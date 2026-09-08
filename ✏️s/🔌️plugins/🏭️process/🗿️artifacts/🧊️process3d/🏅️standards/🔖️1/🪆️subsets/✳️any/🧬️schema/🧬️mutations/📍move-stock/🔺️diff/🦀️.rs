@@ -2,8 +2,8 @@
 //! `base`, never a snapshot clone. The document has exactly one stock (no target to be missing);
 //! Warning `no-op` when the pose is unchanged, Fatal `invariant` when the pose is non-finite.
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::diff::Process3dDiff;
+use crate::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::MoveStock, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {

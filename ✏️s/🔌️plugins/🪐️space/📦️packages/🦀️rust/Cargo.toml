@@ -26,6 +26,9 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-artifact-infinite-dag = { workspace = true }
+semio-framework-artifact-space-space = { workspace = true }
+semio-framework-artifact-space-collection = { workspace = true }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }

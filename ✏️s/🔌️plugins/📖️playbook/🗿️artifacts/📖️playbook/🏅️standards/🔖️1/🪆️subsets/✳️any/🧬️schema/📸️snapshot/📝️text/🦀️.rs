@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::playbook::PlaybookSnapshot;
+use crate::PlaybookSnapshot;
 
 /// 📄️ The `facade-generator` example spec, handcrafted in the `.playbook` DSL.
 pub const FACADE_GENERATOR_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
@@ -25,7 +25,7 @@ pub fn print_dsl(document: &PlaybookSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::playbook::empty_playbook_snapshot;
+    use crate::empty_playbook_snapshot;
 
     #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_the_empty_snapshot() {

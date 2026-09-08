@@ -2,8 +2,8 @@
 //! missing article number ⇒ `Vec::new()`.
 
 use super::DeleteProduct;
-use crate::artifacts::vdi3805::mutations::create_product;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::mutations::create_product;
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteProduct, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

@@ -1,9 +1,9 @@
 //! 🔄️ Drawing mutation — `UpdateLayerTransform`: sets one layer's `transform` facet atomically
 //! (position + scale + rotation are one field in the schema, never independently persisted —
 //! the `update` verb's cohesive-multi-field-facet exception).
-use crate::artifacts::drawing::diff::DrawingDiff;
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::{DrawingSnapshot, DrawingTransform};
+use crate::diff::DrawingDiff;
+use crate::mutations::DrawingMutation;
+use crate::{DrawingSnapshot, DrawingTransform};
 
 //#region 🔖️Mutation
 /// 🔄️ `update-layer-transform` payload.

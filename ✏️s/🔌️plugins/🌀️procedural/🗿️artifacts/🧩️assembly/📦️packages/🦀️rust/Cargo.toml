@@ -1,0 +1,45 @@
+[package]
+name = "semio-s-artifact-procedural-assembly"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural assembly artifact"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+default = []
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os-flow", "dep:semio-framework-os-infinite", "dep:semio-framework-ui", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-styling"]
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-geometry = { workspace = true }
+semio-framework-graph = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+pack = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true, optional = true }
+semio-framework-os-flow = { workspace = true, optional = true }
+semio-framework-os-infinite = { workspace = true, optional = true }
+semio-framework-ui = { workspace = true, optional = true }
+semio-framework-ui-contract = { workspace = true, optional = true }
+semio-framework-ui-styling = { workspace = true, optional = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

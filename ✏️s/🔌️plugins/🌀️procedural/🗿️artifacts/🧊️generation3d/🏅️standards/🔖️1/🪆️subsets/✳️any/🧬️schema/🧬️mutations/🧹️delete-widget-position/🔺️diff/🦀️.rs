@@ -1,10 +1,10 @@
 //! 🔺️ `delete-widget-position` sparse diff construction.
 
-use crate::artifacts::generation3d::diff::Generation3dDiff;
-use crate::artifacts::generation3d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::generation3d::mutations::delete_widget_position::DeleteWidgetPosition;
-use crate::artifacts::generation3d::mutations::widget_index;
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::diff::Generation3dDiff;
+use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::mutations::delete_widget_position::DeleteWidgetPosition;
+use crate::mutations::widget_index;
+use crate::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta removing one widget's position override.
 pub fn diff(payload: &DeleteWidgetPosition, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {

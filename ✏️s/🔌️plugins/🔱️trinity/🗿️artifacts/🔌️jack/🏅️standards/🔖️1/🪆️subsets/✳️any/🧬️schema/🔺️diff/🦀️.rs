@@ -8,8 +8,8 @@
 //! `jack_working_scene(base)`, applies its own specific semantics to a clone, and calls
 //! `diff_replace_content`.
 
-use crate::artifacts::jack::schema::JackEditorSelection;
-use crate::artifacts::jack::{Camera, JackContentChild};
+use crate::schema::JackEditorSelection;
+use crate::{Camera, JackContentChild};
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -26,7 +26,7 @@ pub struct JackDiff {
     #[state(artifact)]
     pub manifest_id: Option<Option<String>>,
     #[state(artifact)]
-    pub manifest: Option<crate::artifacts::jack::Manifest>,
+    pub manifest: Option<crate::Manifest>,
     #[state(artifact)]
     pub camera: Option<Camera>,
     #[state(artifact)]

@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::artifacts::shooting::ShootingCamera;
+use crate::ShootingCamera;
 use schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

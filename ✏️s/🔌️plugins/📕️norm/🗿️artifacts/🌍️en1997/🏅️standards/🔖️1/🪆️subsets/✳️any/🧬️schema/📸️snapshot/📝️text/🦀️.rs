@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::en1997::En1997Snapshot;
+use crate::En1997Snapshot;
 
 /// 📄️ The `default` example document, handcrafted in the `.en1997` DSL — a shallow footing +
 /// pile worked example (bearing, sliding, settlement, pile axial, ground investigation depth)

@@ -1,7 +1,7 @@
 //! ✍️ ✍️ Writer play app commands command — `text-edit`.
 
-use crate::artifacts::writer::op::{EditText, WriterMutation};
-use crate::artifacts::writer::WriterSnapshot;
+use crate::op::{EditText, WriterMutation};
+use crate::WriterSnapshot;
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -22,8 +22,8 @@ pub fn handle(payload: &TextEdit, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg:
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::writer::schema::jack_variable_occurrences;
-    use crate::artifacts::writer::{writer_text, WriterSnapshot};
+    use crate::schema::jack_variable_occurrences;
+    use crate::{writer_text, WriterSnapshot};
     use crate::editor::writer::commands::{commit_rename, format_document, set_active_example, set_text};
     use crate::editor::writer::testkit::{app_with_jack, dispatch, new_app};
     use crate::editor::writer::WriterCommand;

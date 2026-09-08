@@ -1,7 +1,7 @@
 //! Puzzle3d mutation — `ScaleObject`: changes an object's freeform pose scale.
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::Puzzle3dDiff;
+use crate::mutations::Puzzle3dMutation;
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
 /// `scale-object` payload.
@@ -13,7 +13,7 @@ use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 #[dsl(keyword = "scale-object")]
 pub struct ScaleObject {
     pub id: String,
-    pub new_scale: Option<crate::artifacts::puzzle3d::Puzzle3dScale>,
+    pub new_scale: Option<crate::Puzzle3dScale>,
 }
 
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ScaleObject {
@@ -35,6 +35,6 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ScaleObject 
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn scale_object(id: String, new_scale: Option<crate::artifacts::puzzle3d::Puzzle3dScale>) -> Puzzle3dMutation {
+pub fn scale_object(id: String, new_scale: Option<crate::Puzzle3dScale>) -> Puzzle3dMutation {
     Puzzle3dMutation::ScaleObject(ScaleObject { id, new_scale })
 }

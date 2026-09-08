@@ -6,7 +6,7 @@
 //! 🐛️ Repaired here (ticket 26/09/06/FEM-PLUGIN-END-TO-END, W4): the previous leaf ignored `bytes`
 //! entirely and returned `Ok(Fem3dSnapshot::default())` — silent total data loss on every import.
 
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::Fem3dSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

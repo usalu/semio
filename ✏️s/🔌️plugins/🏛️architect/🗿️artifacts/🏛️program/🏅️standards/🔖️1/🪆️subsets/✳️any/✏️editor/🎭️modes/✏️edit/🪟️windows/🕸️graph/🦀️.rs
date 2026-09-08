@@ -1,8 +1,8 @@
 //! 🕸️ Architect graph window — the program elements and their adjacencies as an undirected
 //! node-graph surface, laid out on a circle.
 
-use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::undirected_edges;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::undirected_edges;
+use crate::ProgramSnapshot;
 use crate::editor::architect::config::ArchitectConfig;
 use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowOptions};
 
@@ -106,7 +106,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framewo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
+    use crate::sample_plugin;
 
     #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_node_graph_surface_and_body_key() {

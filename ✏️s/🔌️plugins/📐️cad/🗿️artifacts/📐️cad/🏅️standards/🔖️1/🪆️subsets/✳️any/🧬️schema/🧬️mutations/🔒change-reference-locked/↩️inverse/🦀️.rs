@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeReferenceLocked` — recovers the pre-mutation `locked` from `base`.
 use super::ChangeReferenceLocked;
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangeReferenceLocked, base: &CadSnapshot) -> Vec<CadMutation> {

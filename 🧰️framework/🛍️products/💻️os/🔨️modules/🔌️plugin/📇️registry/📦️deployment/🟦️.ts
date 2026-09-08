@@ -1,18 +1,19 @@
 import catalog from "./🗺️catalog.json";
-import schema from "./📐️schema.json";
+import schemaModule from "./🧬️schema/🔣️.json";
 import routes from "./🛣️routes.json";
 import { installationDirectoryEmoji } from "../../../🧩️extension/🟦️.ts";
 
 export type ModuleDirectory = { readonly pluginId: string; readonly directoryName: string };
 export type ModuleRoutes = { readonly plugin: string; readonly extension: string };
 
+const schema = schemaModule.$defs.DeploymentCatalogV1;
 const idSpec = schema.properties.modules.items.properties.pluginId;
 const idPattern = new RegExp(idSpec.pattern, "u");
 
 /** 🛣️Admits only the two explicitly selected distribution route owners. */
 export function parseModuleRoutes(input: unknown): ModuleRoutes {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Invalid module routes");
-  const value = input as Record<string, unknown>, properties = schema.definitions.moduleRoutes.properties;
+  const value = input as Record<string, unknown>, properties = schemaModule.$defs.DeploymentModuleRoutesV1.properties;
   if (Object.keys(value).sort().join(",") !== "extension,plugin" || value.plugin !== properties.plugin.const || value.extension !== properties.extension.const) throw new Error("Module routes must match their exact schema authority");
   return Object.freeze({ plugin: value.plugin as string, extension: value.extension as string });
 }

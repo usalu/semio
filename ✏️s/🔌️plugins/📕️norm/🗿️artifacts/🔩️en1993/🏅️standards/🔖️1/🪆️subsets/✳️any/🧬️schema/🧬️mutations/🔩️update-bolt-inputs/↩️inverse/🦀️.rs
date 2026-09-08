@@ -1,7 +1,7 @@
 //! ↩️ `update-bolt-inputs` — undo restores BASE's bolt inputs.
 
 use super::UpdateBoltInputs;
-use crate::artifacts::en1993::{En1993Mutation, En1993Snapshot};
+use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &UpdateBoltInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {

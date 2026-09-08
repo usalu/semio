@@ -7,9 +7,9 @@
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from these files by `fixtures generate` and asserted by the codec matrix, never hand-forged here.
 
-use crate::artifacts::en1998::diff::En1998Diff;
-use crate::artifacts::en1998::mutations::En1998Mutation;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::diff::En1998Diff;
+use crate::mutations::En1998Mutation;
+use crate::En1998Snapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

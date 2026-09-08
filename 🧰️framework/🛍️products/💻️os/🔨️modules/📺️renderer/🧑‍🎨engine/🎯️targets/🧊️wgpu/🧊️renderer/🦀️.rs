@@ -3925,13 +3925,6 @@ pub(crate) mod kernel_runtime {
             KernelCloseStatus::Pending
         }
 
-        pub(crate) fn instance(&self) -> u32 {
-            self.owner.instance
-        }
-
-        pub(crate) fn generation(&self) -> u64 {
-            self.owner.generation
-        }
     }
 
     const PRODUCT_REPLAY_KIND_BYTES: usize = 256;
@@ -8357,7 +8350,7 @@ pub(crate) mod kernel_runtime {
             assert!(bridge.reserve(identity(999), JobProgressKind::Preview, 0).is_none(), "capacity +1 must reject before publication ownership moves");
             for (ordinal, token) in tokens.into_iter().enumerate() {
                 let mut lease = bridge.take().expect("FIFO presentation lease");
-                assert_eq!(lease.identity, identity(ordinal));
+                assert_eq!(bridge.slots[lease.token.index].identity, identity(ordinal));
                 assert_eq!(lease.token, token);
                 assert!(bridge.presented(token));
                 lease.terminal = true;
@@ -8629,7 +8622,7 @@ pub(crate) mod kernel_runtime {
                     actor: ActorId(97),
                     record_cursor: 101,
                     checkpoint: Some(MountedProductReplayCheckpoint { ordinal: 103, digest: 107, pages: 2, applied_progress: 109 }),
-                }) if request.instance == 83 && request.job == 89 && request.placement == JobPlacement::Exclusive
+                }) if request.instance == 83 && request.raw.job == 89 && request.placement == JobPlacement::Exclusive
             ));
             while registry.has_close_work() {
                 assert!(registry.close_one());
@@ -13184,7 +13177,6 @@ pub(crate) struct FrameTransaction {
     generation: semio_framework_trace::Generation,
     base_witness: Option<RuntimePresentationWitness>,
     effect_opportunities: u32,
-    dpr: f32,
     stage: FrameTransactionStage,
     phase: AppFrameTransactionPhase,
     board_authority_cursor: usize,
@@ -13236,14 +13228,13 @@ enum AppFrameTransactionPhase {
 }
 
 impl FrameTransaction {
-    pub(crate) fn new(directives: frame_job::FrameDirectives, operation: semio_framework_trace::OperationId, generation: semio_framework_trace::Generation, dpr: f32) -> Self {
+    pub(crate) fn new(directives: frame_job::FrameDirectives, operation: semio_framework_trace::OperationId, generation: semio_framework_trace::Generation) -> Self {
         Self {
             directives: Some(directives),
             operation,
             generation,
             base_witness: None,
             effect_opportunities: 0,
-            dpr,
             stage: FrameTransactionStage::DrainProjectionDeltas,
             phase: AppFrameTransactionPhase::SceneCamera,
             board_authority_cursor: 0,
@@ -14358,10 +14349,6 @@ impl AppPresentedRetirement {
 }
 
 impl AppPresenter {
-    pub(crate) fn dpr(&self) -> f32 {
-        self.gpu.dpr()
-    }
-
     pub(crate) fn surface_resize_available(&self) -> bool {
         self.surface_resize.is_none()
     }

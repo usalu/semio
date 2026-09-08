@@ -1,8 +1,8 @@
 //! 🌍️ Energy model mutation — `UpdateSite`: Sets the whole inseparable site facet — latitude, longitude, elevation, time zone and north axis are validated and consumed together by the solar geometry, so none of them is meaningfully set on its own.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

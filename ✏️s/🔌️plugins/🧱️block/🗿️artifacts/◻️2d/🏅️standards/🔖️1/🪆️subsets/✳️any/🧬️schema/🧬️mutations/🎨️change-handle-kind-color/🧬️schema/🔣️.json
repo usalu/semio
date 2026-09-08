@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/2d/1/any/mutation/change-handle-kind-color.json",
+  "$id": "https://semio.tech/schema/s/block/2d/1/any/mutation/change-handle-kind-color/schema.json",
   "title": "ChangeHandleKindColor",
   "type": "object",
   "additionalProperties": false,

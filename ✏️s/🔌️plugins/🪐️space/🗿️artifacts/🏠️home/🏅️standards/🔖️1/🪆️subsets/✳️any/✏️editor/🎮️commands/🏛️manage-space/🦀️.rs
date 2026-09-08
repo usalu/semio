@@ -3,8 +3,8 @@
 //! renders solely from the hub's own canonical `DirectorySpaceAdministrationPageV1`, so a client that
 //! reached this action without authority still gets a server denial rather than an administration UI.
 
-use crate::artifacts::home::op::SHomeMutation;
-use crate::artifacts::home::SHomeSnapshot;
+use crate::op::SHomeMutation;
+use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 

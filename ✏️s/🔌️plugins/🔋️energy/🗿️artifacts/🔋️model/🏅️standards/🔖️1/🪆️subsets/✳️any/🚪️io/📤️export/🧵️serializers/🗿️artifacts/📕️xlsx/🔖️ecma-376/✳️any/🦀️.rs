@@ -1,5 +1,5 @@
 //! model -> xlsx
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::EnergyModelSnapshot;
 
 pub async fn register() {}
 

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1996/1/any/mutation/change-mortar.json",
+  "$id": "https://semio.tech/schema/s/norm/en1996/1/any/mutation/change-mortar/schema.json",
   "title": "ChangeMortar",
   "type": "object",
   "additionalProperties": false,

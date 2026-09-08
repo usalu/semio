@@ -3,7 +3,7 @@
 //! holds a plain pure function rather than an `InferredField` chain — the family root's
 //! `impl protocol::Inference<SHomeSnapshot>` calls it directly.
 
-use crate::artifacts::home::SHomeSnapshot;
+use crate::SHomeSnapshot;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 

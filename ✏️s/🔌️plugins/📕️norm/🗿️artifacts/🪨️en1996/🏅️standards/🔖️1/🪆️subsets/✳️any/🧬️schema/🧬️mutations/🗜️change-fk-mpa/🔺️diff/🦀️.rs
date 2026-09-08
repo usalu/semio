@@ -1,8 +1,8 @@
 //! 🔺️ `change-fk-mpa` sparse diff construction — writes only `En1996Diff.f_k_mpa` from the payload.
 
-use crate::artifacts::en1996::diff::En1996Diff;
-use crate::artifacts::en1996::mutations::change_f_k_mpa::ChangeFKMpa;
-use crate::artifacts::en1996::En1996Snapshot;
+use crate::diff::En1996Diff;
+use crate::mutations::change_f_k_mpa::ChangeFKMpa;
+use crate::En1996Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeFKMpa, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {

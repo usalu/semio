@@ -1,8 +1,8 @@
 //! 🤝 Puzzle2d mutation — `ConnectKindCompatibility`: allows one kind-id pair to link.
 
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::{Puzzle2dCompatSpecificity, Puzzle2dSnapshot};
+use crate::diff::Puzzle2dDiff;
+use crate::mutations::Puzzle2dMutation;
+use crate::{Puzzle2dCompatSpecificity, Puzzle2dSnapshot};
 
 //#region 🔖️Mutation
 /// 🤝 `connect-kind-compatibility` payload. A duplicate `(source, target)` pair is a no-op.

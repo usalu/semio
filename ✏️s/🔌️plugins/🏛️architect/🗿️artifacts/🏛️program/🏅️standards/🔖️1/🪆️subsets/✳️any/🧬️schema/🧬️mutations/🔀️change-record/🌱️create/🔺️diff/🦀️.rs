@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📝changes` per Wave C.
 
 use super::CreateChangeRecord;
-use crate::artifacts::program::diff::ProgramChangesDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramChangesDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
 pub fn diff(payload: &CreateChangeRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

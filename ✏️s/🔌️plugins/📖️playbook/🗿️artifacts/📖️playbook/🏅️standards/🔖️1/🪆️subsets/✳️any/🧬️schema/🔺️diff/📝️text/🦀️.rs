@@ -1,8 +1,8 @@
 //! 🔺️ Playbook artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::playbook::schema::diff::PlaybookDiff;
-use crate::artifacts::playbook::schema::snapshot::PlaybookSnapshot;
-use crate::artifacts::playbook::schema::PlaybookArtifact;
+use crate::schema::diff::PlaybookDiff;
+use crate::schema::snapshot::PlaybookSnapshot;
+use crate::schema::PlaybookArtifact;
 use crate::playbook::PlaybookStep;
 use protocol::MutationDiff;
 
@@ -119,7 +119,7 @@ pub fn diff_set_snapshot(snapshot: &PlaybookSnapshot) -> PlaybookDiff {
 /// applies its own specific semantics to that scene, then calls this shared builder — mirrors
 /// writer's `diff_set_text`/flow's `diff_replace_content`.
 pub fn diff_replace_content(title: Option<&str>, steps: Vec<PlaybookStep>) -> PlaybookDiff {
-    let (document, flow) = crate::artifacts::playbook::playbook_content_handles(title, steps);
+    let (document, flow) = crate::playbook_content_handles(title, steps);
     PlaybookDiff { document: Some(document), flow: Some(flow), ..Default::default() }
 }
 //#endregion 🔖️Builders

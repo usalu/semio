@@ -8,8 +8,8 @@
 //! Image/Mesh/Document/Media) matches it directly; `TreeWindowKit` was checked and rejected for this
 //! reason before writing this render function by hand.
 
-use crate::artifacts::wires::schema::{dsl_to_json, fixture_camera, fixture_edges, fixture_nodes, wires_relationships};
-use crate::artifacts::wires::WiresSnapshot;
+use crate::schema::{dsl_to_json, fixture_camera, fixture_edges, fixture_nodes, wires_relationships};
+use crate::WiresSnapshot;
 use dsl::DslValue;
 use dsl::os_pack::json::Value;
 use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
@@ -73,7 +73,7 @@ fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
 /// 👁️ Read-only render straight off a `WiresSnapshot` — no config/runtime/utility state, matching the
 /// viewer's `ViewEmit`-only contract.
 pub fn render(document: &WiresSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let board = crate::artifacts::wires::wires_working_board(document);
+    let board = crate::wires_working_board(document);
     let wires = &document.wires_fixture;
     let (camera_x, camera_y, zoom) = fixture_camera(&board);
     let mut layers: Vec<Value> = fixture_nodes(&board).iter().map(dsl_to_json).collect();
@@ -97,7 +97,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_canvas_scene_for_the_empty_document() {
-        let document = crate::artifacts::wires::empty_wires_snapshot();
+        let document = crate::empty_wires_snapshot();
         let node = render(&document).expect("viewer canvas");
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
         let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
@@ -108,7 +108,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_canvas_scene_for_the_metabolism_example() {
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
+        let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
         let node = render(&document).expect("viewer canvas");
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
         let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");

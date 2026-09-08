@@ -4,20 +4,27 @@
 //! here (not in `🦀️.rs`, a closer-only hot file) via `#[path=...]` relative to this file's own
 //! directory. Registration flows through `🎹️composer::register`.
 
+#[cfg(feature = "conversion-animation")]
 #[path = "📥️import/🧩️deserializers/🗿️artifacts/🎞️gif/🔖️89a/✳️any/🦀️.rs"]
 pub mod gif_deserializer;
+#[cfg(feature = "conversion-animation")]
 #[path = "📤️export/🧵️serializers/🗿️artifacts/🎞️gif/🔖️89a/✳️any/🦀️.rs"]
 pub mod gif_serializer;
+#[cfg(feature = "conversion-animation")]
 #[path = "📥️import/🧩️deserializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs"]
 pub mod gltf_deserializer;
+#[cfg(feature = "conversion-animation")]
 #[path = "📤️export/🧵️serializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs"]
 pub mod gltf_serializer;
+#[cfg(feature = "conversion-animation")]
 #[path = "📥️import/🧩️deserializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️.rs"]
 pub mod mp4_deserializer;
+#[cfg(feature = "conversion-animation")]
 #[path = "📤️export/🧵️serializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️.rs"]
 pub mod mp4_serializer;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
+    #[cfg(feature = "conversion-animation")]
     use crate::standards::v1::subsets::animation::io::{
         gif_deserializer::SemioAnimationFromGif, gif_serializer::SemioAnimationToGif, gltf_deserializer::SemioAnimationFromGltf, gltf_serializer::SemioAnimationToGltf, mp4_deserializer::SemioAnimationFromMp4, mp4_serializer::SemioAnimationToMp4,
     };
@@ -123,6 +130,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::animation::schema::snapshot::STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-animation")]
         register_composer_entries(bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -138,6 +146,7 @@ pub mod derived_composition {
     /// 🌉️ animation↔gltf / animation↔mp4 / animation↔gif bridge entries (W4) -- forward + reverse rows
     /// per pair, giving all 4 IoKeys per pair per the master plan's io architecture note.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-animation")]
     fn bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES
@@ -156,7 +165,7 @@ pub mod derived_composition {
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-animation"))]
     mod tests {
         use super::*;
         use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue};

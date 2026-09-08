@@ -1,14 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/delete-model.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/delete-model/schema.json",
   "title": "DeleteModel",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "childId"
+    "child_id"
   ],
   "properties": {
-    "childId": {
+    "child_id": {
       "type": "string"
     }
   }

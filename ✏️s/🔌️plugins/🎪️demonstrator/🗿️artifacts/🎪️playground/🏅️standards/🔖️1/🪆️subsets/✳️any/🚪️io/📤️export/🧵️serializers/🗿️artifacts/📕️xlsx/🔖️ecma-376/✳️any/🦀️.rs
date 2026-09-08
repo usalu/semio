@@ -1,5 +1,5 @@
 //! playground -> xlsx
-use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use semio_s_artifact_stdio_xlsx::{XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 
 pub fn serialize(snapshot: &PlaygroundSnapshot) -> Result<XlsxSnapshot, store::TextError> {

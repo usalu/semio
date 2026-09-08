@@ -1,6 +1,6 @@
 //! 📥️ ISO 16757 play app — the inputs window: the raw compliance document, rendered as JSON.
 
-use crate::artifacts::iso16757::Iso16757Snapshot;
+use crate::Iso16757Snapshot;
 use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants

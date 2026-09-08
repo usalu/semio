@@ -3,9 +3,9 @@
 //! — exactly like `din16798`'s `Din16798MutationDsl` bridge — since `DagNodeSpec`/`DagNodeKind`
 //! can't derive `dsl::DslField` cleanly (their `kind`/`properties` fields aren't boxed; see the
 //! doc comment on `DagNodeKindDsl` in `📸️snapshot/🦀️.rs`). The old bridge into
-//! `infinite_board_port_directed_dag::DagMutation` (the foreign kernel port type) is gone with it.
+//! `semio_framework_artifact_infinite_dag::DagMutation` (the foreign kernel port type) is gone with it.
 
-pub use crate::artifacts::dag::schema::mutations::{apply_dag_mutation, inverse_dag_mutation, DagMutation};
+pub use crate::schema::mutations::{apply_dag_mutation, inverse_dag_mutation, DagMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -13,12 +13,12 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::dag::mutations::{
+use crate::mutations::{
     change_node_abbreviation, change_node_icon, change_node_name, change_node_operator_kind, connect_nodes, create_node, delete_node, disconnect_nodes, move_node, rename_node, reorder_nodes, replace_node_kind, replace_node_properties, resize_node,
 };
-use crate::artifacts::dag::{DagNodeKind, DagNodeSpec};
+use crate::{DagNodeKind, DagNodeSpec};
 use graph::manifest::PropertyBag;
-use infinite_board_port_directed_dag::EdgeRouteStyle;
+use semio_framework_artifact_infinite_dag::EdgeRouteStyle;
 use protocol::OpText;
 
 //#region 🔖️OpText
@@ -152,7 +152,7 @@ mod tests {
     use super::*;
 
     fn sample_node(id: &str) -> DagNodeSpec {
-        crate::artifacts::dag::schema::default_node_for_kind("note", id, 0.0, 0.0)
+        crate::schema::default_node_for_kind("note", id, 0.0, 0.0)
     }
 
     #[semio_framework_async_macros::async_test]

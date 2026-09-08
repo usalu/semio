@@ -1,9 +1,9 @@
 //! ➕️ Block2d mutation — `AddCompatibilityRule`: a handle-kind compatibility rule attachment.
 
 use crate::BlockCompatibilityRule;
-use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::diff::Block2dDiff;
-use crate::artifacts::block2d::mutations::Block2dMutation;
+use crate::Block2dSnapshot;
+use crate::diff::Block2dDiff;
+use crate::mutations::Block2dMutation;
 
 //#region 🔖️Mutation
 /// ➕️ `add-compatibility-rule` payload.

@@ -37,8 +37,8 @@
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::fem2d::standards::v1::subsets::any::schema::Fem2dAnalyzer;
-    use crate::artifacts::fem2d::Fem2dSnapshot;
+    use crate::standards::v1::subsets::any::schema::Fem2dAnalyzer;
+    use crate::Fem2dSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.fem.fem2d", standard: StandardId("1"), subset: SubsetId("*") };
@@ -82,7 +82,7 @@ pub use derived_composition::*;
 /// mount tree declares no import leaf for either format (only the two export leaves), and a file
 /// nothing mounts is dead code.
 pub mod geometry_import {
-    use crate::artifacts::fem2d::Fem2dSnapshot;
+    use crate::Fem2dSnapshot;
     use semio_framework::io::io_mechanism::Deserializer;
     use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
     use semio_framework_plugin::{StandardId, SubsetId};
@@ -123,10 +123,10 @@ pub mod geometry_import {
 /// literal `vec![document, op, diff, pack, spr]` order, the same role→slot mapping `🗒️note`'s
 /// `io()` uses.
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::artifacts::fem2d::io::export::serializers::artifacts as export;
-    use crate::artifacts::fem2d::io::import::deserializers::artifacts as import;
-    use crate::artifacts::fem2d::standards::v1::subsets::any::io::geometry_import::{ObjIntoFem2d, StlIntoFem2d};
-    use crate::artifacts::fem2d::{Fem2dMutation, Fem2dSnapshot, FEM2D_DIALECT, FEM_2D_SCHEMA};
+    use crate::io::export::serializers::artifacts as export;
+    use crate::io::import::deserializers::artifacts as import;
+    use crate::standards::v1::subsets::any::io::geometry_import::{ObjIntoFem2d, StlIntoFem2d};
+    use crate::{Fem2dMutation, Fem2dSnapshot, FEM2D_DIALECT, FEM_2D_SCHEMA};
     use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
@@ -155,7 +155,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             .as_slice()
     }
 
-    let langs = crate::artifacts::fem2d::pilot_languages();
+    let langs = crate::pilot_languages();
     IoDeclaration {
         native: NativeCodecs {
             snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },
@@ -173,22 +173,22 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 #[cfg(test)]
 mod tests {
     use super::geometry_import::{ObjIntoFem2d, StlIntoFem2d};
-    use crate::artifacts::fem2d::io::export::serializers::artifacts::csv::v_rfc4180::any::csv_text;
-    use crate::artifacts::fem2d::io::export::serializers::artifacts::json::v_rfc8259::any::json_text;
-    use crate::artifacts::fem2d::io::export::serializers::artifacts::md::v_commonmark::any::md_text;
-    use crate::artifacts::fem2d::io::export::serializers::artifacts::obj::v3_0::any::obj_text;
-    use crate::artifacts::fem2d::io::export::serializers::artifacts::stl::v_ascii::any::stl_text;
-    use crate::artifacts::fem2d::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
-    use crate::artifacts::fem2d::io::import::deserializers::artifacts::csv::v_rfc4180::any::from_csv_text;
-    use crate::artifacts::fem2d::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
-    use crate::artifacts::fem2d::io::import::deserializers::artifacts::md::v_commonmark::any::from_md_text;
-    use crate::artifacts::fem2d::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
+    use crate::io::export::serializers::artifacts::csv::v_rfc4180::any::csv_text;
+    use crate::io::export::serializers::artifacts::json::v_rfc8259::any::json_text;
+    use crate::io::export::serializers::artifacts::md::v_commonmark::any::md_text;
+    use crate::io::export::serializers::artifacts::obj::v3_0::any::obj_text;
+    use crate::io::export::serializers::artifacts::stl::v_ascii::any::stl_text;
+    use crate::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
+    use crate::io::import::deserializers::artifacts::csv::v_rfc4180::any::from_csv_text;
+    use crate::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
+    use crate::io::import::deserializers::artifacts::md::v_commonmark::any::from_md_text;
+    use crate::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
     use semio_framework::io::io_mechanism::Deserializer;
     use semio_framework::io_schema::IoPayload;
 
     /// 📄️ This subset's handcrafted `.semio` DSL example asset — the same bytes the shipped example
     /// serves to the shell.
-    const EXAMPLE: &str = crate::artifacts::fem2d::examples::demo::PRIMARY_TEXT;
+    const EXAMPLE: &str = crate::examples::demo::PRIMARY_TEXT;
 
     #[semio_framework_async_macros::async_test]
     async fn txt_round_trips_the_example() {

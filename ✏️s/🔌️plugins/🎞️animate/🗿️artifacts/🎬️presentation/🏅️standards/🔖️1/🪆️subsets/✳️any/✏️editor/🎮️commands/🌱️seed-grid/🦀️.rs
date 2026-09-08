@@ -2,10 +2,10 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::presentation::mutations::replace_tiles::ReplaceTiles;
-use crate::artifacts::presentation::op::PresentationMutation;
-use crate::artifacts::presentation::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::mutations::replace_tiles::ReplaceTiles;
+use crate::op::PresentationMutation;
+use crate::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+use crate::PresentationSnapshot;
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
 use crate::editor::animate::{interaction_select_effect, PresentationDispatchCtx};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -20,7 +20,7 @@ pub struct SeedGrid {
 
 pub fn handle(payload: &SeedGrid, doc: &ArtifactView<'_, PresentationSnapshot>, _cfg: &ConfigView<'_, PresentationConfig>, _ctx: &mut PresentationDispatchCtx) -> Result<Emit<PresentationMutation, PresentationConfigMutation>, Fault> {
     let deck = doc.snapshot;
-    let (deck_source, _) = crate::artifacts::presentation::presentation_working_scene(deck);
+    let (deck_source, _) = crate::presentation_working_scene(deck);
     let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck_source, rows: payload.rows, columns: payload.columns, gap: 0.0, key_prefix: "tile" });
     let selected: Vec<String> = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
     let mut emit = Emit::mutations(vec![PresentationMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })]);
@@ -40,7 +40,7 @@ mod tests {
     async fn seed_grid_action_adds_tiles() {
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 })).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
+        assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
     }
 
     /// 🧬️ Whole-document replace is not an in-history mutation (a whole-snapshot variant is banned outright), so
@@ -64,7 +64,7 @@ mod tests {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <PresentationSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-        assert!(crate::artifacts::presentation::presentation_working_scene(&loaded).1.is_empty(), "resetting to demo loads the default deck, which has no seeded tiles");
+        assert!(crate::presentation_working_scene(&loaded).1.is_empty(), "resetting to demo loads the default deck, which has no seeded tiles");
     }
 
     /// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
@@ -77,7 +77,7 @@ mod tests {
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 })).await;
         let result = dispatch(&mut app, PresentationCommand::ClearTiles(clear_tiles::ClearTiles {})).await;
-        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
+        assert!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
         assert!(matches!(result.requested_effects.as_slice(), [Effect::ReplayShellCommand { action_id, .. }] if action_id == semio_framework::INTERACTION_SELECT_ACTION_ID));
     }
 }

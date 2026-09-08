@@ -7,8 +7,8 @@
 //! This file is a routing table: `handle` → `DrawingCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::artifacts::drawing::op::DrawingMutation;
-use crate::artifacts::drawing::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
+use crate::op::DrawingMutation;
+use crate::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
 use crate::editor::drawing::commands::canvas_pointer_down::{DrawingGesturePreview, DrawingSession};
 use crate::editor::drawing::commands::{
     add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input,
@@ -1419,7 +1419,7 @@ pub struct DrawingPlayApp {
 
 impl DrawingPlayApp {
     pub fn arena_boot_fault(&self) -> Option<&'static str> {
-        self.arena_boot_fault.or_else(crate::artifacts::drawing::spr::drawing_mutation_arena_pool_fault)
+        self.arena_boot_fault.or_else(crate::spr::drawing_mutation_arena_pool_fault)
     }
 }
 
@@ -1444,9 +1444,9 @@ fn render_drawing_body(
 
 impl Default for DrawingPlayApp {
     fn default() -> Self {
-        let arena_boot_fault = match crate::artifacts::drawing::spr::request_drawing_mutation_arena_pool() {
-            crate::artifacts::drawing::spr::DrawingMutationArenaPoolAvailability::Fault(error) => Some(error),
-            crate::artifacts::drawing::spr::DrawingMutationArenaPoolAvailability::Ready | crate::artifacts::drawing::spr::DrawingMutationArenaPoolAvailability::NotReady | crate::artifacts::drawing::spr::DrawingMutationArenaPoolAvailability::Contended => None,
+        let arena_boot_fault = match crate::spr::request_drawing_mutation_arena_pool() {
+            crate::spr::DrawingMutationArenaPoolAvailability::Fault(error) => Some(error),
+            crate::spr::DrawingMutationArenaPoolAvailability::Ready | crate::spr::DrawingMutationArenaPoolAvailability::NotReady | crate::spr::DrawingMutationArenaPoolAvailability::Contended => None,
         };
         Self { arena_boot_fault }
     }
@@ -1466,15 +1466,15 @@ impl ArtifactEditor for DrawingPlayApp {
 
     type Command = DrawingCommand;
 
-    const DIALECT: semio_framework::Dialect = crate::artifacts::drawing::DRAWING_DIALECT;
+    const DIALECT: semio_framework::Dialect = crate::DRAWING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::drawing::spr::drawing_envelope_decode_owner_bundle())
+        Some(crate::spr::drawing_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::drawing::spr::drawing_document_store_owners())
+        Some(crate::spr::drawing_document_store_owners())
     }
 
     fn build_document_store_initialization_job(
@@ -1482,7 +1482,7 @@ impl ArtifactEditor for DrawingPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::artifacts::drawing::spr::drawing_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::spr::drawing_document_store_initialization_job(envelope, operation, generation))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1540,12 +1540,12 @@ impl ArtifactEditor for DrawingPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::drawing::config::schema::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> DrawingSnapshot {
-        crate::artifacts::drawing::schema::default_drawing_document("empty", None)
+        crate::schema::default_drawing_document("empty", None)
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -1662,10 +1662,10 @@ pub fn drawing_vector_out_port() -> semio_framework::MediaPortSpec {
 }
 
 /// 🖼️ Exports the current drawing document as an SVG `Media` payload for the `vector:out` port —
-/// reuses `crate::artifacts::drawing::io::drawing_document_to_svg` (the same semio/drawing↔svg bridge the
+/// reuses `crate::io::drawing_document_to_svg` (the same semio/drawing↔svg bridge the
 /// export-svg shell path uses), so there is exactly one SVG renderer.
 pub fn drawing_vector_media(doc: &DrawingSnapshot) -> Result<Media, MediaError> {
-    let (svg, _width, _height) = crate::artifacts::drawing::io::drawing_document_to_svg(doc).map_err(|error| MediaError::Payload("vector:out".into(), error))?;
+    let (svg, _width, _height) = crate::io::drawing_document_to_svg(doc).map_err(|error| MediaError::Payload("vector:out".into(), error))?;
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.drawing".into(), json: svg } })
 }
 //#endregion 🔖️Io
@@ -1690,8 +1690,8 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
         status: Some(vec![WindowEngagementStatus { id: "drawing-layer-count".into(), text: "0 layers · 0 selected".into() }]),
         possible_engagements: None,
     };
-    Editor::builder(crate::artifacts::drawing::DRAWING_DIALECT).document(["semio", "drawing"])
-            .artifact_kind(crate::artifacts::drawing::artifact_kind())
+    Editor::builder(crate::DRAWING_DIALECT).document(["semio", "drawing"])
+            .artifact_kind(crate::artifact_kind())
             .icon_id("drawing")
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
@@ -1839,8 +1839,8 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::drawing::schema::{default_drawing_document, layer_id, semio_drawing_example_json};
-    use crate::artifacts::drawing::DrawingLayerNode;
+    use crate::schema::{default_drawing_document, layer_id, semio_drawing_example_json};
+    use crate::DrawingLayerNode;
     use semio_framework_plugin::kernel::Effect;
     use semio_framework_plugin::{testkit as fw_testkit, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
     use testkit::{drawing_app, set_utility, DrawingApp};
@@ -1858,16 +1858,16 @@ mod tests {
         use store::ArtifactPack;
 
         let mut snapshot = default_drawing_document("drawing-retained-load", None);
-        let mut group = crate::artifacts::drawing::schema::create_drawing_group_layer("Nested");
+        let mut group = crate::schema::create_drawing_group_layer("Nested");
         if let DrawingLayerNode::Group(value) = &mut group {
-            value.children.push(crate::artifacts::drawing::schema::create_drawing_path_layer("Path", vec![crate::artifacts::drawing::PathSegment::Move { to: [1.0, 2.0] }, crate::artifacts::drawing::PathSegment::Line { to: [3.0, 4.0] }]));
+            value.children.push(crate::schema::create_drawing_path_layer("Path", vec![crate::PathSegment::Move { to: [1.0, 2.0] }, crate::PathSegment::Line { to: [3.0, 4.0] }]));
         }
         let retained_target = match &group {
             DrawingLayerNode::Group(value) => layer_id(&value.children[0]).to_string(),
             _ => unreachable!("retained Drawing fixture group remains exact"),
         };
         snapshot.layers.push(group);
-        snapshot.assets.insert("image-a".into(), crate::artifacts::drawing::DrawingImageAsset { mime: "image/png".into(), data: "AA==".into(), width: Some(1), height: Some(1) });
+        snapshot.assets.insert("image-a".into(), crate::DrawingImageAsset { mime: "image/png".into(), data: "AA==".into(), width: Some(1), height: Some(1) });
         let snapshot_pack = snapshot.encode_pack();
         let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         let wire = serde_json::to_vec(&serde_json::json!({
@@ -1878,7 +1878,7 @@ mod tests {
                 "edits": [{
                     "id": "drawing-retained-edit-final",
                     "actor": "drawing-retained-actor",
-                    "forwards": [DrawingMutation::RenameLayer(crate::artifacts::drawing::mutations::RenameLayer { layer_id: retained_target.clone(), new_name: "Retained Path".into() })],
+                    "forwards": [DrawingMutation::RenameLayer(crate::mutations::RenameLayer { layer_id: retained_target.clone(), new_name: "Retained Path".into() })],
                     "inverse": [],
                     "sequenceNumber": 1,
                     "startedAt": "2026-08-23T00:00:00.000Z"
@@ -1892,7 +1892,7 @@ mod tests {
         }))
         .expect("schema-first Drawing fixture envelope");
         let envelope = store::create_document_envelope(DRAWING_DOCUMENT_SCHEMA, "drawing-retained-load", snapshot, None);
-        let mut retirement = crate::artifacts::drawing::spr::drawing_envelope_decode_owner_bundle().retire_envelope(envelope);
+        let mut retirement = crate::spr::drawing_envelope_decode_owner_bundle().retire_envelope(envelope);
         for _ in 0..100_000 {
             match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Drawing fixture envelope retirement") {
                 store::SnapshotRetirementStep::Complete => {
@@ -1944,8 +1944,8 @@ mod tests {
         assert_eq!(drive_drawing_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
         assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
         let projection = app.snapshot().expect("Drawing retained mutation publication");
-        let renamed = crate::artifacts::drawing::schema::find_drawing_layer(&projection, &crate::artifacts::drawing::schema::create_drawing_id("path", b"Path")).expect("retained Drawing target");
-        assert_eq!(crate::artifacts::drawing::schema::layer_base(renamed).name, "Retained Path");
+        let renamed = crate::schema::find_drawing_layer(&projection, &crate::schema::create_drawing_id("path", b"Path")).expect("retained Drawing target");
+        assert_eq!(crate::schema::layer_base(renamed).name, "Retained Path");
         assert!(app.acknowledge_artifact_store_replacement(handle).expect("first Drawing acknowledgement"));
         assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate Drawing acknowledgement"));
     }
@@ -2086,7 +2086,7 @@ mod tests {
         let result = app.dispatch_typed(DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }), &fw_testkit::meta("local")).await.expect("patch");
         assert_eq!(result.mutations.len(), 1);
         let projection = app.snapshot().unwrap();
-        assert!((crate::artifacts::drawing::schema::layer_base(&projection.layers[0]).opacity - 0.5).abs() < f64::EPSILON);
+        assert!((crate::schema::layer_base(&projection.layers[0]).opacity - 0.5).abs() < f64::EPSILON);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2095,7 +2095,7 @@ mod tests {
         let id = first_layer_id(&app);
         let result = app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }), &fw_testkit::meta("local")).await.expect("patch");
         assert_eq!(result.mutations.len(), 1);
-        assert_eq!(crate::artifacts::drawing::schema::layer_base(&app.snapshot().unwrap().layers[0]).name, "Renamed");
+        assert_eq!(crate::schema::layer_base(&app.snapshot().unwrap().layers[0]).name, "Renamed");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2140,7 +2140,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn canvas_point_to_world_matches_host_formula() {
-        let camera = crate::artifacts::drawing::DrawingCamera { x: 100.0, y: 50.0, zoom: 2.0 };
+        let camera = crate::DrawingCamera { x: 100.0, y: 50.0, zoom: 2.0 };
         let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&camera, 420.0, 310.0, 800.0, 600.0);
         assert!((world_x - 110.0).abs() < 1e-9);
         assert!((world_y - 55.0).abs() < 1e-9);
@@ -2276,7 +2276,7 @@ mod tests {
             app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: ellipse_b_id.clone(), field: field.into(), value: value.into() }), &fw_testkit::meta("local")).await.expect("position ellipse b");
         }
 
-        app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("camera");
+        app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::DrawingCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("camera");
         app.dispatch_typed(
             DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
                 x: 400.0,
@@ -2307,7 +2307,7 @@ mod tests {
     async fn set_camera_writes_runtime_and_emits_no_operations() {
         let mut app = drawing_app().await;
         let before = app.snapshot().expect("projection");
-        let result = app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 5.0, y: 5.0, zoom: 2.0 } }), &fw_testkit::meta("local")).await.expect("camera");
+        let result = app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::DrawingCamera { x: 5.0, y: 5.0, zoom: 2.0 } }), &fw_testkit::meta("local")).await.expect("camera");
         assert!(result.mutations.is_empty(), "camera is a view action and emits no operations");
         assert_eq!(app.snapshot().expect("projection"), before, "camera never mutates the document");
         let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).await.expect("render"));
@@ -2317,7 +2317,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
         let mut app = drawing_app().await;
-        app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 4.0, y: 5.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("set camera");
+        app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::DrawingCamera { x: 4.0, y: 5.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("set camera");
         let result = app.dispatch_typed(DrawingCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }), &fw_testkit::meta("local")).await.expect("set camera zoom");
         assert!(result.mutations.is_empty(), "camera zoom is a view action and emits no operations");
         let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).await.expect("render"));
@@ -2364,7 +2364,7 @@ mod tests {
         app.dispatch_typed(DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &fw_testkit::meta("local")).await.expect("clear default layer");
         app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).await.expect("add rect");
         let rect_id = last_layer_id(&app);
-        app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("camera");
+        app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::DrawingCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("camera");
         set_utility(&mut app, "selectDirect").await;
         // 🎯️ Default `shape:rect` geometry is world (0,0)-(128,96); screen (110,110) on a 200x200
         // viewport with the identity camera above maps to world (10,10) — inside the rect.
@@ -2381,7 +2381,7 @@ mod tests {
         app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&dsl::json::to_dsl_value(&dsl::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" }))), &fw_testkit::meta("local")).await.expect("select");
         let result = app.dispatch_typed(DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.25 }), &fw_testkit::meta("local")).await.expect("opacity");
         assert_eq!(result.mutations.len(), 1);
-        assert!((crate::artifacts::drawing::schema::layer_base(&app.snapshot().unwrap().layers[0]).opacity - 0.25).abs() < f64::EPSILON);
+        assert!((crate::schema::layer_base(&app.snapshot().unwrap().layers[0]).opacity - 0.25).abs() < f64::EPSILON);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2490,7 +2490,7 @@ mod tests {
             DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: "layer-1".into(), field: "opacity".into(), value: "0.4".into() }),
             DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec!["a".into(), "b".into()], field: "blendMode".into(), value: "\"multiply\"".into() }),
             DrawingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pen".into() }),
-            DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
+            DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::DrawingCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
             DrawingCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 2.0 }),
             DrawingCommand::EngagementInput(engagement_input::EngagementInput { value: "typing".into() }),
             DrawingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
@@ -2642,7 +2642,7 @@ mod tests {
     /// nothing.
     #[semio_framework_async_macros::async_test]
     async fn set_active_example_resolves_the_registered_catalogue() {
-        let examples = crate::artifacts::drawing::standards::v1::subsets::any::examples();
+        let examples = crate::standards::v1::subsets::any::examples();
         assert!(examples.iter().any(|source| source.id() == "demo"), "the subset registers its demo example");
         let doc = default_drawing_document("example-probe", None);
         let history = semio_framework_plugin::HistoryView::empty();

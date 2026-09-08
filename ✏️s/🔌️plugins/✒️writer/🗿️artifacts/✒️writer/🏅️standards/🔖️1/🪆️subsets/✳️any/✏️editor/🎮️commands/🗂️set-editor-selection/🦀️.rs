@@ -8,8 +8,8 @@
 //! This command keeps only the raw, editor-intrinsic caret/range (`editor_selection` stays app-side,
 //! never part of the `ast` domain).
 
-use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::op::WriterMutation;
+use crate::WriterSnapshot;
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation, WriterEditorSelection};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

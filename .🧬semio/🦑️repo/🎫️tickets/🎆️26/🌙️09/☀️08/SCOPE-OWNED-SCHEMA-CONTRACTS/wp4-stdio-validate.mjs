@@ -197,6 +197,7 @@ for (const path of leafSchemas) {
 }
 
 console.log(`aggregates=${aggregates.length} compiled=${compiled} leaf-branches=${leavesChecked} leaf-schemas=${leafSchemas.length} compiled-standalone=${standalone} fixtures=${fixturesChecked} failures=${failures.length}`);
-for (const failure of failures.slice(0, 80)) console.log("  FAIL", failure);
-if (failures.length > 80) console.log(`  … ${failures.length - 80} more`);
+const limit = process.argv.includes("--all") ? failures.length : 40;
+for (const failure of failures.slice(0, limit)) console.log("  FAIL", failure);
+if (failures.length > limit) console.log(`  … ${failures.length - limit} more`);
 process.exit(failures.length === 0 ? 0 : 1);

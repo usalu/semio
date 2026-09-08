@@ -5,9 +5,9 @@
 //! payload's own `diff`/`inverse` — see `🧪️MutationsDeriveLaws` in
 //! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs` for the reference shape.
 
-use crate::artifacts::fem3d::diff::Fem3dDiff;
-use crate::artifacts::fem3d::Fem3dSnapshot;
-use crate::artifacts::fem3d::{element_id, load_id, FemAnalysisSettings, FemElement, FemLoad, FemMaterial, FemNode, FemSection, FemSolid};
+use crate::diff::Fem3dDiff;
+use crate::Fem3dSnapshot;
+use crate::{element_id, load_id, FemAnalysisSettings, FemElement, FemLoad, FemMaterial, FemNode, FemSection, FemSolid};
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
@@ -320,7 +320,7 @@ pub fn inverse_fem3d_mutation(snapshot: &Fem3dSnapshot, mutation: &Fem3dMutation
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::fem3d::{element_id, load_id, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use crate::{element_id, load_id, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use protocol::MutationDiff;
     use std::collections::BTreeMap;
 

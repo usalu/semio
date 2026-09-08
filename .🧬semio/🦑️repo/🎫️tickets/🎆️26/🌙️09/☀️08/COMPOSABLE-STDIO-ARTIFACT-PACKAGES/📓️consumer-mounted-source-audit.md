@@ -39,3 +39,15 @@ Used Nx’s Rust module/include traversal over external consumer library, binary
 | semio-s-plugin-note | 233 |  |  |  |
 | semio-s-plugin-vcs | 84 |  |  |  |
 | semio-s-plugin-sourcing | 84 |  |  |  |
+
+## Framework Artifact Followup
+
+Static Nx mounted-source and direct dependency audit:
+
+- `♾️infinite/🗿️artifacts/🕸️dag`: {"leaf":"♾️infinite/🗿️artifacts/🕸️dag","files":36,"missing":["semio_format"]}
+- `🌊️flow/🗿️artifacts/🌊️flow`: {"leaf":"🌊️flow/🗿️artifacts/🌊️flow","files":46,"missing":["semio_format"]}
+- `📖️playbook/🗿️artifacts/📖️playbook`: {"leaf":"📖️playbook/🗿️artifacts/📖️playbook","files":6,"missing":["semio_format"]}
+
+The three reported `semio_format` names above are nested `store::semio_format` module references, not external crates. Inspection confirms no missing direct dependency in those three mounted-source sets.
+
+The final explicit old-framework consumer search found one stale documentation reference to `semio_framework::WorkflowNode`, corrected to the independent workflow artifact. No matching executable Rust import remained in that search.

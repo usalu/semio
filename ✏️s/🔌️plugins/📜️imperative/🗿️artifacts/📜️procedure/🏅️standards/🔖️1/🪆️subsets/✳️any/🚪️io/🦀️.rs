@@ -11,7 +11,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 /// 🧩️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 /// Placed beside `io_registry` rather than in the artifact root or the app: it has THREE callers across
 /// two layers — the artifact root's `declaration()` (must warm the native-module registry before
-/// building composers/inferences), the app's `🎚️config` (`crate::artifacts::procedure::io::default_imperative_contributions_json`),
+/// building composers/inferences), the app's `🎚️config` (`crate::io::default_imperative_contributions_json`),
 /// and the app engine's `ImperativeHost::from_snapshot`. An artifact must not depend on its app, so this
 /// stays artifact-side where both the root and the app can reach it by qualified path.
 pub fn default_imperative_contributions_json() -> String {
@@ -49,7 +49,7 @@ pub fn bootstrap_imperative_runtime() {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::procedure::ProcedureSnapshot;
+    use crate::ProcedureSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.imperative.procedure", standard: StandardId("1"), subset: SubsetId("*") };
@@ -82,7 +82,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::procedure::io::import::deserializers::artifacts::csv::v_rfc4180::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::csv::v_rfc4180::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -91,7 +91,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::procedure::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -100,7 +100,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::procedure::io::import::deserializers::artifacts::md::v_commonmark::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::md::v_commonmark::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -109,7 +109,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::procedure::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -127,7 +127,7 @@ pub use derived_composition::*;
 /// module's `entries()` (`&'static [ComposerEntry]`, owning storage) — deliberately different return
 /// types; do not conflate them when qualifying paths.
 pub mod io_registry {
-    use crate::artifacts::procedure::standards::v1::subsets::any::schema::ProcedureComposer as ProcedureAnyComposer;
+    use crate::standards::v1::subsets::any::schema::ProcedureComposer as ProcedureAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
     use std::sync::OnceLock;
 
@@ -147,11 +147,11 @@ pub mod io_registry {
     const PROCEDURE_DIALECT: Dialect = Dialect { artifact_kind: "s.imperative.procedure", standard: StandardId("1"), subset: SubsetId("*") };
     const IMPERATIVE_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::procedure::ProcedureSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::ProcedureSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == PROCEDURE_DIALECT) {
             return match &source.payload {
-                IoPayload::Text(text) => <crate::artifacts::procedure::ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() }),
-                IoPayload::Binary(bytes) => <crate::artifacts::procedure::ProcedureSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() }),
+                IoPayload::Text(text) => <crate::ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() }),
+                IoPayload::Binary(bytes) => <crate::ProcedureSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() }),
             };
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == IMPERATIVE_JSON_BRIDGE_DIALECT) {
@@ -162,7 +162,7 @@ pub mod io_registry {
                 IoPayload::Text(t) => t.as_bytes().to_vec(),
                 IoPayload::Binary(b) => b.clone(),
             };
-            return crate::artifacts::procedure::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
+            return crate::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
         }
         Err(ComposeError { message: "ProcedureComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
@@ -171,7 +171,7 @@ pub mod io_registry {
     fn compose_export_csv(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::procedure::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_CSV_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -179,7 +179,7 @@ pub mod io_registry {
     fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::procedure::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_MD_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -187,7 +187,7 @@ pub mod io_registry {
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::artifacts::procedure::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let bytes = crate::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }

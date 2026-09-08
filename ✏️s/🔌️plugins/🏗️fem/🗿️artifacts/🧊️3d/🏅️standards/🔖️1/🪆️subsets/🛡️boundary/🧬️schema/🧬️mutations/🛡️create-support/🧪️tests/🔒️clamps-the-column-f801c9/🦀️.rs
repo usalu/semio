@@ -7,9 +7,9 @@
 //!
 //! A full 3D fixity restrains all six DOFs at once — the whole `FemDof` vocabulary has to round-trip in one list.
 
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -35,7 +35,7 @@ fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "create-support/clamps-the-column-f801c9: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.supports.len(), 1, "create-support/clamps-the-column-f801c9: exactly one support may be coined");
     assert_eq!(snapshot.supports[0].fixed.len(), 6, "create-support/clamps-the-column-f801c9: a full 3D fixity restrains every DOF");
-    assert_eq!(snapshot.supports[0].fixed, crate::artifacts::fem3d::FemDof::ALL.to_vec(), "create-support/clamps-the-column-f801c9: the DOF tags must round-trip in the canonical order");
+    assert_eq!(snapshot.supports[0].fixed, crate::FemDof::ALL.to_vec(), "create-support/clamps-the-column-f801c9: the DOF tags must round-trip in the canonical order");
 }
 
 /// ↩️ The inverse is a `delete-support` of `s1`, restoring the unrestrained frame.
@@ -84,7 +84,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "create-support/clamps-the-column-f801c9: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "create-support/clamps-the-column-f801c9: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "create-support/clamps-the-column-f801c9: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "create-support/clamps-the-column-f801c9: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "create-support/clamps-the-column-f801c9: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("create-support/clamps-the-column-f801c9: unknown outcome status {other:?}"),
@@ -106,7 +106,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-support/clamps-the-column-f801c9: committed diff JSON is not canonical");
@@ -115,7 +115,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `supports.added` entry on `before` must reproduce the clamped base.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-support/clamps-the-column-f801c9: committed diff did not carry before to after");
 }

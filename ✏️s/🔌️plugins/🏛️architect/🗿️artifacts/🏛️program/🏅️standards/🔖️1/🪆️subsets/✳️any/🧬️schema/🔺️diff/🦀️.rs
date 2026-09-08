@@ -1,8 +1,8 @@
 //! 🧬️ ProgramSnapshot diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::program::kernel::*;
-use crate::artifacts::program::registers::*;
-use schema::ArtifactSchema;
+use crate::kernel::*;
+use crate::registers::*;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the program artifact.
@@ -11,7 +11,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.architect.program")]
 pub struct ProgramDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::program::schema::ProgramArtifact>>,
+    pub artifact: Option<Box<crate::schema::ProgramArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]
@@ -146,10 +146,10 @@ pub struct ProgramDiff {
     pub templates: Option<ProgramTemplatesDelta>,
     /// 🧩️ Replacement handle for the composed knowledge table.
     #[state(artifact)]
-    pub knowledge: Option<crate::artifacts::program::ProgramKnowledgeChild>,
+    pub knowledge: Option<crate::ProgramKnowledgeChild>,
     /// 🧩️ Replacement handle for the composed benchmarks table.
     #[state(artifact)]
-    pub benchmarks: Option<crate::artifacts::program::ProgramBenchmarksChild>,
+    pub benchmarks: Option<crate::ProgramBenchmarksChild>,
     #[state(artifact)]
     pub traces: Option<ProgramTracesDelta>,
     #[state(artifact)]

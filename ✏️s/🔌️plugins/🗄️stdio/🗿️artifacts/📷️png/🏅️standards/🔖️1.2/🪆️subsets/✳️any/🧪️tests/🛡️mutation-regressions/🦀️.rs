@@ -309,13 +309,7 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[test]
     fn codec_retention_law() {
-        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/📷️png/📚️examples/🎬️demo/🖼️assets/🖼️.png"));
-        let bytes = match bytes {
-            Ok(b) if !b.is_empty() => b,
-            // No usable fixture on disk at test time (or a different workspace layout) — fall
-            // back to a synthetic encode -> decode -> re-encode -> re-decode identity check.
-            _ => crate::engine::encode_png(&base_snapshot()).expect("encode synthetic fallback"),
-        };
+        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1.2/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🖼️.png")).expect("read committed PNG fixture");
         let decoded = crate::engine::decode_png(&bytes).expect("decode fixture");
         let reencoded = crate::engine::encode_png(&decoded).expect("re-encode fixture");
         let redecoded = crate::engine::decode_png(&reencoded).expect("re-decode fixture");

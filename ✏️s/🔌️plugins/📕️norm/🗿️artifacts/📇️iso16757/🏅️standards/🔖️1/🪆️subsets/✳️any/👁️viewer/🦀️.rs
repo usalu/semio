@@ -4,8 +4,8 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::iso16757::Iso16757Snapshot;
-use crate::artifacts::iso16757::{ISO16757_DIALECT, ISO16757_DOCUMENT_SCHEMA};
+use crate::Iso16757Snapshot;
+use crate::{ISO16757_DIALECT, ISO16757_DOCUMENT_SCHEMA};
 use crate::viewer::iso16757::modes::view;
 use crate::viewer::iso16757::modes::view::windows::report;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -41,7 +41,7 @@ pub struct Iso16757Viewer;
 
 impl ArtifactViewer for Iso16757Viewer {
     type Snapshot = Iso16757Snapshot;
-    type Mutation = crate::artifacts::iso16757::op::Iso16757Mutation;
+    type Mutation = crate::op::Iso16757Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

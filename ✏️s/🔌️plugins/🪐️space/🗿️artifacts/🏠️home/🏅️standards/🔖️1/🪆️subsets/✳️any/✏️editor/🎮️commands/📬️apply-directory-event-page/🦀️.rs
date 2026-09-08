@@ -1,7 +1,7 @@
 //! 📄️ Accepts one authenticated, receipt-sealed directory page as one local config replacement.
 
-use crate::artifacts::home::op::SHomeMutation;
-use crate::artifacts::home::SHomeSnapshot;
+use crate::op::SHomeMutation;
+use crate::SHomeSnapshot;
 use crate::editor::home::config::{DirectoryProjectionReceiptV1, HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{AppEvent, ArtifactView, ConfigView, Emit, Fault};
 

@@ -1,0 +1,37 @@
+[package]
+name = "semio-s-artifact-vcs-vcs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "vcs vcs artifact"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-ui-contract.workspace = true
+semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-xlsx = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
+semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-ui-scene = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true
+semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

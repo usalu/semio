@@ -1,6 +1,6 @@
 //! 🔎️ 🔎️ Trinity Jack app command — `format-document`.
 
-use crate::artifacts::jack::op::TrinityGraphMutation;
+use crate::op::TrinityGraphMutation;
 use crate::core;
 use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::Emit;

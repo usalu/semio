@@ -6,7 +6,7 @@
 //! default camera is used instead), no selection: a viewer emits no mutations by construction
 //! (`ViewEmit`), so this render duplicates the small, pure structural layer instead of sharing it.
 
-use crate::artifacts::generation2d::{widget_id, Generation2dSnapshot};
+use crate::{widget_id, Generation2dSnapshot};
 use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -43,7 +43,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `Generation2dSnapshot -> BuiltNode` read: a fixed default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), one schematic box per widget at its stored layout
-/// position — no evaluated drawing-handle overlay (that needs a live `flow::FlowEvalSession`, an
+/// position — no evaluated drawing-handle overlay (that needs a live `semio_framework_os_flow::FlowEvalSession`, an
 /// editor-dispatch-time concept a stateless viewer render never has access to).
 pub fn render(document: &Generation2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let fixture = &document.fixture;
@@ -87,7 +87,7 @@ mod tests {
 
     #[test]
     fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::artifacts::generation2d::schema::default_snapshot();
+        let document = crate::schema::default_snapshot();
         let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render(&document).expect("viewer fixture") }).expect("render json");
         assert!(json.contains("canvas-2d"));
     }

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `⚖️options` per Wave C.
 
 use super::DeleteOptionEvaluation;
-use crate::artifacts::program::diff::ProgramOptionsDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramOptionsDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteOptionEvaluation, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

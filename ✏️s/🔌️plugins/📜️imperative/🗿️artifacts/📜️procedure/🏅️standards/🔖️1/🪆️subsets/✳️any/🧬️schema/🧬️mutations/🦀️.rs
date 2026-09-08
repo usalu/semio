@@ -2,14 +2,14 @@
 //!
 //! Every variant wraps the payload owned by its direct `<mutation>/🦀️.rs` leaf.
 
-use crate::artifacts::procedure::diff::ProcedureDiff;
-use crate::artifacts::procedure::ProcedureSnapshot;
+use crate::diff::ProcedureDiff;
+use crate::ProcedureSnapshot;
 
 pub use super::create_step::{create_step, CreateStep};
 pub use super::delete_step::{delete_step, DeleteStep};
 pub use super::edit_step_params::{edit_step_params, EditStepParams};
 pub use super::reorder_steps::{reorder_steps, ReorderSteps};
-pub use crate::artifacts::procedure::standards::v1::subsets::any::schema::operations::*;
+pub use crate::standards::v1::subsets::any::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Semantic Imperative document mutation vocabulary.

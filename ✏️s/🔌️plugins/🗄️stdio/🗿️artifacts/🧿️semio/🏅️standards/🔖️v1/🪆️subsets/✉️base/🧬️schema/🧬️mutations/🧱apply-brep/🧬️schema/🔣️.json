@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-brep.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-brep/schema.json",
   "title": "ApplyBrep",
   "type": "object",
   "additionalProperties": false,

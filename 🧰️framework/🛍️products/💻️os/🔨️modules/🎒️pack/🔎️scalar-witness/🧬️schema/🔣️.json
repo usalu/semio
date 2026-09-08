@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/pack/scalar-witness/schema.json",
+  "title": "Pack Scalar Witness",
+  "$defs": {
+    "ScalarRecordWire": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "grants", "cancelAfterSteps", "terminalEmpty", "capture", "cases"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "grants": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "cancelAfterSteps": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "terminalEmpty": { "const": true },
+        "capture": { "$ref": "#/$defs/ScalarRecordCapture" },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/ScalarRecordCase" }
+        }
+      }
+    },
+    "ScalarRecordCapture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ordinal", "value", "laterOrdinal", "laterValue", "projections", "wire"],
+      "properties": {
+        "ordinal": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "value": { "type": "integer", "minimum": 0 },
+        "laterOrdinal": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "laterValue": { "type": "integer", "minimum": 0 },
+        "projections": { "type": "integer", "minimum": 1 },
+        "wire": {
+          "type": "array",
+          "minItems": 4,
+          "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+        }
+      }
+    },
+    "ScalarRecordCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "ordinal", "fields", "wireBytes", "symbols"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "ordinal": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "wireBytes": { "type": "integer", "minimum": 4 },
+        "symbols": { "type": "integer", "minimum": 0, "maximum": 2 },
+        "fields": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "oneOf": [
+              { "type": "null" },
+              { "$ref": "#/$defs/ScalarRecordText" },
+              { "$ref": "#/$defs/ScalarRecordU64" },
+              { "$ref": "#/$defs/ScalarRecordF64" }
+            ]
+          }
+        }
+      }
+    },
+    "ScalarRecordText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "unit", "repeat", "suffix"],
+      "properties": {
+        "type": { "const": "text" },
+        "unit": { "type": "string", "minLength": 1 },
+        "repeat": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "suffix": { "type": "string" }
+      }
+    },
+    "ScalarRecordU64": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "value"],
+      "properties": {
+        "type": { "const": "u64" },
+        "value": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$" }
+      }
+    },
+    "ScalarRecordF64": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "value"],
+      "properties": {
+        "type": { "const": "f64" },
+        "value": { "type": "string", "enum": ["-0", "1.25", "2", "NaN"] }
+      }
+    }
+  }
+}

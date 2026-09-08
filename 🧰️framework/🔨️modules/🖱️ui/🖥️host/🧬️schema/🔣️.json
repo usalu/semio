@@ -1,65 +1,411 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Framework UI Browser Host Port",
-  "version": 1,
-  "transport": "semio.framework.abi.v1",
-  "limits": {
-    "eventBytes": 1024,
-    "eventEnvelopeBytes": 27,
-    "encodedEventBytes": 1051,
-    "pageBytes": 1033,
-    "pageEnvelopeBytes": 18,
-    "initialPollBytes": 1024,
-    "retainedPollItems": 1,
-    "acknowledgements": 64,
-    "criticalEvents": 32,
-    "latestEvents": 32,
-    "listeners": 64,
-    "semanticUnitsPerGrant": 1
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/ui/host/schema.json",
+  "title": "Ui Host Schema Module",
+  "definitions": {
+    "abiOperationCode": {
+      "type": "integer",
+      "minimum": 1793,
+      "maximum": 1798
+    },
+    "abiEventCode": {
+      "type": "integer",
+      "minimum": 1801,
+      "maximum": 1811
+    },
+    "binaryField": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 40,
+      "pattern": "^[a-z][A-Za-z0-9]*:(u8|u16|u32|u64|i16|i32|f32|f64)(le|be)?$"
+    },
+    "identityOrdinal": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    }
   },
-  "identities": {
-    "CanvasId": { "type": "u32", "minimum": 1 },
-    "ListenerId": { "fields": ["slot:u32", "generation:u32"], "minimum": 1 }
+  "$defs": {
+    "BrowserHostDeclaration": {
+      "title": "Browser Host Declaration",
+      "description": "🌐️ Language-agnostic declaration of the browser UI host port. Bounds are the ceilings the owned Rust host enforces (`🖥️host/📦️packages/🦀️rust/🪟️window.rs` `BROWSER_HOST_*`, `📡️event.rs` `BROWSER_EVENT_*`, `🌉️abi/🦀️.rs` `ABI_*`) and the laws in `🧪️fixtures/📐️browser-host-limits.tsv`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "version",
+        "transport",
+        "limits",
+        "identities",
+        "operations",
+        "events",
+        "eventPrefix",
+        "eventStatus",
+        "poll",
+        "accessibility",
+        "lifecycle",
+        "coalescing"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 255
+        },
+        "transport": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^semio\\.framework\\.abi\\.v[1-9][0-9]*$"
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "eventBytes",
+            "eventEnvelopeBytes",
+            "encodedEventBytes",
+            "pageBytes",
+            "pageEnvelopeBytes",
+            "initialPollBytes",
+            "retainedPollItems",
+            "acknowledgements",
+            "criticalEvents",
+            "latestEvents",
+            "listeners",
+            "semanticUnitsPerGrant"
+          ],
+          "properties": {
+            "eventBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1024
+            },
+            "eventEnvelopeBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 27
+            },
+            "encodedEventBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1051
+            },
+            "pageBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1033
+            },
+            "pageEnvelopeBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 18
+            },
+            "initialPollBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1024
+            },
+            "retainedPollItems": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1
+            },
+            "acknowledgements": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            },
+            "criticalEvents": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32
+            },
+            "latestEvents": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32
+            },
+            "listeners": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            },
+            "semanticUnitsPerGrant": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1
+            }
+          }
+        },
+        "identities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "CanvasId",
+            "ListenerId"
+          ],
+          "properties": {
+            "CanvasId": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "minimum"
+              ],
+              "properties": {
+                "type": {
+                  "enum": [
+                    "u8",
+                    "u16",
+                    "u32",
+                    "u64"
+                  ]
+                },
+                "minimum": {
+                  "$ref": "#/definitions/identityOrdinal"
+                }
+              }
+            },
+            "ListenerId": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "fields",
+                "minimum"
+              ],
+              "properties": {
+                "fields": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 4,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/definitions/binaryField"
+                  }
+                },
+                "minimum": {
+                  "$ref": "#/definitions/identityOrdinal"
+                }
+              }
+            }
+          }
+        },
+        "operations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "attach",
+            "frame",
+            "cursor",
+            "clipboardRead",
+            "clipboardWrite",
+            "detach"
+          ],
+          "properties": {
+            "attach": {
+              "$ref": "#/definitions/abiOperationCode"
+            },
+            "frame": {
+              "$ref": "#/definitions/abiOperationCode"
+            },
+            "cursor": {
+              "$ref": "#/definitions/abiOperationCode"
+            },
+            "clipboardRead": {
+              "$ref": "#/definitions/abiOperationCode"
+            },
+            "clipboardWrite": {
+              "$ref": "#/definitions/abiOperationCode"
+            },
+            "detach": {
+              "$ref": "#/definitions/abiOperationCode"
+            }
+          }
+        },
+        "events": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "metrics",
+            "visibility",
+            "frame",
+            "pointerMove",
+            "pointerDown",
+            "pointerUp",
+            "wheel",
+            "keyDown",
+            "keyUp",
+            "text",
+            "close"
+          ],
+          "properties": {
+            "metrics": {
+              "$ref": "#/definitions/abiEventCode"
+            },
+            "visibility": {
+              "$ref": "#/definitions/abiEventCode"
+            },
+            "frame": {
+              "$ref": "#/definitions/abiEventCode"
+            },
+            "pointerMove": {
+              "$ref": "#/definitions/abiEventCode"
+            },
+            "pointerDown": {
+              "$ref": "#/definitions/abiEventCode"
+            },
+            "pointerUp": {
+              "$ref": "#/definitions/abiEventCode"
+            },
+            "wheel": {
+              "$ref": "#/definitions/abiEventCode"
+            },
+            "keyDown": {
+              "$ref": "#/definitions/abiEventCode"
+            },
+            "keyUp": {
+              "$ref": "#/definitions/abiEventCode"
+            },
+            "text": {
+              "$ref": "#/definitions/abiEventCode"
+            },
+            "close": {
+              "$ref": "#/definitions/abiEventCode"
+            }
+          }
+        },
+        "eventPrefix": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/binaryField"
+          }
+        },
+        "eventStatus": {
+          "enum": [
+            "ok-without-diagnostic-fixed-3-byte-status"
+          ]
+        },
+        "poll": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "shortCapacity",
+            "exactRetry",
+            "maximumEncodedBytes",
+            "cancelBetweenPolls",
+            "closeBetweenPolls"
+          ],
+          "properties": {
+            "shortCapacity": {
+              "enum": [
+                "return-required-length-and-retain"
+              ]
+            },
+            "exactRetry": {
+              "enum": [
+                "copy-once-and-release"
+              ]
+            },
+            "maximumEncodedBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1051
+            },
+            "cancelBetweenPolls": {
+              "enum": [
+                "release-without-copy"
+              ]
+            },
+            "closeBetweenPolls": {
+              "enum": [
+                "release-and-close-without-copy"
+              ]
+            }
+          }
+        },
+        "accessibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "localizedLabel",
+            "focusable",
+            "role"
+          ],
+          "properties": {
+            "localizedLabel": {
+              "enum": [
+                "required-with-no-language-default"
+              ]
+            },
+            "focusable": {
+              "type": "boolean"
+            },
+            "role": {
+              "enum": [
+                "configurable"
+              ]
+            }
+          }
+        },
+        "lifecycle": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "request",
+              "progress",
+              "event",
+              "reply",
+              "acknowledge",
+              "cancel",
+              "close",
+              "terminal-empty"
+            ]
+          }
+        },
+        "coalescing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "metrics",
+            "pointerMove",
+            "frame"
+          ],
+          "properties": {
+            "metrics": {
+              "enum": [
+                "latest-wins"
+              ]
+            },
+            "pointerMove": {
+              "enum": [
+                "latest-wins-per-pointer"
+              ]
+            },
+            "frame": {
+              "enum": [
+                "at-most-one-pending"
+              ]
+            }
+          }
+        }
+      }
+    }
   },
-  "operations": {
-    "attach": 1793,
-    "frame": 1794,
-    "cursor": 1795,
-    "clipboardRead": 1796,
-    "clipboardWrite": 1797,
-    "detach": 1798
-  },
-  "events": {
-    "metrics": 1801,
-    "visibility": 1802,
-    "frame": 1803,
-    "pointerMove": 1804,
-    "pointerDown": 1805,
-    "pointerUp": 1806,
-    "wheel": 1807,
-    "keyDown": 1808,
-    "keyUp": 1809,
-    "text": 1810,
-    "close": 1811
-  },
-  "eventPrefix": ["version:u8", "canvas:u32le", "listenerSlot:u32le", "listenerGeneration:u32le"],
-  "eventStatus": "ok-without-diagnostic-fixed-3-byte-status",
-  "poll": {
-    "shortCapacity": "return-required-length-and-retain",
-    "exactRetry": "copy-once-and-release",
-    "maximumEncodedBytes": 1051,
-    "cancelBetweenPolls": "release-without-copy",
-    "closeBetweenPolls": "release-and-close-without-copy"
-  },
-  "accessibility": {
-    "localizedLabel": "required-with-no-language-default",
-    "focusable": true,
-    "role": "configurable"
-  },
-  "lifecycle": ["request", "progress", "event", "reply", "acknowledge", "cancel", "close", "terminal-empty"],
-  "coalescing": {
-    "metrics": "latest-wins",
-    "pointerMove": "latest-wins-per-pointer",
-    "frame": "at-most-one-pending"
-  }
+  "allOf": [
+    {
+      "$ref": "#/$defs/BrowserHostDeclaration"
+    }
+  ]
 }

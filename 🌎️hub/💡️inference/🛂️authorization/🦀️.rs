@@ -32,5 +32,5 @@ pub(crate) async fn check_live_inference_author(directory: &HubDirectories, iden
 }
 
 #[cfg(all(test, feature = "sqlite"))]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

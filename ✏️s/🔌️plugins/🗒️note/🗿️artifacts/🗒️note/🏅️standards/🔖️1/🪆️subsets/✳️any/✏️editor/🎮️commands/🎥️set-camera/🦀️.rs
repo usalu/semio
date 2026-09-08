@@ -1,11 +1,11 @@
 //! 🎥️ 🎥️ Note play app commands command — `set-camera`.
 
-use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::op::NoteMutation;
+use crate::NoteSnapshot;
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-use crate::artifacts::note::NoteCamera;
+use crate::NoteCamera;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
@@ -23,7 +23,7 @@ pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::note::NoteCamera;
+    use crate::NoteCamera;
     use crate::editor::note::commands::set_camera_zoom;
     use crate::editor::note::testkit::{dispatch, note_app, render};
     use crate::editor::note::{NoteCommand, NOTE_PLAY_BODY_COMPOSITE};

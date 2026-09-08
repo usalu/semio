@@ -1,6 +1,6 @@
 //! 🧮️ Trinity Rewriting app — view-state config + config operations.
 
-use crate::artifacts::jack::Camera;
+use semio_s_artifact_trinity_jack::Camera;
 use std::collections::BTreeMap;
 
 /// 🧮️ Rewriting's `ArtifactApp::Config` — node selection, the Before pane's live viewport camera

@@ -5,7 +5,7 @@
 //! `ArtifactStore` (with a real `backwards`), so camera/utility edits are VCS'd exactly like document
 //! content.
 
-use crate::artifacts::note::NoteCamera;
+use crate::NoteCamera;
 #[cfg(test)]
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};

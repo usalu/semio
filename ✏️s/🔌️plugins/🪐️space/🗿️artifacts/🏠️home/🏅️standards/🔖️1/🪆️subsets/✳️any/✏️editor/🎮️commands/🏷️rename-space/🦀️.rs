@@ -3,8 +3,8 @@
 //! directory read model, `HomeConfig::directory`); a non-empty `name` (the dialog's own submit) relays
 //! the rename to the hub (contract §C6) — no optimistic local rename.
 
-use crate::artifacts::home::op::SHomeMutation;
-use crate::artifacts::home::SHomeSnapshot;
+use crate::op::SHomeMutation;
+use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 

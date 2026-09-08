@@ -1,0 +1,236 @@
+{
+  "contract": "schema-rust-entry-cases-v1",
+  "cases": [
+    {
+      "id": "agrees",
+      "reason": "Every registered triple of a declared scope is exactly one catalog row, so the registry and the catalog agree.",
+      "scopes": {
+        "s.probe.thing": {
+          "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+          "formats": {
+            "🔣️jsonschema": "🔣️.json",
+            "🦀️rust": "🦀️.rs"
+          },
+          "exports": [
+            "ThingArtifact"
+          ]
+        }
+      },
+      "dump": {
+        "contractId": "schema-export-registry-entries-v1",
+        "generator": "cargo test -p semio-framework-schema --lib -- --exact --nocapture schema_export_catalog_entries_dump",
+        "entries": [
+          {
+            "scope": "s.probe.thing",
+            "export": "ThingArtifact",
+            "format": "jsonschema"
+          },
+          {
+            "scope": "s.probe.thing",
+            "export": "ThingArtifact",
+            "format": "rust"
+          }
+        ]
+      },
+      "complete": false,
+      "expectedCodes": []
+    },
+    {
+      "id": "contract-unknown",
+      "reason": "A dump that does not declare the taxonomy's rustEntriesContractId is rejected whole; nothing else is compared.",
+      "scopes": {
+        "s.probe.thing": {
+          "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+          "formats": {
+            "🔣️jsonschema": "🔣️.json",
+            "🦀️rust": "🦀️.rs"
+          },
+          "exports": [
+            "ThingArtifact"
+          ]
+        }
+      },
+      "dump": {
+        "contractId": "schema-export-registry-entries-v0",
+        "generator": "cargo test -p semio-framework-schema --lib -- --exact --nocapture schema_export_catalog_entries_dump",
+        "entries": [
+          {
+            "scope": "s.probe.thing",
+            "export": "ThingArtifact",
+            "format": "jsonschema"
+          }
+        ]
+      },
+      "complete": false,
+      "expectedCodes": [
+        "rust-entries-contract-unknown"
+      ]
+    },
+    {
+      "id": "unknown-scope-and-export",
+      "reason": "A registered scope the catalog does not contain, and a registered export the catalogued scope does not declare, are two distinct findings.",
+      "scopes": {
+        "s.probe.thing": {
+          "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+          "formats": {
+            "🔣️jsonschema": "🔣️.json",
+            "🦀️rust": "🦀️.rs"
+          },
+          "exports": [
+            "ThingArtifact"
+          ]
+        }
+      },
+      "dump": {
+        "contractId": "schema-export-registry-entries-v1",
+        "generator": "cargo test -p semio-framework-schema --lib -- --exact --nocapture schema_export_catalog_entries_dump",
+        "entries": [
+          {
+            "scope": "s.probe.absent",
+            "export": "ThingArtifact",
+            "format": "jsonschema"
+          },
+          {
+            "scope": "s.probe.thing",
+            "export": "Ghost",
+            "format": "jsonschema"
+          },
+          {
+            "scope": "s.probe.thing",
+            "export": "ThingArtifact",
+            "format": "jsonschema"
+          },
+          {
+            "scope": "s.probe.thing",
+            "export": "ThingArtifact",
+            "format": "rust"
+          }
+        ]
+      },
+      "complete": false,
+      "expectedCodes": [
+        "rust-export-unknown",
+        "rust-scope-unknown"
+      ]
+    },
+    {
+      "id": "format-absent-and-missing",
+      "reason": "A registered format the module has no leaf for, and a catalogued leaf the registry never registers, are reported from both directions.",
+      "scopes": {
+        "s.probe.thing": {
+          "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+          "formats": {
+            "🔣️jsonschema": "🔣️.json",
+            "🦀️rust": "🦀️.rs"
+          },
+          "exports": [
+            "ThingArtifact"
+          ]
+        }
+      },
+      "dump": {
+        "contractId": "schema-export-registry-entries-v1",
+        "generator": "cargo test -p semio-framework-schema --lib -- --exact --nocapture schema_export_catalog_entries_dump",
+        "entries": [
+          {
+            "scope": "s.probe.thing",
+            "export": "ThingArtifact",
+            "format": "graphql"
+          }
+        ]
+      },
+      "complete": false,
+      "expectedCodes": [
+        "rust-entry-format-absent",
+        "rust-entry-missing",
+        "rust-entry-missing"
+      ]
+    },
+    {
+      "id": "format-id-unknown",
+      "reason": "An ascii format id outside schemaExportResolution.formatIds is a declaration error, not a silent skip.",
+      "scopes": {
+        "s.probe.thing": {
+          "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+          "formats": {
+            "🔣️jsonschema": "🔣️.json",
+            "🦀️rust": "🦀️.rs"
+          },
+          "exports": [
+            "ThingArtifact"
+          ]
+        }
+      },
+      "dump": {
+        "contractId": "schema-export-registry-entries-v1",
+        "generator": "cargo test -p semio-framework-schema --lib -- --exact --nocapture schema_export_catalog_entries_dump",
+        "entries": [
+          {
+            "scope": "s.probe.thing",
+            "export": "ThingArtifact",
+            "format": "wit"
+          },
+          {
+            "scope": "s.probe.thing",
+            "export": "ThingArtifact",
+            "format": "jsonschema"
+          },
+          {
+            "scope": "s.probe.thing",
+            "export": "ThingArtifact",
+            "format": "rust"
+          }
+        ]
+      },
+      "complete": false,
+      "expectedCodes": [
+        "rust-entry-format-unknown"
+      ]
+    },
+    {
+      "id": "unregistered-scope-only-when-complete",
+      "reason": "A catalogued scope with no registration is silent while registration is landing and a finding once --rust-entries-complete demands full coverage.",
+      "scopes": {
+        "s.probe.thing": {
+          "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+          "formats": {
+            "🔣️jsonschema": "🔣️.json",
+            "🦀️rust": "🦀️.rs"
+          },
+          "exports": [
+            "ThingArtifact"
+          ]
+        },
+        "hub.inference": {
+          "path": "🌎️hub/💡️inference/🧬️schema",
+          "formats": {
+            "🔣️jsonschema": "🔣️.json"
+          },
+          "exports": [
+            "InferenceApproval"
+          ]
+        }
+      },
+      "dump": {
+        "contractId": "schema-export-registry-entries-v1",
+        "generator": "cargo test -p semio-framework-schema --lib -- --exact --nocapture schema_export_catalog_entries_dump",
+        "entries": [
+          {
+            "scope": "s.probe.thing",
+            "export": "ThingArtifact",
+            "format": "jsonschema"
+          },
+          {
+            "scope": "s.probe.thing",
+            "export": "ThingArtifact",
+            "format": "rust"
+          }
+        ]
+      },
+      "complete": true,
+      "expectedCodes": [
+        "rust-scope-unregistered"
+      ]
+    }
+  ]
+}

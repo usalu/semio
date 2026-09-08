@@ -1,12 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/create-solid.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/create-solid/schema.json",
   "title": "CreateSolid",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id",
-    "shells"
+    "id"
   ],
   "properties": {
     "id": {
@@ -15,20 +14,24 @@
     "shells": {
       "type": "array",
       "items": {
-        "title": "BrepSolidShell",
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "isVoid",
-          "shell"
-        ],
-        "properties": {
-          "shell": {
-            "type": "string"
-          },
-          "isVoid": {
-            "type": "boolean"
-          }
+        "$ref": "#/$defs/BrepSolidShell"
+      }
+    }
+  },
+  "$defs": {
+    "BrepSolidShell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shell",
+        "isVoid"
+      ],
+      "properties": {
+        "shell": {
+          "type": "string"
+        },
+        "isVoid": {
+          "type": "boolean"
         }
       }
     }

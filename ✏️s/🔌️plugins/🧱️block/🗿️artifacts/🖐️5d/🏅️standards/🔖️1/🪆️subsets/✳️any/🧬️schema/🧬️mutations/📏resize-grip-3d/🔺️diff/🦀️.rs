@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `ResizeGrip3d`.
 
-use crate::artifacts::block5d::{Block5dGripTemplate, Block5dSnapshot};
-use crate::artifacts::block5d::diff::{Block5dDiff, Block5dGripsDelta, Block5dGripsPatch, Block5dGripsPatchEntry};
+use crate::{Block5dGripTemplate, Block5dSnapshot};
+use crate::diff::{Block5dDiff, Block5dGripsDelta, Block5dGripsPatch, Block5dGripsPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ResizeGrip3d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {

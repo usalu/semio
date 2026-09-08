@@ -1,8 +1,8 @@
 //! ✏️ ✏️ Layout play app commands command — `add-page`.
 
-use crate::artifacts::layout::mutations::create_page::CreatePage;
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::{LayoutSnapshot, PageColumns, PageMargins};
+use crate::mutations::create_page::CreatePage;
+use crate::mutations::LayoutMutation;
+use crate::{LayoutSnapshot, PageColumns, PageMargins};
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,7 +21,7 @@ pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
     let page_id = format!("page-{}", document.pages.len() + 1);
     let layer_id = format!("layer-{page_id}");
     let index = document.pages.len();
-    let page = crate::artifacts::layout::Page {
+    let page = crate::Page {
         id: page_id.clone(),
         name: format!("Page {}", document.pages.len() + 1),
         spread_id,
@@ -32,7 +32,7 @@ pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
         columns,
         guides: Vec::new(),
         layer_ids: vec![layer_id.clone()],
-        layers: vec![crate::artifacts::layout::Layer { id: layer_id, name: "Content".into(), visible: true, locked: false, object_ids: Vec::new() }],
+        layers: vec![crate::Layer { id: layer_id, name: "Content".into(), visible: true, locked: false, object_ids: Vec::new() }],
         frames: Vec::new(),
         overrides: Vec::new(),
     };

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/zip/2.0/iso21320/mutation/rename-entry.json",
+  "$id": "https://semio.tech/schema/s/stdio/zip/2.0/iso21320/mutation/rename-entry/schema.json",
   "title": "RenameEntry",
   "type": "object",
   "additionalProperties": false,
@@ -14,6 +14,10 @@
     },
     "new_name": {
       "type": "string"
+    },
+    "mutation": {
+      "const": "renameEntry",
+      "description": "Aggregate discriminator spliced in by ZipIso21320Mutation; absent when the payload stands alone."
     }
   }
 }

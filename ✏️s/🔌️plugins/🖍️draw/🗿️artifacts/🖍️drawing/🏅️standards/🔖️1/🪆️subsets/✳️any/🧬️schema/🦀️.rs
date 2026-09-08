@@ -1,10 +1,10 @@
 //! 🧬️ Drawing artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::drawing::{
+use crate::{
     default_drawing_trace_params, default_drawing_transform, ArtifactDsl, DrawingArtboard, DrawingAttributes, DrawingBooleanBody, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingImageBody, DrawingLayerBase, DrawingLayerNode, DrawingLine, DrawingMutation, DrawingPathBody,
     DrawingPolygon, DrawingRect, DrawingShapeBody, DrawingSnapshot, DrawingTextBody, DrawingTraceBody, DrawingTransform, FillStyle, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA,
 };
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
@@ -95,31 +95,31 @@ impl DrawingArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.draw.drawing` — twenty handcrafted schema leaves.
-pub fn drawing_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn drawing_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.draw.drawing",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -159,7 +159,7 @@ pub struct DrawingInferrer;
 //#region 🔖️DocumentHelpers
 /// 🌱️ Relocated verbatim from the `⚙️engine` directory (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 3: pure helpers over document types
-/// live in `🧬️schema/`). Every external call site now reads `crate::artifacts::drawing::schema::…`
+/// live in `🧬️schema/`). Every external call site now reads `crate::schema::…`
 /// (the artifact root's own pre-existing `pub mod schema { pub use super::standards::v1::subsets::
 /// any::schema::*; }` shim keeps that path resolving).
 
@@ -232,7 +232,7 @@ pub fn create_drawing_id(prefix: &str, material: &[u8]) -> String {
 /// 📄️ Parses the handcrafted DSL fixture once per call — used both for `setActiveExample`'s in-plugin
 /// document load and to bridge into the framework's still-JSON-only `App::example`/render-override
 /// surfaces, so `SEMIO_DRAW_EXAMPLE_TEXT` stays the single source of truth for the fixture.
-const SEMIO_DRAW_EXAMPLE_TEXT: &str = crate::artifacts::drawing::dsl::SEMIO_DRAW_EXAMPLE_TEXT;
+const SEMIO_DRAW_EXAMPLE_TEXT: &str = crate::document_dsl::SEMIO_DRAW_EXAMPLE_TEXT;
 
 pub fn semio_drawing_example_document() -> DrawingSnapshot {
     DrawingSnapshot::parse_dsl(SEMIO_DRAW_EXAMPLE_TEXT).unwrap_or_else(|_| empty_drawing_snapshot())
@@ -1235,7 +1235,7 @@ fn resolve_trace_layer_segments(doc: &DrawingSnapshot, trace: &DrawingTraceBody)
 /// 🔎 Returns whether `s.draw.drawing` is present in the process-local schema registry. Relocated from
 /// `⚙️engine` alongside `default_drawing_document` (same rule; mirrors `s.lowpoly.lowpoly`'s identical move).
 pub fn artifact_schema_registered() -> bool {
-    ::schema::artifact_schema_descriptor_registered("s.draw.drawing")
+    ::framework_schema::artifact_schema_descriptor_registered("s.draw.drawing")
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -1243,7 +1243,7 @@ pub fn artifact_schema_registered() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::drawing::DrawingCircle;
+    use crate::DrawingCircle;
 
     #[semio_framework_async_macros::async_test]
     async fn default_document_has_path_layer() {

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff construction for `change-exaggeration`.
 use super::ChangeExaggeration;
-use crate::artifacts::gisterrain::diff::GisTerrainDiff;
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::diff::GisTerrainDiff;
+use crate::GisTerrainSnapshot;
 
 //#region 🔹Diff
 /// 🔺️ Builds the sparse `exaggeration` field delta directly from the payload — real handcrafted
@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeExaggeration, base: &GisTerrainSnapshot) -> protocol
     if base.exaggeration == payload.new_exaggeration {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Exaggeration is already {}.", payload.new_exaggeration));
     }
-    protocol::MutationOutcome::new(crate::artifacts::gisterrain::diff::diff_exaggeration(payload.new_exaggeration))
+    protocol::MutationOutcome::new(crate::diff::diff_exaggeration(payload.new_exaggeration))
 }
 //#endregion 🔹Diff

@@ -2,8 +2,8 @@
 //! `(payload, base)` (idempotent even when `base.building_model` is already `None`).
 
 use super::DeleteBuildingModel;
-use crate::artifacts::cad::diff::CadDiff;
-use crate::artifacts::cad::CadSnapshot;
+use crate::diff::CadDiff;
+use crate::CadSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(_payload: &DeleteBuildingModel, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {

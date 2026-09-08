@@ -3522,15 +3522,17 @@ impl BoundedValidationPreparation {
                         self.cursor += 1;
                         continue;
                     }
-                    if self.incident_root.is_none() {
+                    if let Some(root) = self.incident_root {
+                        if self.incident_face_cursor < faces.len() {
+                            let face = faces[self.incident_face_cursor];
+                            if Self::root(&mut self.face_parent, face) != root {
+                                self.incident_conflict = true;
+                            }
+                            self.incident_face_cursor += 1;
+                        }
+                    } else {
                         self.incident_root = Some(Self::root(&mut self.face_parent, faces[0]));
                         self.incident_face_cursor = 1;
-                    } else if self.incident_face_cursor < faces.len() {
-                        let face = faces[self.incident_face_cursor];
-                        if Self::root(&mut self.face_parent, face) != self.incident_root.expect("incident root") {
-                            self.incident_conflict = true;
-                        }
-                        self.incident_face_cursor += 1;
                     }
                     if self.incident_face_cursor >= faces.len() {
                         self.non_manifold_vertex_count += usize::from(self.incident_conflict);

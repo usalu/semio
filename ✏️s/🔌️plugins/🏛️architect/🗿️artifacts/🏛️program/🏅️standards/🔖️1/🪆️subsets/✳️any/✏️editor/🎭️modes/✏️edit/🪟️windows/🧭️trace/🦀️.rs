@@ -1,7 +1,7 @@
 //! 🧭️ Architect trace window — the document-wide audit trail.
 
-use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::audit_trail;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::audit_trail;
+use crate::ProgramSnapshot;
 use crate::editor::architect::ui_label;
 use semio_framework_plugin::{tree_item_desc,  LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
 
@@ -60,10 +60,10 @@ pub fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyRe
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::kernel::{EntityHeader, TextField};
-    use crate::artifacts::program::registers::{AuditAction, AuditEvent};
-    use crate::artifacts::program::sample_plugin;
-    use crate::artifacts::program::EntityId;
+    use crate::kernel::{EntityHeader, TextField};
+    use crate::registers::{AuditAction, AuditEvent};
+    use crate::sample_plugin;
+    use crate::EntityId;
 
     #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_text_editor_surface_and_body_key() {

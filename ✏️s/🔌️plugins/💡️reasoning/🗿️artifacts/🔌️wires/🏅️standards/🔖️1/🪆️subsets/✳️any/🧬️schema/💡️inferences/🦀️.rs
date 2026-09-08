@@ -4,9 +4,9 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::wires::WiresSnapshot;
+use crate::WiresSnapshot;
 use dsl::DslValue;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::{compute_wires_topology, WiresTopology};
@@ -25,7 +25,7 @@ pub struct WiresInference {
 
 impl protocol::Inference<WiresSnapshot> for WiresInference {
     fn infer(snapshot: &WiresSnapshot) -> Self {
-        Self { topology: compute_wires_topology(&crate::artifacts::wires::wires_working_board(snapshot)) }
+        Self { topology: compute_wires_topology(&crate::wires_working_board(snapshot)) }
     }
 }
 
@@ -36,7 +36,7 @@ impl protocol::Inference<WiresSnapshot> for WiresInference {
 /// this artifact's own `empty_wires_snapshot()` rather than `Default::default()`.
 impl Default for WiresInference {
     fn default() -> Self {
-        <Self as protocol::Inference<WiresSnapshot>>::infer(&crate::artifacts::wires::empty_wires_snapshot())
+        <Self as protocol::Inference<WiresSnapshot>>::infer(&crate::empty_wires_snapshot())
     }
 }
 
@@ -61,30 +61,30 @@ impl protocol::InferenceSpec<WiresSnapshot> for WiresInference {
 ///
 /// `find_board_node`/`find_board_edge` return OWNED `DslValue` (not `&'a DslValue` tied to
 /// `document`'s lifetime) since UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: the real node/edge data no longer
-/// lives inside `WiresSnapshot` itself, it's read through [`crate::artifacts::wires::wires_working_board`]
+/// lives inside `WiresSnapshot` itself, it's read through [`crate::wires_working_board`]
 /// (the working-scene accessor), which materializes a fresh `DslValue` every call.
 pub fn find_board_node(document: &WiresSnapshot, node_id: &str) -> Option<DslValue> {
-    crate::artifacts::wires::wires_working_board(document)
+    crate::wires_working_board(document)
         .get("nodes")
         .and_then(|value| value.as_array())
         .into_iter()
         .flatten()
-        .find(|node| crate::artifacts::wires::standards::v1::subsets::any::schema::entity_id(node, "id") == Some(node_id))
+        .find(|node| crate::standards::v1::subsets::any::schema::entity_id(node, "id") == Some(node_id))
         .cloned()
 }
 
 pub fn find_board_edge(document: &WiresSnapshot, edge_id: &str) -> Option<DslValue> {
-    crate::artifacts::wires::wires_working_board(document)
+    crate::wires_working_board(document)
         .get("edges")
         .and_then(|value| value.as_array())
         .into_iter()
         .flatten()
-        .find(|edge| crate::artifacts::wires::standards::v1::subsets::any::schema::entity_id(edge, "id") == Some(edge_id))
+        .find(|edge| crate::standards::v1::subsets::any::schema::entity_id(edge, "id") == Some(edge_id))
         .cloned()
 }
 
 pub fn find_relationship<'a>(document: &'a WiresSnapshot, edge_id: &str) -> Option<&'a DslValue> {
-    document.wires_fixture.get("relationships").and_then(|value| value.as_array()).into_iter().flatten().find(|relationship| crate::artifacts::wires::standards::v1::subsets::any::schema::entity_id(relationship, "edgeId") == Some(edge_id))
+    document.wires_fixture.get("relationships").and_then(|value| value.as_array()).into_iter().flatten().find(|relationship| crate::standards::v1::subsets::any::schema::entity_id(relationship, "edgeId") == Some(edge_id))
 }
 //#endregion 🔖️LookupHelpers
 
@@ -108,10 +108,10 @@ impl ArtifactInferrer for WiresInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.reasoning.wires.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `wires_artifact_schema_descriptor`'s registration.
-pub fn wires_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn wires_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.reasoning.wires.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -126,7 +126,7 @@ pub fn wires_artifact_inference_descriptor() -> schema::ArtifactInferenceDescrip
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::wires::empty_wires_snapshot;
+    use crate::empty_wires_snapshot;
     use dsl::DslValue;
     use protocol::Inference;
 
@@ -134,7 +134,7 @@ mod tests {
         let mut snapshot = empty_wires_snapshot();
         let nodes = vec![DslValue::object([("id".into(), DslValue::String("a".into()))]), DslValue::object([("id".into(), DslValue::String("b".into()))])];
         let edges = vec![DslValue::object([("id".into(), DslValue::String("e1".into())), ("source".into(), DslValue::String("a".into())), ("target".into(), DslValue::String("b".into()))])];
-        snapshot.content = crate::artifacts::wires::wires_content_child_with_owner(nodes, edges);
+        snapshot.content = crate::wires_content_child_with_owner(nodes, edges);
         snapshot
     }
 

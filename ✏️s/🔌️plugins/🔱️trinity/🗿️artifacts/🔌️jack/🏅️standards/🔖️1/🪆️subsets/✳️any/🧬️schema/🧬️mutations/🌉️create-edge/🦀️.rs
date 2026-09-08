@@ -1,7 +1,7 @@
 //! 🔗️ TrinityGraph mutation — `CreateEdge`: brings a new id-keyed edge into existence.
-use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::mutations::TrinityGraphMutation;
-use crate::artifacts::jack::{Edge, JackSnapshot};
+use crate::diff::JackDiff;
+use crate::mutations::TrinityGraphMutation;
+use crate::{Edge, JackSnapshot};
 
 //#region 🔖️Mutation
 /// 🔗️ `create-edge` payload — full initial edge payload.

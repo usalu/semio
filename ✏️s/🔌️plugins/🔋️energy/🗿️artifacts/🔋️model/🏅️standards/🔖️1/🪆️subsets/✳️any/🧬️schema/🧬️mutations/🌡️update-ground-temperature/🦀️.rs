@@ -1,8 +1,8 @@
 //! 🌡️ Energy model mutation — `UpdateGroundTemperature`: Sets the whole inseparable ground-temperature facet — twelve monthly building-surface values, twelve monthly shallow values and one deep value are read together by the ground heat transfer solve.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

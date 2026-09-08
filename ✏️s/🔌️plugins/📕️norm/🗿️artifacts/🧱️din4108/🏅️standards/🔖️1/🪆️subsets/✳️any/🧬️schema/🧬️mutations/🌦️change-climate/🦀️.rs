@@ -1,7 +1,7 @@
 //! 🌦️ `change-climate` — sets the DIN 4108 `climate` scalar.
 
 
-use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
+use crate::{Din4108Mutation, Din4108Snapshot};
 use crate::document::ClimateZoneDe;
 
 //#region 🔖️Payload

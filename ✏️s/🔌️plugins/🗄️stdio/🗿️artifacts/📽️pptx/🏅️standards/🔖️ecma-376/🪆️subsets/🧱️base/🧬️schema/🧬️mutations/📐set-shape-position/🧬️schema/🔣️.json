@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/mutation/set-shape-position.json",
+  "$id": "https://semio.tech/schema/s/stdio/pptx/ecma-376/base/mutation/set-shape-position/schema.json",
   "title": "SetShapePosition",
   "type": "object",
   "additionalProperties": false,

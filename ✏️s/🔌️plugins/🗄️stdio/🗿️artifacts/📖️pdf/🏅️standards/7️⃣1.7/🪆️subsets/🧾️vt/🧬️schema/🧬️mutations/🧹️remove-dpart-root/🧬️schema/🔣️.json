@@ -1,15 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/remove-dpart-root.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/remove-dpart-root/schema.json",
   "title": "RemoveDpartRoot",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "mutation"
-  ],
   "properties": {
     "mutation": {
-      "const": "removeDpartRoot"
+      "const": "removeDpartRoot",
+      "description": "Aggregate discriminator spliced in by PdfVtMutation; absent when the payload stands alone."
     }
   }
 }

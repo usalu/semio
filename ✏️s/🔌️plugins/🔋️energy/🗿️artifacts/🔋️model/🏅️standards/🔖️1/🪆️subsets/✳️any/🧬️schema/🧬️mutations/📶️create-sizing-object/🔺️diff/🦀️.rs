@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateSizingObject` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateSizingObject, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -14,6 +14,6 @@ pub fn diff(payload: &super::CreateSizingObject, base: &EnergyModelSnapshot) -> 
     }
     let mut model = base.model.clone();
     model.sizing_objects.push(crate::model::SizingObject { id: payload.id, zone_id: payload.zone_id, sizing_type: payload.sizing_type, design_day_type: payload.design_day_type });
-    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

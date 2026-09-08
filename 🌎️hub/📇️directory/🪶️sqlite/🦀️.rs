@@ -583,19 +583,19 @@ pub struct SqliteDirectory {
 }
 
 impl SqliteDirectory {
-    fn creation_facts(conn: &rusqlite::Connection, user_id: &str, request_id: &str) -> DirectoryResult<Vec<ArtifactCreationFactV1>> {
+    fn creation_facts(conn: &Connection, user_id: &str, request_id: &str) -> DirectoryResult<Vec<ArtifactCreationFactV1>> {
         let mut query = conn.prepare("SELECT payload FROM hub_artifact_creation_fact WHERE actor_user_id = ?1 AND request_id = ?2 ORDER BY revision LIMIT 4").map_err(backend)?;
         let rows = query.query_map(rusqlite::params![user_id, request_id], |row| row.get::<_, String>(0)).map_err(backend)?;
         rows.map(|row| directory::os_pack::json::from_json_str(&row.map_err(backend)?).map_err(backend)).collect()
     }
 
-    fn creation_authority(conn: &rusqlite::Connection, actor: &ArtifactCreationActorV1, space_id: &str, now_ms: u64) -> DirectoryResult<()> {
+    fn creation_authority(conn: &Connection, actor: &ArtifactCreationActorV1, space_id: &str, now_ms: u64) -> DirectoryResult<()> {
         let allowed: i64 = conn.query_row("SELECT EXISTS(SELECT 1 FROM hub_auth_session AS a JOIN hub_user AS u ON u.id = a.user_id JOIN hub_space AS s ON s.id = ?4 JOIN hub_space_membership AS m ON m.space_id = s.id AND m.user_id = u.id WHERE a.id = ?1 AND a.user_id = ?2 AND a.authorization_generation = ?3 AND a.revoked_at IS NULL AND a.expires_at > ?5 AND s.kind <> 'archive' AND m.role = 'author')", rusqlite::params![actor.session_id, actor.user_id, i64::try_from(actor.authorization_generation).map_err(backend)?, space_id, i64::try_from(now_ms).map_err(backend)?], |row| row.get(0)).map_err(backend)?;
         if allowed != 1 { return Err(DirectoryError::Unauthorized); }
         Ok(())
     }
 
-    fn insert_creation_fact(tx: &rusqlite::Transaction<'_>, intent: &ArtifactCreationIntentV1, fact: &ArtifactCreationFactV1) -> DirectoryResult<()> {
+    fn insert_creation_fact(tx: &Transaction<'_>, intent: &ArtifactCreationIntentV1, fact: &ArtifactCreationFactV1) -> DirectoryResult<()> {
         let phase = match fact.body { ArtifactCreationFactBodyV1::Accepted { .. } => "accepted", ArtifactCreationFactBodyV1::Prepared { .. } => "prepared", ArtifactCreationFactBodyV1::Committed { .. } => "committed", ArtifactCreationFactBodyV1::Cancelled => "cancelled", ArtifactCreationFactBodyV1::Failed => "failed" };
         let payload = directory::os_pack::json::to_json_string(fact);
         if payload.len() > 8 * 1024 * 1024 { return Err(DirectoryError::Conflict("artifact creation fact exceeds its bounded envelope".into())); }

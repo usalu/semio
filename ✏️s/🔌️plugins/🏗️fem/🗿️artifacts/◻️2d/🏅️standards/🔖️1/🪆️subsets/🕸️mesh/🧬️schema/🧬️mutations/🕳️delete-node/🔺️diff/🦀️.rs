@@ -6,8 +6,8 @@
 //! an oversight; the committed vector `🚫️removes-node-n3-without-6eab3f` pins it. Every other
 //! guarded `delete-` refuses with `mutation.target-referenced` instead (see `mutations::guards`).
 use super::DeleteNode;
-use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dNodesDelta};
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::diff::{Fem2dDiff, Fem2dNodesDelta};
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteNode, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

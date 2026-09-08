@@ -13,7 +13,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::sequence::schema::mutations::SequenceMutation;
+use crate::schema::mutations::SequenceMutation;
 use protocol::OpBinary;
 
 //#region 🔖️OpText
@@ -32,8 +32,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<SequenceMutation, protocol::ProtocolErr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::sequence::schema::mutations::{connect_steps, create_step, delete_step};
-    use crate::artifacts::sequence::{default_snapshot, SequenceSnapshot, SequenceStep, StepParams};
+    use crate::schema::mutations::{connect_steps, create_step, delete_step};
+    use crate::{default_snapshot, SequenceSnapshot, SequenceStep, StepParams};
     use neural_engine::{Atom, Value};
 
     #[semio_framework_async_macros::async_test]
@@ -45,14 +45,14 @@ mod tests {
     }
 
     fn move_step_for_test() -> SequenceMutation {
-        crate::artifacts::sequence::schema::mutations::move_step("step-1".into(), 42.0, -6.5)
+        crate::schema::mutations::move_step("step-1".into(), 42.0, -6.5)
     }
 
     /// 🧪️ Whole-store round trip: applies a mutation through a real `SequenceStore`, then proves
     /// the resulting envelope survives both the text and binary document-level protocols.
     #[semio_framework_async_macros::async_test]
     async fn sequence_document_text_round_trips_store_with_applied_mutation() {
-        let envelope = store::create_document_envelope::<SequenceSnapshot, SequenceMutation>(crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA, "sequence-text-test", default_snapshot(), None);
+        let envelope = store::create_document_envelope::<SequenceSnapshot, SequenceMutation>(crate::SEQUENCE_DOCUMENT_SCHEMA, "sequence-text-test", default_snapshot(), None);
         let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         doc_store
             .dispatch(store::ArtifactCommand::Apply { mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false })], description: None }).await

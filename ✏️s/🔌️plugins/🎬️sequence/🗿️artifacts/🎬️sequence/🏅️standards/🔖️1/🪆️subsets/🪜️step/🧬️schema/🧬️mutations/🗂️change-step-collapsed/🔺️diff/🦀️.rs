@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeStepCollapsed`.
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::{diff_replace_content, sequence_working_scene, SequenceSnapshot};
+use crate::diff::SequenceDiff;
+use crate::{diff_replace_content, sequence_working_scene, SequenceSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeStepCollapsed, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {

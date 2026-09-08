@@ -1,8 +1,8 @@
 //! 🏘️ Energy model mutation — `CreateZone`: Adds one thermal zone the caller has already chosen an id for — no mutation mints an id, so an undo can name the same zone again.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

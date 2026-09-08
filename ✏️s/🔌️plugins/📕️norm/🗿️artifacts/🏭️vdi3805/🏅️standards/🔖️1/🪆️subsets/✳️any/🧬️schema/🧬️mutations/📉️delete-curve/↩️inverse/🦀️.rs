@@ -1,8 +1,8 @@
 //! ↩️ `delete-curve` — undo re-`create`s the curve from BASE state; missing id ⇒ `Vec::new()`.
 
 use super::DeleteCurve;
-use crate::artifacts::vdi3805::mutations::create_curve;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::mutations::create_curve;
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteCurve, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

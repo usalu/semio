@@ -1,6 +1,6 @@
 //! 🔧 imperative artifact — OpText/OpBinary bridge for `ProcedureMutation`.
 
-pub use crate::artifacts::procedure::schema::mutations::ProcedureMutation;
+pub use crate::schema::mutations::ProcedureMutation;
 
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] =
     &[("create-step", super::create_step::text::TEXT_OPCODE), ("delete-step", super::delete_step::text::TEXT_OPCODE), ("reorder-steps", super::reorder_steps::text::TEXT_OPCODE), ("edit-step-params", super::edit_step_params::text::TEXT_OPCODE)];

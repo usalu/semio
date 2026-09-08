@@ -42,7 +42,7 @@ pub fn build_catalogue_tree(labels: &CadLabels) -> semio_framework_plugin::UiAss
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
+    use crate::standards::v1::subsets::any::schema::inferences::default_document;
     use crate::editor::cad::config::CadConfig;
     use crate::editor::cad::testkit::*;
     use crate::editor::cad::CadPlayApp;

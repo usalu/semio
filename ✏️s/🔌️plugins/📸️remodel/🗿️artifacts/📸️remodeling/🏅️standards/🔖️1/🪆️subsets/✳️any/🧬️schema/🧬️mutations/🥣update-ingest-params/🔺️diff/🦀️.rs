@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `UpdateIngestParams` — the field is always present, so there is no
 //! missing-target case. A non-finite/negative sharpness gate or a zero frame count/stride ⇒ Fatal
 //! `mutation.invariant`; identical params ⇒ Warning `mutation.no-op`.
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::RemodelingDiff;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdateIngestParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

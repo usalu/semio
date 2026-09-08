@@ -1,6 +1,6 @@
 //! 🧬️ VCS diff schema — sparse field delta over the artifact.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the VCS artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -11,7 +11,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.vcs.vcs")]
 pub struct VcsDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::vcs::schema::VcsArtifact>>,
+    pub artifact: Option<Box<crate::schema::VcsArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

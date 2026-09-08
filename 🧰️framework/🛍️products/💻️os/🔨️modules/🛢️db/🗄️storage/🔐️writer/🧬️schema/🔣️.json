@@ -1,0 +1,219 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/db/storage/writer/component.json",
+  "title": "OS Database Storage Writer Authority Contracts",
+  "$defs": {
+    "WriterAuthorityV1": {
+      "title": "WAL Writer Authority V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "capacity", "mutations", "cases", "filesystem", "resultRetirement", "guardRetirement", "backendPressure", "fairRetirement", "maintenanceFairness", "releaseSignal", "controllerBinding", "replication", "controllerFaults"],
+      "properties": {
+        "schema": { "const": "semio.db.wal-writer-authority/v1" },
+        "capacity": { "type": "integer", "minimum": 1 },
+        "controllerFaults": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["coalesced", "outerPanic"],
+          "properties": {
+            "coalesced": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["fault-retained", "healthy-terminal", "fault-retry-terminal"] } },
+            "outerPanic": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["requestedOwners", "executorTurns", "wakesPerOwner", "guardsRetained"],
+              "properties": {
+                "requestedOwners": { "type": "integer", "minimum": 1 },
+                "executorTurns": { "type": "integer", "minimum": 0 },
+                "wakesPerOwner": { "type": "integer", "minimum": 0 },
+                "guardsRetained": { "const": true }
+              }
+            }
+          }
+        },
+        "replication": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["occupiedFollower", "inventoryAfterConflict", "releaseAfter", "snapshotTransfer"],
+          "properties": {
+            "occupiedFollower": { "enum": ["ok", "conflict"] },
+            "inventoryAfterConflict": { "type": "array", "maxItems": 0 },
+            "releaseAfter": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["tail", "up-to-date", "snapshot", "leader-corrupt"] } },
+            "snapshotTransfer": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["pattern", "repetitions", "bytes", "owners", "sameOperation"],
+              "properties": {
+                "pattern": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+                "repetitions": { "type": "integer", "minimum": 1 },
+                "bytes": { "type": "integer", "minimum": 0 },
+                "owners": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["source-result", "independent-input", "source-terminal", "destination-write", "destination-terminal"] } },
+                "sameOperation": { "const": false }
+              }
+            }
+          }
+        },
+        "controllerBinding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "contender", "fenceBeforeCallback", "pinnedResume", "tasksAddedOnRelease", "wakesAtTerminal", "guardFactoryCallsOnConflict", "faultRetryPreservesKey", "maximumStaticBytes"],
+          "properties": {
+            "operation": { "type": "integer", "minimum": 0 },
+            "contender": { "type": "integer", "minimum": 0 },
+            "fenceBeforeCallback": { "enum": ["open", "closed"] },
+            "pinnedResume": { "enum": ["ok", "conflict"] },
+            "tasksAddedOnRelease": { "const": 0 },
+            "wakesAtTerminal": { "const": 1 },
+            "guardFactoryCallsOnConflict": { "const": 0 },
+            "faultRetryPreservesKey": { "const": true },
+            "maximumStaticBytes": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "releaseSignal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["firstEpoch", "writers", "staleRequestAccepted", "oldWaitSurvivesReuse", "requestCompletesRelease", "maximumEpoch"],
+          "properties": {
+            "firstEpoch": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$" },
+            "writers": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["backendGeneration", "writerGeneration", "terminalEpoch"],
+                "properties": {
+                  "backendGeneration": { "type": "string", "pattern": "^[1-9][0-9]{0,19}$" },
+                  "writerGeneration": { "type": "string", "pattern": "^[1-9][0-9]{0,19}$" },
+                  "terminalEpoch": { "type": "string", "pattern": "^[1-9][0-9]{0,19}$" }
+                }
+              }
+            },
+            "staleRequestAccepted": { "const": false },
+            "oldWaitSurvivesReuse": { "const": true },
+            "requestCompletesRelease": { "const": false },
+            "maximumEpoch": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$" }
+          }
+        },
+        "maintenanceFairness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["classes", "continuouslyReady", "firstClassFaults"],
+          "properties": {
+            "classes": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["lost-owner", "page", "platform", "retry", "rejected-backend", "backend-close", "task-close"] } },
+            "continuouslyReady": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 } },
+            "firstClassFaults": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 } }
+          }
+        },
+        "backendPressure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["capacity", "retainedWhenFull", "terminalAfterCapacityReturns"],
+          "properties": {
+            "capacity": { "type": "integer", "minimum": 1 },
+            "retainedWhenFull": { "const": true },
+            "terminalAfterCapacityReturns": { "const": true }
+          }
+        },
+        "fairRetirement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pinnedSlot", "releasingSlot", "maximumOpportunities", "pinnedRetained", "releasingRetired"],
+          "properties": {
+            "pinnedSlot": { "type": "integer", "minimum": 0 },
+            "releasingSlot": { "type": "integer", "minimum": 0 },
+            "maximumOpportunities": { "type": "integer", "minimum": 1 },
+            "pinnedRetained": { "const": true },
+            "releasingRetired": { "const": true }
+          }
+        },
+        "resultRetirement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pages", "terminal"],
+          "properties": {
+            "pages": { "type": "integer", "minimum": 0 },
+            "terminal": { "type": "array", "minItems": 1, "items": { "type": "boolean" } }
+          }
+        },
+        "guardRetirement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "contender", "stages", "terminal"],
+          "properties": {
+            "operation": { "type": "integer", "minimum": 0 },
+            "contender": { "type": "integer", "minimum": 0 },
+            "stages": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["pending-operation", "unlock-error", "unlock-progress", "terminal"] } },
+            "terminal": { "type": "array", "minItems": 1, "items": { "type": "boolean" } }
+          }
+        },
+        "mutations": { "type": "array", "minItems": 6, "maxItems": 6, "uniqueItems": true, "items": { "enum": ["create", "append", "sync", "seal", "truncate", "delete"] } },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "firstGeneration", "steps"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "firstGeneration": { "type": "string", "pattern": "^[1-9][0-9]{0,19}$" },
+              "steps": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["action", "owner", "document", "backend", "expected"],
+                  "properties": {
+                    "action": { "enum": ["acquire", "validate", "release"] },
+                    "owner": { "type": "string", "minLength": 1 },
+                    "document": { "type": "string", "minLength": 1 },
+                    "backend": { "type": "integer", "minimum": 0 },
+                    "expected": { "enum": ["ok", "conflict", "fenced", "exhausted"] }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "filesystem": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sidecar", "independentInstancesConflict", "independentProcessesConflict", "reacquireAfterClose", "unlinkOnClose"],
+          "properties": {
+            "sidecar": { "type": "string", "minLength": 1 },
+            "independentInstancesConflict": { "const": true },
+            "independentProcessesConflict": { "const": true },
+            "reacquireAfterClose": { "const": true },
+            "unlinkOnClose": { "const": false }
+          }
+        }
+      }
+    },
+    "RemoteGuardV1": {
+      "title": "WAL Writer Remote Guard V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "mutations", "cases"],
+      "properties": {
+        "version": { "const": "semio.db.wal-writer-remote-guard.v1" },
+        "mutations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["create", "append", "sync", "seal", "truncateTail", "delete"] } },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["backend", "name", "expect"],
+            "properties": {
+              "backend": { "enum": ["sqlite", "postgres", "neo4j"] },
+              "name": { "type": "string", "minLength": 1 },
+              "holderExit": { "enum": ["explicitClose", "processExitWithoutRelease"] },
+              "expect": { "enum": ["conflictThenAcquire", "reacquire", "unavailableNoWalEffect"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

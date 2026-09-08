@@ -9,22 +9,22 @@
 //! This file is a routing table: `handle` → `FlowCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::artifacts::flow::op::FlowMutation;
+use crate::op::FlowMutation;
 #[cfg(test)]
-use crate::artifacts::flow::schema::mutations::connect_widgets::ConnectWidgets;
+use crate::schema::mutations::connect_widgets::ConnectWidgets;
 #[cfg(test)]
-use crate::artifacts::flow::schema::mutations::create_widget::CreateWidget;
-use crate::artifacts::flow::schema::mutations::delete_widget::DeleteWidget;
-use crate::artifacts::flow::schema::mutations::disconnect_widgets::DisconnectWidgets;
-use crate::artifacts::flow::schema::mutations::move_widgets::MoveWidgets;
+use crate::schema::mutations::create_widget::CreateWidget;
+use crate::schema::mutations::delete_widget::DeleteWidget;
+use crate::schema::mutations::disconnect_widgets::DisconnectWidgets;
+use crate::schema::mutations::move_widgets::MoveWidgets;
 #[cfg(test)]
-use crate::artifacts::flow::schema::mutations::reorder_synapses::ReorderSynapses;
+use crate::schema::mutations::reorder_synapses::ReorderSynapses;
 #[cfg(test)]
-use crate::artifacts::flow::schema::mutations::reorder_widgets::ReorderWidgets;
-use crate::artifacts::flow::schema::mutations::replace_widget::ReplaceWidget;
+use crate::schema::mutations::reorder_widgets::ReorderWidgets;
+use crate::schema::mutations::replace_widget::ReplaceWidget;
 #[cfg(test)]
-use crate::artifacts::flow::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
-use crate::artifacts::flow::{FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
+use crate::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
+use crate::{FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use crate::editor::flow::commands::{
     add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, duplicate_widget, duplicate_widget_step, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, move_media_node, node_graph_edit, node_graph_viewport,
     open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, reorganize, replace_image, run_extension_action, set_catalogue_sections, set_contributions, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_locale,
@@ -38,7 +38,8 @@ use crate::editor::flow::modes::{edit, generate};
 use crate::editor::flow::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::flow::presence::{FlowPresence, FlowPresenceMutation};
 use crate::editor::flow::terminology::{flow_play_labels, FlowPlayLabels};
-use flow::{dag::DagDrawLod, flow_fixture_operations, flow_host_with_session, CameraJson, FlowEvalSession, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC};
+use flow::{semio_framework_artifact_infinite_dag::DagDrawLod, flow_host_with_session, FlowEvalSession, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
+use semio_framework_artifact_flow_flow::{flow_fixture_operations, CameraJson, Widget};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
@@ -553,7 +554,7 @@ fn prepare_flow_artifact(base: &FlowSnapshot, mutation: FlowMutation) -> Result<
             let widget = scene.widgets[index].clone();
             let mut inverses = vec![FlowMutation::CreateWidget(CreateWidget { index, widget })];
             if let Some(layout) = scene.layout.get(&payload.id) {
-                inverses.push(FlowMutation::MoveWidgets(MoveWidgets { entries: vec![flow::FlowLayoutEntry { id: payload.id.clone(), layout: Some(layout.clone()) }] }));
+                inverses.push(FlowMutation::MoveWidgets(MoveWidgets { entries: vec![semio_framework_artifact_flow_flow::FlowLayoutEntry { id: payload.id.clone(), layout: Some(layout.clone()) }] }));
             }
             for (synapse_index, synapse) in scene.synapses.iter().enumerate().filter(|(_, synapse)| synapse.from == payload.id || synapse.to == payload.id) {
                 inverses.push(FlowMutation::ConnectWidgets(ConnectWidgets { index: synapse_index, id: synapse.id.clone(), from: synapse.from.clone(), from_port: synapse.from_port.clone(), to: synapse.to.clone(), to_port: synapse.to_port.clone() }));
@@ -591,7 +592,7 @@ fn prepare_flow_artifact(base: &FlowSnapshot, mutation: FlowMutation) -> Result<
             if scene.synapses.iter().any(|synapse| synapse.from == payload.from && synapse.from_port == payload.from_port && synapse.to == payload.to && synapse.to_port == payload.to_port) {
                 return Err("Flow connect-widgets parallel edge is a no-op".into());
             }
-            scene.synapses.insert(payload.index.min(scene.synapses.len()), flow::SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() });
+            scene.synapses.insert(payload.index.min(scene.synapses.len()), semio_framework_artifact_flow_flow::SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() });
             vec![FlowMutation::DisconnectWidgets(DisconnectWidgets { id: payload.id.clone() })]
         }
         FlowMutation::DisconnectWidgets(payload) => {
@@ -636,7 +637,7 @@ fn prepare_flow_artifact(base: &FlowSnapshot, mutation: FlowMutation) -> Result<
                 if entry.layout.as_ref().is_some_and(|layout| !layout.x.is_finite() || !layout.y.is_finite()) {
                     return Err(format!("Flow move-widget target {:?} has a non-finite position", entry.id));
                 }
-                inverse_entries.push(flow::FlowLayoutEntry { id: entry.id.clone(), layout: scene.layout.get(&entry.id).cloned() });
+                inverse_entries.push(semio_framework_artifact_flow_flow::FlowLayoutEntry { id: entry.id.clone(), layout: scene.layout.get(&entry.id).cloned() });
             }
             for entry in &payload.entries {
                 if let Some(layout) = &entry.layout {
@@ -655,9 +656,9 @@ fn prepare_flow_artifact(base: &FlowSnapshot, mutation: FlowMutation) -> Result<
                 return Err("Flow duplicate-widget exceeds its fixed scene-item cap".into());
             }
             let source = scene.widgets.iter().find(|widget| flow_widget_id(widget) == payload.source_id).ok_or_else(|| format!("Flow duplicate-widget source {:?} is missing", payload.source_id))?;
-            let copy = crate::artifacts::flow::schema::widget_with_id(source, payload.new_id.clone());
+            let copy = crate::schema::widget_with_id(source, payload.new_id.clone());
             scene.widgets.push(copy);
-            scene.synapses.push(flow::SynapseSpec { id: payload.synapse_id.clone(), from: payload.source_id.clone(), from_port: payload.from_port.clone(), to: payload.new_id.clone(), to_port: payload.to_port.clone() });
+            scene.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: payload.synapse_id.clone(), from: payload.source_id.clone(), from_port: payload.from_port.clone(), to: payload.new_id.clone(), to_port: payload.to_port.clone() });
             vec![FlowMutation::DisconnectWidgets(DisconnectWidgets { id: payload.synapse_id.clone() }), FlowMutation::DeleteWidget(DeleteWidget { id: payload.new_id.clone() })]
         }
     };
@@ -941,8 +942,8 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                         FlowCommand::RemoveWidget(payload) => Some(FlowMutation::DeleteWidget(DeleteWidget { id: payload.widget_id.clone() })),
                         FlowCommand::Disconnect(payload) => Some(FlowMutation::DisconnectWidgets(DisconnectWidgets { id: payload.synapse_id.clone() })),
                         FlowCommand::MoveMediaNode(payload) if payload.x.is_finite() && payload.y.is_finite() => {
-                            let requested = flow::WidgetLayout { x: payload.x, y: payload.y };
-                            (scene.layout.get(&payload.node_id) != Some(&requested)).then(|| FlowMutation::MoveWidgets(MoveWidgets { entries: vec![flow::FlowLayoutEntry { id: payload.node_id.clone(), layout: Some(requested) }] }))
+                            let requested = semio_framework_artifact_flow_flow::WidgetLayout { x: payload.x, y: payload.y };
+                            (scene.layout.get(&payload.node_id) != Some(&requested)).then(|| FlowMutation::MoveWidgets(MoveWidgets { entries: vec![semio_framework_artifact_flow_flow::FlowLayoutEntry { id: payload.node_id.clone(), layout: Some(requested) }] }))
                         }
                         FlowCommand::MoveMediaNode(_) => None,
                         _ => unreachable!(),
@@ -1774,7 +1775,7 @@ impl ArtifactEditor for FlowPlayApp {
 
     type Command = FlowCommand;
 
-    const DIALECT: Dialect = crate::artifacts::flow::FLOW_DIALECT;
+    const DIALECT: Dialect = crate::FLOW_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
@@ -1786,7 +1787,7 @@ impl ArtifactEditor for FlowPlayApp {
     }
 
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::flow::retirement::store_owners())
+        Some(crate::retirement::store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -1889,7 +1890,7 @@ impl ArtifactEditor for FlowPlayApp {
         Box::new(FlowInstanceOperationOwner::new())
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::flow::config::schema::app_schema_descriptor())
     }
 
@@ -1940,7 +1941,7 @@ impl ArtifactEditor for FlowPlayApp {
     /// persisted document data to register — see `flow_graph_selection_domains`'s doc comment.
     fn interaction_topology(doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>) -> InteractionTopology {
         let live = doc.snapshot.to_fixture();
-        let mut ordered: Vec<TopologyNode> = live.widgets.iter().map(|widget| TopologyNode { id: flow_graph_node_target_id(crate::artifacts::flow::schema::widget_id(widget)), granularity: "node".into(), parent: None }).collect();
+        let mut ordered: Vec<TopologyNode> = live.widgets.iter().map(|widget| TopologyNode { id: flow_graph_node_target_id(crate::schema::widget_id(widget)), granularity: "node".into(), parent: None }).collect();
         ordered.extend(live.synapses.iter().map(|synapse| TopologyNode { id: flow_graph_edge_target_id(&synapse.id), granularity: "edge".into(), parent: None }));
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(FLOW_INTERACTION_GRAPH.to_string(), DomainTopology { ordered });
@@ -2047,7 +2048,7 @@ pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowConfig, session: &F
     if !mutate(&mut host) {
         return Vec::new();
     }
-    flow_fixture_operations(&snapshot.to_fixture(), &host.fixture).unwrap_or_default().into_iter().filter_map(crate::artifacts::flow::schema::mutations::from_framework_mutation).collect()
+    flow_fixture_operations(&snapshot.to_fixture(), &host.fixture).unwrap_or_default().into_iter().filter_map(crate::schema::mutations::from_framework_mutation).collect()
 }
 //#endregion 🔖️Host
 
@@ -2084,11 +2085,11 @@ pub fn focus_selection_camera(fixture: &FlowSnapshot, config: &FlowConfig, sessi
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
 pub fn create_flow_app() -> AppDefinition {
-    Editor::builder(crate::artifacts::flow::FLOW_DIALECT)
+    Editor::builder(crate::FLOW_DIALECT)
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
         .document(["semio", "flow"])
-        .artifact_kind(crate::artifacts::flow::artifact_kind())
+        .artifact_kind(crate::artifact_kind())
         .icon_id("flow")
         .mode_def(edit::definition())
         .mode_def(generate::definition())
@@ -2280,7 +2281,7 @@ pub(crate) mod testkit {
     pub(crate) async fn register_content_child(app: &mut FlowApp) {
         let snapshot = app.snapshot().expect("Flow parent snapshot");
         let fixture = snapshot.to_fixture();
-        let content = crate::artifacts::flow::flow_content_snapshot_from_working(&fixture.widgets, &fixture.synapses, &fixture.layout);
+        let content = crate::flow_content_snapshot_from_working(&fixture.widgets, &fixture.synapses, &fixture.layout);
         let dialect = snapshot.content.target.dialect.clone();
         let member = create_semio_member(&snapshot.content.child_id, &dialect, &content.encode_pack()).await.expect("Flow child member");
         app.register_child("content", snapshot.content.child_id, dialect, member).await.expect("register Flow content child");
@@ -2507,27 +2508,27 @@ mod tests {
         let label = fixture["label"]["unit"].as_str().unwrap().repeat(fixture["label"]["repetitions"].as_u64().unwrap() as usize);
         assert_eq!(label.len(), fixture["label"]["expectedBytes"].as_u64().unwrap() as usize);
         scene["widgets"][1]["label"] = Value::String(label);
-        let (widgets, synapses, layout) = crate::artifacts::flow::schema::mutations::decode_flow_scene_json(&scene.to_string()).unwrap();
-        let base = FlowSnapshot { content: crate::artifacts::flow::flow_content_child_handle(&widgets, &synapses, &layout), ..FlowSnapshot::default() };
+        let (widgets, synapses, layout) = crate::schema::mutations::decode_flow_scene_json(&scene.to_string()).unwrap();
+        let base = FlowSnapshot { content: crate::flow_content_child_handle(&widgets, &synapses, &layout), ..FlowSnapshot::default() };
         let mutation = FlowMutation::DeleteWidget(DeleteWidget { id: fixture["targetId"].as_str().unwrap().into() });
-        let ordinary_inverse = crate::artifacts::flow::schema::mutations::inverse_flow_mutation(&base, &mutation);
+        let ordinary_inverse = crate::schema::mutations::inverse_flow_mutation(&base, &mutation);
         let (post, prepared_inverse, _) = prepare_flow_artifact(&base, mutation).unwrap();
-        let forward = crate::artifacts::flow::flow_working_scene(&post);
+        let forward = crate::flow_working_scene(&post);
         assert_eq!(serde_json::to_value(forward.synapses.iter().map(|edge| &edge.id).collect::<Vec<_>>()).unwrap(), fixture["expectedForwardSynapses"]);
         for inverses in [ordinary_inverse, prepared_inverse] {
             let indices: Vec<_> = inverses.iter().filter_map(|inverse| match inverse { FlowMutation::ConnectWidgets(value) => Some(value.index), _ => None }).collect();
             assert_eq!(serde_json::to_value(indices).unwrap(), fixture["expectedInverseIndices"]);
             let mut restored = post.clone();
-            for inverse in inverses { crate::artifacts::flow::schema::mutations::apply_flow_mutation(&mut restored, &inverse).unwrap(); }
-            assert_eq!(crate::artifacts::flow::schema::mutations::encode_flow_projection_json(&restored), crate::artifacts::flow::schema::mutations::encode_flow_projection_json(&base));
+            for inverse in inverses { crate::schema::mutations::apply_flow_mutation(&mut restored, &inverse).unwrap(); }
+            assert_eq!(crate::schema::mutations::encode_flow_projection_json(&restored), crate::schema::mutations::encode_flow_projection_json(&base));
         }
     }
 
     /// 🗂️ Serde is the independent Rust JSON oracle for the language-agnostic Flow/Note route census.
     #[test]
     fn action_cohort_fixtures_match_the_exact_route_census() {
-        let flow: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🎬️action-cohort/🔣️.json"))).expect("Flow action-cohort fixture must be valid JSON");
-        let note: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🗒️note/🧪️action-cohort/🔣️.json"))).expect("Note action-cohort fixture must be valid JSON");
+        let flow: Value = serde_json::from_str(include_str!("../../../../../../../🎬️action-cohort/🔣️.json")).expect("Flow action-cohort fixture must be valid JSON");
+        let note: Value = serde_json::from_str(include_str!("../../../../../../../../🗒️note/🧪️action-cohort/🔣️.json")).expect("Note action-cohort fixture must be valid JSON");
         for (fixture, owner, total, framework_owned) in [(&flow, "FlowPlayApp", 37_u64, 0_usize), (&note, "NotePlayApp", 36_u64, 0_usize)] {
             assert_eq!(fixture["owner"], owner);
             assert_eq!(fixture["routeCount"].as_u64(), Some(total));
@@ -2609,7 +2610,7 @@ mod tests {
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) fn every_command() -> Vec<FlowCommand> {
-        use flow::CameraJson;
+        use semio_framework_artifact_flow_flow::CameraJson;
         vec![
             FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(10.0), y: None }),
             FlowCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "n1".into() }),
@@ -2755,7 +2756,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_on_disjoint_edits() {
-        use crate::artifacts::flow::schema::widget_id;
+        use crate::schema::widget_id;
         use semio_framework_plugin::testkit::paired_apps;
         let (mut instance_a, mut instance_b) = paired_apps::<EditorApp<FlowPlayApp>>("mem://flow-convergence").await;
 
@@ -2902,4 +2903,4 @@ mod tests {
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-use crate::artifacts::flow::flow_content_child_handle_bounded;
+use crate::flow_content_child_handle_bounded;

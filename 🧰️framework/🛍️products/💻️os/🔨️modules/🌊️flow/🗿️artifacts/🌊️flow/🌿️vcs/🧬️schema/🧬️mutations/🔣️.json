@@ -1,0 +1,253 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/flow/flow/vcs/mutations.json",
+  "title": "FlowMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "./➕️add-widget/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "addWidget"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "index",
+          "operation",
+          "widget"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "./🗑️remove-widget/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "removeWidget"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "operation"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "./↔️move-widget/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "moveWidget"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "operation",
+          "toIndex"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "./🩹change-widget/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "changeWidget"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "operation",
+          "widget"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "./🔗️add-synapse/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "addSynapse"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "index",
+          "operation",
+          "synapse"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "./✂️remove-synapse/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "removeSynapse"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "operation"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "./🔀️move-synapse/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "moveSynapse"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "operation",
+          "toIndex"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "./🔄change-synapse/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "changeSynapse"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "operation",
+          "synapse"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "./📐️change-layout/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "changeLayout"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "entries",
+          "operation"
+        ]
+      }
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "./♻️replace-flow-fixture/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "replaceFlowFixture"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "fixture",
+          "operation"
+        ]
+      }
+    }
+  ]
+}

@@ -9,8 +9,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use crate::artifacts::en1997::schema::mutations::En1997Mutation;
-use crate::artifacts::en1997::schema::mutations::{
+pub use crate::document_schema::mutations::En1997Mutation;
+use crate::document_schema::mutations::{
     change_alpha_s, change_annex, change_b_m, change_c_kpa, change_d_f_m, change_design_approach, change_e_s_mpa, change_footing_area_m2, change_gamma_kn_m3, change_h_ed_kn, change_n_pile_ed_kn, change_nu, change_phi_deg, change_pile_base_area_m2,
     change_pile_d_m, change_pile_l_m, change_pile_n_profiles, change_q_b_kpa, change_q_s_kpa, change_settlement_limit_mm, change_v_ed_kn, change_z_investigated_m,
 };

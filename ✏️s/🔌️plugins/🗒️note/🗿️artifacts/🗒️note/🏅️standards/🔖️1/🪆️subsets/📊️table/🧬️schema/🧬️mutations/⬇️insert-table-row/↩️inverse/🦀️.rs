@@ -1,13 +1,13 @@
 //! ↩️ Inverse for `InsertTableRow`.
 use super::InsertTableRow;
-use crate::artifacts::note::schema::mutations::NoteMutation;
-use crate::artifacts::note::schema::mutations::RemoveTableRow;
-use crate::artifacts::note::NoteSnapshot;
+use crate::schema::mutations::NoteMutation;
+use crate::schema::mutations::RemoveTableRow;
+use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &InsertTableRow, base: &NoteSnapshot) -> Vec<NoteMutation> {
-    match crate::artifacts::note::schema::find_block(&base.blocks, &payload.id) {
-        Some(crate::artifacts::note::NoteBlockNode::Table { .. }) => vec![NoteMutation::RemoveTableRow(RemoveTableRow { id: payload.id.clone() })],
+    match crate::schema::find_block(&base.blocks, &payload.id) {
+        Some(crate::NoteBlockNode::Table { .. }) => vec![NoteMutation::RemoveTableRow(RemoveTableRow { id: payload.id.clone() })],
         _ => Vec::new(),
     }
 }

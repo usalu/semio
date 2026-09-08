@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/workflow/workflow/mutation/unbind-parameter-field/schema.json",
+  "title": "UnbindParameterField",
+  "type": "object",
+  "properties": {
+    "node_id": {
+      "type": "string"
+    },
+    "field_path": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "node_id",
+    "field_path"
+  ],
+  "additionalProperties": false
+}

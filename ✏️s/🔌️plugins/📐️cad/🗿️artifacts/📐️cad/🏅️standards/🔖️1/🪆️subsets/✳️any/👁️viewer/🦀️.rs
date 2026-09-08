@@ -4,8 +4,8 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling `✏️editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::forest_play_scene;
-use crate::artifacts::cad::{CadSnapshot, CAD_DIALECT, CAD_DOCUMENT_SCHEMA};
+use crate::standards::v1::subsets::any::schema::inferences::forest_play_scene;
+use crate::{CadSnapshot, CAD_DIALECT, CAD_DOCUMENT_SCHEMA};
 use crate::viewer::cad::modes::view;
 use crate::viewer::cad::modes::view::windows::shape;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
@@ -39,7 +39,7 @@ pub struct CadViewer;
 
 impl ArtifactViewer for CadViewer {
     type Snapshot = CadSnapshot;
-    type Mutation = crate::artifacts::cad::op::CadMutation;
+    type Mutation = crate::op::CadMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

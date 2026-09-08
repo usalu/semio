@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateLoadCase`.
 use super::CreateLoadCase;
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dLoadCasesDelta};
-use crate::artifacts::fem3d::mutations::resolve_load;
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::diff::{Fem3dDiff, Fem3dLoadCasesDelta};
+use crate::mutations::resolve_load;
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateLoadCase, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

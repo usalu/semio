@@ -5,7 +5,7 @@
 //! parent/child object graph — it is a single flat catalog of rim placements — so this is a plain
 //! whole-snapshot derivation, not a per-entity `InferredField` chain.
 
-use crate::artifacts::block5d::Block5dSnapshot;
+use crate::Block5dSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned bounding box in the part kind's local 3d space.
@@ -52,7 +52,7 @@ pub fn compute_block5d_bounds(snapshot: &Block5dSnapshot) -> Block5dBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::block5d::Block5dGripTemplate;
+    use crate::Block5dGripTemplate;
 
     fn grip(id: &str, position: [f64; 3], radius_3d: f64) -> Block5dGripTemplate {
         Block5dGripTemplate { id: id.into(), grip_kind: "rope".into(), angle: 0.0, radius_2d: 0.0, position, direction: [0.0, 1.0, 0.0], radius_3d }

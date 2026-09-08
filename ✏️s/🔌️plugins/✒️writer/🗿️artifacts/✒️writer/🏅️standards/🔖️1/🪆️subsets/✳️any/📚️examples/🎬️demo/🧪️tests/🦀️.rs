@@ -6,8 +6,8 @@ async fn primary_asset_is_nonempty() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::artifacts::writer::schema::inferences::WriterInference;
-    use crate::artifacts::writer::WriterSnapshot;
+    use crate::schema::inferences::WriterInference;
+    use crate::WriterSnapshot;
     use protocol::Inference;
     let snapshot = WriterSnapshot::default();
     assert_eq!(WriterInference::infer(&snapshot), WriterInference::infer(&snapshot));
@@ -15,8 +15,8 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::artifacts::writer::schema::inferences::WriterInference;
-    use crate::artifacts::writer::WriterSnapshot;
+    use crate::schema::inferences::WriterInference;
+    use crate::WriterSnapshot;
     use protocol::Inference;
     assert_eq!(WriterInference::infer(&WriterSnapshot::default()), WriterInference::default());
 }

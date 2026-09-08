@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/host/activation/component.json",
+  "title": "Semio OS Plugin Host Activation",
+  "$defs": {
+    "ActivationAdmissionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "cases"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "stage", "actorRetained", "instantiations", "drops", "admitted"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "stage": { "$ref": "#/$defs/ActivationStage" },
+              "actorRetained": { "type": "boolean" },
+              "instantiations": { "type": "integer", "minimum": 0, "maximum": 1 },
+              "drops": { "type": "integer", "minimum": 0, "maximum": 1 },
+              "admitted": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "ActivationStage": { "enum": ["record", "quarantine", "shard", "instantiate", "register", "complete"] }
+  }
+}

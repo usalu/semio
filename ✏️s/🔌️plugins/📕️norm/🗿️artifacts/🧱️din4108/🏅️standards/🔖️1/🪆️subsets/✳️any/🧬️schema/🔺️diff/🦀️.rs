@@ -1,6 +1,6 @@
 //! 🧬️ Din4108 diff schema — sparse field delta over the artifact.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the Din4108 artifact.
@@ -11,7 +11,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.din4108")]
 pub struct Din4108Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::din4108::schema::Din4108Artifact>>,
+    pub artifact: Option<Box<crate::document_schema::Din4108Artifact>>,
     #[state(artifact)]
     pub category: Option<String>,
     #[state(artifact)]
@@ -68,6 +68,6 @@ pub struct Din4108StringList {
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din4108LayerList {
-    pub values: Vec<crate::artifacts::din4108::LayerDocument>,
+    pub values: Vec<crate::LayerDocument>,
 }
 //#endregion 🔖️DeltaHelpers

@@ -3,8 +3,8 @@
 //! 🩹️ w5b-close fix (stdio_gap/foreign-lag, not svg/dwg-pattern scope — see w5b-close-report.md):
 //! see the paired export leaf's doc comment. Mirrors it going through stdio's own
 //! `JsonSnapshot::to_serde_value` bridge and stdio's own real `parse_json_text`.
-use crate::artifacts::shooting::ShootingSnapshot;
-use crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA;
+use crate::ShootingSnapshot;
+use crate::SHOOTING_DOCUMENT_SCHEMA;
 use semio_s_artifact_stdio_json::schema::snapshot::{parse_json_text, JsonSnapshot};
 
 pub fn register() {}

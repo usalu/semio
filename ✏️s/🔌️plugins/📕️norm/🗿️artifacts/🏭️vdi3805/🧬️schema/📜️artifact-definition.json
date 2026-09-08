@@ -1,0 +1,9 @@
+{
+  "definition_version": 1,
+  "id": "s.norm.vdi3805",
+  "artifact": "vdi3805",
+  "directory": "🏭️vdi3805",
+  "rust_package": "semio-s-artifact-norm-vdi3805",
+  "nx_project": "@semio-tech/norm-vdi3805-rs",
+  "dependencies": []
+}

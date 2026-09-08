@@ -1,19 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/move-vertex.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/move-vertex/schema.json",
   "title": "MoveVertex",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "newPoint",
-    "vertexId"
+    "vertex_id",
+    "new_point"
   ],
   "properties": {
-    "vertexId": {
+    "vertex_id": {
       "type": "string"
     },
-    "newPoint": {
-      "title": "SemioPoint3",
+    "new_point": {
+      "$ref": "#/$defs/SemioPoint3"
+    }
+  },
+  "$defs": {
+    "SemioPoint3": {
       "type": "object",
       "additionalProperties": false,
       "required": [

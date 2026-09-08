@@ -1,7 +1,7 @@
 //! 🧬️ Drawing snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::drawing::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode, DRAWING_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode, DRAWING_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot

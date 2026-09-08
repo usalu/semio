@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle3d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dSnapshot, Puzzle3dTargetVolume};
+use crate::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dSnapshot, Puzzle3dTargetVolume};
 use artifact_schema::ArtifactSchema;
 //#region 🔖️Artifact
 /// 🧬️ Full puzzle3d artifact state across the artifact, presence and config lanes.
@@ -206,7 +206,7 @@ pub fn puzzle3d_artifact_schema_descriptor() -> artifact_schema::ArtifactSchemaD
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::puzzle3d::{Puzzle3dDiff, Puzzle3dMutation, Puzzle3dSnapshot};
+    use crate::{Puzzle3dDiff, Puzzle3dMutation, Puzzle3dSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -258,7 +258,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+    use crate::Puzzle3dSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -556,7 +556,7 @@ pub struct FixtureObject {
     pub object_kind: Option<String>,
     #[cfg_attr(test, serde(default))]
     #[value(default)]
-    pub anchor: crate::artifacts::puzzle3d::Puzzle3dObjectAnchor,
+    pub anchor: crate::Puzzle3dObjectAnchor,
     #[cfg_attr(test, serde(rename = "meshUrl", default))]
     #[value(rename = "meshUrl", default)]
     pub mesh_url: Option<String>,
@@ -990,9 +990,9 @@ mod precompute_model_tests {
     /// `puzzle3d-default` manifest.
     #[test]
     fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
-        let fixture = crate::artifacts::puzzle3d::dsl::parse_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("concrete-forest example parses as dsl");
+        let fixture = crate::dsl::parse_dsl(crate::dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("concrete-forest example parses as dsl");
         let catalogs: KindCatalogBundle = serde_json::from_value(serde_json::to_value(&fixture.meta.kind_catalogs).unwrap()).unwrap();
-        let manifest = graph::manifest::manifest_by_id("puzzle3d-default").expect("puzzle3d-default manifest must be registered");
+        let manifest = semio_framework_graph::manifest::manifest_by_id("puzzle3d-default").expect("puzzle3d-default manifest must be registered");
         let wire_kind_ids: std::collections::BTreeSet<_> = manifest.wire_kinds.iter().map(|row| row.id.as_str()).collect();
         let edge_kind_ids: std::collections::BTreeSet<_> = manifest.edge_kinds.iter().map(|row| row.id.as_str()).collect();
         for vortex in &catalogs.vortices {

@@ -1,8 +1,8 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-mesh-params`.
 
-use crate::artifacts::remodeling::mutations::update_mesh_params;
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::{MeshParams, RemodelingSnapshot};
+use crate::mutations::update_mesh_params;
+use crate::op::RemodelingMutation;
+use crate::{MeshParams, RemodelingSnapshot};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

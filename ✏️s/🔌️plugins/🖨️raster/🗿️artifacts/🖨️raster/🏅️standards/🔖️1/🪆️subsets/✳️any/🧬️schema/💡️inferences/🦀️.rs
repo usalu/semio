@@ -4,7 +4,7 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::raster::RasterSnapshot;
+use crate::RasterSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
@@ -53,7 +53,7 @@ impl protocol::InferenceSpec<RasterSnapshot> for RasterInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::raster::standards::v1::subsets::any::schema::RasterBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::RasterBuilder {
     type Snapshot = RasterSnapshot;
     type Inference = RasterInference;
 }

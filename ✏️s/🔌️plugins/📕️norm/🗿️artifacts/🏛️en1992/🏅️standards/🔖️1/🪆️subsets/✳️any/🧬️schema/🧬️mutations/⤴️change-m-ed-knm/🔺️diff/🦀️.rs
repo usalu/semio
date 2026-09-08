@@ -1,8 +1,8 @@
 //! 🔺️ `change-m-ed-knm` sparse diff construction — writes only `En1992Diff.m_ed_knm` from the payload.
 
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::change_m_ed_knm::ChangeMEdKnm;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::change_m_ed_knm::ChangeMEdKnm;
+use crate::En1992Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeMEdKnm, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {

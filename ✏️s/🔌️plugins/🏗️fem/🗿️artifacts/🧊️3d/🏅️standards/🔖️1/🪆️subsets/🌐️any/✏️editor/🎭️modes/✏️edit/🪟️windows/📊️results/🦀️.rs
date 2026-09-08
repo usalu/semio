@@ -12,8 +12,8 @@
 
 use crate::app_surface::{DisplayMode, ResultDisplay};
 #[cfg(test)]
-use crate::artifacts::fem3d::Fem3dSnapshot;
-use crate::artifacts::fem3d::FemCamera;
+use crate::Fem3dSnapshot;
+use crate::FemCamera;
 use crate::editor::fem3d::config::Fem3dConfig;
 use semio_framework_plugin::BuiltNode;
 #[cfg(test)]
@@ -99,10 +99,10 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> semio_framework_plugin:
 }
 
 /// 👁️ Adopts the immutable mounted result packet without solving, meshing, sorting, or encoding during render.
-pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut scene =
         semio_framework_plugin::world3d_scene(crate::editor::fem3d::fem3d_camera_json(camera), "[]".into(), "[]".into(), semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default());
-    scene.snapshot = visual.map(crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease::snapshot);
+    scene.snapshot = visual.map(crate::live_visual::Fem3dPageVisualLease::snapshot);
     eprintln!("[DEBUG] fem3d results window render: liveVisualLease={} sceneSnapshot={}", visual.is_some(), scene.snapshot.is_some());
     crate::app_surface::world_3d_surface(FEM3D_BODY_RESULTS, scene)
 }

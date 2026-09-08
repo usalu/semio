@@ -2,9 +2,9 @@
 //! `blocks` Vecs (one patch entry if `step_id == to_step_id`, two otherwise).
 
 use super::mutation::MoveBlockToStep;
-use crate::artifacts::forms::diff::text::forms_diff_from_delta;
-use crate::artifacts::forms::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
-use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
+use crate::diff::text::forms_diff_from_delta;
+use crate::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
+use crate::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
 pub fn diff_move_block_to_step(payload: &MoveBlockToStep, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {

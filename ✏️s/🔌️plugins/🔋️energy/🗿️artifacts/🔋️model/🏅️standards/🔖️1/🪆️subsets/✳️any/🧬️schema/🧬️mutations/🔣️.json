@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/mutation.json",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutations.json",
   "title": "EnergyModelMutation",
   "description": "One handcrafted semantic mutation kind per $defs entry - the tagged union EnergyModelMutation dispatches on.",
   "oneOf": [

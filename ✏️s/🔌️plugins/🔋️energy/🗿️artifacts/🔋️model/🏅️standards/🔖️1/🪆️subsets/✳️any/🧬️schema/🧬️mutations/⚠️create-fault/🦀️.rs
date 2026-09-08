@@ -1,8 +1,8 @@
 //! ⚠️ Energy model mutation — `CreateFault`: Adds one equipment fault. `targetEquipmentId` is checked against `ideal_loads` because that is the collection the kernel actually matches it against (`SystemSubstepStage::Fault` compares `fault.target_equipment_id == ideal.id`); the field's own type carries no discriminator, so this is the only referent the engine gives it.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

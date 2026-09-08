@@ -4,13 +4,13 @@
 //! `keyword key1=value1 key2=value2 ...`. `🦀️.rs`'s `op` shim re-exports this module's `*`
 //! (constants only — the trait impls below attach directly to `FormMutation`).
 
-pub use crate::artifacts::forms::mutations::FormMutation;
+pub use crate::mutations::FormMutation;
 
-use crate::artifacts::forms::mutations::{
+use crate::mutations::{
     change_form_title::mutation::ChangeFormTitle, change_step_description::mutation::ChangeStepDescription, create_block::mutation::CreateBlock, create_step::mutation::CreateStep, delete_block::mutation::DeleteBlock,
     delete_step::mutation::DeleteStep, move_block_to_step::mutation::MoveBlockToStep, rename_step::mutation::RenameStep, reorder_step::mutation::ReorderStep, replace_block::mutation::ReplaceBlock,
 };
-use crate::artifacts::forms::{FormQuestion, FormStep};
+use crate::{FormQuestion, FormStep};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");

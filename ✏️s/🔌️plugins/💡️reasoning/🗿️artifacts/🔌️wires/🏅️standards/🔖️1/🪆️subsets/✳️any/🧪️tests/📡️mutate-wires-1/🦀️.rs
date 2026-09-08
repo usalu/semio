@@ -153,8 +153,8 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_reasoning::artifacts::wires::standards::v1::subsets::any::schema::mutations::{apply_wires_mutation_reporting, decode_wires_mutation_json, inverse_wires_mutation_steps, WiresMutation};
-    use semio_s_plugin_reasoning::artifacts::wires::standards::v1::subsets::any::schema::snapshot::{decode_wires_snapshot_json, encode_wires_snapshot_json, parse_wires_dsl, print_wires_dsl, wires_board_summary, WiresSnapshot};
+    use semio_s_artifact_reasoning_wires::standards::v1::subsets::any::schema::mutations::{apply_wires_mutation_reporting, decode_wires_mutation_json, inverse_wires_mutation_steps, WiresMutation};
+    use semio_s_artifact_reasoning_wires::standards::v1::subsets::any::schema::snapshot::{decode_wires_snapshot_json, encode_wires_snapshot_json, parse_wires_dsl, print_wires_dsl, wires_board_summary, WiresSnapshot};
 
     //#region 🔖️FixtureDecode
     fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<WiresSnapshot, String> {

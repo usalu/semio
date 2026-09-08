@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle3d snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, PUZZLE_3D_SCHEMA};
+use crate::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, PUZZLE_3D_SCHEMA};
 use artifact_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot

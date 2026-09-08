@@ -4,8 +4,8 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling mutation-capable module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::flow::op::FlowMutation;
-use crate::artifacts::flow::{FlowSnapshot, FLOW_DIALECT, FLOW_DOCUMENT_SCHEMA};
+use crate::op::FlowMutation;
+use crate::{FlowSnapshot, FLOW_DIALECT, FLOW_DOCUMENT_SCHEMA};
 use crate::viewer::flow::modes::view;
 use crate::viewer::flow::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;
@@ -51,7 +51,7 @@ impl ArtifactViewer for FlowViewer {
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
 
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::flow::retirement::store_owners())
+        Some(crate::retirement::store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {

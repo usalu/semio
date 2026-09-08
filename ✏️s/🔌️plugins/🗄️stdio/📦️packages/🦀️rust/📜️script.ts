@@ -848,16 +848,6 @@ class BenchScript extends BundleScript {
   }
 }
 
-/** 🧩 Builds the root plugin's optimized WASI-P2 component without making stdio a cdylib dependency. */
-class BuildWasmReleaseScript extends BundleScript {
-  run(): void {
-    runCmd("cargo", ["rustc", "-p", "semio-s-plugin-stdio", "--profile", COMPONENT_PROFILE, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2"], {
-      cwd: this.repoRoot,
-      budgetMs: buildBudgetMs(),
-    });
-  }
-}
-
 /** @emoji 🛂️ Builds this crate's `wasm32-wasip2` component and re-emits `🛂️.descriptor.semio` +
  * `🔣️.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
  * `📇️registry:check`'s own descriptor-gate warning tells a developer to run. */
@@ -1014,6 +1004,6 @@ class CatalogRootScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("bench", BenchScript).register("build-wasm-release", BuildWasmReleaseScript).register("describe", DescribeScript).register("catalog-root", CatalogRootScript).register("flow-retained-decode-check", FlowRetainedDecodeScript).register("artifact-directory-wiring", ArtifactDirectoryWiringScript).register("subset-directory-wiring", SubsetDirectoryWiringScript).register("home-io-surface", HomeIoSurfaceScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("bench", BenchScript).register("describe", DescribeScript).register("catalog-root", CatalogRootScript).register("flow-retained-decode-check", FlowRetainedDecodeScript).register("artifact-directory-wiring", ArtifactDirectoryWiringScript).register("subset-directory-wiring", SubsetDirectoryWiringScript).register("home-io-surface", HomeIoSurfaceScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

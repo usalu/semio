@@ -4,7 +4,7 @@
 //! over typed `DwgGeometry` fields (not hand-rolled byte manipulation), but not full CAD fidelity,
 //! so this hop is `IoFidelity::Lossy`.
 
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -22,7 +22,7 @@ impl Deserializer<NoteSnapshot> for DwgIntoNote {
             return Err(IoError { message: "DwgIntoNote: expected a binary dwg payload".to_string(), diagnostics: Vec::new() });
         };
         let drawing = dwg_from_bytes(bytes).map_err(|error| IoError { message: format!("DwgIntoNote: {error}"), diagnostics: Vec::new() })?;
-        let value = crate::artifacts::note::io::note_document_json_from_dwg(&drawing).map_err(|error| IoError { message: format!("DwgIntoNote: {error}"), diagnostics: Vec::new() })?;
+        let value = crate::io::note_document_json_from_dwg(&drawing).map_err(|error| IoError { message: format!("DwgIntoNote: {error}"), diagnostics: Vec::new() })?;
         let snapshot: NoteSnapshot = dsl::os_pack::from_json_str(&value.to_string()).map_err(|error| IoError { message: format!("DwgIntoNote: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(snapshot))
     }

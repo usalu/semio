@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/remove-frame.json",
+  "$id": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/remove-frame/schema.json",
   "title": "RemoveFrame",
   "type": "object",
   "additionalProperties": false,

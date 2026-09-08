@@ -1,9 +1,9 @@
 //! ↩️ `change-wall-phi-deg` inverse — restores the pre-change `wall_phi_deg` from BASE state; `change` is its own
 //! inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::en1998::mutations::change_wall_phi_deg::ChangeWallPhiDeg;
-use crate::artifacts::en1998::mutations::En1998Mutation;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::mutations::change_wall_phi_deg::ChangeWallPhiDeg;
+use crate::mutations::En1998Mutation;
+use crate::En1998Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeWallPhiDeg, base: &En1998Snapshot) -> Vec<En1998Mutation> {

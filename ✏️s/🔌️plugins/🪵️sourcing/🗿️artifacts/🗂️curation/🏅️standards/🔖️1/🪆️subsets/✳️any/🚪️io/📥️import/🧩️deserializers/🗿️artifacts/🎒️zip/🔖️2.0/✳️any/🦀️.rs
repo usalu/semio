@@ -8,7 +8,7 @@
 //! "zip archive -> curation catalogue" mapping is defined anywhere in this codebase, so `deserialize`
 //! is preserved byte-for-byte and honestly labeled `IoFidelity::Lossy` rather than silently claiming
 //! a working conversion. See `📓️w4-sourcing-report.md` `## openQuestions`.
-use crate::artifacts::curation::CurationSnapshot;
+use crate::CurationSnapshot;
 use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};

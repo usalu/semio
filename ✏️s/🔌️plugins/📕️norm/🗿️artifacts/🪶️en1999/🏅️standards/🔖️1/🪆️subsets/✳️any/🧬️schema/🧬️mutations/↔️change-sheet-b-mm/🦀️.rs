@@ -1,9 +1,9 @@
 //! 🐗 `change-sheet-b-mm` payload — changes the En1999 document's `sheet_b_mm` (sheet width b [mm]).
 
 
-use crate::artifacts::en1999::En1999Snapshot;
-use crate::artifacts::en1999::diff::En1999Diff;
-use crate::artifacts::en1999::mutations::En1999Mutation;
+use crate::En1999Snapshot;
+use crate::diff::En1999Diff;
+use crate::mutations::En1999Mutation;
 //#region 🔖️ChangeSheetBMm
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

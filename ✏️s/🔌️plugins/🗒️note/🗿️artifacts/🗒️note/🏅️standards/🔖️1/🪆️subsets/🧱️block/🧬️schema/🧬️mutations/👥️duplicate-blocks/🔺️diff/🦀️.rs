@@ -2,22 +2,22 @@
 //! already exists, Error `target-missing` when none of the sources exist, Warning `partial` when
 //! some sources do not.
 use super::DuplicateBlocks;
-use crate::artifacts::note::NoteDiff;
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteDiff;
+use crate::NoteSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DuplicateBlocks, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
-    let mut delta = crate::artifacts::note::schema::diff::NoteBlocksDelta::default();
+    let mut delta = crate::schema::diff::NoteBlocksDelta::default();
     let mut missing_sources = Vec::new();
     let mut duplicate_ids = Vec::new();
     for (source_id, block) in payload.source_ids.iter().zip(payload.blocks.iter()) {
-        let new_id = crate::artifacts::note::schema::block_id(block);
-        if crate::artifacts::note::schema::find_block(&base.blocks, new_id).is_some() {
+        let new_id = crate::schema::block_id(block);
+        if crate::schema::find_block(&base.blocks, new_id).is_some() {
             duplicate_ids.push(new_id.to_string());
             continue;
         }
-        match crate::artifacts::note::schema::find_block_location(&base.blocks, source_id) {
-            Some((parent_id, index)) => delta.added.push(crate::artifacts::note::schema::diff::NoteAddedBlockEntry { parent_id, index: Some(index + 1), block: block.clone() }),
+        match crate::schema::find_block_location(&base.blocks, source_id) {
+            Some((parent_id, index)) => delta.added.push(crate::schema::diff::NoteAddedBlockEntry { parent_id, index: Some(index + 1), block: block.clone() }),
             None => missing_sources.push(source_id.clone()),
         }
     }

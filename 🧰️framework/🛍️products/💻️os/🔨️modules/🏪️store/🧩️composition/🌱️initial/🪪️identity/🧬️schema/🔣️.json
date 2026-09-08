@@ -1,28 +1,33 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Initial Child Identity Coordinate",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "values",
-    "ordinal"
-  ],
-  "properties": {
-    "values": {
-      "type": "array",
-      "minItems": 9,
-      "maxItems": 9,
-      "items": {
-        "type": "string",
-        "minLength": 1,
-        "maxLength": 256,
-        "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]+$"
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/store/composition/initial/identity/schema.json",
+  "title": "Store Initial Child Identity",
+  "$defs": {
+    "InitialChildIdentityCoordinate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "values",
+        "ordinal"
+      ],
+      "properties": {
+        "values": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]+$"
+          }
+        },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 63
+        }
       }
-    },
-    "ordinal": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 63
     }
   }
 }

@@ -1,7 +1,7 @@
 //! 🧬️ Cad snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::cad::{empty_cad_snapshot, CadDrawingChild, CadModelChild, CadNode, CadReferenceList};
-use schema::ArtifactSchema;
+use crate::{empty_cad_snapshot, CadDrawingChild, CadModelChild, CadNode, CadReferenceList};
+use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 /// 📸️ Persisted cad document snapshot (persistent fields of the artifact). Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the four per-pane object/geometry field
 /// pairs that used to duplicate `SemioBrepSnapshot`'s topology inline (`CadObject`/`CadGeometry` at
-/// `crate::artifacts::cad::🦀️.rs`) are replaced by four fixed composed
+/// `crate::🦀️.rs`) are replaced by four fixed composed
 /// `s.stdio.semio.model` CHILD slots — one per `CadPaneId` — plus a forward `drawings` composition
 /// slot per the design map's `cad | engineering assembly | model, drawing` row. `#[child(...)]`
 /// drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.

@@ -11,9 +11,9 @@
 //! per-entity, so this uses the plain `protocol::Inference<P>` shape (no `InferredField`/caching
 //! machinery — see `🧭topology/🦀️.rs` for the derivation).
 
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramSnapshot;
 use protocol::Inference;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::{compute_topology, ProgramTopology};
@@ -24,9 +24,9 @@ use super::topology::{compute_topology, ProgramTopology};
 /// Value`-style read-only projection that used to live on the artifact-tree engine hub. Mutating /
 /// constructing counterparts (marked in each region below) moved to `crate::apps::architect`'s own
 /// `//#region 🔧️Behavior` instead, since they take `&mut ProgramSnapshot`.
-use crate::artifacts::program::kernel::{DiagnosticSeverity, EntityHeader, EntityId, LifecycleStatus, PluginError, Priority, ProgramDiagnostic};
-use crate::artifacts::program::registers::{AdjacencyKind, AnalysisKind, AuditEvent, RelationshipKind, ReportKind, RiskLevel, SearchFilter, SeparationKind, ValidationStatus};
-use crate::artifacts::program::ARCHITECT_PROGRAM_SCHEMA;
+use crate::kernel::{DiagnosticSeverity, EntityHeader, EntityId, LifecycleStatus, PluginError, Priority, ProgramDiagnostic};
+use crate::registers::{AdjacencyKind, AnalysisKind, AuditEvent, RelationshipKind, ReportKind, RiskLevel, SearchFilter, SeparationKind, ValidationStatus};
+use crate::ARCHITECT_PROGRAM_SCHEMA;
 use semio_s_artifact_stdio_csv as stdio_csv;
 use semio_s_artifact_stdio_tsv as stdio_tsv;
 use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_engine;
@@ -83,7 +83,7 @@ impl protocol::InferenceSpec<ProgramSnapshot> for ProgramInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::program::standards::v1::subsets::any::schema::ProgramBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::ProgramBuilder {
     type Snapshot = ProgramSnapshot;
     type Inference = ProgramInference;
 
@@ -100,10 +100,10 @@ impl ArtifactInferrer for crate::artifacts::program::standards::v1::subsets::any
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.architect.program.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `program_artifact_schema_descriptor`'s registration.
-pub fn program_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn program_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.architect.program.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -232,7 +232,7 @@ fn separation_incompatible(left: &[SeparationKind], right: &[SeparationKind]) ->
 //#region 🧪️AdjacencyTests
 mod tests_adjacency {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
+    use crate::sample_plugin;
 
     #[semio_framework_async_macros::async_test]
     async fn sample_plugin_matrix_has_one_cell() {
@@ -444,10 +444,10 @@ fn build_entity_index(program: &ProgramSnapshot) -> EntityIndex {
     for e in &program.templates {
         register("templates", &e.header.id, &e.header.name);
     }
-    for e in &crate::artifacts::program::program_knowledge(program) {
+    for e in &crate::program_knowledge(program) {
         register("knowledge", &e.header.id, &e.header.name);
     }
-    for e in &crate::artifacts::program::program_benchmarks(program) {
+    for e in &crate::program_benchmarks(program) {
         register("benchmarks", &e.header.id, &e.header.name);
     }
     register("project", &program.project.id, &program.project.code);
@@ -676,9 +676,9 @@ pub fn validate_plugin(program: &ProgramSnapshot) -> Vec<ProgramDiagnostic> {
 //#region 🧪️ValidateTests
 mod tests_validate {
     use super::*;
-    use crate::artifacts::program::kernel::EntityHeader;
-    use crate::artifacts::program::registers::Requirement;
-    use crate::artifacts::program::{empty_plugin, sample_plugin};
+    use crate::kernel::EntityHeader;
+    use crate::registers::Requirement;
+    use crate::{empty_plugin, sample_plugin};
 
     #[semio_framework_async_macros::async_test]
     async fn sample_plugin_passes_validation() {
@@ -698,8 +698,8 @@ mod tests_validate {
         program.requirements.push(Requirement {
             header: EntityHeader::new(EntityId::new_serial("requirement", "Orphan"), "Orphan"),
             code: "OR-1".into(),
-            kind: crate::artifacts::program::registers::RequirementKind::Functional,
-            statement: crate::artifacts::program::kernel::TextField::plain("orphan req"),
+            kind: crate::registers::RequirementKind::Functional,
+            statement: crate::kernel::TextField::plain("orphan req"),
             rationale: None,
             source: None,
             stakeholder_ids: Vec::new(),
@@ -725,7 +725,7 @@ mod tests_validate {
     #[semio_framework_async_macros::async_test]
     async fn detects_broken_relationship_target() {
         let mut program = sample_plugin();
-        program.relationships.push(crate::artifacts::program::registers::Relationship {
+        program.relationships.push(crate::registers::Relationship {
             header: EntityHeader::new(EntityId::new_serial("relationship", "broken"), "broken"),
             source_id: program.elements[0].header.id.clone(),
             target_id: EntityId("missing-target".into()),
@@ -949,7 +949,7 @@ fn program_reports(program: &ProgramSnapshot) -> ProgramOutput {
 //#region 🧪️OutputsTests
 mod tests_outputs {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
+    use crate::sample_plugin;
 
     #[semio_framework_async_macros::async_test]
     async fn requirement_lists_output_nonempty_for_sample() {
@@ -1300,7 +1300,7 @@ fn scenario_summary(program: &ProgramSnapshot) -> ProgramReport {
 //#region 🧪️ReportTests
 mod tests_report {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
+    use crate::sample_plugin;
 
     #[semio_framework_async_macros::async_test]
     async fn executive_summary_includes_counts() {
@@ -1437,9 +1437,9 @@ pub fn status_summary(program: &ProgramSnapshot) -> StatusSummary {
     collect("issues", program.issues.iter().map(|e| &e.header).collect());
     collect("audit_events", program.audit_events.iter().map(|e| &e.header).collect());
     collect("templates", program.templates.iter().map(|e| &e.header).collect());
-    let knowledge_records = crate::artifacts::program::program_knowledge(program);
+    let knowledge_records = crate::program_knowledge(program);
     collect("knowledge", knowledge_records.iter().map(|e| &e.header).collect());
-    let benchmark_records = crate::artifacts::program::program_benchmarks(program);
+    let benchmark_records = crate::program_benchmarks(program);
     collect("benchmarks", benchmark_records.iter().map(|e| &e.header).collect());
 
     let mut compliance_status = Vec::new();
@@ -1481,7 +1481,7 @@ pub fn status_summary(program: &ProgramSnapshot) -> StatusSummary {
 //#region 🧪️StatusSummaryTests
 mod tests_status_summary {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
+    use crate::sample_plugin;
 
     #[semio_framework_async_macros::async_test]
     async fn sample_plugin_status_summary_counts_elements() {
@@ -1624,8 +1624,8 @@ pub fn search_plugin(program: &ProgramSnapshot, query: &SearchQuery, filter: Opt
     search_register!("issues", &program.issues);
     search_register!("audit_events", &program.audit_events);
     search_register!("templates", &program.templates);
-    search_register!("knowledge", &crate::artifacts::program::program_knowledge(program));
-    search_register!("benchmarks", &crate::artifacts::program::program_benchmarks(program));
+    search_register!("knowledge", &crate::program_knowledge(program));
+    search_register!("benchmarks", &crate::program_benchmarks(program));
     hits.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
     hits
 }
@@ -1702,7 +1702,7 @@ fn push_if_match(hits: &mut Vec<SearchHit>, register: &str, header: &EntityHeade
 //#region 🧪️SearchTests
 mod tests_search {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
+    use crate::sample_plugin;
 
     #[semio_framework_async_macros::async_test]
     async fn search_finds_reception_element() {
@@ -2140,7 +2140,7 @@ fn analyze_relationship(program: &ProgramSnapshot) -> AnalysisResult {
 //#region 🧪️AnalyzeTests
 mod tests_analyze {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
+    use crate::sample_plugin;
 
     #[semio_framework_async_macros::async_test]
     async fn gap_analysis_on_sample_plugin() {
@@ -2319,8 +2319,8 @@ fn collect_rows(program: &ProgramSnapshot) -> Vec<RegisterCsvRow> {
     push_rows!("issues", &program.issues);
     push_rows!("audit_events", &program.audit_events);
     push_rows!("templates", &program.templates);
-    push_rows!("knowledge", &crate::artifacts::program::program_knowledge(program));
-    push_rows!("benchmarks", &crate::artifacts::program::program_benchmarks(program));
+    push_rows!("knowledge", &crate::program_knowledge(program));
+    push_rows!("benchmarks", &crate::program_benchmarks(program));
     rows
 }
 
@@ -2333,7 +2333,7 @@ fn header_row(register: &str, header: &EntityHeader, source: Option<String>) -> 
 //#region 🧪️ExchangeReadsTests
 mod tests_exchange {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
+    use crate::sample_plugin;
 
     #[semio_framework_async_macros::async_test]
     async fn json_round_trip() {
@@ -2393,19 +2393,19 @@ pub fn resolve_supersedes(program: &ProgramSnapshot, requirement_id: &EntityId) 
 //#region 🧪️TraceReadsTests
 mod tests_trace {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
+    use crate::sample_plugin;
 
     #[semio_framework_async_macros::async_test]
     async fn audit_trail_sorted_newest_first() {
         let mut program = sample_plugin();
         program.audit_events.push(AuditEvent {
             header: EntityHeader::new(EntityId::new_serial("audit", "older"), "older"),
-            action: crate::artifacts::program::registers::AuditAction::Created,
+            action: crate::registers::AuditAction::Created,
             actor_id: None,
             subject_id: program.elements[0].header.id.clone(),
             subject_kind: "element".into(),
             timestamp: "2020-01-01T00:00:00Z".into(),
-            details: crate::artifacts::program::kernel::TextField::plain("old"),
+            details: crate::kernel::TextField::plain("old"),
             before_state: None,
             after_state: None,
             ip_address: None,
@@ -2421,12 +2421,12 @@ mod tests_trace {
         });
         program.audit_events.push(AuditEvent {
             header: EntityHeader::new(EntityId::new_serial("audit", "newer"), "newer"),
-            action: crate::artifacts::program::registers::AuditAction::Updated,
+            action: crate::registers::AuditAction::Updated,
             actor_id: None,
             subject_id: program.elements[0].header.id.clone(),
             subject_kind: "element".into(),
             timestamp: "2025-01-01T00:00:00Z".into(),
-            details: crate::artifacts::program::kernel::TextField::plain("new"),
+            details: crate::kernel::TextField::plain("new"),
             before_state: None,
             after_state: None,
             ip_address: None,

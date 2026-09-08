@@ -1,6 +1,6 @@
 //! 🖼️ Raster play app — the composite window: the main paintable 2D surface.
 
-use crate::artifacts::raster::RasterSnapshot as RasterDocument;
+use crate::RasterSnapshot as RasterDocument;
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::modes::edit::windows::composite::options;
 use crate::editor::raster::raster_scene;

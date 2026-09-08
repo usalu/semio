@@ -9,8 +9,8 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::puzzle5d::schema::mutations::text::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::schema::mutations::text::Puzzle5dMutation;
+use crate::Puzzle5dSnapshot;
 use protocol::OpBinary;
 use store::{ArtifactEnvelope, ArtifactStore};
 
@@ -36,9 +36,9 @@ mod tests {
 
     #[test]
     fn puzzle5d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::puzzle5d::mutations::create_part;
-        use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::empty_puzzle5d_snapshot;
-        use crate::artifacts::puzzle5d::{Puzzle5dPart, PUZZLE_5D_SCHEMA};
+        use crate::mutations::create_part;
+        use crate::standards::v1::subsets::any::schema::empty_puzzle5d_snapshot;
+        use crate::{Puzzle5dPart, PUZZLE_5D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = semio_framework::io::resolve_ready(Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None))).expect("store");
@@ -60,8 +60,8 @@ mod wire_format_guard {
     //! `OpText`/`OpBinary` round-trip instead of pinning byte literals for a wire shape this ticket
     //! deliberately changed.
     use super::*;
-    use crate::artifacts::puzzle5d::mutations::{change_description, change_domain, connect_grips, create_part, delete_part, disconnect_grips};
-    use crate::artifacts::puzzle5d::Puzzle5dPart;
+    use crate::mutations::{change_description, change_domain, connect_grips, create_part, delete_part, disconnect_grips};
+    use crate::Puzzle5dPart;
     use protocol::OpText;
 
     fn ops() -> Vec<Puzzle5dMutation> {

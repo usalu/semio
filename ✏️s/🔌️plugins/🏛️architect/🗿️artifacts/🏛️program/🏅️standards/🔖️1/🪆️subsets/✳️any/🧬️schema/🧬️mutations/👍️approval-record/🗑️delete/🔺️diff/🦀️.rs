@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `👍approvals` per Wave C.
 
 use super::DeleteApprovalRecord;
-use crate::artifacts::program::diff::ProgramApprovalsDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramApprovalsDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteApprovalRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

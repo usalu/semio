@@ -101,8 +101,8 @@ mod subject {
     use super::{canonical, vector, DERIVED_ASSET, DSL_ASSET, FIELDS, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_plugin_gis::artifacts::gisterrain::standards::v1::subsets::any::schema::mutations::gis_terrain_mutation_report_json;
-    use semio_s_plugin_gis::artifacts::gisterrain::standards::v1::subsets::any::schema::snapshot::gis_terrain_identity_report_json;
+    use semio_s_artifact_gis_gisterrain::standards::v1::subsets::any::schema::mutations::gis_terrain_mutation_report_json;
+    use semio_s_artifact_gis_gisterrain::standards::v1::subsets::any::schema::snapshot::gis_terrain_identity_report_json;
 
     //#region 🔖️Report
     /// 📋️ One member of the production bridge's report, named in the error when it is absent — never

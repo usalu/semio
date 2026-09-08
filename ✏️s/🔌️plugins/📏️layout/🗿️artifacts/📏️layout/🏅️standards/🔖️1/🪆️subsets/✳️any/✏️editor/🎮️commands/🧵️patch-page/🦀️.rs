@@ -1,12 +1,12 @@
 //! ✏️ ✏️ Layout play app commands command — `patch-page`.
 
-use crate::artifacts::layout::mutations::change_page_height::ChangePageHeight;
-use crate::artifacts::layout::mutations::change_page_width::ChangePageWidth;
-use crate::artifacts::layout::mutations::rename_page::RenamePage;
-use crate::artifacts::layout::mutations::update_page_columns::UpdatePageColumns;
-use crate::artifacts::layout::mutations::update_page_margins::UpdatePageMargins;
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::{LayoutSnapshot, Page};
+use crate::mutations::change_page_height::ChangePageHeight;
+use crate::mutations::change_page_width::ChangePageWidth;
+use crate::mutations::rename_page::RenamePage;
+use crate::mutations::update_page_columns::UpdatePageColumns;
+use crate::mutations::update_page_margins::UpdatePageMargins;
+use crate::mutations::LayoutMutation;
+use crate::{LayoutSnapshot, Page};
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -2,8 +2,8 @@
 //! capture). Reads the CURRENT scene off `base` via `sequence_working_scene`, applies the same
 //! append semantics against it, then mints a whole new content handle via `diff_replace_content`
 //! (the composed child is opaque — a parent's diff never embeds a child diff).
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::{diff_replace_content, sequence_working_scene, SequenceSnapshot};
+use crate::diff::SequenceDiff;
+use crate::{diff_replace_content, sequence_working_scene, SequenceSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateStep, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {

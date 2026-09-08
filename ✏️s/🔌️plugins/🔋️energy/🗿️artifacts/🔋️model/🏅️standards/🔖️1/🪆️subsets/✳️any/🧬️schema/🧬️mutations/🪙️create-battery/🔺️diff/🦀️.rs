@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateBattery` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateBattery, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -14,6 +14,6 @@ pub fn diff(payload: &super::CreateBattery, base: &EnergyModelSnapshot) -> proto
     }
     let mut model = base.model.clone();
     model.battery_storage.insert(payload.index as usize, crate::model::BatteryAssignment { id: payload.id, capacity_kwh: payload.capacity_kwh, max_charge_w: payload.max_charge_w, max_discharge_w: payload.max_discharge_w, round_trip_efficiency: payload.round_trip_efficiency });
-    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

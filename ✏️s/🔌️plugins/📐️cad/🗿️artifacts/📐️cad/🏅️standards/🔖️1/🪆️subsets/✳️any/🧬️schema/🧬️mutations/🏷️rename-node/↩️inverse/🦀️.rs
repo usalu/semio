@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `RenameNode` — recovers the pre-mutation `label` from `base`.
 use super::RenameNode;
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &RenameNode, base: &CadSnapshot) -> Vec<CadMutation> {

@@ -3,8 +3,8 @@
 //! real, undoable write (see `crate::editor::layout::LayoutPlayApp::import_media`).
 
 
-use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
-use crate::artifacts::layout::mutations::LayoutMutation;
+use crate::{LayoutDiff, LayoutSnapshot};
+use crate::mutations::LayoutMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

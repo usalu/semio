@@ -2,9 +2,9 @@
 //! node, `width`/`height` for a `rectangle` node (`NodeDsl`'s own optional-field shape, mirrored
 //! here as the mutation's own extent facet per `📓️taxonomy.md`'s `resize` verb).
 
-use crate::artifacts::wires::diff::WiresDiff;
-use crate::artifacts::wires::mutations::WiresMutation;
-use crate::artifacts::wires::WiresSnapshot;
+use crate::diff::WiresDiff;
+use crate::mutations::WiresMutation;
+use crate::WiresSnapshot;
 
 //#region 🔖️Mutation
 /// 📐️ `resize-node` payload — only the extent fields actually being changed are `Some`.

@@ -7,8 +7,8 @@
 //! a bare snapshot; each handler below clamps only against `0` (never negative), documenting the
 //! dropped upper bound honestly rather than guessing at an unknown length.
 
-use crate::artifacts::process3d::mutations::change_cursor::ChangeCursor;
-use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
+use crate::mutations::change_cursor::ChangeCursor;
+use crate::{op::Process3dMutation, Process3dSnapshot};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

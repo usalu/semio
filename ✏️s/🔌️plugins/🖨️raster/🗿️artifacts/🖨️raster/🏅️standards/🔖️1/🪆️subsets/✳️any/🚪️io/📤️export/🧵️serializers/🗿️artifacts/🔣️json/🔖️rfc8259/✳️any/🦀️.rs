@@ -3,7 +3,7 @@
 //! 🩹️ w5b-close fix (stdio_gap/foreign-lag, not svg/dwg-pattern scope — see w5b-close-report.md):
 //! `JsonSnapshot::from_value`/stdio's own real `write_json_pretty` do the structural conversion —
 //! no hand-rolled bridge needed here.
-use crate::artifacts::raster::RasterSnapshot;
+use crate::RasterSnapshot;
 use dsl::ToValue;
 use semio_s_artifact_stdio_json::schema::snapshot::{write_json_pretty, JsonSnapshot};
 use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;

@@ -13,7 +13,7 @@
 //! `#[cfg(test)]` now. `to_serde_value()`'s `serde_json::Value` converts into `dsl::DslValue` via
 //! its own `From` bridge, then `dsl::FromValue::from_value` (first-party) hydrates the typed
 //! snapshot — same shape the sibling `block3d` leaf already uses.
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::Puzzle3dSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 

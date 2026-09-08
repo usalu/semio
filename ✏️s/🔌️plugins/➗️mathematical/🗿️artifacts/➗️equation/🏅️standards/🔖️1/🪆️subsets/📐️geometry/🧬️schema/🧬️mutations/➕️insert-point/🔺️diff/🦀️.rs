@@ -1,6 +1,6 @@
 //! 🔺️ `insert-point` — sparse diff construction.
 
-use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationPoint, EquationSnapshot};
+use crate::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationPoint, EquationSnapshot};
 
 //#region 🔖️Diff
 /// 🔺️ Ascending-insert-clamped: an out-of-range `index` lands at the end rather than panicking,

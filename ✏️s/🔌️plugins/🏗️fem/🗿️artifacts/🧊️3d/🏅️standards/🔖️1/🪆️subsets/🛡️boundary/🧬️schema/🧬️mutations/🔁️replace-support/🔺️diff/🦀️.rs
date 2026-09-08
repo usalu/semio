@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ReplaceSupport`.
 use super::ReplaceSupport;
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dSupportsDelta, Fem3dSupportsPatchEntry};
-use crate::artifacts::fem3d::mutations::id_mismatch;
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::diff::{Fem3dDiff, Fem3dSupportsDelta, Fem3dSupportsPatchEntry};
+use crate::mutations::id_mismatch;
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceSupport, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

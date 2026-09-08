@@ -150,7 +150,7 @@ mod tests {
 
     async fn exact_fixture_bytes() -> &'static [u8] {
         static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
-        BYTES.get_or_init(|| std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/wellness-center-sama.ifc")).expect("read temp/wellness-center-sama.ifc"))
+        BYTES.get_or_init(|| std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../temp/wellness-center-sama.ifc")).expect("read temp/wellness-center-sama.ifc"))
     }
 
     async fn assert_exact(label: &str, actual: &[u8]) {

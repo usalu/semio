@@ -1,9 +1,9 @@
 //! 🪥 `change-h-ed-kn` payload — changes the En1997 document's `h_ed_kn` (design horizontal load H_Ed [kN]).
 
 
-use crate::artifacts::en1997::En1997Snapshot;
-use crate::artifacts::en1997::diff::En1997Diff;
-use crate::artifacts::en1997::mutations::En1997Mutation;
+use crate::En1997Snapshot;
+use crate::diff::En1997Diff;
+use crate::mutations::En1997Mutation;
 //#region 🔖️ChangeHEdKn
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

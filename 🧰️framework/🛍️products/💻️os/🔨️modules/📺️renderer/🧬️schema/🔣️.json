@@ -1,0 +1,2292 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/renderer/component.json",
+  "title": "Renderer",
+  "description": "Renderer-owned presentation contracts: shell dialog/effect origin admission, tutorial drive and playback, document opening and instance admission, host identity bootstrap, extension invocation, mounted probe projection, and the runtime/graph/helper element contracts. Renderer elements (🧱️elements/*) and rendering targets (🎯️targets/*) are consumers; this module is the sole owner.",
+  "$defs": {
+    "ShellScopeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spaceId",
+        "documentId"
+      ],
+      "properties": {
+        "spaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "ShellRuntimeKeyV1": {
+      "type": "string",
+      "pattern": "^v1:[0-9]+:[0-9]+:",
+      "maxLength": 1280
+    },
+    "ShellClientInstanceIdV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "Sha256HexV1": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "ShellDialogDocumentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtimeKey",
+        "clientInstanceId",
+        "scope"
+      ],
+      "properties": {
+        "runtimeKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1280
+        },
+        "clientInstanceId": {
+          "$ref": "#/$defs/ShellClientInstanceIdV1"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/ShellScopeV1"
+            }
+          ]
+        }
+      }
+    },
+    "ShellDialogOriginV1": {
+      "description": "🗨️ The identity a modal dialog or shell effect was raised from. Two origins are the same origin only when every field is equal; a detached document or a reopened client instance is a different origin.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "appId",
+        "controllerId",
+        "sessionInstanceId",
+        "document"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "appId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "controllerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "sessionInstanceId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "document": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/ShellDialogDocumentV1"
+            }
+          ]
+        }
+      }
+    },
+    "AdmittedShellInstanceTransitionV1": {
+      "description": "🛂️ One admission attempt for a shell instance handed off across a create/retire boundary: a creation is admitted only when the instance is retained both before and after it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "before",
+        "after",
+        "creates",
+        "retires",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "before": {
+          "type": "boolean"
+        },
+        "after": {
+          "type": "boolean"
+        },
+        "creates": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "retires": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DocumentOpeningStepV1": {
+      "enum": [
+        "socket",
+        "attach",
+        "close",
+        "detach",
+        "commit",
+        "retire"
+      ]
+    },
+    "DocumentOpeningTransitionV1": {
+      "description": "🚪️ One document-opening attempt: where it was made to fail, where it was replaced, the observed step sequence and the settled outcome. No opening may leave a live timer behind.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fail",
+        "replace",
+        "outcome",
+        "sequence",
+        "timers"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "fail": {
+          "enum": [
+            "none",
+            "socket",
+            "attach",
+            "deadline"
+          ]
+        },
+        "replace": {
+          "enum": [
+            "none",
+            "socket",
+            "attach"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "failed",
+            "retired",
+            "ready"
+          ]
+        },
+        "sequence": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/DocumentOpeningStepV1"
+          }
+        },
+        "timers": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 0
+        }
+      }
+    },
+    "DocumentOpeningAdmissionV1": {
+      "description": "🛂️ Admission of one opening into the shell: a background opening never displaces the visible session, and every rejected admission closes exactly the sessions it names.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "background",
+        "runtimeKey",
+        "instanceId",
+        "admitted",
+        "closed"
+      ],
+      "properties": {
+        "background": {
+          "type": "boolean"
+        },
+        "runtimeKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1280
+        },
+        "instanceId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "admitted": {
+          "type": "boolean"
+        },
+        "closed": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1280
+          }
+        }
+      }
+    },
+    "DocumentOpeningBackgroundSequenceV1": {
+      "description": "🌒️ Ordered lifecycle steps a background document session goes through while the visible session stays mounted.",
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "enum": [
+          "create-1",
+          "create-2",
+          "create-failed",
+          "visit-1",
+          "visit-2",
+          "release-1",
+          "release-2"
+        ]
+      }
+    },
+    "DocumentOpeningAttachmentStepV1": {
+      "enum": [
+        "attach-a",
+        "attached-a",
+        "detach",
+        "attach-b"
+      ]
+    },
+    "DocumentOpeningCloseFailureV1": {
+      "description": "🧯️ A close that failed while an opening was in flight, and the step sequence it still had to complete.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attached",
+        "sequence"
+      ],
+      "properties": {
+        "attached": {
+          "type": "boolean"
+        },
+        "sequence": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "enum": [
+              "socket",
+              "attach",
+              "close",
+              "detach",
+              "retire"
+            ]
+          }
+        }
+      }
+    },
+    "DocumentOpeningRefV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "schema"
+      ],
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "spaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "DocumentOpeningContextV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "currentSpaceId",
+        "identity"
+      ],
+      "properties": {
+        "currentSpaceId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "hubBaseUrl"
+              ],
+              "properties": {
+                "hubBaseUrl": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2048
+                }
+              }
+            }
+          ]
+        },
+        "dataDir": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "surface": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "DocumentOpeningTargetV1": {
+      "description": "📍️ The exact scope a document reference resolves to. A hub target always carries the requested surface; a folder target never invents one.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "baseUrl",
+            "spaceId",
+            "requestedSurfaceId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "hub"
+            },
+            "baseUrl": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "requestedSurfaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path"
+          ],
+          "properties": {
+            "kind": {
+              "const": "folder"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          }
+        }
+      ]
+    },
+    "DocumentOpeningErrorCodeV1": {
+      "enum": [
+        "opening.identity-required",
+        "opening.surface-required"
+      ]
+    },
+    "DocumentOpeningScopeResolutionV1": {
+      "description": "🧭️ One document-opening scope resolution: a reference plus the shell context it is resolved in, settling either into exact targets or into a typed refusal. Never both.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "ref",
+        "context"
+      ],
+      "oneOf": [
+        {
+          "required": [
+            "expected"
+          ],
+          "properties": {
+            "expected": {
+              "type": "array",
+              "maxItems": 2,
+              "items": {
+                "$ref": "#/$defs/DocumentOpeningTargetV1"
+              }
+            }
+          }
+        },
+        {
+          "required": [
+            "error"
+          ],
+          "properties": {
+            "error": {
+              "$ref": "#/$defs/DocumentOpeningErrorCodeV1"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "ref": {
+          "$ref": "#/$defs/DocumentOpeningRefV1"
+        },
+        "context": {
+          "$ref": "#/$defs/DocumentOpeningContextV1"
+        },
+        "expected": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/DocumentOpeningTargetV1"
+          }
+        },
+        "error": {
+          "$ref": "#/$defs/DocumentOpeningErrorCodeV1"
+        }
+      }
+    },
+    "DocumentOpeningRequestStageV1": {
+      "enum": [
+        "open-plan",
+        "manifest",
+        "component",
+        "descriptor",
+        "socket-grants"
+      ]
+    },
+    "DocumentFirstOpenV1": {
+      "description": "🥇️ The first open of a document: it asks only for the surface it requested, walks the request stages in order, and opens exactly one socket.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestedSurfaceOnly",
+        "requestStages",
+        "socketCount",
+        "localSocketFailures",
+        "unselectedSocketFailures",
+        "hostile"
+      ],
+      "properties": {
+        "requestedSurfaceOnly": {
+          "type": "boolean"
+        },
+        "requestStages": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/DocumentOpeningRequestStageV1"
+          }
+        },
+        "socketCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "localSocketFailures": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "unselectedSocketFailures": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "hostile": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "requestStages"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "requestStages": {
+                "type": "array",
+                "maxItems": 8,
+                "items": {
+                  "$ref": "#/$defs/DocumentOpeningRequestStageV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "TutorialRunEventV1": {
+      "enum": [
+        "resolve",
+        "stop",
+        "switch",
+        "replace"
+      ]
+    },
+    "TutorialRunTransitionV1": {
+      "description": "🎥️ One tutorial run: the events it received, whether it started, and how many UI snapshots it restored (never more than one).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "events",
+        "started",
+        "restores"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/TutorialRunEventV1"
+          }
+        },
+        "started": {
+          "type": "boolean"
+        },
+        "restores": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "TutorialDriveEventV1": {
+      "enum": [
+        "claimA",
+        "claimB",
+        "releaseA",
+        "releaseB",
+        "retire"
+      ]
+    },
+    "TutorialDriveTransitionV1": {
+      "description": "🕹️ One tutorial drive: the claim/release events it observed and whether the drive was active after each of them.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "events",
+        "active"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/TutorialDriveEventV1"
+          }
+        },
+        "active": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "PausedTutorialSeekTransitionV1": {
+      "description": "⏩️ One seek against a paused tutorial: a seek applies exactly one mutation, lands on an exact playhead, and only resumes playback when it was playing and nothing interrupted it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "playing",
+        "requested",
+        "interrupt",
+        "mutations",
+        "playhead",
+        "resumed"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "playing": {
+          "type": "boolean"
+        },
+        "requested": {
+          "type": "boolean"
+        },
+        "interrupt": {
+          "enum": [
+            "none",
+            "pause",
+            "close",
+            "play"
+          ]
+        },
+        "mutations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "playhead": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "resumed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SerialTutorialDriveTransitionV1": {
+      "description": "🧵️ One serialized tutorial drive write: the writes it emitted in order and the cursor it left behind.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "close",
+        "replace",
+        "writes",
+        "cursor"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "close": {
+          "type": "boolean"
+        },
+        "replace": {
+          "type": "boolean"
+        },
+        "writes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "enum": [
+              "M",
+              "inverse-M"
+            ]
+          }
+        },
+        "cursor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "HostAppAliasesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "landingAppId",
+        "hostAppId"
+      ],
+      "properties": {
+        "landingAppId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "hostAppId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "HostAppV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "role",
+        "dialect"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "role": {
+          "enum": [
+            "editor",
+            "viewer"
+          ]
+        },
+        "dialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifactKind"
+          ],
+          "properties": {
+            "artifactKind": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        }
+      }
+    },
+    "HostIdentityResolutionV1": {
+      "description": "🪪️ Resolution of the shell's landing and host app aliases against the installed app list. Exactly one editor app per alias — a missing or ambiguous alias is a refusal, never a fallback.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aliases",
+        "apps",
+        "expected"
+      ],
+      "properties": {
+        "aliases": {
+          "$ref": "#/$defs/HostAppAliasesV1"
+        },
+        "apps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/HostAppV1"
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "landingAppId",
+            "hostAppId"
+          ],
+          "properties": {
+            "landingAppId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "hostAppId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          }
+        }
+      }
+    },
+    "ArtifactBootstrapProgressV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "documentId",
+        "receivedBytes",
+        "totalBytes",
+        "receivedChunks",
+        "totalChunks"
+      ],
+      "properties": {
+        "kind": {
+          "const": "artifact-bootstrap-progress"
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "receivedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "totalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        },
+        "receivedChunks": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "totalChunks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        }
+      }
+    },
+    "ArtifactBootstrapFailedV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "documentId",
+        "code",
+        "message",
+        "retryable"
+      ],
+      "properties": {
+        "kind": {
+          "const": "artifact-bootstrap-failed"
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "code": {
+          "enum": [
+            "cancelled",
+            "deadline-exceeded",
+            "invalid-bootstrap",
+            "transport-failure"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ArtifactRebootstrapRequiredV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "documentId",
+        "message",
+        "retryable"
+      ],
+      "properties": {
+        "kind": {
+          "const": "artifact-rebootstrap-required"
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "BootstrapStatusV1": {
+      "description": "📥️ Every bootstrap status the shell renders. A progress notice is polite status; a failure or rebootstrap demand is an assertive alert.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ArtifactBootstrapProgressV1"
+        },
+        {
+          "$ref": "#/$defs/ArtifactBootstrapFailedV1"
+        },
+        {
+          "$ref": "#/$defs/ArtifactRebootstrapRequiredV1"
+        }
+      ]
+    },
+    "LocalizedNoticeTextV1": {
+      "description": "🈯️ Notice copy carried per locale. English and German are both required — the shell has no default language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "ExtensionInvocationRequestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability",
+        "request"
+      ],
+      "properties": {
+        "capability": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "request": {
+          "type": "object"
+        }
+      }
+    },
+    "ExtensionInvocationCompletionV1": {
+      "description": "✅️ The single terminal completion an extension invocation publishes: the surface it settled on, the revision it advanced to, and the history patch it left.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surface",
+        "revision",
+        "notification",
+        "uiScope",
+        "historyPatch"
+      ],
+      "properties": {
+        "surface": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "notification": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "uiScope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "full",
+                "partial"
+              ]
+            }
+          }
+        },
+        "historyPatch": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cursor",
+            "upserts",
+            "canUndo",
+            "canRedo"
+          ],
+          "properties": {
+            "cursor": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "upserts": {
+              "type": "array",
+              "maxItems": 4096,
+              "items": {
+                "type": "object"
+              }
+            },
+            "canUndo": {
+              "type": "boolean"
+            },
+            "canRedo": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "ExtensionCompletionRefusalV1": {
+      "description": "⛔️ A completion the shell refuses to publish, with the exact reason it was refused.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "code"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "missing-lease",
+            "missing-complete",
+            "missing-guard",
+            "foreign-request",
+            "foreign-instance"
+          ]
+        },
+        "code": {
+          "enum": [
+            "extension.completion-unavailable",
+            "extension.completion-owner-mismatch"
+          ]
+        }
+      }
+    },
+    "ExtensionInvocationMissV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "code"
+      ],
+      "properties": {
+        "phase": {
+          "enum": [
+            "extension",
+            "invoke"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "ExtensionInvocationFaultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "code",
+        "severity",
+        "message",
+        "scope",
+        "retryable"
+      ],
+      "properties": {
+        "origin": {
+          "enum": [
+            "extension",
+            "plugin",
+            "host"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "scope": {
+          "type": "object"
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MountedGisMapProbeSourceV1": {
+      "description": "🔬️ The mounted state a GIS map probe is taken from: the exact scope, activation identity, content digests and UI revision it observed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "clientInstanceId",
+        "activationGeneration",
+        "catalogGenerationId",
+        "componentSha256",
+        "descriptorSha256",
+        "browserActorSha256",
+        "uiRevision",
+        "verifiedSurfaceId",
+        "surface",
+        "regions"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/ShellScopeV1"
+        },
+        "clientInstanceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "activationGeneration": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,19}$"
+        },
+        "catalogGenerationId": {
+          "$ref": "#/$defs/Sha256HexV1"
+        },
+        "componentSha256": {
+          "$ref": "#/$defs/Sha256HexV1"
+        },
+        "descriptorSha256": {
+          "$ref": "#/$defs/Sha256HexV1"
+        },
+        "browserActorSha256": {
+          "$ref": "#/$defs/Sha256HexV1"
+        },
+        "uiRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "verifiedSurfaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "surface": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "regions": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            }
+          }
+        }
+      }
+    },
+    "MountedGisMapProbeV1": {
+      "description": "🗺️ The projection a mounted GIS map publishes. It repeats the mounted identity exactly and reduces the map root to its region ids; the root kind is fixed by the artifact standard.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "clientInstanceId",
+        "activationGeneration",
+        "catalogGenerationId",
+        "componentSha256",
+        "descriptorSha256",
+        "browserActorSha256",
+        "uiRevision",
+        "rootKind",
+        "regionIds"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/ShellScopeV1"
+        },
+        "clientInstanceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "activationGeneration": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,19}$"
+        },
+        "catalogGenerationId": {
+          "$ref": "#/$defs/Sha256HexV1"
+        },
+        "componentSha256": {
+          "$ref": "#/$defs/Sha256HexV1"
+        },
+        "descriptorSha256": {
+          "$ref": "#/$defs/Sha256HexV1"
+        },
+        "browserActorSha256": {
+          "$ref": "#/$defs/Sha256HexV1"
+        },
+        "uiRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "rootKind": {
+          "const": "tiled-map"
+        },
+        "regionIds": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "MountedGisMapProbeRefusalV1": {
+      "enum": [
+        "unacknowledged-identity",
+        "stale-ui-revision",
+        "non-map-root",
+        "malformed-map-pack",
+        "duplicate-region-id"
+      ]
+    },
+    "RendererPackageCatalogBrowserEntries": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sourceRelativePath",
+          "outputRelativePath",
+          "inclusion"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "frame-worker",
+              "browser-boot"
+            ]
+          },
+          "sourceRelativePath": {
+            "$ref": "#/$defs/RendererPackageCatalogPath"
+          },
+          "outputRelativePath": {
+            "$ref": "#/$defs/RendererPackageCatalogPath"
+          },
+          "inclusion": {
+            "enum": [
+              "tracked",
+              "ignored"
+            ]
+          }
+        }
+      }
+    },
+    "RendererPackageCatalogPath": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\:*?\"<>|\u0000-\u001f]+$"
+    },
+    "RendererPackageCatalogV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "schemaVersion",
+        "kind",
+        "ownerPath",
+        "packageRelativePath",
+        "identity",
+        "entryPaths",
+        "artifacts"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "kind": {
+          "const": "canonical-wgpu-package"
+        },
+        "ownerPath": {
+          "$ref": "#/$defs/RendererPackageCatalogPath"
+        },
+        "packageRelativePath": {
+          "const": "📦️packages/🦀️rust"
+        },
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cargoPackageName",
+            "nodePackageName",
+            "nxProjectName"
+          ],
+          "properties": {
+            "cargoPackageName": {
+              "const": "semio-framework-os-renderer-wgpu"
+            },
+            "nodePackageName": {
+              "const": "@semio-tech/framework-renderer-wgpu"
+            },
+            "nxProjectName": {
+              "const": "@semio-tech/framework-renderer-wgpu"
+            }
+          }
+        },
+        "entryPaths": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cargoLibrary",
+            "cargoBinary",
+            "cargoBuild",
+            "nodeLibrary"
+          ],
+          "properties": {
+            "cargoLibrary": {
+              "$ref": "#/$defs/RendererPackageCatalogPath"
+            },
+            "cargoBinary": {
+              "$ref": "#/$defs/RendererPackageCatalogPath"
+            },
+            "cargoBuild": {
+              "const": "build.rs"
+            },
+            "nodeLibrary": {
+              "$ref": "#/$defs/RendererPackageCatalogPath"
+            }
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "relativePath",
+              "targetRelativePath",
+              "language",
+              "role",
+              "content"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "build-adapter",
+                  "binary-adapter",
+                  "typescript-adapter",
+                  "renderer-registration"
+                ]
+              },
+              "relativePath": {
+                "$ref": "#/$defs/RendererPackageCatalogPath"
+              },
+              "targetRelativePath": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RendererPackageCatalogPath"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "language": {
+                "enum": [
+                  "rust",
+                  "typescript"
+                ]
+              },
+              "role": {
+                "enum": [
+                  "declaration",
+                  "implementation"
+                ]
+              },
+              "content": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "RendererResidentPolicyV1": {
+      "allOf": [
+        {
+          "$ref": "semio.value.resident.capacity.v1"
+        },
+        {
+          "const": {
+            "bytes": 33554432,
+            "slots": 262144,
+            "owners": 262144,
+            "control": {
+              "bytes": 65536,
+              "slots": 1024,
+              "owners": 1024
+            }
+          }
+        }
+      ]
+    },
+    "PluginRuntimeLifecycleSchedulerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor",
+        "instance",
+        "guestLifetime",
+        "closeGeneration",
+        "work",
+        "events",
+        "phases",
+        "refusedWork",
+        "mailbox",
+        "uiAcknowledgement"
+      ],
+      "properties": {
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "instance": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "guestLifetime": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "closeGeneration": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "work": {
+          "const": [
+            "open",
+            "receipt-ack",
+            "poll",
+            "close",
+            "receipt-ack",
+            "receipt-ack"
+          ]
+        },
+        "events": {
+          "const": [
+            "instance-open",
+            "instance-lifecycle-ack",
+            null,
+            "instance-close",
+            "instance-lifecycle-ack",
+            "instance-lifecycle-ack"
+          ]
+        },
+        "phases": {
+          "const": [
+            "captured",
+            "open",
+            "open",
+            "accepted",
+            "retired",
+            "complete"
+          ]
+        },
+        "refusedWork": {
+          "const": [
+            "app-command",
+            "events",
+            "callback"
+          ]
+        },
+        "mailbox": {
+          "const": {
+            "capacity": 32,
+            "overflow": [
+              "operation",
+              "lifecycle"
+            ],
+            "outcome": "refused"
+          }
+        },
+        "uiAcknowledgement": {
+          "const": {
+            "surface": "window",
+            "revision": 1,
+            "baseRevision": 0,
+            "operationCount": 0,
+            "patchSequence": "9007199254740993"
+          }
+        }
+      }
+    },
+    "PluginRuntimeTypedOperationSettlementV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "retainedEffects",
+        "status",
+        "invocation"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.plugin.typed-operation-settlement/v1"
+        },
+        "retainedEffects": {
+          "const": [
+            {
+              "tag": "typed-operation-terminal-seen",
+              "val": null
+            }
+          ]
+        },
+        "status": {
+          "const": {
+            "tag": "idle"
+          }
+        },
+        "invocation": {
+          "const": {
+            "output": null,
+            "requestedEffects": []
+          }
+        }
+      }
+    },
+    "PluginRuntimeChannelCloseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instance",
+        "refusal",
+        "replacement"
+      ],
+      "properties": {
+        "instance": {
+          "const": 20
+        },
+        "refusal": {
+          "const": {
+            "before": [],
+            "afterFailure": [],
+            "afterRetry": [
+              0
+            ]
+          }
+        },
+        "replacement": {
+          "const": {
+            "whileClosing": [],
+            "afterOldClose": [
+              0
+            ],
+            "afterReplacementClose": [
+              0,
+              1
+            ]
+          }
+        }
+      }
+    },
+    "NodeGraphPickChannelV1": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "channel"
+        ],
+        "properties": {
+          "target": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "domain",
+                  "id"
+                ],
+                "properties": {
+                  "domain": {
+                    "enum": [
+                      "node",
+                      "edge",
+                      "handle"
+                    ]
+                  },
+                  "id": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "nodeId",
+                  "portId"
+                ],
+                "properties": {
+                  "nodeId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "portId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "TutorialInteractionCaptureCapture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "state"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/TutorialInteractionCaptureIdentity"
+        },
+        "state": {
+          "$ref": "#/$defs/TutorialInteractionCaptureLocalState"
+        }
+      }
+    },
+    "TutorialInteractionCaptureIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "appInstanceId",
+        "generation",
+        "revision",
+        "documentRevision",
+        "topologyRevision"
+      ],
+      "properties": {
+        "appInstanceId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "documentRevision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "topologyRevision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "TutorialInteractionCaptureLocalState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selection",
+        "activeMode",
+        "activeGranularity"
+      ],
+      "properties": {
+        "selection": {
+          "$ref": "#/$defs/TutorialInteractionCaptureSelection"
+        },
+        "activeMode": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "https://semio.tech/schema/framework/interaction/component.json#/$defs/SelectionMode"
+          }
+        },
+        "activeGranularity": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "TutorialInteractionCaptureSelection": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "https://semio.tech/schema/framework/interaction/component.json#/$defs/DomainSelection"
+      }
+    },
+    "TutorialInteractionCaptureChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "domainId",
+        "granularity",
+        "ids"
+      ],
+      "properties": {
+        "kind": {
+          "const": "selection"
+        },
+        "domainId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "granularity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "TutorialInteractionCaptureV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capture",
+        "observed",
+        "playbackBefore",
+        "snapshotSelection",
+        "delta",
+        "afterDelta",
+        "clearDelta",
+        "afterClear"
+      ],
+      "properties": {
+        "capture": {
+          "$ref": "#/$defs/TutorialInteractionCaptureCapture"
+        },
+        "observed": {
+          "$ref": "https://semio.tech/schema/framework/interaction/component.json#/$defs/InteractionState"
+        },
+        "playbackBefore": {
+          "$ref": "https://semio.tech/schema/framework/interaction/component.json#/$defs/InteractionState"
+        },
+        "snapshotSelection": {
+          "$ref": "#/$defs/TutorialInteractionCaptureSelection"
+        },
+        "delta": {
+          "$ref": "#/$defs/TutorialInteractionCaptureChange"
+        },
+        "afterDelta": {
+          "$ref": "https://semio.tech/schema/framework/interaction/component.json#/$defs/InteractionState"
+        },
+        "clearDelta": {
+          "$ref": "#/$defs/TutorialInteractionCaptureChange"
+        },
+        "afterClear": {
+          "$ref": "https://semio.tech/schema/framework/interaction/component.json#/$defs/InteractionState"
+        }
+      }
+    },
+    "OpenArtifactRelayRelayArgs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactRef"
+      ],
+      "properties": {
+        "artifactRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "oneOf": [
+            {
+              "enum": [
+                "viewer",
+                "editor"
+              ]
+            },
+            {
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
+            }
+          ]
+        },
+        "pluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "appId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spaceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "dependencies": {
+        "pluginId": [
+          "appId"
+        ],
+        "appId": [
+          "pluginId"
+        ],
+        "documentId": [
+          "schema"
+        ],
+        "schema": [
+          "documentId"
+        ]
+      }
+    },
+    "OpenArtifactRelayDialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "standard": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subset": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "OpenArtifactRelayApp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "appId"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "appId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "OpenArtifactRelayV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "manifests",
+        "preferences",
+        "valid",
+        "invalid"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "manifests": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "pluginId",
+              "apps"
+            ],
+            "properties": {
+              "pluginId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "artifactKinds": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "dependencies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "pluginId",
+                    "version"
+                  ],
+                  "properties": {
+                    "pluginId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "version": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "apps": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "role",
+                    "dialect"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "role": {
+                      "enum": [
+                        "viewer",
+                        "editor"
+                      ]
+                    },
+                    "dialect": {
+                      "$ref": "#/$defs/OpenArtifactRelayDialect"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "preferences": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "defaults"
+          ],
+          "properties": {
+            "defaults": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "dialect",
+                  "role",
+                  "app"
+                ],
+                "properties": {
+                  "dialect": {
+                    "$ref": "#/$defs/OpenArtifactRelayDialect"
+                  },
+                  "role": {
+                    "enum": [
+                      "viewer",
+                      "editor"
+                    ]
+                  },
+                  "app": {
+                    "$ref": "#/$defs/OpenArtifactRelayApp"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "valid": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "actionId",
+              "args",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "actionId": {
+                "enum": [
+                  "os.open-artifact",
+                  "os.open-artifact-with"
+                ]
+              },
+              "args": {
+                "$ref": "#/$defs/OpenArtifactRelayRelayArgs"
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "artifactRef",
+                  "dialect",
+                  "role",
+                  "app"
+                ],
+                "properties": {
+                  "artifactRef": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "dialect": {
+                    "$ref": "#/$defs/OpenArtifactRelayDialect"
+                  },
+                  "role": {
+                    "enum": [
+                      "viewer",
+                      "editor"
+                    ]
+                  },
+                  "app": {
+                    "$ref": "#/$defs/OpenArtifactRelayApp"
+                  },
+                  "documentId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "spaceId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "schema": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "invalid": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "actionId",
+              "args",
+              "error"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "actionId": {
+                "enum": [
+                  "os.open-artifact",
+                  "os.open-artifact-with"
+                ]
+              },
+              "args": {
+                "type": "object"
+              },
+              "error": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "ShellLabelResolutionLanguages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string"
+        },
+        "de": {
+          "type": "string"
+        }
+      }
+    },
+    "ShellLabelResolutionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matrix",
+        "cases"
+      ],
+      "properties": {
+        "matrix": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "native",
+            "reuse"
+          ],
+          "properties": {
+            "native": {
+              "$ref": "#/$defs/ShellLabelResolutionLanguages"
+            },
+            "reuse": {
+              "$ref": "#/$defs/ShellLabelResolutionLanguages"
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "terminology",
+              "locale",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "terminology": {
+                "type": "string"
+              },
+              "locale": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

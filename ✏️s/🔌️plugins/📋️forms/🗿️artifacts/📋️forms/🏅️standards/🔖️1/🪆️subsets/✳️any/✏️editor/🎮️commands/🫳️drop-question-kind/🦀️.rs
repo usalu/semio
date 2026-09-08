@@ -1,7 +1,7 @@
 //! ❓️ ❓️ Forms play app commands command — `drop-question-kind`.
 
-use crate::artifacts::forms::schema::{create_form_id, locate_question, update_block_operation, value_to_dsl};
-use crate::artifacts::forms::{forms_steps, op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
+use crate::schema::{create_form_id, locate_question, update_block_operation, value_to_dsl};
+use crate::{forms_steps, op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -73,7 +73,7 @@ pub fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         "single" | "multi" => {
             let mut question = question_shell(id, if kind == "single" { "Single Select" } else { "Multi Select" }.into(), kind.into());
             question.default = if kind == "multi" { Some(value_to_dsl(&Value::Array(vec![]))) } else { None };
-            question.options = Some(vec![crate::artifacts::forms::FormQuestionOption { value: "a".into(), label: "Option A".into() }, crate::artifacts::forms::FormQuestionOption { value: "b".into(), label: "Option B".into() }]);
+            question.options = Some(vec![crate::FormQuestionOption { value: "a".into(), label: "Option A".into() }, crate::FormQuestionOption { value: "b".into(), label: "Option B".into() }]);
             question
         }
         "note" => {
@@ -201,5 +201,5 @@ pub fn handle(payload: &DropQuestionKind, doc: &ArtifactView<'_, FormsSnapshot>,
     };
     let index = resolve_question_insert_index(spec, &step_id, &payload.target_id, &payload.drop_position);
     let question = default_question_for_kind(&payload.kind, create_form_id("q"));
-    Ok(Emit { artifact_mutations: vec![FormMutation::CreateBlock(crate::artifacts::forms::mutations::create_block::mutation::CreateBlock { step_id, block: question, index })], config_mutations: reset_try_config_mutations(), ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![FormMutation::CreateBlock(crate::mutations::create_block::mutation::CreateBlock { step_id, block: question, index })], config_mutations: reset_try_config_mutations(), ..Default::default() })
 }

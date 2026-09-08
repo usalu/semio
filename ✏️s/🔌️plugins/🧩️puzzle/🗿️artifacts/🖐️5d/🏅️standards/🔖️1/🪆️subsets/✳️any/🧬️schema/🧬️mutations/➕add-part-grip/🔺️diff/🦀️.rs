@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `AddPartGrip` — patches the owner part's `grips` list. No-op when the
 //! grip id already exists on that part.
-use crate::artifacts::puzzle5d::diff::{Puzzle5dDiff, Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dPartsDelta};
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::{Puzzle5dDiff, Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dPartsDelta};
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddPartGrip, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

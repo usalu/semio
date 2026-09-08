@@ -1,8 +1,8 @@
 //! 🏁️ Remodeling mutation — one atomic durable reconstruction terminal event.
 
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::{
+use crate::diff::RemodelingDiff;
+use crate::mutations::RemodelingMutation;
+use crate::{
     CameraTrajectory, GeoProducts, ImageAsset, QcReportSnapshot, ReconstructionJob, RemodelingMesh, RemodelingSnapshot, SparseCloud,
 };
 use semio_framework_value_derive::{FromValue, ToValue};

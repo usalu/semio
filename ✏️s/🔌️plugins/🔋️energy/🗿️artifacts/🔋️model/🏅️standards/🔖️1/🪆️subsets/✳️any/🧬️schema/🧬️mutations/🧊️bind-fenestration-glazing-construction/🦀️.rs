@@ -1,8 +1,8 @@
 //! 🧊️ Energy model mutation — `BindFenestrationGlazingConstruction`: Points the fenestration's optional glazing slot at an existing layered construction, which then supersedes `uValueWM2k`/`shgc`/`vlt`. This is the schema seam the ticket's oracle comparison needed: with only the three scalars a semio→EnergyPlus translation can emit nothing richer than `WindowMaterial:SimpleGlazingSystem`, worth +5.7 to +8.1 % of annual cooling on ANSI/ASHRAE 140 cases 600/900.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

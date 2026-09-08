@@ -1,5 +1,14 @@
 //! 🎪️ Playground artifact — demonstrator's owned document entity (minimal schema stub).
 
+#![allow(async_fn_in_trait)]
+#![allow(long_running_const_eval)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+extern crate self as semio_s_artifact_demonstrator_playground;
+
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
 pub const PLAYGROUND_DOCUMENT_SCHEMA: &str = "playground.playground";
@@ -80,9 +89,9 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::playground::standards::v1::subsets::any::schema::playground_artifact_schema_descriptor())
-        .inferences([crate::artifacts::playground::standards::v1::subsets::any::schema::inferences::playground_artifact_inference_descriptor()])
-        .composers(crate::artifacts::playground::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(crate::standards::v1::subsets::any::schema::playground_artifact_schema_descriptor())
+        .inferences([crate::standards::v1::subsets::any::schema::inferences::playground_artifact_inference_descriptor()])
+        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .try_build()
 }
@@ -105,10 +114,10 @@ fn playground_document_language() -> dsl::LanguageSpec {
         id: "playground.document",
         extension: Some("playground"),
         role: dsl::LanguageRole::Document,
-        grammar: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("playground.document"),
     }
 }
@@ -118,10 +127,10 @@ fn playground_op_language() -> dsl::LanguageSpec {
         id: "playground.op",
         extension: None,
         role: dsl::LanguageRole::Ops,
-        grammar: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("playground.op"),
     }
 }
@@ -131,8 +140,8 @@ fn playground_diff_language() -> dsl::LanguageSpec {
         id: "playground.diff",
         extension: None,
         role: dsl::LanguageRole::Diff,
-        grammar: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::standards::v1::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v1::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: dsl::passthrough_hooks("playground.diff"),
@@ -146,8 +155,8 @@ fn playground_pack_language() -> dsl::LanguageSpec {
         role: dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("playground.pack"),
     }
 }
@@ -159,9 +168,275 @@ fn playground_spr_language() -> dsl::LanguageSpec {
         role: dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
         hooks: dsl::passthrough_hooks("playground.spr"),
     }
 }
 //#endregion 🔖️Register
+
+#[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v1 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "."]
+                        pub mod schema {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod inferences {
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                                pub mod binary;
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                                pub mod text;
+                            }
+                            #[path = "."]
+                            pub mod snapshot {
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                                pub mod binary;
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                                pub mod text;
+                            }
+                            #[path = "."]
+                            pub mod diff {
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                                pub mod text;
+                                pub use text::*;
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                                pub mod binary;
+                            }
+                            #[path = "."]
+                            pub mod mutations {
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                                mod component;
+                                pub use component::*;
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                                pub mod binary;
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                                pub mod text;
+                                #[path = "."]
+                                pub mod change_schema {
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🦀️.rs"]
+                                    mod component;
+                                    pub use component::*;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🔺️diff/🦀️.rs"]
+                                    pub mod diff;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/↩️inverse/🦀️.rs"]
+                                    pub mod inverse;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/📝️text/🦀️.rs"]
+                                    pub mod text;
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/💾️binary/🦀️.rs"]
+                                    pub mod binary;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-4f474c/🦀️.rs"]
+                                    mod tests_retags_the_playground_document_schema;
+                                }
+                            }
+                        }
+                        #[path = "."]
+                        pub mod io {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[path = "."]
+                            pub mod import {
+                                #[path = "."]
+                                pub mod deserializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod zip {
+                                            #[path = "."]
+                                            pub mod v2_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod csv {
+                                            #[path = "."]
+                                            pub mod v_rfc4180 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod xlsx {
+                                            #[path = "."]
+                                            pub mod v_ecma_376 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📕️xlsx/🔖️ecma-376/✳️any/🦀️.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod json {
+                                            #[path = "."]
+                                            pub mod v_rfc8259 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            #[path = "."]
+                            pub mod export {
+                                #[path = "."]
+                                pub mod serializers {
+                                    #[path = "."]
+                                    pub mod artifacts {
+                                        #[path = "."]
+                                        pub mod zip {
+                                            #[path = "."]
+                                            pub mod v2_0 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod csv {
+                                            #[path = "."]
+                                            pub mod v_rfc4180 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🦀️.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod xlsx {
+                                            #[path = "."]
+                                            pub mod v_ecma_376 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📕️xlsx/🔖️ecma-376/✳️any/🦀️.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                        #[path = "."]
+                                        pub mod json {
+                                            #[path = "."]
+                                            pub mod v_rfc8259 {
+                                                #[path = "."]
+                                                pub mod any {
+                                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
+                                                    mod component;
+                                                    pub use component::*;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        #[path = "."]
+        pub mod examples {
+            #[path = "."]
+            pub mod demo {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+                mod component;
+                pub use component::*;
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+                mod tests;
+            }
+        }
+
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod playground {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️change-schema/🦀️.rs"]
+            pub mod change_schema;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                    pub mod main;
+                }
+            }
+        }
+    }
+}
+
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod playground {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
+                    pub mod main;
+                }
+            }
+        }
+    }
+}

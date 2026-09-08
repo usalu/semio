@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::GisMapSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `GisMapSnapshot` to its binary pack form.
@@ -23,8 +23,8 @@ pub fn decode(bytes: &[u8]) -> Result<GisMapSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gismap::dsl;
-    use crate::artifacts::gismap::MapFeature;
+    use crate::dsl;
+    use crate::MapFeature;
     use serde_json::json;
 
     #[semio_framework_async_macros::async_test]
@@ -39,7 +39,7 @@ mod tests {
         store::os_store::test_support::assert_dsl_pack_equivalence(&GisMapSnapshot::default());
     }
 
-    /// 🧬️ `MapFeature::data` is `dsl::DslValue` (deliberately untyped — see `crate::artifacts::gismap`'s
+    /// 🧬️ `MapFeature::data` is `dsl::DslValue` (deliberately untyped — see `crate`'s
     /// doc comment) — this bridges a `serde_json::json!` literal into one for test-fixture ergonomics.
     #[semio_framework_async_macros::async_test]
     async fn gis_map_document_pack_agrees_with_dsl_for_synthetic_value_shapes() {

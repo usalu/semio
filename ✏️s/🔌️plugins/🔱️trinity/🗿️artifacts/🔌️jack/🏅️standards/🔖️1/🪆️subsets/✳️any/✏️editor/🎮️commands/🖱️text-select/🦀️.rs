@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Trinity Jack app command — `text-select`.
 
-use crate::artifacts::jack::op::TrinityGraphMutation;
+use crate::op::TrinityGraphMutation;
 use crate::editor::jack::config::{JackConfigMutation, JackEditorSelection};
 use semio_framework_plugin::Emit;
 

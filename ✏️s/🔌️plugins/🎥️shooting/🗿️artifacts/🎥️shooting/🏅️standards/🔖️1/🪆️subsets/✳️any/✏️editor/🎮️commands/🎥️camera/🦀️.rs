@@ -4,10 +4,10 @@
 //! session-only runtime state, never a document field (see `ShootingConfig::camera`). `SetShotCamera` and
 //! `SaveCamera` ARE real document mutations.
 
-use crate::artifacts::shooting::mutations::create_saved_camera::CreateSavedCamera;
-use crate::artifacts::shooting::mutations::replace_shot_camera::ReplaceShotCamera;
-use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::{ShootingCamera, ShootingSavedCamera, ShootingSnapshot};
+use crate::mutations::create_saved_camera::CreateSavedCamera;
+use crate::mutations::replace_shot_camera::ReplaceShotCamera;
+use crate::op::ShootingMutation;
+use crate::{ShootingCamera, ShootingSavedCamera, ShootingSnapshot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -37,7 +37,7 @@ pub mod set_shot_camera {
 //#region 🔖️SaveCamera
 pub mod save_camera {
     use super::*;
-    use crate::artifacts::shooting::schema::next_shooting_id;
+    use crate::schema::next_shooting_id;
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "save-camera")]

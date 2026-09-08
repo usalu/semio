@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `InsertAnnualScheduleRule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::InsertAnnualScheduleRule, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -22,6 +22,6 @@ pub fn diff(payload: &super::InsertAnnualScheduleRule, base: &EnergyModelSnapsho
     if let Some(item) = model.schedules.annual.iter_mut().find(|item| item.id == payload.id) {
         item.rules.insert(payload.index as usize, crate::schedule::CompactScheduleRule { start_month: payload.start_month, start_day: payload.start_day, end_month: payload.end_month, end_day: payload.end_day, daily_schedule_id: payload.daily_schedule_id });
     }
-    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

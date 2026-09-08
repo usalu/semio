@@ -1,0 +1,9 @@
+{
+  "definition_version": 1,
+  "id": "s.norm.din4108",
+  "artifact": "din4108",
+  "directory": "🧱️din4108",
+  "rust_package": "semio-s-artifact-norm-din4108",
+  "nx_project": "@semio-tech/norm-din4108-rs",
+  "dependencies": []
+}

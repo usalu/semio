@@ -1,0 +1,9 @@
+{
+  "definition_version": 1,
+  "id": "os.collection",
+  "artifact": "collection",
+  "directory": "🗂️collection",
+  "rust_package": "semio-framework-artifact-space-collection",
+  "nx_project": "@semio-tech/space-collection-rs",
+  "dependencies": []
+}

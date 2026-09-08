@@ -345,21 +345,21 @@ impl GraphTopologyBuilder {
 // #endregion 🔖️Builder
 
 // #region 🔖️FromGraphView
-/// 🔁️ Builds a [`GraphTopology`] from any [`graph_core::GraphView`]. Nodes are assigned
-/// dense ids in ascending order of their `graph_core::NodeId` (deterministic regardless of
+/// 🔁️ Builds a [`GraphTopology`] from any [`semio_framework_graph::GraphView`]. Nodes are assigned
+/// dense ids in ascending order of their `semio_framework_graph::NodeId` (deterministic regardless of
 /// the view's internal iteration order). Directed views get one arc per edge via `rel_of`;
 /// undirected views get the same relation registered in both directions (the model relation is
 /// expected to be self-inverse in that case, matching every other symmetric-adjacency convention
 /// in this crate).
 #[cfg(test)]
-pub fn from_graph_view(view: &impl graph_core::GraphView, rel_of: impl Fn(graph_core::EdgeRef) -> RelationId) -> Result<GraphTopology, crate::wfc_engine::error::TopologyError> {
+pub fn from_graph_view(view: &impl semio_framework_graph::GraphView, rel_of: impl Fn(semio_framework_graph::EdgeRef) -> RelationId) -> Result<GraphTopology, crate::wfc_engine::error::TopologyError> {
     use crate::wfc_engine::error::TopologyError;
-    let mut sorted_nodes: Vec<graph_core::NodeId> = view.nodes().collect();
+    let mut sorted_nodes: Vec<semio_framework_graph::NodeId> = view.nodes().collect();
     sorted_nodes.sort_unstable();
     if sorted_nodes.len() > u32::MAX as usize {
         return Err(TopologyError::TooManyNodes { count: sorted_nodes.len() as u64 });
     }
-    let index_of: std::collections::HashMap<graph_core::NodeId, usize> = sorted_nodes.iter().enumerate().map(|(i, &n)| (n, i)).collect();
+    let index_of: std::collections::HashMap<semio_framework_graph::NodeId, usize> = sorted_nodes.iter().enumerate().map(|(i, &n)| (n, i)).collect();
 
     let mut builder = GraphTopologyBuilder::new(sorted_nodes.len());
     for edge in view.edges() {

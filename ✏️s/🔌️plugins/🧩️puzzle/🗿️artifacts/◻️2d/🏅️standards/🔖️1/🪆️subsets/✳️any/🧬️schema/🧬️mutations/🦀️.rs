@@ -14,8 +14,8 @@
 //! `serde_json::to_value`) instead of hand-rolling per-field JSON splicing — the typed
 //! `Mutation`/`MutationDiff` impls above are the single source of truth either way.
 
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::Puzzle2dDiff;
+use crate::Puzzle2dSnapshot;
 use protocol::{Mutation, MutationDiff};
 use serde_json::Value;
 
@@ -119,9 +119,9 @@ pub use super::disconnect_kind_compatibility::{disconnect_kind_compatibility, Di
 pub use super::edit_node_text::{edit_node_text, EditNodeText};
 pub use super::move_node::{move_node, MoveNode};
 pub use super::remove_node_handle::{remove_node_handle, RemoveNodeHandle};
-pub use super::replace_edge_geometry::{replace_edge_geometry, ReplaceEdgeGeometry};
+pub use super::replace_edge_semio_framework_geometry::{replace_edge_geometry, ReplaceEdgeGeometry};
 pub use super::replace_kind_catalogs::{replace_kind_catalogs, ReplaceKindCatalogs};
-pub use super::replace_node_geometry::{replace_node_geometry, ReplaceNodeGeometry};
+pub use super::replace_node_semio_framework_geometry::{replace_node_geometry, ReplaceNodeGeometry};
 pub use super::replace_node_handle::{replace_node_handle, ReplaceNodeHandle};
 pub use super::scale_node::{scale_node, ScaleNode};
 
@@ -477,7 +477,7 @@ impl protocol::SemanticMutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA;
+    use crate::PUZZLE_2D_SCHEMA;
     use protocol::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     
     use serde_json::json;
@@ -521,7 +521,7 @@ mod tests {
     //#region 🔖️MutationLaws
     #[test]
     fn create_delete_node_inverse_law() {
-        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
+        use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &create_node(node.clone(), None)));
@@ -531,7 +531,7 @@ mod tests {
 
     #[test]
     fn move_node_inverse_and_absorb_law() {
-        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
+        use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
         let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
@@ -544,7 +544,7 @@ mod tests {
 
     #[test]
     fn node_field_mutations_inverse_law() {
-        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
+        use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
         let base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n1".into(), handles: vec![Puzzle2dHandle { id: "h1".into(), ..Default::default() }], ..Default::default() };
         let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
@@ -564,7 +564,7 @@ mod tests {
 
     #[test]
     fn connect_disconnect_handles_inverse_law() {
-        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
+        use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }], ..Default::default() };
         let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }], ..Default::default() };
@@ -583,7 +583,7 @@ mod tests {
 
     #[test]
     fn delete_node_severs_and_reconnects_edges() {
-        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
+        use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
         let base = empty_puzzle2d_snapshot();
         let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }], ..Default::default() };
         let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }], ..Default::default() };
@@ -600,7 +600,7 @@ mod tests {
 
     #[test]
     fn meta_mutations_inverse_law() {
-        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dCompatSpecificity, Puzzle2dKindCatalogs};
+        use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dCompatSpecificity, Puzzle2dKindCatalogs};
         let base = empty_puzzle2d_snapshot();
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &change_manifest_id(Some("manifest-1".into()))));
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle)));
@@ -626,7 +626,7 @@ mod tests {
 
     #[test]
     fn missing_target_is_error_per_verb_family() {
-        use crate::artifacts::puzzle2d::schema::empty_puzzle2d_snapshot;
+        use crate::schema::empty_puzzle2d_snapshot;
         let base = empty_puzzle2d_snapshot();
         semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &delete_node("missing".into()))); // delete
         semio_framework::io::resolve_ready(assert_missing_target_is_error(&base, &remove_node_handle("missing".into(), "h0".into()))); // remove
@@ -639,7 +639,7 @@ mod tests {
 
     #[test]
     fn create_duplicate_id_is_fatal_and_never_applies() {
-        use crate::artifacts::puzzle2d::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
+        use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
         let mut base = empty_puzzle2d_snapshot();
         let node = Puzzle2dNode { id: "n0".into(), ..Default::default() };
         base.nodes.push(node.clone());

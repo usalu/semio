@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/node-mesh/unbind.json",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/unbind-node-mesh/schema.json",
   "title": "GltfUnbindNodeMeshMutation",
   "type": "object",
   "additionalProperties": false,

@@ -2,7 +2,7 @@
 //! `En1990Diff.consequence_class`.
 
 use super::ChangeConsequenceClass;
-use crate::artifacts::en1990::{En1990Diff, En1990Snapshot};
+use crate::{En1990Diff, En1990Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeConsequenceClass, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {

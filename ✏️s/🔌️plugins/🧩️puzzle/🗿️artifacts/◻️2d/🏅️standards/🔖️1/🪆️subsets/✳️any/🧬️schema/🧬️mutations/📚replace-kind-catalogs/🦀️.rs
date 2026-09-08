@@ -2,9 +2,9 @@
 //! kind-catalog bundle (`nodes`/`🐙️handles`/`edges`/`wires` catalogs together, one manifest-import
 //! gesture).
 
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::{Puzzle2dKindCatalogs, Puzzle2dSnapshot};
+use crate::diff::Puzzle2dDiff;
+use crate::mutations::Puzzle2dMutation;
+use crate::{Puzzle2dKindCatalogs, Puzzle2dSnapshot};
 
 //#region 🔖️Mutation
 /// 📚 `replace-kind-catalogs` payload — `None` clears the catalogs.

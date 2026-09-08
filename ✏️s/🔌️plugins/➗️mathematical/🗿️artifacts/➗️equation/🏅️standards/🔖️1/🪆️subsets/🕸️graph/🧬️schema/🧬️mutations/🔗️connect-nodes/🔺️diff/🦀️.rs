@@ -1,6 +1,6 @@
 //! 🔺️ `connect-nodes` — sparse diff construction.
 
-use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationEdge, EquationSnapshot};
+use crate::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationEdge, EquationSnapshot};
 
 //#region 🔖️Diff
 /// 🔺️ A duplicate edge `id` is Fatal `duplicate-id`, matching `create-node`'s handling. A missing

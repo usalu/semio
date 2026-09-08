@@ -1,8 +1,8 @@
 //! 🔺️ `change-h-tr-wk` sparse diff construction — writes only `Din16798Diff.h_tr_w_k` from the payload.
 
-use crate::artifacts::din16798::diff::Din16798Diff;
-use crate::artifacts::din16798::mutations::change_h_tr_w_k::ChangeHTrWK;
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::diff::Din16798Diff;
+use crate::mutations::change_h_tr_w_k::ChangeHTrWK;
+use crate::Din16798Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeHTrWK, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {

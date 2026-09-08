@@ -6,7 +6,7 @@
 //! plugin's OWN `.dag` DSL directly, never as real json — this impl decodes the foreign
 //! `JsonSnapshot` first, via its own `ArtifactPack`, as the coordinate (`JSON_DIALECT`) requires.
 
-use crate::artifacts::dag::DagSnapshot;
+use crate::DagSnapshot;
 use dsl::FromValue;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};

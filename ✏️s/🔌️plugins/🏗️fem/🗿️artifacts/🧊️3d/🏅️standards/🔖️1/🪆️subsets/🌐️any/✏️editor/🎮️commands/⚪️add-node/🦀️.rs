@@ -1,7 +1,7 @@
 //! 🧱️ 🧱️ FEM 3D app commands command — `add-node`.
 
-use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::op::Fem3dMutation;
+use crate::Fem3dSnapshot;
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,7 +17,7 @@ pub struct AddNode {
 pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.nodes.iter().map(|n| n.id.clone()), "n");
-    Ok(Emit::mutations(vec![Fem3dMutation::CreateNode(crate::artifacts::fem3d::mutations::create_node::CreateNode { node: crate::artifacts::fem3d::FemNode { id, x: payload.x, y: payload.y, z: payload.z } })]))
+    Ok(Emit::mutations(vec![Fem3dMutation::CreateNode(crate::mutations::create_node::CreateNode { node: crate::FemNode { id, x: payload.x, y: payload.y, z: payload.z } })]))
 }
 
 #[cfg(test)]
@@ -65,7 +65,7 @@ mod tests {
         dispatch(&mut app, Fem3dCommand::AddFrame(add_frame::AddFrame { start, end, material_id, section_id, roll: 0.5 })).await;
         let snapshot = app.snapshot().expect("snapshot");
         match snapshot.elements.last().expect("element added") {
-            crate::artifacts::fem3d::FemElement::Frame { roll, .. } => assert_eq!(*roll, 0.5),
+            crate::FemElement::Frame { roll, .. } => assert_eq!(*roll, 0.5),
             _ => panic!("expected Frame"),
         }
     }

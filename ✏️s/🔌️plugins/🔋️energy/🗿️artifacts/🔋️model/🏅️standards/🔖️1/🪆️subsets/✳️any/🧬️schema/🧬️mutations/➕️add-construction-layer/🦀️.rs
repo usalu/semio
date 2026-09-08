@@ -1,8 +1,8 @@
 //! ➕️ Energy model mutation — `AddConstructionLayer`: Inserts one material layer into a construction at a stated position, outside-to-inside. Layer order is physically load-bearing — the same layers in a different order are a different wall — so the position is payload data, not an append.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

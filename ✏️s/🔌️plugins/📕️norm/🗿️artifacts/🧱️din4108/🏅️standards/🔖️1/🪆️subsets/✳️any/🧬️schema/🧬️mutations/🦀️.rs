@@ -19,7 +19,7 @@
 //! ARE self-wired with `#[path = "."]`, because `🦀️.rs` is shared with the agents migrating the
 //! other thirteen norm artifacts and must not absorb this artifact's test mounts.
 
-use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
+use crate::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Mutations
 use super::change_airtightness_class;
@@ -156,7 +156,7 @@ impl Din4108Mutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::din4108::LayerDocument;
+    use crate::LayerDocument;
     use crate::document::ClimateZoneDe;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 

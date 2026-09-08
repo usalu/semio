@@ -3,7 +3,7 @@
 #[path = "📡️protocol.rs"]
 pub mod protocol;
 
-use crate::artifacts::sequence::{SequenceFixture, SlotRef};
+use crate::{SequenceFixture, SlotRef};
 use crate::editor::sequence::SequenceHost;
 use infinite_board_port_directed_dag::DagLayoutOptions;
 use protocol::{SequenceBridge, SequenceDomain, SequenceFailure, SequencePayloadReader};

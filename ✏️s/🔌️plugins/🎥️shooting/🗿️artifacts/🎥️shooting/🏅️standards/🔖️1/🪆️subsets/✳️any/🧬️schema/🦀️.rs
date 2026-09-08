@@ -1,6 +1,6 @@
 //! 🧬️ Shooting artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::shooting::{ShootingAsset, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, ShootingSnapshot};
+use crate::{ShootingAsset, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, ShootingSnapshot};
 use schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
@@ -60,7 +60,7 @@ pub struct ShootingArtifact {
 impl Default for ShootingArtifact {
     fn default() -> Self {
         Self {
-            schema: crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA.into(),
+            schema: crate::SHOOTING_DOCUMENT_SCHEMA.into(),
             assets: Vec::new(),
             saved_cameras: Vec::new(),
             scene: ShootingSceneLighting::default(),
@@ -137,10 +137,10 @@ pub fn next_shooting_id(prefix: &str) -> String {
 
 /// 📄️ Parses the handcrafted DSL fixture once per call — used both for the in-plugin default document
 /// and to bridge into the framework's still-JSON-only `App::example` surface, so
-/// `crate::artifacts::shooting::dsl::SHOOTING_EXAMPLE_TEXT` stays the single source of truth for the
+/// `crate::dsl::SHOOTING_EXAMPLE_TEXT` stays the single source of truth for the
 /// snapshot.
 pub fn default_snapshot() -> ShootingSnapshot {
-    crate::artifacts::shooting::dsl::parse_dsl(crate::artifacts::shooting::dsl::SHOOTING_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::shooting::empty_shooting_snapshot())
+    crate::dsl::parse_dsl(crate::dsl::SHOOTING_EXAMPLE_TEXT).unwrap_or_else(|_| crate::empty_shooting_snapshot())
 }
 
 /// 🌉️ JSON bridge for `semio_framework_plugin`'s `App::example` override, which hardcodes
@@ -197,7 +197,7 @@ fn shooting_scene_to_semio_drawing(snapshot: &ShootingSnapshot) -> (SemioDrawing
     let label = asset.map_or("Untitled", |entry| entry.name.as_str());
 
     let mut children = vec![DrawNode::Path { segments: shooting_shape_path_segments(shape, width as f64, height as f64), style: Some("background".into()) }];
-    if let Some(bytes) = crate::artifacts::shooting::shooting_emblem_bytes(snapshot).filter(|bytes| !bytes.is_empty()) {
+    if let Some(bytes) = crate::shooting_emblem_bytes(snapshot).filter(|bytes| !bytes.is_empty()) {
         children.push(DrawNode::Image { at: SemioPoint2 { x: 0.0, y: 0.0 }, width: width as f64, height: height as f64, mime: "image/png".into(), bytes });
     }
     children.push(DrawNode::Text { value: label.to_string(), at: SemioPoint2 { x: width as f64 / 2.0, y: height as f64 * 0.92 }, style: Some("label".into()) });
@@ -311,7 +311,7 @@ pub fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32)
 /// commands (`🎮️commands/🖨️export`), two consumers.
 pub fn shooting_icon_render_request_json(snapshot: &ShootingSnapshot, shot: &ShootingShot, asset: &ShootingAsset, fallback_camera: &ShootingCamera) -> String {
     let vec3 = |v: [f64; 3]| Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>());
-    let camera = crate::artifacts::shooting::shooting_resolve_shot_camera(snapshot, shot, fallback_camera);
+    let camera = crate::shooting_resolve_shot_camera(snapshot, shot, fallback_camera);
     let scene = &snapshot.scene;
     let mut camera_value = json!({
         "position": vec3(camera.position),
@@ -396,9 +396,9 @@ pub fn shooting_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::shooting::schema::diff::ShootingDiff;
-    use crate::artifacts::shooting::schema::mutations::ShootingMutation;
-    use crate::artifacts::shooting::schema::snapshot::ShootingSnapshot;
+    use crate::schema::diff::ShootingDiff;
+    use crate::schema::mutations::ShootingMutation;
+    use crate::schema::snapshot::ShootingSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -450,7 +450,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::shooting::ShootingSnapshot;
+    use crate::ShootingSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -514,7 +514,7 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::shooting::SHOOTING_DOCUMENT_SCHEMA;
+    use crate::SHOOTING_DOCUMENT_SCHEMA;
 
     #[semio_framework_async_macros::async_test]
     async fn default_example_fixture_parses() {

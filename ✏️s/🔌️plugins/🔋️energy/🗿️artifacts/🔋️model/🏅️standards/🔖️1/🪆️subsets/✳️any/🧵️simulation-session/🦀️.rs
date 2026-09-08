@@ -1,6 +1,6 @@
 //! ⚡️ Artifact-neutral mounted Energy product session: admitted capture, worker job and immutable view.
 
-use crate::artifacts::model::{EnergyModelReadLease, EnergyModelSnapshot};
+use crate::{EnergyModelReadLease, EnergyModelSnapshot};
 use crate::{
     EnergyAdmissionRejected, EnergyCheckpointRejected, EnergyJob, EnergyJobPreview, EnergyJobStage, EnergyModelCloseCursor, EnergyNumericalBounds, EnergyQualityTier, EnergyRestoreJob, EnergyWireLease, EnergyWirePacket, Model, SimulationConfig,
 };
@@ -2597,7 +2597,7 @@ mod tests {
     #[test]
     fn artifact_read_path_has_no_process_cache_clone_or_serde_key_authority() {
         let model = Model { name: "store-owned".into(), ..Model::default() };
-        let snapshot = crate::artifacts::model::energy_snapshot_with_state(crate::artifacts::model::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None);
+        let snapshot = crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None);
         assert_eq!(snapshot.model, model, "the event-sourced snapshot, not a side cache, is the exact numerical read authority");
         let artifact = include_str!("../../../../../🦀️.rs");
         for forbidden in ["ENERGY_SCRATCH", "with_energy_model_ref", "HashMap<String, EnergyWorkingScene>", "energy_scene_id"] {

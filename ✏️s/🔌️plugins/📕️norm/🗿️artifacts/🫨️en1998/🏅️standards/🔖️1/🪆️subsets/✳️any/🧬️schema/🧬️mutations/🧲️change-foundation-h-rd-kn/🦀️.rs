@@ -1,9 +1,9 @@
 //! 🐎 `change-foundation-h-rd-kn` payload — changes the En1998 document's `foundation_h_rd_kn` (foundation horizontal resistance H_Rd [kN]).
 
 
-use crate::artifacts::en1998::En1998Snapshot;
-use crate::artifacts::en1998::diff::En1998Diff;
-use crate::artifacts::en1998::mutations::En1998Mutation;
+use crate::En1998Snapshot;
+use crate::diff::En1998Diff;
+use crate::mutations::En1998Mutation;
 //#region 🔖️ChangeFoundationHRdKn
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

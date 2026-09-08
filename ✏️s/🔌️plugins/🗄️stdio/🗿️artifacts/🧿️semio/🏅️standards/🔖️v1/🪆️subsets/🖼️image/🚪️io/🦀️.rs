@@ -4,15 +4,25 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
+    #[cfg(feature = "conversion-image")]
     use crate::standards::v1::subsets::image::io::export::serializers::artifacts::bmp::v_v3::any::SemioImageToBmp;
+    #[cfg(feature = "conversion-image")]
     use crate::standards::v1::subsets::image::io::export::serializers::artifacts::gif::v89a::any::SemioImageToGif;
+    #[cfg(feature = "conversion-image")]
     use crate::standards::v1::subsets::image::io::export::serializers::artifacts::jpg::v_jfif_1_01::any::SemioImageToJpg;
+    #[cfg(feature = "conversion-image")]
     use crate::standards::v1::subsets::image::io::export::serializers::artifacts::png::v1_2::any::SemioImageToPng;
+    #[cfg(feature = "conversion-image")]
     use crate::standards::v1::subsets::image::io::export::serializers::artifacts::tiff::v6_0::any::SemioImageToTiff;
+    #[cfg(feature = "conversion-image")]
     use crate::standards::v1::subsets::image::io::import::deserializers::artifacts::bmp::v_v3::any::SemioImageFromBmp;
+    #[cfg(feature = "conversion-image")]
     use crate::standards::v1::subsets::image::io::import::deserializers::artifacts::gif::v89a::any::SemioImageFromGif;
+    #[cfg(feature = "conversion-image")]
     use crate::standards::v1::subsets::image::io::import::deserializers::artifacts::jpg::v_jfif_1_01::any::SemioImageFromJpg;
+    #[cfg(feature = "conversion-image")]
     use crate::standards::v1::subsets::image::io::import::deserializers::artifacts::png::v1_2::any::SemioImageFromPng;
+    #[cfg(feature = "conversion-image")]
     use crate::standards::v1::subsets::image::io::import::deserializers::artifacts::tiff::v6_0::any::SemioImageFromTiff;
     use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
     use crate::standards::v1::subsets::image::schema::SemioImageAnalyzer;
@@ -86,8 +96,10 @@ pub mod derived_composition {
     /// AND (symmetrically) the counterpart's export `IoKey` — a deserializer (writes image, reads
     /// fmt) plus its mirror serializer (writes fmt, reads image) together cover all four `IoKey`s per
     /// format without hand-writing each direction separately.
+    #[cfg(feature = "conversion-image")]
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-image")]
     fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES
             .get_or_init(|| {
@@ -118,6 +130,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-image")]
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -132,7 +145,7 @@ pub mod derived_composition {
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-image"))]
     mod tests {
         //#region 🔖️ConformanceLaws
         /// 🧪️ The 6 real-codec conformance-law tests (ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-

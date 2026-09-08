@@ -4,7 +4,7 @@
 //! `dsl::ToValue`/`dsl::FromValue`), not a lossy foreign-format transform — every field round
 //! trips, so `IoFidelity::Exact`.
 
-use crate::artifacts::wires::{WiresSnapshot, MINDMAP_WIRES_SCHEMA};
+use crate::{WiresSnapshot, MINDMAP_WIRES_SCHEMA};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

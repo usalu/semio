@@ -8,13 +8,13 @@
 //! view state round-trips through the config `ArtifactStore` exactly like document content, with a real
 //! `backwards` per `DagConfigMutation` instead of never being VCS'd at all.
 
-use infinite_board_port_directed_dag::DagCamera;
+use semio_framework_artifact_infinite_dag::DagCamera;
 
 //#region 🔖️Config
 /// 🧮️ `DagPlayApp::Config` — the pure-trait `ArtifactEditor::Config` for the dag app.
 ///
 /// The camera is flattened to its three scalar fields (`camera_x`/`camera_y`/`camera_zoom`) rather than
-/// embedding `infinite_board_port_directed_dag::DagCamera` as a `#[dsl(block)]`: that kernel type is
+/// embedding `semio_framework_artifact_infinite_dag::DagCamera` as a `#[dsl(block)]`: that kernel type is
 /// explicitly out of scope for this crate and doesn't derive `dsl::DslRecord` (only
 /// `Clone`/`Debug`/`PartialEq`/`Serialize`/`Deserialize`), so it can't satisfy a nested-block field —
 /// three plain `f64` fields need no such support at all. See `dag_config_camera` below for the seam back

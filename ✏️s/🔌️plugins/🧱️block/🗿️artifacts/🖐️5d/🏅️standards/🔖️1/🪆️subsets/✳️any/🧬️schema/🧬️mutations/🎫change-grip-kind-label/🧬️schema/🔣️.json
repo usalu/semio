@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/5d/1/any/mutation/change-grip-kind-label.json",
+  "$id": "https://semio.tech/schema/s/block/5d/1/any/mutation/change-grip-kind-label/schema.json",
   "title": "ChangeGripKindLabel",
   "type": "object",
   "additionalProperties": false,

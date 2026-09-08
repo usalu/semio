@@ -4,8 +4,8 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::gismap::schema::default_document;
-use crate::artifacts::gismap::{GisMapSnapshot, GISMAP_DIALECT, GIS_MAP_SCHEMA};
+use crate::schema::default_document;
+use crate::{GisMapSnapshot, GISMAP_DIALECT, GIS_MAP_SCHEMA};
 use crate::viewer::gismap::modes::view;
 use crate::viewer::gismap::modes::view::windows::map;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -37,7 +37,7 @@ pub struct GisMapViewer;
 
 impl ArtifactViewer for GisMapViewer {
     type Snapshot = GisMapSnapshot;
-    type Mutation = crate::artifacts::gismap::op::GisMapMutation;
+    type Mutation = crate::op::GisMapMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

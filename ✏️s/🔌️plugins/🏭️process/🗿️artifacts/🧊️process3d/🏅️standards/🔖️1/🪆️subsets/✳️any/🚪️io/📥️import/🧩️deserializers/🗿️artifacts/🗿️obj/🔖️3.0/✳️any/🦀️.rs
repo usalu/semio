@@ -1,5 +1,5 @@
 //! process3d <- obj
-use crate::artifacts::process3d::schema::snapshot::Process3dSnapshot;
+use crate::schema::snapshot::Process3dSnapshot;
 use semio_s_artifact_stdio_obj::{ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEMA};
 
 pub fn register() {}

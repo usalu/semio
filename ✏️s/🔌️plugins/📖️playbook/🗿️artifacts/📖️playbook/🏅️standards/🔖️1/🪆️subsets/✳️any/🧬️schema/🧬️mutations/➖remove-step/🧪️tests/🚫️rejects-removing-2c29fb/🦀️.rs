@@ -13,8 +13,8 @@
 //! back as an EMPTY working scene (`playbook_working_scene_for_handle` fails soft, never panics),
 //! which is exactly the state in which `remove-step`'s single target guard fires.
 
-use crate::artifacts::playbook::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
-use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
+use crate::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
+use crate::{PlaybookDiff, PlaybookSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

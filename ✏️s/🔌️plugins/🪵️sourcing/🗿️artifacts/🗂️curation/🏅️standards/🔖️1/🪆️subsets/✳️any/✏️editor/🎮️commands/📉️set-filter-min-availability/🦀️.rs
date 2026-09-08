@@ -1,7 +1,7 @@
 //! 🔍️ 🔍️ Sourcing curation app commands command — `set-filter-min-availability`.
 
-use crate::artifacts::curation::op::SourcingMutation;
-use crate::artifacts::curation::CurationSnapshot;
+use crate::op::SourcingMutation;
+use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

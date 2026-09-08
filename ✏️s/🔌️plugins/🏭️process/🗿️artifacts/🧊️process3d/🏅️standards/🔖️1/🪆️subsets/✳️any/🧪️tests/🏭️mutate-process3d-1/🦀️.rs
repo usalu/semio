@@ -223,8 +223,8 @@ mod subject {
     use super::{canonical, vector, DSL_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_plugin_process::artifacts::process3d::standards::v1::subsets::any::schema::mutations::process3d_mutation_report_json;
-    use semio_s_plugin_process::artifacts::process3d::standards::v1::subsets::any::schema::snapshot::process3d_identity_report_json;
+    use semio_s_artifact_process_process3d::standards::v1::subsets::any::schema::mutations::process3d_mutation_report_json;
+    use semio_s_artifact_process_process3d::standards::v1::subsets::any::schema::snapshot::process3d_identity_report_json;
 
     //#region 🔖️Report
     /// 📋️ One member of the production bridge's report, named in the error when it is absent — never

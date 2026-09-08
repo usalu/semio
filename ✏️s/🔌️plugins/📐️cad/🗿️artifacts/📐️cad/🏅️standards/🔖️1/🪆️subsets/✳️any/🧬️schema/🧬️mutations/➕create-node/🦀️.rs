@@ -1,7 +1,7 @@
 //! ➕️ CAD mutation — `CreateNode` payload + `MutationKind` impl.
 
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::{CadNode, CadSnapshot};
+use crate::mutations::CadMutation;
+use crate::{CadNode, CadSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
@@ -18,7 +18,7 @@ pub struct CreateNode {
 impl MutationKind<CadSnapshot, CadMutation> for CreateNode {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {

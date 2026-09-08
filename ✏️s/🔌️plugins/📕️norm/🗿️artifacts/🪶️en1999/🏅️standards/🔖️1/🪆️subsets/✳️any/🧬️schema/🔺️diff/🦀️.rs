@@ -1,6 +1,6 @@
 //! 🧬️ EN 1999 diff schema — sparse field delta.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -10,7 +10,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1999")]
 pub struct En1999Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::en1999::schema::En1999Artifact>>,
+    pub artifact: Option<Box<crate::document_schema::En1999Artifact>>,
     #[state(artifact)]
     pub n_ed_kn: Option<f64>,
     #[state(artifact)]

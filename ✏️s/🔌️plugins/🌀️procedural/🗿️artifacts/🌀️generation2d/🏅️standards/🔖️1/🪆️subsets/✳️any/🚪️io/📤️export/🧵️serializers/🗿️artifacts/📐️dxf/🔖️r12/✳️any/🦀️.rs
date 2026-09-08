@@ -1,5 +1,5 @@
 //! generation2d -> dxf
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::Generation2dSnapshot;
 
 pub fn register() {}
 

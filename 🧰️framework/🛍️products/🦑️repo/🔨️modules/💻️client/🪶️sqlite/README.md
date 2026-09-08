@@ -1,79 +1,84 @@
 # Summary
 
-SQLite schema definitions for repo exports.
+SQLite schema of the repo client checkpoint export.
 
 # Docs
 
-## 📐️schema.sql
+## 🧬️schema
 
-SQLite schema with ticket UI storage alongside LLM and commit metadata.
+Scope `repo.client.sqlite` (`https://semio.tech/schema/repo/client/sqlite/schema.json`).
+
+- `🧬️schema/🗄️.sql` — native SQLite implementation, seven tables.
+- `🧬️schema/🔣️.json` — draft-07 contract, one `<Table>Row` export per table, each annotated
+  `x-semio-persistence: local-only`.
+
+Column names and nullability of both files are kept identical by
+`📦️packages/🟦️typescript/🔬️schema.test.ts`.
+
+The exported entity set is the one the client materializes in `ExportResult`
+(`⌨️cli/📤️event_export.go`): technologies, bundles, folders, files, sections and definitions, rooted in
+one repo checkpoint. Shared repo state lives in the repo server's PostgreSQL schema
+(`🖥️server/🧬️schema/`), never here.
 
 # 💯️Requirements
 
 ```mermaid
 erDiagram
-    contributor ||--o{ commit : commits
-    contributor ||--o{ ticket : opens
-    commit ||--o{ repo : belongs_to
     repo ||--o{ folder : contains
+    folder ||--o{ folder : nests
+    folder ||--o{ technology : hosts
+    folder ||--o{ bundle : hosts
+    technology ||--o{ bundle : ships
     folder ||--o{ file : contains
-    folder ||--o{ bundle : contains
     file ||--o{ section : contains
     section ||--o{ definition : contains
-    REPO {
-        string github PK
-        string exported_at
-    }
-    CONTRIBUTOR {
-        string github PK
-        string name
-        string avatar
-    }
-    COMMIT {
-        string sha
-        string message
-        string date
-        int contributor_id FK
-    }
-    FOLDER {
+    repo {
         int id PK
-        int repo_id FK
-        int parent_id FK
         string name
-        int bundle_id FK
+        string summary
+        string checkpoint
     }
-    FILE {
+    folder {
         int id PK
         int parent_folder_id FK
+        int kind
         string name
-        string extension
-        int bundle_id FK
+        string summary
     }
-    BUNDLE {
+    technology {
         int id PK
-        string kind
         int folder_id FK
-    }
-    SECTION {
-        int id PK
+        int kind
         string name
-        string path
-        int file_id FK
-        int parent_id FK
-        int start_line
-        int end_line
-        int start_column
-        int end_column
+        string summary
     }
-    DEFINITION {
+    bundle {
         int id PK
+        int technology_id FK
+        int folder_id FK
+        int kind
         string name
-        string kind
+        string summary
+    }
+    file {
+        int id PK
+        int parent_folder_id FK
+        int kind
+        string name
+        string summary
+    }
+    section {
+        int id PK
         int file_id FK
+        string name
+        string summary
+    }
+    definition {
+        int id PK
         int section_id FK
-        int start_line
-        int end_line
-        int start_column
-        int end_column
+        int kind
+        string name
+        string summary
+        string code
     }
 ```

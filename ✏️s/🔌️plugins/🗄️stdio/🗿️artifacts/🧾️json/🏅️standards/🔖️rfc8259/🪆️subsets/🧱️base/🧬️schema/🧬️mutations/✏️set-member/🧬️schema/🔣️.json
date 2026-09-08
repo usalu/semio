@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/base/mutation/set-member.json",
+  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/base/mutation/set-member/schema.json",
   "title": "SetMemberPayload",
   "type": "object",
   "additionalProperties": false,
@@ -13,15 +13,53 @@
     "path": {
       "type": "array",
       "items": {
-        "type": [
-          "object",
-          "integer"
-        ]
+        "$ref": "#/$defs/JsonPathSegment"
       }
     },
     "key": {
       "type": "string"
     },
-    "value": {}
+    "value": {
+      "description": "any JSON value"
+    }
+  },
+  "$defs": {
+    "JsonPathSegment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "key"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "index"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    }
   }
 }

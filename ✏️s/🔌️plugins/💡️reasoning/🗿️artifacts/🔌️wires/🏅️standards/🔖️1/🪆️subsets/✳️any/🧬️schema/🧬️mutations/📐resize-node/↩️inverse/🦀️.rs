@@ -2,9 +2,9 @@
 //! payload touched (untouched fields stay `None`, meaning "leave alone"). Missing target ⇒
 //! `Vec::new()`.
 
-use crate::artifacts::wires::mutations::WiresMutation;
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::WiresSnapshot;
+use crate::mutations::WiresMutation;
+use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::WiresSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::ResizeNode, base: &WiresSnapshot) -> Vec<WiresMutation> {
@@ -12,6 +12,6 @@ pub fn inverse(payload: &super::ResizeNode, base: &WiresSnapshot) -> Vec<WiresMu
     let old_radius = payload.new_radius.and(node.get("radius").and_then(|value| value.as_f64()));
     let old_width = payload.new_width.and(node.get("width").and_then(|value| value.as_f64()));
     let old_height = payload.new_height.and(node.get("height").and_then(|value| value.as_f64()));
-    vec![crate::artifacts::wires::mutations::resize_node::resize_node(payload.node_id.clone(), old_radius, old_width, old_height)]
+    vec![crate::mutations::resize_node::resize_node(payload.node_id.clone(), old_radius, old_width, old_height)]
 }
 //#endregion 🔖️Inverse

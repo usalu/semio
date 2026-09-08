@@ -2,7 +2,7 @@
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Honest not-yet-implemented
 //! stub, unchanged behavior from the pre-migration free-function version. `IoFidelity::Lossy`.
 
-use crate::artifacts::wires::WiresSnapshot;
+use crate::WiresSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

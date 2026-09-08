@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteSection` — recreates the captured section from `base`.
 use super::DeleteSection;
-use crate::artifacts::fem3d::mutations::{create_section, Fem3dMutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::{create_section, Fem3dMutation};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteSection, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

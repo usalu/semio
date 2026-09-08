@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-normal.json",
+  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/set-normal/schema.json",
   "title": "SetNormal",
   "type": "object",
   "additionalProperties": false,

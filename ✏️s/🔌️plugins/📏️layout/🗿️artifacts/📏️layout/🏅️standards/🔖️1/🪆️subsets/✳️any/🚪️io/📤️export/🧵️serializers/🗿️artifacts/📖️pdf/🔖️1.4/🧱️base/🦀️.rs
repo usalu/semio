@@ -1,5 +1,5 @@
 //! 📖️ Layout document text interchange through the PDF 1.4 base page collection.
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::LayoutSnapshot;
 use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use semio_s_artifact_stdio_pdf::STDIO_PDF_DOCUMENT_SCHEMA;
 

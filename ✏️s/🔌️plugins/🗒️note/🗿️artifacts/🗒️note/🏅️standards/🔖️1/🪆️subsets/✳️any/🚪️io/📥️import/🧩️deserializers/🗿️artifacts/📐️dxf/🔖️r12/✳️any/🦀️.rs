@@ -2,8 +2,8 @@
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Only `DxfEntity::Line` is
 //! mapped back to ink blocks — never a general DXF importer, so this hop is `IoFidelity::Lossy`.
 
-use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot, NoteIdOwner};
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
+use crate::schema::{create_note_id, empty_note_snapshot, NoteIdOwner};
+use crate::{NoteBlockNode, NoteSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

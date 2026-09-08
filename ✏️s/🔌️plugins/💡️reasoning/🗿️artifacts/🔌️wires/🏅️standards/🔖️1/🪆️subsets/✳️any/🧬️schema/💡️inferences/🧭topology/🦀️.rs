@@ -1,7 +1,7 @@
 //! 🧭 `topology` — one named inference: graph-shape stats derived from the wires board's own
 //! `nodes`/`edges` arrays (node count, edge count, connected-component count, cycle-freedom).
 //! `WiresSnapshot`'s `board_fixture` stays an opaque `dsl::DslValue` by this artifact's own design
-//! (see `crate::artifacts::wires`'s module doc), so this leaf reads it generically via
+//! (see `crate`'s module doc), so this leaf reads it generically via
 //! `DslValue::get`/`as_array`/`as_str` rather than through the `BoardFixtureDsl` typed mirror,
 //! matching how the artifact's own tests already probe `board_fixture` (`empty_snapshot_has_empty_fixtures`).
 

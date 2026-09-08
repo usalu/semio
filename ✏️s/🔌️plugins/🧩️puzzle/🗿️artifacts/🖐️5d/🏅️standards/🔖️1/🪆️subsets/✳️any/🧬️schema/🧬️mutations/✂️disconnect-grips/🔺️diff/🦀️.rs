@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `DisconnectGrips` — a real removal, never a whole-snapshot capture.
-use crate::artifacts::puzzle5d::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta};
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta};
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DisconnectGrips, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

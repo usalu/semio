@@ -2,7 +2,7 @@
 //! (never spatial — `En1990QkEntry` carries no position of its own, only table sequence).
 
 
-use crate::artifacts::en1990::{En1990Mutation, En1990Snapshot};
+use crate::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

@@ -1,7 +1,7 @@
 //! Puzzle5d mutation — `ScalePart3d`: changes a part's 3D-projection freeform scale.
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::Puzzle5dDiff;
+use crate::mutations::Puzzle5dMutation;
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
 /// `scale-part3d` payload.
@@ -13,7 +13,7 @@ use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 #[dsl(keyword = "scale-part3d")]
 pub struct ScalePart3d {
     pub id: String,
-    pub new_scale: Option<crate::artifacts::puzzle5d::Puzzle5dScale>,
+    pub new_scale: Option<crate::Puzzle5dScale>,
 }
 
 impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ScalePart3d {
@@ -35,6 +35,6 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ScalePart3d 
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn scale_part_3d(id: String, new_scale: Option<crate::artifacts::puzzle5d::Puzzle5dScale>) -> Puzzle5dMutation {
+pub fn scale_part_3d(id: String, new_scale: Option<crate::Puzzle5dScale>) -> Puzzle5dMutation {
     Puzzle5dMutation::ScalePart3d(ScalePart3d { id, new_scale })
 }

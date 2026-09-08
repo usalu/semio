@@ -1,6 +1,6 @@
 //! 🔍️ Block 5D play app panel — the inspector: the part kind's identity fields plus a grip count.
 
-use crate::artifacts::block5d::Block5dSnapshot;
+use crate::Block5dSnapshot;
 use crate::editor::block5d::terminology::Block5dLabels;
 use crate::editor::block5d::{block5d_action, ui_label, ui_node_list, ui_value_map, ui_value_text};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};

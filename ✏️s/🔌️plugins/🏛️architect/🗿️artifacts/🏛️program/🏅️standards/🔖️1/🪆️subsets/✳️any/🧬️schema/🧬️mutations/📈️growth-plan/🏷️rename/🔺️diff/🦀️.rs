@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📈growth` per Wave C.
 
 use super::RenameGrowthPlan;
-use crate::artifacts::program::diff::{ProgramGrowthDelta, ProgramGrowthPatchEntry};
-use crate::artifacts::program::registers::GrowthPlanPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramGrowthDelta, ProgramGrowthPatchEntry};
+use crate::registers::GrowthPlanPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameGrowthPlan, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

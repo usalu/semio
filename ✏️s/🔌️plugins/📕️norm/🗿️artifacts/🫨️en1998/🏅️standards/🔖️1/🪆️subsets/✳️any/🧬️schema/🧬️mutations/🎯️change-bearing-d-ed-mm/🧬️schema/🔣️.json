@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1998/1/any/mutation/change-bearing-d-ed-mm.json",
+  "$id": "https://semio.tech/schema/s/norm/en1998/1/any/mutation/change-bearing-d-ed-mm/schema.json",
   "title": "ChangeBearingDEdMm",
   "type": "object",
   "additionalProperties": false,

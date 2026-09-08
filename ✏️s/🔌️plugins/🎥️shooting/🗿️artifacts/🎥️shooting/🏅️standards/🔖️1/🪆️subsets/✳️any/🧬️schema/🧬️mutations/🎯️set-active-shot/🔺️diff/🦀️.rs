@@ -2,8 +2,8 @@
 //! shot, Warning `no-op` when already active.
 
 use super::SetActiveShot;
-use crate::artifacts::shooting::diff::ShootingDiff;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::ShootingDiff;
+use crate::ShootingSnapshot;
 
 pub fn diff(payload: &SetActiveShot, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let next = payload.shot_id.clone().unwrap_or_default();

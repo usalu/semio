@@ -2,14 +2,14 @@
   "cases": [
     {
       "target": "native",
-      "requiredPackages": ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", "semio-framework-os-renderer-wgpu", "semio-s-plugin-dag", "semio-s-plugin-flow-extension-math"],
+      "requiredPackages": ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", "semio-framework-os-renderer-wgpu", "semio-s-plugin-dag", "semio-s-plugin-flow-extension-math", "semio-s-artifact-stdio-binary", "semio-s-artifact-norm-en1992", "semio-s-artifact-sequence-sequence"],
       "scopeArgs": ["--all-targets"],
       "targetArgs": [],
       "rendererFeatures": ["--features", "native-bin"]
     },
     {
       "target": "wasm32-wasip2",
-      "requiredPackages": ["semio-s-plugin-dag", "semio-s-plugin-flow-extension-math"],
+      "requiredPackages": ["semio-s-plugin-dag", "semio-s-plugin-flow-extension-math", "semio-s-artifact-stdio-binary", "semio-s-artifact-norm-en1992", "semio-s-artifact-sequence-sequence"],
       "scopeArgs": ["--lib"],
       "targetArgs": ["--target", "wasm32-wasip2"],
       "rendererFeatures": []

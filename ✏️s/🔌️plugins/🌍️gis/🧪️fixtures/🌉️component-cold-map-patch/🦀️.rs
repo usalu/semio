@@ -11,8 +11,8 @@ use semio_framework::kernel::{
 use semio_framework_plugin_host::{shard, GuestInstance, GuestRuntime, PackageHash, PackageId, PackageRef, SharedEngineConfig, WasmtimeRuntime};
 use semio_framework_ui_contract::{Component, SurfaceKind, UiPatch, UiPatchOp};
 use semio_framework_ui_scene::TiledMapScene;
-use semio_s_plugin_gis::artifacts::gismap::standards::v1::subsets::any::schema::mutations::GisMapMutation;
-use semio_s_plugin_gis::artifacts::gismap::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
+use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::mutations::GisMapMutation;
+use semio_s_artifact_gis_gismap::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
 use std::collections::BTreeMap;
 
 const INSTANCE: u32 = 1;
@@ -83,7 +83,7 @@ async fn canonical_pair(value: &serde_json::Value) -> (Vec<u8>, Vec<u8>) {
     let envelope = semio_framework_os_kernel::create_document_envelope::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, "shared-map", snapshot, None);
     let files = semio_framework_os_kernel::print_document_pack(&envelope).await.expect("canonical GIS pack pair");
     assert_eq!(files.pack, envelope.vcs.initial_snapshot.encode_pack());
-    let mut retirement = semio_s_plugin_gis::artifacts::gismap::spr::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let mut retirement = semio_s_artifact_gis_gismap::spr::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     let mut retired = false;
     for _ in 0..100_000 {
         match retirement.close_step(1, semio_framework_os_kernel::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS envelope retirement") {

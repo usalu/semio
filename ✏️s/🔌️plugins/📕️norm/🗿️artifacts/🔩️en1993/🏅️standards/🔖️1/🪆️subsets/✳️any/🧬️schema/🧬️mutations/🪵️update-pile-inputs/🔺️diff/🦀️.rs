@@ -1,7 +1,7 @@
 //! 🔺️ `update-pile-inputs` — sparse diff construction.
 
 use super::UpdatePileInputs;
-use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
+use crate::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &UpdatePileInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {

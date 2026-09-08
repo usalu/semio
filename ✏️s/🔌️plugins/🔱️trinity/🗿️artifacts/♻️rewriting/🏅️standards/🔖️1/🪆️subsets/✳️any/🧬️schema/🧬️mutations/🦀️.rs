@@ -2,8 +2,8 @@
 //!
 //! Every variant wraps the payload owned by its direct `<mutation>/🦀️.rs` leaf.
 
-use crate::artifacts::rewriting::diff::RewritingDiff;
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::diff::RewritingDiff;
+use crate::RewritingSnapshot;
 
 pub use super::change_parameter_binding::{change_parameter_binding, ChangeParameterBinding};
 pub use super::change_rule_layout_point::{change_rule_layout_point, ChangeRuleLayoutPoint};

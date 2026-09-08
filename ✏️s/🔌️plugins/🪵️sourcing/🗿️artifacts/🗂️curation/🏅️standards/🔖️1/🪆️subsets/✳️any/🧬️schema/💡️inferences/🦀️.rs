@@ -8,8 +8,8 @@
 //! (the picked bill of quantities, each `{ objectId, count }`) — no graph, no geometry, so the
 //! honest whole-snapshot derivation is a real census over those two lists.
 
-use crate::artifacts::curation::CurationSnapshot;
-use schema::ArtifactSchema;
+use crate::CurationSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::entries::compute_curation_entries;
@@ -81,7 +81,7 @@ impl ArtifactInferrer for CurationInferrer {
 /// data, so every row's `meshUrl` is `null` and `vortices` is empty — puzzle's importer treats a missing
 /// mesh as "no visual representation yet", not an error.
 pub fn sourcing_catalog_fragment(document: &CurationSnapshot) -> dsl::DslValue {
-    let object_kinds: Vec<dsl::DslValue> = crate::artifacts::curation::stock_of(document)
+    let object_kinds: Vec<dsl::DslValue> = crate::stock_of(document)
         .iter()
         .map(|kind| {
             dsl::DslValue::object([
@@ -107,10 +107,10 @@ pub fn sourcing_catalog_fragment(document: &CurationSnapshot) -> dsl::DslValue {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.sourcing.curation.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `curation_artifact_schema_descriptor`'s registration.
-pub fn curation_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn curation_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.sourcing.curation.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -125,7 +125,7 @@ pub fn curation_artifact_inference_descriptor() -> schema::ArtifactInferenceDesc
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::curation::CuratedItem;
+    use crate::CuratedItem;
     use protocol::Inference;
 
     fn picked_snapshot() -> CurationSnapshot {
@@ -152,13 +152,13 @@ mod tests {
 
     //#region 🧪️PuzzleCatalogFragment
     fn sample_document() -> CurationSnapshot {
-        crate::artifacts::curation::curation_snapshot_from_stock(crate::artifacts::curation::schema::demo_stock(), Vec::new())
+        crate::curation_snapshot_from_stock(&crate::schema::demo_stock(), Vec::new())
     }
 
     #[semio_framework_async_macros::async_test]
     async fn sourcing_catalog_fragment_maps_stock_into_the_puzzle3d_kit_catalog_shape() {
         let document = sample_document();
-        let stock = crate::artifacts::curation::stock_of(&document);
+        let stock = crate::stock_of(&document);
         let fragment = sourcing_catalog_fragment(&document);
         assert_eq!(fragment.get("schema").and_then(|value| value.as_str()), Some("manifest"));
         let object_kinds = fragment.get("objectKinds").and_then(|value| value.as_array()).expect("objectKinds array");

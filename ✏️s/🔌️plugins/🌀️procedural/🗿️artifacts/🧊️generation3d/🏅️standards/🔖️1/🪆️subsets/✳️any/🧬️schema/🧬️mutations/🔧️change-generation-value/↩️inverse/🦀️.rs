@@ -1,11 +1,11 @@
 //! ↩️ `change-generation-value` inverse — old value looked up from BASE (defaulting to
 //! `DslValue::Null` for a question with no prior answer, matching
-//! `flow::playbook::invert_generation_operation`'s own `UpdateValues` rule); missing generation ⇒
+//! `semio_framework_artifact_playbook_playbook::invert_generation_operation`'s own `UpdateValues` rule); missing generation ⇒
 //! nothing to undo.
 
-use crate::artifacts::generation3d::mutations::change_generation_value::ChangeGenerationValue;
-use crate::artifacts::generation3d::mutations::Generation3dMutation;
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::mutations::change_generation_value::ChangeGenerationValue;
+use crate::mutations::Generation3dMutation;
+use crate::Generation3dSnapshot;
 
 pub fn inverse(payload: &ChangeGenerationValue, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
     base.generation

@@ -12,8 +12,8 @@
 //! invariant, which is evaluated on the payload alone, before the scene is consulted at all. That
 //! makes it the branch this fixture pins.
 
-use crate::artifacts::dag::mutations::{apply_dag_mutation, inverse_dag_mutation, DagMutation};
-use crate::artifacts::dag::{DagDiff, DagSnapshot};
+use crate::mutations::{apply_dag_mutation, inverse_dag_mutation, DagMutation};
+use crate::{DagDiff, DagSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

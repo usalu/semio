@@ -4,8 +4,8 @@
 //! `"locale"`/`"terminology"` rather than the kebab-cased forms their command ids would suggest —
 //! see the `as` literals in `crate::editor::cad`'s `app_commands!` invocation.
 
-use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::op::CadMutation;
+use crate::CadSnapshot;
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{runtime_of, snapshot_of};

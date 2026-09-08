@@ -10,9 +10,9 @@
 //! taxonomy node (commands, windows, panels, the wasm bridge) — a helper with exactly one consumer
 //! lives in that consumer's own component file instead.
 
-use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::op::sequence_snapshot_mutations;
-use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::mutations::SequenceMutation;
+use crate::op::sequence_snapshot_mutations;
+use crate::{default_snapshot, SequenceCamera, SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use crate::editor::sequence::commands::connection::{connect_steps, disconnect_steps};
 use crate::editor::sequence::commands::layout::{reorganize, set_orientation};
 use crate::editor::sequence::commands::locale::set_locale;
@@ -25,7 +25,8 @@ use crate::editor::sequence::modes::edit::windows::{compiled, main, script};
 use crate::editor::sequence::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::sequence::presence::{SequencePresence, SequencePresenceMutation};
 use crate::editor::sequence::terminology::sequence_play_labels;
-use dag::{dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
+use dag::{would_create_cycle, DagHost, DagLayoutOptions};
+use semio_framework_artifact_infinite_dag::{dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
 use graph::manifest::PropertyBag;
 use imperative_engine::{
     compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step,
@@ -1032,13 +1033,13 @@ fn admit_sequence_artifact_mutation(mutation: &SequenceMutation) -> Result<store
 fn sequence_delete_inverse(scene: &SequenceWorkingScene) -> Vec<SequenceMutation> {
     let mut inverse = Vec::with_capacity(scene.steps.len().saturating_mul(2).saturating_add(scene.edges.len()));
     for step in &scene.steps {
-        inverse.push(SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id: step.id.clone() }));
+        inverse.push(SequenceMutation::DeleteStep(crate::mutations::DeleteStep { id: step.id.clone() }));
     }
     for step in &scene.steps {
-        inverse.push(SequenceMutation::CreateStep(crate::artifacts::sequence::mutations::CreateStep { step: step.clone() }));
+        inverse.push(SequenceMutation::CreateStep(crate::mutations::CreateStep { step: step.clone() }));
     }
     for edge in &scene.edges {
-        inverse.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() }));
+        inverse.push(SequenceMutation::ConnectSteps(crate::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() }));
     }
     inverse.reverse();
     inverse
@@ -1058,7 +1059,7 @@ fn prepare_sequence_artifact(base: &SequenceSnapshot, mutation: SequenceMutation
                 return Err("Sequence create-step rejected duplicate or capped identity".into());
             }
             scene.steps.push(payload.step.clone());
-            vec![SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id: payload.step.id.clone() })]
+            vec![SequenceMutation::DeleteStep(crate::mutations::DeleteStep { id: payload.step.id.clone() })]
         }
         SequenceMutation::DeleteStep(payload) => {
             if !scene.steps.iter().any(|step| step.id == payload.id) {
@@ -1077,7 +1078,7 @@ fn prepare_sequence_artifact(base: &SequenceSnapshot, mutation: SequenceMutation
             if step.x == payload.x && step.y == payload.y {
                 return Err("Sequence move-step is a no-op".into());
             }
-            let inverse = SequenceMutation::MoveStep(crate::artifacts::sequence::mutations::MoveStep { id: payload.id.clone(), x: step.x, y: step.y });
+            let inverse = SequenceMutation::MoveStep(crate::mutations::MoveStep { id: payload.id.clone(), x: step.x, y: step.y });
             step.x = payload.x;
             step.y = payload.y;
             vec![inverse]
@@ -1087,7 +1088,7 @@ fn prepare_sequence_artifact(base: &SequenceSnapshot, mutation: SequenceMutation
             if step.params == payload.params {
                 return Err("Sequence edit-step-params is a no-op".into());
             }
-            let inverse = SequenceMutation::EditStepParams(crate::artifacts::sequence::mutations::EditStepParams { id: payload.id.clone(), params: step.params.clone() });
+            let inverse = SequenceMutation::EditStepParams(crate::mutations::EditStepParams { id: payload.id.clone(), params: step.params.clone() });
             step.params = payload.params.clone();
             vec![inverse]
         }
@@ -1096,7 +1097,7 @@ fn prepare_sequence_artifact(base: &SequenceSnapshot, mutation: SequenceMutation
             if step.collapsed == payload.collapsed {
                 return Err("Sequence change-step-collapsed is a no-op".into());
             }
-            let inverse = SequenceMutation::ChangeStepCollapsed(crate::artifacts::sequence::mutations::ChangeStepCollapsed { id: payload.id.clone(), collapsed: step.collapsed });
+            let inverse = SequenceMutation::ChangeStepCollapsed(crate::mutations::ChangeStepCollapsed { id: payload.id.clone(), collapsed: step.collapsed });
             step.collapsed = payload.collapsed;
             vec![inverse]
         }
@@ -1110,18 +1111,18 @@ fn prepare_sequence_artifact(base: &SequenceSnapshot, mutation: SequenceMutation
                 return Err("Sequence connect-steps rejected invalid endpoints, duplicate, or capped edge".into());
             }
             scene.edges.push(SequenceEdge { id: payload.id.clone(), from: payload.from.clone(), to: payload.to.clone() });
-            vec![SequenceMutation::DisconnectSteps(crate::artifacts::sequence::mutations::DisconnectSteps { id: payload.id.clone() })]
+            vec![SequenceMutation::DisconnectSteps(crate::mutations::DisconnectSteps { id: payload.id.clone() })]
         }
         SequenceMutation::DisconnectSteps(payload) => {
             let edge = scene.edges.iter().find(|edge| edge.id == payload.id).cloned().ok_or_else(|| format!("Sequence disconnect-steps target {:?} is missing", payload.id))?;
             scene.edges.retain(|entry| entry.id != payload.id);
-            vec![SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id, from: edge.from, to: edge.to })]
+            vec![SequenceMutation::ConnectSteps(crate::mutations::ConnectSteps { id: edge.id, from: edge.from, to: edge.to })]
         }
         SequenceMutation::DuplicateStep(_) => return Err("Sequence duplicate-step has no retained route authority".into()),
     };
     sequence_bounded_serialized_bytes(&inverse, SEQUENCE_STORE_MAXIMUM_BYTES)?;
     sequence_bounded_serialized_bytes(&(&scene.steps, &scene.edges), SEQUENCE_STORE_MAXIMUM_BYTES)?;
-    let content = crate::artifacts::sequence::sequence_content_child_with_owner(scene.steps, scene.edges);
+    let content = crate::sequence_content_child_with_owner(scene.steps, scene.edges);
     let post = SequenceSnapshot { schema: base.schema.clone(), content };
     Ok((post, inverse, mutation))
 }
@@ -1430,7 +1431,7 @@ fn sequence_retained_default_slot(kind: &str) -> &'static str {
 }
 
 fn sequence_retained_create_step(scene: &SequenceWorkingScene, kind: String, x: f64, y: f64, slot: Option<SlotRef>) -> SequenceMutation {
-    SequenceMutation::CreateStep(crate::artifacts::sequence::mutations::CreateStep {
+    SequenceMutation::CreateStep(crate::mutations::CreateStep {
         step: SequenceStep { id: sequence_retained_next_id(scene, "step"), kind, params: StepParams::new(), x, y, slot, collapsed: false },
     })
 }
@@ -1467,22 +1468,22 @@ fn sequence_retained_artifact_emit(command: &SequenceCommand, snapshot: &Sequenc
             });
             vec![sequence_retained_create_step(scene, payload.kind.clone(), payload.x, payload.y, slot)]
         }
-        SequenceCommand::RemoveStep(payload) => sequence_retained_delete_ids(scene, [payload.id.clone()]).into_iter().map(|id| SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id })).collect(),
+        SequenceCommand::RemoveStep(payload) => sequence_retained_delete_ids(scene, [payload.id.clone()]).into_iter().map(|id| SequenceMutation::DeleteStep(crate::mutations::DeleteStep { id })).collect(),
         SequenceCommand::DeleteSelection(_) => {
             let selected = interaction.selection.get(SEQUENCE_INTERACTION_STEPS).map(|selection| selection.ids.clone()).unwrap_or_default();
             if selected.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-retained-selection-capacity")); }
-            sequence_retained_delete_ids(scene, selected).into_iter().map(|id| SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id })).collect()
+            sequence_retained_delete_ids(scene, selected).into_iter().map(|id| SequenceMutation::DeleteStep(crate::mutations::DeleteStep { id })).collect()
         }
-        SequenceCommand::MoveStep(payload) => scene.steps.iter().find(|step| step.id == payload.node_id).filter(|step| step.x != payload.x || step.y != payload.y).map(|_| vec![SequenceMutation::MoveStep(crate::artifacts::sequence::mutations::MoveStep { id: payload.node_id.clone(), x: payload.x, y: payload.y })]).unwrap_or_default(),
+        SequenceCommand::MoveStep(payload) => scene.steps.iter().find(|step| step.id == payload.node_id).filter(|step| step.x != payload.x || step.y != payload.y).map(|_| vec![SequenceMutation::MoveStep(crate::mutations::MoveStep { id: payload.node_id.clone(), x: payload.x, y: payload.y })]).unwrap_or_default(),
         SequenceCommand::SetStepParams(payload) => {
             let params = dsl::os_pack::from_json_str::<StepParams>(&payload.params_json).ok();
             match (scene.steps.iter().find(|step| step.id == payload.id), params) {
-                (Some(step), Some(params)) if step.params != params => vec![SequenceMutation::EditStepParams(crate::artifacts::sequence::mutations::EditStepParams { id: payload.id.clone(), params })],
+                (Some(step), Some(params)) if step.params != params => vec![SequenceMutation::EditStepParams(crate::mutations::EditStepParams { id: payload.id.clone(), params })],
                 _ => Vec::new(),
             }
         }
-        SequenceCommand::SetStepCollapsed(payload) => scene.steps.iter().find(|step| step.id == payload.id && sequence_retained_is_control(&step.kind)).map(|step| vec![SequenceMutation::ChangeStepCollapsed(crate::artifacts::sequence::mutations::ChangeStepCollapsed { id: payload.id.clone(), collapsed: !step.collapsed })]).unwrap_or_default(),
-        SequenceCommand::DisconnectSteps(payload) => scene.edges.iter().filter(|edge| edge.from == payload.from_id && edge.to == payload.to_id).map(|edge| SequenceMutation::DisconnectSteps(crate::artifacts::sequence::mutations::DisconnectSteps { id: edge.id.clone() })).collect(),
+        SequenceCommand::SetStepCollapsed(payload) => scene.steps.iter().find(|step| step.id == payload.id && sequence_retained_is_control(&step.kind)).map(|step| vec![SequenceMutation::ChangeStepCollapsed(crate::mutations::ChangeStepCollapsed { id: payload.id.clone(), collapsed: !step.collapsed })]).unwrap_or_default(),
+        SequenceCommand::DisconnectSteps(payload) => scene.edges.iter().filter(|edge| edge.from == payload.from_id && edge.to == payload.to_id).map(|edge| SequenceMutation::DisconnectSteps(crate::mutations::DisconnectSteps { id: edge.id.clone() })).collect(),
         SequenceCommand::ConnectSteps(payload) => {
             let from = scene.steps.iter().find(|step| step.id == payload.source_node_id);
             let to = scene.steps.iter().find(|step| step.id == payload.target_node_id);
@@ -1491,8 +1492,8 @@ fn sequence_retained_artifact_emit(command: &SequenceCommand, snapshot: &Sequenc
             if payload.source_node_id == payload.target_node_id || !same_slot || would_create_cycle(&existing, &payload.source_node_id, &payload.target_node_id) || scene.edges.iter().any(|edge| edge.from == payload.source_node_id) {
                 Vec::new()
             } else {
-                let mut result: Vec<SequenceMutation> = scene.edges.iter().filter(|edge| edge.to == payload.target_node_id).map(|edge| SequenceMutation::DisconnectSteps(crate::artifacts::sequence::mutations::DisconnectSteps { id: edge.id.clone() })).collect();
-                result.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: sequence_retained_next_id(scene, "edge"), from: payload.source_node_id.clone(), to: payload.target_node_id.clone() }));
+                let mut result: Vec<SequenceMutation> = scene.edges.iter().filter(|edge| edge.to == payload.target_node_id).map(|edge| SequenceMutation::DisconnectSteps(crate::mutations::DisconnectSteps { id: edge.id.clone() })).collect();
+                result.push(SequenceMutation::ConnectSteps(crate::mutations::ConnectSteps { id: sequence_retained_next_id(scene, "edge"), from: payload.source_node_id.clone(), to: payload.target_node_id.clone() }));
                 result
             }
         }
@@ -1641,7 +1642,7 @@ impl SequenceReorganizeState {
             let primary = self.depths[index] as f64 * 280.0;
             let secondary = self.depths[..index].iter().filter(|depth| **depth == self.depths[index]).count() as f64 * 160.0;
             let (x, y) = if config.orientation == "topBottom" { (secondary, primary) } else { (primary, secondary) };
-            if step.x != x || step.y != y { self.mutations.push(SequenceMutation::MoveStep(crate::artifacts::sequence::mutations::MoveStep { id: step.id.clone(), x, y })); }
+            if step.x != x || step.y != y { self.mutations.push(SequenceMutation::MoveStep(crate::mutations::MoveStep { id: step.id.clone(), x, y })); }
             self.emit += 1;
             return Ok(SequencePersistentAdvance::Progress("sequence-reorganize-publish-plan", b"{\"en\":\"Planning node position\",\"de\":\"Knotenposition wird geplant\"}"));
         }
@@ -1759,22 +1760,22 @@ impl SequenceNodeGraphState {
             SequenceNodeGraphStage::Apply => { self.stage = SequenceNodeGraphStage::DeleteSteps; self.cursor = 0; self.advance(command, snapshot, interaction) }
             SequenceNodeGraphStage::DeleteSteps => {
                 let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?; let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
-                if self.cursor < base.steps.len() { let step = &base.steps[self.cursor]; if !target.steps.iter().any(|entry| entry.id == step.id) { self.deleted.push(step.id.clone()); self.mutations.push(SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id: step.id.clone() })); } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-delete-step", b"{\"en\":\"Diffing removed step\",\"de\":\"Entfernter Schritt wird verglichen\"}")); }
+                if self.cursor < base.steps.len() { let step = &base.steps[self.cursor]; if !target.steps.iter().any(|entry| entry.id == step.id) { self.deleted.push(step.id.clone()); self.mutations.push(SequenceMutation::DeleteStep(crate::mutations::DeleteStep { id: step.id.clone() })); } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-delete-step", b"{\"en\":\"Diffing removed step\",\"de\":\"Entfernter Schritt wird verglichen\"}")); }
                 self.stage = SequenceNodeGraphStage::UpsertSteps; self.cursor = 0; self.advance(command, snapshot, interaction)
             }
             SequenceNodeGraphStage::UpsertSteps => {
                 let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?; let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
-                if self.cursor < target.steps.len() { let step = &target.steps[self.cursor]; match base.steps.iter().find(|entry| entry.id == step.id) { None => self.mutations.push(SequenceMutation::CreateStep(crate::artifacts::sequence::mutations::CreateStep { step: step.clone() })), Some(old) if old.kind != step.kind || old.slot != step.slot => { self.recreated.push(step.id.clone()); self.mutations.push(SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id: step.id.clone() })); self.mutations.push(SequenceMutation::CreateStep(crate::artifacts::sequence::mutations::CreateStep { step: step.clone() })); }, Some(old) => { if old.x != step.x || old.y != step.y { self.mutations.push(SequenceMutation::MoveStep(crate::artifacts::sequence::mutations::MoveStep { id: step.id.clone(), x: step.x, y: step.y })); } if old.params != step.params { self.mutations.push(SequenceMutation::EditStepParams(crate::artifacts::sequence::mutations::EditStepParams { id: step.id.clone(), params: step.params.clone() })); } if old.collapsed != step.collapsed { self.mutations.push(SequenceMutation::ChangeStepCollapsed(crate::artifacts::sequence::mutations::ChangeStepCollapsed { id: step.id.clone(), collapsed: step.collapsed })); } } } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-upsert-step", "{\"en\":\"Diffing changed step\",\"de\":\"Geänderter Schritt wird verglichen\"}".as_bytes())); }
+                if self.cursor < target.steps.len() { let step = &target.steps[self.cursor]; match base.steps.iter().find(|entry| entry.id == step.id) { None => self.mutations.push(SequenceMutation::CreateStep(crate::mutations::CreateStep { step: step.clone() })), Some(old) if old.kind != step.kind || old.slot != step.slot => { self.recreated.push(step.id.clone()); self.mutations.push(SequenceMutation::DeleteStep(crate::mutations::DeleteStep { id: step.id.clone() })); self.mutations.push(SequenceMutation::CreateStep(crate::mutations::CreateStep { step: step.clone() })); }, Some(old) => { if old.x != step.x || old.y != step.y { self.mutations.push(SequenceMutation::MoveStep(crate::mutations::MoveStep { id: step.id.clone(), x: step.x, y: step.y })); } if old.params != step.params { self.mutations.push(SequenceMutation::EditStepParams(crate::mutations::EditStepParams { id: step.id.clone(), params: step.params.clone() })); } if old.collapsed != step.collapsed { self.mutations.push(SequenceMutation::ChangeStepCollapsed(crate::mutations::ChangeStepCollapsed { id: step.id.clone(), collapsed: step.collapsed })); } } } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-upsert-step", "{\"en\":\"Diffing changed step\",\"de\":\"Geänderter Schritt wird verglichen\"}".as_bytes())); }
                 self.stage = SequenceNodeGraphStage::DeleteEdges; self.cursor = 0; self.advance(command, snapshot, interaction)
             }
             SequenceNodeGraphStage::DeleteEdges => {
                 let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?; let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
-                if self.cursor < base.edges.len() { let edge = &base.edges[self.cursor]; if !self.deleted.iter().any(|id| id == &edge.from || id == &edge.to) && !self.recreated.iter().any(|id| id == &edge.from || id == &edge.to) && !target.edges.iter().any(|entry| entry.id == edge.id) { self.mutations.push(SequenceMutation::DisconnectSteps(crate::artifacts::sequence::mutations::DisconnectSteps { id: edge.id.clone() })); } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-delete-edge", b"{\"en\":\"Diffing removed edge\",\"de\":\"Entfernte Kante wird verglichen\"}")); }
+                if self.cursor < base.edges.len() { let edge = &base.edges[self.cursor]; if !self.deleted.iter().any(|id| id == &edge.from || id == &edge.to) && !self.recreated.iter().any(|id| id == &edge.from || id == &edge.to) && !target.edges.iter().any(|entry| entry.id == edge.id) { self.mutations.push(SequenceMutation::DisconnectSteps(crate::mutations::DisconnectSteps { id: edge.id.clone() })); } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-delete-edge", b"{\"en\":\"Diffing removed edge\",\"de\":\"Entfernte Kante wird verglichen\"}")); }
                 self.stage = SequenceNodeGraphStage::UpsertEdges; self.cursor = 0; self.advance(command, snapshot, interaction)
             }
             SequenceNodeGraphStage::UpsertEdges => {
                 let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?; let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
-                if self.cursor < target.edges.len() { let edge = &target.edges[self.cursor]; let endpoint_recreated = self.recreated.iter().any(|id| id == &edge.from || id == &edge.to); match base.edges.iter().find(|entry| entry.id == edge.id) { None => self.mutations.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })), Some(_) if endpoint_recreated => self.mutations.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })), Some(old) if old.from != edge.from || old.to != edge.to => { self.mutations.push(SequenceMutation::DisconnectSteps(crate::artifacts::sequence::mutations::DisconnectSteps { id: old.id.clone() })); self.mutations.push(SequenceMutation::ConnectSteps(crate::artifacts::sequence::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })); }, Some(_) => {} } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-upsert-edge", "{\"en\":\"Diffing changed edge\",\"de\":\"Geänderte Kante wird verglichen\"}".as_bytes())); }
+                if self.cursor < target.edges.len() { let edge = &target.edges[self.cursor]; let endpoint_recreated = self.recreated.iter().any(|id| id == &edge.from || id == &edge.to); match base.edges.iter().find(|entry| entry.id == edge.id) { None => self.mutations.push(SequenceMutation::ConnectSteps(crate::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })), Some(_) if endpoint_recreated => self.mutations.push(SequenceMutation::ConnectSteps(crate::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })), Some(old) if old.from != edge.from || old.to != edge.to => { self.mutations.push(SequenceMutation::DisconnectSteps(crate::mutations::DisconnectSteps { id: old.id.clone() })); self.mutations.push(SequenceMutation::ConnectSteps(crate::mutations::ConnectSteps { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })); }, Some(_) => {} } self.cursor += 1; return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-upsert-edge", "{\"en\":\"Diffing changed edge\",\"de\":\"Geänderte Kante wird verglichen\"}".as_bytes())); }
                 self.stage = SequenceNodeGraphStage::Complete; self.advance(command, snapshot, interaction)
             }
             SequenceNodeGraphStage::Complete => {
@@ -2325,7 +2326,7 @@ impl ArtifactEditor for SequencePlayApp {
 
     type Command = SequenceCommand;
 
-    const DIALECT: Dialect = crate::artifacts::sequence::SEQUENCE_DIALECT;
+    const DIALECT: Dialect = crate::SEQUENCE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -2383,7 +2384,7 @@ impl ArtifactEditor for SequencePlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::sequence::config::schema::app_schema_descriptor())
     }
 
@@ -2415,7 +2416,7 @@ impl ArtifactEditor for SequencePlayApp {
         let live = fixture.to_fixture();
         let x = live.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if live.steps.is_empty() { 0.0 } else { 280.0 };
         let step = SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false };
-        Ok(Emit::mutations(vec![crate::artifacts::sequence::mutations::create_step(step)]))
+        Ok(Emit::mutations(vec![crate::mutations::create_step(step)]))
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -2536,9 +2537,9 @@ fn sequence_context_menu_items(registry: &AppActionRegistry, is_de: bool, surfac
 /// `definition()`. Only the leaf action/keybinding declarations (which have no dedicated `_def`
 /// passthrough) are written out inline.
 pub fn create_sequence_app() -> AppDefinition {
-    Editor::builder(crate::artifacts::sequence::SEQUENCE_DIALECT)
+    Editor::builder(crate::SEQUENCE_DIALECT)
             .document(["semio", "sequence"])
-            .artifact_kind(crate::artifacts::sequence::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             .icon_id("sequence")
             .mode_def(edit::definition())
             .default_mode_id(edit::SEQUENCE_PLAY_MODE_EDIT)

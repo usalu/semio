@@ -89,10 +89,10 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::schema::zip_artifact_schema_descriptor())
+        .schema(schema::zip_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::schema::inferences::zip_artifact_inference_descriptor()])
-        .composers(crate::standards::v2_0::subsets::base::io::io_registry::entries())
+        .inferences([schema::inferences::zip_artifact_inference_descriptor()])
+        .composers(standards::v2_0::subsets::base::io::io_registry::entries())
         .subset_validators(zip_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA)
@@ -105,7 +105,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn zip_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<crate::standards::v2_0::subsets::iso21320::io::ZipIso21320Validator>()]).as_slice()
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<standards::v2_0::subsets::iso21320::io::ZipIso21320Validator>()]).as_slice()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five
@@ -121,28 +121,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.zip",
                     extension: Some("zip"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.zip"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.zip.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.zip.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.zip.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.zip.diff"),
@@ -153,8 +153,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.zip.pack"),
                 },
                 dsl::LanguageSpec {
@@ -163,8 +163,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.zip.spr"),
                 },
             ]

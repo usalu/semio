@@ -149,11 +149,11 @@ if (import.meta.vitest) {
   const { expect, it } = import.meta.vitest;
   it("browser actor action handoff validates the neutral schema and exact owner with an independent oracle", async () => {
     const { readFileSync } = await import("node:fs");
-    const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+    const Ajv = (await import("ajv")).default;
     const equal = (await import("fast-deep-equal")).default;
     const fixture = JSON.parse(readFileSync(new URL("./🧫️fixture/🔣️.json", import.meta.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
-    expect(new Ajv2020({ strict: true }).compile(schema)(fixture)).toBe(true);
+    expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     const request = parseBrowserActorActionRequestV1(fixture.request);
     const acknowledged = parseBrowserActorActionResultV1(fixture.acknowledged);
     expect(browserActorActionOwnerMatchesV1(request, acknowledged)).toBe(true);

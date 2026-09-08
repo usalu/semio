@@ -1,6 +1,6 @@
 //! ↩️ `rename-product` — undo restores BASE's preferred name; missing id ⇒ `Vec::new()`.
 
-use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
+use crate::{Iso16757Mutation, Iso16757Snapshot};
 
 use super::mutation::RenameProduct;
 

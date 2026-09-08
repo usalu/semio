@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::din4108::Din4108Snapshot;
-use schema::ArtifactSchema;
+use crate::Din4108Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::Din4108Outline;
@@ -44,7 +44,7 @@ impl protocol::InferenceSpec<Din4108Snapshot> for Din4108Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::din4108::standards::v1::subsets::any::schema::Din4108Builder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Din4108Builder {
     type Snapshot = Din4108Snapshot;
     type Inference = Din4108Inference;
 }
@@ -53,10 +53,10 @@ impl ArtifactInferrer for crate::artifacts::din4108::standards::v1::subsets::any
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.din4108.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `din4108_artifact_schema_descriptor`'s registration.
-pub fn din4108_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn din4108_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.din4108.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -87,7 +87,7 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::din4108::standards::v1::subsets::any::schema::{bb_2, part_1, part_10, part_2, part_3, part_4, part_5, part_6, part_7, part_8, R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};
+use crate::standards::v1::subsets::any::schema::{bb_2, part_1, part_10, part_2, part_3, part_4, part_5, part_6, part_7, part_8, R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};
 /// 📋️ Full DIN 4108 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `Din4108Snapshot -> CheckReport` projection; everything it composes

@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ReplaceReferenceMedia` — recovers the pre-mutation media bundle from `base`.
 use super::ReplaceReferenceMedia;
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceReferenceMedia, base: &CadSnapshot) -> Vec<CadMutation> {

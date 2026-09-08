@@ -9,9 +9,9 @@
 //! `print_dsl(...).into_bytes()` — plain DSL text mislabelled as a zip archive, which no zip reader
 //! could open.
 
-use crate::artifacts::block2d::io::export::serializers::artifacts::json::v_rfc8259::any::json_text;
-use crate::artifacts::block2d::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
-use crate::artifacts::block2d::Block2dSnapshot;
+use crate::io::export::serializers::artifacts::json::v_rfc8259::any::json_text;
+use crate::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
+use crate::Block2dSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

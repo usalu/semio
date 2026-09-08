@@ -37,9 +37,9 @@ if (import.meta.vitest) {
 
   it("PluginPollCompositionWit preserves the canonical six scalars and exact nested field names", async () => {
     const api = await import("./🟦️.ts"); const { default: fixture } = await import("../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧫️fixture/🔣️.json"); const { default: contract } = await import("../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/📜️contract/🔣️.json");
-    const { default: schema } = await import("../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧬️schema/🔣️.json"); const { default: fixtureSchema } = await import("../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/📐️fixture-schema/🔣️.json"); const { default: capacitySchema } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema.json");
+    const { default: schema } = await import("../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧬️schema/🔣️.json"); const { default: capacitySchema } = await import("../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const library = "lodash"; const { default: _ } = await import(library); const { Buffer } = await import("node:buffer");
-    const oracle = new Ajv({ strict: true }).addSchema(capacitySchema).addSchema(schema); expect(oracle.compile(fixtureSchema)(fixture)).toBe(true);
+    const oracle = new Ajv({ strict: true }).addSchema(capacitySchema).addSchema(schema); expect(oracle.getSchema("https://semio.tech/schema/framework/kernel/poll/composition/schema.json#/$defs/CompositionFixture")!(fixture)).toBe(true);
     for (const row of fixture.valid) {
       const bytes = Buffer.alloc(48); const expected = {};
       contract.wireOrder.forEach((path, index) => { bytes.writeBigUInt64LE(BigInt(_.get(row.input.composition, path)), index * 8); _.set(expected, path, bytes.readBigUInt64LE(index * 8)); });

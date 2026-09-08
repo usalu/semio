@@ -7,8 +7,8 @@
 //!
 //! 🏞️ `kind` asserts the owner stream's provenance instead of rewriting it, which is what gives this verb an inverse
 
-use crate::artifacts::remodeling::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
-use crate::artifacts::remodeling::{RemodelingDiff, RemodelingSnapshot};
+use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
+use crate::{RemodelingDiff, RemodelingSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

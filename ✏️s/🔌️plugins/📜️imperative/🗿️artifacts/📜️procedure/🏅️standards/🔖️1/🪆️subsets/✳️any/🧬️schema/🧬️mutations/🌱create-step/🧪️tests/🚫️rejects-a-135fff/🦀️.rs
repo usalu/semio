@@ -13,9 +13,9 @@
 //! Source of truth is the committed JSON beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`); the derived encodings come from `fixtures generate`.
 
-use crate::artifacts::procedure::diff::ProcedureDiff;
-use crate::artifacts::procedure::mutations::ProcedureMutation;
-use crate::artifacts::procedure::{Dictionary, ProcedureSnapshot, Path, PathRef, Step};
+use crate::diff::ProcedureDiff;
+use crate::mutations::ProcedureMutation;
+use crate::{Dictionary, ProcedureSnapshot, Path, PathRef, Step};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -36,7 +36,7 @@ fn cached_program() -> Path {
 
 fn before() -> ProcedureSnapshot {
     let mut snapshot: ProcedureSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before imperative document decodes");
-    crate::artifacts::procedure::materialize_procedure_flow(&mut snapshot.flow, &cached_program());
+    crate::materialize_procedure_flow(&mut snapshot.flow, &cached_program());
     snapshot
 }
 fn expected_after() -> ProcedureSnapshot {

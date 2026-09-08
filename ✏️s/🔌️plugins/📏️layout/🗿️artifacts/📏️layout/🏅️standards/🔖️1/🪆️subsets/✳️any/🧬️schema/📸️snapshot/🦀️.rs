@@ -1,9 +1,9 @@
 //! 🧬️ Layout snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::layout::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
+use crate::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 #[cfg(test)]
-use crate::artifacts::layout::Frame;
+use crate::Frame;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Snapshot
@@ -61,7 +61,7 @@ pub struct LayoutSnapshot {
 }
 
 /// 🧷️ Real "empty" constructor used as the parse/decode starting point (mirrors cad's
-/// `empty_cad_snapshot`) — `default_document()` at `crate::artifacts::layout::schema` seeds a full
+/// `empty_cad_snapshot`) — `default_document()` at `crate::schema` seeds a full
 /// demo document instead, so this can't reuse a `Default` impl (this type has none).
 pub(crate) fn empty_layout_snapshot() -> LayoutSnapshot {
     LayoutSnapshot {
@@ -302,7 +302,7 @@ impl store::ArtifactPack for LayoutSnapshot {
 #[cfg(test)]
 mod round_trip_tests {
     use super::*;
-    use crate::artifacts::layout::{LayoutBounds, Page, PageColumns, PageMargins};
+    use crate::{LayoutBounds, Page, PageColumns, PageMargins};
 
     fn sample_with_composition() -> LayoutSnapshot {
         let mut snapshot = empty_layout_snapshot();

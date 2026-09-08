@@ -1,6 +1,6 @@
 //! 📜️ Note artifact — textual document grammar surface + laws (constitutional: dsl).
 
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -25,7 +25,7 @@ pub fn print_dsl(document: &NoteSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+    use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
     use std::collections::BTreeMap;
 
     #[semio_framework_async_macros::async_test]
@@ -54,7 +54,7 @@ mod tests {
             linked_artifact: None,
             blocks: vec![
                 NoteBlockNode::Text {
-                    content: crate::artifacts::note::note_text_child_record(
+                    content: crate::note_text_child_record(
                         "text-1",
                         &[NoteTextParagraph {
                             runs: vec![
@@ -116,7 +116,7 @@ mod tests {
                     visible: true,
                     locked: false,
                     children: vec![NoteBlockNode::Text {
-                        content: crate::artifacts::note::note_text_child_record("child-text-1", &[]),
+                        content: crate::note_text_child_record("child-text-1", &[]),
                         id: "child-text-1".into(),
                         name: "Child".into(),
                         x: 0.0,

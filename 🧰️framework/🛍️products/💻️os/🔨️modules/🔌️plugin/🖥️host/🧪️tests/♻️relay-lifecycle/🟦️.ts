@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv from "ajv";
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 
 type Expected = { state: string; firstReason: string | null; cancelAdmissions: number; releaseOpportunities: number; callerOutput: string | null };
@@ -13,8 +13,10 @@ type Fixture = { schemaVersion: number; capacities: { mountedRelaySlots: number;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/♻️relay-lifecycle.json"), "utf8")) as Fixture;
-const schema = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🧬️relay-lifecycle.schema.json"), "utf8"));
-const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+const schema = JSON.parse(readFileSync(join(here, "../../🧬️schema/🔣️.json"), "utf8"));
+const ajv = new Ajv({ strict: true, allErrors: true });
+ajv.addSchema(schema);
+const validate = ajv.getSchema(`${schema.$id}#/$defs/RelayLifecycleV1`)!;
 if (!validate(fixture)) throw new Error(`relay lifecycle fixture schema violation: ${JSON.stringify(validate.errors)}`);
 
 /** 🤖 Interprets one literal trace independently from the Rust ownership machinery. */

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/model/mutation/insert-element.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/model/mutation/insert-element/schema.json",
   "title": "InsertElement",
   "type": "object",
   "additionalProperties": false,

@@ -2,9 +2,9 @@
 //! already at that name.
 
 use super::RenameAsset;
-use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
-use crate::artifacts::shooting::ShootingAssetPatch;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
+use crate::ShootingAssetPatch;
+use crate::ShootingSnapshot;
 
 pub fn diff(payload: &RenameAsset, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let Some(existing) = base.assets.iter().find(|asset| asset.id == payload.id) else {

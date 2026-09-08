@@ -4,7 +4,7 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::curation::{CurationSnapshot, SOURCING_CURATION_SCHEMA, SOURCING_DIALECT};
+use crate::{CurationSnapshot, SOURCING_CURATION_SCHEMA, SOURCING_DIALECT};
 use crate::viewer::sourcing::modes::view;
 use crate::viewer::sourcing::modes::view::windows::pool;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -42,9 +42,9 @@ pub struct SourcingViewer;
 
 impl ArtifactViewer for SourcingViewer {
     /// 📜️ Snapshot/decode-only Mutation are the SAME artifact-level types the sibling editor uses
-    /// (contract §2.2) — they already live outside both surfaces, under `crate::artifacts::curation`.
+    /// (contract §2.2) — they already live outside both surfaces, under `crate`.
     type Snapshot = CurationSnapshot;
-    type Mutation = crate::artifacts::curation::SourcingMutation;
+    type Mutation = crate::SourcingMutation;
     /// 👁️ A viewer needs no persisted per-session state to render a read-only catalogue table —
     /// framework `NoConfig`/`NoPresence`/`NoTransient` throughout, an intentional simplification, not
     /// a bug (mirrors the cad pilot's viewer, contract §2.2/§8).
@@ -60,7 +60,7 @@ impl ArtifactViewer for SourcingViewer {
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;
 
     fn initial_snapshot() -> CurationSnapshot {
-        crate::artifacts::curation::schema::default_document()
+        crate::schema::default_document()
     }
 
     /// 👁️ Structurally read-only: the sole `SourcingViewCommand::Noop` variant never carries a config

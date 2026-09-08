@@ -8,7 +8,7 @@
 //! `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave-3 gap, pre-existing, not introduced here) — real
 //! parity with the editor's CURRENT behavior for that gap, not a regression.
 
-use crate::artifacts::lowpoly::LowpolySnapshot;
+use crate::LowpolySnapshot;
 use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, WindowKindDefinition};
 // 🚧️ SDK GAP: `MeshWindowKit`/`MeshView`/`WindowKit` (contract §2.6) are declared inside
 // `semio_framework_plugin`'s `app` module but are not in the curated crate-root `pub use app::{ … };`
@@ -98,7 +98,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::artifacts::lowpoly::schema::default_snapshot();
+        let document = crate::schema::default_snapshot();
         let _node = render(&document);
     }
 }

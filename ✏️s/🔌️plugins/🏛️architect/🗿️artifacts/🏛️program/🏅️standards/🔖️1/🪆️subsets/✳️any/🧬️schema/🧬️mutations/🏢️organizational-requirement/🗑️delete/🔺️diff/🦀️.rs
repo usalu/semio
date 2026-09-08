@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🏢organizational` per Wave C.
 
 use super::DeleteOrganizationalRequirement;
-use crate::artifacts::program::diff::ProgramOrganizationalDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramOrganizationalDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteOrganizationalRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::raster::RasterSnapshot;
+use crate::RasterSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `RasterSnapshot` to its binary pack form.
@@ -23,14 +23,14 @@ pub fn decode(bytes: &[u8]) -> Result<RasterSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::raster::mutations::create_layer;
-    use crate::artifacts::raster::op::RasterMutation;
-    use crate::artifacts::raster::RasterOwnedMap;
-    use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+    use crate::mutations::create_layer;
+    use crate::op::RasterMutation;
+    use crate::RasterOwnedMap;
+    use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
     #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {
-        let document = crate::artifacts::raster::schema::semio_fixture_snapshot();
+        let document = crate::schema::semio_fixture_snapshot();
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);
@@ -39,7 +39,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_representative_document() {
         let mut assets = RasterOwnedMap::new();
-        assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() })).expect("bounded fixture operation succeeds");
+        assets.insert("asset-1".into(), crate::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() })).expect("bounded fixture operation succeeds");
         let mut params = RasterOwnedMap::new();
         params.insert("brightness".into(), dsl::DslValue::float(0.06)).expect("bounded fixture operation succeeds");
         params.insert("label".into(), dsl::DslValue::String("Warm \"Curve\"".to_string())).expect("bounded fixture operation succeeds");
@@ -112,7 +112,7 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::artifacts::raster::schema::empty_raster_document(), None);
+        let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::schema::empty_raster_document(), None);
         let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {

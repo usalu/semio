@@ -4,7 +4,7 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::presentation::{default_presentation_snapshot, PresentationSnapshot, ANIMATE_DIALECT, PRESENTATION_DOCUMENT_SCHEMA};
+use crate::{default_presentation_snapshot, PresentationSnapshot, ANIMATE_DIALECT, PRESENTATION_DOCUMENT_SCHEMA};
 use crate::viewer::animate::modes::view;
 use crate::viewer::animate::modes::view::windows::tile_editor;
 use semio_framework_plugin::app::InteractionView;
@@ -38,7 +38,7 @@ pub struct AnimatePresentationViewer;
 
 impl ArtifactViewer for AnimatePresentationViewer {
     type Snapshot = PresentationSnapshot;
-    type Mutation = crate::artifacts::presentation::PresentationMutation;
+    type Mutation = crate::PresentationMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ConnectGrips` — a real append-only insert. No-op when the id
 //! already exists in `base`.
-use crate::artifacts::puzzle5d::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta};
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dSnapshot};
+use crate::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta};
+use crate::{Puzzle5dFastener, Puzzle5dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ConnectGrips, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

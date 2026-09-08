@@ -3,12 +3,12 @@
 //! empty runs, matching the original write's own out-of-range no-op behavior).
 
 use super::EditPaintLayer;
-use crate::artifacts::lowpoly::mutations::PixelRun;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::mutations::PixelRun;
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &EditPaintLayer, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
-    let pixels = crate::artifacts::lowpoly::schema::layer_pixels_at(base, &payload.object_id, payload.layer_index);
+    let pixels = crate::schema::layer_pixels_at(base, &payload.object_id, payload.layer_index);
     let inverse_runs = payload
         .runs
         .iter()

@@ -1,10 +1,10 @@
 //! 🧬️ Generation3d snapshot schema — artifact-lane fields only.
 
-use flow::playbook::GenerationPlayState;
-use flow::FlowFixture;
+use semio_framework_artifact_playbook_playbook::GenerationPlayState;
+use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-pub use flow::playbook::GenerationPlayRoot;
+pub use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 
 //#region 🔖️Generation3dSnapshot
 /// 🧬️ Generation3dSnapshot facet type.

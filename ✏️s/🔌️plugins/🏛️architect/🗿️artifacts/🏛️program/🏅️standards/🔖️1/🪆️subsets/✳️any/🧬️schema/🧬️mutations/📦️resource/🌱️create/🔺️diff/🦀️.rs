@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📦resources` per Wave C.
 
 use super::CreateResource;
-use crate::artifacts::program::diff::ProgramResourcesDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramResourcesDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
 pub fn diff(payload: &CreateResource, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

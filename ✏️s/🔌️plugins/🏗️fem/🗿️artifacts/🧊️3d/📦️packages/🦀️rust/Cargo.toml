@@ -1,0 +1,43 @@
+[package]
+name = "semio-s-artifact-fem-3d"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM 3d artifact"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+default = []
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-fem-2d = { workspace = true }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-md = { workspace = true }
+semio-s-artifact-stdio-obj = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-mesh"] }
+semio-s-artifact-stdio-stl = { workspace = true }
+pack = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true, optional = true }
+semio-framework-ui-contract = { workspace = true, optional = true }
+semio-framework-ui-scene = { workspace = true, optional = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

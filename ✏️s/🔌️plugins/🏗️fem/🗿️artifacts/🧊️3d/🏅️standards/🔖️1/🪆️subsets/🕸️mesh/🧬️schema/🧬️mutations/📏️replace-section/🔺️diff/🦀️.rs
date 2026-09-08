@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ReplaceSection`.
 use super::ReplaceSection;
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dSectionsDelta, Fem3dSectionsPatchEntry};
-use crate::artifacts::fem3d::mutations::{id_mismatch, invariant, section_breach};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::diff::{Fem3dDiff, Fem3dSectionsDelta, Fem3dSectionsPatchEntry};
+use crate::mutations::{id_mismatch, invariant, section_breach};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceSection, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

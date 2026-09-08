@@ -1,19 +1,41 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/remove-object.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/remove-object/schema.json",
   "title": "RemoveObject",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "id"
   ],
   "properties": {
-    "mutation": {
-      "const": "removeObject"
-    },
     "id": {
-      "type": "object"
+      "$ref": "#/$defs/ObjRef"
+    },
+    "mutation": {
+      "const": "removeObject",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "ObjRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "num",
+        "gen"
+      ],
+      "properties": {
+        "num": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "gen": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
     }
   }
 }

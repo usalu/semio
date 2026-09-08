@@ -1119,7 +1119,7 @@ mod tests {
         h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
 
-        let fixture: serde_json::Value = serde_json::to_value(<crate::artifacts::puzzle2d::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::puzzle2d::dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
+        let fixture: serde_json::Value = serde_json::to_value(<crate::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         h.set_board_kind_catalogs_from_json(&catalogs_json_from_manifest_id("nakagin")).unwrap();
@@ -1200,7 +1200,7 @@ mod tests {
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
 
-        let fixture: serde_json::Value = serde_json::to_value(<crate::artifacts::puzzle2d::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::puzzle2d::dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
+        let fixture: serde_json::Value = serde_json::to_value(<crate::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = fixture.get("meta").and_then(|m| m.get("kindCatalogs")).map_or_else(

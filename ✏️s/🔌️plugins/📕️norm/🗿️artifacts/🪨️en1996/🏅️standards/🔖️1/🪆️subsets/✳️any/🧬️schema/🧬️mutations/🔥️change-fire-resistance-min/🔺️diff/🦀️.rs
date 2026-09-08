@@ -1,8 +1,8 @@
 //! 🔺️ `change-fire-resistance-min` sparse diff construction — writes only `En1996Diff.fire_resistance_min` from the payload.
 
-use crate::artifacts::en1996::diff::En1996Diff;
-use crate::artifacts::en1996::mutations::change_fire_resistance_min::ChangeFireResistanceMin;
-use crate::artifacts::en1996::En1996Snapshot;
+use crate::diff::En1996Diff;
+use crate::mutations::change_fire_resistance_min::ChangeFireResistanceMin;
+use crate::En1996Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeFireResistanceMin, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {

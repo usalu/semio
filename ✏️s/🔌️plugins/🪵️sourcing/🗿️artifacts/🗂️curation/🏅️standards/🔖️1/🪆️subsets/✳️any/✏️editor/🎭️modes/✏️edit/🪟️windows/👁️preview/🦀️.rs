@@ -1,7 +1,7 @@
 //! 👁️ Sourcing curation app — the preview window: a 3D preview of the currently-selected object.
 
-use crate::artifacts::curation::schema::{instance_json, kind_mesh_json};
-use crate::artifacts::curation::CurationSnapshot;
+use crate::schema::{instance_json, kind_mesh_json};
+use crate::CurationSnapshot;
 use crate::editor::sourcing::terminology::SourcingLabels;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{world3d_default_camera, world3d_selection_json, BuiltNode, Label, LocalizedLabel, MeshView, MeshWindowKit, PluginAssemblyError, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
@@ -41,7 +41,7 @@ pub fn definition() -> WindowKindDefinition {
 /// framework gap, not worked around here — kept as a parameter (rather than deleted outright) so that
 /// future wave has a slot to fill in.
 pub fn render(document: &CurationSnapshot, selected_ids: &[String], labels: &SourcingLabels) -> UiAssemblyResult<BuiltNode> {
-    let stock = crate::artifacts::curation::stock_of(document);
+    let stock = crate::stock_of(document);
     let Some(kind) = selected_ids.first().and_then(|id| stock.iter().find(|kind| &kind.id == id)) else {
         return semio_framework_plugin::built_text_node(Label::data(labels.no_selection.as_str())).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sourcing preview placeholder admission failed"));
     };
@@ -70,8 +70,8 @@ mod tests {
     /// surface back is the current idiom (see `🎪️demonstrator`'s own `🪟️main` window test).
     #[semio_framework_async_macros::async_test]
     async fn preview_renders_selected_mesh_id() {
-        let document = crate::artifacts::curation::schema::default_document();
-        let object_id = crate::artifacts::curation::stock_of(&document)[0].id.clone();
+        let document = crate::schema::default_document();
+        let object_id = crate::stock_of(&document)[0].id.clone();
         let node = render(&document, &[object_id.clone()], crate::editor::sourcing::terminology::sourcing_curation_labels(&SourcingCurationConfig::default())).expect("bounded preview");
         let semio_framework_plugin::Component::Surface(props) = node.component else { panic!("preview must build a World3d surface") };
         let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(&props).expect("decode world3d scene");
@@ -81,7 +81,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn preview_shows_placeholder_without_selection() {
-        let document = crate::artifacts::curation::schema::default_document();
+        let document = crate::schema::default_document();
         let node = render(&document, &[], crate::editor::sourcing::terminology::sourcing_curation_labels(&SourcingCurationConfig::default())).expect("bounded placeholder");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("No selection"));

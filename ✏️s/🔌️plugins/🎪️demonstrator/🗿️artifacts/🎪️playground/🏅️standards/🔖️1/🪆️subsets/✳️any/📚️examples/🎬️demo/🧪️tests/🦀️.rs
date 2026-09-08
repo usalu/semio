@@ -7,8 +7,8 @@ fn primary_asset_is_nonempty() {
 //#region 🧪️InferenceLaws
 #[test]
 fn inference_determinism_law() {
-    use crate::artifacts::playground::standards::v1::subsets::any::schema::inferences::PlaygroundInference;
-    use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+    use crate::standards::v1::subsets::any::schema::inferences::PlaygroundInference;
+    use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
     use protocol::Inference;
 
     let snapshot = PlaygroundSnapshot::default();
@@ -17,8 +17,8 @@ fn inference_determinism_law() {
 
 #[test]
 fn inference_default_law() {
-    use crate::artifacts::playground::standards::v1::subsets::any::schema::inferences::PlaygroundInference;
-    use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+    use crate::standards::v1::subsets::any::schema::inferences::PlaygroundInference;
+    use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
     use protocol::Inference;
 
     assert_eq!(PlaygroundInference::infer(&PlaygroundSnapshot::default()), PlaygroundInference::default());

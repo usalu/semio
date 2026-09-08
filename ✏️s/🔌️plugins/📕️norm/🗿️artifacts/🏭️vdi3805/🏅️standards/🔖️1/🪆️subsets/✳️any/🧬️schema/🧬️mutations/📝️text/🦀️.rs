@@ -7,9 +7,9 @@
 //! `Serialize`/`Deserialize`, so a second handcrafted grammar per structured type would just
 //! duplicate that losslessly.
 
-pub use crate::artifacts::vdi3805::schema::mutations::Vdi3805Mutation;
+pub use crate::document_schema::mutations::Vdi3805Mutation;
 
-use crate::artifacts::vdi3805::schema::mutations::{
+use crate::document_schema::mutations::{
     add_geometry_connection::AddGeometryConnection, change_correction_as_of::ChangeCorrectionAsOf, change_edition_profile::ChangeEditionProfile, change_strict_mode::ChangeStrictMode,
     create_curve::CreateCurve, create_geometry::CreateGeometry, create_product::CreateProduct, delete_curve::DeleteCurve, delete_geometry::DeleteGeometry, delete_product::DeleteProduct,
     remove_edition_profile::RemoveEditionProfile, remove_geometry_connection::RemoveGeometryConnection, rename_product::RenameProduct, replace_curve_points::ReplaceCurvePoints,
@@ -369,13 +369,13 @@ impl protocol::OpBinary for Vdi3805Mutation {
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
-    use crate::artifacts::vdi3805::{
+    use crate::{
         BoundingBox, CatalogueProduct, CharacteristicCurve, Configuration, ConnectionPoint, CurvePoint, EditionId, EditionProfileChoice, ExtensionBag, ParametricGeometry, ProductIdentity, SecurityLimits, SheetId, VdiQuantityKind, VdiUnit, VdiValue,
     };
 
     let product = CatalogueProduct {
         identity: ProductIdentity { manufacturer_code: "DEMO".into(), product_group: "HV".into(), article_number: "VLV-NEW".into() },
-        title: crate::artifacts::vdi3805::bilingual("Neu", "New"),
+        title: crate::bilingual("Neu", "New"),
         sheet: SheetId(3),
         records: Vec::new(),
         configuration: Configuration { id: "cfg.new".into(), parameters: std::collections::BTreeMap::new(), geometry_ref: None, function_refs: Vec::new() },
@@ -387,7 +387,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
     let curve = CharacteristicCurve { id: "curve.new".into(), x_unit: VdiUnit::delta("%", VdiQuantityKind::Dimensionless, 0.01), y_unit: VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0), points: vec![CurvePoint { x: 0.0, y: 0.0 }] };
 
     vec![
-        Vdi3805Mutation::UpdateManufacturerFile(UpdateManufacturerFile { new_manufacturer_file: crate::artifacts::vdi3805::reference_fixture().manufacturer_file }),
+        Vdi3805Mutation::UpdateManufacturerFile(UpdateManufacturerFile { new_manufacturer_file: crate::reference_fixture().manufacturer_file }),
         Vdi3805Mutation::ChangeCorrectionAsOf(ChangeCorrectionAsOf { new_correction_as_of: EditionId::new(2025, 3) }),
         Vdi3805Mutation::ChangeStrictMode(ChangeStrictMode { new_strict_mode: true }),
         Vdi3805Mutation::UpdateLimits(UpdateLimits { new_limits: SecurityLimits { max_file_bytes: 1, max_records: 2, max_field_length: 3, max_nesting_depth: 4 } }),
@@ -395,7 +395,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
         Vdi3805Mutation::RemoveEditionProfile(RemoveEditionProfile { sheet: "8".into() }),
         Vdi3805Mutation::CreateProduct(CreateProduct { product: product.clone(), index: Some(0) }),
         Vdi3805Mutation::DeleteProduct(DeleteProduct { id: "VLV-50-001".into() }),
-        Vdi3805Mutation::RenameProduct(RenameProduct { id: "VLV-50-001".into(), new_title: crate::artifacts::vdi3805::bilingual("Umbenannt", "Renamed") }),
+        Vdi3805Mutation::RenameProduct(RenameProduct { id: "VLV-50-001".into(), new_title: crate::bilingual("Umbenannt", "Renamed") }),
         Vdi3805Mutation::ReplaceProductConfiguration(ReplaceProductConfiguration { id: "VLV-50-001".into(), new_configuration: product.configuration.clone() }),
         Vdi3805Mutation::CreateGeometry(CreateGeometry { geometry: geometry.clone() }),
         Vdi3805Mutation::DeleteGeometry(DeleteGeometry { id: "geom.valve.50".into() }),

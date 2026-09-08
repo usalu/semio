@@ -1,19 +1,19 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/set-dpart-metadata.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/set-dpart-metadata/schema.json",
   "title": "SetDpartMetadata",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "job"
   ],
   "properties": {
-    "mutation": {
-      "const": "setDpartMetadata"
-    },
     "job": {
       "type": "string"
+    },
+    "mutation": {
+      "const": "setDpartMetadata",
+      "description": "Aggregate discriminator spliced in by PdfVtMutation; absent when the payload stands alone."
     }
   }
 }

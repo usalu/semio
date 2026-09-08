@@ -15,8 +15,8 @@
 //! `DagEdgePatchEntry`/`DagNodeSpecList`/`DagFixtureEdgeList` are all dead with it — confirmed zero
 //! remaining references after this pass.
 
-use crate::artifacts::dag::{DagCamera, DagContentChild};
-use schema::ArtifactSchema;
+use crate::{DagCamera, DagContentChild};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the DAG artifact.

@@ -6,7 +6,7 @@
 //! no utilities that edit and emits no mutations by construction (`ViewEmit`). Board/2D projection is
 //! a follow-up, not a purity or completeness requirement — the contract only asks for one real window.
 
-use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dScale, Puzzle5dSnapshot};
+use crate::{Puzzle5dPart, Puzzle5dScale, Puzzle5dSnapshot};
 use semio_framework_plugin::app::{MeshView, MeshWindowKit, WindowKit};
 use semio_framework_plugin::{world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_selection_json, WindowKindDefinition};
 

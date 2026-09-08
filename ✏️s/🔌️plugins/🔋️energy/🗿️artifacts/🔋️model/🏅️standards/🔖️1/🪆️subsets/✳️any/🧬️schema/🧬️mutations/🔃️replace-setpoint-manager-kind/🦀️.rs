@@ -1,8 +1,8 @@
 //! 🔃️ Energy model mutation — `ReplaceSetpointManagerKind`: Swaps the whole tagged control law of one setpoint manager. `replace`, not `change`, because the payload shape genuinely differs per variant (taxonomy rule for tagged unions); the four outdoor-air-reset limits are carried flattened beside the variant's wire name and must be zero for every other variant.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

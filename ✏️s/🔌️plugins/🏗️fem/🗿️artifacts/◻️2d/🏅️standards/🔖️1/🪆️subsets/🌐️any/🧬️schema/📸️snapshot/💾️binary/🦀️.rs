@@ -1,6 +1,6 @@
 //! 📦️ FEM 2D artifact — binary document surface + laws (constitutional: pack).
 
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::Fem2dSnapshot;
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -23,7 +23,7 @@ pub fn decode(bytes: &[u8]) -> Result<Fem2dSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::fem2d::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+    use crate::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 
     // #region 🔖️Fixtures
     fn simply_supported_beam_doc() -> Fem2dSnapshot {
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn fem2d_pack_agrees_with_dsl_for_bundled_default_example() {
-        let document = crate::artifacts::fem2d::dsl::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).expect("parse default example");
+        let document = crate::dsl::parse_dsl(crate::dsl::FEM2D_EXAMPLE_TEXT).expect("parse default example");
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
 

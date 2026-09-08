@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/ifc/4/any/mutation/set-file-name.json",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/4/any/mutation/set-file-name/schema.json",
   "title": "SetFileName",
   "type": "object",
   "additionalProperties": false,

@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle3d diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::puzzle3d::schema::Puzzle3dArtifact;
-use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume};
+use crate::schema::Puzzle3dArtifact;
+use crate::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume};
 use artifact_schema::ArtifactSchema;
 
 //#region 🔖️Diff

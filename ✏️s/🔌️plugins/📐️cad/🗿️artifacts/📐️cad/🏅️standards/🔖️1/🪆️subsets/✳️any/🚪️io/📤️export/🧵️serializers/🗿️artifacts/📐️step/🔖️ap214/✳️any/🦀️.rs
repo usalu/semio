@@ -8,7 +8,7 @@
 //! Real geometry-exact STEP export lives at `⚙️engine/🦀️.rs`'s `export_solids_as`
 //! (sources the live kernel solids' real AP214 text, then round-trips it through stdio's own
 //! `SemioBrepFromStep`/`SemioBrepToStep` `semio/brep` bridge).
-use crate::artifacts::cad::CadSnapshot;
+use crate::CadSnapshot;
 
 //#region Serialize
 pub fn register() {}

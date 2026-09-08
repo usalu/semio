@@ -1,7 +1,7 @@
 //! 🗣️ 🗣️ Equation play app commands command — `set-locale`.
 
-use crate::artifacts::equation::op::EquationMutation;
-use crate::artifacts::equation::EquationSnapshot;
+use crate::op::EquationMutation;
+use crate::EquationSnapshot;
 use crate::editor::equation::config::{EquationConfig, EquationConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};

@@ -1,7 +1,7 @@
 //! 🔺️ `change-correction-as-of` — sparse diff construction.
 
 use super::ChangeCorrectionAsOf;
-use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
+use crate::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeCorrectionAsOf, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {

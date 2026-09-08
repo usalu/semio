@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeNodeOperatorKind` — the OLD `operator_kind` looked up from BASE. Missing
 //! target ⇒ `Vec::new()`.
-use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::{dag_working_scene, DagSnapshot};
+use crate::mutations::DagMutation;
+use crate::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::ChangeNodeOperatorKind, base: &DagSnapshot) -> Vec<DagMutation> {

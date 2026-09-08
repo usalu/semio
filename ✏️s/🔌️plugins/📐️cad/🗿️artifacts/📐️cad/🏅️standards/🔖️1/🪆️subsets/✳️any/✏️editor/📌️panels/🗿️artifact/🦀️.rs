@@ -1,9 +1,9 @@
 //! 📄️ CAD play app panel — the document tree: every pane's objects (with their primitive children)
 //! and reference overlays, plus the scene's nodes.
 
-use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
-use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
-use crate::artifacts::cad::{CadPaneId, CadReference, CadSnapshot};
+use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
+use crate::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
+use crate::{CadPaneId, CadReference, CadSnapshot};
 use crate::editor::cad::terminology::{typology_label, CadLabels};
 use crate::editor::cad::{cad_action, cad_tree_item, ui_label, ui_node_list, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView};
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, BuiltNode, Label as UiLabel, RowAction, RowActionPlacement, Trigger};
@@ -225,9 +225,9 @@ pub fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> semio_
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_SHAPE};
-    use crate::artifacts::cad::CadPaneId;
+    use crate::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
+    use crate::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_SHAPE};
+    use crate::CadPaneId;
     use crate::editor::cad::config::CadConfig;
     use crate::editor::cad::terminology::cad_labels;
     use crate::editor::cad::testkit::*;

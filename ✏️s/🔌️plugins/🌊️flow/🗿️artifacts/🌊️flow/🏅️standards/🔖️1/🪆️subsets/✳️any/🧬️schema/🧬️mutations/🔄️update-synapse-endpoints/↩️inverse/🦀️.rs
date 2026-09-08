@@ -1,6 +1,6 @@
 //! ↩️ Undo mutation for `update-synapse-endpoints`: restore the synapse's prior `base` endpoints.
-use crate::artifacts::flow::schema::mutations::FlowMutation;
-use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
+use crate::schema::mutations::FlowMutation;
+use crate::{flow_working_scene, FlowSnapshot};
 
 use super::UpdateSynapseEndpoints;
 

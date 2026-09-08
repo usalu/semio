@@ -1,8 +1,8 @@
 //! 🔺️ `change-retrofit-ed-kn` sparse diff construction — writes only `En1998Diff.retrofit_e_d_kn` from the payload.
 
-use crate::artifacts::en1998::diff::En1998Diff;
-use crate::artifacts::en1998::mutations::change_retrofit_e_d_kn::ChangeRetrofitEDKn;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::diff::En1998Diff;
+use crate::mutations::change_retrofit_e_d_kn::ChangeRetrofitEDKn;
+use crate::En1998Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeRetrofitEDKn, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {

@@ -16,8 +16,8 @@
 //! committed payload asks to create — nothing here is invented, the seeded step IS the mutation
 //! JSON's own `step` — which is precisely the collision `mutation.duplicate-id` guards against.
 
-use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{materialize_forms_steps, FormsDiff, FormsSnapshot};
+use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::{materialize_forms_steps, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

@@ -1,7 +1,7 @@
 //! ↩️ `change-object-smooth-shading` — undo restores the base-state flag; missing id ⇒ `Vec::new()`.
 
 use super::ChangeObjectSmoothShading;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangeObjectSmoothShading, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

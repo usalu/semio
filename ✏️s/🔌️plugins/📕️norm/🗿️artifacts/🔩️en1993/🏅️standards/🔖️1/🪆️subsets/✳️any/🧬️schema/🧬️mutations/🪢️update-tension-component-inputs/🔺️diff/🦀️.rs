@@ -1,7 +1,7 @@
 //! 🔺️ `update-tension-component-inputs` — sparse diff construction.
 
 use super::UpdateTensionComponentInputs;
-use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
+use crate::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &UpdateTensionComponentInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {

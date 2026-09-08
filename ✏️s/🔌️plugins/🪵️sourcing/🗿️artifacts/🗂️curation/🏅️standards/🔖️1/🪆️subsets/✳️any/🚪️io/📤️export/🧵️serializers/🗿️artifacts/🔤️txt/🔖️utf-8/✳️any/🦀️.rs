@@ -1,7 +1,7 @@
 //! 🚪️ curation -> txt — foreign `Serializer<CurationSnapshot>` (ticket 26/08/17/CLEAN-ARTIFACT-
 //! STANDARD-SUBSET-MECHANISM design.md §3). See the sibling `Deserializer`'s doc comment: an
 //! honest not-yet-implemented stub, `IoFidelity::Lossy`.
-use crate::artifacts::curation::CurationSnapshot;
+use crate::CurationSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

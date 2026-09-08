@@ -2,9 +2,9 @@
 //! non-rect frames, matching the pre-migration `PatchFrame`'s `stroke` handling.
 
 
-use crate::artifacts::layout::{Frame, FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
+use crate::mutations::LayoutMutation;
+use crate::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

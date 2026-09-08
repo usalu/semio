@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `RenamePuzzle5d` — patches the document `label`.
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::Puzzle5dDiff;
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenamePuzzle5d, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

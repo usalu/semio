@@ -1,9 +1,9 @@
 //! 🏠️ Space Home semantic mutation aggregate.
 
-use crate::artifacts::home::{SHomeDiff, SHomeSnapshot};
+use crate::{SHomeDiff, SHomeSnapshot};
 
 pub use super::change_catalog_generation::{change_catalog_generation, ChangeCatalogGeneration};
-pub use crate::artifacts::home::schema::operations::*;
+pub use crate::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Home launcher mutation vocabulary backed by its direct semantic owner.

@@ -1,9 +1,9 @@
 //! 📥️ CAD play app commands — the shell file round-trip: native/spatial import and the three export flavours.
 
-use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::standards::v1::subsets::any::io::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload, CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STEP, CAD_SOLID_EXPORT_DIALECT_STL};
-use crate::artifacts::cad::CadSnapshot;
-use crate::artifacts::cad::{cad_pane_from_model_definition_id, CadPaneId};
+use crate::op::CadMutation;
+use crate::standards::v1::subsets::any::io::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload, CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STEP, CAD_SOLID_EXPORT_DIALECT_STL};
+use crate::CadSnapshot;
+use crate::{cad_pane_from_model_definition_id, CadPaneId};
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, export_solid_for_pane, export_solid_modelspace, export_spatial_json, preview_transition_snapshot_of, reset_document_effect, runtime_of, CadPlayView};

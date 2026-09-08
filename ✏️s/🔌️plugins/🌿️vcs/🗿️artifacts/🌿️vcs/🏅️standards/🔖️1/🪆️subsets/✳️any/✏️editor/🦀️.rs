@@ -8,7 +8,7 @@
 //! `VcsCommand::dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
-use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot, VCS_DOCUMENT_SCHEMA};
+use crate::{op::VcsDemoMutation, VcsSnapshot, VCS_DOCUMENT_SCHEMA};
 use crate::editor::vcs::commands::edit as edit_command;
 use crate::editor::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, increment_counter, no_operation, patch_snapshot, set_locale, text_edit};
 use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
@@ -254,7 +254,7 @@ impl VcsEditCommandWork {
     }
 
     fn advance(&mut self, command: &VcsCommand, snapshot: &VcsSnapshot) -> Result<Option<Emit<VcsDemoMutation, VcsDemoConfigMutation, NoDraftMutation>>, Fault> {
-        use crate::artifacts::vcs::mutations::{add_tag, change_counter, change_notes, change_status, remove_tag, rename_vcs};
+        use crate::mutations::{add_tag, change_counter, change_notes, change_status, remove_tag, rename_vcs};
         match self.phase {
             VcsEditPhase::Decode => {
                 let text = vcs_edit_text(command).ok_or_else(|| Fault::from("vcs-edit-command-mismatch"))?;
@@ -329,9 +329,9 @@ impl VcsEditCommandWork {
                 let next = self.next.as_ref().ok_or_else(|| Fault::from("vcs-edit-next-snapshot-absent"))?;
                 if let Some(tag) = next.tags.get(self.cursor) {
                     let mutation = (!self.current_tags.contains(tag.as_str())).then(|| add_tag(tag.clone()));
-                    if mutation.is_some() {
+                    if let Some(mutation) = mutation {
                         self.charge_output(tag.len())?;
-                        self.mutations.push(mutation.expect("mutation was checked above"));
+                        self.mutations.push(mutation);
                     }
                     self.cursor += 1;
                 } else {
@@ -342,9 +342,9 @@ impl VcsEditCommandWork {
             VcsEditPhase::Removals => {
                 if let Some(tag) = snapshot.tags.get(self.cursor) {
                     let mutation = (!self.next_tags.contains(tag.as_str())).then(|| remove_tag(tag.clone()));
-                    if mutation.is_some() {
+                    if let Some(mutation) = mutation {
                         self.charge_output(tag.len())?;
-                        self.mutations.push(mutation.expect("mutation was checked above"));
+                        self.mutations.push(mutation);
                     }
                     self.cursor += 1;
                 } else {
@@ -762,7 +762,7 @@ impl ArtifactEditor for VcsPlayApp {
 
     type Command = VcsCommand;
 
-    const DIALECT: Dialect = crate::artifacts::vcs::VCS_DIALECT;
+    const DIALECT: Dialect = crate::VCS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -815,12 +815,12 @@ impl ArtifactEditor for VcsPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::vcs::config::schema::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> VcsSnapshot {
-        crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot()
+        crate::standards::v1::subsets::any::schema::empty_vcs_snapshot()
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -902,9 +902,9 @@ impl ArtifactEditor for VcsPlayApp {
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
 pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::vcs::VCS_DIALECT)
+    Editor::builder(crate::VCS_DIALECT)
             .document(["semio", "vcs"])
-            .artifact_kind(crate::artifacts::vcs::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             .icon_id("git-branch")
             .mode_def(edit::definition())
             .default_mode_id(edit::VCS_PLAY_MODE_EDIT)
@@ -1320,8 +1320,8 @@ mod tests {
         use store::ArtifactStoreOneItemPreparationFactory;
         let artifact = VcsOneItemPreparationFactory::<VcsSnapshot, VcsDemoMutation>::new(store::HistoryLane::Document);
         let config = VcsOneItemPreparationFactory::<VcsDemoConfig, VcsDemoConfigMutation>::new(store::HistoryLane::Document);
-        assert!(artifact.preflight(&crate::artifacts::vcs::mutations::change_counter(1), None, store::HistoryLane::Document).is_ok());
-        assert!(artifact.preflight(&crate::artifacts::vcs::mutations::change_counter(1), None, store::HistoryLane::Interaction).is_err());
+        assert!(artifact.preflight(&crate::mutations::change_counter(1), None, store::HistoryLane::Document).is_ok());
+        assert!(artifact.preflight(&crate::mutations::change_counter(1), None, store::HistoryLane::Interaction).is_err());
         assert!(config.preflight(&VcsDemoConfigMutation::SetLocale { value: "de-DE".into() }, None, store::HistoryLane::Document).is_ok());
     }
 
@@ -1393,7 +1393,7 @@ mod tests {
         work.next = Some(VcsSnapshot { tags: vec!["retire".into()], ..VcsPlayApp::initial_snapshot() });
         work.current_tags.insert("current".into());
         work.next_tags.insert("next".into());
-        work.mutations.push(crate::artifacts::vcs::mutations::add_tag("mutation".into()));
+        work.mutations.push(crate::mutations::add_tag("mutation".into()));
         work.begin_close();
         let mut turns = 0;
         while !work.terminal_is_empty() {

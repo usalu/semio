@@ -1,7 +1,7 @@
 //! 🌞️ CAD play app commands — the shared sun/environment controls. Config-only and coalesced, so a slider drag is one undo step.
 
-use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::op::CadMutation;
+use crate::CadSnapshot;
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{runtime_of, snapshot_of};

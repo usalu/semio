@@ -16,7 +16,7 @@ pub fn source() -> ExampleSource {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
     #[semio_framework_async_macros::async_test]
     async fn bundled_example_parses_as_a_valid_space_index() {

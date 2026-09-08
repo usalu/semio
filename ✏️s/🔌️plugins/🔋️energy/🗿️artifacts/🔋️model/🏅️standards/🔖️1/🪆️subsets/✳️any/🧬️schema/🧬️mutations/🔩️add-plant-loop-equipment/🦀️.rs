@@ -1,8 +1,8 @@
 //! 🔩️ Energy model mutation — `AddPlantLoopEquipment`: Puts one central-plant equipment id on a plant loop. ⚠️ This is the ONE reference in the whole HVAC group that is NOT checked against a collection: `Model` has no chiller, boiler or pump type at all (vocabulary §5.4), so the id is opaque and only the list shape is enforced. Declared and documented rather than silently validated against nothing; when a plant-equipment collection lands this gains a `g3_chk_reference` and the refusal vector below becomes a referential one.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

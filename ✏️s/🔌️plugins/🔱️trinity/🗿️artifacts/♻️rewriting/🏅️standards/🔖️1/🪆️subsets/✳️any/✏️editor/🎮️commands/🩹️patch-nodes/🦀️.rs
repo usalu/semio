@@ -1,9 +1,9 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `patch-nodes`.
 
-use crate::artifacts::jack::{Graph, JackSnapshot};
-use crate::artifacts::rewriting::rewriting_snapshot_mutations;
-use crate::artifacts::rewriting::op::RewriteRuleMutation;
-use crate::artifacts::rewriting::RewritingSnapshot;
+use semio_s_artifact_trinity_jack::{Graph, JackSnapshot};
+use crate::rewriting_snapshot_mutations;
+use crate::op::RewriteRuleMutation;
+use crate::RewritingSnapshot;
 use crate::editor::rewriting::config::RewritingConfigMutation;
 use semio_framework_plugin::Emit;
 

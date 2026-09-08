@@ -1,12 +1,12 @@
 //! 🧱️ 🧱️ Fem2d play app commands command — `add-node`.
 
-use crate::artifacts::fem2d::op::Fem2dMutation;
-use crate::artifacts::fem2d::FemNode;
+use crate::op::Fem2dMutation;
+use crate::FemNode;
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
+type Fem2dSnapshot = crate::Fem2dSnapshot;
 
 //#region 🔖️AddNode
 //#endregion 🔖️AddNode
@@ -39,14 +39,14 @@ pub struct AddNode {
 pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.nodes.iter().map(|n| n.id.clone()), "n");
-    Ok(Emit::mutations(vec![Fem2dMutation::CreateNode(crate::artifacts::fem2d::mutations::create_node::CreateNode { node: FemNode { id, x: payload.x, y: payload.y } })]))
+    Ok(Emit::mutations(vec![Fem2dMutation::CreateNode(crate::mutations::create_node::CreateNode { node: FemNode { id, x: payload.x, y: payload.y } })]))
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::fem2d::{FemDof, FemElement};
+    use crate::{FemDof, FemElement};
     use crate::editor::fem2d::commands::{add_bar, add_beam, add_material, add_region, add_section, add_support};
     use crate::editor::fem2d::testkit::{dispatch, fem2d_app};
     use crate::editor::fem2d::Fem2dCommand;

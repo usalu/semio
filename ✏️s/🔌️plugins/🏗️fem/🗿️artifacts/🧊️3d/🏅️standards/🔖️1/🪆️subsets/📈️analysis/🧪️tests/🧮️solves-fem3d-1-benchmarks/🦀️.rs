@@ -128,7 +128,7 @@ fn significant_relative(value: f64, scale: f64) -> Json {
 mod decode {
     use super::{flag, number, numbers};
     use semio_repo_test_host::Json;
-    use semio_s_plugin_fem::artifacts::fem3d::{Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use semio_s_artifact_fem_3d::{Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use std::collections::BTreeMap;
 
     /// 🔒️ One degree-of-freedom tag, as this artifact spells it on the wire.
@@ -254,8 +254,8 @@ mod decode {
 mod subject {
     use super::{decode, number, numbers, significant, significant_relative, DOFS, STATIC_TOLERANCE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_fem::artifacts::fem3d::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
-    use semio_s_plugin_fem::artifacts::fem3d::Fem3dSnapshot;
+    use semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
+    use semio_s_artifact_fem_3d::Fem3dSnapshot;
     use semio_s_plugin_fem::model::{Dof, StaticResult};
     use semio_s_plugin_stdio_test_oracle::law;
     use std::collections::BTreeMap;
@@ -305,7 +305,7 @@ mod subject {
         let mut projected = document.clone();
         projected.solids.clear();
         for case in &mut projected.load_cases {
-            case.loads.retain(|load| !matches!(load, semio_s_plugin_fem::artifacts::fem3d::FemLoad::Area { .. }));
+            case.loads.retain(|load| !matches!(load, semio_s_artifact_fem_3d::FemLoad::Area { .. }));
         }
         let solved = semio_s_plugin_fem::fem3d_engine::fem3d_solve_all(&projected).map_err(|error| error.to_string())?;
         Ok(solved.into_iter().collect())
@@ -500,7 +500,7 @@ mod subject {
             let (material, section, length) = (&document.materials[0], &document.sections[0], document.nodes[1].x);
             let inertia = if axis == "Tz" { section.iy } else { section.iz };
             let load = match &document.load_cases[0].loads[0] {
-                semio_s_plugin_fem::artifacts::fem3d::FemLoad::Nodal { value, .. } => *value,
+                semio_s_artifact_fem_3d::FemLoad::Nodal { value, .. } => *value,
                 other => return Err(format!("the cantilever fixture's load is {other:?}, not a nodal force")),
             };
             let index = DOFS.iter().position(|name| *name == axis).unwrap_or(2);
@@ -522,7 +522,7 @@ mod subject {
             agrees_with_reference(&format!("closed-form-{needle}"), &answers, &reference(ctx)?)?;
             let (material, section, length) = (&document.materials[0], &document.sections[0], document.nodes[1].x);
             let torque = match &document.load_cases[0].loads[0] {
-                semio_s_plugin_fem::artifacts::fem3d::FemLoad::Nodal { value, .. } => *value,
+                semio_s_artifact_fem_3d::FemLoad::Nodal { value, .. } => *value,
                 other => return Err(format!("the torsion fixture's load is {other:?}, not a nodal moment")),
             };
             let answer = answers.get("tip").ok_or_else(|| "the torsion fixture declares a `tip` load case".to_string())?;
@@ -542,7 +542,7 @@ mod subject {
             agrees_with_reference(&format!("closed-form-{needle}"), &answers, &reference(ctx)?)?;
             let (material, section, length) = (&document.materials[0], &document.sections[0], document.nodes[2].x);
             let w = match &document.load_cases[0].loads[0] {
-                semio_s_plugin_fem::artifacts::fem3d::FemLoad::MemberUdl { wz, .. } => *wz,
+                semio_s_artifact_fem_3d::FemLoad::MemberUdl { wz, .. } => *wz,
                 other => return Err(format!("the simply supported fixture's load is {other:?}, not a member UDL")),
             };
             let answer = answers.get("udl").ok_or_else(|| "the simply supported fixture declares a `udl` load case".to_string())?;

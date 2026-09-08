@@ -10,7 +10,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::jack::JackSnapshot;
+use crate::JackSnapshot;
 use store::{ArtifactPack, PackError};
 
 /// 📦️ Encodes a `JackSnapshot` to its binary pack form.
@@ -27,7 +27,7 @@ pub fn decode(bytes: &[u8]) -> Result<JackSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jack::dsl::{parse_dsl, NAKAGIN_EXAMPLE_TEXT};
+    use crate::dsl::{parse_dsl, NAKAGIN_EXAMPLE_TEXT};
 
     #[semio_framework_async_macros::async_test]
     async fn nakagin_example_pack_round_trips_and_agrees_with_dsl() {

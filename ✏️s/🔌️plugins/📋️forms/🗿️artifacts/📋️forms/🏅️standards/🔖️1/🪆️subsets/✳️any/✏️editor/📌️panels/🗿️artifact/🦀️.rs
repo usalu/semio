@@ -1,7 +1,7 @@
 //! 📄️ Forms play app panel — the document tree: steps and their questions.
 
-use crate::artifacts::forms::schema::forms_play_step_tree_id;
-use crate::artifacts::forms::{forms_steps, FormsSnapshot};
+use crate::schema::forms_play_step_tree_id;
+use crate::{forms_steps, FormsSnapshot};
 use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::{forms_action, ui_node_list, FORMS_INTERACTION_FIELDS};
 use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};

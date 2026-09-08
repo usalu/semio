@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DragBlocks`.
 use super::DragBlocks;
-use crate::artifacts::note::schema::mutations::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::schema::mutations::NoteMutation;
+use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DragBlocks, _base: &NoteSnapshot) -> Vec<NoteMutation> {

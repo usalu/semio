@@ -1,7 +1,7 @@
 //! 🗂️ 🗂️ DAG play app commands command — `graph-pointer-down`.
 
-use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::op::DagMutation;
+use crate::DagSnapshot;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 

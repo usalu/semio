@@ -12,8 +12,8 @@
 //! source is the committed payload's own `newSource`, verbatim, so the comparison is a genuine
 //! identity across all five fields rather than a lucky match on `src` alone.
 
-use crate::artifacts::presentation::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
-use crate::artifacts::presentation::{cache_presentation_working_scene, PresentationDiff, PresentationSnapshot};
+use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
+use crate::{cache_presentation_working_scene, PresentationDiff, PresentationSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

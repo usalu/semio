@@ -1,13 +1,13 @@
 //! 📦 `bounds` — one named inference: geographic bounding box across every `positions`/`routes`/
 //! `regions` feature. `MapFeature::data` is deliberately untyped (`dsl::DslValue`, the engine's
-//! `Shape::Value` escape hatch — see `crate::artifacts::gismap`'s own docs), so the box is derived
+//! `Shape::Value` escape hatch — see `crate`'s own docs), so the box is derived
 //! by a generic coordinate-pair scan over each feature's raw value rather than by assuming a fixed
 //! shape: any `{lon, lat}` object or `[number, number]` pair anywhere inside `data` counts as one
 //! point. This uniformly covers `positions` (`{lon,lat}`), `routes` (`points: [[lon,lat], …]`) and
 //! `regions` (`ring: [[lon,lat], …]`) without hard-coding any of those field names. Simple
 //! whole-snapshot scalar: no `InferredField` caching, feature counts here are small.
 
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::GisMapSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 📦Bounds
@@ -94,7 +94,7 @@ pub(crate) fn all_lon_lat_pairs(snapshot: &GisMapSnapshot) -> Vec<(f64, f64)> {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::gismap::MapFeature;
+    use crate::MapFeature;
 
     fn dsl_of(value: serde_json::Value) -> dsl::DslValue {
         dsl::DslValue::from(value)

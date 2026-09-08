@@ -1,9 +1,9 @@
 //! 📥️ 📥️ Remodeling play app commands command — `import-frame-payload`.
 
-use crate::artifacts::remodeling::mutations::{add_stream_frame, create_asset, create_stream};
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::schema::next_remodeling_id;
-use crate::artifacts::remodeling::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot};
+use crate::mutations::{add_stream_frame, create_asset, create_stream};
+use crate::op::RemodelingMutation;
+use crate::schema::next_remodeling_id;
+use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot};
 use crate::editor::remodeling::commands::import_video_bytes_payload;
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 #[cfg(test)]

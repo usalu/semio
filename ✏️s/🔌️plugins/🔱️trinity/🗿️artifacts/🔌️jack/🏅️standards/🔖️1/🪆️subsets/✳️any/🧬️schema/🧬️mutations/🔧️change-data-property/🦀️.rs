@@ -1,8 +1,8 @@
 //! 🔧️ TrinityGraph mutation — `ChangeDataProperty`: upserts one key on a node's or edge's property
 //! bag (addressed via `EntityRef`).
-use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::mutations::TrinityGraphMutation;
-use crate::artifacts::jack::{EntityRef, JackSnapshot, PropertyValue};
+use crate::diff::JackDiff;
+use crate::mutations::TrinityGraphMutation;
+use crate::{EntityRef, JackSnapshot, PropertyValue};
 
 //#region 🔖️Mutation
 /// 🔧️ `change-data-property` payload.

@@ -7,9 +7,9 @@
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from these files by `fixtures generate` and asserted by the codec matrix, never hand-forged here.
 
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::En1992Mutation;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::En1992Mutation;
+use crate::En1992Snapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -32,7 +32,7 @@ fn mutation() -> En1992Mutation {
 #[semio_framework_async_macros::async_test]
 async fn change_fire_rating_applies_to_committed_after() {
     let (applied, messages) = vcs::apply_mutation(&before(), &mutation()).expect("change-fire-rating applies to its committed before-snapshot");
-    assert_eq!(applied.fire_rating, crate::artifacts::en1992::part_1_2::FireRating::R120, "change-fire-rating/switches-fire-rating-to-r120: fire_rating must read R120 after the change");
+    assert_eq!(applied.fire_rating, crate::part_1_2::FireRating::R120, "change-fire-rating/switches-fire-rating-to-r120: fire_rating must read R120 after the change");
     assert_eq!(applied, expected_after(), "change-fire-rating/switches-fire-rating-to-r120: applied state differs from the committed after-snapshot");
     assert!(messages.is_empty(), "change-fire-rating/switches-fire-rating-to-r120: a real R60 to R120 change must raise no `mutation.no-op` message");
 }
@@ -50,7 +50,7 @@ async fn change_fire_rating_inverse_restores_before() {
         let (next, _messages) = vcs::apply_mutation(&restored, step).expect("inverse change-fire-rating step applies");
         restored = next;
     }
-    assert_eq!(restored.fire_rating, crate::artifacts::en1992::part_1_2::FireRating::R60, "change-fire-rating/switches-fire-rating-to-r120: the inverse must put fire_rating back to R60");
+    assert_eq!(restored.fire_rating, crate::part_1_2::FireRating::R60, "change-fire-rating/switches-fire-rating-to-r120: the inverse must put fire_rating back to R60");
     assert_eq!(restored, base, "change-fire-rating/switches-fire-rating-to-r120: the inverse did not restore the committed before-snapshot");
 }
 
@@ -87,7 +87,7 @@ async fn change_fire_rating_declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn change_fire_rating_produces_committed_diff() {
     let outcome = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(&mutation(), &before());
-    assert_eq!(outcome.diff().fire_rating, Some(crate::artifacts::en1992::part_1_2::FireRating::R120), "change-fire-rating/switches-fire-rating-to-r120: the diff must set fire_rating to R120");
+    assert_eq!(outcome.diff().fire_rating, Some(crate::part_1_2::FireRating::R120), "change-fire-rating/switches-fire-rating-to-r120: the diff must set fire_rating to R120");
     assert!(outcome.diff().artifact.is_none(), "change-fire-rating/switches-fire-rating-to-r120: a scalar change must never take the whole-artifact replacement path");
     assert!(outcome.diff().provided_axis_distance_mm.is_none(), "change-fire-rating/switches-fire-rating-to-r120: change-fire-rating must leave provided_axis_distance_mm untouched");
     let produced = serde_json::to_value(outcome.diff()).expect("change-fire-rating produced diff encodes");
@@ -102,7 +102,7 @@ async fn change_fire_rating_produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn change_fire_rating_committed_diff_is_canonical() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-fire-rating committed diff decodes");
-    assert_eq!(decoded.fire_rating, Some(crate::artifacts::en1992::part_1_2::FireRating::R120), "change-fire-rating/switches-fire-rating-to-r120: the committed diff must carry fire_rating at R120");
+    assert_eq!(decoded.fire_rating, Some(crate::part_1_2::FireRating::R120), "change-fire-rating/switches-fire-rating-to-r120: the committed diff must carry fire_rating at R120");
     assert!(decoded.selected_check_index.is_none(), "change-fire-rating/switches-fire-rating-to-r120: the committed diff must leave the presence-lane selected_check_index unset");
     let reencoded = serde_json::to_value(&decoded).expect("change-fire-rating committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("change-fire-rating committed diff reparses");
@@ -115,6 +115,6 @@ async fn change_fire_rating_committed_diff_is_canonical() {
 async fn change_fire_rating_committed_diff_applies_to_after() {
     let decoded: En1992Diff = serde_json::from_str(DIFF).expect("change-fire-rating committed diff decodes");
     let produced = <En1992Diff as protocol::MutationDiff<En1992Snapshot>>::apply(&decoded, &before()).expect("change-fire-rating committed diff applies to the before-snapshot");
-    assert_eq!(produced.fire_rating, crate::artifacts::en1992::part_1_2::FireRating::R120, "change-fire-rating/switches-fire-rating-to-r120: the committed diff must leave fire_rating reading R120");
+    assert_eq!(produced.fire_rating, crate::part_1_2::FireRating::R120, "change-fire-rating/switches-fire-rating-to-r120: the committed diff must leave fire_rating reading R120");
     assert_eq!(produced, expected_after(), "change-fire-rating/switches-fire-rating-to-r120: the committed diff did not carry before to after");
 }

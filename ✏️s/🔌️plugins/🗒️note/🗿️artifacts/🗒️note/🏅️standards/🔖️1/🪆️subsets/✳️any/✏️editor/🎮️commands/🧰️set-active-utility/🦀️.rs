@@ -1,7 +1,7 @@
 //! 🧰️ 🧰️ Note play app command command — `set-active-utility`.
 
-use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::op::NoteMutation;
+use crate::NoteSnapshot;
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

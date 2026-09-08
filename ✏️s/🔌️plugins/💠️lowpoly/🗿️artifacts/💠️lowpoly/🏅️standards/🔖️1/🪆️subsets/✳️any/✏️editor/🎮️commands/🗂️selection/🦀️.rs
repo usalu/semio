@@ -7,8 +7,8 @@
 //! `AppBuilder::interaction`) now own the mesh domain's selection/granularity/mode entirely; see
 //! `🧭️view/🦀️.rs`'s `🔖️MeshDomain` region for the target-id/selection-resolution boundary.
 
-use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolySnapshot;
+use crate::op::LowpolyMutation;
+use crate::LowpolySnapshot;
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

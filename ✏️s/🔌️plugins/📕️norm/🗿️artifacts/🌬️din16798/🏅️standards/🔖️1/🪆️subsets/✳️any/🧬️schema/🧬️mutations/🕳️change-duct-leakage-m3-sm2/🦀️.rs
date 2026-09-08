@@ -1,9 +1,9 @@
 //! 🔧 `change-duct-leakage-m3-sm2` payload — changes the Din16798 document's `duct_leakage_m3_s_m2` (duct leakage rate).
 
 
-use crate::artifacts::din16798::Din16798Snapshot;
-use crate::artifacts::din16798::diff::Din16798Diff;
-use crate::artifacts::din16798::mutations::Din16798Mutation;
+use crate::Din16798Snapshot;
+use crate::diff::Din16798Diff;
+use crate::mutations::Din16798Mutation;
 //#region 🔖️ChangeDuctLeakageM3SM2
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

@@ -1,6 +1,6 @@
 //! 🧺️ Sourcing curation app — the curated window: the currently-picked objects and their counts.
 
-use crate::artifacts::curation::CurationSnapshot;
+use crate::CurationSnapshot;
 use crate::editor::sourcing::terminology::SourcingLabels;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
@@ -33,7 +33,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 fn view_model(document: &CurationSnapshot, labels: &SourcingLabels) -> TableView {
-    let stock = crate::artifacts::curation::stock_of(document);
+    let stock = crate::stock_of(document);
     let rows = document
         .curated
         .iter()

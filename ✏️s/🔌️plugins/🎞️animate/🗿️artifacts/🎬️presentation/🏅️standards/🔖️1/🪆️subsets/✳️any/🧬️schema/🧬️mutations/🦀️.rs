@@ -1,7 +1,7 @@
 //! 🧬️ presentation artifact — document mutation dispatch.
 
-use crate::artifacts::presentation::diff::PresentationDiff;
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::diff::PresentationDiff;
+use crate::PresentationSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️MutationLeaves
@@ -59,7 +59,7 @@ pub const KINDS: &[&str] = &["resize-source-frame", "replace-source", "create-ti
 #[allow(clippy::items_after_test_module)]
 mod tests {
     use super::*;
-    use crate::artifacts::presentation::{default_presentation_snapshot, presentation_snapshot_with_tiles, presentation_working_scene, FigureTileDraft, FigureTileFrame};
+    use crate::{default_presentation_snapshot, presentation_snapshot_with_tiles, presentation_working_scene, FigureTileDraft, FigureTileFrame};
     use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
     use protocol::SemanticMutation;
 
@@ -272,7 +272,7 @@ pub fn decode_presentation_mutation_json(text: &str) -> Result<PresentationMutat
 /// `DefaultHasher`, so projecting one would compare the same content twice and pin a value the
 /// standard library does not promise. `animation` carries no content at all today.
 pub fn encode_presentation_projection_json(snapshot: &PresentationSnapshot) -> String {
-    let (source, tiles) = crate::artifacts::presentation::presentation_working_scene(snapshot);
+    let (source, tiles) = crate::presentation_working_scene(snapshot);
     let source_json = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&source));
     let tiles_json = dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&tiles));
     let value = dsl::os_pack::json::object([

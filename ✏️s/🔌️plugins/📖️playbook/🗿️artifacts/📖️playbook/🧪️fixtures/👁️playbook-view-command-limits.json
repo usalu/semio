@@ -1,7 +1,9 @@
 {
-  "$schema": "./🎚️playbook-view-command-limits.schema.json",
   "schemaVersion": 1,
-  "tools": ["setLocale", "setContributions"],
+  "tools": [
+    "setLocale",
+    "setContributions"
+  ],
   "limits": {
     "maximumRawBytes": 8192,
     "maximumDecodedItems": 2,
@@ -10,9 +12,29 @@
     "maximumStepMicros": 2000
   },
   "cases": [
-    { "name": "empty", "declaredBytes": 0, "checkpoint": false, "admitted": true },
-    { "name": "maximum", "declaredBytes": 8192, "checkpoint": false, "admitted": true },
-    { "name": "maximum-plus-one", "declaredBytes": 8193, "checkpoint": false, "admitted": false },
-    { "name": "checkpoint", "declaredBytes": 1, "checkpoint": true, "admitted": false }
+    {
+      "name": "empty",
+      "declaredBytes": 0,
+      "checkpoint": false,
+      "admitted": true
+    },
+    {
+      "name": "maximum",
+      "declaredBytes": 8192,
+      "checkpoint": false,
+      "admitted": true
+    },
+    {
+      "name": "maximum-plus-one",
+      "declaredBytes": 8193,
+      "checkpoint": false,
+      "admitted": false
+    },
+    {
+      "name": "checkpoint",
+      "declaredBytes": 1,
+      "checkpoint": true,
+      "admitted": false
+    }
   ]
 }

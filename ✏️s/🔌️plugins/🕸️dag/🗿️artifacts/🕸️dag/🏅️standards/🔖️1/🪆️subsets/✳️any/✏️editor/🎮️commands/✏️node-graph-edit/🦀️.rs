@@ -1,11 +1,11 @@
 //! 🕸️ 🕸️ DAG play app commands command — `node-graph-edit`.
 
-use crate::artifacts::dag::mutations::{connect_nodes, dag_snapshot_mutations};
-use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::mutations::{connect_nodes, dag_snapshot_mutations};
+use crate::op::DagMutation;
+use crate::DagSnapshot;
 use crate::editor::dag::commands::delete_selection::delete_selection_result;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
-use infinite_board_port_directed_dag::{dag_document_from_fixture, DagFixture};
+use semio_framework_artifact_infinite_dag::{dag_document_from_fixture, DagFixture};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -37,14 +37,14 @@ pub struct NodeGraphEdit {
 /// through that macro-generated path (`DagPlayApp::handle` always routes this command through `apply`
 /// below instead), so its `DeleteSelection` sub-op degrades to treating the selection as empty.
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-    apply_to(payload, doc, cfg, &[])
+    Ok(apply_to(payload, doc, cfg, &[]))
 }
 
 pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, interaction: &InteractionView<'_>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-    apply_to(payload, doc, cfg, &interaction.selection("graph").ids)
+    Ok(apply_to(payload, doc, cfg, &interaction.selection("graph").ids))
 }
 
-fn apply_to(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, selected: &[String]) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+fn apply_to(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, selected: &[String]) -> Emit<DagMutation, DagConfigMutation> {
     let document = doc.snapshot;
     let mut artifact_mutations: Vec<DagMutation> = Vec::new();
     let mut config_mutations: Vec<DagConfigMutation> = Vec::new();
@@ -62,13 +62,13 @@ fn apply_to(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg: 
                 }
             }
             DagNodeGraphEditOp::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
-                if let Ok(edge) = crate::artifacts::dag::schema::connect_edge(document, source_node_id, source_port_id, target_node_id, target_port_id) {
+                if let Ok(edge) = crate::schema::connect_edge(document, source_node_id, source_port_id, target_node_id, target_port_id) {
                     artifact_mutations.push(connect_nodes(edge.id, edge.source, edge.target, edge.route_style, edge.properties));
                 }
             }
         }
     }
-    Ok(Emit { artifact_mutations, config_mutations, ..Default::default() })
+    Emit { artifact_mutations, config_mutations, ..Default::default() }
 }
 
 //#region 🧪️Tests
@@ -120,7 +120,7 @@ mod tests {
         // A whole drag (three ticks, same coalesce key) is ONE undo step, not one-operation-per-tick.
         app.handle_action("undo", None, &meta("local")).await.expect("undo");
         let restored = app.snapshot().expect("projection");
-        let original = crate::artifacts::dag::default_snapshot().nodes().iter().find(|node| node.id == node_id).map(|node| node.x).expect("original x");
+        let original = crate::default_snapshot().nodes().iter().find(|node| node.id == node_id).map(|node| node.x).expect("original x");
         assert_eq!(restored.nodes().iter().find(|node| node.id == node_id).unwrap().x, original, "undoing the coalesced drag restores the pre-drag position");
     }
 

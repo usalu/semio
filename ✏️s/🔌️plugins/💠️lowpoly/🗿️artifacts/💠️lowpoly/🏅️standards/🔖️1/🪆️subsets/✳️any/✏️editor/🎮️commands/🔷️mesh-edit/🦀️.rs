@@ -6,8 +6,8 @@
 //! 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law fix) to build/re-sync the compute
 //! session, even though no handler here reads `ctx` directly itself.
 
-use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolySnapshot;
+use crate::op::LowpolyMutation;
+use crate::LowpolySnapshot;
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::{map_kernel_err, mesh_edit, LowpolyScratch};
 use crate::editor::lowpoly::view::{mirror_axis_from_param, utility_param_f32, utility_param_u32, utility_params_value};

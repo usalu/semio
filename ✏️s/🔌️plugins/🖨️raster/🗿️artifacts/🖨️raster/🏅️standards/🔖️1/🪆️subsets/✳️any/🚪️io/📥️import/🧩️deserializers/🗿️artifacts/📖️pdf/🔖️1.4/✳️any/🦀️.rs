@@ -1,6 +1,6 @@
 //! 📥️ raster ← pdf (1.4) — HONESTLY UNSUPPORTED, registered so the router answers with THIS
 //! sentence instead of a bare "no route". The same page model runs the other way: `decode_pdf` yields `{width, height, text}` per page and no pixels, so there is nothing a raster document could be built out of.
-use crate::artifacts::raster::RasterSnapshot;
+use crate::RasterSnapshot;
 pub fn register() {}
 /// 🚫️ This repo's PDF model decodes no pixels.
 pub const RASTER_PDF_IMPORT_UNSUPPORTED: &str =

@@ -1,14 +1,14 @@
 //! 🔺️ Vdi3805 artifact — sparse field diff runtime.
 
-use crate::artifacts::vdi3805::schema::diff::*;
+use crate::document_schema::diff::*;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::vdi3805::schema::Vdi3805Artifact;
-use crate::artifacts::vdi3805::Vdi3805Snapshot;
+use crate::document_schema::Vdi3805Artifact;
+use crate::Vdi3805Snapshot;
 use protocol::MutationDiff;
 
 //#region 🔖️Apply

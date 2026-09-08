@@ -3,8 +3,8 @@
 //! restructuring (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️fanout-brief.md`
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
-use crate::artifacts::program::registers::OperationalRequirement;
-use crate::artifacts::program::{ProgramDiff, ProgramMutation, ProgramSnapshot};
+use crate::registers::OperationalRequirement;
+use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🔁️ Whole-value swap of one operational requirement row's non-identity content, addressed by

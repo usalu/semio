@@ -7,7 +7,7 @@ Root document is exactly `{ $schema, $id, $defs }`; no root `$ref`, no envelope 
 
 ## A. Scope → export table
 
-29 exports (PascalCase `$defs` keys). 25 lower-camel `$defs` keys are private helpers and are not exports:
+30 exports (PascalCase `$defs` keys). 25 lower-camel `$defs` keys are private helpers and are not exports:
 `id, identifier, text, hash, nonzeroHash, requestId, safeInteger, positiveSafeInteger, spaceKind, spaceVisibility, spaceRole, documentOwner, documentFrontier, publicSpace, memberSpace, publicDocument, scopedDocumentDescriptor, spaceDocumentView, spaceMember, spaceInvite, directoryEventHlc, directoryEventActor, directoryEvent, directoryCommandResult, presenceBoundedText`.
 
 | Scope id | Export id | Source fixture the contract was lifted out of | Implementation it mirrors |
@@ -37,6 +37,7 @@ Root document is exactly `{ $schema, $id, $defs }`; no root `$ref`, no envelope 
 | hub.directory | `AdminActorV1` | `🎯️admin-intent-v1` (`expectedActor`) | `DirectoryActor` / `DirectoryActorKind` (os directory `$defs`) |
 | hub.directory | `AdminRecordedConnectionV1` | `🎯️admin-intent-v1` (`recordedConnection.stored`) | `AdminRecordedConnectionV1` (os directory `$defs`) |
 | hub.directory | `AdminIntentOutcomeV1` | `🎯️admin-intent-v1` (`outcomes.durableRevoke`, `outcomes.ephemeralKick`) | `AdminIntentOutcomeV1` (os directory `$defs`) |
+| hub.directory | `InviteRedemptionCallV1` | `🎟️invite-redemption-transaction-v1` (`vectors[].calls[]`) | server-derived redemption call in `🌎️hub/📇️directory/🦀️.rs` / `🪶️sqlite/🦀️.rs` — the client supplies no capability, space, role or event id |
 | hub.directory | `InviteAcceptanceMarkerV1` | `🎟️invite-redemption-transaction-v1` (`vectors[].expected.marker`) | invite acceptance marker (`accepted_at` / `accepted_event_id`) in `🌎️hub/📇️directory/🦀️.rs` + `🪶️sqlite/🦀️.rs` |
 | hub.directory | `PresenceAdmissionV1` | `🪪️presence-normalization-v1` (`vectors[].admission`) | presence admission normalization in `🌎️hub/📦️packages/🦀️rust/🚀️bin.rs`; `ArtifactPresencePeer` in `🧰️framework/🔨️modules/📡️replication/🟦️.ts` |
 | hub.directory | `PresenceLeaseOperationV1` | `👥️presence-lease-v1` (`vectors[].operations[]`) | presence lease install/refresh/tick/close/fill/restart in `🚀️bin.rs` (`presence_lease_*` laws) |
@@ -60,7 +61,7 @@ inventory strings, `Set` size uniqueness checks, exhaustive enum enumeration per
 ## B. Files created / moved / deleted
 
 Created
-- `🌎️hub/📇️directory/🧬️schema/🔣️.json` (new owner module, draft-07, 29 exports + 25 private helpers)
+- `🌎️hub/📇️directory/🧬️schema/🔣️.json` (new owner module, draft-07, 30 exports + 25 private helpers)
 
 Deleted (21 fixture-owned schemas — the contract moved into the module, the fixture directories now hold data only)
 1. `🌎️hub/📇️directory/🧪️tests/🏛️retained-short-admin/🧬️.schema.json`
@@ -112,15 +113,15 @@ read by any of them any more.
 | `DirectoryMessageAuthorityCheckScript.run` | — | envelope key set, 4/6 sizes, uniqueness, close-code/keys enums, message JSON byte bounds |
 | `proveExecutionTargetRelay` | `DocumentOpenIntentV1`, `ExecutionTargetAssetRouteV1` | envelope key set, route/response inventories, exhaustive fence oracle table, response byte/delay/status bounds |
 | `proveExecutionTargetLeaseCorpus` | `DocumentOpenIntentV1`, `SocketGrantReceiptV1`, `LocalizedTextV1` | envelope key set, clock/origin/hex shape, full `expected` key set + every bound literal, renderer-claim closure, asset-path derivation from `openPlanPath`, status/statusRoles inventory, rotation distinctness, hostile stage closure. `leaseFields` validation moved from the deleted fixture schema to the canonical os module export `DocumentExecutionTargetLeaseFieldsV1` |
-| `proveDirectoryEventPageRouteV1` | `DirectorySessionBindingV1` | envelope key set, four limit literals, exact 5-vector and 5-hostile inventories, 12 query cases with enum/bound closure |
+| `proveDirectoryEventPageRouteV1` | `DirectorySessionBindingV1` | envelope key set, four limit literals, exact 5-vector and 5-hostile inventories, 12 query cases with enum/bound closure; the old whole-fixture unknown-field hostile became three contract-stage session mutations (unknown field, concatenated binding digest, generation 0) |
 | `proveDirectoryHomeBrowserProcessSource` | `DirectoryProfileV1`, `DirectoryEventPageCursorV1` | envelope key set, guest-boundary literals, Home app-binding literals, ≥4 pages, 8–16 unique traces, exhaustive hostile mutation set |
 | `proveDirectoryCommandReceiptV1` | `DirectoryCommandReceiptV1` | envelope key set, five limit literals, table sizes, transport inventory; per-receipt unknown-field rejection |
 | `proveDirectoryCommandAuthorityV1` | — | version const, envelope key set, capacity literals, table sizes, id uniqueness, ordered invite-scope inventory, per-row enum closure |
-| `proveDirectorySpaceAdministrationPageV1` | `DirectorySpaceSessionBindingV1`, `SpaceAdministrationSpaceV1`, `SpaceAdministrationMemberRowV1`, `SpaceAdministrationInviteRowV1` | envelope key set, four limit literals, session↔space binding equality, window inventories, invite-secret rejection, ordered vector + 9-hostile inventories, 8 cursor cases |
+| `proveDirectorySpaceAdministrationPageV1` | `DirectorySpaceSessionBindingV1`, `SpaceAdministrationSpaceV1`, `SpaceAdministrationMemberRowV1`, `SpaceAdministrationInviteRowV1` | envelope key set, four limit literals, session↔space binding equality, window inventories, invite-secret rejection, ordered vector + 9-hostile inventories, 8 cursor cases; the old whole-fixture unknown-field hostile became contract-stage member/space mutations |
 | `provePresenceLeaseFixture` | `PresenceLeaseOperationV1`, `PresenceScopeSummaryV1` | envelope key set, four limit literals, 8–16 unique vectors, per-vector ephemeral/member-fanout and outcome closure; hostiles are now contract-stage operation/summary mutations |
 | `provePresenceNormalizationFixture` | `PresenceAdmissionV1` | envelope key set, `maximumEntryBytes` literal, 12–32 unique vectors, hex shape/bounds, `durableWrites === 0`; forged-claim rejections |
 | `AdminPresenceTargetRecoveryCheckScript.run` | `DirectorySocketScopeV1` | envelope key set, surface literal, membership shape, full `expected` key set + every literal |
-| `proveInviteRedemptionTransaction` | `InviteAcceptanceMarkerV1` | envelope key set, three limit literals, table sizes, exhaustive hostile-mutation set, per-vector call/outcome arity |
+| `proveInviteRedemptionTransaction` | `InviteRedemptionCallV1`, `InviteAcceptanceMarkerV1` | envelope key set, three limit literals, table sizes, exhaustive hostile-mutation set, per-vector call/outcome arity. The seven `hostiles[]` are now dispatched: five client-authority mutations are rejected by `InviteRedemptionCallV1`, `unknown-field` by the envelope key set, `oversized-identifier` by `InviteAcceptanceMarkerV1` |
 | `proveDirectorySpaceJourneyV1` | `DirectoryProfileV1`, `DirectoryDocumentDescriptorV1`, `LocalizedTextV1` | envelope key set, bound/deadline literals, distinct profiles, EN/DE label distinctness + min length, kebab id shape, step/skip/route inventories and uniqueness, privacy inventory, space taxonomy |
 | `proveSpacePublicBoundaryFixture` | `PublicSpaceDetailV1`, `MemberSpaceDetailV1`, `AuthorSpaceDetailV1` | envelope key set, access inventory, 21/21 forbidden-key and hostile inventories; the 21 hostiles now run through `assertHubFixtureExpectation` against the fixture-declared `stage/result/code` |
 | `🎯️admin-intent-v1/🧪️oracle/🟦️.ts` | `AdminPrincipalV1`, `AdminCreateSpaceIntentV1`, `AdminActorV1`, `AdminRecordedConnectionV1`, `AdminIntentOutcomeV1` | envelope key set, four limit literals, public-projection/audit/invalid/redaction inventories; generic-command and non-admin-peer-class rejections |
@@ -129,23 +130,32 @@ read by any of them any more.
 
 ### D.1 Module loads as draft-07 and every rewired fixture member validates
 
-Harness: `/private/tmp/claude-501/-Users-ueli-Documents-semio/cd1780e5-e2df-474c-a459-b3835d585ab6/scratchpad/wp4-hub-directory-verify.ts`
-(`new Ajv({ strict: true, allErrors: true })` from the `ajv` package — draft-07, **not** `ajv/dist/2020`;
-`addSchema` of the module; `getSchema("<$id>#/$defs/<Export>")` per export; validates the real fixture member
-and the negative mutations).
+Harness: `<scratchpad>/wp4-hub-directory-verify.ts` — `new Ajv({ strict: true, allErrors: true })` from the
+`ajv` package (draft-07, **not** `ajv/dist/2020`), `addSchema` of the module, `getSchema("<$id>#/$defs/<Export>")`
+per export, then the real fixture member plus the negative mutations.
 
 ```
-$ cd /Users/ueli/Documents/semio && bun .../wp4-hub-directory-verify.ts
+$ bun <scratchpad>/wp4-hub-directory-verify.ts
 hub.directory $id=https://semio.tech/schema/hub/directory/schema.json
-exports (29): DirectoryDocumentScopeV1, DirectorySocketScopeV1, DirectorySocketMessageRoutingV1, DocumentOpenIntentV1, ExecutionTargetAssetRouteV1, SocketGrantReceiptV1, DirectoryCommandReceiptV1, DirectorySessionBindingV1, DirectorySpaceSessionBindingV1, SpaceAdministrationSpaceV1, SpaceAdministrationMemberRowV1, SpaceAdministrationInviteRowV1, PublicSpaceDetailV1, MemberSpaceDetailV1, AuthorSpaceDetailV1, DirectoryDocumentDescriptorV1, DirectoryEventPageCursorV1, DirectoryProfileV1, LocalizedTextV1, AdminPrincipalV1, AdminCreateSpaceIntentV1, AdminOperationIntentV1, AdminActorV1, AdminRecordedConnectionV1, AdminIntentOutcomeV1, InviteAcceptanceMarkerV1, PresenceAdmissionV1, PresenceLeaseOperationV1, PresenceScopeSummaryV1
+exports (30): DirectoryDocumentScopeV1, DirectorySocketScopeV1, DirectorySocketMessageRoutingV1, DocumentOpenIntentV1, ExecutionTargetAssetRouteV1, SocketGrantReceiptV1, DirectoryCommandReceiptV1, DirectorySessionBindingV1, DirectorySpaceSessionBindingV1, SpaceAdministrationSpaceV1, SpaceAdministrationMemberRowV1, SpaceAdministrationInviteRowV1, PublicSpaceDetailV1, MemberSpaceDetailV1, AuthorSpaceDetailV1, DirectoryDocumentDescriptorV1, DirectoryEventPageCursorV1, DirectoryProfileV1, LocalizedTextV1, AdminPrincipalV1, AdminCreateSpaceIntentV1, AdminOperationIntentV1, AdminActorV1, AdminRecordedConnectionV1, AdminIntentOutcomeV1, InviteRedemptionCallV1, InviteAcceptanceMarkerV1, PresenceAdmissionV1, PresenceLeaseOperationV1, PresenceScopeSummaryV1
 private helpers (25): id, identifier, text, hash, nonzeroHash, requestId, safeInteger, positiveSafeInteger, spaceKind, spaceVisibility, spaceRole, documentOwner, documentFrontier, publicSpace, memberSpace, publicDocument, scopedDocumentDescriptor, spaceDocumentView, spaceMember, spaceInvite, directoryEventHlc, directoryEventActor, directoryEvent, directoryCommandResult, presenceBoundedText
 public-space-detail: 21 fixture-declared contract rejections all denied by PublicSpaceDetailV1
 fixtures bound to a module export (15): 🔌️scoped-socket-revocation-v1, 🚶️admin-live-journey-v1, 🛂️admin-presence-target-recovery-v1, 👥️presence-lease-v1, 🪪️presence-normalization-v1, 🏘️space-administration-page-v1, 📅️event-page-route-v1, 🔏️document-execution-target-lease-v1, 🚻️space-journey-v1, 🧾️command-receipt-v1, 🪪️execution-target-relay-v1, 🌐️directory-home-browser-process-v1, 🏛️public-space-detail-v1, 🎯️admin-intent-v1, 🎟️invite-redemption-transaction-v1
 fixtures replaced by explicit oracle-table assertions (6): 📣️ordered-append-broadcast-v1, 🛡️command-authority-v1, 🔐️share-issuance-atomicity, 🏛️retained-short-admin, 🌐️directory-message-authority-v1, 🏛️admin-directory-authority-v1
-hub.directory module verification: assertions=271 exports=29 fixtures=21
+hub.directory module verification: assertions=304 exports=30 fixtures=21
 ```
 
-### D.2 Hub oracle commands (no cargo, run at the real router)
+Second harness `<scratchpad>/wp4-hub-directory-envelope.ts` re-evaluates every literal envelope/inventory
+string this WP wrote into `📜️script.ts` against the real fixtures:
+
+```
+$ cd /Users/ueli/Documents/semio && bun <scratchpad>/wp4-hub-directory-envelope.ts
+hub.directory envelope-assertion re-evaluation: literals=33 all matched the real fixtures
+```
+
+### D.2 Hub oracle commands at the real router (no cargo)
+
+Ran before a concurrent peer broke the shared import graph (see §E.5):
 
 ```
 $ bun 🌎️hub/📦️packages/🦀️rust/📜️script.ts directory-ordered-publication-check
@@ -181,43 +191,139 @@ $ bun 🌎️hub/📇️directory/🧫️fixtures/🎯️admin-intent-v1/🧪️
 admin-intent-v1 oracle: 5/5; invalid inventory 22/22; hub.directory exports 5/5
 ```
 
-<!--PENDING-D2-->
+After the peer breakage every `bun 📜️script.ts <cmd>` aborts at
+`Cannot find module '../📃️pageSchema/🟦️.ts' from '🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts'`. It was still
+broken after 27 retry attempts over 17 minutes, so the remaining commands were run through a *test-only*
+Bun `onResolve` shim in the scratchpad (`wp4-hub-directory-shim.ts`, maps `📃️pageSchema` → the `📃️page`
+directory that is actually on disk). Nothing in the repository was changed for this.
+
+```
+$ bun --preload <scratchpad>/wp4-hub-directory-shim.ts 🌎️hub/📦️packages/🦀️rust/📜️script.ts space-administration-check
+space-administration-oracle: AJV=2 vectors=4 cursors=8 hostiles=9 source-hostiles=9 component-schema=9 sha256=1 binding=1
+space-administration-check: checks=41 phase=source
+
+$ bun --preload <shim> 🌎️hub/📦️packages/🦀️rust/📜️script.ts space-journey-check source
+space-journey-check: checks=149 phase=source steps=20 skips=5
+
+$ bun --preload <shim> 🌎️hub/📦️packages/🦀️rust/📜️script.ts execution-target-relay-check
+hub-native-artifact-provider-frontier-oracle: scope-exports=2 headless=sqlite plugin-deps=0 production-receipts=29 configured-no-provider=reject
+execution-target-provider-frontier: checks=12
+execution-target relay runtime routes=21 responses=9 bounded-capacity=2 exact-bytes=true
+execution-target-relay-check: checks=39
+execution-target-relay-check: existing browser proof-ratchet runtime regression clean
+
+$ bun --preload <shim> 🌎️hub/📦️packages/🦀️rust/📜️script.ts execution-target-lease-check
+execution-target-lease-oracle: ajv=1 positive=1 manifest-fields=49 byte-vectors=13 lifecycle=11 hostile=73 component-bytes=1024 descriptor-bytes=656 node+webcrypto-sha256=agree first-party-blake3=known-answer status=5 passed
+execution-target-lease-source: browser lease region=renderer-free hub routes=4 accessor=generation-bound native=full-field passed
+
+$ bun --preload <shim> 🌎️hub/📦️packages/🦀️rust/📜️script.ts scoped-directory-socket-check source
+scoped-directory-socket-oracle: hub.directory-exports=2 decisions=19 hostiles=3 client-closes=3 relay=3
+```
+
+#### Three commands stop later, in Rust source fences that predate this work
+
+`directory-event-page-v1-check`, `directory-command-receipt-check` and `invite-redemption-transaction-check`
+each get **past** every rewired schema/contract assertion and then fail in a Rust source-mutation oracle over
+`🌎️hub/📇️directory/{🦀️.rs,🪶️sqlite,🐘️postgres,🌐️neo4j}` — files this WP never touched.
+
+```
+$ bun --preload <shim> … directory-event-page-v1-check
+error: directory event page route/storage source boundary is incomplete   (📜️script.ts:12929, sourceClosed)
+
+$ bun --preload <shim> … directory-command-receipt-check
+error: PostgreSQL invite scope predicates or bindings drifted             (📜️script.ts:14315, inside proveDirectoryCommandAuthorityV1 — i.e. proveDirectoryCommandReceiptV1 already returned)
+
+$ bun --preload <shim> … invite-redemption-transaction-check
+error: archive authority oracle admitted removed fence 0                  (📜️script.ts:15840, archiveClosed)
+```
+
+Attribution — the two fence predicates were extracted from `📜️script.ts` and re-evaluated against
+`git show 0a0bb74380:<rust file>` (the last commit before this session began):
+
+```
+$ bun <scratchpad>/wp4-fence-attribution.ts
+directory-event-page fence @ worktree   : false
+directory-event-page fence @ 0a0bb74380 : false
+
+$ bun <scratchpad>/wp4-fence-attribution2.ts
+invite-redemption archive fence @ worktree:   base=true hostile0-detected=false hostile1-detected=true
+invite-redemption archive fence @ 0a0bb74380: base=true hostile0-detected=false hostile1-detected=true
+```
+
+And for the PostgreSQL binding drift, the `.bind(...)` order in `🌎️hub/📇️directory/🐘️postgres/🦀️.rs` grew four
+extra binds between `aa72759d41` (2026-09-07 16:52) and `0a0bb74380` (2026-09-08 14:30), both before this
+session:
+
+```
+now      : ['invite_id','revoked_at','reason','space_id','invite_id','space_id','invite_id','revoked_at','reason','space_id']
+0a0bb743 : ['invite_id','revoked_at','reason','space_id','invite_id','space_id','invite_id','revoked_at','reason','space_id']
+aa72759d : ['invite_id','revoked_at','reason','space_id','invite_id','space_id']
+expected : ['invite_id','revoked_at','reason','space_id','invite_id','space_id']
+```
+
+All three are pre-existing regressions owned by whoever is refactoring the directory backends; they are listed
+under §E as cross-partition requests, not fixed here.
+
+#### Not run (would invoke cargo or a built binary — this ticket forbids cargo)
+
+- `space-public-boundary-check` (`runProbe("cargo", […"--list"])` + `runCargo` after the oracle) — `proveSpacePublicBoundaryFixture`'s contract logic is covered by D.1 instead (4 positives, 21 declared hostile rejections, raw-event denial).
+- `directory-home-browser-process-check` — `proveDirectoryHomeBrowserProcessSource` itself shells out to `cargo tree`.
+- `admin-live-journey-check` — needs a built `os-hub` binary and Chromium.
+- every `--native` / `process` phase of the commands above.
 
 ### D.3 `📜️script.ts` still parses
 
 ```
-$ bun build --target=bun --no-bundle 🌎️hub/📦️packages/🦀️rust/📜️script.ts
+$ cd /Users/ueli/Documents/semio && bun build --target=bun --no-bundle 🌎️hub/📦️packages/🦀️rust/📜️script.ts
 Transpiled file in 83ms
 ```
 
-<!--PENDING-D3-->
+The router's no-arg usage line also printed correctly during D.2 (the full `<setup|build|test|…>` usage banner),
+which only happens after the whole file and its import graph load.
+
+A repo-wide `tsc --noEmit` is not a usable gate here: this workspace has no `@types/bun` installed and the root
+`tsconfig.json` does not set `allowImportingTsExtensions`, so a scoped run over `📜️script.ts` reports 726
+pre-existing errors (`Cannot find name 'Bun'`, `Cannot find module 'bun:sqlite'`, `TS5097`, …). Cross-checking
+those 726 error lines against the lines this WP authored found zero attributable to the rewiring.
 
 ### D.4 No fixture-owned schema left on disk
 
 `git ls-files` still lists the 21 blobs because they are only removed from the working tree — staging a
-deletion requires a git-modifying command, which this ticket forbids; the repository's auto-commit will pick
-them up. The equivalent worktree check:
+deletion needs a git-modifying command, which this ticket forbids; the repository's auto-commit picks them up.
+The equivalent worktree check over the whole hub:
 
 ```
-$ git ls-files 🌎️hub/📇️directory 🌎️hub/🧪️fixtures 🌎️hub/📦️packages/🦀️rust/🧪️fixtures \
-    | grep -E 'schema\.json$' | while IFS= read -r f; do [ -e "$f" ] && echo "STILL ON DISK: $f"; done
-STILL ON DISK: 🌎️hub/🧪️fixtures/↩️gis-map-approval-undo-v1/🧬️.schema.json
-STILL ON DISK: 🌎️hub/🧪️fixtures/⏸️gis-inference-checkpoint-control-v1/🧬️.schema.json
-STILL ON DISK: 🌎️hub/🧪️fixtures/⛓️inference-wal-chain-v1/🧬️.schema.json
-STILL ON DISK: 🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json
-STILL ON DISK: 🌎️hub/🧪️fixtures/✉️inference-command-v1/🧬️.schema.json
-STILL ON DISK: 🌎️hub/🧪️fixtures/🎯️inference-catalog-selection-v1/🧬️.schema.json
-STILL ON DISK: 🌎️hub/🧪️fixtures/🖥️inference-server-identity-v1/🧬️.schema.json
-STILL ON DISK: 🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1/🧬️.schema.json
-STILL ON DISK: 🌎️hub/🧪️fixtures/🗺️gis-inference-job-v1/🧬️.schema.json
-STILL ON DISK: 🌎️hub/🧪️fixtures/🗺️gis-inference-retained-runtime-v1/🧬️.schema.json
-STILL ON DISK: 🌎️hub/🧪️fixtures/🛂️inference-author-v1/🧬️.schema.json
-STILL ON DISK: 🌎️hub/🧪️fixtures/🧊️gis-map-frozen-binding-v1/🧬️.schema.json
-STILL ON DISK: 🌎️hub/🧪️fixtures/🧾️inference-wal-proof-v1/🧬️.schema.json
+$ git ls-files 🌎️hub | grep -E 'schema\.json$' \
+    | while IFS= read -r f; do [ -e "$f" ] && echo "$f"; done
+🌎️hub/💡️inference/🧬️schema/🤝️two-author-shell-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/↩️gis-map-approval-undo-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/⏸️gis-inference-checkpoint-control-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/⛓️inference-wal-chain-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/✉️inference-command-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/🎯️inference-catalog-selection-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/🖥️inference-server-identity-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/🗺️gis-inference-job-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/🗺️gis-inference-retained-runtime-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/🛂️inference-author-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/🧊️gis-map-frozen-binding-v1/🧬️.schema.json
+🌎️hub/🧪️fixtures/🧾️inference-wal-proof-v1/🧬️.schema.json
 ```
 
-All 13 survivors belong to the `hub.inference` partition (they are the `-v1` fixtures the execution contract
-§D assigns to `hub.inference`), not to `hub.directory`. None of my 21 files remain.
+All 14 survivors belong to the `hub.inference` / GIS-inference partition (the `-v1` fixtures the execution
+contract §D assigns to `hub.inference`). None of the 21 `hub.directory` files remains, and both
+`👥️presence-lease-v1/🧬️schema/` and `🪪️presence-normalization-v1/🧬️schema/` are gone as directories:
+
+```
+$ ls 🌎️hub/📦️packages/🦀️rust/🧪️fixtures/👥️presence-lease-v1 🌎️hub/📦️packages/🦀️rust/🧪️fixtures/🪪️presence-normalization-v1
+🌎️hub/📦️packages/🦀️rust/🧪️fixtures/👥️presence-lease-v1:
+🧪️fixture
+🧫️fixture
+
+🌎️hub/📦️packages/🦀️rust/🧪️fixtures/🪪️presence-normalization-v1:
+🧪️fixture
+```
 
 ## E. Cross-partition requests
 
@@ -236,11 +342,19 @@ All 13 survivors belong to the `hub.inference` partition (they are the `-v1` fix
    and `🌎️hub/📦️packages/🦀️rust/🧪️fixtures/{🌐️directory-message-authority-v1,🏛️admin-directory-authority-v1,
    🛂️admin-presence-target-recovery-v1,👥️presence-lease-v1,🪪️presence-normalization-v1}` and were not touched.
 4. **WP2 catalog** — `hub.directory` now has a module; the derived catalog
-   (`🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json`) must list the 29 export ids above.
-5. **`framework.actor` peer refactor** — during this work
-   `🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts` began importing `../📃️pageSchema/🟦️.ts` while the directory on
-   disk is still `📃️page`, which makes every `bun 🌎️hub/📦️packages/🦀️rust/📜️script.ts <cmd>` fail at module
-   resolution. Not my partition; noted so the owner can land the directory rename.
+   (`🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json`) must list the 30 export ids above.
+5. **`framework.actor` peer refactor (blocking every hub command).** At 16:20 today
+   `🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts:2` began importing `../📃️pageSchema/🟦️.ts` while the directory
+   on disk is still `📃️page`, so every `bun 🌎️hub/📦️packages/🦀️rust/📜️script.ts <cmd>` aborts at module
+   resolution. Still broken after 27 polls over 17 minutes. Needs the `📃️page` → `📃️pageSchema` directory
+   rename (or the import reverted). D.2's later runs used a scratchpad-only Bun resolver shim to work around it.
+6. **Directory backend Rust fences already red** (owner: whoever is refactoring `🌎️hub/📇️directory/*`), all
+   proven pre-existing in D.2:
+   - `📜️script.ts:12929` `sourceClosed` — `directory event page route/storage source boundary is incomplete`.
+   - `📜️script.ts:14315` — PostgreSQL `revoke_invite_as` now issues 10 `.bind(...)` calls where the fence
+     expects 6; drifted between `aa72759d41` and `0a0bb74380`.
+   - `📜️script.ts:15840` `archiveClosed` hostile 0 — removing `space_kind == Some("archive")` from
+     `🌎️hub/📇️directory/🦀️.rs` no longer flips the fence, so the mutant is admitted.
 
 ## F. Open questions
 

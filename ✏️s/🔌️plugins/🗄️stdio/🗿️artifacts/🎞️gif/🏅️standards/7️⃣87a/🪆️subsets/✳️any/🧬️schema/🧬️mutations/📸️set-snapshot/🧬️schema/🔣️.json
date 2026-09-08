@@ -1,31 +1,75 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-snapshot.json",
+  "$id": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-snapshot/schema.json",
   "title": "SetSnapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema",
-    "width",
-    "height",
-    "backgroundColorIndex",
-    "pixelAspectRatio",
-    "images"
+    "snapshot"
   ],
   "properties": {
-    "schema": {
-      "type": "string"
+    "snapshot": {
+      "$ref": "#/$defs/GifSnapshot"
     },
-    "width": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "height": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "gct": {
+    "mutation": {
+      "const": "setSnapshot",
+      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "GifSnapshot": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "gct": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GifColorTable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "backgroundColorIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "pixelAspectRatio": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GifImage"
+          }
+        }
+      }
+    },
+    "GifColorTable": {
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
         "sorted": {
           "type": "boolean"
@@ -33,121 +77,89 @@
         "colors": {
           "type": "array",
           "items": {
-            "type": "object",
-            "properties": {
-              "r": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "g": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "b": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": [
-              "r",
-              "g",
-              "b"
-            ],
-            "additionalProperties": false
+            "$ref": "#/$defs/GifRgb"
           }
         }
-      },
-      "required": [
-        "sorted",
-        "colors"
-      ],
-      "additionalProperties": false
-    },
-    "backgroundColorIndex": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "pixelAspectRatio": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "images": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "left": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "top": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "width": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "height": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "interlace": {
-            "type": "boolean"
-          },
-          "lct": {
-            "type": "object",
-            "properties": {
-              "sorted": {
-                "type": "boolean"
-              },
-              "colors": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "r": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "g": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "b": {
-                      "type": "integer",
-                      "minimum": 0
-                    }
-                  },
-                  "required": [
-                    "r",
-                    "g",
-                    "b"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            },
-            "required": [
-              "sorted",
-              "colors"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "required": [
-          "left",
-          "top",
-          "width",
-          "height",
-          "interlace"
-        ],
-        "additionalProperties": false
       }
     },
-    "mutation": {
-      "const": "setSnapshot",
-      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    "GifRgb": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b"
+      ],
+      "properties": {
+        "r": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "g": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "GifImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "left",
+        "top",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "left": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "top": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "interlace": {
+          "type": "boolean"
+        },
+        "lct": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GifColorTable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
     }
   }
 }

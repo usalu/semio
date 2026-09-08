@@ -5,9 +5,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::note::schema::mutations::{apply_note_mutation, inverse_note_mutation, NoteMutation};
-use crate::artifacts::note::schema::{block_bounds, find_block, find_block_location};
-use crate::artifacts::note::{NoteDiff, NoteSnapshot};
+use crate::schema::mutations::{apply_note_mutation, inverse_note_mutation, NoteMutation};
+use crate::schema::{block_bounds, find_block, find_block_location};
+use crate::{NoteDiff, NoteSnapshot};
 use protocol::Mutation;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

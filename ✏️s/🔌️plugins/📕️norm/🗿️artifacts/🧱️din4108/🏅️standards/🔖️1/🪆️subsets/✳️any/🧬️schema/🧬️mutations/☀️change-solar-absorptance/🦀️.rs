@@ -1,7 +1,7 @@
 //! ☀️ `change-solar-absorptance` — sets the DIN 4108 `solar_absorptance` scalar.
 
 
-use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
+use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

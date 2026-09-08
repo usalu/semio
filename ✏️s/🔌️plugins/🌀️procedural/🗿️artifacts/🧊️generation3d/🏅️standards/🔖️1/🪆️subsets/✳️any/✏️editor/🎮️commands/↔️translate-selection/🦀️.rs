@@ -1,12 +1,13 @@
 //! 🧭️ 🧭️ Generation3d play app commands command — `translate-selection`.
 
-use crate::artifacts::generation3d::op::Generation3dMutation;
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::op::Generation3dMutation;
+use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use flow::{FlowEvalSession, FlowFixture, FlowHost};
+use semio_framework_os_flow::{FlowEvalSession, FlowHost};
+use semio_framework_artifact_flow_semio_framework_os_flow::{FlowFixture};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
-use crate::artifacts::generation3d::schema::{commit_fixture, ensure_gumball_node, gumball_translate_params_json, gumball_widget_offset, host_from_fixture};
+use crate::schema::{commit_fixture, ensure_gumball_node, gumball_translate_params_json, gumball_widget_offset, host_from_fixture};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared
@@ -109,11 +110,11 @@ pub(crate) fn apply_selected(payload: &TranslateSelection, doc: &ArtifactView<'_
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::generation3d::widget_id;
+    use crate::widget_id;
     use crate::editor::generation3d::commands::{rotate_selection, scale_selection};
     use crate::editor::generation3d::testkit::{app, dispatch};
     use crate::editor::generation3d::Generation3dCommand;
-    use flow::Widget;
+    use semio_framework_artifact_flow_semio_framework_os_flow::Widget;
 
     #[semio_framework_async_macros::async_test]
     async fn translate_selection_persists_transform_into_flow_graph() {

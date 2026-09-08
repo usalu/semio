@@ -7,7 +7,7 @@
 //! plugin's txt target folder. Left as an honest stub producing this artifact's own real
 //! snapshot type, pending a real txt import implementation.
 
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::SequenceSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

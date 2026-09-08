@@ -16,8 +16,8 @@
 //! `crate::editor::wires::config::WiresConfigMutation`s (real `backwards`, no ad hoc runtime `RefCell`);
 //! every action dispatches through the single typed `WiresCommand` channel via `ArtifactEditor::handle`.
 
-use crate::artifacts::wires::op::WiresMutation;
-use crate::artifacts::wires::WiresSnapshot;
+use crate::op::WiresMutation;
+use crate::WiresSnapshot;
 use crate::editor::wires::commands::add_node;
 use crate::editor::wires::commands::add_relationship;
 use crate::editor::wires::commands::delete_selection;
@@ -120,7 +120,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
 pub fn reset_wires_document_effect(document: &WiresSnapshot) -> Effect {
     let pack = <WiresSnapshot as store::ArtifactPack>::encode_pack(document);
-    let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document.clone(), None);
+    let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document.clone(), None);
     let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("wires document spr encode is infallible for a fresh, edit-free envelope");
     Effect::LoadDocument { pack, spr }
 }
@@ -274,7 +274,7 @@ impl ToolJobFactory for WiresRetainedCommandJobFactory {
 impl ArtifactOwnedToolJobFactory for WiresRetainedCommandJobFactory {
     type Owner = EditorApp<ReasoningWiresPlayApp>;
     const TOOL_IDS: &'static [&'static str] = WIRES_RETAINED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::wires::MINDMAP_WIRES_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::MINDMAP_WIRES_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = WIRES_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
@@ -391,9 +391,9 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 
     type Command = WiresCommand;
 
-    const DIALECT: Dialect = crate::artifacts::wires::WIRES_DIALECT;
+    const DIALECT: Dialect = crate::WIRES_DIALECT;
 
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::wires::MINDMAP_WIRES_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::MINDMAP_WIRES_SCHEMA;
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(WiresConfigPreparationFactory))
@@ -444,12 +444,12 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::wires::config::schema::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> WiresSnapshot {
-        crate::artifacts::wires::empty_wires_snapshot()
+        crate::empty_wires_snapshot()
     }
 
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
@@ -479,7 +479,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         let document = doc.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::wires::terminology::WiresLabels>(&cfg.snapshot.locale);
         match body_key {
-            WIRES_PLAY_BODY_COMPOSITE => edit::windows::canvas::render(&crate::artifacts::wires::wires_working_board(document), &document.wires_fixture),
+            WIRES_PLAY_BODY_COMPOSITE => edit::windows::canvas::render(&crate::wires_working_board(document), &document.wires_fixture),
             WIRES_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
             WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_fixture, labels),
             WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(document, labels),
@@ -500,9 +500,9 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 /// for the former; `metabolism_wires_example_snapshot()` itself still lives on and is exercised
 /// directly by this file's own tests below.
 pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::wires::WIRES_DIALECT)
+    Editor::builder(crate::WIRES_DIALECT)
         .document(["semio", "reasoning", "mindmap", "wires"])
-        .artifact_kind(crate::artifacts::wires::artifact_kind())
+        .artifact_kind(crate::artifact_kind())
         .icon_id("reasoning-wires")
         .mode_def(edit::definition())
         .default_mode_id(edit::WIRES_PLAY_MODE_EDIT)
@@ -593,8 +593,8 @@ pub(crate) mod testkit {
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
     pub async fn metabolism_app() -> WiresApp {
         let mut app = new_app().await;
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
-        let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
+        let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
+        let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
         let files = store::print_document_pack(&envelope).await.expect("print document pack");
         app.load_document_pack(&files).await.expect("load metabolism");
         app
@@ -791,10 +791,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn metabolism_board_fixture_uses_mindmap_schema() {
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
-        let board = crate::artifacts::wires::wires_working_board(&document);
-        assert_eq!(board.get("schema").and_then(|value| value.as_str()), Some(crate::artifacts::wires::MINDMAP_BOARD_SCHEMA));
-        assert_eq!(crate::artifacts::wires::schema::fixture_nodes(&board).len(), 7);
+        let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
+        let board = crate::wires_working_board(&document);
+        assert_eq!(board.get("schema").and_then(|value| value.as_str()), Some(crate::MINDMAP_BOARD_SCHEMA));
+        assert_eq!(crate::schema::fixture_nodes(&board).len(), 7);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -809,7 +809,7 @@ mod tests {
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(
             &mut app,
             WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
-            |app| crate::artifacts::wires::schema::fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len(),
+            |app| crate::schema::fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).len(),
             0,
             1,
         ).await;
@@ -818,7 +818,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent() {
         semio_framework_plugin::testkit::assert_ingest_idempotent::<EditorApp<ReasoningWiresPlayApp>, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| {
-            crate::artifacts::wires::schema::fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len()
+            crate::schema::fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).len()
         }).await;
     }
 
@@ -826,7 +826,7 @@ mod tests {
     /// on one backbone that must both survive on both instances (impossible under whole-document LWW).
     #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
-        use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
+        use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
         use semio_framework_plugin::testkit::meta;
         use semio_framework_plugin::PluginApp;
         use store::MemoryBackbone;
@@ -836,10 +836,10 @@ mod tests {
         // Seed both from an identical base projection carrying node-1/node-2 (as initial state, not
         // as edits) so the only edits on the channel are A's and B's disjoint ones.
         let seed_node = |id: &str| dsl::to_dsl_value(&dsl::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] })).expect("seed node");
-        let mut base = crate::artifacts::wires::empty_wires_snapshot();
-        base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-1"))).expect("valid mutation").0;
-        base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-2"))).expect("valid mutation").0;
-        let base_envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", base, None);
+        let mut base = crate::empty_wires_snapshot();
+        base = store::apply_mutation(&base, &crate::mutations::create_node(seed_node("node-1"))).expect("valid mutation").0;
+        base = store::apply_mutation(&base, &crate::mutations::create_node(seed_node("node-2"))).expect("valid mutation").0;
+        let base_envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", base, None);
         let base_files = store::print_document_pack(&base_envelope).await.expect("print document pack");
         instance_a.load_document_pack(&base_files).await.expect("load a");
         instance_b.load_document_pack(&base_files).await.expect("load b");
@@ -862,7 +862,7 @@ mod tests {
         assert!(find_board_node(&projection_a, "node-3").is_some(), "A keeps its own node");
         assert!(find_board_node(&projection_b, "node-3").is_some(), "B converges on A's node");
         // B's move of node-2 survives on both.
-        let x_of = |document: &WiresSnapshot| find_board_node(document, "node-2").map(|node| crate::artifacts::wires::schema::node_position(&node)).unwrap().0;
+        let x_of = |document: &WiresSnapshot| find_board_node(document, "node-2").map(|node| crate::schema::node_position(&node)).unwrap().0;
         assert_eq!(x_of(&projection_a), 50.0, "A converges on B's move");
         assert_eq!(x_of(&projection_b), 50.0, "B keeps its own move");
     }

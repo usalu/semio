@@ -1,9 +1,9 @@
 //! ↩️ `change-anchor-as-mm2` inverse — restores the pre-change `anchor_a_s_mm2` from BASE state; `change` is its
 //! own inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::en1992::mutations::change_anchor_a_s_mm2::ChangeAnchorASMm2;
-use crate::artifacts::en1992::mutations::En1992Mutation;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::mutations::change_anchor_a_s_mm2::ChangeAnchorASMm2;
+use crate::mutations::En1992Mutation;
+use crate::En1992Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeAnchorASMm2, base: &En1992Snapshot) -> Vec<En1992Mutation> {

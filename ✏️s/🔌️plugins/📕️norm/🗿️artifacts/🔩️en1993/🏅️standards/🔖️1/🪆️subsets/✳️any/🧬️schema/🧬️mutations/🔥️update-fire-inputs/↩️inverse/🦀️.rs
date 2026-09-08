@@ -1,7 +1,7 @@
 //! ↩️ `update-fire-inputs` — undo restores BASE's fire inputs.
 
 use super::UpdateFireInputs;
-use crate::artifacts::en1993::{En1993Mutation, En1993Snapshot};
+use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &UpdateFireInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {

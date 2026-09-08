@@ -1,13 +1,13 @@
 //! ⚙️ Jack artifact mutation validation, application, inversion and store behavior.
 
-use crate::artifacts::jack::mutations::TrinityGraphMutation;
+use crate::mutations::TrinityGraphMutation;
 #[cfg(test)]
-use crate::artifacts::jack::mutations::{
+use crate::mutations::{
     change_data_property, create_edge, create_node, delete_edge, delete_node, move_node, register_trinity_graph_mutation_descriptors, remove_data_property, rename_node, CreateEdge, DeleteNode, RenameNode,
 };
-use crate::artifacts::jack::{EntityRef, JackSnapshot, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
+use crate::{EntityRef, JackSnapshot, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
 #[cfg(test)]
-use crate::artifacts::jack::{Edge, Node, Port};
+use crate::{Edge, Node, Port};
 use protocol::Mutation;
 use store::{create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactStore};
 
@@ -24,9 +24,9 @@ pub fn create_trinity_graph_envelope(id: &str, fixture: JackSnapshot) -> Trinity
 /// 🛡️ Pre-flight manifest/reference validation for one operation against `fixture` — distinct from
 /// `diff`/`inverse` (which assume a validated operation); kept centralized because it cross-checks
 /// against the compile-time `Manifest`, not a single sparse-diff concern.
-pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixture: &JackSnapshot) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    use crate::artifacts::jack::TrinityRamError;
-    let scene = crate::artifacts::jack::jack_working_scene(fixture);
+pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixture: &JackSnapshot) -> Result<(), crate::TrinityRamError> {
+    use crate::TrinityRamError;
+    let scene = crate::jack_working_scene(fixture);
     match operation {
         TrinityGraphMutation::CreateNode(payload) => {
             let node = &payload.node;
@@ -55,8 +55,8 @@ pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixtur
             }
             validate_edge_kind_trinity(&fixture.manifest, &edge.kind)?;
             validate_edge_properties_trinity(&fixture.manifest, &edge.kind, &edge.properties)?;
-            let source_node = crate::artifacts::jack::port_node_id(&edge.source).ok_or_else(|| TrinityRamError::InvalidSourcePortKey(edge.source.clone()))?;
-            let target_node = crate::artifacts::jack::port_node_id(&edge.target).ok_or_else(|| TrinityRamError::InvalidTargetPortKey(edge.target.clone()))?;
+            let source_node = crate::port_node_id(&edge.source).ok_or_else(|| TrinityRamError::InvalidSourcePortKey(edge.source.clone()))?;
+            let target_node = crate::port_node_id(&edge.target).ok_or_else(|| TrinityRamError::InvalidTargetPortKey(edge.target.clone()))?;
             if !scene.nodes.iter().any(|node| node.id == source_node) {
                 return Err(TrinityRamError::SourceNodeNotFound(source_node.to_string()));
             }
@@ -89,9 +89,9 @@ pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, fixtur
     Ok(())
 }
 
-fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    use crate::artifacts::jack::TrinityRamError;
-    let scene = crate::artifacts::jack::jack_working_scene(fixture);
+fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str) -> Result<(), crate::TrinityRamError> {
+    use crate::TrinityRamError;
+    let scene = crate::jack_working_scene(fixture);
     match entity {
         EntityRef::Node(id) => {
             scene.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
@@ -104,9 +104,9 @@ fn validate_clear_data_property(fixture: &JackSnapshot, entity: &EntityRef, key:
     Ok(())
 }
 
-fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    use crate::artifacts::jack::TrinityRamError;
-    let scene = crate::artifacts::jack::jack_working_scene(fixture);
+fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), crate::TrinityRamError> {
+    use crate::TrinityRamError;
+    let scene = crate::jack_working_scene(fixture);
     let (defs, path_prefix) = match entity {
         EntityRef::Node(id) => {
             let node = scene.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
@@ -128,39 +128,39 @@ fn validate_set_data_property(fixture: &JackSnapshot, entity: &EntityRef, key: &
     validate_property_bag_trinity(&path_prefix, defs, &bag)
 }
 
-fn validate_node_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_node_kind_trinity(manifest: &crate::Manifest, kind: &str) -> Result<(), crate::TrinityRamError> {
     if manifest.node_kind(kind).is_some() {
         Ok(())
     } else {
-        Err(crate::artifacts::jack::TrinityRamError::UnknownNodeKind { kind: kind.to_string() })
+        Err(crate::TrinityRamError::UnknownNodeKind { kind: kind.to_string() })
     }
 }
 
-fn validate_edge_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_edge_kind_trinity(manifest: &crate::Manifest, kind: &str) -> Result<(), crate::TrinityRamError> {
     if manifest.edge_kind(kind).is_some() {
         Ok(())
     } else {
-        Err(crate::artifacts::jack::TrinityRamError::UnknownEdgeKind { kind: kind.to_string() })
+        Err(crate::TrinityRamError::UnknownEdgeKind { kind: kind.to_string() })
     }
 }
 
-fn validate_port_kind_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_port_kind_trinity(manifest: &crate::Manifest, kind: &str) -> Result<(), crate::TrinityRamError> {
     if manifest.port_kind(kind).is_some() {
         Ok(())
     } else {
-        Err(crate::artifacts::jack::TrinityRamError::UnknownPortKind { kind: kind.to_string() })
+        Err(crate::TrinityRamError::UnknownPortKind { kind: kind.to_string() })
     }
 }
 
-fn validate_edge_properties_trinity(manifest: &crate::artifacts::jack::Manifest, kind: &str, properties: &PropertyBag) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+fn validate_edge_properties_trinity(manifest: &crate::Manifest, kind: &str, properties: &PropertyBag) -> Result<(), crate::TrinityRamError> {
     let Some(def) = manifest.edge_kind(kind) else {
         return validate_edge_kind_trinity(manifest, kind);
     };
     validate_property_bag_trinity(&format!("edges/{kind}/properties"), &def.properties, properties)
 }
 
-fn validate_property_bag_trinity(path: &str, defs: &[crate::artifacts::jack::PropertyDef], bag: &PropertyBag) -> Result<(), crate::artifacts::jack::TrinityRamError> {
-    use crate::artifacts::jack::{PropertyKind, TrinityRamError};
+fn validate_property_bag_trinity(path: &str, defs: &[crate::PropertyDef], bag: &PropertyBag) -> Result<(), crate::TrinityRamError> {
+    use crate::{PropertyKind, TrinityRamError};
     for def in defs {
         if def.kind == PropertyKind::Derived {
             continue;
@@ -180,7 +180,7 @@ fn validate_property_bag_trinity(path: &str, defs: &[crate::artifacts::jack::Pro
     Ok(())
 }
 
-fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::artifacts::jack::PropertyDef) -> bool {
+fn property_value_matches_type_trinity(value: &PropertyValue, def: &crate::PropertyDef) -> bool {
     match value {
         PropertyValue::Null => def.value_type.id() == "null",
         PropertyValue::Bool(_) => def.value_type.id() == "boolean",
@@ -216,7 +216,7 @@ pub fn inverse_trinity_graph_mutation(projection: &JackSnapshot, mutation: &Trin
 }
 
 /// ▶️ Validates then applies a batch of operations, failing atomically on the first invalid one.
-pub fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[TrinityGraphMutation]) -> Result<JackSnapshot, crate::artifacts::jack::TrinityRamError> {
+pub fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[TrinityGraphMutation]) -> Result<JackSnapshot, crate::TrinityRamError> {
     let mut snapshot = fixture;
     for operation in operations {
         validate_trinity_graph_operation(operation, &snapshot)?;
@@ -226,7 +226,7 @@ pub fn apply_trinity_graph_mutations(fixture: JackSnapshot, operations: &[Trinit
 }
 
 /// ▶️ Validates a batch incrementally, then dispatches it as one VCS edit.
-pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphMutation>) -> Result<(), crate::artifacts::jack::TrinityRamError> {
+pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphMutation>) -> Result<(), crate::TrinityRamError> {
     if operations.is_empty() {
         return Ok(());
     }
@@ -235,7 +235,7 @@ pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, ope
         validate_trinity_graph_operation(operation, &snapshot)?;
         apply_trinity_graph_mutation(&mut snapshot, operation)?;
     }
-    store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None }).await.map_err(crate::artifacts::jack::TrinityRamError::from).map(|_| ())
+    store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None }).await.map_err(crate::TrinityRamError::from).map(|_| ())
 }
 //#endregion 🔖️BatchHelpers
 
@@ -243,8 +243,8 @@ pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, ope
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jack::mutations::CreateNode;
-    use crate::artifacts::jack::{Camera, Manifest, PortDirection};
+    use crate::mutations::CreateNode;
+    use crate::{Camera, Manifest, PortDirection};
     
 
     fn mini_fixture() -> JackSnapshot {
@@ -302,52 +302,52 @@ mod tests {
     async fn graph_op_rejects_port_kind_not_declared_on_operation() {
         let mut fixture = mini_fixture();
         fixture.manifest = Manifest {
-            node_kinds: vec![graph::manifest::TrinityNodeKindDef { name: "Piece".into(), properties: vec![], port_kinds: vec!["Connector".into()] }],
-            edge_kinds: vec![graph::manifest::TrinityEdgeKindDef { name: "Connection".into(), properties: vec![] }],
+            node_kinds: vec![semio_framework_graph::manifest::TrinityNodeKindDef { name: "Piece".into(), properties: vec![], port_kinds: vec!["Connector".into()] }],
+            edge_kinds: vec![semio_framework_graph::manifest::TrinityEdgeKindDef { name: "Connection".into(), properties: vec![] }],
             port_kinds: vec![
-                graph::manifest::TrinityPortKindDef { name: "Connector".into(), direction: PortDirection::Out, properties: vec![] },
-                graph::manifest::TrinityPortKindDef { name: "Other".into(), direction: PortDirection::In, properties: vec![] },
+                semio_framework_graph::manifest::TrinityPortKindDef { name: "Connector".into(), direction: PortDirection::Out, properties: vec![] },
+                semio_framework_graph::manifest::TrinityPortKindDef { name: "Other".into(), direction: PortDirection::In, properties: vec![] },
             ],
         };
         let op = create_node(mini_node("new", 0.0, 0.0, vec![Port { id: "p".into(), kind: "Other".into(), direction: PortDirection::In, properties: PropertyBag::new() }]));
         let err = validate_trinity_graph_operation(&op, &fixture).expect_err("bad port kind");
-        assert!(matches!(err, crate::artifacts::jack::TrinityRamError::PortKindNotDeclaredOnMutation { .. }));
+        assert!(matches!(err, crate::TrinityRamError::PortKindNotDeclaredOnMutation { .. }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn graph_op_create_edge_rejects_invalid_port_keys() {
         let fixture = mini_fixture();
-        let bad_source = create_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: "noAt".into(), target: crate::artifacts::jack::port_key("child", "in-a"), properties: PropertyBag::new() });
-        assert!(matches!(validate_trinity_graph_operation(&bad_source, &fixture), Err(crate::artifacts::jack::TrinityRamError::InvalidSourcePortKey(_))));
-        let bad_target = create_edge(Edge { id: "e3".into(), kind: "Connection".into(), source: crate::artifacts::jack::port_key("root", "out-a"), target: "noAt".into(), properties: PropertyBag::new() });
-        assert!(matches!(validate_trinity_graph_operation(&bad_target, &fixture), Err(crate::artifacts::jack::TrinityRamError::InvalidTargetPortKey(_))));
+        let bad_source = create_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: "noAt".into(), target: crate::port_key("child", "in-a"), properties: PropertyBag::new() });
+        assert!(matches!(validate_trinity_graph_operation(&bad_source, &fixture), Err(crate::TrinityRamError::InvalidSourcePortKey(_))));
+        let bad_target = create_edge(Edge { id: "e3".into(), kind: "Connection".into(), source: crate::port_key("root", "out-a"), target: "noAt".into(), properties: PropertyBag::new() });
+        assert!(matches!(validate_trinity_graph_operation(&bad_target, &fixture), Err(crate::TrinityRamError::InvalidTargetPortKey(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn graph_op_create_edge_rejects_missing_source_and_target_nodes() {
         let fixture = mini_fixture();
-        let missing_source = create_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: crate::artifacts::jack::port_key("ghost", "out"), target: crate::artifacts::jack::port_key("child", "in-a"), properties: PropertyBag::new() });
-        assert!(matches!(validate_trinity_graph_operation(&missing_source, &fixture), Err(crate::artifacts::jack::TrinityRamError::SourceNodeNotFound(_))));
-        let missing_target = create_edge(Edge { id: "e3".into(), kind: "Connection".into(), source: crate::artifacts::jack::port_key("root", "out-a"), target: crate::artifacts::jack::port_key("ghost", "in"), properties: PropertyBag::new() });
-        assert!(matches!(validate_trinity_graph_operation(&missing_target, &fixture), Err(crate::artifacts::jack::TrinityRamError::TargetNodeNotFound(_))));
+        let missing_source = create_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: crate::port_key("ghost", "out"), target: crate::port_key("child", "in-a"), properties: PropertyBag::new() });
+        assert!(matches!(validate_trinity_graph_operation(&missing_source, &fixture), Err(crate::TrinityRamError::SourceNodeNotFound(_))));
+        let missing_target = create_edge(Edge { id: "e3".into(), kind: "Connection".into(), source: crate::port_key("root", "out-a"), target: crate::port_key("ghost", "in"), properties: PropertyBag::new() });
+        assert!(matches!(validate_trinity_graph_operation(&missing_target, &fixture), Err(crate::TrinityRamError::TargetNodeNotFound(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn graph_op_rejects_duplicate_node_and_edge_ids() {
         let fixture = mini_fixture();
         let dup_node = create_node(mini_node("root", 0.0, 0.0, vec![]));
-        assert!(matches!(validate_trinity_graph_operation(&dup_node, &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeAlreadyExists(_))));
-        let dup_edge = create_edge(Edge { id: "e1".into(), kind: "Connection".into(), source: crate::artifacts::jack::port_key("root", "out-a"), target: crate::artifacts::jack::port_key("child", "in-a"), properties: PropertyBag::new() });
-        assert!(matches!(validate_trinity_graph_operation(&dup_edge, &fixture), Err(crate::artifacts::jack::TrinityRamError::EdgeAlreadyExists(_))));
+        assert!(matches!(validate_trinity_graph_operation(&dup_node, &fixture), Err(crate::TrinityRamError::NodeAlreadyExists(_))));
+        let dup_edge = create_edge(Edge { id: "e1".into(), kind: "Connection".into(), source: crate::port_key("root", "out-a"), target: crate::port_key("child", "in-a"), properties: PropertyBag::new() });
+        assert!(matches!(validate_trinity_graph_operation(&dup_edge, &fixture), Err(crate::TrinityRamError::EdgeAlreadyExists(_))));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn graph_op_rejects_missing_entities_on_delete_rename_reposition() {
         let fixture = mini_fixture();
-        assert!(matches!(validate_trinity_graph_operation(&delete_node("ghost".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
-        assert!(matches!(validate_trinity_graph_operation(&delete_edge("ghost".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::EdgeNotFound(_))));
-        assert!(matches!(validate_trinity_graph_operation(&rename_node("ghost".into(), "x".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
-        assert!(matches!(validate_trinity_graph_operation(&move_node("ghost".into(), 0.0, 0.0), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
+        assert!(matches!(validate_trinity_graph_operation(&delete_node("ghost".into()), &fixture), Err(crate::TrinityRamError::NodeNotFound(_))));
+        assert!(matches!(validate_trinity_graph_operation(&delete_edge("ghost".into()), &fixture), Err(crate::TrinityRamError::EdgeNotFound(_))));
+        assert!(matches!(validate_trinity_graph_operation(&rename_node("ghost".into(), "x".into()), &fixture), Err(crate::TrinityRamError::NodeNotFound(_))));
+        assert!(matches!(validate_trinity_graph_operation(&move_node("ghost".into(), 0.0, 0.0), &fixture), Err(crate::TrinityRamError::NodeNotFound(_))));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -357,28 +357,28 @@ mod tests {
         nodes[0].kind = "Ghost".into();
         let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id.clone());
         let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::String("x".into())), &fixture).expect_err("unknown entity kind");
-        assert!(matches!(err, crate::artifacts::jack::TrinityRamError::UnknownEntityKind { .. }));
+        assert!(matches!(err, crate::TrinityRamError::UnknownEntityKind { .. }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn graph_op_set_data_property_rejects_unknown_property_key() {
         let fixture = mini_fixture();
         let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "bogus".into(), PropertyValue::Null), &fixture).expect_err("unknown key");
-        assert!(matches!(err, crate::artifacts::jack::TrinityRamError::UnknownPropertyAtPath { .. }));
+        assert!(matches!(err, crate::TrinityRamError::UnknownPropertyAtPath { .. }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn graph_op_set_data_property_rejects_type_mismatch() {
         let fixture = mini_fixture();
         let err = validate_trinity_graph_operation(&change_data_property(EntityRef::Node("root".into()), "label".into(), PropertyValue::Number(1.0)), &fixture).expect_err("type mismatch");
-        assert!(matches!(err, crate::artifacts::jack::TrinityRamError::PropertyTypeMismatch { .. }));
+        assert!(matches!(err, crate::TrinityRamError::PropertyTypeMismatch { .. }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn graph_op_clear_data_property_rejects_missing_entities() {
         let fixture = mini_fixture();
-        assert!(matches!(validate_trinity_graph_operation(&remove_data_property(EntityRef::Node("ghost".into()), "label".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::NodeNotFound(_))));
-        assert!(matches!(validate_trinity_graph_operation(&remove_data_property(EntityRef::Edge("ghost".into()), "u".into()), &fixture), Err(crate::artifacts::jack::TrinityRamError::EdgeNotFound(_))));
+        assert!(matches!(validate_trinity_graph_operation(&remove_data_property(EntityRef::Node("ghost".into()), "label".into()), &fixture), Err(crate::TrinityRamError::NodeNotFound(_))));
+        assert!(matches!(validate_trinity_graph_operation(&remove_data_property(EntityRef::Edge("ghost".into()), "u".into()), &fixture), Err(crate::TrinityRamError::EdgeNotFound(_))));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -388,7 +388,7 @@ mod tests {
         assert_eq!(ok.nodes().iter().find(|n| n.id == "root").unwrap().name, "renamed");
 
         let err = apply_trinity_graph_mutations(fixture, &[delete_node("ghost".into())]).expect_err("missing node");
-        assert!(matches!(err, crate::artifacts::jack::TrinityRamError::NodeNotFound(_)));
+        assert!(matches!(err, crate::TrinityRamError::NodeNotFound(_)));
     }
 
     #[semio_framework_async_macros::async_test]

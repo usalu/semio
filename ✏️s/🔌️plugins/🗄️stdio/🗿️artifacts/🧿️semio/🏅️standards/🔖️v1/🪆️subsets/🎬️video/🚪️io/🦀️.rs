@@ -5,16 +5,21 @@
 //! file's own directory — the same mechanism `🦀️.rs` itself uses one level up. Registration
 //! flows through `🎹️composer::register` (see that module), matching the repo-wide convention.
 
+#[cfg(feature = "conversion-video")]
 #[path = "📥️import/🧩️deserializers/🗿️artifacts/📼️avi/🔖️1.0/✳️any/🦀️.rs"]
 pub mod avi_deserializer;
+#[cfg(feature = "conversion-video")]
 #[path = "📤️export/🧵️serializers/🗿️artifacts/📼️avi/🔖️1.0/✳️any/🦀️.rs"]
 pub mod avi_serializer;
+#[cfg(feature = "conversion-video")]
 #[path = "📥️import/🧩️deserializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️.rs"]
 pub mod mp4_deserializer;
+#[cfg(feature = "conversion-video")]
 #[path = "📤️export/🧵️serializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️.rs"]
 pub mod mp4_serializer;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
+    #[cfg(feature = "conversion-video")]
     use crate::standards::v1::subsets::video::io::{avi_deserializer::SemioVideoFromAvi, avi_serializer::SemioVideoToAvi, mp4_deserializer::SemioVideoFromMp4, mp4_serializer::SemioVideoToMp4};
     use crate::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, SemioVideoStreamKind};
     use crate::standards::v1::subsets::video::schema::SemioVideoAnalyzer;
@@ -131,6 +136,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-video")]
         register_composer_entries(bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -149,6 +155,7 @@ pub mod derived_composition {
     /// `OnceLock<Vec<ComposerEntry>>` entries-table convention (e.g. mp4/isobmff's own subset
     /// composer).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-video")]
     fn bridge_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioVideoFromMp4>(), serializer_entry_of::<SemioVideoToMp4>(), deserializer_entry_of::<SemioVideoFromAvi>(), serializer_entry_of::<SemioVideoToAvi>()]).as_slice()
@@ -156,7 +163,7 @@ pub mod derived_composition {
     //#endregion 🔖️Register
 
     //#region 🧪️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-video"))]
     mod tests {
         use super::*;
         use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream};

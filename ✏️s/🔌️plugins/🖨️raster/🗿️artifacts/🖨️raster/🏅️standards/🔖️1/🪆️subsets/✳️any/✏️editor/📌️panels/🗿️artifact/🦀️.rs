@@ -1,8 +1,8 @@
 //! 📄️ Raster play app panel — the layer tree.
 
-use crate::artifacts::raster::schema::layer_name;
-use crate::artifacts::raster::schema::layer_visible;
-use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterDocument};
+use crate::schema::layer_name;
+use crate::schema::layer_visible;
+use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
 use crate::editor::raster::{layer_row_id, raster_action, ui_label, ui_value_map, ui_value_text, RASTER_TREE_PREFIX};

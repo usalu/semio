@@ -1,7 +1,7 @@
 //! Puzzle3d mutation — `ReplaceReferenceSource`: whole-value swap of a reference's media source (url + media kind together).
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::Puzzle3dDiff;
+use crate::mutations::Puzzle3dMutation;
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
 /// `replace-reference-source` payload.
@@ -13,7 +13,7 @@ use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 #[dsl(keyword = "replace-reference-source")]
 pub struct ReplaceReferenceSource {
     pub id: String,
-    pub new_source: crate::artifacts::puzzle3d::Puzzle3dReferenceSource,
+    pub new_source: crate::Puzzle3dReferenceSource,
 }
 
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ReplaceReferenceSource {
@@ -35,6 +35,6 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ReplaceRefer
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_reference_source(id: String, new_source: crate::artifacts::puzzle3d::Puzzle3dReferenceSource) -> Puzzle3dMutation {
+pub fn replace_reference_source(id: String, new_source: crate::Puzzle3dReferenceSource) -> Puzzle3dMutation {
     Puzzle3dMutation::ReplaceReferenceSource(ReplaceReferenceSource { id, new_source })
 }

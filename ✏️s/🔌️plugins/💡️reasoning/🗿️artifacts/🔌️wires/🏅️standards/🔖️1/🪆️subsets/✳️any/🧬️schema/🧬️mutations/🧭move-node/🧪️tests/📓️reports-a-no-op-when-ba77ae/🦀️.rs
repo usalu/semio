@@ -15,10 +15,10 @@
 //! defaults a MISSING coordinate to the origin. The committed node carries `x` and no `y` at all,
 //! so `newY: 0.0` is "already there" — a shape only this leaf's guard produces.
 
-use crate::artifacts::wires::mutations::{MoveNode, WiresMutation};
-use crate::artifacts::wires::schema::node_position;
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::{materialize_wires_content, WiresDiff, WiresSnapshot};
+use crate::mutations::{MoveNode, WiresMutation};
+use crate::schema::node_position;
+use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::{materialize_wires_content, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

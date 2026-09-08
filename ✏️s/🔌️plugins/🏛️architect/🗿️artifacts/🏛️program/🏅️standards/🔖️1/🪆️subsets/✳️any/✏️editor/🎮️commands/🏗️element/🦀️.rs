@@ -3,9 +3,9 @@
 
 pub mod add_element {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::schema::mutations as leaves;
-    use crate::artifacts::program::ProgramSnapshot;
+    use crate::op::ProgramMutation;
+    use crate::schema::mutations as leaves;
+    use crate::ProgramSnapshot;
     use crate::editor::architect::catalog::default_element;
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -30,9 +30,9 @@ pub mod add_element {
 
 pub mod remove_element {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::schema::mutations as leaves;
-    use crate::artifacts::program::{EntityId, ProgramSnapshot};
+    use crate::op::ProgramMutation;
+    use crate::schema::mutations as leaves;
+    use crate::{EntityId, ProgramSnapshot};
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     

@@ -5,7 +5,7 @@
 //! 🐛️ Repaired here (ticket 26/09/06/FEM-PLUGIN-END-TO-END, W4): this file used to be an
 //! `Err("txt import not yet implemented")` stub left by a copy-paste of stdio's own json↔txt bridge.
 
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::Fem3dSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutation/set-image-bytes.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutation/set-image-bytes/schema.json",
   "title": "SetImageBytes",
   "type": "object",
   "additionalProperties": false,
@@ -24,9 +24,9 @@
         "maximum": 255
       }
     },
-    "kind": {
+    "mutation": {
       "const": "setImageBytes",
-      "description": "Aggregate discriminator spliced in by DocPathSegment; absent when the payload stands alone."
+      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     }
   }
 }

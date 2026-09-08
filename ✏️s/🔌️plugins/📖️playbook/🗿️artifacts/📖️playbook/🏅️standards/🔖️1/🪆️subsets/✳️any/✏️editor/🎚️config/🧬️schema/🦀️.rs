@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
@@ -17,17 +17,17 @@ pub struct PlaybookConfig {
 /// https://github.com/usalu/semio/issues/2543. Returned, not self-registered; `ArtifactEditor::app_schema`
 /// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) hands it to `register_document_app`, which
 /// replaces the narrowed `.setup()` this used to run through — `.setup()` is gone from this plugin root.
-pub fn app_schema_descriptor() -> schema::AppSchemaDescriptor {
-    schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> framework_schema::AppSchemaDescriptor {
+    framework_schema::AppSchemaDescriptor {
         id: "s.playbook.playbook",
-        config: schema::FacetLeaves {
+        config: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        presence: schema::FacetLeaves {
+        presence: framework_schema::FacetLeaves {
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),

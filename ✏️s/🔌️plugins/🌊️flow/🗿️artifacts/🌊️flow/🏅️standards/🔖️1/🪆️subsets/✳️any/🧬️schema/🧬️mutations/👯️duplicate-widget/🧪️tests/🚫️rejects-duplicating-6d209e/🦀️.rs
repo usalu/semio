@@ -17,9 +17,9 @@
 //! copy), so planning gets past the "source missing" precondition and dies on the third one —
 //! `new_id` already taken — the branch a composite folds into a Fatal `mutation.invariant`.
 
-use crate::artifacts::flow::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, to_framework_mutation, FlowMutation};
-use crate::artifacts::flow::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
-use flow::Widget;
+use crate::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, to_framework_mutation, FlowMutation};
+use crate::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
+use semio_framework_artifact_flow_flow::Widget;
 use flow::OrderedMap;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

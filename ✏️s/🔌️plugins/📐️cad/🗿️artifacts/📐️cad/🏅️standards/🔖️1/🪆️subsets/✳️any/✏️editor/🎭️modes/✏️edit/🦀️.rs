@@ -2,9 +2,9 @@
 //! energy/structure-classic) plus the world-scene, selection-overlay and engagement-HUD builders its
 //! four windows share. Each window binds these to its own pane; nothing here is pane-specific.
 
-use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadObject};
-use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
-use crate::artifacts::cad::{CadPaneId, CadSnapshot, CadWorkingScene};
+use crate::standards::v1::subsets::any::io::geometry_import::{CadGeometry, CadObject};
+use crate::standards::v1::subsets::any::schema::inferences::{collect_mesh_urls, object_mesh_data, object_scale_json, resolve_object_mesh_url};
+use crate::{CadPaneId, CadSnapshot, CadWorkingScene};
 use crate::editor::cad::config::CadDislocateOptions;
 use crate::editor::cad::engine::interaction::{keyed_transitions, list_interactions_for_model_definition};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};

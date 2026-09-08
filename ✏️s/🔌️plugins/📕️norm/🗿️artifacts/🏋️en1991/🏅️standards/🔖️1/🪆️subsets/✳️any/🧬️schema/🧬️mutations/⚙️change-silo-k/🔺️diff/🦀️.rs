@@ -1,7 +1,7 @@
 //! 🔺️ `change-silo-k` — sparse diff construction.
 
 use super::ChangeSiloK;
-use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
+use crate::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSiloK, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {

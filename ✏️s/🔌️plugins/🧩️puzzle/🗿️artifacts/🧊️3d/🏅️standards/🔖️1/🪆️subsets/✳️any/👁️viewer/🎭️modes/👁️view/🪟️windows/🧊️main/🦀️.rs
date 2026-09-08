@@ -5,7 +5,7 @@
 //! utilities that edit and emits no mutations by construction (`ViewEmit`). This file imports nothing
 //! from the sibling editor module (`policyViewerPurityBreaches` forbids it outright).
 
-use crate::artifacts::puzzle3d::{Puzzle3dObject, Puzzle3dScale, Puzzle3dSnapshot};
+use crate::{Puzzle3dObject, Puzzle3dScale, Puzzle3dSnapshot};
 use semio_framework_plugin::app::{MeshView, MeshWindowKit, WindowKit};
 use semio_framework_plugin::{world3d_default_camera, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_selection_json, WindowKindDefinition};
 

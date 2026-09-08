@@ -8,7 +8,7 @@
 //! a plain pure function rather than an `InferredField` chain — the family root's
 //! `impl protocol::Inference<RemodelingSnapshot>` calls it directly.
 
-use crate::artifacts::remodeling::{resolve_bounded_remodeling_mesh, RemodelingSnapshot};
+use crate::{resolve_bounded_remodeling_mesh, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -55,7 +55,7 @@ pub fn compute_remodeling_bounds(snapshot: &RemodelingSnapshot) -> RemodelingBou
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::remodeling::mint_and_stash_mesh;
+    use crate::mint_and_stash_mesh;
     use semio_framework::MeshData;
 
     #[semio_framework_async_macros::async_test]

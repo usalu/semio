@@ -1,10 +1,10 @@
 //! 🌐️ Block 3D play app — world-scene compute that needs both the document (`Block3dSnapshot`) and
 //! this app's view state (`Block3dConfig`/`Block3dWindowView`). Kept out of
-//! `crate::artifacts::block3d::schema`/`crate::artifacts::block3d::schema::inferences` on purpose: an
+//! `crate::schema`/`crate::schema::inferences` on purpose: an
 //! artifact must never depend on an app, and every function here takes at least one app-only type.
 
-use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};
-use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexKind};
+use crate::{Block3dBrushPreview, Block3dWindowView};
+use crate::{Block3dSnapshot, Block3dVortexKind};
 use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::BlockRepresentation;
 use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_selection_json, WorldProjectionConfig};
@@ -82,7 +82,7 @@ pub fn world_instances_json(definition: &Block3dSnapshot, visible: &[&BlockRepre
 }
 
 fn vortex_kind_color(definition: &Block3dSnapshot, vortex_kind_id: &str) -> String {
-    crate::artifacts::block3d::vortex_kinds_of(definition).iter().find(|kind| kind.id == vortex_kind_id).map_or_else(|| "#888888".into(), |kind| kind.color.clone())
+    crate::vortex_kinds_of(definition).iter().find(|kind| kind.id == vortex_kind_id).map_or_else(|| "#888888".into(), |kind| kind.color.clone())
 }
 
 pub fn block3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
@@ -160,6 +160,6 @@ pub fn default_vortex_kind() -> Block3dVortexKind {
 }
 
 pub fn resolve_brush_vortex_kind_id(definition: &Block3dSnapshot, config: &Block3dConfig) -> String {
-    config.brush_vortex_kind_id.clone().or_else(|| crate::artifacts::block3d::vortex_kinds_of(definition).first().map(|kind| kind.id.clone())).unwrap_or_else(|| "vortex-kind-0".into())
+    config.brush_vortex_kind_id.clone().or_else(|| crate::vortex_kinds_of(definition).first().map(|kind| kind.id.clone())).unwrap_or_else(|| "vortex-kind-0".into())
 }
 //#endregion 🔖️Brush

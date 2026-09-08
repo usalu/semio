@@ -1,7 +1,7 @@
 //! Puzzle3d mutation — `DeleteReference`: removes an id-keyed reference.
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::Puzzle3dDiff;
+use crate::mutations::Puzzle3dMutation;
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
 /// `delete-reference` payload.

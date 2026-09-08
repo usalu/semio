@@ -1,9 +1,9 @@
 //! ⚙️ Remodeling mutation — `UpdateFeatureParams`: full-record replace of `ReconstructionParams.feature` (always
 //! set wholesale from the palette form's flat field list — genuinely inseparable).
 
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::{FeatureParams, RemodelingSnapshot};
+use crate::diff::RemodelingDiff;
+use crate::mutations::RemodelingMutation;
+use crate::{FeatureParams, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 

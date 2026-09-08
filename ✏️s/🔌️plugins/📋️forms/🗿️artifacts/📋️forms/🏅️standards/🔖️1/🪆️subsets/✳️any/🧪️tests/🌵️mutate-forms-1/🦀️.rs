@@ -80,9 +80,9 @@ const EXAMPLE_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/�
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_plugin_forms::artifacts::forms::standards::v1::subsets::any::io::snapshot::text::{parse_form_dsl, print_form_dsl};
-    use semio_s_plugin_forms::artifacts::forms::standards::v1::subsets::any::schema::mutations::{apply_form_mutation_outcome, decode_form_mutation_json, decode_form_snapshot_json, encode_form_snapshot_json, inverse_form_mutation_steps, seed_form_scene_json, FormMutation};
-    use semio_s_plugin_forms::artifacts::forms::FormsSnapshot;
+    use semio_s_artifact_forms_forms::standards::v1::subsets::any::io::snapshot::text::{parse_form_dsl, print_form_dsl};
+    use semio_s_artifact_forms_forms::standards::v1::subsets::any::schema::mutations::{apply_form_mutation_outcome, decode_form_mutation_json, decode_form_snapshot_json, encode_form_snapshot_json, inverse_form_mutation_steps, seed_form_scene_json, FormMutation};
+    use semio_s_artifact_forms_forms::FormsSnapshot;
 
     //#region 🔖️VectorReading
     /// 🧫️ The scenario's own doc string, which carries the kind and the committed vector directory

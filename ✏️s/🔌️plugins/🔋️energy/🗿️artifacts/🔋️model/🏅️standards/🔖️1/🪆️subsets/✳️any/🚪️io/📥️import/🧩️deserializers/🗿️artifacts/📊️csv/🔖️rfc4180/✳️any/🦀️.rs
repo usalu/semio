@@ -1,5 +1,5 @@
 //! model <- csv
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::EnergyModelSnapshot;
 use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 pub async fn register() {}

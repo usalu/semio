@@ -1,8 +1,8 @@
 //! 🔺️ `create-building-model` — sparse diff construction, built directly from `(payload, base)`.
 
 use super::CreateBuildingModel;
-use crate::artifacts::cad::diff::CadDiff;
-use crate::artifacts::cad::CadSnapshot;
+use crate::diff::CadDiff;
+use crate::CadSnapshot;
 
 //#region 🔖️Diff
 /// 🔗️ Parses a wire URI into a real `ArtifactRef`, degrading to an empty (invalid, harmlessly

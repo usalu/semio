@@ -5,6 +5,9 @@ edition.workspace = true
 rust-version.workspace = true
 description = "Stdio svg artifact"
 
+[package.metadata.semio]
+role = "s-module"
+
 [lints]
 workspace = true
 

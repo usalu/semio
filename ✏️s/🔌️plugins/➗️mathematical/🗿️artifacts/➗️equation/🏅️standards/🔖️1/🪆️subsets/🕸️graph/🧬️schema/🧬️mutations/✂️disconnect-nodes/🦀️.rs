@@ -1,6 +1,6 @@
 //! ✂️ `disconnect-nodes` — removes an edge relationship between two graph nodes.
 
-use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
+use crate::{EquationMutation, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload

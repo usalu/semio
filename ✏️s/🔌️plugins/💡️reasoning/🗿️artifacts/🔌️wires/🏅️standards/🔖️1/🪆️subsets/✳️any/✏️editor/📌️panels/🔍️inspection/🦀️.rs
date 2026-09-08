@@ -1,8 +1,8 @@
 //! 🔍️ Wires play app panel — the inspector: a document-wide summary (was field editors for the
 //! current selection; see `render`'s doc comment for why that's gone).
 
-use crate::artifacts::wires::schema::{fixture_json_string, fixture_nodes};
-use crate::artifacts::wires::{WiresSnapshot, MINDMAP_WIRES_SCHEMA};
+use crate::schema::{fixture_json_string, fixture_nodes};
+use crate::{WiresSnapshot, MINDMAP_WIRES_SCHEMA};
 use semio_framework_plugin::{BuiltNode, UiAssemblyResult, PanelTreeBuilder, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use dsl::os_pack::json::Value;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
@@ -32,7 +32,7 @@ pub fn definition() -> PanelTabDefinition {
 /// layout's/gis2d's/puzzle3d's inspection panels flag (see this ticket's w3b-summary.md). Not fixed
 /// here (framework file, out of this crate's remit).
 pub fn render(document: &WiresSnapshot, labels: &crate::editor::wires::terminology::WiresLabels) -> UiAssemblyResult<BuiltNode> {
-    let board = crate::artifacts::wires::wires_working_board(document);
+    let board = crate::wires_working_board(document);
     let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();
     let namespace = PanelTreeBuilder::new("wires-inspection")?;
     let rows = [
@@ -279,11 +279,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn metabolism_fixture_hydrates_extension() {
-        // 📜️ The `.wires` fixture is handcrafted in `crate::artifacts::wires::dsl`'s DSL — parse it,
+        // 📜️ The `.wires` fixture is handcrafted in `crate::dsl`'s DSL — parse it,
         // then hydrate this crate's JSON-facing extension from its `wires_fixture` value, the same
         // shape `from_fixture_json` has always expected.
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
-        let json = dsl::os_pack::json::to_string(&crate::artifacts::wires::schema::dsl_to_json(&document.wires_fixture));
+        let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
+        let json = dsl::os_pack::json::to_string(&crate::schema::dsl_to_json(&document.wires_fixture));
         let ext = DefaultWiresExtension::from_fixture_json(&json).expect("metabolism fixture");
         assert_eq!(ext.topics.len(), 7);
         assert_eq!(ext.relationships.len(), 9);
@@ -305,7 +305,7 @@ mod semantic_contract {
     #[test]
     fn wires_semantic_panels_match_the_json_oracle() {
         let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️panels.json")).expect("neutral UI vectors");
-        let document = crate::artifacts::wires::empty_wires_snapshot();
+        let document = crate::empty_wires_snapshot();
         for row in vectors["cases"].as_array().expect("locales") {
             let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::wires::terminology::WiresLabels>(row["locale"].as_str().expect("locale"));
             let tree = project(crate::editor::wires::panels::document::render(&document, labels).expect("document"));
@@ -318,7 +318,7 @@ mod semantic_contract {
             let lines = tree["children"][0]["children"].as_array().expect("summary").iter().map(|node| node["component"]["value"].clone()).collect::<Vec<_>>();
             assert_eq!(serde_json::Value::Array(lines), row["summary"]);
         }
-        let board = crate::artifacts::wires::wires_working_board(&document);
+        let board = crate::wires_working_board(&document);
         for node in [
             crate::editor::wires::modes::edit::windows::canvas::render(&board, &document.wires_fixture).expect("editor canvas"),
             crate::viewer::wires::modes::view::windows::canvas::render(&document).expect("viewer canvas"),

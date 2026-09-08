@@ -1,7 +1,7 @@
 //! 📬️ Flow-owned construction, portable identity, and Store-owned canonical sealing are distinct frontiers.
 
 use super::{recipe::Recipe, SceneHash};
-use crate::artifacts::flow::retirement::{MutationRetirementFactory, SnapshotRetirementFactory};
+use crate::retirement::{MutationRetirementFactory, SnapshotRetirementFactory};
 use super::super::{bytes::{edit_id_byte, edit_id_length, TextCopy}, Owner, Retirement};
 use super::super::super::{FlowMutation, FlowSnapshot, FlowWorkingScene, FLOW_STORE_MAX_MUTATION_ITEMS, FLOW_STORE_MAX_TEXT_BYTES};
 use std::{mem::ManuallyDrop, sync::Arc};
@@ -69,7 +69,7 @@ impl store::ArtifactStoreOneItemPreparation<FlowSnapshot, FlowMutation> for Prep
             }
             1 => {
                 let hash = state.hash.as_mut().unwrap(); let bytes = hash.advance(grant)?; state.phase_bytes += bytes;
-                if state.phase_bytes > FLOW_STORE_MAX_TEXT_BYTES + crate::artifacts::flow::FLOW_CONTENT_ID_DOMAIN.len() { return Err("Flow artifact base exceeds admitted canonical byte envelope".into()); }
+                if state.phase_bytes > FLOW_STORE_MAX_TEXT_BYTES + crate::FLOW_CONTENT_ID_DOMAIN.len() { return Err("Flow artifact base exceeds admitted canonical byte envelope".into()); }
                 if hash.complete() { let (root, digest) = hash.take().unwrap(); state.scene_root = Some(root); state.source_digest = Some(digest); hash.begin_close(); state.phase = 2; }
                 return Ok(progress(state, bytes));
             }
@@ -166,7 +166,7 @@ impl store::ArtifactStoreOneItemPreparation<FlowSnapshot, FlowMutation> for Prep
                 let target = store::os_io::ArtifactRef { artifact_id: state.texts[4].take().unwrap(), dialect: store::os_io::ArtifactDialect {
                     artifact_kind: state.texts[5].take().unwrap(), standard: state.texts[6].take().unwrap(), subset: state.texts[7].take().unwrap(),
                 } };
-                let content = crate::artifacts::flow::FlowContentChild::new(state.texts[3].take().unwrap(), target).with_local_owner(state.scene_root.take().unwrap());
+                let content = crate::FlowContentChild::new(state.texts[3].take().unwrap(), target).with_local_owner(state.scene_root.take().unwrap());
                 state.post = Some(FlowSnapshot { schema: state.texts[0].take().unwrap(), camera: state.base.as_ref().unwrap().get().camera.clone(), content }); state.phase = 111;
             }
             111 => {
@@ -263,12 +263,12 @@ mod tests {
             for row in fixture["cases"].as_array().unwrap() {
                 for cancel in [None, Some(0), Some(131), Some(5001)] {
                     let scene = super::super::recipe::tests::source(&label);
-                    let content = crate::artifacts::flow::flow_content_child_handle_and_cache(scene.widgets, scene.synapses, scene.layout);
-                    let initial = FlowSnapshot { schema: "flow".into(), camera: flow::CameraJson::default(), content };
+                    let content = crate::flow_content_child_handle_and_cache(scene.widgets, scene.synapses, scene.layout);
+                    let initial = FlowSnapshot { schema: "flow".into(), camera: semio_framework_artifact_flow_flow::CameraJson::default(), content };
                     let initial_scene = initial.content.local_owner::<FlowWorkingScene>().unwrap(); let baseline = serde_json::Value::from(dsl::ToValue::to_value(&*initial_scene)); drop(initial_scene);
                     let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.flow", "retained-recipe", initial, None);
                     let mut store = store::ArtifactStore::new(envelope).await.unwrap();
-                    store.install_member_store_owners_exact(crate::artifacts::flow::retirement::store_owners());
+                    store.install_member_store_owners_exact(crate::retirement::store_owners());
                     let generation = store.generation_now();
                     let mutation = dsl::FromValue::from_value(dsl::DslValue::from(row["mutation"].clone())).unwrap();
                     let mut publication = store.begin_apply_one(semio_framework_job::OperationId(1), generation, store.content_revision_now(), "flow-test".into(), mutation, None, store::HistoryLane::Document, Some(&PreparationFactory)).unwrap();

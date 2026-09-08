@@ -1,7 +1,7 @@
 //! 🔧️ 🔧️ DAG play app commands command — `remove-node`.
 
-use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::op::DagMutation;
+use crate::DagSnapshot;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
@@ -16,7 +16,7 @@ pub struct RemoveNode {
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so no config mutation is needed here at all.
 pub fn handle(payload: &RemoveNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let removes = crate::artifacts::dag::schema::remove_nodes_operations(document, std::slice::from_ref(&payload.node_id));
+    let removes = crate::schema::remove_nodes_operations(document, std::slice::from_ref(&payload.node_id));
     if removes.is_empty() {
         Ok(Emit::default())
     } else {

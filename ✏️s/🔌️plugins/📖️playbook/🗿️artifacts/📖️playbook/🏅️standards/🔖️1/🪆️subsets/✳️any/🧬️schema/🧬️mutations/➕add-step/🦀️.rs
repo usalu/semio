@@ -1,8 +1,8 @@
 //! ➕ Playbook mutation — `AddStep`: inserts a new step, positioned at `index` (final-state) or
 //! appended when absent. A duplicate `step.id` is Warning `mutation.no-op`.
 
-use crate::artifacts::playbook::mutations::PlaybookMutation;
-use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot, PlaybookStep};
+use crate::mutations::PlaybookMutation;
+use crate::{PlaybookDiff, PlaybookSnapshot, PlaybookStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 // 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle — committed
 // `🧪️tests/<fixture>/🦀️.rs` fixture vectors decode/re-encode through them — never a production

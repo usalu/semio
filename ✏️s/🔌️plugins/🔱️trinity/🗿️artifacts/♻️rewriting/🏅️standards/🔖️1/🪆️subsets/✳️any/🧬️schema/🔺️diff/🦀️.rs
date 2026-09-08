@@ -1,7 +1,7 @@
 //! 🧬️ Rewriting diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::jack::{Camera, PropertyValue};
-use crate::artifacts::rewriting::LayoutPoint;
+use semio_s_artifact_trinity_jack::{Camera, PropertyValue};
+use crate::LayoutPoint;
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 

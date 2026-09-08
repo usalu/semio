@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::en1992::En1992Snapshot;
-use schema::ArtifactSchema;
+use crate::En1992Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::En1992Outline;
@@ -44,7 +44,7 @@ impl protocol::InferenceSpec<En1992Snapshot> for En1992Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::en1992::standards::v1::subsets::any::schema::En1992Builder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1992Builder {
     type Snapshot = En1992Snapshot;
     type Inference = En1992Inference;
 }
@@ -53,10 +53,10 @@ impl ArtifactInferrer for crate::artifacts::en1992::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1992.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1992_artifact_schema_descriptor`'s registration.
-pub fn en1992_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn en1992_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1992.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -88,8 +88,8 @@ mod tests {
 
 //#region 🔖️ComplianceReport
 #[cfg(feature = "cross-fem")]
-use crate::artifacts::en1992::standards::v1::subsets::any::schema::check_rc_beam_from_fem;
-use crate::artifacts::en1992::standards::v1::subsets::any::schema::{check_full_rc_beam, part_1_2, part_2, part_3, part_4};
+use crate::standards::v1::subsets::any::schema::check_rc_beam_from_fem;
+use crate::standards::v1::subsets::any::schema::{check_full_rc_beam, part_1_2, part_2, part_3, part_4};
 /// 📋️ Full EN 1992 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1992Snapshot -> CheckReport` projection; everything it composes

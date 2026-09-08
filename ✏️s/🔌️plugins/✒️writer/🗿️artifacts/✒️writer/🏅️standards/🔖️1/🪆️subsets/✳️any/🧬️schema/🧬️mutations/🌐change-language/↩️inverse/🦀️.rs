@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeLanguage` — reads the BASE language, never the diff.
 use super::ChangeLanguage;
-use crate::artifacts::writer::schema::mutations::WriterMutation;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::schema::mutations::WriterMutation;
+use crate::WriterSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ Undo restores `base.language_id`.

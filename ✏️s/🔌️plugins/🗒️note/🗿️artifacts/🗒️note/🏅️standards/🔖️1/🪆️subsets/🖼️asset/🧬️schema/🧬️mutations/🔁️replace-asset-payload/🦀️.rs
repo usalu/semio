@@ -1,7 +1,7 @@
 //! 🔁 Note mutation — `ReplaceAssetPayload`: whole-value swap of an existing asset's image payload.
 
-use crate::artifacts::note::{NoteDiff, NoteSnapshot};
-use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::{NoteDiff, NoteSnapshot};
+use crate::schema::mutations::NoteMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -16,11 +16,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct ReplaceAssetPayload {
     pub key: String,
     #[dsl(block)]
-    pub new_asset: crate::artifacts::note::NoteImageAsset,
+    pub new_asset: crate::NoteImageAsset,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_asset_payload(key: String, new_asset: crate::artifacts::note::NoteImageAsset) -> NoteMutation {
+pub fn replace_asset_payload(key: String, new_asset: crate::NoteImageAsset) -> NoteMutation {
     NoteMutation::ReplaceAssetPayload(ReplaceAssetPayload { key, new_asset })
 }
 

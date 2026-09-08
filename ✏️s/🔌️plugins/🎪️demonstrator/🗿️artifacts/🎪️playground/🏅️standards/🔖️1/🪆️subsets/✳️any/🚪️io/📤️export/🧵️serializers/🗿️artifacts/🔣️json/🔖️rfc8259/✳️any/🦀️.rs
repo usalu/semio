@@ -1,5 +1,5 @@
 //! playground -> json
-use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::write_json_pretty;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 

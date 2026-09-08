@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `DeleteVortex`.
 
-use crate::artifacts::block3d::Block3dSnapshot;
-use crate::artifacts::block3d::diff::{Block3dDiff, Block3dVorticesDelta};
+use crate::Block3dSnapshot;
+use crate::diff::{Block3dDiff, Block3dVorticesDelta};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteVortex, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

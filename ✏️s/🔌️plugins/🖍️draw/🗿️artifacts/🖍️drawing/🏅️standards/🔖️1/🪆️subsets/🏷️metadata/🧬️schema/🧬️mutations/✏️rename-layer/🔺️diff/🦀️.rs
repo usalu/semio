@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RenameLayer`.
-use crate::artifacts::drawing::diff::{diff_set_layer_name, DrawingDiff};
-use crate::artifacts::drawing::schema::{find_drawing_layer, layer_base};
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::diff::{diff_set_layer_name, DrawingDiff};
+use crate::schema::{find_drawing_layer, layer_base};
+use crate::DrawingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::RenameLayer, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {

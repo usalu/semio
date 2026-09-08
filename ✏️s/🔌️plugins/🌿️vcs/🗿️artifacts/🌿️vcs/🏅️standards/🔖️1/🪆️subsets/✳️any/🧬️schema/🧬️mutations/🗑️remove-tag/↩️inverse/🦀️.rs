@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `RemoveTag` — `add-tag` if BASE had it, else nothing to undo.
-use crate::artifacts::vcs::mutations::VcsDemoMutation;
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::mutations::VcsDemoMutation;
+use crate::VcsSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::RemoveTag, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {

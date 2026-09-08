@@ -1,6 +1,6 @@
 //! 🧬️ EN 1996 diff schema — sparse field delta.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -10,7 +10,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1996")]
 pub struct En1996Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::en1996::schema::En1996Artifact>>,
+    pub artifact: Option<Box<crate::document_schema::En1996Artifact>>,
     #[state(artifact)]
     pub m_ed_knm: Option<f64>,
     #[state(artifact)]
@@ -32,7 +32,7 @@ pub struct En1996Diff {
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]
-    pub masonry_class: Option<crate::artifacts::en1996::MasonryClass>,
+    pub masonry_class: Option<crate::MasonryClass>,
     #[state(artifact)]
     pub design_situation: Option<crate::document::DesignSituation>,
     #[state(artifact)]
@@ -44,9 +44,9 @@ pub struct En1996Diff {
     #[state(artifact)]
     pub unit: Option<String>,
     #[state(artifact)]
-    pub exposure: Option<crate::artifacts::en1996::part_2::ExposureClass>,
+    pub exposure: Option<crate::part_2::ExposureClass>,
     #[state(artifact)]
-    pub mortar: Option<crate::artifacts::en1996::part_2::MortarClass>,
+    pub mortar: Option<crate::part_2::MortarClass>,
     #[state(artifact)]
     pub bed_joint_thickness_mm: Option<f64>,
     #[state(artifact)]

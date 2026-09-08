@@ -1,9 +1,9 @@
 //! 🌱 Assembly mutation — `CreateRule`: brings a new id-keyed adjacency rule into existence at a
 //! FINAL-state insertion index.
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::mutations::AssemblyMutation;
-use crate::artifacts::assembly::schema::snapshot::{AssemblyRule, AssemblySnapshot};
+use crate::diff::AssemblyDiff;
+use crate::mutations::AssemblyMutation;
+use crate::schema::snapshot::{AssemblyRule, AssemblySnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️CreateRule

@@ -10,7 +10,7 @@
 //! plain function suffices — no `InferredField`/per-entity caching needed (see the family root's
 //! doc comment for why).
 
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::SequenceSnapshot;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, VecDeque};
 
@@ -30,7 +30,7 @@ pub struct SequenceTopology {
 /// composed content child's working scene — see `sequence_working_scene`'s doc comment). Edges
 /// referencing a missing step id are ignored (dangling refs never a source of truth for topology).
 pub fn compute_sequence_topology(snapshot: &SequenceSnapshot) -> SequenceTopology {
-    let scene = crate::artifacts::sequence::sequence_working_scene(snapshot);
+    let scene = crate::sequence_working_scene(snapshot);
     let ids: Vec<String> = scene.steps.iter().map(|step| step.id.clone()).collect();
     let known: std::collections::BTreeSet<&String> = ids.iter().collect();
 
@@ -85,7 +85,7 @@ pub fn compute_sequence_topology(snapshot: &SequenceSnapshot) -> SequenceTopolog
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::sequence::{SequenceEdge, SequenceFixture, SequenceStep, StepParams};
+    use crate::{SequenceEdge, SequenceFixture, SequenceStep, StepParams};
 
     fn step(id: &str) -> SequenceStep {
         SequenceStep { id: id.into(), kind: "state.set".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false }
@@ -96,7 +96,7 @@ mod tests {
     }
 
     fn snapshot_from(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> neural_engine::ColdOwner<SequenceSnapshot> {
-        neural_engine::ColdOwner::new(SequenceSnapshot::from_fixture(SequenceFixture { schema: crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA.into(), steps, edges }))
+        neural_engine::ColdOwner::new(SequenceSnapshot::from_fixture(SequenceFixture { schema: crate::SEQUENCE_DOCUMENT_SCHEMA.into(), steps, edges }))
     }
 
     #[semio_framework_async_macros::async_test]

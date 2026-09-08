@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/playbook/playbook/artifact.json",
   "title": "PlaybookArtifact",
   "type": "object",
@@ -13,36 +14,70 @@
     "contributionsJson"
   ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "id": { "type": "string", "x-semio-state": "artifact" },
-    "version": { "type": "string", "x-semio-state": "artifact" },
-    "title": { "type": "string", "x-semio-state": "artifact" },
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "version": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "title": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
     "steps": {
       "type": "array",
-      "items": { "$ref": "#/$defs/PlaybookStep" },
+      "items": {
+        "$ref": "#/$defs/PlaybookStep"
+      },
       "x-semio-state": "artifact"
     },
     "selectedIds": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "x-semio-state": "presence"
     },
-    "locale": { "type": "string", "x-semio-state": "config" },
-    "contributionsJson": { "type": "string", "x-semio-state": "config" }
+    "locale": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "contributionsJson": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
   },
   "$defs": {
     "PlaybookStep": {
       "title": "PlaybookStep",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "title", "blocks"],
+      "required": [
+        "id",
+        "title",
+        "blocks"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
         "blocks": {
           "type": "array",
-          "items": { "$ref": "#/$defs/PlaybookBlock" }
+          "items": {
+            "$ref": "#/$defs/PlaybookBlock"
+          }
         }
       }
     },
@@ -50,11 +85,163 @@
       "title": "PlaybookBlock",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "kind"],
+      "required": [
+        "id",
+        "label",
+        "kind"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "label": { "type": "string" },
-        "kind": { "type": "string" }
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        }
+      }
+    },
+    "PlaybookViewCommandLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "tools",
+        "limits",
+        "cases"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "tools": {
+          "type": "array",
+          "const": [
+            "setLocale",
+            "setContributions"
+          ]
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumRawBytes",
+            "maximumDecodedItems",
+            "maximumWorkUnits",
+            "maximumOutputBytes",
+            "maximumStepMicros"
+          ],
+          "properties": {
+            "maximumRawBytes": {
+              "const": 8192
+            },
+            "maximumDecodedItems": {
+              "const": 2
+            },
+            "maximumWorkUnits": {
+              "const": 1
+            },
+            "maximumOutputBytes": {
+              "const": 16384
+            },
+            "maximumStepMicros": {
+              "const": 2000
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "declaredBytes",
+              "checkpoint",
+              "admitted"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "empty",
+                  "maximum",
+                  "maximum-plus-one",
+                  "checkpoint"
+                ]
+              },
+              "declaredBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 8193
+              },
+              "checkpoint": {
+                "type": "boolean"
+              },
+              "admitted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "PlaybookSceneOwnerLaw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "ownedSlots",
+        "maximumCases",
+        "cases"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "ownedSlots": {
+          "const": 1
+        },
+        "maximumCases": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 8
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "law",
+              "first",
+              "second"
+            ],
+            "properties": {
+              "law": {
+                "enum": [
+                  "cloneIdentity",
+                  "instanceIsolation",
+                  "abaIsolation",
+                  "wireOmission",
+                  "boundedClose"
+                ]
+              },
+              "first": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "second": {
+                "type": "string",
+                "maxLength": 64
+              }
+            }
+          }
+        }
       }
     }
   }

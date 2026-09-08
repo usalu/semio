@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-viewpoint-snapshot.json",
+  "$id": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-viewpoint-snapshot/schema.json",
   "title": "SetViewpointSnapshot",
   "type": "object",
   "additionalProperties": false,

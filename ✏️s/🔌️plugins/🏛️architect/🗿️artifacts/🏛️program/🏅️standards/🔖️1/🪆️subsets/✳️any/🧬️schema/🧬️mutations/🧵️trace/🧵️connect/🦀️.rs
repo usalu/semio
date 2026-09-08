@@ -3,8 +3,8 @@
 //! restructuring (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️fanout-brief.md`
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
-use crate::artifacts::program::kernel::TraceLink;
-use crate::artifacts::program::{ProgramDiff, ProgramMutation, ProgramSnapshot};
+use crate::kernel::TraceLink;
+use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🔌️ Upserts a trace edge by its own id: adds it if new, replaces its full content if present.

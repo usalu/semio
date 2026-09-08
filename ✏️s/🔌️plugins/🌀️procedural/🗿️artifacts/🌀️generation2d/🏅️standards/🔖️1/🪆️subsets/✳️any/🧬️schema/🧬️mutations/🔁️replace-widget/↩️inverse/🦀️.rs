@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `ReplaceWidget`, reconstructed from BASE.
 use super::ReplaceWidget;
-use crate::artifacts::generation2d::mutations::Generation2dMutation;
-use crate::artifacts::generation2d::mutations::{replace_widget, widget_index};
-use crate::artifacts::generation2d::{widget_id, Generation2dSnapshot};
+use crate::mutations::Generation2dMutation;
+use crate::mutations::{replace_widget, widget_index};
+use crate::{widget_id, Generation2dSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceWidget, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {

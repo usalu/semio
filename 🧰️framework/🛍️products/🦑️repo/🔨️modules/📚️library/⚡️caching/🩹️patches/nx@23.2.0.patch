@@ -207,3 +207,35 @@ diff --git a/dist/src/daemon/server/project-graph-incremental-recomputation.js b
          }
          return cachedSerializedProjectGraphPromise;
      };
+diff --git a/dist/src/tasks-runner/task-orchestrator.js b/dist/src/tasks-runner/task-orchestrator.js
+--- a/dist/src/tasks-runner/task-orchestrator.js
++++ b/dist/src/tasks-runner/task-orchestrator.js
+@@ -1061,7 +1061,8 @@
+         }
+     }
+     async startContinuousTask(task, groupId) {
+-        if (this.runningTasksService &&
++        const share = this.projects[task.target.project].targets[task.target.target].metadata?.semio?.continuousSharing !== false;
++        if (share && this.runningTasksService &&
+             this.runningTasksService.getRunningTasks([task.id]).length) {
+             await this.preRunSteps([task], { groupId });
+             if (this.tuiEnabled) {
+@@ -1097,15 +1098,15 @@
+             : (0, task_env_1.getEnvVariablesForTask)(task, taskSpecificEnv, undefined, this.options.skipNxCache, this.options.captureStderr, temporaryOutputPath, streamOutput);
+         this.detectTaskInvocationLoop(task);
+         const childProcess = await this.runTask(task, streamOutput, env, temporaryOutputPath, pipeOutput);
+-        this.runningTasksService?.addRunningTask(task.id);
++        if (share) this.runningTasksService?.addRunningTask(task.id);
+         this.runningContinuousTasks.set(task.id, {
+             runningTask: childProcess,
+             groupId,
+-            ownsRunningTasksService: true,
++            ownsRunningTasksService: share,
+         });
+         this.continuousTaskExitHandled.set(task.id, new Promise((resolve) => {
+             childProcess.onExit(async (code) => {
+-                await this.handleContinuousTaskExit(code, task, groupId, true);
++                await this.handleContinuousTaskExit(code, task, groupId, share);
+                 resolve();
+             });
+         }));

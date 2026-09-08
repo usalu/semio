@@ -1,0 +1,13 @@
+{
+  "definition_version": 1,
+  "id": "s.norm.din18599",
+  "artifact": "din18599",
+  "directory": "⚡️din18599",
+  "rust_package": "semio-s-artifact-norm-din18599",
+  "nx_project": "@semio-tech/norm-din18599-rs",
+  "dependencies": [
+    "semio-s-artifact-norm-din16798",
+    "semio-s-artifact-norm-din4108",
+    "semio-s-artifact-stdio-semio"
+  ]
+}

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeWeight` — upserts the id-keyed `weights` entry.
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::schema::snapshot::{AssemblyModuleWeight, AssemblySnapshot};
+use crate::diff::AssemblyDiff;
+use crate::schema::snapshot::{AssemblyModuleWeight, AssemblySnapshot};
 
 pub fn diff(payload: &super::ChangeWeight, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     if !base.modules.iter().any(|module| module.child_id == payload.module_id) {

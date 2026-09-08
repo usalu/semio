@@ -10,7 +10,7 @@
 //! real, honest, reduced-fidelity signal (non-zero `object_count` again once a real per-child
 //! element/vertex inference exists over the composed children), not a silently wrong one.
 
-use crate::artifacts::cad::CadSnapshot;
+use crate::CadSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 📦Bounds
 /// 📦 Axis-aligned 3d bounding box.
@@ -44,7 +44,7 @@ pub(crate) fn vertex_count(_snapshot: &CadSnapshot) -> usize {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::cad::{empty_cad_snapshot, testkit::sample_model_child};
+    use crate::{empty_cad_snapshot, testkit::sample_model_child};
 
     #[semio_framework_async_macros::async_test]
     async fn empty_scene_has_no_bounds() {

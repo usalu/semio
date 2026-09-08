@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "id": "empty-dag",
+      "snapshot": {
+        "schema": "dag.fixture",
+        "nodes": [],
+        "edges": []
+      }
+    }
+  ]
+}

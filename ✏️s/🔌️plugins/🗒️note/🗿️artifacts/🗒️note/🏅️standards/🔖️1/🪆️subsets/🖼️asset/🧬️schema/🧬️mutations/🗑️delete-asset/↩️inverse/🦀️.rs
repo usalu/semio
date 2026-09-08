@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `DeleteAsset`.
 use super::DeleteAsset;
-use crate::artifacts::note::schema::mutations::CreateAsset;
-use crate::artifacts::note::schema::mutations::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::schema::mutations::CreateAsset;
+use crate::schema::mutations::NoteMutation;
+use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteAsset, base: &NoteSnapshot) -> Vec<NoteMutation> {

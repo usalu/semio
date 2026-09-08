@@ -1,8 +1,8 @@
 //! 🔵️ 🔵️ Wires play app commands command — `add-node`.
 
-use crate::artifacts::wires::op::WiresMutation;
-use crate::artifacts::wires::schema::fixture_nodes;
-use crate::artifacts::wires::WiresSnapshot;
+use crate::op::WiresMutation;
+use crate::schema::fixture_nodes;
+use crate::WiresSnapshot;
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_NODE};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -21,7 +21,7 @@ pub struct AddNode {
 pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &ConfigView<'_, WiresConfig>) -> Result<Emit<WiresMutation, WiresConfigMutation>, Fault> {
     let document = doc.snapshot;
     let kind = if payload.kind.is_empty() { "identity" } else { payload.kind.as_str() };
-    let id = format!("node-{}", fixture_nodes(&crate::artifacts::wires::wires_working_board(document)).len() + 1);
+    let id = format!("node-{}", fixture_nodes(&crate::wires_working_board(document)).len() + 1);
     let node = DslValue::object([
         ("id".into(), DslValue::String(id.clone())),
         ("nodeKind".into(), DslValue::String(kind.into())),
@@ -32,14 +32,14 @@ pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &C
         ("text".into(), DslValue::String(id.clone())),
         ("handles".into(), DslValue::Array(vec![])),
     ]);
-    Ok(Emit { artifact_mutations: vec![crate::artifacts::wires::mutations::create_node(node)], effects: vec![wires_select_effect(&[id], WIRES_GRANULARITY_NODE, "replace")], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![crate::mutations::create_node(node)], effects: vec![wires_select_effect(&[id], WIRES_GRANULARITY_NODE, "replace")], ..Default::default() })
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
+    use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
     use crate::editor::wires::testkit::{dispatch, new_app};
     use crate::editor::wires::WiresCommand;
 
@@ -48,7 +48,7 @@ mod tests {
         let mut app = new_app().await;
         dispatch(&mut app, WiresCommand::AddNode(AddNode { kind: "identity".into() })).await;
         let projection = app.snapshot().expect("snapshot");
-        assert_eq!(fixture_nodes(&crate::artifacts::wires::wires_working_board(&projection)).len(), 1);
+        assert_eq!(fixture_nodes(&crate::wires_working_board(&projection)).len(), 1);
         assert!(find_board_node(&projection, "node-1").is_some());
     }
 }

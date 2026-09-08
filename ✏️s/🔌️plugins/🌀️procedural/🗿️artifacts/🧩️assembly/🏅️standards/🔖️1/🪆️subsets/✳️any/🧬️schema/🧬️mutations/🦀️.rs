@@ -4,8 +4,8 @@
 //! `impl protocol::Mutation<AssemblySnapshot>` and `impl protocol::SemanticMutation<AssemblySnapshot>`
 //! from those payloads — no hand-written apply/diff/inverse dispatch here.
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::diff::AssemblyDiff;
+use crate::schema::snapshot::AssemblySnapshot;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 // 🧵 Deliberately NOT `use super::{create_slot, ...};` — this file's own `pub use X::mutation::x;`
@@ -70,7 +70,7 @@ pub fn inverse_assembly_mutation(projection: &AssemblySnapshot, mutation: &Assem
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::assembly::schema::snapshot::{AssemblyRule, AssemblySlot, AssemblySlotEdge};
+    use crate::schema::snapshot::{AssemblyRule, AssemblySlot, AssemblySlotEdge};
     use protocol::{MutationDiff, SemanticMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     use vcs::apply_mutation;
@@ -141,7 +141,7 @@ mod tests {
     #[test]
     fn change_weight_inverse_law_restores_the_prior_value() {
         let mut base = AssemblySnapshot::default();
-        base.weights.push(crate::artifacts::assembly::schema::snapshot::AssemblyModuleWeight { module_id: "m1".into(), weight: 1.0 });
+        base.weights.push(crate::schema::snapshot::AssemblyModuleWeight { module_id: "m1".into(), weight: 1.0 });
         let mutation = change_weight("m1".into(), 9.0);
         let after = round_trip(&base, &mutation);
         assert_eq!(after.weights[0].weight, 9.0);

@@ -1,6 +1,6 @@
 //! 🧾️ Typed borrowed Flow JSON in lexical object order, with retained native map iterators.
 
-use flow::NodeChrome;
+use semio_framework_artifact_flow_flow::NodeChrome;
 use super::{neural, FlowGui, FlowLayoutEntry, FlowMutation, FlowPreviewGui, Widget};
 use store::{ArtifactCanonicalJson, ArtifactCanonicalJsonArray as Array, ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonObject as Object, ArtifactCanonicalJsonValue as Value};
 
@@ -17,8 +17,8 @@ fn object<'a, const N: usize>(mut fields: [(&'a str, Value<'a>); N]) -> Value<'a
 fn array<'a>(values: impl Iterator<Item = Value<'a>> + Send + 'a) -> Value<'a> { Value::Array(Array::new(values)) }
 fn strings(values: &[String]) -> Value<'_> { array(values.iter().map(|value| text(value))) }
 fn set(values: &flow::OrderedSet) -> Value<'_> { array(values.iter().map(|value| text(value))) }
-fn layout(value: &flow::WidgetLayout) -> Value<'_> { object([("x", number(value.x)), ("y", number(value.y))]) }
-fn optional_layout(value: &Option<flow::WidgetLayout>) -> Value<'_> { value.as_ref().map(layout).unwrap_or_else(null) }
+fn layout(value: &semio_framework_artifact_flow_flow::WidgetLayout) -> Value<'_> { object([("x", number(value.x)), ("y", number(value.y))]) }
+fn optional_layout(value: &Option<semio_framework_artifact_flow_flow::WidgetLayout>) -> Value<'_> { value.as_ref().map(layout).unwrap_or_else(null) }
 //#endregion 🔣️Scalars
 
 //#region 🧠️Neural
@@ -126,7 +126,7 @@ impl ArtifactCanonicalJson for FlowMutation {
 //#endregion 🧬️Mutations
 
 //#region 🗿️Scene
-impl ArtifactCanonicalJson for crate::artifacts::flow::FlowWorkingScene {
+impl ArtifactCanonicalJson for crate::FlowWorkingScene {
     fn canonical_json_borrowed_root(&self) -> Result<Option<Value<'_>>, String> {
         Ok(Some(object([
             ("widgets", array(self.widgets.iter().map(widget))),
@@ -187,27 +187,27 @@ mod tests {
             let value: FlowMutation = dsl::FromValue::from_value(dsl::DslValue::from(row.clone())).unwrap();
             let mut bytes = Vec::new(); encode(value.canonical_json_borrowed_root().unwrap().unwrap(), &mut bytes);
             assert_eq!(bytes, serde_json::to_vec(&serde_json::Value::from(dsl::ToValue::to_value(&value))).unwrap(), "mutation {:?}", row["mutation"]);
-            crate::artifacts::flow::retirement::retire_mutation(value).retire_cold();
+            crate::retirement::retire_mutation(value).retire_cold();
         }
         eprintln!("[DEBUG] Flow borrowed canonical bytes match typed-DSL serde oracle:9 widgets,10 mutations,nonempty ports");
     }
 
     #[test]
     fn large_unicode_key_and_label_scene_matches_serde_without_an_ordinal_map_scan() {
-        let scene = crate::artifacts::flow::FlowWorkingScene {
+        let scene = crate::FlowWorkingScene {
             widgets: vec![Widget::InputSlider { id: "height".into(), label: "🌊".repeat(2048), value: 6.0, min: 0.0, max: 10.0, step: 0.5 }],
-            layout: flow::OrderedMap::from([("🌊".repeat(1025), flow::WidgetLayout { x: 1.0, y: 2.0 })]),
+            layout: flow::OrderedMap::from([("🌊".repeat(1025), semio_framework_artifact_flow_flow::WidgetLayout { x: 1.0, y: 2.0 })]),
             synapses: Vec::new(),
         };
         let mut bytes = Vec::new(); encode(scene.canonical_json_borrowed_root().unwrap().unwrap(), &mut bytes);
         assert_eq!(bytes, serde_json::to_vec(&serde_json::Value::from(dsl::ToValue::to_value(&scene))).unwrap());
         assert!(bytes.len() > 4096);
-        crate::artifacts::flow::retirement::retire_scene(scene).retire_cold();
+        crate::retirement::retire_scene(scene).retire_cold();
         let absent_tree = neural::Neuron { id: "n".into(), kind: "core.number".into(), params: neural::Dictionary::new(), tree: None };
         let mut bytes = Vec::new(); encode(neuron(&absent_tree), &mut bytes);
         assert_eq!(bytes, serde_json::to_vec(&serde_json::Value::from(dsl::ToValue::to_value(&absent_tree))).unwrap());
-        let mut retirement = flow::retained::FlowRetirement::default();
-        retirement.push(flow::retained::FlowOwner::Neurons(vec![absent_tree]));
+        let mut retirement = semio_framework_artifact_flow_flow::retained::FlowRetirement::default();
+        retirement.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Neurons(vec![absent_tree]));
         retirement.retire_cold();
         eprintln!("[DEBUG] Flow borrowed canonical bytes preserve large Unicode keys, labels and explicit absent-tree null");
     }

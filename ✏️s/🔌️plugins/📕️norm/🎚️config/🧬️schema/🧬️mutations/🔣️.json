@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/config/mutation.json",
+  "$id": "https://semio.tech/schema/s/norm/config/mutations.json",
   "title": "NormConfigMutation",
   "oneOf": [
     {

@@ -8,7 +8,7 @@
 //! editable `set-cell` action: a viewer has no utilities that edit and emits no mutations by
 //! construction (`ViewEmit`).
 
-use crate::artifacts::equation::{equation_geometry, EquationSnapshot};
+use crate::{equation_geometry, EquationSnapshot};
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, UiAssemblyResult};
 

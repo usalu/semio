@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/gis/gismap/1/any/mutation/create-route.json",
+  "$id": "https://semio.tech/schema/s/gis/gismap/1/any/mutation/create-route/schema.json",
   "title": "CreateRoute",
   "type": "object",
   "additionalProperties": false,

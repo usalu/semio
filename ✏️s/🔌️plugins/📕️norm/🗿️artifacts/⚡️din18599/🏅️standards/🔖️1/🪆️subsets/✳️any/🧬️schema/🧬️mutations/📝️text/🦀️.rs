@@ -9,12 +9,12 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use crate::artifacts::din18599::schema::mutations::Din18599Mutation;
-use crate::artifacts::din18599::schema::mutations::{
+pub use crate::document_schema::mutations::Din18599Mutation;
+use crate::document_schema::mutations::{
     change_annual_limit_kwh, change_energy_carrier, change_h_t, change_h_v, change_heated_area_m2, change_internal_gains_w_m2, change_occupants, change_reference_q_p_kwh, change_renewable_kwh, change_solar_gains_kwh, change_system_losses_kwh,
     change_use_class, update_climate,
 };
-use crate::artifacts::din18599::{MonthlyClimate, UseClass};
+use crate::{MonthlyClimate, UseClass};
 use protocol::OpText;
 
 //#region 🔖️OpText

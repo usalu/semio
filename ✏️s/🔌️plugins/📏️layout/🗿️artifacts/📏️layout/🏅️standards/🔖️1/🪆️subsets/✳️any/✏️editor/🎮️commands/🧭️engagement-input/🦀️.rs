@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Layout play app commands command — `engagement-input`.
 
-use crate::artifacts::layout::{op::LayoutMutation, LayoutSnapshot};
+use crate::{op::LayoutMutation, LayoutSnapshot};
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

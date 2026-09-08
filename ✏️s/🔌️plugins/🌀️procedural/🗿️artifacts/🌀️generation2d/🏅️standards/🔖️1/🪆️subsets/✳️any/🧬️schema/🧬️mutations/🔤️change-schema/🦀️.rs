@@ -1,9 +1,9 @@
 //! 🏷️ Generation2d mutation — `ChangeSchema`: sets the fixture's document-level schema field to a
 //! new value.
 
-use crate::artifacts::generation2d::diff::Generation2dDiff;
-use crate::artifacts::generation2d::mutations::Generation2dMutation;
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::diff::Generation2dDiff;
+use crate::mutations::Generation2dMutation;
+use crate::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️ChangeSchema

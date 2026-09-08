@@ -1,7 +1,7 @@
 //! 🏷️️ SpaceIndexEditor commands command — `rename-artifact`.
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::{rename_artifact, SSpaceMutation};
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::{rename_artifact, SSpaceMutation};
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 

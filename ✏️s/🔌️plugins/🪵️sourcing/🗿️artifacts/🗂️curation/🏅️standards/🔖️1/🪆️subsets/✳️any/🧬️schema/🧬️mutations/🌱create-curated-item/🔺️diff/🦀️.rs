@@ -1,7 +1,7 @@
 //! 🔺 Sparse diff builder for `CreateCuratedItem` — a real append-only insert (never a whole-
 //! snapshot capture). Fatal `duplicate-id` when the object is already curated.
-use crate::artifacts::curation::diff::{CurationCuratedDelta, CurationDiff};
-use crate::artifacts::curation::CurationSnapshot;
+use crate::diff::{CurationCuratedDelta, CurationDiff};
+use crate::CurationSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateCuratedItem, base: &CurationSnapshot) -> protocol::MutationOutcome<CurationDiff> {

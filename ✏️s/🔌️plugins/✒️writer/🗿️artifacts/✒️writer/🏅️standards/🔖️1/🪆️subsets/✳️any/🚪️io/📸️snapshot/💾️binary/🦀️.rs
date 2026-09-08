@@ -2,7 +2,7 @@
 //! `store::ArtifactPack` impl for `WriterSnapshot` (design.md §1 CORRECTION: the native codec is
 //! one bidirectional thing, unsplit, so it lives here rather than mirrored under import/export).
 
-use crate::artifacts::writer::{WriterDocumentChild, WriterSnapshot};
+use crate::{WriterDocumentChild, WriterSnapshot};
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -102,11 +102,11 @@ pub fn decode(bytes: &[u8]) -> Result<WriterSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::writer::schema;
+    use crate::schema;
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
     fn jack_snapshot() -> WriterSnapshot {
-        crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
+        crate::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
     #[semio_framework_async_macros::async_test]
@@ -128,7 +128,7 @@ mod tests {
     /// existing dsl/pack round-trip law.
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::writer::op::WriterMutation;
+        use crate::op::WriterMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
@@ -155,7 +155,7 @@ mod semio_protocol_conformance {
 
     #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_pack() {
-        let document = crate::artifacts::writer::schema::empty_writer_snapshot();
+        let document = crate::schema::empty_writer_snapshot();
         let bytes = encode(&document);
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");

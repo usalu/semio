@@ -1,6 +1,6 @@
 //! 📜️ FEM 3D artifact — textual document grammar surface + laws (constitutional: dsl).
 
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::Fem3dSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -30,14 +30,14 @@ pub fn print_dsl(document: &Fem3dSnapshot) -> String {
 /// the shared boot document lives here, beside the fixture text itself). Falls back to the empty
 /// document if the embedded fixture ever stops parsing — a boot must never fault on a fixture.
 pub fn fem3d_boot_snapshot() -> Fem3dSnapshot {
-    parse_dsl(FEM3D_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::fem3d::schema::empty_fem3d_snapshot())
+    parse_dsl(FEM3D_EXAMPLE_TEXT).unwrap_or_else(|_| crate::schema::empty_fem3d_snapshot())
 }
 
 // #region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::fem3d::{FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use crate::{FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use std::collections::BTreeMap;
 
     // #region 🔖️Fixtures

@@ -1,6 +1,6 @@
 //! 🧬️ Shooting diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::shooting::{ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingSceneLighting, ShootingShot, ShootingShotPatch};
+use crate::{ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingSceneLighting, ShootingShot, ShootingShotPatch};
 use schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -10,7 +10,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.shooting.shooting")]
 pub struct ShootingDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::shooting::schema::ShootingArtifact>>,
+    pub artifact: Option<Box<crate::schema::ShootingArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

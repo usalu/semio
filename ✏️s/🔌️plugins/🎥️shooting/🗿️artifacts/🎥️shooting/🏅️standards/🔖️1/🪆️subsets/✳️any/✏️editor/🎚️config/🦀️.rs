@@ -6,7 +6,7 @@
 //! `ArtifactStore` (with a real `backwards`), so selection/camera/utility edits are VCS'd exactly like
 //! document content.
 
-use crate::artifacts::shooting::ShootingCamera;
+use crate::ShootingCamera;
 #[cfg(test)]
 use protocol::Mutation;
 

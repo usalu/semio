@@ -4,7 +4,9 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
+    #[cfg(feature = "conversion-brep")]
     use crate::standards::v1::subsets::brep::io::export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
+    #[cfg(feature = "conversion-brep")]
     use crate::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
     use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
     use crate::standards::v1::subsets::brep::schema::SemioBrepAnalyzer;
@@ -142,6 +144,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-brep")]
         register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -159,6 +162,7 @@ pub mod derived_composition {
     /// symmetric import/export insertion (see its doc comment) — no separate reverse registration
     /// needed.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-brep")]
     fn io_bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioBrepFromStep>(), serializer_entry_of::<SemioBrepToStep>()]).as_slice()
@@ -166,7 +170,7 @@ pub mod derived_composition {
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-brep"))]
     mod tests {
         use super::*;
         use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
@@ -345,6 +349,7 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 /// 🖊️ DWG mesh conversion for the BREP artifact.
+#[cfg(feature = "conversion-brep")]
 pub mod dwg {
     use crate::standards::v1::subsets::brep::schema::engine::{BrepError, BrepKernel, GeometryHandle};
 struct DwgExporter;

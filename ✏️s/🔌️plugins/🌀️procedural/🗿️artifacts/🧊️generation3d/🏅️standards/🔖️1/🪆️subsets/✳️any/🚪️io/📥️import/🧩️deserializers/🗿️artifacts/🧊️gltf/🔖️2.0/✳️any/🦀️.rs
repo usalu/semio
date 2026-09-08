@@ -1,5 +1,5 @@
 //! generation3d <- gltf
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::Generation3dSnapshot;
 use semio_s_artifact_stdio_gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
 
 pub fn register() {}

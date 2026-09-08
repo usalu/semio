@@ -1,9 +1,9 @@
 //! 🍀 `change-pile-dm` payload — changes the En1997 document's `pile_d_m` (pile diameter [m]).
 
 
-use crate::artifacts::en1997::En1997Snapshot;
-use crate::artifacts::en1997::diff::En1997Diff;
-use crate::artifacts::en1997::mutations::En1997Mutation;
+use crate::En1997Snapshot;
+use crate::diff::En1997Diff;
+use crate::mutations::En1997Mutation;
 //#region 🔖️ChangePileDM
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

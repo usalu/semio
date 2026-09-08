@@ -1,9 +1,9 @@
 //! 🦏 `change-use-class` payload — changes the Din18599 document's `use_class` (building use class).
 
 
-use crate::artifacts::din18599::Din18599Snapshot;
-use crate::artifacts::din18599::diff::Din18599Diff;
-use crate::artifacts::din18599::mutations::Din18599Mutation;
+use crate::Din18599Snapshot;
+use crate::diff::Din18599Diff;
+use crate::mutations::Din18599Mutation;
 //#region 🔖️ChangeUseClass
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -11,7 +11,7 @@ use crate::artifacts::din18599::mutations::Din18599Mutation;
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ChangeUseClass {
-    pub new_use_class: crate::artifacts::din18599::UseClass,
+    pub new_use_class: crate::UseClass,
 }
 
 impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeUseClass {

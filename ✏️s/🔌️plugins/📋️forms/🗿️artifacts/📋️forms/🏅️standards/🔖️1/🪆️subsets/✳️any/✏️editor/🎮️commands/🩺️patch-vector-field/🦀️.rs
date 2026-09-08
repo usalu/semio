@@ -1,7 +1,7 @@
 //! 📐️ 📐️ Forms play app commands command — `patch-vector-field`.
 
-use crate::artifacts::forms::schema::update_block_operation;
-use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
+use crate::schema::update_block_operation;
+use crate::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::parse_value_json;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -53,7 +53,7 @@ mod tests {
 
     async fn vector_question_id(app: &mut crate::editor::forms::testkit::FormsApp) -> String {
         dispatch(app, FormsCommand::AddQuestion(crate::editor::forms::commands::add_question::AddQuestion { kind: "vector".into(), step_id: None })).await;
-        crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "vector").expect("vector question").id
+        crate::schema::flatten_questions(&app.snapshot().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "vector").expect("vector question").id
     }
 
     #[semio_framework_async_macros::async_test]
@@ -62,7 +62,7 @@ mod tests {
         let question_id = vector_question_id(&mut app).await;
         dispatch(&mut app, FormsCommand::PatchVectorField(PatchVectorField { question_id: question_id.clone(), field_key: "x".into(), field: "value".into(), value_json: "5.0".into() })).await;
         let spec = app.snapshot().expect("projection");
-        let (_, question) = crate::artifacts::forms::schema::flatten_questions(&spec).into_iter().find(|(_, question)| question.id == question_id).expect("question");
+        let (_, question) = crate::schema::flatten_questions(&spec).into_iter().find(|(_, question)| question.id == question_id).expect("question");
         let x = question.fields.as_ref().expect("fields").iter().find(|field| field.key == "x").expect("x field");
         assert_eq!(x.value, Some(5.0));
     }
@@ -73,11 +73,11 @@ mod tests {
         let question_id = vector_question_id(&mut app).await;
         dispatch(&mut app, FormsCommand::AddVectorField(AddVectorField { question_id: question_id.clone(), field_key: "w".into() })).await;
         let spec = app.snapshot().expect("projection");
-        let (_, question) = crate::artifacts::forms::schema::flatten_questions(&spec).into_iter().find(|(_, question)| question.id == question_id).expect("question");
+        let (_, question) = crate::schema::flatten_questions(&spec).into_iter().find(|(_, question)| question.id == question_id).expect("question");
         assert!(question.fields.as_ref().expect("fields").iter().any(|field| field.key == "w"));
         dispatch(&mut app, FormsCommand::RemoveVectorField(RemoveVectorField { question_id: question_id.clone(), field_key: "w".into() })).await;
         let spec = app.snapshot().expect("projection");
-        let (_, question) = crate::artifacts::forms::schema::flatten_questions(&spec).into_iter().find(|(_, question)| question.id == question_id).expect("question");
+        let (_, question) = crate::schema::flatten_questions(&spec).into_iter().find(|(_, question)| question.id == question_id).expect("question");
         assert!(question.fields.as_ref().expect("fields").iter().all(|field| field.key != "w"));
     }
 }

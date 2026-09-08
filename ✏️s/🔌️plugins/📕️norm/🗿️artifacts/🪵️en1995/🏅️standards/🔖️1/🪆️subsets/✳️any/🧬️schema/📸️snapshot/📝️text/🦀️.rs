@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::en1995::En1995Snapshot;
+use crate::En1995Snapshot;
 
 /// 🗄️ The glulam-footbridge example fixture, handcrafted in `en1995`'s DSL (`store::ArtifactDsl`):
 /// an EN-annex EN 1995-2 glulam pedestrian footbridge beam under service class 2 and long-duration

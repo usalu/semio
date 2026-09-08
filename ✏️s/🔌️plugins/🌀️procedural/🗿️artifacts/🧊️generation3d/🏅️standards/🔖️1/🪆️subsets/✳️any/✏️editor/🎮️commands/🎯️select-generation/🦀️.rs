@@ -1,11 +1,11 @@
 //! 🧬️ 🧬️ Generation3d play app commands command — `select-generation`.
 
-use crate::artifacts::generation3d::op::Generation3dMutation;
-use crate::artifacts::generation3d::schema::evaluate_generation_preview;
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::op::Generation3dMutation;
+use crate::schema::evaluate_generation_preview;
+use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use flow::playbook::{select_generation, selected_generation};
-use flow::FlowEvalSession;
+use semio_framework_artifact_playbook_playbook::{select_generation, selected_generation};
+use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

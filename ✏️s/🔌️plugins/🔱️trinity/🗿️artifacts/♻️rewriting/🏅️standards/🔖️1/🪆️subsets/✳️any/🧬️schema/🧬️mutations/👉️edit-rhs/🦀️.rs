@@ -1,7 +1,7 @@
 //! 🎯️ Direct rewriting mutation — `EditRhs`: replaces the authored RHS rewriting body (JSON).
-use crate::artifacts::rewriting::diff::RewritingDiff;
-use crate::artifacts::rewriting::mutations::RewriteRuleMutation;
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::diff::RewritingDiff;
+use crate::mutations::RewriteRuleMutation;
+use crate::RewritingSnapshot;
 
 //#region 🔖️Mutation
 /// 🎯️ `edit-rhs` payload.

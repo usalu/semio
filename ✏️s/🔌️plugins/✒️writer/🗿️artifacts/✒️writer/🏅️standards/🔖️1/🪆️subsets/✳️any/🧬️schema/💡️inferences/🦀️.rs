@@ -4,12 +4,12 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::writer::WriterSnapshot;
+use crate::WriterSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use trinity::core::{example_graph, lint};
+use semio_s_artifact_trinity_jack::core::{example_graph, lint};
 
 use super::outline::WriterOutline;
 
@@ -91,21 +91,21 @@ pub fn writer_artifact_inference_descriptor() -> schema::ArtifactInferenceDescri
 /// straight from a `WriterSnapshot` (its `language_id`/`text` fields), so it lives here beside
 /// `WriterInference` rather than in `🧬️schema`'s text-only helpers.
 pub fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
-    let text = crate::artifacts::writer::writer_text(document);
+    let text = crate::writer_text(document);
     eprintln!("[DEBUG] writer.schema.inferences language_tokens_json language_id={} text_len={}", document.language_id, text.len());
     if let Some(spec) = dsl::language(&document.language_id) {
         let session = dsl::lsp::LanguageSession::open(spec, text.clone());
         return Some(dsl::os_pack::json::to_json_string(&session.semantic_tokens_lsp()));
     }
     if dsl::idiom(&document.language_id).is_some() {
-        let tokens = crate::artifacts::writer::schema::tokenize_language(&text, &document.language_id);
+        let tokens = crate::schema::tokenize_language(&text, &document.language_id);
         return serde_json::to_string(&tokens).ok();
     }
     None
 }
 
 pub fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u32) -> Option<String> {
-    let text = crate::artifacts::writer::writer_text(document);
+    let text = crate::writer_text(document);
     if document.language_id == "jack" {
         let graph = example_graph();
         let diagnostics: Vec<dsl::JsonValue> = lint(&graph, &text).into_iter().map(|diag| dsl::json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message })).collect();

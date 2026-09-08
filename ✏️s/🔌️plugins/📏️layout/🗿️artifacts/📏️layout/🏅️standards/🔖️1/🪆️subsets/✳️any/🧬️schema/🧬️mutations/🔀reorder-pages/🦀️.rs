@@ -2,9 +2,9 @@
 //! sequence, unlike `stories`/`links` which have no display order).
 
 
-use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::schema::diff::LayoutPagesDelta;
+use crate::{LayoutDiff, LayoutSnapshot};
+use crate::mutations::LayoutMutation;
+use crate::schema::diff::LayoutPagesDelta;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

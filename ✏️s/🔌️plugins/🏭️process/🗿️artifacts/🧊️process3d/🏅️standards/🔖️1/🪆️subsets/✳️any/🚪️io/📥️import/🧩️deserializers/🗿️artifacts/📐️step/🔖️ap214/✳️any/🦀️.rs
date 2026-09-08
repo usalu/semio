@@ -1,5 +1,5 @@
 //! process3d <- step
-use crate::artifacts::process3d::schema::snapshot::Process3dSnapshot;
+use crate::schema::snapshot::Process3dSnapshot;
 use semio_s_artifact_stdio_step::{StepSnapshot, STDIO_STEP_DOCUMENT_SCHEMA};
 
 pub fn register() {}

@@ -1,8 +1,16 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/reactor/cold-pair/component.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "limits", "exact", "hostile", "lifecycle", "browserRender"],
+  "required": [
+    "schema",
+    "limits",
+    "exact",
+    "hostile",
+    "lifecycle",
+    "browserRender"
+  ],
   "properties": {
     "schema": {
       "const": "semio.plugin.cold-document-pair-ingress-corpus/v1"
@@ -18,7 +26,16 @@
     "exact": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["packLength", "sprLength", "pageCount", "packPattern", "sprPattern", "packSha256", "sprSha256", "aggregateSha256"],
+      "required": [
+        "packLength",
+        "sprLength",
+        "pageCount",
+        "packPattern",
+        "sprPattern",
+        "packSha256",
+        "sprSha256",
+        "aggregateSha256"
+      ],
       "properties": {
         "packLength": {
           "const": 2097152
@@ -59,10 +76,24 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "fault", "displacesOwner", "loadsDocument"],
+        "required": [
+          "name",
+          "fault",
+          "displacesOwner",
+          "loadsDocument"
+        ],
         "properties": {
           "name": {
-            "enum": ["duplicate-page", "reordered-page", "foreign-lifetime", "changed-descriptor", "changed-length", "short-middle-page", "mutated-terminal", "slot-collision"]
+            "enum": [
+              "duplicate-page",
+              "reordered-page",
+              "foreign-lifetime",
+              "changed-descriptor",
+              "changed-length",
+              "short-middle-page",
+              "mutated-terminal",
+              "slot-collision"
+            ]
           },
           "fault": {
             "const": true
@@ -98,7 +129,13 @@
       "const": {
         "maximumRenderTurns": 256,
         "lazyWakeTurns": 2,
-        "events": ["surface-visible", "wake", "wake", "patch-ack", "patch-rejected"],
+        "events": [
+          "surface-visible",
+          "wake",
+          "wake",
+          "patch-ack",
+          "patch-rejected"
+        ],
         "revision": 1,
         "nodeKind": "tiled-map",
         "hostile": [

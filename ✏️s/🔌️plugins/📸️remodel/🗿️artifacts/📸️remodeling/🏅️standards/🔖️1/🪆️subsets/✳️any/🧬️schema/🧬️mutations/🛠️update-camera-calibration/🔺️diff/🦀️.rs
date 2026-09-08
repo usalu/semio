@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `UpdateCameraCalibration`, in the vocabulary's one guard order:
 //! missing target ⇒ Error, non-finite intrinsics/distortion ⇒ Fatal, identical resubmission ⇒ Warning.
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::RemodelingDiff;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdateCameraCalibration, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

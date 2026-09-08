@@ -846,19 +846,21 @@ export function describeExtensionComponent(repoRoot: string, rsDir: string, cont
 /** 🧪️ Exercises the physical epoch owner against neutral races and independent canonical/hash oracles. */
 export async function testFreshComponentSourceEpochV1(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const { default: stableStringify } = await import("fast-json-stable-stringify");
   const { dirname } = await import("node:path");
   const { symlinkSync, ftruncateSync } = await import("node:fs");
   const fixtureRoot = resolve(import.meta.dir, "../../🧪️fixtures/🧾️fresh-source-epoch");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  const ajv = new Ajv2020({ strict: true, allErrors: true });
-  const validate = ajv.compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
-  const validateEpoch = ajv.compile(JSON.parse(readFileSync(join(fixtureRoot, "📌️epoch.schema.json"), "utf8")));
+  const { default: Ajv } = await import("ajv");
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  const describeSchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
+  ajv.addSchema(describeSchema);
+  const validate = ajv.getSchema(`${describeSchema.$id}#/$defs/FreshSourceEpochLawsV1`)!;
+  const validateEpoch = ajv.getSchema(`${describeSchema.$id}#/$defs/FreshSourceEpochV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   assert.deepEqual(fixture.limits, FRESH_SOURCE_EPOCH_LIMITS);
   const depInfo = JSON.parse(readFileSync(join(fixtureRoot, "📃️dep-info.json"), "utf8"));
-  const validateDepInfo = ajv.compile(JSON.parse(readFileSync(join(fixtureRoot, "📃️dep-info.schema.json"), "utf8")));
+  const validateDepInfo = ajv.getSchema(`${describeSchema.$id}#/$defs/RustDepInfoLawsV1`)!;
   assert(validateDepInfo(depInfo), JSON.stringify(validateDepInfo.errors));
   for (const row of depInfo.cases) {
     const bytes = Buffer.from(row.text);
@@ -944,11 +946,14 @@ export async function testFreshComponentSourceEpochV1(repoRoot: string): Promise
 /** 🧪️ Qualifies retained verified inputs and staging independently of Cargo or descriptor execution. */
 export async function testFreshComponentStagingV1(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const { default: Ajv } = await import("ajv");
   const { encodePackValue } = await import("../../../../../🟦️.ts");
   const fixtureRoot = resolve(import.meta.dir, "../../🧪️fixtures/🧊️fresh-staging");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  const describeSchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
+  const stagingAjv = new Ajv({ strict: true, allErrors: true });
+  stagingAjv.addSchema(describeSchema);
+  const validate = stagingAjv.getSchema(`${describeSchema.$id}#/$defs/FreshStagingV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   assert(artifactRoot?.includes("🗑️generated"));
@@ -1154,11 +1159,14 @@ export async function testFreshComponentStagingV1(repoRoot: string): Promise<voi
 /** 🧪️ Qualifies fresh producer diagnostics and bounded real process retirement without Cargo. */
 export async function testFreshComponentProcessV1(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const { default: Ajv } = await import("ajv");
   const { default: deepEqual } = await import("fast-deep-equal");
   const fixtureRoot = resolve(import.meta.dir, "../../🧪️fixtures/🧵️fresh-process");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  const describeSchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
+  const processAjv = new Ajv({ strict: true, allErrors: true });
+  processAjv.addSchema(describeSchema);
+  const validate = processAjv.getSchema(`${describeSchema.$id}#/$defs/FreshProcessV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   assert(artifactRoot && isAbsolute(artifactRoot) && artifactRoot.split(/[\\/]/u).includes("🗑️generated"));

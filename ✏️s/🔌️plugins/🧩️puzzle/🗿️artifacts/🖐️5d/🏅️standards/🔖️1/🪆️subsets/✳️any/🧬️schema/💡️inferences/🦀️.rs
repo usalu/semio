@@ -13,9 +13,9 @@
 //! that sibling slug's function directly; `ArtifactInferrer::infer_cached`'s default passthrough
 //! (just calls `infer`) is used as-is, uncached.
 
-use crate::artifacts::puzzle3d::schema::inferences::flatten::FlattenPose;
-use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use semio_s_artifact_puzzle_3d::schema::inferences::flatten::FlattenPose;
+use crate::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot;
+use crate::Puzzle5dSnapshot;
 use artifact_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use std::collections::BTreeMap;
@@ -54,7 +54,7 @@ impl protocol::InferenceSpec<Puzzle5dSnapshot> for Puzzle5dInference {
 /// 🧠️ Uncached: `flatten_snapshot` recomputes the whole graph in one pass and puzzle5d's engine
 /// exposes no per-edge decomposition to key an `InferredField` chain off of (see the module doc) —
 /// the default `infer_cached` passthrough (just calls `infer`) is exactly right here.
-impl ArtifactInferrer for crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::Puzzle5dBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Puzzle5dBuilder {
     type Snapshot = Puzzle5dSnapshot;
     type Inference = Puzzle5dInference;
 }
@@ -81,7 +81,7 @@ pub fn puzzle5d_artifact_inference_descriptor() -> artifact_schema::ArtifactInfe
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
+    use crate::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
     use protocol::Inference;
 
     //#region 🧸️Fixtures

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/avi/1.0/hdrl/mutation/set-stream-header.json",
+  "$id": "https://semio.tech/schema/s/stdio/avi/1.0/hdrl/mutation/set-stream-header/schema.json",
   "title": "SetStreamHeader",
   "type": "object",
   "additionalProperties": false,

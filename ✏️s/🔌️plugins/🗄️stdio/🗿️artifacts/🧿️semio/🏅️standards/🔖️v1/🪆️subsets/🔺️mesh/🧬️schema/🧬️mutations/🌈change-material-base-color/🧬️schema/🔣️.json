@@ -1,26 +1,30 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/change-material-base-color.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/change-material-base-color/schema.json",
   "title": "ChangeMaterialBaseColor",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "id",
-    "newBaseColor"
+    "new_base_color"
   ],
   "properties": {
     "id": {
       "type": "string"
     },
-    "newBaseColor": {
-      "title": "SemioRgba",
+    "new_base_color": {
+      "$ref": "#/$defs/SemioRgba"
+    }
+  },
+  "$defs": {
+    "SemioRgba": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "a",
-        "b",
+        "r",
         "g",
-        "r"
+        "b",
+        "a"
       ],
       "properties": {
         "r": {

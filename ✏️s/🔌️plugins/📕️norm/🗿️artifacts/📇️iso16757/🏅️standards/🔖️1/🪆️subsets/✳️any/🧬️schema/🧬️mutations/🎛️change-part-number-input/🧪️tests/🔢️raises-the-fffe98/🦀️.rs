@@ -9,7 +9,7 @@
 //! the nested states `None` and `Some(None)` are NOT distinguishable in this file's committed diff,
 //! and nothing here asserts that they are.
 
-use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
+use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -37,7 +37,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 async fn raises_the_height_part_number_input_to_750() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-part-number-input applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-part-number-input/raises-the-height-part-number-input-to-750: the applied state differs from the committed after-snapshot");
-    assert_eq!(applied.part_number_inputs.get("height"), Some(&crate::artifacts::iso16757::CatalogueValue::Decimal { value: 750.0 }), "change-part-number-input/raises-the-height-part-number-input-to-750: the addressed key must hold 750.0");
+    assert_eq!(applied.part_number_inputs.get("height"), Some(&crate::CatalogueValue::Decimal { value: 750.0 }), "change-part-number-input/raises-the-height-part-number-input-to-750: the addressed key must hold 750.0");
     assert_eq!(applied.part_number_inputs.get("length"), before().part_number_inputs.get("length"), "change-part-number-input/raises-the-height-part-number-input-to-750: the untargeted `length` input must survive the clone-and-insert unchanged");
     assert_eq!(applied.part_number_inputs.len(), 2, "change-part-number-input/raises-the-height-part-number-input-to-750: writing over an EXISTING key must not grow the map");
 }
@@ -104,7 +104,7 @@ async fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed change-part-number-input diff decodes");
     let inputs = decoded.part_number_inputs.as_ref().expect("the committed change-part-number-input diff carries the input map");
     assert_eq!(inputs.len(), 2, "change-part-number-input/raises-the-height-part-number-input-to-750: the diff carries BOTH inputs, because this container delta is a whole-map replacement");
-    assert_eq!(inputs.get("height"), Some(&crate::artifacts::iso16757::CatalogueValue::Decimal { value: 750.0 }), "change-part-number-input/raises-the-height-part-number-input-to-750: the diff must carry the new 750.0 height");
+    assert_eq!(inputs.get("height"), Some(&crate::CatalogueValue::Decimal { value: 750.0 }), "change-part-number-input/raises-the-height-part-number-input-to-750: the diff must carry the new 750.0 height");
     assert!(decoded.catalogue.is_none(), "change-part-number-input/raises-the-height-part-number-input-to-750: change-part-number-input writes `partNumberInputs` and must leave `catalogue` untouched");
     assert!(decoded.dictionary.is_none(), "change-part-number-input/raises-the-height-part-number-input-to-750: change-part-number-input writes `partNumberInputs` and must leave `dictionary` untouched");
     assert!(decoded.selection.is_none(), "change-part-number-input/raises-the-height-part-number-input-to-750: change-part-number-input writes `partNumberInputs` and must leave `selection` untouched");

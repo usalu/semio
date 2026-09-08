@@ -2,8 +2,8 @@
 //! captured pre-state (`base`), never by structurally inverting the diff. Split from
 //! `🎬scenarios` per Wave C.
 
-use crate::artifacts::program::ProgramMutation;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramMutation;
+use crate::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
 pub fn inverse(payload: &super::CreateScenario, _base: &ProgramSnapshot) -> Vec<ProgramMutation> {

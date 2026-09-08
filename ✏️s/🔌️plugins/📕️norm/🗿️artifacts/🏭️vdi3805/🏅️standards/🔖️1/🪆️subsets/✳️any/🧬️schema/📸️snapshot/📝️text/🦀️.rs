@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::vdi3805::Vdi3805Snapshot;
+use crate::Vdi3805Snapshot;
 
 /// 📜️ Bundled reference-catalogue example (`.semio` envelope + DSL body).
 pub const REFERENCE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
@@ -27,7 +27,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_dsl_round_trips_the_reference_fixture() {
-        store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::vdi3805::reference_fixture());
+        store::os_store::test_support::assert_dsl_round_trip(&crate::reference_fixture());
     }
 
     #[semio_framework_async_macros::async_test]

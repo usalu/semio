@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeReferenceWidth` — recovers the pre-mutation `width_world` from `base`.
 use super::ChangeReferenceWidth;
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangeReferenceWidth, base: &CadSnapshot) -> Vec<CadMutation> {

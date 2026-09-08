@@ -1,13 +1,16 @@
 /** 🧵️ Validates native codec semantic fixtures independently of Rust Send checking. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import _ from "lodash";
 
 //#region 🧵️CodecSendOracle
 export function testNativeCodecSendFixture(): void {
   const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8")));
+  const contract = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(contract);
+  const validate = ajv.getSchema(`${contract.$id}#/$defs/CodecSend`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   for (const snapshot of fixture.snapshots) {
     assert.deepEqual(JSON.parse(JSON.stringify(snapshot)), _.cloneDeep(snapshot));

@@ -25537,7 +25537,8 @@
       },
       "product-module": {
         "pathPatterns": [
-          "🧰️framework/🛍️products/*/🔨️modules/**"
+          "🧰️framework/🛍️products/*/🔨️modules/**",
+          "♻️mit-bestand/*/🔨️modules/**"
         ],
         "reason": "A product module owns the contracts of the product surface it implements."
       },
@@ -25561,13 +25562,16 @@
       "**/🎯️targets/**",
       "**/📦️packages",
       "**/📦️packages/**",
+      "**/🧬️contracts",
+      "**/🧬️contracts/**"
+    ],
+    "fixtureOwnerPathPatterns": [
       "**/🧪️*",
       "**/🧪️*/**",
       "**/🧫️*",
-      "**/🧫️*/**",
-      "**/🧬️contracts",
-      "**/🧬️contracts/**"
-    ]
+      "**/🧫️*/**"
+    ],
+    "fixtureOwnerReason": "A 🧪️/🧫️ tree carries test data and the authority schema of that data. It can never own a contract scope, so its schema modules and its retired-placement filenames are fixture inputs, not findings."
   },
   "schemaExportResolution": {
     "uriScheme": "schema",
@@ -25577,6 +25581,16 @@
     "scopeIdSeparator": ".",
     "scopeIdPattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)*$",
     "exportIdPattern": "^[A-Z][A-Za-z0-9]*$",
+    "formatIds": {
+      "🦀️rust": "rust",
+      "🟦️typescript": "typescript",
+      "🔗️graphql": "graphql",
+      "🔣️jsonschema": "jsonschema",
+      "🛰️protobuf": "protobuf"
+    },
+    "rustEntriesContractId": "schema-export-registry-entries-v1",
+    "mutationScopeSegment": "mutation",
+    "mutationLeafFacetFilename": "schema.json",
     "rootExportKeyword": "title",
     "exportsKeyword": "$defs",
     "catalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json",
@@ -25819,6 +25833,66 @@
     "🐍️python": "python",
     "🔷️dotnet": "dotnet"
   },
+  "testImplementationFileKindIds": [
+    "rust-source",
+    "typescript-source",
+    "javascript-source",
+    "go-source",
+    "python-source",
+    "dotnet-source"
+  ],
+  "testLegacyDirectoryNames": [
+    "test",
+    "tests",
+    "__tests__",
+    "🧪tests"
+  ],
+  "testLegacyFilenamePatterns": [
+    {
+      "id": "javascript-test-suffix",
+      "pattern": "\\.(?:test|spec|e2e|integration)\\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$"
+    },
+    {
+      "id": "typescript-definition-test-suffix",
+      "pattern": "\\.test-d\\.ts$"
+    },
+    {
+      "id": "go-test-suffix",
+      "pattern": "_test\\.go$"
+    },
+    {
+      "id": "python-test-affix",
+      "pattern": "(?:^test_.+|.+_test)\\.py$"
+    },
+    {
+      "id": "dotnet-test-suffix",
+      "pattern": "Tests?\\.cs$"
+    },
+    {
+      "id": "test-emoji-filename",
+      "pattern": "^🧪️"
+    }
+  ],
+  "testDeliveryScopeDirectoryNames": [
+    "📦️packages",
+    "⚡️implementations",
+    "🎯️targets"
+  ],
+  "testJavaScriptFrameworkModules": [
+    "@jest/globals",
+    "@playwright/test",
+    "ava",
+    "bun:test",
+    "jest",
+    "mocha",
+    "node:test",
+    "vitest"
+  ],
+  "testAssertionModules": [
+    "node:assert",
+    "node:assert/strict"
+  ],
+  "testSelfTestDeclarationPattern": "(?:SelfTests?$|^test[A-Z])",
   "testOwnerKinds": [
     "🛍️products",
     "🔌️plugins",

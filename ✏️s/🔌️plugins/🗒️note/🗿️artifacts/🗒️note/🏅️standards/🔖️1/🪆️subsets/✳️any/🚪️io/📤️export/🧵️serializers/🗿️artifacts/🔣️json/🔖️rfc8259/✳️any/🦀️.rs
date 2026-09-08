@@ -4,7 +4,7 @@
 //! `IoFidelity::Exact`, matching the sequence pilot's identical json-bridge precedent
 //! (`📓️w4-sequence-report.md`). JSON's own native form is text, never a raw-bytes wrapper.
 
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

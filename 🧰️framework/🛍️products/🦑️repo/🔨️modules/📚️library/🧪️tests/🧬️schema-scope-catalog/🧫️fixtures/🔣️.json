@@ -11,9 +11,21 @@
           "title": "ThingArtifact",
           "type": "object",
           "additionalProperties": false,
-          "properties": { "corner": { "$ref": "#/$defs/Corner" } },
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
           "$defs": {
-            "Corner": { "type": "object", "additionalProperties": false, "properties": { "x": { "type": "number" } } }
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            }
           }
         },
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\n"
@@ -23,7 +35,10 @@
           "s.probe.thing": {
             "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
             "level": "artifact-standard-subset",
-            "exports": ["Corner", "ThingArtifact"],
+            "exports": [
+              "Corner",
+              "ThingArtifact"
+            ],
             "dependsOn": []
           }
         },
@@ -41,9 +56,21 @@
           "title": "InferenceApproval",
           "type": "object",
           "additionalProperties": false,
-          "properties": { "id": { "type": "string" } },
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          },
           "$defs": {
-            "Receipt": { "type": "object", "additionalProperties": false, "properties": { "at": { "type": "string" } } }
+            "Receipt": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "at": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
@@ -52,7 +79,11 @@
           "title": "ThingArtifact",
           "type": "object",
           "additionalProperties": false,
-          "properties": { "receipt": { "$ref": "https://semio.tech/schema/hub/inference/contract.json#/$defs/Receipt" } }
+          "properties": {
+            "receipt": {
+              "$ref": "https://semio.tech/schema/hub/inference/contract.json#/$defs/Receipt"
+            }
+          }
         }
       },
       "expected": {
@@ -60,14 +91,21 @@
           "hub.inference": {
             "path": "🌎️hub/💡️inference/🧬️schema",
             "level": "hub-area-module",
-            "exports": ["InferenceApproval", "Receipt"],
+            "exports": [
+              "InferenceApproval",
+              "Receipt"
+            ],
             "dependsOn": []
           },
           "s.probe.thing": {
             "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
             "level": "artifact-standard-subset",
-            "exports": ["ThingArtifact"],
-            "dependsOn": ["hub.inference"]
+            "exports": [
+              "ThingArtifact"
+            ],
+            "dependsOn": [
+              "hub.inference"
+            ]
           }
         },
         "diagnosticCodes": [],
@@ -84,7 +122,11 @@
           "title": "InferenceApproval",
           "type": "object",
           "additionalProperties": false,
-          "properties": { "id": { "type": "string" } }
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
         },
         "🌎️hub/🔐️auth/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
@@ -92,7 +134,11 @@
           "title": "InferenceApprovalMirror",
           "type": "object",
           "additionalProperties": false,
-          "properties": { "id": { "type": "string" } }
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
         }
       },
       "expected": {
@@ -100,11 +146,16 @@
           "hub.inference": {
             "path": "🌎️hub/💡️inference/🧬️schema",
             "level": "hub-area-module",
-            "exports": ["InferenceApproval"],
+            "exports": [
+              "InferenceApproval"
+            ],
             "dependsOn": []
           }
         },
-        "diagnosticCodes": ["scope-id-duplicate", "scope-id-duplicate"],
+        "diagnosticCodes": [
+          "scope-id-duplicate",
+          "scope-id-duplicate"
+        ],
         "placementPaths": []
       }
     },
@@ -118,7 +169,11 @@
           "title": "InferenceApproval",
           "type": "object",
           "additionalProperties": false,
-          "properties": { "missing": { "$ref": "https://semio.tech/schema/hub/absent/contract.json#/$defs/Nope" } }
+          "properties": {
+            "missing": {
+              "$ref": "https://semio.tech/schema/hub/absent/contract.json#/$defs/Nope"
+            }
+          }
         }
       },
       "expected": {
@@ -126,11 +181,15 @@
           "hub.inference": {
             "path": "🌎️hub/💡️inference/🧬️schema",
             "level": "hub-area-module",
-            "exports": ["InferenceApproval"],
+            "exports": [
+              "InferenceApproval"
+            ],
             "dependsOn": []
           }
         },
-        "diagnosticCodes": ["ref-unresolved"],
+        "diagnosticCodes": [
+          "ref-unresolved"
+        ],
         "placementPaths": []
       }
     },
@@ -144,7 +203,11 @@
           "title": "InferenceApproval",
           "type": "object",
           "additionalProperties": false,
-          "properties": { "id": { "type": "string" } }
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
         }
       },
       "expected": {
@@ -152,29 +215,39 @@
           "hub.inference": {
             "path": "🌎️hub/💡️inference/🧬️schema",
             "level": "hub-area-module",
-            "exports": ["InferenceApproval"],
+            "exports": [
+              "InferenceApproval"
+            ],
             "dependsOn": []
           }
         },
-        "diagnosticCodes": ["document-dialect-unexpected"],
+        "diagnosticCodes": [
+          "document-dialect-unexpected"
+        ],
         "placementPaths": []
       }
     },
     {
       "id": "fixture-owned-schema",
-      "reason": "A schema authored beside fixture data is a retired placement: fixtures carry data, owners carry contracts.",
+      "reason": "A 🧪️/🧫️ tree carries test data and the authority schema of that data: schemaScopeOwnerLevels.fixtureOwnerPathPatterns makes it silent, never a scope and never a retired-placement finding.",
       "files": {
         "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️.schema.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
           "title": "ApprovalFixture",
           "type": "object"
         },
-        "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🔣️.json": { "id": "a" }
+        "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🔣️.json": {
+          "id": "a"
+        },
+        "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "title": "approvalFixture"
+        }
       },
       "expected": {
         "scopes": {},
         "diagnosticCodes": [],
-        "placementPaths": ["🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️.schema.json"]
+        "placementPaths": []
       }
     },
     {
@@ -191,7 +264,9 @@
       "expected": {
         "scopes": {},
         "diagnosticCodes": [],
-        "placementPaths": ["🌎️hub/💡️inference/🧬️contracts"]
+        "placementPaths": [
+          "🌎️hub/💡️inference/🧬️contracts"
+        ]
       }
     },
     {
@@ -207,7 +282,237 @@
       },
       "expected": {
         "scopes": {},
-        "diagnosticCodes": ["module-level-ineligible"],
+        "diagnosticCodes": [
+          "module-level-ineligible"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "mutation-leaf-scope",
+      "reason": "A 🧬️mutations/<leaf>/🧬️schema module is its own scope <root>.mutation.<semanticKind>, not a facet of the module that encloses it.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/s/probe/thing/mutations.json",
+          "oneOf": [
+            {
+              "$ref": "https://semio.tech/schema/s/probe/thing/mutation/edit-text/schema.json"
+            }
+          ]
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🔣️.json": {
+          "schemaVersion": 1,
+          "owner": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text",
+          "semanticKind": "edit-text",
+          "displayName": "Edit Text",
+          "emoji": "✏️",
+          "aggregateVariant": "EditText",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "requiredLanguageSurfaces": [
+            "json-schema"
+          ]
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/s/probe/thing/mutation/edit-text/schema.json",
+          "title": "EditText",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "text": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": [
+              "ThingArtifact"
+            ],
+            "dependsOn": [
+              "s.probe.thing.mutation.edit-text"
+            ]
+          },
+          "s.probe.thing.mutation.edit-text": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🧬️schema",
+            "level": "mutation-leaf",
+            "exports": [
+              "EditText"
+            ],
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "mutation-leaf-id-grammar",
+      "reason": "A leaf $id that encodes the standard and subset instead of <root scope path>/mutation/<semanticKind>/schema.json names the wrong scope and is reported with the exact expected id.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/s/probe/thing/mutations.json",
+          "oneOf": [
+            {
+              "$ref": "https://semio.tech/schema/s/probe/thing/mutation/edit-text/schema.json"
+            }
+          ],
+          "x-semio-mutationKinds": [
+            "edit-text"
+          ]
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🔣️.json": {
+          "schemaVersion": 1,
+          "owner": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text",
+          "semanticKind": "edit-text",
+          "displayName": "Edit Text",
+          "emoji": "✏️",
+          "aggregateVariant": "EditText",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "requiredLanguageSurfaces": [
+            "json-schema"
+          ]
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/s/probe/thing/1/any/mutation/edit-text.json",
+          "title": "EditText",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "text": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": [
+              "ThingArtifact"
+            ],
+            "dependsOn": []
+          },
+          "s.probe.thing.1.any.mutation": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🧬️schema",
+            "level": "mutation-leaf",
+            "exports": [
+              "EditText"
+            ],
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "mutation-aggregate-kinds-redundant",
+          "mutation-leaf-id-grammar",
+          "ref-unresolved"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "facet-document-keeps-scope-path",
+      "reason": "A facet document repeats its module's scope path and varies only the facet filename; one that resolves under a different scope path is reported and never deepens the catalog.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/s/probe/thing/snapshot.json",
+          "title": "ThingSnapshot",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/s/probe/thing/snapshot/text.json",
+          "title": "ThingSnapshotText",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "body": {
+              "type": "string"
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/s/other/thing/diff.json",
+          "title": "ThingDiff",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": [
+              "ThingArtifact",
+              "ThingDiff",
+              "ThingSnapshot",
+              "ThingSnapshotText"
+            ],
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "module-scope-id-inconsistent"
+        ],
         "placementPaths": []
       }
     }

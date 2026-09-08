@@ -4,9 +4,9 @@
 //! `guards::node_reference` resolution of `node_id` (`mutation.target-missing`, Error).
 //! `replace-support` calls the SAME guard, so the twins cannot drift apart.
 use super::CreateSupport;
-use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dSupportsDelta};
-use crate::artifacts::fem2d::mutations::guards;
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::diff::{Fem2dDiff, Fem2dSupportsDelta};
+use crate::mutations::guards;
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateSupport, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

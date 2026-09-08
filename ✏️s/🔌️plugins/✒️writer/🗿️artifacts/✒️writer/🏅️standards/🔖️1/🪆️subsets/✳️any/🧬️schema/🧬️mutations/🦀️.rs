@@ -2,14 +2,14 @@
 //!
 //! Every variant wraps the payload owned by its direct `<mutation>/🦀️.rs` leaf.
 
-use crate::artifacts::writer::{WriterDiff, WriterSnapshot};
+use crate::{WriterDiff, WriterSnapshot};
 use serde::{Deserialize, Serialize};
 
 pub use super::change_language::{change_language, ChangeLanguage};
 pub use super::change_uri::{change_uri, ChangeUri};
 pub use super::edit_text::{edit_text, EditText};
 pub use super::rename_writer::{rename_writer, RenameWriter};
-pub use crate::artifacts::writer::schema::operations::*;
+pub use crate::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Semantic Writer document mutation vocabulary.

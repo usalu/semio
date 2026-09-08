@@ -1,19 +1,19 @@
 //! 🗺️ 🗺️ Trinity Jack app command — `reorganize`.
 
-use crate::artifacts::jack::mutations::move_node;
-use crate::artifacts::jack::op::TrinityGraphMutation;
-use crate::artifacts::jack::{JackSnapshot, Node};
+use crate::mutations::move_node;
+use crate::op::TrinityGraphMutation;
+use crate::{JackSnapshot, Node};
 use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::Emit;
 
 fn force_layout_nodes(fixture: &JackSnapshot) -> Option<Vec<Node>> {
-    let scene = crate::artifacts::jack::jack_working_scene(fixture);
+    let scene = crate::jack_working_scene(fixture);
     if scene.nodes.is_empty() {
         return None;
     }
     let mut nodes = scene.nodes;
-    use geometry::Vec2;
-    use graph::drawing::force::{run_force_layout, ForceLayoutOptions};
+    use semio_framework_geometry::Vec2;
+    use semio_framework_graph::drawing::force::{run_force_layout, ForceLayoutOptions};
     use std::collections::HashMap;
     let mut positions: Vec<Vec2> = nodes.iter().map(|node| Vec2::new(node.x, node.y)).collect();
     let radii: Vec<f64> = nodes.iter().map(|node| (node.width.max(48.0) + node.height.max(24.0)) * 0.25).collect();

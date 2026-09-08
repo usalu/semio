@@ -1,7 +1,7 @@
 //! ✂️ DAG mutation — `DisconnectNodes`: removes a port-to-port edge relationship.
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::diff::DagDiff;
+use crate::mutations::DagMutation;
+use crate::DagSnapshot;
 
 //#region 🔖️Mutation
 /// ✂️ `disconnect-nodes` payload — edge id.

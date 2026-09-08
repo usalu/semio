@@ -7,9 +7,9 @@
 //! `Serialize`/`Deserialize`, so a second handcrafted grammar per structured type would just
 //! duplicate that losslessly.
 
-pub use crate::artifacts::iso16757::schema::mutations::Iso16757Mutation;
+pub use crate::document_schema::mutations::Iso16757Mutation;
 
-use crate::artifacts::iso16757::schema::mutations::{
+use crate::document_schema::mutations::{
     add_selection_constraint::mutation::AddSelectionConstraint, change_exchange_process::mutation::ChangeExchangeProcess, change_part_number_input::mutation::ChangePartNumberInput, change_selection_class::mutation::ChangeSelectionClass,
     change_selection_series::mutation::ChangeSelectionSeries, create_product::mutation::CreateProduct, create_product_group::mutation::CreateProductGroup, create_property_definition::mutation::CreatePropertyDefinition,
     create_subject::mutation::CreateSubject, delete_product::mutation::DeleteProduct, delete_product_group::mutation::DeleteProductGroup, delete_property_definition::mutation::DeletePropertyDefinition, delete_subject::mutation::DeleteSubject,
@@ -400,7 +400,7 @@ impl protocol::OpBinary for Iso16757Mutation {
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<Iso16757Mutation> {
-    use crate::artifacts::iso16757::{part_1, part_4, part_5, Cardinality, CatalogueValue, LocalizedText, Names};
+    use crate::{part_1, part_4, part_5, Cardinality, CatalogueValue, LocalizedText, Names};
 
     let names = |text: &str| Names { preferred: LocalizedText { locale: "en".into(), text: text.into() }, short_name: None, alternatives: Vec::new() };
 

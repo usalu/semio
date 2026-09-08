@@ -1,5 +1,5 @@
 //! playground -> zip
-use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use semio_s_artifact_stdio_zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 
 pub fn serialize(snapshot: &PlaygroundSnapshot) -> Result<ZipSnapshot, store::TextError> {

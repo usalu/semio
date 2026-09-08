@@ -1,0 +1,16 @@
+{
+  "package": "semio-framework-artifact-workflow-workflow",
+  "expected": {
+    "schema": "os.workflow",
+    "graph": {
+      "schema": "workflow.graph",
+      "nodes": [],
+      "edges": []
+    },
+    "parameters": [],
+    "parameter_bindings": [],
+    "inputs": [],
+    "input_bindings": [],
+    "output_bindings": []
+  }
+}

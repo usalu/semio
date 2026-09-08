@@ -1,9 +1,9 @@
 //! ↩️ `delete-machine` inverse — reconstructs a `create-machine` from BASE state (original list
 //! position + full payload); a machine already absent from `base` has nothing to undo.
 
-use crate::artifacts::process3d::mutations::create_machine::CreateMachine;
-use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::mutations::create_machine::CreateMachine;
+use crate::mutations::Process3dMutation;
+use crate::Process3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DeleteMachine, base: &Process3dSnapshot) -> Vec<Process3dMutation> {

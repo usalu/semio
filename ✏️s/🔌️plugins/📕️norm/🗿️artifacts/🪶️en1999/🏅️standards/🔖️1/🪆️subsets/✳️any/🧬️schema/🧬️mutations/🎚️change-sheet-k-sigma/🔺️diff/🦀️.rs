@@ -1,8 +1,8 @@
 //! 🔺️ `change-sheet-k-sigma` sparse diff construction — writes only `En1999Diff.sheet_k_sigma` from the payload.
 
-use crate::artifacts::en1999::diff::En1999Diff;
-use crate::artifacts::en1999::mutations::change_sheet_k_sigma::ChangeSheetKSigma;
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::diff::En1999Diff;
+use crate::mutations::change_sheet_k_sigma::ChangeSheetKSigma;
+use crate::En1999Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSheetKSigma, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {

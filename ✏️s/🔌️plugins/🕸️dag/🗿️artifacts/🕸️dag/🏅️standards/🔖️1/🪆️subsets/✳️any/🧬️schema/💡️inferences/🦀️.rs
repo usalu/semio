@@ -4,8 +4,8 @@
 //! dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::dag::DagSnapshot;
-use schema::ArtifactSchema;
+use crate::DagSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::{compute_dag_topology, DagTopology};
@@ -23,7 +23,7 @@ pub struct DagInference {
 
 impl protocol::Inference<DagSnapshot> for DagInference {
     fn infer(snapshot: &DagSnapshot) -> Self {
-        let scene = crate::artifacts::dag::dag_working_scene(snapshot);
+        let scene = crate::dag_working_scene(snapshot);
         Self { topology: compute_dag_topology(&scene.nodes, &scene.edges) }
     }
 }
@@ -69,10 +69,10 @@ impl ArtifactInferrer for DagInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.dag.dag.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `dag_artifact_schema_descriptor`'s registration.
-pub fn dag_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn dag_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.dag.dag.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -87,14 +87,14 @@ pub fn dag_artifact_inference_descriptor() -> schema::ArtifactInferenceDescripto
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::dag::{DagFixtureEdge, DagNodeSpec};
+    use crate::{DagFixtureEdge, DagNodeSpec};
     use protocol::Inference;
 
     fn chain_snapshot() -> DagSnapshot {
         let a = DagNodeSpec { id: "a".into(), ..Default::default() };
         let b = DagNodeSpec { id: "b".into(), ..Default::default() };
         let edges = vec![DagFixtureEdge { id: "e1".into(), source: "a".into(), target: "b".into(), ..Default::default() }];
-        let content = crate::artifacts::dag::dag_content_child_with_owner(vec![a, b], edges);
+        let content = crate::dag_content_child_with_owner(vec![a, b], edges);
         DagSnapshot { schema: "dag.dag".into(), content }
     }
 

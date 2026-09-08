@@ -3,13 +3,13 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the board/world
 //! windows in `🎭️modes/✏️edit/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`,
-//! view state in `🦀️config.rs`, document-side compute in `crate::artifacts::block5d::schema`/
-//! `crate::artifacts::block5d::schema::inferences`, and this app's own typed media I/O surface (below —
+//! view state in `🦀️config.rs`, document-side compute in `crate::schema`/
+//! `crate::schema::inferences`, and this app's own typed media I/O surface (below —
 //! constitutional: general, an artifact must never depend on an app, so it lives here rather than under
 //! `🗿️artifacts`).
 
-use crate::artifacts::block5d::op::Block5dMutation;
-use crate::artifacts::block5d::{artifact_kind, Block5dSnapshot, BLOCK_5D_SCHEMA};
+use crate::op::Block5dMutation;
+use crate::{artifact_kind, Block5dSnapshot, BLOCK_5D_SCHEMA};
 use crate::editor::block5d::commands::patch_part_kind;
 use crate::editor::block5d::commands::{add_grip, remove_grip};
 use crate::editor::block5d::commands::{add_grip_kind, remove_grip_kind};
@@ -382,7 +382,7 @@ impl ArtifactEditor for Block5dPlayApp {
 
     type Command = Block5dCommand;
 
-    const DIALECT: Dialect = crate::artifacts::block5d::BLOCK5D_DIALECT;
+    const DIALECT: Dialect = crate::BLOCK5D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_5D_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -438,9 +438,9 @@ impl ArtifactEditor for Block5dPlayApp {
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document (the same DSL
     /// `setActiveExample` parses), so the board window shows a part kind and the World3d window a
     /// `mesh_url` instead of the all-`Default` empty part kind — see
-    /// `crate::artifacts::block5d::schema::default_block5d_snapshot`.
+    /// `crate::schema::default_block5d_snapshot`.
     fn initial_snapshot() -> Block5dSnapshot {
-        crate::artifacts::block5d::schema::default_block5d_snapshot()
+        crate::schema::default_block5d_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -532,7 +532,7 @@ impl ArtifactEditor for Block5dPlayApp {
             let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let fragment = crate::artifacts::block5d::schema::inferences::puzzle5d_catalog_fragment(doc.snapshot);
+        let fragment = crate::schema::inferences::puzzle5d_catalog_fragment(doc.snapshot);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
@@ -550,7 +550,7 @@ impl ArtifactEditor for Block5dPlayApp {
 /// (untouched, already wired in `🦀️.rs`'s Examples region) is the modern, role-agnostic
 /// replacement surface for app-level example registration.
 pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::block5d::BLOCK5D_DIALECT)
+    Editor::builder(crate::BLOCK5D_DIALECT)
             .document(["semio", "block", "5d"])
             .artifact_kind(artifact_kind())
             // 🗂️ The puzzle5d catalog artifact this app's new `"catalog:out"` port produces — see
@@ -804,7 +804,7 @@ mod tests {
     async fn boots_on_the_forest_left_example_document() {
         let mut app: Block5dApp = new_app().await;
         let booted = app.snapshot().expect("snapshot");
-        assert_ne!(booted, crate::artifacts::block5d::schema::empty_block5d_snapshot());
+        assert_ne!(booted, crate::schema::empty_block5d_snapshot());
         assert_eq!(booted.part_kind.label, "Hexagonal Cut Concrete Forest Left");
         assert!(booted.representations.first().and_then(|representation| representation.mesh_url.as_deref()).is_some());
         assert!(!booted.grip_kinds.is_empty());

@@ -1,9 +1,9 @@
 //! 📝 `edit-story` — replaces a story's authored `content` body.
 
 
-use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot, TextStoryPatch};
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::schema::diff::{LayoutStoriesDelta, LayoutStoryPatchEntry};
+use crate::{LayoutDiff, LayoutSnapshot, TextStoryPatch};
+use crate::mutations::LayoutMutation;
+use crate::schema::diff::{LayoutStoriesDelta, LayoutStoryPatchEntry};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

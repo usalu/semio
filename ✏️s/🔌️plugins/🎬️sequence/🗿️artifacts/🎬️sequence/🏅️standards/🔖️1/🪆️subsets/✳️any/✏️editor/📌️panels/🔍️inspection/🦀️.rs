@@ -1,6 +1,6 @@
 //! 🔍️ Sequence play app panel — inspection: the selected step's kind and params.
 
-use crate::artifacts::sequence::{SequenceFixture, SequenceStep};
+use crate::{SequenceFixture, SequenceStep};
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::ui_label;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
@@ -98,7 +98,7 @@ mod semantic_contract {
     #[test]
     fn sequence_semantic_panels_match_the_json_oracle() {
         let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️panels.json")).expect("neutral panels");
-        let document = neural_engine::ColdOwner::new(crate::artifacts::sequence::default_snapshot());
+        let document = neural_engine::ColdOwner::new(crate::default_snapshot());
         let fixture = neural_engine::ColdOwner::new(document.to_fixture());
         for row in vectors["cases"].as_array().expect("locales") {
             let config = crate::editor::sequence::config::SequenceConfig { locale: row["locale"].as_str().expect("locale").into(), ..Default::default() };

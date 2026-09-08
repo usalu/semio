@@ -6,11 +6,11 @@
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/<window>`. This file dispatches and stitches.
 //!
 //! 🌉️ `ArtifactApp::Snapshot` is the `Puzzle2dPlaySnapshot` newtype over a bare
-//! `serde_json::Value` fixture (see `crate::artifacts::puzzle2d::op`'s `🔖️ValueBridge`), not the typed
+//! `serde_json::Value` fixture (see `crate::op`'s `🔖️ValueBridge`), not the typed
 //! `Puzzle2dSnapshot`. Ordinary commands derive granular typed deltas; mounted fill continuations
 //! bypass whole fixture materialization and publish their already-prepared typed mutations directly.
 
-use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
+use crate::op::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
 use crate::editor::puzzle2d::commands::{
     add_node, apply_board_events, cancel_slot, commit_slot, cycle_candidate, delete_selection, duplicate_selection, engagement_abort, engagement_control_select, engagement_input, engagement_submit, focus_selection, force_layout, lod_scale_json,
     open_slot, patch_inspector, select_same_kind, set_active_example, set_active_utility, set_brush_kind_weights, set_brush_node_size, set_camera, set_candidate_index, set_fill_count, set_grid_factor, set_grid_snap_enabled, set_locale,
@@ -176,7 +176,7 @@ pub fn kind_catalog_entries<'a>(fixture: &'a Value, key: &str) -> Option<&'a [Va
     fixture.get("meta").and_then(|value| value.get("kindCatalogs")).and_then(|value| value.get(key)).and_then(|value| value.as_array()).map(|values| values.as_slice())
 }
 
-fn manifest_catalog_rows(kinds: &[graph::manifest::KindDef]) -> Value {
+fn manifest_catalog_rows(kinds: &[semio_framework_graph::manifest::KindDef]) -> Value {
     Value::Array(
         kinds
             .iter()
@@ -201,8 +201,8 @@ fn manifest_catalog_rows(kinds: &[graph::manifest::KindDef]) -> Value {
 /// its flattened `presentation`. Port kinds without a `presentation.color` are dropped because the
 /// engine rejects a colourless handle kind outright, which would discard the whole catalog push.
 pub fn manifest_board_kind_catalogs_json(manifest_id: &str) -> Option<String> {
-    let manifest = graph::manifest::manifest_by_id(manifest_id)?;
-    let visual_port_kinds: Vec<graph::manifest::KindDef> = manifest.port_kinds.iter().filter(|kind| kind.presentation.as_ref().is_some_and(|p| p.get("color").is_some())).cloned().collect();
+    let manifest = semio_framework_graph::manifest::manifest_by_id(manifest_id)?;
+    let visual_port_kinds: Vec<semio_framework_graph::manifest::KindDef> = manifest.port_kinds.iter().filter(|kind| kind.presentation.as_ref().is_some_and(|p| p.get("color").is_some())).cloned().collect();
     Some(
         json!({
             "handleKinds": manifest_catalog_rows(&visual_port_kinds),
@@ -1616,7 +1616,7 @@ fn puzzle2d_board_events_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dP
 /// events, then derive the granular document delta and the config snapshot. `operation` is the
 /// committed public authority a mounted continuation carries and is simply `None` for a retained
 /// work, which never sees an `ArtifactView`.
-fn puzzle2d_dispatch_emit(command: &Puzzle2dCommand, before: Value, config: &Puzzle2dConfig, selection: &protocol::DomainSelection, operation: Option<semio_framework_plugin::AppOperationContext>) -> Emit<Puzzle2dMutation, Puzzle2dConfigMutation> {
+fn puzzle2d_dispatch_emit(command: &Puzzle2dCommand, before: &Value, config: &Puzzle2dConfig, selection: &protocol::DomainSelection, operation: Option<semio_framework_plugin::AppOperationContext>) -> Emit<Puzzle2dMutation, Puzzle2dConfigMutation> {
     let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
     let active_utility = puzzle2d_active_utility(config, window_id);
     let mut scene = Puzzle2dPlayApp::scene_for(before.clone(), config, window_id);
@@ -1672,7 +1672,7 @@ fn puzzle2d_dispatch_emit(command: &Puzzle2dCommand, before: Value, config: &Puz
         }
     }
     apply_host_events(&mut host.borrow_mut(), &mut scene);
-    let mut operations = puzzle2d_document_delta_operations(&before, &scene.fixture);
+    let mut operations = puzzle2d_document_delta_operations(before, &scene.fixture);
     operations.append(&mut artifact_mutations);
     // 🐢️ Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
     // actual document mutation (would silently desync remote clients' UI from the committed operation).
@@ -1702,7 +1702,7 @@ fn puzzle2d_board_events_reduce(
         return Err(Fault::from("puzzle2d-board-events-command-mismatch"));
     }
     let selection = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
-    Ok(puzzle2d_dispatch_emit(command, snapshot.0.clone(), config, &selection, None))
+    Ok(puzzle2d_dispatch_emit(command, &snapshot.0, config, &selection, None))
 }
 
 /// 🗂️ Upper bound on the entities one selection-acting retained step may touch. Nakagin — this
@@ -1741,7 +1741,7 @@ fn puzzle2d_generic_reduce(
         return Err(Fault::from("puzzle2d-generic-command-mismatch"));
     }
     let selection = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
-    Ok(puzzle2d_dispatch_emit(command, snapshot.0.clone(), config, &selection, None))
+    Ok(puzzle2d_dispatch_emit(command, &snapshot.0, config, &selection, None))
 }
 
 /// 🛍️ Stage hand-offs [`Puzzle2dActiveExampleWork`] spends outside its per-item cursors (one per
@@ -1782,8 +1782,8 @@ fn puzzle2d_retained_reduce(
     let mut fixture = json!({ "nodes": [] });
     add_node_to_fixture(&mut fixture, command.args().and_then(|args| args.get("kind")).and_then(Value::as_str), command.args());
     let node = fixture.get_mut("nodes").and_then(Value::as_array_mut).and_then(Vec::pop).ok_or_else(|| Fault::from("puzzle2d-add-node-owner-lost"))?;
-    let node = <crate::artifacts::puzzle2d::Puzzle2dNode as dsl::FromValue>::from_value(dsl::DslValue::from(&node)).map_err(|_| Fault::from("puzzle2d-add-node-malformed"))?;
-    Ok(Emit { artifact_mutations: vec![crate::artifacts::puzzle2d::mutations::create_node(node, None)], ui_scope: UiDirtyScope::Full, ..Default::default() })
+    let node = <crate::Puzzle2dNode as dsl::FromValue>::from_value(dsl::DslValue::from(&node)).map_err(|_| Fault::from("puzzle2d-add-node-malformed"))?;
+    Ok(Emit { artifact_mutations: vec![crate::mutations::create_node(node, None)], ui_scope: UiDirtyScope::Full, ..Default::default() })
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1814,7 +1814,7 @@ impl Default for Puzzle2dActiveExampleWork {
 }
 
 impl Puzzle2dActiveExampleWork {
-    fn target(command: &Puzzle2dCommand) -> &'static crate::artifacts::puzzle2d::Puzzle2dSnapshot {
+    fn target(command: &Puzzle2dCommand) -> &'static crate::Puzzle2dSnapshot {
         let id = set_active_example::canonical_example_id(command.args().and_then(|args| args.get("exampleId")).and_then(Value::as_str).unwrap_or(""));
         set_active_example::target(id)
     }
@@ -1857,7 +1857,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             Puzzle2dExampleStage::ClearEdges => {
                 let source = snapshot.0.get("edges").and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
                 if let Some(id) = source.and_then(|row| row.get("id")).and_then(Value::as_str) {
-                    self.mutations.push(crate::artifacts::puzzle2d::mutations::disconnect_handles(id.to_string()));
+                    self.mutations.push(crate::mutations::disconnect_handles(id.to_string()));
                     self.source_cursor += 1;
                     return Ok(Self::progress("puzzle2d-example-clear-edge", "Removing existing edge", "Bestehende Kante wird entfernt"));
                 }
@@ -1868,7 +1868,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             Puzzle2dExampleStage::ClearNodes => {
                 let source = snapshot.0.get("nodes").and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
                 if let Some(id) = source.and_then(|row| row.get("id")).and_then(Value::as_str) {
-                    self.mutations.push(crate::artifacts::puzzle2d::mutations::delete_node(id.to_string()));
+                    self.mutations.push(crate::mutations::delete_node(id.to_string()));
                     self.source_cursor += 1;
                     return Ok(Self::progress("puzzle2d-example-clear-node", "Removing existing node", "Bestehender Knoten wird entfernt"));
                 }
@@ -1879,7 +1879,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             Puzzle2dExampleStage::Manifest => {
                 let current = snapshot.0.get("meta").and_then(|meta| meta.get("manifestId")).and_then(Value::as_str);
                 if current != target.meta.manifest_id.as_deref() {
-                    self.mutations.push(crate::artifacts::puzzle2d::mutations::change_manifest_id(target.meta.manifest_id.clone()));
+                    self.mutations.push(crate::mutations::change_manifest_id(target.meta.manifest_id.clone()));
                 }
                 self.stage = Puzzle2dExampleStage::ClearCompatibility;
                 Ok(Self::progress("puzzle2d-example-clear-compatibility", "Removing kind relation", "Artbeziehung wird entfernt"))
@@ -1887,8 +1887,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             Puzzle2dExampleStage::ClearCompatibility => {
                 let source = snapshot.0.get("meta").and_then(|meta| meta.get("kindCompatibility")).and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
                 if let Some(source) = source {
-                    let row = <crate::artifacts::puzzle2d::Puzzle2dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(source)).map_err(|_| Fault::from("puzzle2d-example-compatibility-malformed"))?;
-                    self.mutations.push(crate::artifacts::puzzle2d::mutations::disconnect_kind_compatibility(row.source, row.target));
+                    let row = <crate::Puzzle2dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(source)).map_err(|_| Fault::from("puzzle2d-example-compatibility-malformed"))?;
+                    self.mutations.push(crate::mutations::disconnect_kind_compatibility(row.source, row.target));
                     self.source_cursor += 1;
                     return Ok(Self::progress("puzzle2d-example-clear-compatibility", "Removing kind relation", "Artbeziehung wird entfernt"));
                 }
@@ -1897,7 +1897,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             }
             Puzzle2dExampleStage::AddCompatibility => {
                 if let Some(row) = target.meta.kind_compatibility.get(self.target_cursor) {
-                    self.mutations.push(crate::artifacts::puzzle2d::mutations::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity));
+                    self.mutations.push(crate::mutations::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity));
                     self.target_cursor += 1;
                     return Ok(Self::progress("puzzle2d-example-add-compatibility", "Adding kind relation", "Artbeziehung wird hinzugefügt"));
                 }
@@ -1906,13 +1906,13 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                 Ok(Self::progress("puzzle2d-example-catalogs", "Replacing kind catalogs", "Artkataloge werden ersetzt"))
             }
             Puzzle2dExampleStage::Catalogs => {
-                self.mutations.push(crate::artifacts::puzzle2d::mutations::replace_kind_catalogs(target.meta.kind_catalogs.clone()));
+                self.mutations.push(crate::mutations::replace_kind_catalogs(target.meta.kind_catalogs.clone()));
                 self.stage = Puzzle2dExampleStage::Nodes;
                 Ok(Self::progress("puzzle2d-example-node", "Adding example node", "Beispielknoten wird hinzugefügt"))
             }
             Puzzle2dExampleStage::Nodes => {
                 if let Some(node) = target.nodes.get(self.target_cursor) {
-                    self.mutations.push(crate::artifacts::puzzle2d::mutations::create_node(node.clone(), None));
+                    self.mutations.push(crate::mutations::create_node(node.clone(), None));
                     self.target_cursor += 1;
                     return Ok(Self::progress("puzzle2d-example-node", "Adding example node", "Beispielknoten wird hinzugefügt"));
                 }
@@ -1922,7 +1922,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             }
             Puzzle2dExampleStage::Edges => {
                 if let Some(edge) = target.edges.get(self.target_cursor) {
-                    self.mutations.push(crate::artifacts::puzzle2d::mutations::connect_handles(
+                    self.mutations.push(crate::mutations::connect_handles(
                         edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.edge_kind.clone(), edge.gap, edge.shift, edge.rise, edge.rotation, edge.turn, edge.tilt, edge.x, edge.y, edge.source_tip.clone(), edge.target_tip.clone(),
                     ));
                     self.target_cursor += 1;
@@ -1930,8 +1930,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                 }
                 self.stage = Puzzle2dExampleStage::Complete;
                 let generation = config.example_load_generation.saturating_add(1);
-                let mut next = Puzzle2dPlayRuntime::default();
-                next.example_load_generation = generation;
+                let next = Puzzle2dPlayRuntime { example_load_generation: generation, ..Default::default() };
                 let mutations = std::mem::take(&mut self.mutations);
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
                     artifact_mutations: mutations,
@@ -2382,7 +2381,7 @@ impl Puzzle2dForceLayoutWork {
             return true;
         };
         if self.original[index] != Some(position) {
-            self.mutations.push(crate::artifacts::puzzle2d::mutations::move_node(self.node_ids[index].clone(), position[0], position[1]));
+            self.mutations.push(crate::mutations::move_node(self.node_ids[index].clone(), position[0], position[1]));
         }
         self.force_cursor += 1;
         false
@@ -2736,14 +2735,14 @@ impl Puzzle2dRedrawHandlesWork {
         let object = nodes.get(node_index).and_then(Value::as_object).ok_or_else(|| Fault::from("puzzle2d-redraw-node-owner-lost"))?;
         let node_id = object.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle2d-redraw-node-id-missing"))?;
         let handle = object.get("handles").and_then(Value::as_array).and_then(|handles| handles.get(handle_index)).ok_or_else(|| Fault::from("puzzle2d-redraw-handle-owner-lost"))?;
-        let original = <crate::artifacts::puzzle2d::Puzzle2dHandle as dsl::FromValue>::from_value(dsl::DslValue::from(handle)).map_err(|_| Fault::from("puzzle2d-redraw-handle-malformed"))?;
+        let original = <crate::Puzzle2dHandle as dsl::FromValue>::from_value(dsl::DslValue::from(handle)).map_err(|_| Fault::from("puzzle2d-redraw-handle-malformed"))?;
         let mut next = original.clone();
         next.angle = angle;
         if next == original {
             return Ok(false);
         }
         self.admit_bytes(node_id.len().saturating_add(next.id.len()))?;
-        self.mutations.push(crate::artifacts::puzzle2d::mutations::replace_node_handle(node_id.to_string(), next.id.clone(), next));
+        self.mutations.push(crate::mutations::replace_node_handle(node_id.to_string(), next.id.clone(), next));
         Ok(false)
     }
 
@@ -3011,10 +3010,10 @@ fn puzzle2d_import_label(row: &Value, name: &str) -> String {
     row.get("label").and_then(Value::as_str).filter(|label| !label.trim().is_empty()).map_or_else(|| name.to_string(), str::to_string)
 }
 
-fn puzzle2d_import_handle_template(node_kind_id: &str, index: usize, template: &Value) -> Option<crate::artifacts::puzzle2d::Puzzle2dHandleTemplate> {
+fn puzzle2d_import_handle_template(node_kind_id: &str, index: usize, template: &Value) -> Option<crate::Puzzle2dHandleTemplate> {
     let handle_kind = template.get("handleKind").and_then(Value::as_str).filter(|kind| !kind.trim().is_empty())?;
     let name = puzzle2d_import_text(template, "name");
-    Some(crate::artifacts::puzzle2d::Puzzle2dHandleTemplate {
+    Some(crate::Puzzle2dHandleTemplate {
         id: puzzle2d_import_identity(template).map_or_else(|| format!("{node_kind_id}-h{index}"), str::to_string),
         label: puzzle2d_import_label(template, &name),
         name,
@@ -3028,11 +3027,11 @@ fn puzzle2d_import_handle_template(node_kind_id: &str, index: usize, template: &
     })
 }
 
-fn puzzle2d_import_node_kind(row: &Value) -> Option<crate::artifacts::puzzle2d::Puzzle2dCatalogNodeKind> {
+fn puzzle2d_import_node_kind(row: &Value) -> Option<crate::Puzzle2dCatalogNodeKind> {
     let id = puzzle2d_import_identity(row)?;
     let name = row.get("name").and_then(Value::as_str).unwrap_or(id).to_string();
     let handles = puzzle2d_import_presentation(row, "handles").and_then(Value::as_array).map_or_else(Vec::new, |templates| templates.iter().enumerate().filter_map(|(index, template)| puzzle2d_import_handle_template(id, index, template)).collect());
-    Some(crate::artifacts::puzzle2d::Puzzle2dCatalogNodeKind {
+    Some(crate::Puzzle2dCatalogNodeKind {
         id: id.to_string(),
         label: puzzle2d_import_label(row, &name),
         name,
@@ -3049,9 +3048,9 @@ fn puzzle2d_import_node_kind(row: &Value) -> Option<crate::artifacts::puzzle2d::
     })
 }
 
-fn puzzle2d_import_handle_kind(row: &Value) -> Option<crate::artifacts::puzzle2d::Puzzle2dCatalogHandleKind> {
+fn puzzle2d_import_handle_kind(row: &Value) -> Option<crate::Puzzle2dCatalogHandleKind> {
     let id = puzzle2d_import_identity(row)?;
-    Some(crate::artifacts::puzzle2d::Puzzle2dCatalogHandleKind {
+    Some(crate::Puzzle2dCatalogHandleKind {
         id: id.to_string(),
         code: None,
         label: Some(puzzle2d_import_label(row, row.get("name").and_then(Value::as_str).unwrap_or(id))),
@@ -3064,10 +3063,10 @@ fn puzzle2d_import_handle_kind(row: &Value) -> Option<crate::artifacts::puzzle2d
     })
 }
 
-fn puzzle2d_import_edge_kind(row: &Value) -> Option<crate::artifacts::puzzle2d::Puzzle2dCatalogEdgeKind> {
+fn puzzle2d_import_edge_kind(row: &Value) -> Option<crate::Puzzle2dCatalogEdgeKind> {
     let id = puzzle2d_import_identity(row)?;
     let name = row.get("name").and_then(Value::as_str).unwrap_or(id).to_string();
-    Some(crate::artifacts::puzzle2d::Puzzle2dCatalogEdgeKind {
+    Some(crate::Puzzle2dCatalogEdgeKind {
         id: id.to_string(),
         label: puzzle2d_import_label(row, &name),
         name,
@@ -3077,10 +3076,10 @@ fn puzzle2d_import_edge_kind(row: &Value) -> Option<crate::artifacts::puzzle2d::
     })
 }
 
-fn puzzle2d_import_wire_kind(row: &Value) -> Option<crate::artifacts::puzzle2d::Puzzle2dCatalogWireKind> {
+fn puzzle2d_import_wire_kind(row: &Value) -> Option<crate::Puzzle2dCatalogWireKind> {
     let id = puzzle2d_import_identity(row)?;
     let name = row.get("name").and_then(Value::as_str).unwrap_or(id).to_string();
-    Some(crate::artifacts::puzzle2d::Puzzle2dCatalogWireKind {
+    Some(crate::Puzzle2dCatalogWireKind {
         id: id.to_string(),
         label: puzzle2d_import_label(row, &name),
         name,
@@ -3132,8 +3131,8 @@ struct Puzzle2dImportJob {
     media_json: Option<String>,
     snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
     fragment: Option<Value>,
-    catalogs: crate::artifacts::puzzle2d::Puzzle2dKindCatalogs,
-    compatibility: Vec<crate::artifacts::puzzle2d::Puzzle2dKindCompatibility>,
+    catalogs: crate::Puzzle2dKindCatalogs,
+    compatibility: Vec<crate::Puzzle2dKindCompatibility>,
     mutations: Vec<Puzzle2dMutation>,
     stage: Puzzle2dImportStage,
     cursor: usize,
@@ -3157,7 +3156,7 @@ impl Puzzle2dImportJob {
             media_json,
             snapshot: Some(request.snapshot),
             fragment: None,
-            catalogs: crate::artifacts::puzzle2d::Puzzle2dKindCatalogs::default(),
+            catalogs: crate::Puzzle2dKindCatalogs::default(),
             compatibility: Vec::new(),
             mutations: Vec::new(),
             stage: Puzzle2dImportStage::Decode,
@@ -3226,14 +3225,14 @@ impl Puzzle2dImportJob {
             _ => return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in decoded item limit exceeded")),
         };
         self.catalogs = match existing_catalogs.as_ref() {
-            Some(value) => match <crate::artifacts::puzzle2d::Puzzle2dKindCatalogs as dsl::FromValue>::from_value(dsl::DslValue::from(value)) {
+            Some(value) => match <crate::Puzzle2dKindCatalogs as dsl::FromValue>::from_value(dsl::DslValue::from(value)) {
                 Ok(catalogs) => catalogs,
                 Err(_) => return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in cannot read the document's own kind catalogs")),
             },
-            None => crate::artifacts::puzzle2d::Puzzle2dKindCatalogs::default(),
+            None => crate::Puzzle2dKindCatalogs::default(),
         };
         for row in &existing_compatibility {
-            match <crate::artifacts::puzzle2d::Puzzle2dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(row)) {
+            match <crate::Puzzle2dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(row)) {
                 Ok(parsed) => self.compatibility.push(parsed),
                 Err(_) => return Some(puzzle2d_job_fault(cx, "puzzle2d kit:in cannot read the document's own kind relations")),
             }
@@ -3339,7 +3338,7 @@ impl InteractiveJob for Puzzle2dImportJob {
                     cx.consume_fuel(1);
                     return self.checkpoint(cx);
                 };
-                let Ok(parsed) = <crate::artifacts::puzzle2d::Puzzle2dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(&row)) else {
+                let Ok(parsed) = <crate::Puzzle2dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(&row)) else {
                     return puzzle2d_job_fault(cx, "puzzle2d kit:in kind relation is malformed");
                 };
                 let existing = self.compatibility.iter().position(|entry| entry.source == parsed.source && entry.target == parsed.target);
@@ -3348,7 +3347,7 @@ impl InteractiveJob for Puzzle2dImportJob {
                         Some(index) => self.compatibility[index] = parsed.clone(),
                         None => self.compatibility.push(parsed.clone()),
                     }
-                    if let Err(error) = self.push_mutation(crate::artifacts::puzzle2d::mutations::connect_kind_compatibility(parsed.source, parsed.target, parsed.bidirectional, parsed.important, parsed.specificity)) {
+                    if let Err(error) = self.push_mutation(crate::mutations::connect_kind_compatibility(parsed.source, parsed.target, parsed.bidirectional, parsed.important, parsed.specificity)) {
                         return puzzle2d_job_fault(cx, error);
                     }
                 }
@@ -3357,7 +3356,7 @@ impl InteractiveJob for Puzzle2dImportJob {
             Puzzle2dImportStage::CatalogMutation => {
                 cx.set_stage("puzzle2d-import-kind-catalogs");
                 if self.catalog_changed {
-                    let mutation = crate::artifacts::puzzle2d::mutations::replace_kind_catalogs(Some(std::mem::take(&mut self.catalogs)));
+                    let mutation = crate::mutations::replace_kind_catalogs(Some(std::mem::take(&mut self.catalogs)));
                     if let Err(error) = self.push_mutation(mutation) {
                         return puzzle2d_job_fault(cx, error);
                     }
@@ -3512,7 +3511,7 @@ impl ArtifactReservedJob for Puzzle2dImportJob {
 //#endregion 🧵️ReservedJobs
 
 impl ArtifactEditor for Puzzle2dPlayApp {
-    const DIALECT: Dialect = crate::artifacts::puzzle2d::PUZZLE2D_DIALECT;
+    const DIALECT: Dialect = crate::PUZZLE2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
     type Snapshot = Puzzle2dPlaySnapshot;
     type Mutation = Puzzle2dMutation;
@@ -3598,8 +3597,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         if set_fill_count::is_fill_session_action(action) {
             return Err(Fault::from("puzzle2d-fill-requires-retained-job"));
         }
-        let before = doc.snapshot.0.clone();
-        Ok(puzzle2d_dispatch_emit(command, before, config, interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned()))
+        Ok(puzzle2d_dispatch_emit(command, &doc.snapshot.0, config, interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned()))
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -3850,7 +3848,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
     let labels = puzzle2d_labels(&Puzzle2dConfig::default()).expect("default puzzle2d locale and terminology axes are explicit");
     Editor::builder(Puzzle2dPlayApp::DIALECT)
             .document(["semio", "puzzle", "2d"])
-            .artifact_kind(crate::artifacts::puzzle2d::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             .icon_id("puzzle")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "2d"])
@@ -3977,7 +3975,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
 // 🗂️ `Puzzle2dPlaySnapshot`'s pack<->dsl codec (so `framework/sync`'s `FolderEndpoint::Pack` can
 // print/parse puzzle-2d play documents without depending on this crate's concrete
 // `Projection`/`Mutation` types) is now declared via `.document_codec::<Puzzle2dPlayApp>()` on
-// `crate::artifacts::puzzle2d::declaration()` (ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`
+// `crate::declaration()` (ticket `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`
 // M1) — the old side-effecting `register_puzzle2d_exports()` wrapper (this app file's only caller of
 // `register_document_codec_for_app`) is gone.
 //#endregion 🔖️Manifest
@@ -4111,7 +4109,7 @@ pub(crate) mod testkit {
 mod tests {
     use super::testkit::*;
     use super::*;
-    use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+    use crate::Puzzle2dSnapshot;
     use semio_framework_plugin::PluginApp;
     use store::{Backbone, BackboneMessage, MemoryBackbone};
 
@@ -4301,14 +4299,14 @@ mod tests {
     /// `Mutation<Value>` bridge impl) is what the CW7 law is about.
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::puzzle2d::spr::Puzzle2dStore;
-        use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
+        use crate::spr::Puzzle2dStore;
+        use crate::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None)).await.expect("store");
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle2d::mutations::create_node(node, None)], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::create_node(node, None)], description: None }).await.expect("apply");
         let envelope = store.envelope();
         let edit: &Edit<Puzzle2dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;

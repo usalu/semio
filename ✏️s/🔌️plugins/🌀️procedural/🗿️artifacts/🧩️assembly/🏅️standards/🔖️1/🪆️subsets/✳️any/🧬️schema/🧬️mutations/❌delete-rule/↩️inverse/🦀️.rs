@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteRule` — recreates the rule from a real BASE lookup (missing id ⇒ empty).
 
-use crate::artifacts::assembly::mutations::{create_rule, AssemblyMutation};
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::mutations::{create_rule, AssemblyMutation};
+use crate::schema::snapshot::AssemblySnapshot;
 
 pub fn inverse(payload: &super::DeleteRule, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
     let Some(index) = base.rules.iter().position(|rule| rule.id == payload.id) else {

@@ -13,8 +13,8 @@
 //! the title", the inner is "is the new title present". The committed diff sets it to a real string;
 //! the sibling all-null diffs in this tree leave the outer layer null.
 
-use crate::artifacts::playbook::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
-use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
+use crate::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
+use crate::{PlaybookDiff, PlaybookSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

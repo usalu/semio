@@ -1,7 +1,7 @@
 //! ↩️ `change-bridge-span-m` — undo restores BASE's bridge span.
 
 use super::ChangeBridgeSpanM;
-use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
+use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeBridgeSpanM, base: &En1991Snapshot) -> Vec<En1991Mutation> {

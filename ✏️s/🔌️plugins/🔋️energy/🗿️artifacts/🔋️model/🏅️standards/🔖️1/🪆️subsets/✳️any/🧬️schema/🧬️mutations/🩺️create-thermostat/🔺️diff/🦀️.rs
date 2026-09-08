@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateThermostat` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateThermostat, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -26,6 +26,6 @@ pub fn diff(payload: &super::CreateThermostat, base: &EnergyModelSnapshot) -> pr
     }
     let mut model = base.model.clone();
     model.thermostats.push(crate::model::Thermostat { id: payload.id, zone_id: payload.zone_id, heating_setpoint_schedule_id: payload.heating_setpoint_schedule_id, cooling_setpoint_schedule_id: payload.cooling_setpoint_schedule_id, heating_throttle_range_k: payload.heating_throttle_range_k, cooling_throttle_range_k: payload.cooling_throttle_range_k });
-    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

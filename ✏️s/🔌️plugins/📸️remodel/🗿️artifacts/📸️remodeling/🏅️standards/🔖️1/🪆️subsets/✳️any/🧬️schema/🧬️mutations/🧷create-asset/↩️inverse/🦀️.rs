@@ -5,8 +5,8 @@
 //! durable leaf for the overwritten handle (`remodeling_asset`, `🦀️.rs:258`), so this inverse is a
 //! pure function of `base`. A document that carries the handle but not its leaf ⇒ `Vec::new()`, never
 //! fabricated bytes.
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::{remodeling_asset, RemodelingSnapshot};
+use crate::mutations::RemodelingMutation;
+use crate::{remodeling_asset, RemodelingSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::CreateAsset, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
@@ -15,7 +15,7 @@ pub fn inverse(payload: &super::CreateAsset, base: &RemodelingSnapshot) -> Vec<R
             Some(old) => vec![super::create_asset(payload.key.clone(), old)],
             None => Vec::new(),
         },
-        None => vec![crate::artifacts::remodeling::mutations::delete_asset::delete_asset(payload.key.clone())],
+        None => vec![crate::mutations::delete_asset::delete_asset(payload.key.clone())],
     }
 }
 //#endregion 🔖️Inverse

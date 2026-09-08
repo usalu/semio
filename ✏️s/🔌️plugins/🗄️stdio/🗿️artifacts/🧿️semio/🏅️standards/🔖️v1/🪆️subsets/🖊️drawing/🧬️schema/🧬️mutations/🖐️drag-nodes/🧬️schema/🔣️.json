@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/drag-nodes.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/drag-nodes/schema.json",
   "title": "DragNodes",
   "type": "object",
   "additionalProperties": false,
@@ -12,15 +12,35 @@
     "ats": {
       "type": "array",
       "items": {
-        "type": "array",
-        "items": {
-          "type": "integer",
-          "minimum": 0
-        }
+        "$ref": "#/$defs/NodePath"
       }
     },
     "offset": {
-      "title": "SemioPoint2",
+      "$ref": "#/$defs/SemioPoint2"
+    }
+  },
+  "$defs": {
+    "NodePath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer"
+      ],
+      "properties": {
+        "layer": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "SemioPoint2": {
       "type": "object",
       "additionalProperties": false,
       "required": [

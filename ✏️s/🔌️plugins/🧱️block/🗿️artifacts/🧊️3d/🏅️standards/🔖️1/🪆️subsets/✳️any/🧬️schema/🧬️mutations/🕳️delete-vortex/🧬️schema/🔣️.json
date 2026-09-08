@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/3d/1/any/mutation/delete-vortex.json",
+  "$id": "https://semio.tech/schema/s/block/3d/1/any/mutation/delete-vortex/schema.json",
   "title": "DeleteVortex",
   "type": "object",
   "additionalProperties": false,

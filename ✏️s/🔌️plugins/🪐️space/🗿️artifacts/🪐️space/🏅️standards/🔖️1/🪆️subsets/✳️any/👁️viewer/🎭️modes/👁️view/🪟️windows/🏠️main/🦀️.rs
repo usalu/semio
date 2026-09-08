@@ -2,7 +2,7 @@
 //! the shared `TableWindowKit`'s read-only `window_kind()` (no `set-cell` action) — never imports
 //! anything from the sibling `✏️editor` (`policyViewerPurityBreaches`).
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{space_index_table_row, SSpaceSnapshot, SPACE_INDEX_TABLE_COLUMNS};
+use crate::standards::v1::subsets::any::schema::snapshot::{space_index_table_row, SSpaceSnapshot, SPACE_INDEX_TABLE_COLUMNS};
 use semio_framework_plugin::app::{TableRow, TableRowsView, TableWindowKit, WindowKit};
 use semio_framework_plugin::WindowKindDefinition;
 
@@ -76,7 +76,7 @@ mod tests {
     /// it just never attaches row action buttons to it.
     #[semio_framework_async_macros::async_test]
     async fn a_row_stamps_the_artifact_row_id_with_no_actions_cell() {
-        use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
+        use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
         let mut document = SSpaceSnapshot::default();
         document.artifacts.push(SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() });
         observe(render(&document).expect("Space viewer rows"), |root| {

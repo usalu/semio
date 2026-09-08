@@ -10,7 +10,7 @@
 //! conflating the two would let a dangling/self reference fabricate a fake cycle in what is
 //! otherwise a real tree invariant.
 
-use crate::artifacts::drawing::{DrawingLayerNode, DrawingSnapshot};
+use crate::{DrawingLayerNode, DrawingSnapshot};
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
@@ -61,10 +61,10 @@ pub fn compute_drawing_topology(snapshot: &DrawingSnapshot) -> DrawingTopology {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::drawing::{DrawingAttributes, DrawingGroupBody, DrawingLayerBase, DrawingPathBody};
+    use crate::{DrawingAttributes, DrawingGroupBody, DrawingLayerBase, DrawingPathBody};
 
     fn base(id: &str) -> DrawingLayerBase {
-        DrawingLayerBase { id: id.into(), name: id.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: crate::artifacts::drawing::default_drawing_transform(), attributes: DrawingAttributes::default() }
+        DrawingLayerBase { id: id.into(), name: id.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: crate::default_drawing_transform(), attributes: DrawingAttributes::default() }
     }
 
     fn path_layer(id: &str) -> DrawingLayerNode {

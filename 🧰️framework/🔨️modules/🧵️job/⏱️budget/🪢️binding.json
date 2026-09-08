@@ -1,5 +1,5 @@
 {
-  "$schema": "./🧬️schema/🪢️binding.json",
+  "$schema": "https://semio.tech/schema/framework/job/budget/schema.json#/$defs/Binding",
   "cases": [
     { "mutation": "none", "admitted": true },
     { "mutation": "wrong-helper", "admitted": false },

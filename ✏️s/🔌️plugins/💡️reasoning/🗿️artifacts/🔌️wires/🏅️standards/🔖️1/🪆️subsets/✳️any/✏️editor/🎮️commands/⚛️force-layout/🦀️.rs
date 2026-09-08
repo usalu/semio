@@ -1,8 +1,8 @@
 //! 🔄️ 🔄️ Wires play app commands command — `force-layout`.
 
-use crate::artifacts::wires::op::WiresMutation;
-use crate::artifacts::wires::schema::{fixture_nodes, force_layout_board, node_position};
-use crate::artifacts::wires::WiresSnapshot;
+use crate::op::WiresMutation;
+use crate::schema::{fixture_nodes, force_layout_board, node_position};
+use crate::WiresSnapshot;
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -10,18 +10,18 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🕸️ Re-lays out the board and diffs the moved nodes into `move-node` operations — shared by both
 /// `ForceLayout` and `Reorganize`.
 fn force_layout_operations(document: &WiresSnapshot) -> Vec<WiresMutation> {
-    let mut board = crate::artifacts::wires::wires_working_board(document);
+    let mut board = crate::wires_working_board(document);
     force_layout_board(&mut board);
     fixture_nodes(&board)
         .iter()
         .filter_map(|node| {
             let id = node.get("id").and_then(|value| value.as_str())?;
             let (nx, ny) = node_position(node);
-            let (ox, oy) = crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node(document, id).map_or((nx, ny), |node| node_position(&node));
+            let (ox, oy) = crate::standards::v1::subsets::any::schema::inferences::find_board_node(document, id).map_or((nx, ny), |node| node_position(&node));
             if nx == ox && ny == oy {
                 return None;
             }
-            Some(crate::artifacts::wires::mutations::move_node(id.to_string(), nx, ny))
+            Some(crate::mutations::move_node(id.to_string(), nx, ny))
         })
         .collect()
 }
@@ -51,9 +51,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn force_layout_action_repositions_metabolism_nodes() {
         let mut app = metabolism_app().await;
-        let before: Vec<(f64, f64)> = fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).iter().map(node_position).collect();
+        let before: Vec<(f64, f64)> = fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).iter().map(node_position).collect();
         dispatch(&mut app, WiresCommand::ForceLayout(ForceLayout {})).await;
-        let after: Vec<(f64, f64)> = fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).iter().map(node_position).collect();
+        let after: Vec<(f64, f64)> = fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).iter().map(node_position).collect();
         assert_eq!(before.len(), after.len());
         assert_ne!(before, after, "force layout should move at least one node");
     }
@@ -61,9 +61,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn reorganize_repositions_metabolism_nodes() {
         let mut app = metabolism_app().await;
-        let before: Vec<(f64, f64)> = fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).iter().map(node_position).collect();
+        let before: Vec<(f64, f64)> = fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).iter().map(node_position).collect();
         dispatch(&mut app, WiresCommand::Reorganize(reorganize::Reorganize {})).await;
-        let after: Vec<(f64, f64)> = fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).iter().map(node_position).collect();
+        let after: Vec<(f64, f64)> = fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).iter().map(node_position).collect();
         assert_eq!(before.len(), after.len());
         assert_ne!(before, after, "reorganize should move at least one node");
     }

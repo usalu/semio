@@ -18,9 +18,9 @@
 //! `shape` alone and never strips the other extent keys. That is what makes this leaf's
 //! payload-masked inverse observable.
 
-use crate::artifacts::wires::mutations::{ResizeNode, WiresMutation};
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::{materialize_wires_content, WiresDiff, WiresSnapshot};
+use crate::mutations::{ResizeNode, WiresMutation};
+use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::{materialize_wires_content, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

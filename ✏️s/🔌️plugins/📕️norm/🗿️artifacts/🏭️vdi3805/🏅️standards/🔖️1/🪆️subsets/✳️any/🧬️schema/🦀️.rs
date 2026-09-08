@@ -2,8 +2,8 @@
 
 use std::collections::BTreeMap;
 
-use crate::artifacts::vdi3805::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
-use ::schema::ArtifactSchema;
+use crate::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
+use ::framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full Vdi3805 artifact state across the artifact and presence lanes.
@@ -80,31 +80,31 @@ impl Vdi3805Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.vdi3805` — twenty handcrafted schema leaves.
-pub fn vdi3805_artifact_schema_descriptor() -> ::schema::ArtifactSchemaDescriptor {
-    ::schema::ArtifactSchemaDescriptor {
+pub fn vdi3805_artifact_schema_descriptor() -> ::framework_schema::ArtifactSchemaDescriptor {
+    ::framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.vdi3805",
-        artifact: ::schema::FacetLeaves {
+        artifact: ::framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: ::schema::FacetLeaves {
+        snapshot: ::framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: ::schema::FacetLeaves {
+        diff: ::framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: ::schema::FacetLeaves {
+        mutations: ::framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -116,7 +116,7 @@ pub fn vdi3805_artifact_schema_descriptor() -> ::schema::ArtifactSchemaDescripto
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
+    use crate::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -168,7 +168,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::vdi3805::Vdi3805Snapshot;
+    use crate::Vdi3805Snapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -237,9 +237,9 @@ semio_framework_plugin::derive_artifact_facets!(
 /// conformance laws (99 `part_N::check(&Vdi3805Snapshot)` functions, which — unlike the Eurocode
 /// artifacts' `part_N` modules — take the whole snapshot directly, so they live in `inferences` not
 /// here). The whole-artifact JSON (de)serializers live in `🚪️io`.
-use crate::artifacts::vdi3805::*;
+use crate::*;
 use crate::document::{AnnexChoice, CheckResult, CheckStatus, ClauseId, NormError, Quantity, QuantityKind};
-// 🔀️ Explicit single-item import: the glob above also pulls in `crate::artifacts::vdi3805::dsl`
+// 🔀️ Explicit single-item import: the glob above also pulls in `crate::dsl`
 // (the mounted native-text grammar submodule, see `🦀️.rs`), which would otherwise shadow the
 // `extern crate semio_framework_os_kernel as dsl;` alias for every unqualified `dsl::…` path in this
 // module — including the one `derive_artifact_facets!` (below) expands to. An explicit `use` always

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `ℹ️information` per Wave C.
 
 use super::DeleteInformationRequirement;
-use crate::artifacts::program::diff::ProgramInformationDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramInformationDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteInformationRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

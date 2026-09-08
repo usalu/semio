@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `DeleteNode` — reconstructs the removed node from BASE, then re-`connect`s every
 //! severed edge (in reverse dependency order: node first, edges after). Missing target ⇒
 //! `Vec::new()`.
-use crate::artifacts::jack::mutations::{create_edge, create_node, TrinityGraphMutation};
-use crate::artifacts::jack::JackSnapshot;
+use crate::mutations::{create_edge, create_node, TrinityGraphMutation};
+use crate::JackSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DeleteNode, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
@@ -11,7 +11,7 @@ pub fn inverse(payload: &super::DeleteNode, base: &JackSnapshot) -> Vec<TrinityG
         return Vec::new();
     };
     let mut out = vec![create_node(node.clone())];
-    for edge in base.edges().iter().filter(|edge| crate::artifacts::jack::port_node_id(&edge.source) == Some(payload.id.as_str()) || crate::artifacts::jack::port_node_id(&edge.target) == Some(payload.id.as_str())) {
+    for edge in base.edges().iter().filter(|edge| crate::port_node_id(&edge.source) == Some(payload.id.as_str()) || crate::port_node_id(&edge.target) == Some(payload.id.as_str())) {
         out.push(create_edge(edge.clone()));
     }
     out

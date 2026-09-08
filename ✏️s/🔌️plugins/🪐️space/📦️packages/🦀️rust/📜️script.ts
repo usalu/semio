@@ -17,6 +17,16 @@ function homeExactCargoEnvironment(): { env: NodeJS.ProcessEnv; nativeEnv: NodeJ
   };
 }
 
+/** 🧫️ Compiles one scope-owned retained-command export against the shared `framework.ui` shape. */
+function compileRetainedCommandLimits(repoRoot: string, scopeRoot: string, exportId: string) {
+  const ui = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json"), "utf8"));
+  const module = JSON.parse(readFileSync(join(scopeRoot, "🧬️schema/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: false, allErrors: true });
+  ajv.addSchema(ui);
+  ajv.addSchema(module);
+  return ajv.compile({ $ref: `${module.$id}#/$defs/${exportId}` });
+}
+
 class TestScript extends BundleScript {
   run(_segments: string[]): void {
     runCargoTestBudgeted(["semio-s-plugin-space"], this.repoRoot);
@@ -27,8 +37,10 @@ class TestScript extends BundleScript {
 export function homeDirectoryProjectionPersistenceOracle(repoRoot: string): number {
   const base = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config");
   const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/📇️projection-persistence-v1/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(base, "🧪️fixtures/📇️projection-persistence-v1/🧬️.schema.json"), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  const module = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: false, allErrors: true });
+  ajv.addSchema(module);
+  const validate = ajv.compile({ $ref: `${module.$id}#/$defs/HomeProjectionPersistence` });
   assert(validate(fixture), JSON.stringify(validate.errors));
   const exactKeys = (value: unknown, keys: string[]): boolean => Boolean(value) && typeof value === "object" && !Array.isArray(value) && JSON.stringify(Object.keys(value as object).sort()) === JSON.stringify([...keys].sort());
   const decode = (text: string): unknown => {
@@ -118,8 +130,7 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
     assert.equal(validateConfig(hostile), false, `config schema accepted missing ${field}`);
   }
   const retainedFixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🧫️retained-command-limits/🔣️.json"), "utf8"));
-  const retainedSchema = JSON.parse(readFileSync(join(base, "🧪️fixtures/🧫️retained-command-limits/🧬️.schema.json"), "utf8"));
-  const validateRetained = new Ajv2020({ strict: false, allErrors: true }).compile(retainedSchema);
+  const validateRetained = compileRetainedCommandLimits(repoRoot, join(base, ".."), "HomeRetainedCommandLimits");
   assert(validateRetained(retainedFixture), JSON.stringify(validateRetained.errors));
   assert.equal(retainedFixture.routes.find((route: any) => route.id === "applyDirectoryEventPage")?.lanes?.[0], "Config");
   const commandPath = join(base, "🎮️commands/📬️apply-directory-event-page/🦀️.rs");
@@ -355,8 +366,10 @@ export function spacePluginIdentityOracle(repoRoot: string): number {
   const plugin = join(repoRoot, "✏️s/🔌️plugins/🪐️space");
   const registryRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
   const fixture = JSON.parse(readFileSync(join(plugin, "🧪️fixtures/🧫️plugin-identity/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(plugin, "🧪️fixtures/🧫️plugin-identity/🧬️.schema.json"), "utf8"));
-  assert(new Ajv2020({ strict: true, allErrors: true }).compile(schema)(fixture), "plugin-identity fixture violates its own schema");
+  const module = JSON.parse(readFileSync(join(plugin, "🧬️schema/🔣️.json"), "utf8"));
+  const identityAjv = new Ajv({ strict: true, allErrors: true });
+  identityAjv.addSchema(module);
+  assert(identityAjv.compile({ $ref: `${module.$id}#/$defs/SpacePluginIdentity` })(fixture), "plugin-identity fixture violates its owner scope export");
 
   const cargo = readFileSync(join(plugin, "📦️packages/🦀️rust/Cargo.toml"), "utf8");
   const cargoComponentPackage = cargo.split("[package.metadata.component]")[1]?.split("[")[0]?.match(/package\s*=\s*"([^"]+)"/)?.[1];
@@ -403,9 +416,9 @@ export function spacePluginIdentityOracle(repoRoot: string): number {
 export function interactiveJobCatalogOracle(repoRoot: string): number {
   const plugin = join(repoRoot, "✏️s/🔌️plugins/🪐️space");
   const surfaces = [
-    { appId: "s.space.studio@1/*#editor", owner: join(plugin, "⚙️engine/🪐️space"), source: join(plugin, "⚙️engine/🪐️space/🦀️.rs"), shape: "status" as const, factory: "SpaceCommandJobFactory" },
-    { appId: "s.space.home@1/*#editor", owner: join(plugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), source: join(plugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "disposition" as const, factory: "HomeRetainedCommandJobFactory" },
-    { appId: "s.space.space@1/*#editor", owner: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), source: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "status" as const, factory: "SpaceIndexRetainedCommandJobFactory" },
+    { appId: "s.space.studio@1/*#editor", owner: join(plugin, "⚙️engine/🪐️space"), scope: plugin, export: "SpacePlayRetainedCommandLimits", source: join(plugin, "⚙️engine/🪐️space/🦀️.rs"), shape: "status" as const, factory: "SpaceCommandJobFactory" },
+    { appId: "s.space.home@1/*#editor", owner: join(plugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), scope: join(plugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any"), export: "HomeRetainedCommandLimits", source: join(plugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "disposition" as const, factory: "HomeRetainedCommandJobFactory" },
+    { appId: "s.space.space@1/*#editor", owner: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), scope: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any"), export: "SpaceIndexRetainedCommandLimits", source: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "status" as const, factory: "SpaceIndexRetainedCommandJobFactory" },
   ];
   const descriptor = JSON.parse(readFileSync(join(plugin, "🔣️.json"), "utf8"));
   let checks = spacePluginIdentityOracle(repoRoot);
@@ -413,8 +426,8 @@ export function interactiveJobCatalogOracle(repoRoot: string): number {
   for (const surface of surfaces) {
     const fixtureRoot = join(surface.owner, "🧪️fixtures/🧫️retained-command-limits");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8"));
-    assert(new Ajv2020({ strict: false, allErrors: true }).compile(schema)(fixture), `${surface.appId} fixture violates its own schema`);
+    const validate = compileRetainedCommandLimits(repoRoot, surface.scope, surface.export);
+    assert(validate(fixture), `${surface.appId} fixture violates ${surface.export}: ${JSON.stringify(validate.errors)}`);
     checks += 1;
     const migrated: string[] = fixture.routes.filter((route: any) => (surface.shape === "status" ? route.status === "migrated" : route.disposition === "Migrated")).map((route: any) => route.id);
     const lanes = new Map<string, string[]>(

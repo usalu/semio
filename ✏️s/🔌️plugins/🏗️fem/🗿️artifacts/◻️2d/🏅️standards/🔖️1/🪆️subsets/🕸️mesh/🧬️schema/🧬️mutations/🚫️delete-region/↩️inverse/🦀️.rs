@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteRegion` — recreates the captured region from `base`.
 use super::DeleteRegion;
-use crate::artifacts::fem2d::mutations::{create_region, Fem2dMutation};
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::mutations::{create_region, Fem2dMutation};
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteRegion, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {

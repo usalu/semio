@@ -111,7 +111,7 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_plugin_demonstrator::artifacts::playground::standards::v1::subsets::any::schema::mutations::{apply_playground_mutation_json, round_trip_playground_dsl, undo_playground_mutation_json};
+    use semio_s_artifact_demonstrator_playground::standards::v1::subsets::any::schema::mutations::{apply_playground_mutation_json, round_trip_playground_dsl, undo_playground_mutation_json};
 
     /// 📥️ Splits a bridge answer into the resulting document and the diagnostic codes it raised.
     fn answer(text: &str) -> Result<(Json, Vec<String>), String> {

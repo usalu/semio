@@ -1,9 +1,9 @@
 //! ↩️ `change-span-m` inverse — restores the pre-change `span_m` from BASE state; `change` is its
 //! own inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::en1992::mutations::change_span_m::ChangeSpanM;
-use crate::artifacts::en1992::mutations::En1992Mutation;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::mutations::change_span_m::ChangeSpanM;
+use crate::mutations::En1992Mutation;
+use crate::En1992Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeSpanM, base: &En1992Snapshot) -> Vec<En1992Mutation> {

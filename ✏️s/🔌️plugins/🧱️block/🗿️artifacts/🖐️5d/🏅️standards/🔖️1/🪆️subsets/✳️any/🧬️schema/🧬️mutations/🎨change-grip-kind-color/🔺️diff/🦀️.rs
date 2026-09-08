@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `ChangeGripKindColor`.
 
-use crate::artifacts::block5d::{Block5dGripKind, Block5dSnapshot};
-use crate::artifacts::block5d::diff::{Block5dDiff, Block5dGripKindsDelta, Block5dGripKindsPatch, Block5dGripKindsPatchEntry};
+use crate::{Block5dGripKind, Block5dSnapshot};
+use crate::diff::{Block5dDiff, Block5dGripKindsDelta, Block5dGripKindsPatch, Block5dGripKindsPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeGripKindColor, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {

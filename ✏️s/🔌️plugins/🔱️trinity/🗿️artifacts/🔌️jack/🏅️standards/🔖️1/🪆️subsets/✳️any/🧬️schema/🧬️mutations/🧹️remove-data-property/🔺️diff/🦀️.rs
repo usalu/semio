@@ -1,11 +1,11 @@
 //! 🔺️ Sparse diff builder for `RemoveDataProperty` — clears the addressed node's or edge's
 //! property against the current scene off `base`.
-use crate::artifacts::jack::diff::{diff_replace_content, JackDiff};
-use crate::artifacts::jack::{EntityRef, JackSnapshot};
+use crate::diff::{diff_replace_content, JackDiff};
+use crate::{EntityRef, JackSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveDataProperty, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
-    let mut scene = crate::artifacts::jack::jack_working_scene(base);
+    let mut scene = crate::jack_working_scene(base);
     let (kind, id) = match &payload.entity {
         EntityRef::Node(id) => ("node", id),
         EntityRef::Edge(id) => ("edge", id),

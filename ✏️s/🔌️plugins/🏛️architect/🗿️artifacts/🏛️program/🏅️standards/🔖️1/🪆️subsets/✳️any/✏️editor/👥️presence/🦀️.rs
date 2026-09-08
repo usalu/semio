@@ -4,7 +4,7 @@
 //! here — it broadcasts automatically via the framework's typed `PresenceInteraction` (assembled
 //! from the "program" domain's `InteractionState`, zero app code).
 
-use crate::artifacts::program::registers::AdjacencyKind;
+use crate::registers::AdjacencyKind;
 use store::ArtifactPack;
 
 //#region 🔖️Presence

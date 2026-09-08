@@ -115,6 +115,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-demonstrator-playground = { workspace = true }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-xlsx = { workspace = true }

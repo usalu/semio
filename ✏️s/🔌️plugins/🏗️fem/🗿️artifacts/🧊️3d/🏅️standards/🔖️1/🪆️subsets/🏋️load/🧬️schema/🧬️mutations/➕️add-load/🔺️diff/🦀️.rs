@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `AddLoad` — clones the target case, pushes the load, patches it.
 use super::AddLoad;
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dLoadCasesDelta, Fem3dLoadCasesPatchEntry};
-use crate::artifacts::fem3d::mutations::resolve_load;
-use crate::artifacts::fem3d::{load_id, Fem3dSnapshot};
+use crate::diff::{Fem3dDiff, Fem3dLoadCasesDelta, Fem3dLoadCasesPatchEntry};
+use crate::mutations::resolve_load;
+use crate::{load_id, Fem3dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &AddLoad, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

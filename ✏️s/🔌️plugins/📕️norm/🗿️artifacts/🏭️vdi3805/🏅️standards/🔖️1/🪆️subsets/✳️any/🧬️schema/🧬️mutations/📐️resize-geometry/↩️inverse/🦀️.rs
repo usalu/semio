@@ -1,7 +1,7 @@
 //! ↩️ `resize-geometry` — undo restores BASE's bbox; missing id ⇒ `Vec::new()`.
 
 use super::ResizeGeometry;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ResizeGeometry, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

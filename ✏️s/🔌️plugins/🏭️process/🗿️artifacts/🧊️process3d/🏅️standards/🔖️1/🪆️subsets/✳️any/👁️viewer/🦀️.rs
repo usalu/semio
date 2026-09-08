@@ -4,7 +4,7 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::process3d::{Process3dMutation, Process3dSnapshot, PROCESS3D_DIALECT, PROCESS_3D_SCHEMA};
+use crate::{Process3dMutation, Process3dSnapshot, PROCESS3D_DIALECT, PROCESS_3D_SCHEMA};
 use crate::viewer::process3d::modes::view;
 use crate::viewer::process3d::modes::view::windows::workpiece;
 use semio_framework_plugin::app::InteractionView;
@@ -49,7 +49,7 @@ impl ArtifactViewer for Process3dViewer {
     const DOCUMENT_SCHEMA: &'static str = PROCESS_3D_SCHEMA;
 
     fn initial_snapshot() -> Process3dSnapshot {
-        crate::artifacts::process3d::schema::default_document()
+        crate::schema::default_document()
     }
 
     /// 👁️ Structurally read-only: the sole `Process3dViewCommand::Noop` variant never carries a

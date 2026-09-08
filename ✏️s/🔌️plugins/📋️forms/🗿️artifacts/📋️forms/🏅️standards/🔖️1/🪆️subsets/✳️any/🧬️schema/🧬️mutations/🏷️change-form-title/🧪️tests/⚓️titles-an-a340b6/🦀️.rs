@@ -13,8 +13,8 @@
 //! of `std`'s deliberately unspecified default hasher is not authorable. Here both handles are
 //! carried through untouched, so `➡️after` differs from `⬅️before` in one key only: `title`.
 
-use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{FormsDiff, FormsSnapshot};
+use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::{FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

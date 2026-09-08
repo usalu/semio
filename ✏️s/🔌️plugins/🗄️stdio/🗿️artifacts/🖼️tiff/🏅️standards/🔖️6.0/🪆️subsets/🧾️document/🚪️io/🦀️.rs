@@ -1056,7 +1056,7 @@ mod tests {
         async fn zzz_write_native_tiff_fixture() {
             let demo = demo_tiff_snapshot();
             let native = encode_tiff(&demo).expect("encode");
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/📚️examples/🎬️demo/🖼️assets/🧪️example/🖼️.tiff");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/📚️examples/🎬️demo/🖼️assets/🧪️example/🖼️.tiff");
             std::fs::write(path, native).expect("write 🖼️example.tiff");
         }
     }

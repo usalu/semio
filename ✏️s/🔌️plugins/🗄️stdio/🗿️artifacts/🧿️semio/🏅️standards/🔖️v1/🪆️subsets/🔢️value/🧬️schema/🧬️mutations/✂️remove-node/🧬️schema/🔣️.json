@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/value/mutation/remove-node.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/value/mutation/remove-node/schema.json",
   "title": "RemoveNode",
   "type": "object",
   "additionalProperties": false,
@@ -11,9 +11,9 @@
     "id": {
       "$ref": "#/$defs/ValueId"
     },
-    "kind": {
+    "mutation": {
       "const": "removeNode",
-      "description": "Aggregate discriminator spliced in by SemioValuePathSegment; absent when the payload stands alone."
+      "description": "Aggregate discriminator spliced in by SemioValueMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

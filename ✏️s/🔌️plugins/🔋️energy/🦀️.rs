@@ -16,12 +16,12 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 //#endregion 🗃️Apps
 
 /// 🔌️ Builds the energy plugin. `.artifact(…)` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-/// M1) replaces the old bare `crate::artifacts::model::engine::register()` call made before
+/// M1) replaces the old bare `crate::engine::register()` call made before
 /// `Plugin::builder(...)` was even constructed. `.setup()` is GONE (W1d): it survived here for exactly
 /// one call — `register_document_codec`, registering `EnergyModelSnapshot`/`EnergyModelMutation`'s
 /// pack↔dsl codec directly against `store`'s registry, because this plugin used to have zero
 /// `ArtifactApp`s for `.document_codec::<A>()` to bind to. `ArtifactDeclaration::document_codec_bare::
-/// <Snapshot, Mutation>(schema)` still expresses that — see `crate::artifacts::model::declaration()`.
+/// <Snapshot, Mutation>(schema)` still expresses that — see `crate::declaration()`.
 ///
 /// 📚️ Ticket 26/09/06/ENERGY-PLUGIN-END-TO-END: the editor is registered through
 /// `.editor_with_examples::<…>(…, crate::editor::model::examples())` rather than the bare
@@ -43,12 +43,12 @@ pub fn plugin() -> Result<Plugin<EnergyApps>, PluginAssemblyError> {
         .label("Energy")
         .version("0.1.0")
         .package_id("semio:energy")
-        .artifact(crate::artifacts::model::declaration().map_err(PluginAssemblyError::definition)?)
+        .artifact(crate::declaration().map_err(PluginAssemblyError::definition)?)
         .editor_with_examples::<crate::editor::model::EnergyModelEditor>(crate::editor::model::create_energy_model_editor(), crate::editor::model::examples())
         .editor_mutation_roster::<crate::editor::model::EnergyModelEditor>()
         .viewer::<crate::viewer::model::EnergyModelViewer>(crate::viewer::model::create_energy_model_viewer())
         .viewer_mutation_roster::<crate::viewer::model::EnergyModelViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist energy model edits to the open document".into(), optional: false })
         .try_build()

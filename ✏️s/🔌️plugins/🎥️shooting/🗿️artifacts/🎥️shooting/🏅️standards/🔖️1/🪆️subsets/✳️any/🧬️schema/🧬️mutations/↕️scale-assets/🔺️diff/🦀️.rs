@@ -3,9 +3,9 @@
 //! when some do not.
 
 use super::ScaleAssets;
-use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
-use crate::artifacts::shooting::ShootingSnapshot;
-use crate::artifacts::shooting::{shooting_asset_scale, ShootingAssetPatch};
+use crate::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
+use crate::ShootingSnapshot;
+use crate::{shooting_asset_scale, ShootingAssetPatch};
 
 pub fn diff(payload: &ScaleAssets, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if [payload.sx, payload.sy, payload.sz].iter().any(|value| !value.is_finite() || *value <= 0.0) {

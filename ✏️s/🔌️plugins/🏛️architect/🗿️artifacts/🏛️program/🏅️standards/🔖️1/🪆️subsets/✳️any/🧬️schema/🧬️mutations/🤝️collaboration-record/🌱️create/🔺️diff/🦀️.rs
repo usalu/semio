@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🤝collaboration` per Wave C.
 
 use super::CreateCollaborationRecord;
-use crate::artifacts::program::diff::ProgramCollaborationDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramCollaborationDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
 pub fn diff(payload: &CreateCollaborationRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

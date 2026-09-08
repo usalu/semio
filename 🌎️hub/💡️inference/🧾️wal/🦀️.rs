@@ -236,7 +236,7 @@ struct Transaction {
 
 #[cfg(feature = "native-artifact-execution")]
 fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, document: &db::ArtifactId) -> Result<(String, String, bool), InferenceErrorV1> {
-    use semio_s_plugin_gis::artifacts::gismap::{GisMapSnapshot, mutations::GisMapMutation};
+    use semio_s_artifact_gis_gismap::{GisMapSnapshot, mutations::GisMapMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::{
         drawing::schema::{mutations::SemioDrawingMutation, snapshot::SemioDrawingSnapshot},
         value::schema::{mutations::SemioValueMutation, snapshot::SemioValueSnapshot},
@@ -486,5 +486,5 @@ async fn scan(
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(super) mod tests;

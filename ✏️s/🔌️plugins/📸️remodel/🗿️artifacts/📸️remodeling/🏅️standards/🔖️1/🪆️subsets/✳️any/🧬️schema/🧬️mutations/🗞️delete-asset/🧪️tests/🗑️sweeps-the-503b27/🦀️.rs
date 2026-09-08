@@ -7,8 +7,8 @@
 //!
 //! 🏞️ the accepted branch drops the durable leaf with the entry, which is what makes create-asset its inverse
 
-use crate::artifacts::remodeling::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
-use crate::artifacts::remodeling::{RemodelingDiff, RemodelingSnapshot};
+use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
+use crate::{RemodelingDiff, RemodelingSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

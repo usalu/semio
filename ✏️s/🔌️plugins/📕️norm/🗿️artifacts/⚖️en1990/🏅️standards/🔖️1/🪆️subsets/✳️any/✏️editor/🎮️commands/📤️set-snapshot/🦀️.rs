@@ -20,8 +20,8 @@
 //! writeup). `En1990Snapshot`'s own hand-rolled `ArtifactDsl` codec (Rust's own
 //! `f64::to_string`/`str::parse`) round-trips correctly, so it is used here instead.
 
-use crate::artifacts::en1990::op::En1990Mutation;
-use crate::artifacts::en1990::En1990Snapshot;
+use crate::op::En1990Mutation;
+use crate::En1990Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -46,7 +46,7 @@ pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, En1990Snapshot>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::en1990::op::En1990Mutation;
+    use crate::op::En1990Mutation;
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]

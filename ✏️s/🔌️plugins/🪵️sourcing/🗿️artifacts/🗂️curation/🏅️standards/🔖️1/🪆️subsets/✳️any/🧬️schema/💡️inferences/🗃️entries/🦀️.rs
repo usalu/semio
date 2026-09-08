@@ -5,7 +5,7 @@
 //! `InferredField` chain — the family root's `impl protocol::Inference<CurationSnapshot>` calls it
 //! directly.
 
-use crate::artifacts::curation::CurationSnapshot;
+use crate::CurationSnapshot;
 
 //#region 🔖️Entries
 /// 🗃️ Real census over `stock`/`curated`.
@@ -30,7 +30,7 @@ pub fn compute_curation_entries(snapshot: &CurationSnapshot) -> CurationEntries 
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::curation::{CuratedItem, GeometryRecipe, ObjectKind};
+    use crate::{CuratedItem, GeometryRecipe, ObjectKind};
 
     fn object_kind(id: &str) -> ObjectKind {
         ObjectKind { id: id.into(), name: id.into(), module_id: "beams".into(), typology_path: vec!["beams".into()], availability: 1, geometry: Box::new(GeometryRecipe::Box { width: 0.2, height: 0.4, depth: 6.0 }) }
@@ -44,7 +44,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn stock_and_curated_lines_are_counted_exactly() {
-        let snapshot = crate::artifacts::curation::curation_snapshot_from_stock(vec![object_kind("a"), object_kind("b"), object_kind("c")], vec![CuratedItem { object_id: "a".into(), count: 5 }, CuratedItem { object_id: "b".into(), count: 3 }]);
+        let snapshot = crate::curation_snapshot_from_stock(&[object_kind("a"), object_kind("b"), object_kind("c")], vec![CuratedItem { object_id: "a".into(), count: 5 }, CuratedItem { object_id: "b".into(), count: 3 }]);
         let entries = compute_curation_entries(&snapshot);
         assert_eq!(entries.stock_count, 3);
         assert_eq!(entries.entry_count, 2);
@@ -53,7 +53,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn entries_is_deterministic() {
-        let snapshot = crate::artifacts::curation::curation_snapshot_from_stock(Vec::new(), vec![CuratedItem { object_id: "a".into(), count: 1 }]);
+        let snapshot = crate::curation_snapshot_from_stock(&[], vec![CuratedItem { object_id: "a".into(), count: 1 }]);
         assert_eq!(compute_curation_entries(&snapshot), compute_curation_entries(&snapshot));
     }
 }

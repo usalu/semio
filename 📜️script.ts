@@ -112,6 +112,8 @@ import {
   renderSchemaCatalog,
   renderSchemaCatalogDocument,
   renderSchemaCheckReport,
+  schemaRustEntryDiagnostics,
+  type SchemaRustEntryDump,
   type SchemaScopeDiagnostic,
   type SchemaScopeInventory,
   loadCatalogTaxonomy,
@@ -665,7 +667,7 @@ export class NxScript extends Script {
   async run(segments: string[]): Promise<void> {
     const nxCli = createRequire(join(this.root, "package.json")).resolve("nx/bin/nx.js");
     const invocation = resolveNxInvocation(segments), children: ReturnType<typeof spawnNxProcess>[] = [];
-    const env = devToolingEnv({ ...invocation.env, NX_WORKSPACE_DATA_DIRECTORY: join(this.root, ".nx", "workspace-data"), NX_SOCKET_DIR: undefined, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined });
+    const env = devToolingEnv({ ...invocation.env, NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY || join(this.root, ".nx", "workspace-data"), NX_SOCKET_DIR: undefined, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined });
     let cancelled: NodeJS.Signals | undefined, cancellationDeadline = 0, watchFailure = 0, finishing = false;
     let force: ReturnType<typeof setTimeout> | undefined, watcher: ReturnType<typeof spawnNxProcess> | undefined;
     const descendants = new Set<number>();
@@ -781,10 +783,11 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     if (report[2] && !catalog.documents.some(document => document.id === report[2])) throw new Error(`Unknown report document: ${report[2]}`);
     return { args: ["run", target, ...options], env: {}, ...(report[1] === "watch" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: target.replace(":watch", ":build") } : {}) };
   }
-  const demonstratorPreparation = target?.match(/^@semio-tech\/mit-bestand-demonstrator:prepare-(dev|release)$/);
-  if (demonstratorPreparation) {
-    if (selected.length) throw new Error("Demonstrator preparation targets accept no compiler arguments");
-    return { args: segments, env: { SEMIO_BUILD_MODE: demonstratorPreparation[1] === "release" ? "ship" : "dev", SEMIO_RENDERER: "react" } };
+  const demonstrator = target?.match(/^@semio-tech\/mit-bestand-demonstrator:(prepare-(dev|release)|build|activate-dev|serve|dev|prepare-e2e|serve-e2e|test-e2e)$/);
+  if (demonstrator) {
+    if (selected.length) throw new Error("Demonstrator targets accept no compiler arguments");
+    const release = demonstrator[1] === "build" || demonstrator[2] === "release";
+    return { args: segments, env: { SEMIO_BUILD_MODE: release ? "ship" : "dev", SEMIO_RENDERER: "react" }, ...(demonstrator[1] === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/mit-bestand-demonstrator:activate-dev" } : {}) };
   }
   const preparation = target?.match(/^@semio-tech\/framework-os-dev:(prepare|activate|serve|dev)-(.+)-react-(dev|release)$/);
   if (preparation) return { args: segments, env: { SEMIO_BUILD_MODE: preparation[3] === "release" ? "ship" : "dev", SEMIO_PLUGIN: preparation[2], SEMIO_RENDERER: "react" }, ...(preparation[1] === "dev" && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${preparation[2]}-react-${preparation[3]}` } : {}) };
@@ -1182,15 +1185,15 @@ export class LintScript extends Script {
 //#endregion 🔖️LintScript
 
 //#region 🔖️VerifyScript
-/** 🦀️ Shipping plugin and extension crates from the repository's package catalog. */
+/** 🦀️ Shipping plugins, extensions, and their artifact libraries from the repository's package catalog. */
 function pluginCrateNames(root: string): string[] {
   const names = discoverPackages(root)
-    .filter((pkg) => pkg.lang === "🦀️rust" && (pkg.role === "plugin" || pkg.role === "extension"))
-    .map((pkg) => {
+    .filter((pkg) => pkg.lang === "🦀️rust")
+    .flatMap((pkg) => {
       const manifest = Bun.TOML.parse(readFileSync(join(root, pkg.manifestPath), "utf8"));
       const name = (manifest.package as { name?: string } | undefined)?.name;
       if (!name) throw new Error(`[verify rust-warnings] package name missing in ${pkg.manifestPath}.`);
-      return name;
+      return pkg.role === "plugin" || pkg.role === "extension" || name.startsWith("semio-s-artifact-") ? [name] : [];
     });
   return [...new Set(names)].sort();
 }
@@ -1226,7 +1229,7 @@ export function rustWarningScopeChecks(root: string): number {
   const cargo = Bun.spawnSync(["cargo", "metadata", "--no-deps", "--format-version=1"], { cwd: root });
   if (cargo.exitCode !== 0) throw new Error(`[verify rust-warnings] Cargo metadata failed: ${cargo.stderr.toString()}`);
   const metadata = JSON.parse(cargo.stdout.toString()) as { packages: { name: string; metadata?: { semio?: { role?: string } } | null }[] };
-  const oracle = metadata.packages.filter((pkg) => ["plugin", "extension"].includes(pkg.metadata?.semio?.role ?? "")).map((pkg) => pkg.name).sort();
+  const oracle = metadata.packages.filter((pkg) => ["plugin", "extension"].includes(pkg.metadata?.semio?.role ?? "") || pkg.name.startsWith("semio-s-artifact-")).map((pkg) => pkg.name).sort();
   const components = rustWarningTargetScope(root, "wasm32-wasip2").packages;
   if (JSON.stringify(components) !== JSON.stringify(oracle)) throw new Error(`[verify rust-warnings] repository discovery differs from Cargo's shipping package catalog.`);
   console.log(`[verify rust-warnings] ${fixture.cases.length} target vectors, ${fixture.rejectedTargets.length} rejection vectors, ${oracle.length} Cargo-verified component crates.`);
@@ -22725,6 +22728,9 @@ class CleanMechanismNewScript extends Script {
 //#endregion 🔖️CleanMechanismNewScript
 
 //#region 🔖️SchemaScript
+/** 🧪️ The third-party draft-07 oracle that keeps `semio_framework_schema`'s owned validator honest. */
+const SCHEMA_DRAFT07_ORACLE_SPEC = "🧰️framework/🔨️modules/🧬️schema/✅️draft07-oracle.test.ts";
+
 /** 🧬️ Scope-owned schema contracts: catalog generation, invariant checking and the generated index. */
 export class SchemaScript extends Script {
   run(segments: string[]): void {
@@ -22732,18 +22738,37 @@ export class SchemaScript extends Script {
     const rest = segments.slice(1);
     if (sub === "generate") return this.generate(rest);
     if (sub === "check") return this.check(rest);
-    if (sub === "verify") return this.verify();
+    if (sub === "verify") return this.verify(rest);
     if (sub === "audit") return this.audit(rest);
     if (sub === "docs") return this.docs();
-    if (sub === "test") {
-      runCmd("bun", ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "test", "schema", ...rest], { cwd: this.root });
-      return;
-    }
-    throw new Error(`unknown schema subcommand: ${JSON.stringify(sub)} (expected audit | check | docs | generate | test | verify).`);
+    if (sub === "oracle") return this.oracle();
+    if (sub === "test") return this.test(rest);
+    throw new Error(`unknown schema subcommand: ${JSON.stringify(sub)} (expected audit | check | docs | generate | oracle | test | verify).`);
   }
 
   private inventory(): SchemaScopeInventory {
     return inventorySchemaScopes(this.root, loadCatalogTaxonomy());
+  }
+
+  /**
+   * 📖️ Reads the tracked catalog once and tolerates exactly one torn read: a catalog being rewritten by a
+   * concurrent `schema generate` parses as garbage, and re-reading it after a short pause is the difference
+   * between one honest finding and hundreds of spurious ones.
+   */
+  private readCatalog(): { readonly text: string; readonly parsed: Record<string, unknown> | null } {
+    const abs = join(this.root, this.catalogPath());
+    if (!existsSync(abs)) return { text: "", parsed: null };
+    for (let attempt = 0; ; attempt += 1) {
+      const text = readFileSync(abs, "utf8");
+      try {
+        const parsed = JSON.parse(text) as Record<string, unknown>;
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return { text, parsed };
+      } catch {
+        // a torn read is retried once below
+      }
+      if (attempt > 0) return { text, parsed: null };
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000);
+    }
   }
 
   private catalogPath(): string {
@@ -22780,8 +22805,10 @@ export class SchemaScript extends Script {
     const abs = join(this.root, rel);
     const findings: SchemaScopeDiagnostic[] = [...inventory.diagnostics, ...inventory.placement];
     const rendered = renderSchemaCatalog(inventory.catalog);
+    const tracked = this.readCatalog();
     if (!existsSync(abs)) findings.push({ code: "catalog-absent", path: rel, detail: "Run bun ./📜️script.ts schema generate." });
-    else if (readFileSync(abs, "utf8") !== rendered) findings.push({ code: "catalog-stale", path: rel, detail: "The catalog does not match the schema modules on disk." });
+    else if (!tracked.parsed) findings.push({ code: "catalog-malformed", path: rel, detail: "The catalog is not a JSON object after a re-read; a concurrent schema generate is still writing it." });
+    else if (tracked.text !== rendered) findings.push({ code: "catalog-stale", path: rel, detail: "The catalog does not match the schema modules on disk." });
     const sorted = findings.slice().sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)) || Buffer.from(left.code).compare(Buffer.from(right.code)) || Buffer.from(left.detail).compare(Buffer.from(right.detail)));
     const reportIndex = args.indexOf("--report");
     if (reportIndex >= 0) {
@@ -22799,21 +22826,54 @@ export class SchemaScript extends Script {
     if (sorted.length > 0) process.exit(1);
   }
 
-  /** 🔒️ Proves the tracked catalog and index are exactly what the current sources render. */
-  private verify(): void {
+  /**
+   * 🔒️ Proves the tracked catalog and index are exactly what the current sources render, and — with
+   * `--rust-entries <file>` — that the `(scope, export, format)` triples of
+   * `semio_framework_schema::schema_export_catalog_entries()` agree with the catalog rows.
+   * `--rust-entries-complete` additionally demands that every catalogued scope registers its exports.
+   */
+  private verify(args: string[]): void {
     const inventory = this.inventory();
     const stale: string[] = [];
     for (const [rel, rendered] of [[this.catalogPath(), renderSchemaCatalog(inventory.catalog)], [this.documentPath(), renderSchemaCatalogDocument(inventory.catalog)]] as const) {
       const abs = join(this.root, rel);
       if (!existsSync(abs) || readFileSync(abs, "utf8") !== rendered) stale.push(rel);
     }
-    const catalog = existsSync(join(this.root, this.catalogPath())) ? JSON.parse(readFileSync(join(this.root, this.catalogPath()), "utf8")) as { generator?: string; taxonomySchemaVersion?: number } : null;
+    const catalog = this.readCatalog().parsed as { generator?: string; taxonomySchemaVersion?: number } | null;
     if (catalog && (catalog.generator !== inventory.catalog.generator || catalog.taxonomySchemaVersion !== inventory.catalog.taxonomySchemaVersion)) stale.push(`${this.catalogPath()} (provenance)`);
-    if (stale.length > 0) {
-      console.error(`[schema verify] stale generated output: ${stale.join(", ")}. Run bun ./📜️script.ts schema generate && bun ./📜️script.ts schema docs.`);
-      process.exit(1);
+    if (stale.length > 0) console.error(`[schema verify] stale generated output: ${stale.join(", ")}. Run bun ./📜️script.ts schema generate && bun ./📜️script.ts schema docs.`);
+    else console.log(`[schema verify] catalog and index are current (${Object.keys(inventory.catalog.scopes).length} scopes, generator ${inventory.catalog.generator}).`);
+    const entriesIndex = args.indexOf("--rust-entries");
+    if (entriesIndex < 0) {
+      if (stale.length > 0) process.exit(1);
+      return;
     }
-    console.log(`[schema verify] catalog and index are current (${Object.keys(inventory.catalog.scopes).length} scopes, generator ${inventory.catalog.generator}).`);
+    const target = args[entriesIndex + 1];
+    if (!target) throw new Error("[schema verify] --rust-entries requires a path to the registry dump.");
+    const dumpPath = isAbsolute(target) ? target : join(this.root, target);
+    if (!existsSync(dumpPath)) throw new Error(`[schema verify] --rust-entries ${target} does not exist; emit it from semio_framework_schema::schema_export_catalog_entries().`);
+    const dump = JSON.parse(readFileSync(dumpPath, "utf8")) as SchemaRustEntryDump;
+    const findings = schemaRustEntryDiagnostics(inventory.catalog, dump, loadCatalogTaxonomy(), args.includes("--rust-entries-complete"));
+    const registered = new Set(dump.entries.map((entry) => entry.scope));
+    for (const finding of findings) console.log(JSON.stringify(finding));
+    const counts = new Map<string, number>();
+    for (const finding of findings) counts.set(finding.code, (counts.get(finding.code) ?? 0) + 1);
+    console.log(`[schema verify] rust entries=${dump.entries.length} scopes=${registered.size} of ${Object.keys(inventory.catalog.scopes).length} catalogued, findings=${findings.length}`);
+    for (const [code, count] of [...counts].sort(([left], [right]) => left.localeCompare(right))) console.log(`[schema verify] ${code}=${count}`);
+    if (findings.length > 0 || stale.length > 0) process.exit(1);
+  }
+
+  /** 🧪️ Runs the ajv draft-07 oracle spec that validates the owned Rust structural validator. */
+  private oracle(): void {
+    runCmd("bunx", ["vitest", "run", "--root", ".", SCHEMA_DRAFT07_ORACLE_SPEC], { cwd: this.root });
+  }
+
+  /** 🧪️ The whole schema gate: the harness invariants over the catalog, then the third-party draft-07 oracle. */
+  private test(rest: string[]): void {
+    const tracked = this.readCatalog();
+    if (!tracked.parsed) throw new Error(`[schema test] ${this.catalogPath()} is absent or unreadable after a re-read. Run bun ./📜️script.ts schema generate before the gate; running the harness against a torn catalog reports every scope as malformed.`);
+    runCmd("bun", ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts", "test", "schema", ...rest], { cwd: this.root });
+    this.oracle();
   }
 
   /** 📊️ Writes the full scope/diagnostic evidence pair into a report directory. */
@@ -27800,7 +27860,7 @@ export function policyOsConfigShapeBreaches(repoRoot: string): BreachRecord[] {
     return breaches;
   }
   for (const format of schemaFacetFormatEntries(schemaRel, taxonomy).map(([, f]) => f)) {
-    const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
+    const leafFilename = canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy);
     if (existsSync(join(repoRoot, schemaRel, leafFilename))) continue;
     breaches.push({
       id: `os-config-shape-schema-leaf-${leafFilename}`,
@@ -28929,7 +28989,7 @@ type MutationLeafDescriptor = {
   readonly requiredLanguageSurfaces: readonly string[];
 };
 
-const MUTATION_DESCRIPTOR_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️.schema.json";
+const MUTATION_DESCRIPTOR_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️.json";
 
 //#region 🔣️JsonSchemaSubset
 function jsonSchemaSubsetObject(value: unknown): Record<string, unknown> | undefined {
@@ -29003,6 +29063,57 @@ function policyMutationDescriptorView(view: MutationTaxonomyStructuralSourceView
     const errors = [...jsonDocumentDuplicateKeys(source), ...validateJsonSchemaSubset(schema, descriptor)];
     return errors.length === 0 ? { descriptor } : { problem: errors.join("; ") };
   } catch (error) { return { problem: error instanceof Error ? error.message : String(error) }; }
+}
+
+/**
+ * 🧬️ Structural identity of one `🧬️mutations/🔣️.json` aggregate: every `oneOf` `$ref` must resolve to a
+ * direct leaf's payload schema (by relative path or by that document's `$id`) and every leaf whose descriptor
+ * requires the JSON Schema surface must be referenced. This replaces reading the leaf's semantic kind out of
+ * the aggregate's `x-semio-mutationKinds` string list, which no consumer reads.
+ */
+function policyMutationAggregateMembers(view: MutationTaxonomyStructuralSourceView, mutationsRel: string, aggregateRel: string, leafNames: readonly string[], taxonomy: ReturnType<typeof loadTaxonomy>): { readonly referenced: ReadonlySet<string>; readonly breaches: BreachRecord[] } {
+  const solution = "Make the aggregate a pure $ref union over exactly the direct leaves' payload schemas; the union is the identity, no restated kind list.";
+  const source = policyStructuralSource(view, aggregateRel);
+  if (source === null) return { referenced: new Set(), breaches: [] };
+  let parsed: { oneOf?: unknown };
+  try {
+    parsed = JSON.parse(source) as { oneOf?: unknown };
+  } catch (error) {
+    return { referenced: new Set(), breaches: [policyMutationStructuralBreach("mutation/schema-parity", aggregateRel, `"${aggregateRel}" is not readable JSON: ${error instanceof Error ? error.message : String(error)}`, solution)] };
+  }
+  if (!Array.isArray(parsed.oneOf)) return { referenced: new Set(), breaches: [policyMutationStructuralBreach("mutation/schema-parity", aggregateRel, `"${aggregateRel}" declares no oneOf union of its direct leaves`, solution)] };
+  const descriptorFilename = canonicalPrimaryFilenameForKind(taxonomy.mutationDescriptorFileKindId, taxonomy);
+  const byPath = new Map<string, string>();
+  const byId = new Map<string, string>();
+  const required: string[] = [];
+  for (const leafName of leafNames) {
+    const descriptor = policyMutationDescriptorView(view, `${mutationsRel}/${leafName}/${descriptorFilename}`).descriptor;
+    if (!descriptor?.requiredLanguageSurfaces.includes("json-schema")) continue;
+    required.push(leafName);
+    const payloadRel = `${mutationsRel}/${leafName}/${descriptor.payloadSchema.split("#")[0]}`;
+    byPath.set(payloadRel, leafName);
+    const payloadSource = policyStructuralSource(view, payloadRel);
+    if (payloadSource === null) continue;
+    try {
+      const id = (JSON.parse(payloadSource) as { $id?: unknown }).$id;
+      if (typeof id === "string" && id) byId.set(id, leafName);
+    } catch { /* an unreadable payload is already a schema-parity breach on the leaf */ }
+  }
+  const breaches: BreachRecord[] = [];
+  const referenced = new Set<string>();
+  for (const [index, member] of parsed.oneOf.entries()) {
+    const ref = (member as { $ref?: unknown } | null)?.$ref;
+    if (typeof ref !== "string" || !ref) {
+      breaches.push(policyMutationStructuralBreach("mutation/schema-parity", aggregateRel, `"${aggregateRel}" oneOf[${index}] is not a $ref to a direct leaf payload schema`, solution));
+      continue;
+    }
+    const target = ref.split("#")[0]!;
+    const leafName = byId.get(target) ?? byPath.get(target.includes("://") ? target : posix.normalize(`${mutationsRel}/${target}`));
+    if (leafName === undefined) breaches.push(policyMutationStructuralBreach("mutation/schema-parity", aggregateRel, `"${aggregateRel}" oneOf[${index}] references ${JSON.stringify(ref)}, which is not a direct leaf payload schema of "${mutationsRel}"`, solution));
+    else referenced.add(leafName);
+  }
+  for (const leafName of required) if (!referenced.has(leafName)) breaches.push(policyMutationStructuralBreach("mutation/schema-parity", aggregateRel, `"${aggregateRel}" omits the payload schema of direct leaf "${leafName}"`, solution));
+  return { referenced, breaches };
 }
 
 function policyMutationStructuralBreach(kind: MutationStructuralKind, scope: string, summary: string, solution: string): BreachRecord {
@@ -29178,6 +29289,8 @@ function policyMutationStructuralBreachesView(view: MutationTaxonomyStructuralSo
       const source = policyStructuralSource(view, surface.root) ?? "";
       return { ...surface, source, identities: surface.id === "text" || surface.id === "binary" ? new Set(inspectRustSourceIdentities(source)) : null };
     });
+    const aggregate = policyMutationAggregateMembers(view, mutationsRel, surfaceSpecs.find((surface) => surface.id === "json-schema")!.root, leafNames, taxonomy);
+    breaches.push(...aggregate.breaches);
     const subsetRoot = mutationsRel.endsWith("/🧬️schema/🧬️mutations") ? mutationsRel.slice(0, -"/🧬️schema/🧬️mutations".length) : null;
     const catalogRel = subsetRoot ? `${subsetRoot}/${taxonomy.testContributionDirectoryOverrides[subsetRoot] ?? taxonomy.testContributionDirName}/${canonicalPrimaryFilenameForKind(taxonomy.testContributionFileKindId, taxonomy)}` : null;
     const catalogSource = catalogRel ? policyStructuralSource(view, catalogRel) ?? "" : "";
@@ -29225,7 +29338,7 @@ function policyMutationStructuralBreachesView(view: MutationTaxonomyStructuralSo
           const binaryTag = binaryConstants.find((constant) => constant.name === "BINARY_TAG");
           const binaryTagMatches = binaryTag !== undefined && descriptor.binaryTag !== null && policyMutationBinaryTag(binaryTag.value, binaryConstants) === descriptor.binaryTag;
           const leafHasIdentity = (leafIdentities ? names.some((name) => leafIdentities.has(name)) || binaryTagMatches : leafSurfaceSource.includes(semanticKind) || leafSurfaceSource.includes(variantName)) && (binaryTag === undefined || binaryTagMatches);
-          const rootHasIdentity = surface.identities ? names.some((name) => surface.identities!.has(name)) : surface.source.includes(semanticKind) || surface.source.includes(variantName);
+          const rootHasIdentity = surface.id === "json-schema" ? aggregate.referenced.has(leafName) : surface.identities ? names.some((name) => surface.identities!.has(name)) : surface.source.includes(semanticKind) || surface.source.includes(variantName);
           if (binaryTag && !binaryTagMatches) breaches.push(policyMutationStructuralBreach("mutation/wire-identity", leafSurfaceRel, `"${leafSurfaceRel}" binary tag ${binaryTag.value} does not equal descriptor tag ${descriptor.binaryTag}`, "Use the same exact numeric tag in the direct binary contribution and its language-neutral descriptor."));
           if (!rootExists || !descriptorRequires || !leafSurfaceSource || !leafHasIdentity) breaches.push(policyMutationStructuralBreach(surface.policy, leafSurfaceRel, `"${descriptorRel}" does not have a complete direct ${surface.id} counterpart`, `Declare ${surface.id} in requiredLanguageSurfaces and add visible descriptor-backed identities to ${surface.root} and ${leafSurfaceRel}.`));
           if (!rootHasIdentity) breaches.push(policyMutationStructuralBreach(surface.policy, surface.root, `"${surface.root}" omits ${semanticKind}/${variantName}`, `Add the descriptor-backed ${surface.id} union, discriminator, opcode, or tag entry for ${semanticKind}.`));
@@ -29730,7 +29843,7 @@ function policyInferenceFamilyRootCompletenessBreaches(repoRoot: string): Breach
   const breaches: BreachRecord[] = [];
   for (const inferencesRel of policyFindAllInferencesDirs(repoRoot)) {
     const artRel = policyArtifactRootOfInferencesDir(inferencesRel);
-    const rootLeaves = schemaFacetFormatEntries(inferencesRel, taxonomy).map(([, format]) => canonicalFilenameForKind(format.fileKindId, taxonomy));
+    const rootLeaves = schemaFacetFormatEntries(inferencesRel, taxonomy).map(([, format]) => canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy));
     for (const leaf of rootLeaves) {
       const rel = `${inferencesRel}/${leaf}`;
       if (existsSync(join(repoRoot, rel))) continue;
@@ -30424,7 +30537,7 @@ function policyLoadSchemaFacetLeaves(
   const expected = policyDeclaredSchemaExportName(repoRoot, facetRel);
   const out: { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] = [];
   for (const [formatId, format] of schemaFacetFormatEntries(facetRel, taxonomy)) {
-    const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
+    const leafFilename = canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy);
     const relPath = `${facetRel}/${leafFilename}`;
     const abs = join(repoRoot, relPath);
     if (!existsSync(abs)) {
@@ -30485,7 +30598,7 @@ function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): Breach
         continue;
       }
       for (const [formatId, format] of schemaFacetFormatEntries(facetAbs, taxonomy)) {
-        const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
+        const leafFilename = canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy);
         const leafRel = `${facetAbs}/${leafFilename}`;
         if (existsSync(join(repoRoot, leafRel))) continue;
         breaches.push({
@@ -30500,7 +30613,7 @@ function policyArtifactSchemaFacetCompletenessBreaches(repoRoot: string): Breach
       }
       const normativeFileKindId = normativeByFacet[facetRel];
       if (normativeFileKindId) {
-        const normative = canonicalFilenameForKind(normativeFileKindId, taxonomy);
+        const normative = canonicalPrimaryFilenameForKind(normativeFileKindId, taxonomy);
         const normativeRel = `${facetAbs}/${normative}`;
         if (!existsSync(join(repoRoot, normativeRel))) {
           breaches.push({
@@ -30860,7 +30973,7 @@ function policyLoadAppSchemaFacetLeaves(
   const formats = taxonomy.schemaFormats ?? {};
   const out: { formatId: string; leafFilename: string; fieldCasing: string; relPath: string; extract: PolicySchemaLeafExtract | null }[] = [];
   for (const [formatId, format] of Object.entries(formats)) {
-    const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
+    const leafFilename = canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy);
     const relPath = `${facetAbs}/${leafFilename}`;
     const abs = join(repoRoot, relPath);
     if (!existsSync(abs)) {
@@ -30928,7 +31041,7 @@ function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecor
         continue;
       }
       for (const [formatId, format] of schemaFacetFormatEntries(facetAbs, taxonomy)) {
-        const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
+        const leafFilename = canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy);
         const leafRel = `${facetAbs}/${leafFilename}`;
         if (existsSync(join(repoRoot, leafRel))) continue;
         breaches.push({
@@ -30943,7 +31056,7 @@ function policyAppSchemaFacetCompletenessBreaches(repoRoot: string): BreachRecor
       }
       const normativeFileKindId = normativeByFacet[policyAppSchemaFacetRole(kind)];
       if (!normativeFileKindId) throw new Error(`[taxonomy] no normative surface schema file kind for ${policyAppSchemaFacetRole(kind)}.`);
-      const normative = canonicalFilenameForKind(normativeFileKindId, taxonomy);
+      const normative = canonicalPrimaryFilenameForKind(normativeFileKindId, taxonomy);
       const normativeRel = `${facetAbs}/${normative}`;
       if (!existsSync(join(repoRoot, normativeRel))) {
         breaches.push({
@@ -31967,7 +32080,7 @@ function policySchemaFormatLeafBreaches(
 ): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const [formatId, format] of schemaFacetFormatEntries(facetAbs, taxonomy)) {
-    const leafFilename = canonicalFilenameForKind(format.fileKindId, taxonomy);
+    const leafFilename = canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy);
     const leafRel = `${facetAbs}/${leafFilename}`;
     if (existsSync(join(repoRoot, leafRel))) continue;
     breaches.push({

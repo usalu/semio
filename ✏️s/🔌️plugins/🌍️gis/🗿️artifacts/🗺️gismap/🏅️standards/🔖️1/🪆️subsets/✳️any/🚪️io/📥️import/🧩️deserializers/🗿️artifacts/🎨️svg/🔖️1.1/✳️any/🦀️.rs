@@ -1,5 +1,5 @@
 //! gismap <- svg
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::GisMapSnapshot;
 use semio_s_artifact_stdio_svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
 
 pub fn register() {}

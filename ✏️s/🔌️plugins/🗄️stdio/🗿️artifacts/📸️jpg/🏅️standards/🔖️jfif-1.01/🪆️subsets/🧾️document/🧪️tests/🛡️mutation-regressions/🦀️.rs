@@ -296,25 +296,7 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[test]
     fn codec_retention_law() {
-        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/📸️jpg/📚️examples/🎬️demo/🖼️assets/🖼️.jpg"));
-        let bytes = match bytes {
-            Ok(b) if !b.is_empty() => b,
-            // No usable fixture on disk at test time (or a different workspace layout) — fall
-            // back to a synthetic encode -> decode identity check (matches png's precedent).
-            _ => {
-                let w = 16u32;
-                let h = 16u32;
-                let mut pixels = vec![0u8; (w * h * 4) as usize];
-                for (i, px) in pixels.chunks_mut(4).enumerate() {
-                    px[0] = (i * 7 % 255) as u8;
-                    px[1] = (i * 13 % 255) as u8;
-                    px[2] = (i * 17 % 255) as u8;
-                    px[3] = 255;
-                }
-                let snap = JpgSnapshot { width: w, height: h, pixels, ..JpgSnapshot::default() };
-                crate::engine::encode_jpg(&snap).expect("encode synthetic fallback")
-            }
-        };
+        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/📚️examples/🎬️demo/🖼️assets/🖼️.jpg")).expect("read committed JPG fixture");
         let decoded = crate::engine::decode_jpg(&bytes).expect("decode fixture");
         let reencoded = crate::engine::encode_jpg(&decoded).expect("re-encode fixture");
         let redecoded = crate::engine::decode_jpg(&reencoded).expect("re-decode fixture");

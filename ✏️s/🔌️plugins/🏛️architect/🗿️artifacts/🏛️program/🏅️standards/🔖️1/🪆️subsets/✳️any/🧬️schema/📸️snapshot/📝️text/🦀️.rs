@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramSnapshot;
 
 /// @emoji 📦️ The "Sample Clinic" default example, embedded at compile time as handcrafted
 /// `.architect` DSL text — a static transcription of `sample_plugin()`, kept in sync with it by
@@ -34,7 +34,7 @@ pub fn print(document: &ProgramSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::{empty_plugin, sample_plugin};
+    use crate::{empty_plugin, sample_plugin};
 
     #[semio_framework_async_macros::async_test]
     async fn parse_and_print_round_trip_the_sample_program() {

@@ -1,6 +1,6 @@
 //! Deserialize cad via stdio.dwg.
 
-use crate::artifacts::cad::CadSnapshot;
+use crate::CadSnapshot;
 use semio_s_artifact_stdio_dwg::{DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
 
 //#region Deserialize
@@ -8,7 +8,7 @@ pub fn register() {}
 
 pub fn deserialize(_from: &DwgSnapshot) -> Result<CadSnapshot, store::TextError> {
     let _ = STDIO_DWG_DOCUMENT_SCHEMA;
-    Ok(crate::artifacts::cad::empty_cad_snapshot())
+    Ok(crate::empty_cad_snapshot())
 }
 
 pub fn deserialize_text(text: &str) -> Result<CadSnapshot, store::TextError> {

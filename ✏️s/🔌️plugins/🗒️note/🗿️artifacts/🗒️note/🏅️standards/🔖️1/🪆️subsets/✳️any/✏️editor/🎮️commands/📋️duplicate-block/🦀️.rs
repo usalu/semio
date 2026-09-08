@@ -1,12 +1,12 @@
 //! 🧱️ 🧱️ Note play app commands command — `duplicate-block`.
 
-use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::schema::mutations::{
+use crate::op::NoteMutation;
+use crate::schema::mutations::{
     duplicate_block as duplicate_block_mutation,
     duplicate_blocks as duplicate_blocks_mutation,
 };
-use crate::artifacts::note::schema::{clone_block, find_block, offset_block_tree};
-use crate::artifacts::note::NoteSnapshot;
+use crate::schema::{clone_block, find_block, offset_block_tree};
+use crate::NoteSnapshot;
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -19,7 +19,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the clones used to also become the new
 /// selection here — selection is framework-owned `InteractionState` now, only ever mutated by the
 /// framework's own injected `interactionSelect` handling, never by an app command's `Emit`.
-fn duplicate_blocks(document: &NoteSnapshot, ids: &[String], id_owner: &mut crate::artifacts::note::schema::NoteIdOwner) -> Emit<NoteMutation, NoteConfigMutation> {
+fn duplicate_blocks(document: &NoteSnapshot, ids: &[String], id_owner: &mut crate::schema::NoteIdOwner) -> Emit<NoteMutation, NoteConfigMutation> {
     let mut source_ids = Vec::new();
     let mut blocks = Vec::new();
     for source_id in ids {

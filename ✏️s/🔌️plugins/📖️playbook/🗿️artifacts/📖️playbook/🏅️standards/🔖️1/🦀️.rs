@@ -7,7 +7,7 @@
 //! `🖍️draw`/`🔱️trinity`'s identical documented deviation); `extensions: ["playbook"]` is the real,
 //! carried-over value from `definition()`'s `s.playbook.codec.document.v1` row.
 
-use crate::artifacts::playbook::standards::v1::subsets;
+use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 

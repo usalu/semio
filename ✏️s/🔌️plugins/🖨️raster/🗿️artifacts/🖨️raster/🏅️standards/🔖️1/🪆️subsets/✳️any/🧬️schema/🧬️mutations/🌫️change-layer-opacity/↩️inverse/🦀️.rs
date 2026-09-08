@@ -1,9 +1,9 @@
 //! ↩️ `change-layer-opacity` inverse — the old `opacity` value from `base`. Missing target ⇒
 //! `Vec::new()`.
 
-use crate::artifacts::raster::mutations::RasterMutation;
-use crate::artifacts::raster::schema::{find_layer, layer_opacity};
-use crate::artifacts::raster::RasterSnapshot;
+use crate::mutations::RasterMutation;
+use crate::schema::{find_layer, layer_opacity};
+use crate::RasterSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::ChangeLayerOpacity, base: &RasterSnapshot) -> Vec<RasterMutation> {

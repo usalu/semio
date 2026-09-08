@@ -1,19 +1,19 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/ua/mutation/set-mark-info.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/ua/mutation/set-mark-info/schema.json",
   "title": "SetMarkInfo",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "marked"
   ],
   "properties": {
-    "mutation": {
-      "const": "setMarkInfo"
-    },
     "marked": {
       "type": "boolean"
+    },
+    "mutation": {
+      "const": "setMarkInfo",
+      "description": "Aggregate discriminator spliced in by PdfUaMutation; absent when the payload stands alone."
     }
   }
 }

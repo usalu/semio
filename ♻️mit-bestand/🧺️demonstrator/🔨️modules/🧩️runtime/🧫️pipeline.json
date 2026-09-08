@@ -1,10 +1,46 @@
 {
   "schemaVersion": 1,
-  "profiles": ["dev", "release"],
-  "variants": ["aggregator", "aussuchen", "bearbeiten", "generation3d", "generator", "koordinator", "verfolgen"],
+  "profiles": [
+    "dev",
+    "release"
+  ],
+  "variants": [
+    "aggregator",
+    "aussuchen",
+    "bearbeiten",
+    "generation3d",
+    "generator",
+    "koordinator",
+    "verfolgen"
+  ],
   "preparationProject": "@semio-tech/framework-os-dev",
   "primaryVariant": "generator",
   "command": "🔨️modules/🧩️runtime/📜️script.ts",
-  "forbiddenCommandImports": ["🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"],
-  "forbiddenOrchestration": ["buildPlugins", "buildEngineWasm", "ensurePluginRegistry", "SKIP_PLUGIN_BUILD", "spawnDaemon"]
+  "forbiddenCommandImports": [
+    "🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+  ],
+  "forbiddenOrchestration": [
+    "buildPlugins",
+    "buildEngineWasm",
+    "ensurePluginRegistry",
+    "SKIP_PLUGIN_BUILD",
+    "spawnDaemon"
+  ],
+  "site": {
+    "command": "🔨️modules/📦️site/📜️script.ts",
+    "output": "dist/site",
+    "owner": "demonstrator:site",
+    "profile": "release"
+  },
+  "development": {
+    "activationTarget": "@semio-tech/framework-os-dev:activate-generator-react-dev",
+    "watchTarget": "@semio-tech/mit-bestand-demonstrator:activate-dev",
+    "port": 6029
+  },
+  "e2e": {
+    "owner": "@semio-tech/mit-bestand-demonstrator:e2e",
+    "directory": "dist/services/e2e",
+    "testCommand": "🔨️modules/🧪️e2e/📜️script.ts",
+    "browserTarget": "workspace:deps-browsers"
+  }
 }

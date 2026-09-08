@@ -1,7 +1,7 @@
 //! ↩️ Undo mutation for `move-widgets`, restoring each entry's prior `base.layout` value.
-use crate::artifacts::flow::schema::mutations::FlowMutation;
-use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
-use flow::FlowLayoutEntry;
+use crate::schema::mutations::FlowMutation;
+use crate::{flow_working_scene, FlowSnapshot};
+use semio_framework_artifact_flow_flow::FlowLayoutEntry;
 
 use super::MoveWidgets;
 

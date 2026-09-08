@@ -161,7 +161,7 @@ if (import.meta.vitest) {
     const { default: Ajv } = await import("ajv");
     const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-    const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/CloseFaultFixture`)!;
+    const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, extra: true })).toBe(false);
     expect(validate({ ...fixture, grants: [0, 4096] })).toBe(false);
@@ -208,7 +208,7 @@ if (import.meta.vitest) {
     const { default: Ajv } = await import("ajv");
     const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️list/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-    const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/CloseFaultFixture`)!;
+    const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, capacity: 5 })).toBe(false);
     expect(validate({ ...fixture, extra: true })).toBe(false);
@@ -233,7 +233,7 @@ if (import.meta.vitest) {
     const { default: Ajv } = await import("ajv");
     const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-    const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/CloseFaultFixture`)!;
+    const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/TypedFixture`)!;
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, componentVariants: fixture.componentVariants.slice(1) })).toBe(false);
     expect(validate({ ...fixture, patchVariants: [...fixture.patchVariants, "invented"] })).toBe(false);
@@ -271,8 +271,7 @@ if (import.meta.vitest) {
     expect(bytes(fixture.document.value)).toBe(fixture.document.valueTextBytes);
     expect(oracleBytes).toBe(fixture.document.valueTextBytes);
     const components = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧩️components.json", import.meta.url), "utf8"));
-    const componentSchema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-    const validateComponents = new Ajv({ strict: true }).addSchema(componentSchema).getSchema(`${componentSchema.$id}#/$defs/Components`)!;
+    const validateComponents = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/Components`)!;
     expect(validateComponents(components)).toBe(true);
     expect(validateComponents({ ...components, cases: components.cases.slice(1) })).toBe(false);
     expect(validateComponents({ ...components, cases: components.cases.map((row: { component: object }, index: number) => (index ? row : { ...row, component: { ...row.component, extra: 1 } })) })).toBe(false);
@@ -298,7 +297,7 @@ if (import.meta.vitest) {
     const { default: Ajv } = await import("ajv");
     const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📮️handback/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-    const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/CloseFaultFixture`)!;
+    const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, slots: 255 })).toBe(false);
     expect(validate({ ...fixture, expectedOrder: fixture.expectedOrder.slice(1) })).toBe(false);
@@ -349,7 +348,7 @@ if (import.meta.vitest) {
     const { default: Ajv } = await import("ajv");
     const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🩹️patch/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/🩹️patch/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-    const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/CloseFaultFixture`)!;
+    const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     for (const invalid of [
       { ...fixture, logicalCapacity: 128 },
@@ -389,11 +388,10 @@ if (import.meta.vitest) {
     const { default: Ajv } = await import("ajv");
     const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", import.meta.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
-    const fixtureSchema = schema;
     const ajv = new Ajv({ strict: true });
     ajv.addSchema(schema);
     expect(ajv.getSchema(`${schema.$id}#/$defs/LifetimeFixture`)!(fixture)).toBe(true);
-    const validate = ajv.getSchema(`${schema.$id}#/$defs/CloseFaultFixture`)!;
+    const validate = ajv.getSchema(`${schema.$id}#/$defs/Lifetime`)!;
     for (const invalid of ["0", "-1", "01", "18446744073709551616"]) {
       expect(validate({ ...fixture.vectors[0].value, activationGeneration: invalid })).toBe(false);
       expect(validate({ ...fixture.vectors[1].value, lifetime: { ...fixture.vectors[1].value.lifetime, guestLifetime: invalid } })).toBe(false);
@@ -495,7 +493,7 @@ if (import.meta.vitest) {
     const current = prior + 1n;
     const { Worker } = await import("node:worker_threads");
     type Message = { readonly kind: string; readonly requestId?: string; readonly ok?: boolean; readonly value?: unknown; readonly error?: string };
-    const pending = new Map<string, { resolve: (value: Message) => void; reject: (error: Error) => void }>();
+    const pending = new Map<string, { resolve: (value: Message) => void; reject: (error: unknown) => void }>();
     const worker = new Worker(
       "const { parentPort } = require('node:worker_threads'); const self = { postMessage: value => parentPort.postMessage(value), addEventListener: (_, callback) => parentPort.on('message', data => callback({ data })) }; const WebAssembly = { Suspending: function(){}, promising: function(){} };\n" +
         shardWorkerSource(),

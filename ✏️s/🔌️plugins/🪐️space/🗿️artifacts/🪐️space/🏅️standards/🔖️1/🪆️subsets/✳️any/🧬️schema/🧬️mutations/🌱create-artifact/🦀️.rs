@@ -1,7 +1,7 @@
 //! 🌱 Direct SSpace mutation — `CreateArtifact` brings a new id-keyed row into the space's artifact index.
-use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDiff;
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceArtifactRow};
+use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceArtifactRow};
 
 //#region 🔖️Mutation
 /// 🌱 `create-artifact` payload — the full initial row (id/name/kind/schema/dialect/timestamps all

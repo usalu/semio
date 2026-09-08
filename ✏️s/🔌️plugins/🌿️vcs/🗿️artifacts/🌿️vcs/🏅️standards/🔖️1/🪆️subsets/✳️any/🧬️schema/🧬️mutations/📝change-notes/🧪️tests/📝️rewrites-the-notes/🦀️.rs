@@ -5,8 +5,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::vcs::mutations::{apply_vcs_mutation, inverse_vcs_mutation, VcsDemoMutation};
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::mutations::{apply_vcs_mutation, inverse_vcs_mutation, VcsDemoMutation};
+use crate::VcsSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -104,7 +104,7 @@ async fn produces_committed_diff() {
 /// re-encodes byte-for-byte, so the file is a faithful `VcsDiff`, not prose that merely resembles one.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::vcs::VcsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::VcsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-notes/rewrites-the-notes: committed diff JSON is not canonical");
@@ -114,7 +114,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::vcs::VcsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::vcs::VcsDiff as protocol::MutationDiff<VcsSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::VcsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::VcsDiff as protocol::MutationDiff<VcsSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-notes/rewrites-the-notes: committed diff did not carry before to after");
 }

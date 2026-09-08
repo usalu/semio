@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🗄️storage` per Wave C.
 
 use super::RenameStorageRequirement;
-use crate::artifacts::program::diff::{ProgramStorageDelta, ProgramStoragePatchEntry};
-use crate::artifacts::program::registers::StorageRequirementPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramStorageDelta, ProgramStoragePatchEntry};
+use crate::registers::StorageRequirementPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameStorageRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

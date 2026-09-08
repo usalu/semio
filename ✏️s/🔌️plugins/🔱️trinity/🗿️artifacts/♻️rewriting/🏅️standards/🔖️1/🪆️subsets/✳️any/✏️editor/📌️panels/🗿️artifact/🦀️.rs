@@ -1,6 +1,6 @@
 //! 📄️ Trinity Rewriting app — Document panel (before-fixture node tree).
 
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 use crate::editor::rewriting::config::RewritingConfig;
 use crate::editor::rewriting::terminology::TrinityRewritingLabels;
 use semio_framework_plugin::{tree_item_desc, PanelTreeBuilder};

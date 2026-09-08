@@ -1,6 +1,6 @@
 //! ⚡️ Puzzle2d artifact — OpText/OpBinary codecs + grammar for `Puzzle2dMutation`.
 
-pub use crate::artifacts::puzzle2d::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation, puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
+pub use crate::schema::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation, puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

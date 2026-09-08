@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/reasoning/wires/artifact.json",
   "title": "WiresArtifact",
   "type": "object",
@@ -38,6 +39,81 @@
     "locale": {
       "x-semio-state": "config",
       "type": "string"
+    }
+  },
+  "$defs": {
+    "WiresRetainedCommandRoutes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "maximumRawBytes",
+        "maximumWorkItems",
+        "routes"
+      ],
+      "properties": {
+        "schema": {
+          "const": "reasoning.wires.retained-command-routes.v1"
+        },
+        "maximumRawBytes": {
+          "type": "integer",
+          "const": 8192
+        },
+        "maximumWorkItems": {
+          "type": "integer",
+          "const": 1
+        },
+        "routes": {
+          "allOf": [
+            {
+              "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes"
+            },
+            {
+              "type": "array",
+              "minItems": 10,
+              "maxItems": 10,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "disposition",
+                  "lanes",
+                  "reason"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "disposition": {
+                    "enum": [
+                      "migrated",
+                      "batch-only-pending-rewrite"
+                    ]
+                  },
+                  "lanes": {
+                    "type": "array",
+                    "items": {
+                      "enum": [
+                        "artifact",
+                        "config",
+                        "transient",
+                        "host-only"
+                      ]
+                    },
+                    "uniqueItems": true
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
     }
   }
 }

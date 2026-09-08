@@ -1,12 +1,12 @@
 //! 🗿️ App-owned scene assembly delegates selected payload copying to the shared Flow cursor.
 
 use super::{Owner, Retirement};
-use crate::artifacts::flow::retirement::SceneRetirementFactory;
+use crate::retirement::SceneRetirementFactory;
 use super::super::FlowWorkingScene;
-use flow::Widget;
+use semio_framework_artifact_flow_flow::Widget;
 #[cfg(test)]
 use flow::neural;
-use flow::retained::{FlowCopyAllocationBudget, FlowSynapseCopy, FlowWidgetCopy};
+use semio_framework_artifact_flow_flow::retained::{FlowCopyAllocationBudget, FlowSynapseCopy, FlowWidgetCopy};
 use std::mem::ManuallyDrop;
 use std::sync::Arc;
 
@@ -90,7 +90,7 @@ impl SceneCopy {
             3 => {
                 let count = source.synapses.len();
                 if count > super::super::FLOW_STORE_MAX_SCENE_ITEMS { return Err("Flow scene synapse count exceeds admitted envelope".into()); }
-                let bytes = count.checked_mul(size_of::<flow::SynapseSpec>()).ok_or("Flow synapse allocation overflow")?;
+                let bytes = count.checked_mul(size_of::<semio_framework_artifact_flow_flow::SynapseSpec>()).ok_or("Flow synapse allocation overflow")?;
                 if bytes > FLOW_SCENE_COPY_ALLOCATION_BYTES { return Err("Flow synapse allocation exceeds admitted envelope".into()); }
                 result.synapses.try_reserve_exact(count).map_err(|_| "Flow synapse allocation failed")?;
                 state.phase = 4;
@@ -186,7 +186,7 @@ impl SceneHash {
     pub(super) fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<usize, String> {
         if self.failed { return Err("Flow canonical scene encoding failed".into()); }
         if !grant.permits_one() || self.digest.is_some() || self.hash.is_none() { return Ok(0); }
-        let domain = crate::artifacts::flow::FLOW_CONTENT_ID_DOMAIN;
+        let domain = crate::FLOW_CONTENT_ID_DOMAIN;
         if self.domain_offset < domain.len() {
             let end = (self.domain_offset + grant.maximum_bytes).min(domain.len());
             self.hash.as_mut().unwrap().update(&domain[self.domain_offset..end]);
@@ -225,7 +225,7 @@ mod tests {
     use super::*;
     use semio_framework_job::InteractiveJobCloseStep;
 
-    fn retire_child_local_owner(mut child: crate::artifacts::flow::FlowContentChild) {
+    fn retire_child_local_owner(mut child: crate::FlowContentChild) {
         let Some(owner) = child.take_local_owner::<FlowWorkingScene>().unwrap() else { return; };
         let mut retirement = store::SnapshotRetirementFactory::retire(&SceneRetirementFactory, owner);
         for _ in 0..100_000 { if retirement.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete { break; } }
@@ -295,11 +295,11 @@ mod tests {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🪪️content-identity/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             let canonical = row["canonicalJson"].as_str().unwrap();
-            let (widgets, synapses, layout) = crate::artifacts::flow::schema::mutations::decode_flow_scene_json(canonical).unwrap();
+            let (widgets, synapses, layout) = crate::schema::mutations::decode_flow_scene_json(canonical).unwrap();
             let root = Arc::new(FlowWorkingScene { widgets, synapses, layout });
             let expected_id = format!("flow-content-sha256-{}", row["expectedSha256"].as_str().unwrap());
             assert_eq!(serde_json::to_string(&serde_json::Value::from(dsl::ToValue::to_value(&*root))).unwrap(), canonical);
-            let derived = crate::artifacts::flow::flow_content_child_handle(&root.widgets, &root.synapses, &root.layout);
+            let derived = crate::flow_content_child_handle(&root.widgets, &root.synapses, &root.layout);
             assert_eq!(derived.child_id, expected_id);
             retire_child_local_owner(derived);
             for maximum_bytes in [1, 64, 4096] {
@@ -311,9 +311,9 @@ mod tests {
                     let completed = cursor.advance(grant).unwrap(); assert!(completed <= maximum_bytes); bytes += completed;
                 }
                 assert!(cursor.complete());
-                assert_eq!(bytes, crate::artifacts::flow::FLOW_CONTENT_ID_DOMAIN.len() + canonical.len());
+                assert_eq!(bytes, crate::FLOW_CONTENT_ID_DOMAIN.len() + canonical.len());
                 let (scene, digest) = cursor.take().unwrap(); assert!(Arc::ptr_eq(&scene, &root));
-                let mut child = crate::artifacts::flow::flow_content_child_from_digest(digest, scene);
+                let mut child = crate::flow_content_child_from_digest(digest, scene);
                 assert_eq!(child.child_id, expected_id);
                 assert_eq!(child.target.artifact_id, expected_id);
                 assert_eq!(child.target.dialect.artifact_kind, fixture["dialect"]["artifactKind"].as_str().unwrap());

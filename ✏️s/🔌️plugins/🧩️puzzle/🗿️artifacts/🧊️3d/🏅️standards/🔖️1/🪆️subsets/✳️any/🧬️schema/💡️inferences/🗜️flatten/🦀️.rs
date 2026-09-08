@@ -3,7 +3,7 @@
 //! Byte-faithful port of `compose/client/lib/rs/lib.rs` `geom::flatten` (constants, matrix algebra,
 //! child-plane solve, BFS). Diagram centers use attraction `x`/`y` (compose `u`/`v`).
 
-use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dSnapshot, Puzzle3dVortex};
+use crate::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dSnapshot, Puzzle3dVortex};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 /// 🎛 Absolute plane + diagram center for one object after flatten. `ToValue`/`FromValue`
@@ -412,7 +412,7 @@ pub fn flatten_objects_with_assignment(objects: &[Puzzle3dObject], attractions: 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dVortex};
+    use crate::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dVortex};
 
     fn vortex(id: &str, position: [f64; 3], direction: [f64; 3]) -> Puzzle3dVortex {
         Puzzle3dVortex { id: id.into(), vortex_kind: None, label: None, position, direction: Some(direction), radius: None, hidden: false, locked: false }

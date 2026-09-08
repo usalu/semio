@@ -9,7 +9,7 @@
 //! the nested states `None` and `Some(None)` are NOT distinguishable in this file's committed diff,
 //! and nothing here asserts that they are.
 
-use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
+use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -103,7 +103,7 @@ async fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed create-subject diff decodes");
     let dictionary = decoded.dictionary.as_ref().expect("the committed create-subject diff carries the dictionary");
     assert_eq!(dictionary.subjects.len(), 2, "create-subject/appends-a-towel-radiator-subject-under-the-radiator-parent: the diff carries both subjects, because the dictionary delta is whole-container");
-    assert_eq!(dictionary.subjects[1].kind, crate::artifacts::iso16757::part_4::SubjectKind::ProductSpecialization, "create-subject/appends-a-towel-radiator-subject-under-the-radiator-parent: the declared subject kind must survive the diff");
+    assert_eq!(dictionary.subjects[1].kind, crate::part_4::SubjectKind::ProductSpecialization, "create-subject/appends-a-towel-radiator-subject-under-the-radiator-parent: the declared subject kind must survive the diff");
     assert!(decoded.catalogue.is_none(), "create-subject/appends-a-towel-radiator-subject-under-the-radiator-parent: create-subject writes `dictionary` and must leave `catalogue` untouched");
     assert!(decoded.selection.is_none(), "create-subject/appends-a-towel-radiator-subject-under-the-radiator-parent: create-subject writes `dictionary` and must leave `selection` untouched");
     assert!(decoded.part_number_inputs.is_none(), "create-subject/appends-a-towel-radiator-subject-under-the-radiator-parent: create-subject writes `dictionary` and must leave `part_number_inputs` untouched");

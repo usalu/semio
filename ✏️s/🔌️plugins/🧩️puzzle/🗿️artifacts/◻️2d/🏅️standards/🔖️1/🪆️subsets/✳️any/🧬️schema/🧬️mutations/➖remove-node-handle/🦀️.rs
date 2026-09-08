@@ -1,9 +1,9 @@
 //! ➖ Puzzle2d mutation — `RemoveNodeHandle`: detaches a rim port from a node (captures cascade —
 //! any edge whose `source`/`target` referenced this handle is severed too).
 
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::Puzzle2dDiff;
+use crate::mutations::Puzzle2dMutation;
+use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// ➖ `remove-node-handle` payload.

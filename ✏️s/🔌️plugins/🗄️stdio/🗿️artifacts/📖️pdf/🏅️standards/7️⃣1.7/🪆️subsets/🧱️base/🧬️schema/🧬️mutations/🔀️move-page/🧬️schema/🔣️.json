@@ -1,23 +1,25 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/move-page.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/move-page/schema.json",
   "title": "MovePage",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "from",
     "to"
   ],
   "properties": {
-    "mutation": {
-      "const": "movePage"
-    },
     "from": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0
     },
     "to": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0
+    },
+    "mutation": {
+      "const": "movePage",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     }
   }
 }

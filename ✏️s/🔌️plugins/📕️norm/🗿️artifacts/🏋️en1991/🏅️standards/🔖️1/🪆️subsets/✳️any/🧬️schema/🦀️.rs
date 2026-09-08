@@ -1,7 +1,7 @@
 //! 🧬️ En1991 artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::en1991::part_1_2::FireCurve;
-use schema::ArtifactSchema;
+use crate::part_1_2::FireCurve;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full En1991 artifact state across the artifact and presence lanes.
@@ -83,8 +83,8 @@ pub struct En1991Artifact {
 //#region 🔖️Conversions
 impl En1991Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::en1991::En1991Snapshot {
-        crate::artifacts::en1991::En1991Snapshot {
+    pub fn to_snapshot(&self) -> crate::En1991Snapshot {
+        crate::En1991Snapshot {
             area_m2: self.area_m2,
             category: self.category,
             annex: self.annex,
@@ -121,12 +121,12 @@ impl En1991Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::en1991::En1991Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::En1991Snapshot) -> Self {
         Self {
             area_m2: snapshot.area_m2,
             category: snapshot.category,
             annex: snapshot.annex,
-            self_weight_material: snapshot.self_weight_material.clone(),
+            self_weight_material: snapshot.self_weight_material,
             self_weight_thickness_m: snapshot.self_weight_thickness_m,
             assumed_g_k_kn_m2: snapshot.assumed_g_k_kn_m2,
             fire_curve: snapshot.fire_curve,
@@ -138,15 +138,15 @@ impl En1991Artifact {
             wind_zone: snapshot.wind_zone,
             en_v_b_m_s: snapshot.en_v_b_m_s,
             delta_t_k: snapshot.delta_t_k,
-            construction_activity: snapshot.construction_activity.clone(),
+            construction_activity: snapshot.construction_activity,
             accidental_mass_t: snapshot.accidental_mass_t,
             accidental_speed_km_h: snapshot.accidental_speed_km_h,
             bridge_lane: snapshot.bridge_lane,
             bridge_span_m: snapshot.bridge_span_m,
             bridge_lane_width_m: snapshot.bridge_lane_width_m,
             bridge_moment_resistance_knm: snapshot.bridge_moment_resistance_knm,
-            crane_class: snapshot.crane_class.clone(),
-            hoist_class: snapshot.hoist_class.clone(),
+            crane_class: snapshot.crane_class,
+            hoist_class: snapshot.hoist_class,
             hoisting_speed_m_s: snapshot.hoisting_speed_m_s,
             silo_bulk_density_kn_m3: snapshot.silo_bulk_density_kn_m3,
             silo_height_m: snapshot.silo_height_m,
@@ -159,7 +159,7 @@ impl En1991Artifact {
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1991::En1991Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::En1991Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -170,31 +170,31 @@ impl En1991Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.en1991` — twenty handcrafted schema leaves.
-pub fn en1991_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn en1991_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1991",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -206,7 +206,7 @@ pub fn en1991_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::en1991::{En1991Diff, En1991Mutation, En1991Snapshot};
+    use crate::{En1991Diff, En1991Mutation, En1991Snapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -258,7 +258,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::en1991::En1991Snapshot;
+    use crate::En1991Snapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -327,7 +327,7 @@ use crate::document::{AnnexChoice, CheckResult, ClauseId, ImposedCategory, Natio
 
 // #region 🔖️NaDe
 pub mod na_de {
-    pub use crate::artifacts::en1990::standards::v1::subsets::any::schema::na_de::NaDe;
+    pub use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::na_de::NaDe;
 
     /// ❄️ German snow zone per DIN EN 1991-1-3/NA.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -864,7 +864,7 @@ mod compliance_helpers_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn snow_and_wind_de_vs_en_diverge_at_altitude() {
-        let doc = crate::artifacts::en1991::En1991Snapshot { snow_altitude_m: 400.0, annex: AnnexChoice::De, ..crate::artifacts::en1991::En1991Snapshot::default() };
+        let doc = crate::En1991Snapshot { snow_altitude_m: 400.0, annex: AnnexChoice::De, ..crate::En1991Snapshot::default() };
         let de_s_k = part_1_3::design_ground_snow_load(doc.annex, doc.snow_zone, doc.snow_altitude_m, doc.en_s_k_kn_m2);
         let en_s_k = part_1_3::design_ground_snow_load(AnnexChoice::En, doc.snow_zone, doc.snow_altitude_m, doc.en_s_k_kn_m2);
         assert!(de_s_k > en_s_k);

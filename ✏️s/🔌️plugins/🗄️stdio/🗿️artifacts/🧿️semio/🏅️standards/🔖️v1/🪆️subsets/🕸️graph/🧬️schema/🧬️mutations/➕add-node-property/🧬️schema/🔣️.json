@@ -1,17 +1,28 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/add-node-property.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/add-node-property/schema.json",
   "title": "AddNodeProperty",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "node_id",
     "index",
-    "nodeId",
     "property"
   ],
   "properties": {
-    "nodeId": {
-      "title": "GraphNodeId",
+    "node_id": {
+      "$ref": "#/$defs/GraphNodeId"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "property": {
+      "$ref": "#/$defs/SemioValueEntry"
+    }
+  },
+  "$defs": {
+    "GraphNodeId": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -23,12 +34,7 @@
         }
       }
     },
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "property": {
-      "title": "SemioValueEntry",
+    "SemioValueEntry": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -40,104 +46,174 @@
           "type": "string"
         },
         "value": {
-          "oneOf": [
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Bool"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Int"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Float"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Str"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Bytes"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "List"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Map"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "const": "Ref"
-                }
-              },
-              "required": [
-                "kind"
-              ],
-              "additionalProperties": false
+          "$ref": "#/$defs/SemioValue"
+        }
+      }
+    },
+    "SemioValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "null"
             }
-          ]
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bool"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lexeme"
+          ],
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "lexeme": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lexeme"
+          ],
+          "properties": {
+            "kind": {
+              "const": "float"
+            },
+            "lexeme": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "str"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bytes"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "items"
+          ],
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValue"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "entries"
+          ],
+          "properties": {
+            "kind": {
+              "const": "map"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValueEntry"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ref"
+            },
+            "id": {
+              "$ref": "#/$defs/ValueId"
+            }
+          }
+        }
+      ]
+    },
+    "ValueId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
         }
       }
     }

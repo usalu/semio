@@ -7,8 +7,8 @@
 //! subset in this ticket hits — `ArtifactChild<S>` has no `DslField` impl) rather than delegating to
 //! `PlaybookSpec::__dsl_to_record`/`__dsl_spec` as before.
 
-use crate::artifacts::playbook::PlaybookStep;
-use schema::ArtifactSchema;
+use crate::PlaybookStep;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted playbook document snapshot (persistent fields of the artifact). `#[child(...)]`
@@ -26,10 +26,10 @@ pub struct PlaybookSnapshot {
     pub title: Option<String>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.document")]
-    pub document: crate::artifacts::playbook::PlaybookDocumentChild,
+    pub document: crate::PlaybookDocumentChild,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.flow")]
-    pub flow: crate::artifacts::playbook::PlaybookFlowChild,
+    pub flow: crate::PlaybookFlowChild,
 }
 
 impl Default for PlaybookSnapshot {
@@ -43,7 +43,7 @@ impl PlaybookSnapshot {
     /// 🌉️ Builds a plugin snapshot from the shared kernel `PlaybookSpec`, minting/caching the
     /// composed `document`/`flow` children from its `steps`.
     pub fn from_kernel(spec: crate::playbook::PlaybookSpec) -> Self {
-        crate::artifacts::playbook::playbook_snapshot_with_steps(&spec.schema, &spec.id, &spec.version, spec.title, spec.steps)
+        crate::playbook_snapshot_with_steps(&spec.schema, &spec.id, &spec.version, spec.title, spec.steps)
     }
 
     /// 🌉️ Lowers this snapshot into the kernel `PlaybookSpec` for shared domain helpers — reads
@@ -54,14 +54,14 @@ impl PlaybookSnapshot {
 
     /// 🌉️ Borrows as kernel spec without consuming `self`.
     pub fn as_kernel(&self) -> crate::playbook::PlaybookSpec {
-        crate::playbook::PlaybookSpec { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), steps: crate::artifacts::playbook::playbook_steps(self) }
+        crate::playbook::PlaybookSpec { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), steps: crate::playbook_steps(self) }
     }
 
     /// 🔎️ The current steps, read through the composed `flow` child's working-scene cache — the
     /// single call site every render/inference/export path in this plugin uses instead of the old
     /// `.steps` field access.
     pub fn steps(&self) -> Vec<PlaybookStep> {
-        crate::artifacts::playbook::playbook_steps(self)
+        crate::playbook_steps(self)
     }
 }
 //#endregion 🔖️Snapshot

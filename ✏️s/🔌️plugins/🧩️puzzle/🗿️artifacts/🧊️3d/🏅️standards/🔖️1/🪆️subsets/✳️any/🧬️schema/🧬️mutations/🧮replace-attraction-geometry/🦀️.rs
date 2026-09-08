@@ -1,7 +1,7 @@
 //! Puzzle3d mutation — `ReplaceAttractionGeometry`: whole-value swap of an attraction's pose-solver connection pose.
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::Puzzle3dDiff;
+use crate::mutations::Puzzle3dMutation;
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
 /// `replace-attraction-geometry` payload.
@@ -42,6 +42,6 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ReplaceAttra
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_attraction_geometry(id: String, new_gap: f64, new_shift: f64, new_rise: f64, new_rotation: f64, new_turn: f64, new_tilt: f64, new_x: f64, new_y: f64) -> Puzzle3dMutation {
-    Puzzle3dMutation::ReplaceAttractionGeometry(ReplaceAttractionGeometry { id, new_gap, new_shift, new_rise, new_rotation, new_turn, new_tilt, new_x, new_y })
+pub fn replace_attraction_geometry(geometry: ReplaceAttractionGeometry) -> Puzzle3dMutation {
+    Puzzle3dMutation::ReplaceAttractionGeometry(geometry)
 }

@@ -2,7 +2,7 @@
 //! `Vec::new()`.
 
 use super::ReplaceGeometryParameters;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceGeometryParameters, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

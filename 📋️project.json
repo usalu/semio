@@ -315,6 +315,13 @@
         "forwardAllArgs": true
       }
     },
+    "schema-oracle": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts schema oracle"
+      }
+    },
     "schema-test": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -997,9 +1004,7 @@
       "options": {
         "command": "bun ./📜️script.ts setup deps browsers"
       },
-      "dependsOn": [
-        "deps-javascript"
-      ]
+      "dependsOn": []
     },
     "deps-wasm": {
       "executor": "nx:run-commands",

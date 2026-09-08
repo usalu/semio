@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1990/1/any/mutation/change-consequence-class.json",
+  "$id": "https://semio.tech/schema/s/norm/en1990/1/any/mutation/change-consequence-class/schema.json",
   "title": "ChangeConsequenceClass",
   "type": "object",
   "additionalProperties": false,

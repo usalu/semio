@@ -1,8 +1,8 @@
 //! 🧹️ 🧹️ Remodeling play app commands command — `reset-placeholder-mesh`.
 
-use crate::artifacts::remodeling::mutations::replace_mesh_result;
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::{MeshSource, RemodelingMesh, RemodelingSnapshot};
+use crate::mutations::replace_mesh_result;
+use crate::op::RemodelingMutation;
+use crate::{MeshSource, RemodelingMesh, RemodelingSnapshot};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Results
 /// 📦️ The seeded stand-in mesh a fresh document (and `resetPlaceholderMesh`) carries.
 fn placeholder_result() -> RemodelingMesh {
-    RemodelingMesh { mesh: crate::artifacts::remodeling::placeholder_remodeling_mesh_handle(), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
+    RemodelingMesh { mesh: crate::placeholder_remodeling_mesh_handle(), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
 }
 //#endregion 🔖️Results
 
@@ -55,7 +55,7 @@ mod tests {
     /// 🧩️ `results.mesh.mesh` is a composed CHILD handle now — reads the real vertex count through
     /// `remodeling_mesh_workspace`'s working-scene cache (0 on a cold cache, matching an empty mesh).
     fn mesh_vertex_count(snapshot: &RemodelingSnapshot) -> usize {
-        crate::artifacts::remodeling::remodeling_mesh_workspace(&snapshot.results.mesh.mesh).map_or(0, |mesh| mesh.vertex_count())
+        crate::remodeling_mesh_workspace(&snapshot.results.mesh.mesh).map_or(0, |mesh| mesh.vertex_count())
     }
 
     #[semio_framework_async_macros::async_test]

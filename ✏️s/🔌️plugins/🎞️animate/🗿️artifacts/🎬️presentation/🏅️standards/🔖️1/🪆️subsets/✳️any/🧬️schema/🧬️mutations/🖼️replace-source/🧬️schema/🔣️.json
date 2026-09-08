@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/animate/presentation/1/any/mutation/replace-source.json",
+  "$id": "https://semio.tech/schema/s/animate/presentation/1/any/mutation/replace-source/schema.json",
   "title": "ReplaceSource",
   "type": "object",
   "additionalProperties": false,

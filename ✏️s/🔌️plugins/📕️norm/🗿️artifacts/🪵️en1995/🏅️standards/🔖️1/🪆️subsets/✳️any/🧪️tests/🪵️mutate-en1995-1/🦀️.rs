@@ -261,8 +261,8 @@ fn carrier_projection(text: &str) -> Json {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_norm::artifacts::en1995::standards::v1::subsets::any::schema::mutations::{apply_en1995_mutation, decode_en1995_mutation_json, inverse_en1995_mutation, En1995Mutation};
-    use semio_s_plugin_norm::artifacts::en1995::standards::v1::subsets::any::schema::snapshot::{decode_en1995_dsl, decode_en1995_pack, decode_en1995_snapshot_json, encode_en1995_dsl, encode_en1995_pack, encode_en1995_snapshot_json, En1995Snapshot};
+    use crate::standards::v1::subsets::any::schema::mutations::{apply_en1995_mutation, decode_en1995_mutation_json, inverse_en1995_mutation, En1995Mutation};
+    use crate::standards::v1::subsets::any::schema::snapshot::{decode_en1995_dsl, decode_en1995_pack, decode_en1995_snapshot_json, encode_en1995_dsl, encode_en1995_pack, encode_en1995_snapshot_json, En1995Snapshot};
     use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️FixtureDecode

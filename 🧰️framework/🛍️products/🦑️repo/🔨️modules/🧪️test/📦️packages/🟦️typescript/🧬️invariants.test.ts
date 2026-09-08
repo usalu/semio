@@ -8,7 +8,7 @@
 
 //#region 🔌️Adapters
 import { describe, expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import cases from "../../🧪️tests/🧬️schema-invariants/🔣️.json";
@@ -22,7 +22,9 @@ import {
   clearSchemaContractCache,
   discoverSchemaFixtures,
   fixtureUrisIn,
+  isFixtureOwnedPath,
   isJsonSchemaDefinition,
+  matchesTaxonomyPathPattern,
   parseFeature,
   parseSchemaUri,
   readSchemaCatalog,
@@ -51,7 +53,10 @@ const HUB_ID = "https://semio.tech/schema/hub/inference.json";
 const CASE_DIR = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️schema-invariants";
 const FORMAT_FILENAMES: Readonly<Record<string, string>> = { "🔣️jsonschema": "🔣️.json", "🦀️rust": "🦀️.rs", "🟦️typescript": "🟦️.ts", "🔗️graphql": "🔗️.graphql", "🛰️protobuf": "🛰️.proto" };
 
-type CatalogScopeRow = { path: string; formats: Record<string, string>; exports: string[]; dependsOn: string[]; hashes: Record<string, string> };
+type CatalogScopeRow = { path: string; formats: Record<string, string>; exports: Record<string, { file: string; facet: string }>; dependsOn: string[]; hashes: Record<string, string> };
+
+/** 📚️ One export row of a module-root document: the normative file that carries it, and its facet. */
+const rootExportRow = (...names: string[]): Record<string, { file: string; facet: string }> => Object.fromEntries(names.map((name) => [name, { file: "🔣️.json", facet: "schema" }]));
 
 /** 📝️ Writes one file into a synthetic repository, creating its parents. */
 function write(root: string, rel: string, body: string): void {
@@ -63,8 +68,7 @@ function write(root: string, rel: string, body: string): void {
 function scaffold(declareResolution = true): string {
   const root = mkdtempSync(join(tmpdir(), "schema-invariants-"));
   const taxonomy = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
-  if (declareResolution) taxonomy.schemaExportResolution = { scheme: "schema://", catalogPath: CATALOG_REL };
-  else delete taxonomy.schemaExportResolution;
+  if (!declareResolution) delete taxonomy.schemaExportResolution;
   write(root, TAXONOMY_REL_PATH, JSON.stringify(taxonomy));
   clearSchemaContractCache();
   return root;
@@ -76,16 +80,21 @@ function discard(root: string): void {
 }
 
 /** 🧬️ Writes one `🧬️schema/` module and returns the catalog row that names its files. */
-function writeSchemaModule(root: string, ownerRel: string, id: string, defs: Record<string, unknown>, sources: Readonly<Record<string, string>>): { path: string; formats: Record<string, string> } {
+function writeSchemaModule(root: string, ownerRel: string, id: string, defs: Record<string, unknown>, sources: Readonly<Record<string, string>>, rootExport = false): { path: string; formats: Record<string, string> } {
   const moduleRel = `${ownerRel}/🧬️schema`;
-  write(root, `${moduleRel}/🔣️.json`, `${JSON.stringify({ $schema: "http://json-schema.org/draft-07/schema#", $id: id, $defs: defs }, null, 2)}\n`);
-  const formats: Record<string, string> = { "🔣️jsonschema": `${moduleRel}/🔣️.json` };
+  // 🎯️A single-export module IS its export and says so with the taxonomy's root keyword; a multi-export
+  // module lists them under `$defs`. Both forms are written here so both are actually exercised.
+  const single = Object.entries(defs)[0]!;
+  const document = rootExport ? { $schema: "http://json-schema.org/draft-07/schema#", $id: id, title: single[0], ...(single[1] as Record<string, unknown>) } : { $schema: "http://json-schema.org/draft-07/schema#", $id: id, $defs: defs };
+  write(root, `${moduleRel}/🔣️.json`, `${JSON.stringify(document, null, 2)}\n`);
+  // 📚️`path` is the MODULE directory and every `formats` value is relative to it — the shape the
+  // generator emits, so this fixture repository and the real catalog are read by the same code.
+  const formats: Record<string, string> = { "🔣️jsonschema": "🔣️.json" };
   for (const [format, source] of Object.entries(sources)) {
-    const file = `${moduleRel}/${FORMAT_FILENAMES[format]!}`;
-    write(root, file, source);
-    formats[format] = file;
+    write(root, `${moduleRel}/${FORMAT_FILENAMES[format]!}`, source);
+    formats[format] = FORMAT_FILENAMES[format]!;
   }
-  return { path: ownerRel, formats };
+  return { path: moduleRel, formats };
 }
 
 function writeCatalog(root: string, scopes: Record<string, CatalogScopeRow>, duplicateScopeId?: string): void {
@@ -97,19 +106,19 @@ function writeCatalog(root: string, scopes: Record<string, CatalogScopeRow>, dup
 const ARTIFACT_DEF = { type: "object", additionalProperties: false, required: ["title"], properties: { title: { type: "string" } } } as const;
 
 /** 🧪️ The repository every resolution case resolves against: one writer scope, four formats. */
-function resolutionRepo(options: { declareResolution?: boolean; omitCatalog?: boolean; duplicateScopeId?: string; aliasScopeId?: string; fixtureOwnedScope?: boolean; dropRustExport?: boolean } = {}): string {
+function resolutionRepo(options: { declareResolution?: boolean; omitCatalog?: boolean; duplicateScopeId?: string; aliasScopeId?: string; fixtureOwnedScope?: boolean; dropRustExport?: boolean; rootExport?: boolean } = {}): string {
   const root = scaffold(options.declareResolution !== false);
   if (options.fixtureOwnedScope === true) {
     const scope = writeSchemaModule(root, "🌎️hub/🧪️fixtures/✅️inference-approval-v1", "https://semio.tech/schema/hub/inference-approval-fixture.json", { Approval: { type: "object" } }, {});
-    writeCatalog(root, { "hub.inference": { ...scope, exports: ["Approval"], dependsOn: [], hashes: {} } });
+    writeCatalog(root, { "hub.inference": { ...scope, exports: rootExportRow("Approval"), dependsOn: [], hashes: {} } });
     return root;
   }
   const scope = writeSchemaModule(root, WRITER_OWNER, WRITER_ID, { Artifact: ARTIFACT_DEF }, {
     "🦀️rust": options.dropRustExport === true ? "pub struct WriterDocument {\n    pub title: String,\n}\n" : "pub struct Artifact {\n    pub title: String,\n}\n",
     "🟦️typescript": "export interface Artifact {\n  title: string;\n}\n",
     "🔗️graphql": "type Artifact {\n  title: String!\n}\n",
-  });
-  const row: CatalogScopeRow = { ...scope, exports: ["Artifact"], dependsOn: [], hashes: {} };
+  }, options.rootExport === true);
+  const row: CatalogScopeRow = { ...scope, exports: rootExportRow("Artifact"), dependsOn: [], hashes: {} };
   const scopes: Record<string, CatalogScopeRow> = { "s.writer.writer": row };
   if (options.aliasScopeId !== undefined) scopes[options.aliasScopeId] = { ...row };
   if (options.omitCatalog !== true) writeCatalog(root, scopes, options.duplicateScopeId);
@@ -117,7 +126,7 @@ function resolutionRepo(options: { declareResolution?: boolean; omitCatalog?: bo
 }
 
 /** 🧪️ The repository every catalog case is judged against: two scopes, five formats each. */
-function catalogRepo(options: { recursiveRef?: boolean; unresolvedLocalRef?: boolean; crossScopeRef?: boolean; declareDependency?: boolean; filePathRef?: boolean; dropRustExport?: boolean; dropTypescriptExport?: boolean; dropProtoExport?: boolean; dropGraphqlExport?: boolean } = {}): string {
+function catalogRepo(options: { rootExport?: boolean; recursiveRef?: boolean; unresolvedLocalRef?: boolean; crossScopeRef?: boolean; declareDependency?: boolean; filePathRef?: boolean; dropRustExport?: boolean; dropTypescriptExport?: boolean; dropProtoExport?: boolean; dropGraphqlExport?: boolean } = {}): string {
   const root = scaffold(true);
   const properties: Record<string, unknown> = { title: { type: "string" } };
   if (options.recursiveRef === true) properties.children = { type: "array", items: { $ref: "#/$defs/Artifact" } };
@@ -129,7 +138,7 @@ function catalogRepo(options: { recursiveRef?: boolean; unresolvedLocalRef?: boo
     "🟦️typescript": options.dropTypescriptExport === true ? "export interface WriterDocument {\n  title: string;\n}\n" : "export interface Artifact {\n  title: string;\n}\n",
     "🔗️graphql": options.dropGraphqlExport === true ? "type WriterDocument {\n  title: String!\n}\n" : "type Artifact {\n  title: String!\n}\n",
     "🛰️protobuf": options.dropProtoExport === true ? "message WriterDocument {\n  string title = 1;\n}\n" : "message Artifact {\n  string title = 1;\n}\n",
-  });
+  }, options.rootExport === true);
   const hub = writeSchemaModule(root, HUB_OWNER, HUB_ID, { Approval: { type: "object", additionalProperties: false, required: ["artifactId"], properties: { artifactId: { type: "string" } } } }, {
     "🦀️rust": "pub struct Approval {\n    pub artifact_id: String,\n}\n",
     "🟦️typescript": "export interface Approval {\n  artifactId: string;\n}\n",
@@ -137,8 +146,8 @@ function catalogRepo(options: { recursiveRef?: boolean; unresolvedLocalRef?: boo
     "🛰️protobuf": "message Approval {\n  string artifact_id = 1;\n}\n",
   });
   writeCatalog(root, {
-    "s.writer.writer": { ...writer, exports: ["Artifact"], dependsOn: options.declareDependency === true ? ["hub.inference"] : [], hashes: {} },
-    "hub.inference": { ...hub, exports: ["Approval"], dependsOn: [], hashes: {} },
+    "s.writer.writer": { ...writer, exports: rootExportRow("Artifact"), dependsOn: options.declareDependency === true ? ["hub.inference"] : [], hashes: {} },
+    "hub.inference": { ...hub, exports: rootExportRow("Approval"), dependsOn: [], hashes: {} },
   });
   return root;
 }
@@ -178,13 +187,25 @@ describe("🔣️ schema invariant cases are themselves contracted", () => {
 describe("🏛️ owner eligibility", () => {
   test("every declared level and exclusion is decided by position, not by filename", () => {
     for (const row of cases.eligibilityCases) {
-      const verdict = schemaScopeEligibility(row.path);
+      const verdict = schemaScopeEligibility(repoRoot, row.path);
       expect(`${row.id}:${verdict.eligible}:${verdict.level ?? ""}`).toBe(`${row.id}:${row.eligible}:${row.level ?? ""}`);
     }
   });
 
   test("a trailing slash never changes a verdict", () => {
-    for (const row of cases.eligibilityCases) expect(schemaScopeEligibility(`${row.path}/`).eligible).toBe(row.eligible);
+    for (const row of cases.eligibilityCases) expect(schemaScopeEligibility(repoRoot, `${row.path}/`).eligible).toBe(row.eligible);
+  });
+
+  test("the glob vocabulary the taxonomy writes its levels in is honoured exactly", () => {
+    expect(matchesTaxonomyPathPattern("✏️s/🔌️plugins/*", "✏️s/🔌️plugins/✒️writer")).toBe(true);
+    expect(matchesTaxonomyPathPattern("✏️s/🔌️plugins/*", "✏️s/🔌️plugins/✒️writer/🗿️artifacts")).toBe(false);
+    expect(matchesTaxonomyPathPattern("**/🧪️*", "🌎️hub/🧪️fixtures")).toBe(true);
+    expect(matchesTaxonomyPathPattern("**/🧪️*", "🌎️hub/🧪️fixtures/x")).toBe(false);
+    expect(matchesTaxonomyPathPattern("**/🧪️*/**", "🌎️hub/🧪️fixtures/x")).toBe(true);
+    expect(isFixtureOwnedPath(repoRoot, "🌎️hub/🧪️fixtures/✅️approval/🧬️.schema.json")).toBe(true);
+    expect(isFixtureOwnedPath(repoRoot, `${TEST_DOMAIN_REL_PATH}/🧬️schema/🔣️.json`)).toBe(false);
+    expect(isFixtureOwnedPath(repoRoot, `${TEST_DOMAIN_REL_PATH}/🧪️tests/x/🔣️.json`)).toBe(true);
+    expect(matchesTaxonomyPathPattern("🧰️framework/🛍️products/*/🔨️modules/**", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine")).toBe(true);
   });
 });
 
@@ -269,7 +290,7 @@ describe("📚️ catalog completeness and cross-scope dependencies", () => {
   test("a scope that declares no json schema implementation has no normative definition", () => {
     const root = scaffold();
     try {
-      expect(codesOf(schemaExportCompletenessDiagnostics(root, "s.empty", { path: "✏️s/🔌️plugins/✒️writer", formats: {}, exports: ["Artifact"], dependsOn: [], hashes: {} }))).toEqual(["schema-format-unavailable"]);
+      expect(codesOf(schemaExportCompletenessDiagnostics(root, "s.empty", { path: "✏️s/🔌️plugins/✒️writer", formats: {}, exports: { Artifact: { file: "🔣️.json", facet: "schema" } }, dependsOn: [], hashes: {} }))).toEqual(["schema-format-unavailable"]);
     } finally {
       discard(root);
     }
@@ -295,7 +316,7 @@ describe("🧬️ structural validation agrees with ajv", () => {
 describe("🧫️ schema-bound fixtures run through named stages", () => {
   for (const row of cases.pipelineCases) {
     test(row.id, () => {
-      const root = resolutionRepo({ dropRustExport: (row as { dropRustExport?: boolean }).dropRustExport === true });
+      const root = resolutionRepo({ dropRustExport: (row as { dropRustExport?: boolean }).dropRustExport === true, rootExport: (row as { rootExport?: boolean }).rootExport === true });
       try {
         const report = runSchemaFixture(root, row.fixture as unknown as SchemaBoundFixture, CASE_DIR);
         expect(report.stages.map((entry) => entry.stage)).toEqual([...SCHEMA_FIXTURE_STAGES]);
@@ -351,6 +372,43 @@ describe("🔗️ the fixture resolver speaks schema://", () => {
       expect(codesOf(diagnostics)).toEqual(["schema-scope-unknown"]);
     } finally {
       discard(root);
+    }
+  });
+});
+
+/**
+ * 🤝️ The catalog generator (`📚️library`) and this harness are two independent implementations of one
+ * invariant set, so they are held against ONE vector: the generator's own cases, run through these
+ * checkers. Only the code-free halves are compared — which PATHS are misplaced, and which LEVEL each
+ * eligible owner sits on — because the two implementations name their diagnostics differently and a
+ * translation table between two vocabularies would be the adapter this ticket exists to remove.
+ */
+describe("🤝️ parity with the catalog generator's own vector", () => {
+  const VECTOR = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️schema-scope-catalog/🧫️fixtures/🔣️.json";
+  const PLACEMENT_CODES = new Set(["schema-placement-forbidden-filename", "schema-placement-outside-module", "schema-contracts-directory-forbidden", "schema-fixture-defines-schema"]);
+  type GeneratorCase = { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string }>; diagnosticCodes: string[]; placementPaths: string[] } };
+
+  const vector = (): GeneratorCase[] => {
+    expect(existsSync(join(repoRoot, VECTOR)), `the catalog generator's vector is expected at ${VECTOR}`).toBe(true);
+    return (JSON.parse(readFileSync(join(repoRoot, VECTOR), "utf8")) as { cases: GeneratorCase[] }).cases;
+  };
+
+  test("every generator case places the same files and levels as this harness does", () => {
+    for (const row of vector()) {
+      const root = scaffold();
+      try {
+        for (const [rel, body] of Object.entries(row.files)) write(root, rel, typeof body === "string" ? body : `${JSON.stringify(body, null, 2)}\n`);
+        const found = [...schemaPlacementDiagnostics(root), ...schemaFixtureIsolationDiagnostics(root)];
+        const misplaced = [...new Set(found.filter((entry) => PLACEMENT_CODES.has(entry.code)).map((entry) => entry.path ?? ""))].sort();
+        expect(`${row.id}:${misplaced.join(",")}`).toBe(`${row.id}:${[...row.expected.placementPaths].sort().join(",")}`);
+        for (const [id, scope] of Object.entries(row.expected.scopes)) {
+          const verdict = schemaScopeEligibility(root, scope.path.replace(/\/🧬️schema$/u, ""));
+          expect(`${row.id}:${id}:${verdict.eligible}:${verdict.level ?? ""}`).toBe(`${row.id}:${id}:true:${scope.level}`);
+        }
+        if (row.expected.diagnosticCodes.includes("module-level-ineligible")) expect(schemaOwnerEligibilityDiagnostics(root).map((entry) => entry.code)).toEqual(["schema-owner-ineligible"]);
+      } finally {
+        discard(root);
+      }
     }
   });
 });

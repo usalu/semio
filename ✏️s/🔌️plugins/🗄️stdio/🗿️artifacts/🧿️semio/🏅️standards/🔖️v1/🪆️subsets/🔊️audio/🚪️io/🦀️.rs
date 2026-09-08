@@ -4,16 +4,21 @@
 //! `🦀️.rs`, a closer-only hot file) via `#[path=...]` relative to this file's own directory.
 //! Registration flows through `🎹️composer::register`.
 
+#[cfg(feature = "conversion-audio")]
 #[path = "📥️import/🧩️deserializers/🗿️artifacts/🎵️mp3/🔖️mpeg1-layer3/✳️any/🦀️.rs"]
 pub mod mp3_deserializer;
+#[cfg(feature = "conversion-audio")]
 #[path = "📤️export/🧵️serializers/🗿️artifacts/🎵️mp3/🔖️mpeg1-layer3/✳️any/🦀️.rs"]
 pub mod mp3_serializer;
+#[cfg(feature = "conversion-audio")]
 #[path = "📥️import/🧩️deserializers/🗿️artifacts/🔊️wav/🔖️riff-pcm/✳️any/🦀️.rs"]
 pub mod wav_deserializer;
+#[cfg(feature = "conversion-audio")]
 #[path = "📤️export/🧵️serializers/🗿️artifacts/🔊️wav/🔖️riff-pcm/✳️any/🦀️.rs"]
 pub mod wav_serializer;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
+    #[cfg(feature = "conversion-audio")]
     use crate::standards::v1::subsets::audio::io::{mp3_deserializer::SemioAudioFromMp3, mp3_serializer::SemioAudioToMp3, wav_deserializer::SemioAudioFromWav, wav_serializer::SemioAudioToWav};
     use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
     use crate::standards::v1::subsets::audio::schema::SemioAudioAnalyzer;
@@ -137,6 +142,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::audio::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-audio")]
         register_composer_entries(bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -152,6 +158,7 @@ pub mod derived_composition {
     /// 🌉️ audio↔mp3 / audio↔wav bridge entries (W4) -- forward + reverse rows per pair, giving all 4
     /// IoKeys per pair per the master plan's io architecture note.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-audio")]
     fn bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioAudioFromMp3>(), serializer_entry_of::<SemioAudioToMp3>(), deserializer_entry_of::<SemioAudioFromWav>(), serializer_entry_of::<SemioAudioToWav>()]).as_slice()
@@ -159,7 +166,7 @@ pub mod derived_composition {
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-audio"))]
     mod tests {
         use super::*;
         use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioTag};

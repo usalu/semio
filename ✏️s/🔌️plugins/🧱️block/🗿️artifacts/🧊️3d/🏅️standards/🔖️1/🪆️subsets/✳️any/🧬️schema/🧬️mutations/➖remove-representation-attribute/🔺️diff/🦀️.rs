@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `RemoveRepresentationAttribute`.
 
 use crate::{BlockAttribute, BlockRepresentation};
-use crate::artifacts::block3d::Block3dSnapshot;
-use crate::artifacts::block3d::diff::{Block3dDiff, Block3dRepresentationsDelta, Block3dRepresentationsPatch, Block3dRepresentationsPatchEntry};
+use crate::Block3dSnapshot;
+use crate::diff::{Block3dDiff, Block3dRepresentationsDelta, Block3dRepresentationsPatch, Block3dRepresentationsPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveRepresentationAttribute, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

@@ -1,7 +1,7 @@
 //! 🧱️ 🧱️ FEM 3D app commands command — `add-solid`.
 
-use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::op::Fem3dMutation;
+use crate::Fem3dSnapshot;
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -27,7 +27,7 @@ pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.solids.iter().map(|s| s.id.clone()), "sol");
     let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.depth], [payload.x, payload.y + payload.depth]];
-    let solid = crate::artifacts::fem3d::FemSolid {
+    let solid = crate::FemSolid {
         id,
         name: "Solid".into(),
         outline,
@@ -38,5 +38,5 @@ pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &
         mesh_size: payload.mesh_size.unwrap_or(0.5),
         material_id: payload.material_id.clone(),
     };
-    Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::CreateSolid { solid })]))
+    Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::mutations::create_solid::CreateSolid { solid })]))
 }

@@ -4,7 +4,9 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
+    #[cfg(feature = "conversion-flow")]
     use super::super::export::serializers::artifacts::json::v_rfc8259::any::SemioFlowToJson;
+    #[cfg(feature = "conversion-flow")]
     use super::super::import::deserializers::artifacts::json::v_rfc8259::any::SemioFlowFromJson;
     use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
     use crate::standards::v1::subsets::flow::schema::SemioFlowAnalyzer;
@@ -103,8 +105,10 @@ pub mod derived_composition {
     /// 🚪️ flow<->json bridge row (W4 G6) — one `deserializer_entry_of` (json -> semio) + one
     /// `serializer_entry_of` (semio -> json), lossless (see `document`'s own composer for the fuller
     /// doc comment on how `register_composer_entries` derives all 4 `IoKey`s from these 2 rows).
+    #[cfg(feature = "conversion-flow")]
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-flow")]
     fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioFlowFromJson>(), serializer_entry_of::<SemioFlowToJson>()])
     }
@@ -120,6 +124,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-flow")]
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -134,7 +139,7 @@ pub mod derived_composition {
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-flow"))]
     mod tests {
         use super::*;
         use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;

@@ -4,7 +4,7 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::block5d::{Block5dSnapshot, BLOCK5D_DIALECT, BLOCK_5D_SCHEMA};
+use crate::{Block5dSnapshot, BLOCK5D_DIALECT, BLOCK_5D_SCHEMA};
 use crate::viewer::block5d::modes::view;
 use crate::viewer::block5d::modes::view::windows::world;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
@@ -42,7 +42,7 @@ pub struct Block5dViewer;
 
 impl ArtifactViewer for Block5dViewer {
     type Snapshot = Block5dSnapshot;
-    type Mutation = crate::artifacts::block5d::op::Block5dMutation;
+    type Mutation = crate::op::Block5dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -57,9 +57,9 @@ impl ArtifactViewer for Block5dViewer {
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document so the view's
     /// mesh window renders a real representation instead of the fallback mesh kind — the
     /// artifact-side `default_block5d_snapshot` the editor boots on too (no editor import: this is
-    /// `crate::artifacts::block5d::schema`).
+    /// `crate::schema`).
     fn initial_snapshot() -> Block5dSnapshot {
-        crate::artifacts::block5d::schema::default_block5d_snapshot()
+        crate::schema::default_block5d_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Block5dViewCommand::Noop` variant never carries a config

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/scene-root/bind.json",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-scene-root-node/schema.json",
   "title": "GltfBindSceneRootNodeMutation",
   "type": "object",
   "additionalProperties": false,

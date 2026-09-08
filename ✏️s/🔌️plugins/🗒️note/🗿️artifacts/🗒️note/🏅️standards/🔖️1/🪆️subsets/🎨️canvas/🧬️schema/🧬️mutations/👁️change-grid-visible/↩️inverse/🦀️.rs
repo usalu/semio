@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeGridVisible`.
 use super::ChangeGridVisible;
-use crate::artifacts::note::schema::mutations::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::schema::mutations::NoteMutation;
+use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeGridVisible, base: &NoteSnapshot) -> Vec<NoteMutation> {

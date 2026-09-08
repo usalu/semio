@@ -1,13 +1,13 @@
 //! 🧮️ 🧮️ Fem2d play app commands command — `set-analysis-settings`.
 
-use crate::artifacts::fem2d::mutations::update_analysis_settings;
-use crate::artifacts::fem2d::op::Fem2dMutation;
-use crate::artifacts::fem2d::FemAnalysisSettings;
+use crate::mutations::update_analysis_settings;
+use crate::op::Fem2dMutation;
+use crate::FemAnalysisSettings;
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
+type Fem2dSnapshot = crate::Fem2dSnapshot;
 
 //#region 🔖️SetAnalysisSettings
 //#endregion 🔖️SetAnalysisSettings

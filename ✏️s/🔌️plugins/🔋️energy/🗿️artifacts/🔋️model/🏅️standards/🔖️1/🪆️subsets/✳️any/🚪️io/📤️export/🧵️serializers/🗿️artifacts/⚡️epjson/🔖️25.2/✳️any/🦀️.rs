@@ -38,7 +38,7 @@
 //! @see https://energyplus.readthedocs.io/en/latest/schema.html
 //! @see ../../../../../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/ENERGY-PLUGIN-END-TO-END/📓️w6-epjson-io.md
 use crate::air_exchange::InfiltrationMethod;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::EnergyModelSnapshot;
 use crate::model::{EntityId, Fenestration, Material, Model, OutsideBoundary, ScheduleId, Surface, SurfaceClass};
 use pack::json::{Object, Value};
 

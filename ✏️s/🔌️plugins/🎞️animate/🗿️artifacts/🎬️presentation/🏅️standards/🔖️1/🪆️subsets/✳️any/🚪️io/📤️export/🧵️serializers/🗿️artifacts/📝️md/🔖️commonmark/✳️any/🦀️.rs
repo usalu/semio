@@ -5,7 +5,7 @@
 //! Lossless wrap of the native text, so this hop is `IoFidelity::Canonical`, not `Lossy` —
 //! mirrors `🎬️sequence`'s identical md placeholder precedent.
 
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::PresentationSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

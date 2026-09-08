@@ -1,7 +1,7 @@
 //! ↩️ `change-moisture-mu-interior` — undo restores BASE's `moisture_mu_interior`.
 
 use super::ChangeMoistureMuInterior;
-use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
+use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeMoistureMuInterior, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {

@@ -8,7 +8,7 @@
 //! watchdog-wrapped and explicitly bounded. No ambient randomness enters the inference, so
 //! `DepHash` caching over `AssemblySolve`/`AssemblyContradiction`/`AssemblyEntropy` is sound.
 
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::schema::snapshot::AssemblySnapshot;
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️Compile
@@ -796,7 +796,7 @@ fn shannon_entropy_over_modules(snapshot: &AssemblySnapshot) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::assembly::schema::snapshot::{AssemblyModuleWeight, AssemblyRule, AssemblySlot, AssemblySlotEdge};
+    use crate::schema::snapshot::{AssemblyModuleWeight, AssemblyRule, AssemblySlot, AssemblySlotEdge};
     use semio_framework::ToolJobFactory as _;
     use semio_framework_job::{allocate_operation_id, root_cancel_token, CommitValidation, Generation, InteractiveJob, Operation, RevisionId, StepBudget, StepContext, StepOutcome};
     use semio_framework_plugin::app::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode, WireArtifactInferenceRequest, WireArtifactInferenceResult, ARTIFACT_INFERENCE_WIRE_VERSION};

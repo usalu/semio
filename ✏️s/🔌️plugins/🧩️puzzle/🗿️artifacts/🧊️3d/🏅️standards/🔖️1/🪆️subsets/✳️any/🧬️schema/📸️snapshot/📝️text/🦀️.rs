@@ -7,7 +7,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::Puzzle3dSnapshot;
 
 /// 📄️ The `concrete-forest` example fixture, handcrafted in the `.puzzle3d` DSL.
 pub const PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio");
@@ -28,7 +28,7 @@ pub fn print_dsl(document: &Puzzle3dSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle3d::{
+    use crate::{
         Puzzle3dAttraction, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dScale, Puzzle3dTargetVolume, Puzzle3dVortex,
     };
 
@@ -81,7 +81,7 @@ mod tests {
         });
         projection.meta = Puzzle3dMeta {
             kind_catalogs: None,
-            kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: crate::artifacts::puzzle3d::Puzzle3dCompatSpecificity::Vortex }],
+            kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: crate::Puzzle3dCompatSpecificity::Vortex }],
         };
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
@@ -94,15 +94,15 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::puzzle3d::op::Puzzle3dMutation;
-        use crate::artifacts::puzzle3d::spr::Puzzle3dStore;
-        use crate::artifacts::puzzle3d::PUZZLE_3D_SCHEMA;
+        use crate::op::Puzzle3dMutation;
+        use crate::spr::Puzzle3dStore;
+        use crate::PUZZLE_3D_SCHEMA;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = semio_framework::io::resolve_ready(Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None))).expect("store");
         let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle3d::mutations::create_object(object, None)], description: None })).expect("apply");
+        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::create_object(object, None)], description: None })).expect("apply");
         let envelope = store.envelope();
         let edit: &Edit<Puzzle3dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework::io::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));

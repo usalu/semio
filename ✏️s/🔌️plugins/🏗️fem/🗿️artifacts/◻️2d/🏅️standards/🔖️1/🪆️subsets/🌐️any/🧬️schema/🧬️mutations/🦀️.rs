@@ -5,8 +5,8 @@
 //! payload's own `diff`/`inverse` — see `🧪️MutationsDeriveLaws` in
 //! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs` for the reference shape.
 
-use crate::artifacts::fem2d::diff::Fem2dDiff;
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::diff::Fem2dDiff;
+use crate::Fem2dSnapshot;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
@@ -122,8 +122,8 @@ pub fn inverse_fem2d_mutation(snapshot: &Fem2dSnapshot, mutation: &Fem2dMutation
 ///
 /// @see 📓️w13-fem2d-semantics.md — the per-kind rule table these guards implement.
 pub mod guards {
-    use crate::artifacts::fem2d::diff::Fem2dDiff;
-    use crate::artifacts::fem2d::{element_id, load_id, Fem2dSnapshot, FemAnalysisSettings, FemElement, FemLoad, FemMaterial, FemNode, FemRegion, FemSection};
+    use crate::diff::Fem2dDiff;
+    use crate::{element_id, load_id, Fem2dSnapshot, FemAnalysisSettings, FemElement, FemLoad, FemMaterial, FemNode, FemRegion, FemSection};
 
     type Rejection = protocol::MutationOutcome<Fem2dDiff>;
 
@@ -148,10 +148,11 @@ pub mod guards {
     /// and then every referrer, so a caller can offer to re-point or remove them.
     pub fn referenced(noun: &str, blocker: &str, target: &str, referrers: Vec<String>) -> Option<Rejection> {
         (!referrers.is_empty()).then(|| {
+            let count = referrers.len();
             let listed = referrers.join(", ");
             let mut address = vec![target.to_string()];
-            address.extend(referrers.iter().cloned());
-            protocol::MutationOutcome::error("mutation.target-referenced", format!("{noun} \"{target}\" is still referenced by {} {blocker}(s): {listed}.", referrers.len()), address)
+            address.extend(referrers);
+            protocol::MutationOutcome::error("mutation.target-referenced", format!("{noun} \"{target}\" is still referenced by {count} {blocker}(s): {listed}."), address)
         })
     }
 
@@ -327,7 +328,7 @@ pub mod guards {
 
     /// 🔎️ Every member UDL naming this element, as `"<case>/<load>"`.
     pub fn element_referrers(base: &Fem2dSnapshot, target: &str) -> Vec<String> {
-        base.load_cases.iter().flat_map(|case| case.loads.iter().filter_map(move |load| matches!(load, FemLoad::MemberUdl { element_id: referenced, .. } if referenced == target).then(|| format!("{}/{}", case.id, load_id(load))))).collect()
+        base.load_cases.iter().flat_map(|case| case.loads.iter().filter(move |load| matches!(load, FemLoad::MemberUdl { element_id: referenced, .. } if referenced == target)).map(move |load| format!("{}/{}", case.id, load_id(load)))).collect()
     }
 
     /// 🔎️ Every element and region naming this material.
@@ -351,7 +352,7 @@ pub mod guards {
 
     /// 🔎️ Every area load naming this region, as `"<case>/<load>"`.
     pub fn region_referrers(base: &Fem2dSnapshot, target: &str) -> Vec<String> {
-        base.load_cases.iter().flat_map(|case| case.loads.iter().filter_map(move |load| matches!(load, FemLoad::Area { region_id, .. } if region_id == target).then(|| format!("{}/{}", case.id, load_id(load))))).collect()
+        base.load_cases.iter().flat_map(|case| case.loads.iter().filter(move |load| matches!(load, FemLoad::Area { region_id, .. } if region_id == target)).map(move |load| format!("{}/{}", case.id, load_id(load)))).collect()
     }
 
     /// 🔎️ Every combination weighting this load case.
@@ -370,7 +371,7 @@ pub mod guards {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::fem2d::{element_id, load_id, FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+    use crate::{element_id, load_id, FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
     use protocol::MutationDiff;
     use protocol::SemanticMutation;
 
@@ -938,9 +939,9 @@ const PLANAR_DOFS: [&str; 3] = ["Tx", "Ty", "Rz"];
 /// is not something a frame solver can express, and this subset's region geometry already has its own
 /// two third-party oracles.
 fn fem2d_frame_axes(doc: &Fem2dSnapshot) -> (Vec<String>, Vec<(String, String)>, Vec<String>) {
-    let ends = |element: &crate::artifacts::fem2d::FemElement| match element {
-        crate::artifacts::fem2d::FemElement::Bar { start, end, .. } => (start.clone(), end.clone(), false),
-        crate::artifacts::fem2d::FemElement::Beam { start, end, .. } => (start.clone(), end.clone(), true),
+    let ends = |element: &crate::FemElement| match element {
+        crate::FemElement::Bar { start, end, .. } => (start.clone(), end.clone(), false),
+        crate::FemElement::Beam { start, end, .. } => (start.clone(), end.clone(), true),
     };
     let mut active: Vec<(String, [bool; 3])> = Vec::new();
     for element in &doc.elements {
@@ -965,19 +966,19 @@ fn fem2d_frame_axes(doc: &Fem2dSnapshot) -> (Vec<String>, Vec<(String, String)>,
             }
         }
     }
-    let members: Vec<String> = doc.elements.iter().map(crate::artifacts::fem2d::element_id).map(str::to_string).collect();
+    let members: Vec<String> = doc.elements.iter().map(crate::element_id).map(str::to_string).collect();
     (nodes, pairs, members)
 }
 
 /// 🔤️ A document degree of freedom as the wire spells it.
-fn fem2d_dof_name(dof: crate::artifacts::fem2d::FemDof) -> &'static str {
+fn fem2d_dof_name(dof: crate::FemDof) -> &'static str {
     match dof {
-        crate::artifacts::fem2d::FemDof::Tx => "Tx",
-        crate::artifacts::fem2d::FemDof::Ty => "Ty",
-        crate::artifacts::fem2d::FemDof::Tz => "Tz",
-        crate::artifacts::fem2d::FemDof::Rx => "Rx",
-        crate::artifacts::fem2d::FemDof::Ry => "Ry",
-        crate::artifacts::fem2d::FemDof::Rz => "Rz",
+        crate::FemDof::Tx => "Tx",
+        crate::FemDof::Ty => "Ty",
+        crate::FemDof::Tz => "Tz",
+        crate::FemDof::Rx => "Rx",
+        crate::FemDof::Ry => "Ry",
+        crate::FemDof::Rz => "Rz",
     }
 }
 

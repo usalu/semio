@@ -1,13 +1,13 @@
 //! ↩️ Inverse for `MoveBlock`.
 use super::MoveBlock;
-use crate::artifacts::note::schema::mutations::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::schema::mutations::NoteMutation;
+use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &MoveBlock, base: &NoteSnapshot) -> Vec<NoteMutation> {
-    match crate::artifacts::note::schema::find_block(&base.blocks, &payload.id) {
+    match crate::schema::find_block(&base.blocks, &payload.id) {
         Some(block) => {
-            let (x, y, ..) = crate::artifacts::note::schema::block_bounds(block);
+            let (x, y, ..) = crate::schema::block_bounds(block);
             vec![NoteMutation::MoveBlock(MoveBlock { id: payload.id.clone(), new_x: x, new_y: y })]
         }
         None => Vec::new(),

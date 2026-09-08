@@ -1,6 +1,6 @@
 //! 🧪️ Forms try-value updates with bounded vector expansion.
 
-use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
+use crate::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{discard_staged_try_value, FormsConfig, FormsConfigMutation};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
@@ -1475,7 +1475,7 @@ mod tests {
         let mut app = forms_app_with_registry().await;
         let mut snapshot = app.snapshot().expect("Forms snapshot");
         snapshot.id = id.into();
-        let envelope = store::create_document_envelope::<_, FormMutation>(crate::artifacts::forms::FORMS_DOCUMENT_SCHEMA, id, snapshot, None);
+        let envelope = store::create_document_envelope::<_, FormMutation>(crate::FORMS_DOCUMENT_SCHEMA, id, snapshot, None);
         let files = store::print_document_pack(&envelope).await.expect("Forms document pack");
         app.load_document_pack(&files).await.expect("load Forms document identity");
         app

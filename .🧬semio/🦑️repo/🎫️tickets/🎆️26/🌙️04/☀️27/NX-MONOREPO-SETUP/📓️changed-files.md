@@ -430,3 +430,58 @@ Retained probes: `🔬️graph-coalescing/📜️script.ts`, `🔬️graph-coale
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts`
 
 The existing `🔬️demonstrator-runtime/📜️script.ts` retained probe now checks profile invocation vectors as well.
+
+## Browser Artifact Distribution Foundation
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🕸️imports/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🕸️imports/🧫️cases.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🕸️imports/🧬️schema.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📦️distribution/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📦️distribution/🧫️cases.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📦️distribution/🧬️schema.json`
+- `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📦️assets/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌐️browser/📜️script.ts`
+
+Retained executable probes: `🔬️browser-imports/📜️script.ts` and `🔬️browser-distribution/📜️script.ts`. The runtime schema and pipeline schema were consolidated concurrently into `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧬️schema/🔣️.json`; our tests now use that current authority.
+
+## Demonstrator Production Publication
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📦️distribution/⚡️vite/🟦️.ts`
+- `♻️mit-bestand/🧺️demonstrator/🔨️modules/📦️site/📜️script.ts`
+- `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧬️schema/🔣️.json`
+- `♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts`
+- `♻️mit-bestand/🧺️demonstrator/📜️script.ts`
+
+## Demonstrator Development Lifecycle
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧫️cases.json`
+- `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/♻️activation/🟦️.ts`
+
+## Continuous Service Ownership
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/continuous-services/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/continuous-services/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🖥️services/📜️script.ts`
+
+## Service Readiness
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🧫️cases.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🖥️services/🌐️readiness/📜️script.ts`
+
+## Demonstrator E2E Entry Points
+
+- `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧪️e2e/🟦️.ts`
+- `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/📜️script.ts`
+- `♻️mit-bestand/🧺️demonstrator/🎭️playwright.config.ts`
+- `♻️mit-bestand/🧺️demonstrator/package.json`
+- `📋️project.json`
+
+- `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📋️project.json` — removed duplicate raw WASI release build entry point; existing canonical component target remains.
+
+- `✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📜️script.ts` — removed duplicate raw WASI release build entry point; existing canonical component target remains.

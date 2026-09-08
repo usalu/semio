@@ -1,8 +1,8 @@
 //! 🧬️ GIS terrain artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::gisterrain::dsl::REUSE_TERRAIN_EXAMPLE_TEXT;
-use crate::artifacts::gisterrain::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
-use framework_surface::terrain::tiles;
+use crate::dsl::REUSE_TERRAIN_EXAMPLE_TEXT;
+use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
+use semio_framework_surface::terrain::tiles;
 use schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -102,7 +102,7 @@ pub fn gisterrain_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::gisterrain::{GisTerrainDiff, GisTerrainMutation, GisTerrainSnapshot};
+    use crate::{GisTerrainDiff, GisTerrainMutation, GisTerrainSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -154,7 +154,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::gisterrain::GisTerrainSnapshot;
+    use crate::GisTerrainSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -226,7 +226,7 @@ pub fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
 }
 
 /// 🗺️ The default terrain document, seeded from the bundled reuse example's `gisterrain
-/// exaggeration=...` header (see `crate::artifacts::gisterrain::GisTerrainSnapshot`'s
+/// exaggeration=...` header (see `crate::GisTerrainSnapshot`'s
 /// derive-generated `.gisterrain` DSL).
 pub fn default_terrain_document() -> GisTerrainSnapshot {
     <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_terrain_snapshot())
@@ -242,7 +242,7 @@ pub fn default_terrain_document() -> GisTerrainSnapshot {
 /// 🧭️ Originally relocated out of the generic `framework_surface_terrain` engine (audit finding A5:
 /// the framework must not know ✏️s — these DTOs and `build_terrain_scene_json` name gis-specific
 /// concepts). The DEM-tile decode/session/mesh engine itself
-/// (`framework_surface::terrain::{tiles, projection, TerrainSessionCore}`) stays in the framework:
+/// (`semio_framework_surface::terrain::{tiles, projection, TerrainSessionCore}`) stays in the framework:
 /// it is also path-mounted directly into `framework/os/infinite`'s `World3dState` (to dodge a
 /// surface↔infinite cargo cycle) to drive the generic `World3d` terrain layer, so it is genuinely
 /// shared rendering engine code, not gis-specific — only this descriptor/DTO layer belonged here.
@@ -295,7 +295,7 @@ struct TerrainSceneStyleJson<'a> {
 }
 
 /// 🏔️ Builds the `World3dScene.terrain_json` payload for a descriptor — the one place gis needs to
-/// reach into `framework_surface::terrain` beyond the wasm session itself (for the generic engine's
+/// reach into `semio_framework_surface::terrain` beyond the wasm session itself (for the generic engine's
 /// tile zoom bounds).
 pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
     let style = TerrainSceneStyleJson {

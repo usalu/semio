@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/set-basic-attribute.json",
+  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/basic/mutation/set-basic-attribute/schema.json",
   "title": "SetBasicAttribute",
   "type": "object",
   "additionalProperties": false,

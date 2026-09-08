@@ -1,5 +1,5 @@
 //! 🧾️ Serialize layout through the first-party JSON artifact codec.
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::LayoutSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::JsonSnapshot;
 
 pub fn register() {}
@@ -18,7 +18,7 @@ mod tests {
     #[test]
     fn json_artifact_round_trip_preserves_the_language_neutral_snapshot() {
         let fixture = include_str!("../../../../../../../🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/🔀️moves-page-1-behind-page-2/📸️snapshot/⬅️before/🔣️.json");
-        let snapshot = crate::artifacts::layout::schema::parse_layout_document(fixture).unwrap();
+        let snapshot = crate::schema::parse_layout_document(fixture).unwrap();
         let actual = serialize_text(&snapshot).unwrap();
         let oracle: serde_json::Value = serde_json::from_str(fixture).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&actual).unwrap();
@@ -26,6 +26,6 @@ mod tests {
         let artifact = serialize(&snapshot).unwrap();
         let artifact_json = semio_s_artifact_stdio_json::schema::snapshot::write_json_text(&artifact.value);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&artifact_json).unwrap(), parsed);
-        assert_eq!(crate::artifacts::layout::schema::parse_layout_document(&artifact_json).unwrap(), snapshot);
+        assert_eq!(crate::schema::parse_layout_document(&artifact_json).unwrap(), snapshot);
     }
 }

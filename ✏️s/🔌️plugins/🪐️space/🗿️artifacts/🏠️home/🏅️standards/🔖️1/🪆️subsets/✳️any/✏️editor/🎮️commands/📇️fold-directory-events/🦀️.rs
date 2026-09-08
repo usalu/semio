@@ -4,8 +4,8 @@
 //! View action only: never an artifact mutation, config lane, persisted local-only, no undo (matches
 //! `HomeConfigMutation::FoldDirectoryEvent`'s own doc — the fold is the SOLE writer of the read model).
 
-use crate::artifacts::home::op::SHomeMutation;
-use crate::artifacts::home::SHomeSnapshot;
+use crate::op::SHomeMutation;
+use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
@@ -21,7 +21,7 @@ pub struct FoldDirectoryEvents {
 //#region 🔖️Handle
 pub fn handle(payload: &FoldDirectoryEvents, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let events: Vec<store::os_directory::DirectoryEvent> = pack::from_json_str(&payload.events_json).unwrap_or_default();
-    let config_mutations = events.iter().filter_map(|event| Some(pack::to_json_string(event))).map(|event_json| HomeConfigMutation::FoldDirectoryEvent { event_json }).collect();
+    let config_mutations = events.iter().map(pack::to_json_string).map(|event_json| HomeConfigMutation::FoldDirectoryEvent { event_json }).collect();
     Ok(Emit { config_mutations, ..Default::default() })
 }
 //#endregion 🔖️Handle

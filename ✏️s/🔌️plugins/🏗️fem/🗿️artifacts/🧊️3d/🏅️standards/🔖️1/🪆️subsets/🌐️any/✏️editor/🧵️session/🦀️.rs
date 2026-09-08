@@ -1,7 +1,7 @@
 //! 🧵️ Mounted FEM3D visual publication on the shared bounded-job reactor.
 
 use crate::analyses::{AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction, MountedAnalysisModel, MountedAnalysisSupport};
-use crate::artifacts::fem3d::{element_id, load_id, Fem3dSnapshot, FemElement, FemLoad};
+use crate::{element_id, load_id, Fem3dSnapshot, FemElement, FemLoad};
 use crate::elements3d::Tet4;
 use crate::mesh::{MeshJob, MeshOpts, MountedPlanarDomain};
 use crate::model::{Bar3, Dof, Element, Elements, Frame3, Node};
@@ -1329,7 +1329,7 @@ impl Fem3dNumericalChild {
                     return Err(b"fem3d.numerical-load-kind".to_vec());
                 };
                 let Some(element) = doc.elements.get(self.load_element_cursor) else { return Err(b"fem3d.numerical-member-load-element".to_vec()) };
-                if crate::artifacts::fem3d::element_id(element) == element_id {
+                if crate::element_id(element) == element_id {
                     self.load_triangle_cursor = 0;
                     self.load_node_cursor = 0;
                     self.stage = Fem3dNumericalStage::ResolveMemberNode;
@@ -3865,7 +3865,7 @@ mod tests {
     #[test]
     fn fem3d_visual_maximum_plus_one_rejects_before_owner_transfer() {
         let mut doc = Fem3dSnapshot::default();
-        doc.nodes.resize_with(MAXIMUM_NODES + 1, || crate::artifacts::fem3d::FemNode { id: "n".into(), x: 0.0, y: 0.0, z: 0.0 });
+        doc.nodes.resize_with(MAXIMUM_NODES + 1, || crate::FemNode { id: "n".into(), x: 0.0, y: 0.0, z: 0.0 });
         let producer = doc.nodes.as_ptr();
         let credit = Fem3dPageCredit { item_count: 3, byte_count: 7, draw_count: 0, draw_bytes: 3 };
         let mut job = Fem3dPageVisualJob::new(freshness(19), credit);
@@ -3879,7 +3879,7 @@ mod tests {
     #[test]
     fn fem3d_snapshot_preflight_page_maximum_plus_one_returns_exact_producer() {
         let mut doc = Fem3dSnapshot::default();
-        doc.nodes.push(crate::artifacts::fem3d::FemNode { id: "n".repeat(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY + 1), x: 0.0, y: 0.0, z: 0.0 });
+        doc.nodes.push(crate::FemNode { id: "n".repeat(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY + 1), x: 0.0, y: 0.0, z: 0.0 });
         let producer = doc.nodes.as_ptr();
         let mut preflight = SnapshotPreflight::new();
         let before = preflight;
@@ -3892,7 +3892,7 @@ mod tests {
     #[test]
     fn fem3d_solver_nonzero_generation_corresponds_to_every_published_field_page() {
         let mut doc = Fem3dSnapshot::default();
-        doc.nodes.push(crate::artifacts::fem3d::FemNode { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 });
+        doc.nodes.push(crate::FemNode { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 });
         let scalar = Fem3dSolverScalar { displacement: [1.0, 2.0, 3.0], residual: [4.0, 5.0, 6.0], reaction: [7.0, 8.0, 9.0], contour: 13.0, mode_shape: [10.0, 11.0, 12.0], eigen_estimate: 17.0 };
         let solver = solver(&doc, scalar);
         assert_eq!(solver.scalar(0), Some(scalar));
@@ -3985,7 +3985,7 @@ mod tests {
         assert!(ids.close_admission_one());
 
         let mut model = MountedAnalysisModel::new();
-        assert_eq!(model.admit_node_one(MAXIMUM_FIELDS + 1), Err(()));
+        assert_eq!(model.admit_node_one(MAXIMUM_FIELDS + 1), Err(crate::analyses::MountedAnalysisCapacityExceeded { requested: MAXIMUM_FIELDS + 1, maximum: crate::analyses::MOUNTED_ANALYSIS_NODE_SLOTS }));
         assert_eq!(model.nodes_len(), 0);
         let node = Node { id: "returned-node".into(), pos: [0.0; 3] };
         let node_pointer = node.id.as_ptr();
@@ -3993,11 +3993,11 @@ mod tests {
         assert_eq!(returned.id.as_ptr(), node_pointer);
 
         let mut domain = MountedPlanarDomain::new();
-        assert_eq!(domain.admit_outer_one(MAXIMUM_FIELDS + 1), Err(()));
+        assert_eq!(domain.admit_outer_one(MAXIMUM_FIELDS + 1), Err(crate::mesh::MountedDomainFault::PointCapacity { requested: MAXIMUM_FIELDS + 1, maximum: crate::mesh::MOUNTED_DOMAIN_POINT_SLOTS }));
         assert_eq!(domain.push_outer([1.0, 2.0]), Err([1.0, 2.0]));
 
         let mut scalars = MountedScalarSlots::new();
-        assert_eq!(scalars.admit_one(MAXIMUM_FIELDS * 6 + 1), Err(()));
+        assert_eq!(scalars.admit_one(MAXIMUM_FIELDS * 6 + 1), Err(crate::sparse::MountedScalarFault::Capacity { requested: MAXIMUM_FIELDS * 6 + 1, maximum: crate::sparse::MOUNTED_SCALAR_SLOTS }));
         assert_eq!(scalars.len(), 0);
         assert_eq!(scalars.push(17.0), Err(17.0));
         assert!(started.elapsed().as_micros() < 8_000);
@@ -4005,7 +4005,7 @@ mod tests {
 
     #[test]
     fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorized() {
-        use crate::artifacts::fem3d::{FemDof, FemLoadCase, FemMaterial, FemNode, FemSolid, FemSupport};
+        use crate::{FemDof, FemLoadCase, FemMaterial, FemNode, FemSolid, FemSupport};
 
         let doc = Fem3dSnapshot {
             nodes: vec![FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n1".into(), x: 1.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 1.0, y: 1.0, z: 0.0 }, FemNode { id: "n3".into(), x: 0.0, y: 1.0, z: 0.0 }],

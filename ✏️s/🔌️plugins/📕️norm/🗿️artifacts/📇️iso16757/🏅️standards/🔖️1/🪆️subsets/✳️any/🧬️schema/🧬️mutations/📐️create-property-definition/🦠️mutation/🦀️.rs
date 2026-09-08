@@ -1,7 +1,7 @@
 //! 🆕️ `create-property-definition` — brings a new id-keyed catalogue property definition into
 //! existence.
 
-use crate::artifacts::iso16757::{part_1::PropertyDefinition, Iso16757Mutation, Iso16757Snapshot};
+use crate::{part_1::PropertyDefinition, Iso16757Mutation, Iso16757Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

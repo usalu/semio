@@ -1,7 +1,7 @@
 //! ↩️ `change-accidental-mass-t` — undo restores BASE's accidental impact mass.
 
 use super::ChangeAccidentalMassT;
-use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
+use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeAccidentalMassT, base: &En1991Snapshot) -> Vec<En1991Mutation> {

@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::en1993::En1993Snapshot;
-use schema::ArtifactSchema;
+use crate::En1993Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::En1993Outline;
@@ -44,7 +44,7 @@ impl protocol::InferenceSpec<En1993Snapshot> for En1993Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::en1993::standards::v1::subsets::any::schema::En1993Builder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1993Builder {
     type Snapshot = En1993Snapshot;
     type Inference = En1993Inference;
 }
@@ -53,10 +53,10 @@ impl ArtifactInferrer for crate::artifacts::en1993::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1993.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1993_artifact_schema_descriptor`'s registration.
-pub fn en1993_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn en1993_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1993.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -87,7 +87,7 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::en1993::standards::v1::subsets::any::schema::{
+use crate::standards::v1::subsets::any::schema::{
     check_steel_member, part_1_1, part_1_10, part_1_11, part_1_12, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_8, part_1_9, part_2, part_3, part_4, part_5, part_6, AnnexParams,
 };
 /// 📋️ Full EN 1993 compliance-report conformance law (ticket

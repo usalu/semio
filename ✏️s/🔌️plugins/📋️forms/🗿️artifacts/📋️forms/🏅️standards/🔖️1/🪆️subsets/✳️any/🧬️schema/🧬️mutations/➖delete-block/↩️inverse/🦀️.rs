@@ -2,8 +2,8 @@
 //! step or block ⇒ `Vec::new()`.
 
 use super::mutation::DeleteBlock;
-use crate::artifacts::forms::mutations::create_block;
-use crate::artifacts::forms::{forms_steps, FormMutation, FormsSnapshot};
+use crate::mutations::create_block;
+use crate::{forms_steps, FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse_delete_block(payload: &DeleteBlock, base: &FormsSnapshot) -> Vec<FormMutation> {

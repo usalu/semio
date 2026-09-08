@@ -1,9 +1,9 @@
 //! ↩️ `change-data-center-supply-c` inverse — restores the pre-change `data_center_supply_c` from BASE state; `change` is its own
 //! inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::din16798::mutations::change_data_center_supply_c::ChangeDataCenterSupplyC;
-use crate::artifacts::din16798::mutations::Din16798Mutation;
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::mutations::change_data_center_supply_c::ChangeDataCenterSupplyC;
+use crate::mutations::Din16798Mutation;
+use crate::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeDataCenterSupplyC, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {

@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::en1990::En1990Snapshot;
+use crate::En1990Snapshot;
 
 /// 🏢️ The high-consequence-office example fixture, handcrafted in `en1990`'s DSL
 /// (`store::ArtifactDsl`): a CC3 (high-consequence) office building basis-of-design check with
@@ -58,7 +58,7 @@ mod tests {
         assert_eq!(document.consequence_class, 3);
         assert_eq!(document.annex, AnnexChoice::En);
         assert_eq!(document.seismic_a_ed_kn, 0.0);
-        assert_eq!(crate::artifacts::en1990::en1990_qk(&document).len(), 3);
+        assert_eq!(crate::en1990_qk(&document).len(), 3);
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 }

@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `RenameNote`. Warning `no-op` when the title is unchanged.
 use super::RenameNote;
-use crate::artifacts::note::NoteDiff;
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteDiff;
+use crate::NoteSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &RenameNote, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

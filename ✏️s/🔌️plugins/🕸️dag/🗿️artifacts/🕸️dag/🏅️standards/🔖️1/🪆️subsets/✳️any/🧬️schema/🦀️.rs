@@ -1,10 +1,10 @@
 //! 🧬️ DAG artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::dag::mutations::delete_node;
-use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::{DagCamera, DagContentChild, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, DagSnapshot, IoPortSpec};
+use crate::mutations::delete_node;
+use crate::op::DagMutation;
+use crate::{DagCamera, DagContentChild, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, DagSnapshot, IoPortSpec};
 use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::BTreeSet;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
@@ -32,7 +32,7 @@ pub struct DagArtifact {
 //#region 🔖️Conversions
 impl Default for DagArtifact {
     fn default() -> Self {
-        Self::from_snapshot(crate::artifacts::dag::default_snapshot())
+        Self::from_snapshot(crate::default_snapshot())
     }
 }
 
@@ -65,31 +65,31 @@ impl DagArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.dag.dag` — twenty handcrafted schema leaves.
-pub fn dag_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn dag_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.dag.dag",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -138,7 +138,7 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
 }
 
 pub fn document_to_workflow(document: &DagSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
-    let scene = crate::artifacts::dag::dag_working_scene(document);
+    let scene = crate::dag_working_scene(document);
     let nodes: Vec<NodeGraphNodeRecord> = scene
         .nodes
         .iter()
@@ -306,11 +306,11 @@ mod document_helpers_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn next_node_id_continues_after_the_highest_existing_suffix() {
-        let document = crate::artifacts::dag::default_snapshot();
+        let document = crate::default_snapshot();
         let mut nodes = document.nodes();
         nodes.push(DagNodeSpec { id: "n99".into(), ..default_node_for_kind("note", "n99", 0.0, 0.0) });
         let edges = document.edges();
-        let content = crate::artifacts::dag::dag_content_child_with_owner(nodes, edges);
+        let content = crate::dag_content_child_with_owner(nodes, edges);
         let document = DagSnapshot { schema: document.schema.clone(), content };
         assert_eq!(next_node_id(&document), "n100");
     }
@@ -325,7 +325,7 @@ mod document_helpers_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn connect_edge_rejects_a_connection_that_would_create_a_cycle() {
-        let document = crate::artifacts::dag::default_snapshot();
+        let document = crate::default_snapshot();
         let nodes = document.nodes();
         if let (Some(first), Some(second)) = (nodes.first(), nodes.get(1)) {
             let _ = connect_edge(&document, &first.id, "out", &second.id, "in");
@@ -358,7 +358,7 @@ mod document_helpers_tests {
     /// targeted node id, regardless of how many edges touch it.
     #[semio_framework_async_macros::async_test]
     async fn remove_nodes_operations_returns_one_delete_node_mutation_per_targeted_node() {
-        let document = crate::artifacts::dag::default_snapshot();
+        let document = crate::default_snapshot();
         let nodes = document.nodes();
         let edges = document.edges();
         let node_id = nodes.first().expect("fixture has a node").id.clone();
@@ -379,7 +379,7 @@ mod document_helpers_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn remove_nodes_operations_is_empty_for_an_unknown_node_id() {
-        let document = crate::artifacts::dag::default_snapshot();
+        let document = crate::default_snapshot();
         assert!(remove_nodes_operations(&document, &["nonexistent".to_string()]).is_empty());
     }
 }

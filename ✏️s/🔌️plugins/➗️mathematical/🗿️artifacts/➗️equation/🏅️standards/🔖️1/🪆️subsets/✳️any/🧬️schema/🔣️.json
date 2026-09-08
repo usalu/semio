@@ -1,9 +1,17 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/equation/equation/artifact.json",
   "title": "EquationArtifact",
   "type": "object",
   "additionalProperties": false,
-  "required": ["graph", "geometry", "cameraX", "cameraY", "cameraZoom", "locale"],
+  "required": [
+    "graph",
+    "geometry",
+    "cameraX",
+    "cameraY",
+    "cameraZoom",
+    "locale"
+  ],
   "properties": {
     "graph": {
       "$ref": "#/$defs/EquationGraph",
@@ -38,63 +46,295 @@
       "title": "EquationGraph",
       "type": "object",
       "additionalProperties": false,
-      "required": ["directed", "nodes", "edges", "algorithm"],
+      "required": [
+        "directed",
+        "nodes",
+        "edges",
+        "algorithm"
+      ],
       "properties": {
-        "directed": { "type": "boolean" },
+        "directed": {
+          "type": "boolean"
+        },
         "nodes": {
           "type": "array",
-          "items": { "$ref": "#/$defs/EquationNode" }
+          "items": {
+            "$ref": "#/$defs/EquationNode"
+          }
         },
         "edges": {
           "type": "array",
-          "items": { "$ref": "#/$defs/EquationEdge" }
+          "items": {
+            "$ref": "#/$defs/EquationEdge"
+          }
         },
-        "algorithm": { "type": "string" },
-        "algorithmSeed": { "type": "string" }
+        "algorithm": {
+          "type": "string"
+        },
+        "algorithmSeed": {
+          "type": "string"
+        }
       }
     },
     "EquationNode": {
       "title": "EquationNode",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "x", "y"],
+      "required": [
+        "id",
+        "label",
+        "x",
+        "y"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "label": { "type": "string" },
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" }
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
       }
     },
     "EquationEdge": {
       "title": "EquationEdge",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "source", "target"],
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "source": { "type": "string" },
-        "target": { "type": "string" }
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
       }
     },
     "EquationPoint": {
       "title": "EquationPoint",
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y"],
+      "required": [
+        "x",
+        "y"
+      ],
       "properties": {
-        "x": { "type": "number", "format": "double" },
-        "y": { "type": "number", "format": "double" }
+        "x": {
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "type": "number",
+          "format": "double"
+        }
       }
     },
     "EquationGeometry": {
       "title": "EquationGeometry",
       "type": "object",
       "additionalProperties": false,
-      "required": ["points"],
+      "required": [
+        "points"
+      ],
       "properties": {
         "points": {
           "type": "array",
-          "items": { "$ref": "#/$defs/EquationPoint" }
+          "items": {
+            "$ref": "#/$defs/EquationPoint"
+          }
+        }
+      }
+    },
+    "EquationRetainedCommandLaw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "contract",
+        "actions",
+        "hostileCases"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rawBytes",
+            "wirePageBytes",
+            "workItems",
+            "durationMillis",
+            "maximumStepMillis",
+            "checkpointBytes",
+            "closeItems"
+          ],
+          "properties": {
+            "rawBytes": {
+              "const": 65536
+            },
+            "wirePageBytes": {
+              "const": 2048
+            },
+            "workItems": {
+              "const": 65536
+            },
+            "durationMillis": {
+              "const": 7500
+            },
+            "maximumStepMillis": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 8
+            },
+            "checkpointBytes": {
+              "const": 40
+            },
+            "closeItems": {
+              "const": 1
+            }
+          }
+        },
+        "actions": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": [
+            {
+              "const": "setDocument"
+            },
+            {
+              "const": "setAlgorithm"
+            },
+            {
+              "const": "setDirected"
+            },
+            {
+              "const": "nodeGraphEdit"
+            },
+            {
+              "const": "nodeGraphViewport"
+            },
+            {
+              "const": "setPoints"
+            },
+            {
+              "const": "setLocale"
+            }
+          ],
+          "additionalItems": false
+        },
+        "hostileCases": {
+          "type": "array",
+          "minItems": 14,
+          "maxItems": 14,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "law",
+              "maximum",
+              "maximumPlusOneAccepted"
+            ],
+            "properties": {
+              "law": {
+                "enum": [
+                  "nodes",
+                  "edges",
+                  "points",
+                  "editJsonBytes",
+                  "editOperations",
+                  "deleteIds",
+                  "textBytes",
+                  "localeBytes",
+                  "registrationIdentity",
+                  "interruptionReplay",
+                  "checkpointIdentity",
+                  "cancelBefore",
+                  "cancelAfter",
+                  "repeatedClose"
+                ]
+              },
+              "maximum": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65536
+              },
+              "maximumPlusOneAccepted": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "EquationSceneOwnerLaw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "ownedSlots",
+        "maximumCases",
+        "cases"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "ownedSlots": {
+          "const": 3
+        },
+        "maximumCases": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "law",
+              "leftDirected",
+              "rightDirected"
+            ],
+            "properties": {
+              "law": {
+                "enum": [
+                  "tripleIdentity",
+                  "instanceIsolation",
+                  "abaIsolation",
+                  "wireOmission",
+                  "boundedClose"
+                ]
+              },
+              "leftDirected": {
+                "type": "boolean"
+              },
+              "rightDirected": {
+                "type": "boolean"
+              }
+            }
+          }
         }
       }
     }

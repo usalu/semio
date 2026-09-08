@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RemoveWeight` — removes the id from `weights`.
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::diff::AssemblyDiff;
+use crate::schema::snapshot::AssemblySnapshot;
 
 pub fn diff(payload: &super::RemoveWeight, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     if !base.weights.iter().any(|weight| weight.module_id == payload.module_id) {

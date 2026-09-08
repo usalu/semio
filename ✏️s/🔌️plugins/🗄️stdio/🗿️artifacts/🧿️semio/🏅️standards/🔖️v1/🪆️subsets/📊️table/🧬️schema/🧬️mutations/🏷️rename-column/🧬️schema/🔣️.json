@@ -1,18 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/rename-column.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/rename-column/schema.json",
   "title": "RenameColumn",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "name",
-    "newName"
+    "new_name"
   ],
   "properties": {
     "name": {
       "type": "string"
     },
-    "newName": {
+    "new_name": {
       "type": "string"
     }
   }

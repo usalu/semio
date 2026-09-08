@@ -1,8 +1,8 @@
 //! 💬️ Lowpoly play app commands — the engagement text input (`engagementInput`) and its typed-token
 //! resolution into a real mesh-edit command (`engagementSubmit`).
 
-use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolySnapshot;
+use crate::op::LowpolyMutation;
+use crate::LowpolySnapshot;
 use crate::editor::lowpoly::commands::mesh_edit::{bevel, decimate, dissolve, extrude, flip_faces, inset, loop_cut, merge, mirror, snap, subdivide, triangulate};
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;

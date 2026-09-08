@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/mutation/change-asset-url.json",
+  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/mutation/change-asset-url/schema.json",
   "title": "ChangeAssetUrl",
   "type": "object",
   "additionalProperties": false,

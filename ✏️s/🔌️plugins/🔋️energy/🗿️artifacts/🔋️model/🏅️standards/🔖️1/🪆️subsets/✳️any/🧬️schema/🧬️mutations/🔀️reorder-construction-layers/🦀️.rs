@@ -1,8 +1,8 @@
 //! 🔀️ Energy model mutation — `ReorderConstructionLayers`: Restates a construction's whole layer sequence. The new sequence must be a permutation of the one the construction already holds — adding or dropping a layer is `add-construction-layer`'s and `remove-construction-layer`'s job, so a reorder can never change which materials a wall is made of.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

@@ -23,6 +23,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-sequence-sequence = { workspace = true }
 semio-framework-ui-contract.workspace = true
 semio-framework-job.workspace = true
 semio-s-artifact-stdio-csv = { workspace = true }

@@ -1,8 +1,8 @@
 //! 🔺 Diff constructor for `DeleteShot`. Error `target-missing` when absent.
 
 use super::DeleteShot;
-use crate::artifacts::shooting::diff::{ShootingDiff, ShootingShotsDelta};
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::{ShootingDiff, ShootingShotsDelta};
+use crate::ShootingSnapshot;
 
 pub fn diff(payload: &DeleteShot, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !base.shots.iter().any(|shot| shot.id == payload.id) {

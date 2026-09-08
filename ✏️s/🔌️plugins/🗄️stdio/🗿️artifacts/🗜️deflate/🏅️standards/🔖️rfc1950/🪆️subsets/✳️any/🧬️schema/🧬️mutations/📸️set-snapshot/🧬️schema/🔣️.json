@@ -1,34 +1,75 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutation/set-snapshot.json",
+  "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutation/set-snapshot/schema.json",
   "title": "SetSnapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema",
-    "compressionMethod",
-    "compressionLevelHint"
+    "snapshot"
   ],
   "properties": {
-    "schema": {
-      "type": "string"
-    },
-    "compressionMethod": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "compressionLevelHint": {
-      "type": "string",
-      "enum": [
-        "Fastest",
-        "Fast",
-        "Default",
-        "Maximum"
-      ]
+    "snapshot": {
+      "$ref": "#/$defs/DeflateSnapshot"
     },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by DeflateMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "DeflateSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "compressionMethod": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "windowBits": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "compressionLevelHint": {
+          "$ref": "#/$defs/DeflateLevelHint"
+        },
+        "dictId": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "DeflateLevelHint": {
+      "type": "string",
+      "enum": [
+        "fastest",
+        "fast",
+        "default",
+        "maximum"
+      ]
     }
   }
 }

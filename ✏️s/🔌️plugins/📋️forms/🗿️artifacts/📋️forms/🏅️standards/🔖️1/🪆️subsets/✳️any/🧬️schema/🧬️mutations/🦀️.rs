@@ -17,7 +17,7 @@
 //! …mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation}; }` re-export is
 //! outside this facet's edit boundary and would otherwise fail to compile.
 
-use crate::artifacts::forms::{FormsDiff, FormsSnapshot};
+use crate::{FormsDiff, FormsSnapshot};
 use protocol::Mutation;
 
 //#region 🔖️FormMutation
@@ -55,10 +55,10 @@ pub fn inverse_form_mutation(spec: &FormsSnapshot, mutation: &FormMutation) -> V
 
 //#region 🔖️PlaybookBridge
 /// 🌉️ Playbook kernel helpers still typed on `PlaybookSpec` — reads `steps` through the
-/// working-scene accessor (`crate::artifacts::forms::forms_steps`) now that `FormsSnapshot` no
+/// working-scene accessor (`crate::forms_steps`) now that `FormsSnapshot` no
 /// longer carries a bare `steps` field (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM).
-pub fn as_playbook_spec(snapshot: &FormsSnapshot) -> flow::playbook::PlaybookSpec {
-    flow::playbook::PlaybookSpec { schema: snapshot.schema.clone(), id: snapshot.id.clone(), version: snapshot.version.clone(), title: snapshot.title.clone(), steps: crate::artifacts::forms::forms_steps(snapshot) }
+pub fn as_playbook_spec(snapshot: &FormsSnapshot) -> semio_framework_artifact_playbook_playbook::PlaybookSpec {
+    semio_framework_artifact_playbook_playbook::PlaybookSpec { schema: snapshot.schema.clone(), id: snapshot.id.clone(), version: snapshot.version.clone(), title: snapshot.title.clone(), steps: crate::forms_steps(snapshot) }
 }
 //#endregion 🔖️PlaybookBridge
 
@@ -130,9 +130,9 @@ pub fn encode_form_snapshot_json(snapshot: &FormsSnapshot) -> String {
 /// it was read from cited there. The right long-term fix is to commit the scene beside the snapshot
 /// as a fixture file of its own; until then this is the seam that makes the vectors runnable.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn seed_form_scene_json(snapshot: &mut FormsSnapshot, steps_json: &str) -> Result<Vec<crate::artifacts::forms::FormStep>, String> {
-    let steps: Vec<crate::artifacts::forms::FormStep> = dsl::os_pack::json::from_json_str(steps_json).map_err(|error| error.to_string())?;
-    crate::artifacts::forms::materialize_forms_steps(&mut snapshot.structure, steps.clone());
+pub fn seed_form_scene_json(snapshot: &mut FormsSnapshot, steps_json: &str) -> Result<Vec<crate::FormStep>, String> {
+    let steps: Vec<crate::FormStep> = dsl::os_pack::json::from_json_str(steps_json).map_err(|error| error.to_string())?;
+    crate::materialize_forms_steps(&mut snapshot.structure, steps.clone());
     Ok(steps)
 }
 //#endregion 🔖️Kinds
@@ -166,8 +166,8 @@ mod kinds_catalog {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::forms::mutations::{change_form_title, change_step_description, create_block, create_step, delete_block, delete_step, move_block_to_step, rename_step, reorder_step, replace_block};
-    use crate::artifacts::forms::{FormQuestion, FormStep, FORMS_DOCUMENT_SCHEMA};
+    use crate::mutations::{change_form_title, change_step_description, create_block, create_step, delete_block, delete_step, move_block_to_step, rename_step, reorder_step, replace_block};
+    use crate::{FormQuestion, FormStep, FORMS_DOCUMENT_SCHEMA};
     use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
     use protocol::{MutationDiff, SemanticMutation};
 
@@ -205,11 +205,11 @@ mod tests {
     }
 
     fn base_snapshot_with_steps(steps: Vec<FormStep>) -> FormsSnapshot {
-        crate::artifacts::forms::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, steps)
+        crate::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, steps)
     }
 
     fn steps_of(snapshot: &FormsSnapshot) -> Vec<FormStep> {
-        crate::artifacts::forms::forms_steps(snapshot)
+        crate::forms_steps(snapshot)
     }
 
     #[semio_framework_async_macros::async_test]

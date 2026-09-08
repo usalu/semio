@@ -1,5 +1,5 @@
 //! gisterrain <- ply
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::GisTerrainSnapshot;
 use semio_s_artifact_stdio_ply::{PlySnapshot, STDIO_PLY_DOCUMENT_SCHEMA};
 
 pub fn register() {}

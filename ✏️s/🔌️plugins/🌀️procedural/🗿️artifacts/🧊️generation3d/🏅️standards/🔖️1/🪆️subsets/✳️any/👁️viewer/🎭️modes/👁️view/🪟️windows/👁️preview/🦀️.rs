@@ -6,13 +6,13 @@
 //! viewer emits no mutations by construction (`ViewEmit`).
 //!
 //! 🧵️ Unlike the sibling surface's own preview pipeline (which threads a live, session-cached
-//! `flow::FlowEvalSession` through `handle`/`pending_effects` for incremental re-tessellation), this
+//! `semio_framework_os_flow::FlowEvalSession` through `handle`/`pending_effects` for incremental re-tessellation), this
 //! window carries no persisted per-session state (`Config = NoConfig`) and re-evaluates the whole
-//! flow fixture fresh on every render call via `flow::FlowHost`/`flow::tessellate_geometry` directly
+//! flow fixture fresh on every render call via `semio_framework_os_flow::FlowHost`/`semio_framework_os_flow::tessellate_geometry` directly
 //! — an intentional simplification (no cache, no incremental tick chain), documented here rather
 //! than silently duplicating the other surface's session machinery.
 
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::Generation3dSnapshot;
 use dsl::json::{Object, Value};
 use semio_framework_plugin::{world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
@@ -165,9 +165,9 @@ fn vector_marker_mesh(x: f64, y: f64, z: f64) -> semio_framework_plugin::MeshDat
 
 /// 👁️ Evaluates the whole fixture fresh (no session cache — see module doc comment) and tessellates
 /// every preview widget's geometry handles into meshes/instances at the world origin.
-fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, String) {
-    let mut host = flow::FlowHost::from_fixture(fixture.clone());
-    host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
+fn evaluated_meshes_and_instances(fixture: &semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture) -> (String, String) {
+    let mut host = semio_framework_os_flow::FlowHost::from_fixture(fixture.clone());
+    host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
     let eval_json = host.evaluate().unwrap_or_default();
     let eval: Value = dsl::json::parse(&eval_json).unwrap_or(Value::Object(Object::new()));
     let mut meshes = Vec::new();
@@ -176,11 +176,11 @@ fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, Strin
     // the editor surface's own dedup rule.
     let mut mesh_id_by_handle: std::collections::HashMap<String, String> = std::collections::HashMap::new();
     for widget in &fixture.widgets {
-        let preview = matches!(widget, flow::Widget::Neuron { preview: true, .. } | flow::Widget::OutputPreview { .. });
+        let preview = matches!(widget, semio_framework_artifact_flow_semio_framework_os_flow::Widget::Neuron { preview: true, .. } | semio_framework_artifact_flow_semio_framework_os_flow::Widget::OutputPreview { .. });
         if !preview {
             continue;
         }
-        let id = crate::artifacts::generation3d::widget_id(widget).to_string();
+        let id = crate::widget_id(widget).to_string();
         for item in preview_channel_items_for_widget(&eval, &id) {
             let PreviewChannelItem { channel, index, handle, inline } = item;
             let own_mesh_id = format!("eval-{id}@{channel}#{index}");
@@ -189,7 +189,7 @@ fn evaluated_meshes_and_instances(fixture: &flow::FlowFixture) -> (String, Strin
                 let data = match inline {
                     Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(x, y, z)),
                     Some(PreviewInlineGeometry::Vector { x, y, z }) => Some(vector_marker_mesh(x, y, z)),
-                    None => flow::tessellate_geometry(&handle, GENERATION3D_VIEW_TOLERANCE).ok(),
+                    None => semio_framework_os_flow::tessellate_geometry(&handle, GENERATION3D_VIEW_TOLERANCE).ok(),
                 };
                 if let Some(data) = data {
                     if mesh_has_preview_geometry(&data) {
@@ -254,13 +254,13 @@ mod tests {
 
     #[test]
     fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::artifacts::generation3d::schema::default_snapshot();
+        let document = crate::schema::default_snapshot();
         let _node = render(&document);
     }
 
     #[test]
     fn render_emits_real_tessellated_geometry_for_the_default_fixture() {
-        let document = crate::artifacts::generation3d::schema::default_snapshot();
+        let document = crate::schema::default_snapshot();
         let (meshes_json, instances_json) = evaluated_meshes_and_instances(&document.fixture);
         assert_ne!(meshes_json, "[]", "default fixture should evaluate and tessellate at least one preview mesh");
         assert_ne!(instances_json, "[]");

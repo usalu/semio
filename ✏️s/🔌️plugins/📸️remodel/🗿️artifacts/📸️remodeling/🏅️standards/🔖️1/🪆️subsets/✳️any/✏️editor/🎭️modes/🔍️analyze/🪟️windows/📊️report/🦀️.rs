@@ -1,7 +1,7 @@
 //! 📊️ Remodeling play app — the Report window: a Table surface over whichever reconstruction dataset the
 //! config's `report_table` selects.
 
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::RemodelingSnapshot;
 use crate::editor::remodeling::config::RemodelingConfig;
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, TableScene, UiAssemblyResult, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
@@ -149,7 +149,7 @@ pub fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> UiAssemb
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::remodeling::default_remodeling_scene;
+    use crate::default_remodeling_scene;
     use crate::editor::remodeling::commands::set_report_table::SetReportTable;
     use crate::editor::remodeling::testkit::{app, dispatch, render as render_body};
     use crate::editor::remodeling::RemodelingCommand;

@@ -4,8 +4,8 @@
 //! `mutation.clamped`.
 
 use super::InsertLayer;
-use crate::artifacts::din4108::diff::Din4108LayerList;
-use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
+use crate::diff::Din4108LayerList;
+use crate::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &InsertLayer, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {

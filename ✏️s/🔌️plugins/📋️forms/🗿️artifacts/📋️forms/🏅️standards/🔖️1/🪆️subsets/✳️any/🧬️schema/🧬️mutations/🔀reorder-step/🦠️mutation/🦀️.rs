@@ -3,7 +3,7 @@
 //! wired by `🦀️.rs`) predates the semantic rename; the Rust module is still `move_step`, the
 //! type/variant/kind are `reorder-step`.
 
-use crate::artifacts::forms::{FormMutation, FormsDiff, FormsSnapshot};
+use crate::{FormMutation, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔀️ReorderStep

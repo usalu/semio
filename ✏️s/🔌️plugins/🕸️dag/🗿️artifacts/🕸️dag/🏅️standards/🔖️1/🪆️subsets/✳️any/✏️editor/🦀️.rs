@@ -14,8 +14,8 @@
 // on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::op::DagMutation;
+use crate::DagSnapshot;
 use crate::editor::dag::commands::set_locale;
 use crate::editor::dag::commands::{add_node, patch_dag_nodes, remove_node, rename_dag_node};
 use crate::editor::dag::commands::{connect_media_ports, delete_selection, disconnect, move_media_node, node_graph_edit, reorganize};
@@ -383,7 +383,7 @@ impl ArtifactEditor for DagPlayApp {
 
     type Command = DagCommand;
 
-    const DIALECT: Dialect = crate::artifacts::dag::DAG_DIALECT;
+    const DIALECT: Dialect = crate::DAG_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "dag.dag";
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -429,12 +429,12 @@ impl ArtifactEditor for DagPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::dag::config::schema::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> DagSnapshot {
-        crate::artifacts::dag::default_snapshot()
+        crate::default_snapshot()
     }
 
     // 🎞️ No `whole_document_operation` override: whole-document replace is not an in-history
@@ -514,7 +514,7 @@ impl ArtifactEditor for DagPlayApp {
         // 🧵️ `DagFixtureEdge.source`/`.target` are "nodeId@portId" endpoint strings (defaulting to the
         // "out" port when bare) — `split_endpoint` peels the node id back off before it can be matched
         // against a plain `DagNodeSpec.id`.
-        let node_id_of = |endpoint: &str| crate::artifacts::dag::schema::split_endpoint(endpoint).0;
+        let node_id_of = |endpoint: &str| crate::schema::split_endpoint(endpoint).0;
         let mut ordered = Vec::with_capacity(nodes.len() + edges.len());
         for node in &nodes {
             let parent = edges.iter().find(|edge| node_id_of(&edge.target) == node.id).map(|edge| node_id_of(&edge.source));
@@ -535,9 +535,9 @@ impl ArtifactEditor for DagPlayApp {
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
 pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::dag::DAG_DIALECT)
+    Editor::builder(crate::DAG_DIALECT)
             .document(["semio", "mathematical", "graph", "port", "directed", "dag"])
-            .artifact_kind(crate::artifacts::dag::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             .icon_id("dag")
             .mode_def(edit::definition())
             .default_mode_id(edit::DAG_PLAY_MODE_EDIT)
@@ -607,9 +607,9 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
             // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
             // `.example_source(...)`/`.workflow(...)` on this builder, so the app-level
-            // `crate::artifacts::dag::examples::demo` example registration and the no-op `.workflow("dag", …)`
+            // `crate::examples::demo` example registration and the no-op `.workflow("dag", …)`
             // call are dropped here (reported in the migration report, not silently lost). The
-            // subset's own `📚️examples/🎬️demo` facet (`crate::artifacts::dag::examples::demo`,
+            // subset's own `📚️examples/🎬️demo` facet (`crate::examples::demo`,
             // real content, pre-existing) is the modern, role-agnostic replacement surface for this.
             .action_interactive_job("addNode", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("removeNode", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
@@ -879,7 +879,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn whole_document_operation_is_not_supported_as_an_in_history_mutation() {
-        let replacement = crate::artifacts::dag::default_snapshot();
+        let replacement = crate::default_snapshot();
         assert!(DagPlayApp::whole_document_operation(replacement).is_none(), "whole-document replace goes through ArtifactStore::reset, never a mutation");
     }
 
@@ -894,7 +894,7 @@ mod tests {
             |app| {
                 let projection = app.snapshot().expect("projection");
                 let nodes = projection.nodes();
-                (nodes.iter().any(|node| matches!(node.kind, infinite_board_port_directed_dag::DagNodeKind::Note { .. })), nodes.iter().any(|node| matches!(node.kind, infinite_board_port_directed_dag::DagNodeKind::Slider { .. })))
+                (nodes.iter().any(|node| matches!(node.kind, semio_framework_artifact_infinite_dag::DagNodeKind::Note { .. })), nodes.iter().any(|node| matches!(node.kind, semio_framework_artifact_infinite_dag::DagNodeKind::Slider { .. })))
             },
         ).await;
     }

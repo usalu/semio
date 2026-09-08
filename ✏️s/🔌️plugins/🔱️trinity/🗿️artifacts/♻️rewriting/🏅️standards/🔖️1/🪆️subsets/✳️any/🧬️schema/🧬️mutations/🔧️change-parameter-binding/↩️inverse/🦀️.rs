@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeParameterBinding` — the OLD value looked up from BASE: `change` back to it
 //! if the key existed, `remove` if it was previously absent.
-use crate::artifacts::rewriting::mutations::{change_parameter_binding, remove_parameter_binding, RewriteRuleMutation};
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::mutations::{change_parameter_binding, remove_parameter_binding, RewriteRuleMutation};
+use crate::RewritingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::ChangeParameterBinding, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {

@@ -1,6 +1,6 @@
 //! 📜️ EN 1992 design of concrete structures — textual document grammar surface + laws (constitutional: dsl).
 
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::En1992Snapshot;
 
 /// 💧️ The liquid-retaining-fem-anchor example fixture, handcrafted in `en1992`'s DSL
 /// (`store::ArtifactDsl`): a liquid-retaining structure (EN 1992-3 tightness class TC2) section
@@ -60,8 +60,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn liquid_retaining_fem_anchor_example_fixture_parses_and_round_trips() {
-        use crate::artifacts::en1992::part_1_2::FireRating;
-        use crate::artifacts::en1992::part_3::TightnessClass;
+        use crate::part_1_2::FireRating;
+        use crate::part_3::TightnessClass;
         use crate::document::AnnexChoice;
         let document = parse_dsl(EN1992_LIQUID_RETAINING_FEM_ANCHOR_EXAMPLE_TEXT).expect("parse liquid retaining fem anchor example");
         assert_eq!(document.annex, AnnexChoice::En);

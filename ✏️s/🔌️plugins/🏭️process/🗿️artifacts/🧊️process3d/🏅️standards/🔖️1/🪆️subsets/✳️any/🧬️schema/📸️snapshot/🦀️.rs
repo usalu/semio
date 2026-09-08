@@ -7,8 +7,8 @@
 //! `📐️cad`/`✳️object`/`✳️kit` hit) in favor of a hand-rolled `ArtifactDsl`/`ArtifactPack` — see
 //! `🔖️HandcraftedArtifactCodecs` below, matching `📐️cad`'s own snapshot facet exactly.
 
-use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
-use schema::ArtifactSchema;
+use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
+use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use semio_framework_os_kernel::{FromValue, ToValue};
@@ -53,7 +53,7 @@ pub struct Process3dSnapshot {
 
 impl Default for Process3dSnapshot {
     fn default() -> Self {
-        crate::artifacts::process3d::empty_process3d_snapshot()
+        crate::empty_process3d_snapshot()
     }
 }
 
@@ -153,7 +153,7 @@ fn print_process3d_snapshot_body(s: &Process3dSnapshot) -> String {
     )
 }
 fn parse_process3d_snapshot_body(body: &str) -> Result<Process3dSnapshot, String> {
-    let mut snapshot = crate::artifacts::process3d::empty_process3d_snapshot();
+    let mut snapshot = crate::empty_process3d_snapshot();
     let mut saw_workshop = false;
     for line in body.lines() {
         let line = line.trim();
@@ -1378,7 +1378,7 @@ impl Process3dRetainedSnapshotReader {
                 let cursor = self.active_pose.get_or_insert_with(Process3dRetainedPoseCursor::default);
                 if let Some(value) = retained_advance(bytes, &mut self.offset, |reader| cursor.step(reader))? {
                     self.candidate.as_mut().expect("Process3d retained shell exists").stock_pose = value;
-                    self.active_pose = None;
+                    *self.active_pose = None;
                     self.phase = Process3dRetainedSnapshotPhase::StockPayload;
                 }
             }
@@ -1599,7 +1599,7 @@ mod retained_structural_laws {
     }
 
     fn complete_snapshot() -> Process3dSnapshot {
-        let mut snapshot = crate::artifacts::process3d::empty_process3d_snapshot();
+        let mut snapshot = crate::empty_process3d_snapshot();
         snapshot.workshop = Workshop {
             machines: vec![WorkshopMachine {
                 id: "machine".into(),
@@ -1738,7 +1738,7 @@ mod retained_structural_laws {
         let partial = reader.take_rejected().expect("partial snapshot handback");
         assert!(reader.terminal_is_empty());
         drop(reader);
-        let mut retirement = store::SnapshotRetirementFactory::retire(&crate::artifacts::process3d::spr::Process3dSnapshotRetirementFactory, std::sync::Arc::new(partial));
+        let mut retirement = store::SnapshotRetirementFactory::retire(&crate::spr::Process3dSnapshotRetirementFactory, std::sync::Arc::new(partial));
         for _ in 0..8_192 {
             if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), Ok(store::SnapshotRetirementStep::Complete)) {
                 break;
@@ -1797,7 +1797,7 @@ mod retained_structural_laws {
             let partial = reader.take_rejected().expect("interrupted substate exact handback");
             assert!(reader.terminal_is_empty());
             drop(reader);
-            let mut retirement = store::SnapshotRetirementFactory::retire(&crate::artifacts::process3d::spr::Process3dSnapshotRetirementFactory, std::sync::Arc::new(partial));
+            let mut retirement = store::SnapshotRetirementFactory::retire(&crate::spr::Process3dSnapshotRetirementFactory, std::sync::Arc::new(partial));
             for _ in 0..8_192 {
                 if matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), Ok(store::SnapshotRetirementStep::Complete)) {
                     break;

@@ -4,7 +4,7 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::playbook::{PlaybookSnapshot, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
+use crate::{PlaybookSnapshot, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
 use crate::viewer::playbook::modes::view;
 use crate::viewer::playbook::modes::view::windows::steps;
 use semio_framework_plugin::{ArtifactView, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -40,7 +40,7 @@ pub struct PlaybookViewer;
 
 impl semio_framework_plugin::ArtifactViewer for PlaybookViewer {
     type Snapshot = PlaybookSnapshot;
-    type Mutation = crate::artifacts::playbook::op::PlaybookMutation;
+    type Mutation = crate::op::PlaybookMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -53,7 +53,7 @@ impl semio_framework_plugin::ArtifactViewer for PlaybookViewer {
     const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> PlaybookSnapshot {
-        crate::artifacts::playbook::empty_playbook_snapshot()
+        crate::empty_playbook_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `PlaybookViewCommand::Noop` variant never carries a config

@@ -3,7 +3,7 @@
 //! `.dag` DSL text as MD's text body (round-trips through `stdio.md`'s block model on the way
 //! back in — see the sibling `Deserializer`), so this hop is `IoFidelity::Canonical`.
 
-use crate::artifacts::dag::DagSnapshot;
+use crate::DagSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

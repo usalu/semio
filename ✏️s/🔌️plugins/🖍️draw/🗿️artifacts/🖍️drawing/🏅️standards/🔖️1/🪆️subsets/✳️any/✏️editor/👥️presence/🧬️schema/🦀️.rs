@@ -1,6 +1,6 @@
 //! 🧬️ schema leaf
-use crate::artifacts::drawing::DrawingCamera;
-use schema::ArtifactSchema;
+use crate::DrawingCamera;
+use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]

@@ -1,18 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/set-trim-box.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/vt/mutation/set-trim-box/schema.json",
   "title": "SetTrimBox",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "pageIndex",
     "trimBox"
   ],
   "properties": {
-    "mutation": {
-      "const": "setTrimBox"
-    },
     "pageIndex": {
       "type": "integer",
       "minimum": 0
@@ -24,6 +20,10 @@
       },
       "minItems": 4,
       "maxItems": 4
+    },
+    "mutation": {
+      "const": "setTrimBox",
+      "description": "Aggregate discriminator spliced in by PdfVtMutation; absent when the payload stands alone."
     }
   }
 }

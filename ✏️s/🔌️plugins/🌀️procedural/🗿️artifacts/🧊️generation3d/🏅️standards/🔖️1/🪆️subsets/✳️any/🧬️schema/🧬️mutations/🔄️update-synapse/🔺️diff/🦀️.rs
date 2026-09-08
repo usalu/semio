@@ -1,10 +1,10 @@
 //! 🔺️ `update-synapse` sparse diff construction.
 
-use crate::artifacts::generation3d::diff::Generation3dDiff;
-use crate::artifacts::generation3d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::generation3d::mutations::synapse_index;
-use crate::artifacts::generation3d::mutations::update_synapse::UpdateSynapse;
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::diff::Generation3dDiff;
+use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::mutations::synapse_index;
+use crate::mutations::update_synapse::UpdateSynapse;
+use crate::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta replacing one existing synapse's ports. The index is
 /// irrelevant here — `apply_synapses_diff` resolves an existing entry by id first.

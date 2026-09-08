@@ -7,14 +7,14 @@
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/🧊️main`. This file dispatches and stitches.
 //!
 //! 🌉️ `ArtifactApp::Snapshot` is the `Puzzle3dPlaySnapshot` newtype over a bare
-//! `serde_json::Value` fixture (see `crate::artifacts::puzzle3d::op`'s `🔖️ValueBridge`), not the typed
+//! `serde_json::Value` fixture (see `crate::op`'s `🔖️ValueBridge`), not the typed
 //! `Puzzle3dSnapshot` — the `Puzzle3dFixture` model below is this app's own structural twin of it,
 //! and each action emits the granular typed operation delta
 //! (`puzzle3d_operations_from_fixture_change`) turning the old fixture into the new one.
 
-use crate::artifacts::puzzle3d::op::{puzzle3d_document_delta_operations, Puzzle3dMutation, Puzzle3dPlaySnapshot};
-use crate::artifacts::puzzle3d::schema::Puzzle3dEngineCommand;
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::op::{puzzle3d_document_delta_operations, Puzzle3dMutation, Puzzle3dPlaySnapshot};
+use crate::schema::Puzzle3dEngineCommand;
+use crate::Puzzle3dSnapshot;
 use crate::editor::puzzle3d::commands::{
     accept_suggestion, add_brush_object, add_object_kind, add_target_volume, apply_sun, close_vortex_suggestions, create_attraction, cycle_candidate, delete_attraction, delete_selection, delete_target_volume, duplicate_selection, engagement_abort,
     engagement_control_select, engagement_input, engagement_repeat_last, engagement_submit, fill_build_tick, focus_selection, hover_suggestion, open_vortex_suggestions, patch_inspector, register_brush_mesh, relocate_target_volume, rotate_selection,
@@ -95,11 +95,11 @@ pub const PUZZLE3D_GRANULARITY_KIND: &str = "kind";
 pub static PUZZLE3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 /// 🌉️ This app's own `Puzzle3dScene.fixture: Puzzle3dFixture` (and `ArtifactApp::Snapshot`) stays a
-/// local structural-twin mirror of `crate::artifacts::puzzle3d::Puzzle3dSnapshot`, so the DSL-text
+/// local structural-twin mirror of `crate::Puzzle3dSnapshot`, so the DSL-text
 /// example fixtures are parsed once into the typed projection and re-serialized to the JSON string
 /// this module's `from_json_str::<Puzzle3dFixture>`/`.example(...)` call sites expect.
-pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest"));
-pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
+pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest"));
+pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::dsl::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
 static CONCRETE_FOREST_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(|| from_json_str(CONCRETE_FOREST_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture()));
 static NAKAGIN_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(|| from_json_str(NAKAGIN_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture()));
 static EMPTY_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(empty_fixture);
@@ -1114,14 +1114,14 @@ pub fn sync_precompute_weights(session: &mut Puzzle3dPrecomputeSession, envelope
 /// exactly what froze the UI: hundreds of Monte-Carlo collision task units, blocking, every tick.
 pub fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
     sync_precompute_session(session, envelope);
-    session.precompute_step_lane(crate::artifacts::puzzle3d::schema::PrecomputeLane::Brush, 8);
+    session.precompute_step_lane(crate::schema::PrecomputeLane::Brush, 8);
 }
 
 /// 🎯️ `dispatch`'s `Fixture` outcome is the precompute schema's own typed fixture shape, distinct from
 /// this app's `Puzzle3dFixture` document model — bridged through one JSON round trip (schema translation
 /// between two independently-evolved Rust types) exactly like `scene_config_json` bridges the other
 /// direction.
-pub fn fixture_from_engine_fixture(envelope: &Puzzle3dScene, fixture: &crate::artifacts::puzzle3d::schema::Fixture) -> Option<Puzzle3dScene> {
+pub fn fixture_from_engine_fixture(envelope: &Puzzle3dScene, fixture: &crate::schema::Fixture) -> Option<Puzzle3dScene> {
     let parsed = dsl::ToValue::to_value(fixture);
     let mut next = envelope.clone();
     next.fixture.objects = dsl::FromValue::from_value(parsed.get("objects")?.clone()).ok()?;
@@ -1146,7 +1146,7 @@ struct FillDisplayMemo {
     payload: Puzzle3dFillDisplayPayload,
 }
 
-fn fill_display_payload_from_fixture(fixture: &crate::artifacts::puzzle3d::schema::Fixture) -> Option<Puzzle3dFillDisplayPayload> {
+fn fill_display_payload_from_fixture(fixture: &crate::schema::Fixture) -> Option<Puzzle3dFillDisplayPayload> {
     dsl::FromValue::from_value(dsl::ToValue::to_value(fixture)).ok()
 }
 
@@ -2571,10 +2571,10 @@ fn puzzle3d_retained_reduce(
         let grid_spacing = options.map_or(config.grid_spacing, |options| options.grid_spacing).max(0.1);
         let voxel_dims = options.map_or(config.voxel_dims, |options| options.voxel_dims);
         let snapped = [(origin[0] / grid_spacing).round() * grid_spacing, (origin[1] / grid_spacing).round() * grid_spacing, (origin[2] / grid_spacing).round() * grid_spacing];
-        let scale = crate::artifacts::puzzle3d::Puzzle3dScale::Vec3([voxel_dims[0] as f64 * grid_spacing, voxel_dims[1] as f64 * grid_spacing, voxel_dims[2] as f64 * grid_spacing]);
+        let scale = crate::Puzzle3dScale::Vec3([voxel_dims[0] as f64 * grid_spacing, voxel_dims[1] as f64 * grid_spacing, voxel_dims[2] as f64 * grid_spacing]);
         let id = format!("target-volume-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
-        let volume = crate::artifacts::puzzle3d::Puzzle3dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false };
-        return Ok(Emit { artifact_mutations: vec![crate::artifacts::puzzle3d::mutations::create_target_volume(volume, None)], ui_scope: UiDirtyScope::Full, ..Default::default() });
+        let volume = crate::Puzzle3dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false };
+        return Ok(Emit { artifact_mutations: vec![crate::mutations::create_target_volume(volume, None)], ui_scope: UiDirtyScope::Full, ..Default::default() });
     }
     let empty_selection = protocol::DomainSelection::default();
     let selection = interaction.selection.get(PUZZLE3D_INTERACTION_DOMAIN).unwrap_or(&empty_selection);
@@ -3269,7 +3269,7 @@ struct Puzzle3dAddObjectKindWork {
     payload: Option<Puzzle3dAddObjectKindPayload>,
     object_id: Option<String>,
     mesh_url: Option<String>,
-    vortices: Vec<crate::artifacts::puzzle3d::Puzzle3dVortex>,
+    vortices: Vec<crate::Puzzle3dVortex>,
     mutation: Option<Puzzle3dMutation>,
 }
 
@@ -3387,7 +3387,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 };
                 let index = self.vortex_cursor;
                 self.vortex_cursor += 1;
-                self.vortices.push(crate::artifacts::puzzle3d::Puzzle3dVortex {
+                self.vortices.push(crate::Puzzle3dVortex {
                     id: if template.id.is_empty() { format!("v{index}") } else { template.id.clone() },
                     label: (!template.label.is_empty()).then(|| template.label.clone()),
                     vortex_kind: template.vortex_kind.clone(),
@@ -3401,7 +3401,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dAddObjectKindStage::Publish => {
                 let payload = self.payload.take().ok_or_else(|| Fault::from("puzzle3d-add-kind-payload-owner"))?;
-                let object = crate::artifacts::puzzle3d::Puzzle3dObject {
+                let object = crate::Puzzle3dObject {
                     id: self.object_id.take().ok_or_else(|| Fault::from("puzzle3d-add-kind-object-owner"))?,
                     label: Some(payload.kind_id.clone()),
                     object_kind: Some(payload.kind_id),
@@ -3414,7 +3414,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     hidden: false,
                     locked: false,
                 };
-                self.mutation = Some(crate::artifacts::puzzle3d::mutations::create_object(object, None));
+                self.mutation = Some(crate::mutations::create_object(object, None));
                 self.stage = Puzzle3dAddObjectKindStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
                     artifact_mutations: self.mutation.take().into_iter().collect(),
@@ -3509,13 +3509,13 @@ impl Puzzle3dScaleWork {
         [axis("sx"), axis("sy"), axis("sz")]
     }
 
-    fn scaled(scale: Option<crate::artifacts::puzzle3d::Puzzle3dScale>, factors: [f64; 3]) -> crate::artifacts::puzzle3d::Puzzle3dScale {
+    fn scaled(scale: Option<crate::Puzzle3dScale>, factors: [f64; 3]) -> crate::Puzzle3dScale {
         let current = match scale {
-            Some(crate::artifacts::puzzle3d::Puzzle3dScale::Uniform(value)) => [value; 3],
-            Some(crate::artifacts::puzzle3d::Puzzle3dScale::Vec3(value)) => value,
+            Some(crate::Puzzle3dScale::Uniform(value)) => [value; 3],
+            Some(crate::Puzzle3dScale::Vec3(value)) => value,
             None => [1.0; 3],
         };
-        crate::artifacts::puzzle3d::Puzzle3dScale::Vec3([current[0] * factors[0], current[1] * factors[1], current[2] * factors[2]])
+        crate::Puzzle3dScale::Vec3([current[0] * factors[0], current[1] * factors[1], current[2] * factors[2]])
     }
 
     fn translated(origin: [f64; 3], command: &Puzzle3dCommand) -> [f64; 3] {
@@ -3529,19 +3529,19 @@ impl Puzzle3dScaleWork {
         quat_mul(delta, orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]))
     }
 
-    fn object_mutation(&self, object: &crate::artifacts::puzzle3d::Puzzle3dObject, command: &Puzzle3dCommand) -> Puzzle3dMutation {
+    fn object_mutation(&self, object: &crate::Puzzle3dObject, command: &Puzzle3dCommand) -> Puzzle3dMutation {
         match self.tool_id {
-            "translateSelection" => crate::artifacts::puzzle3d::mutations::move_object(object.id.clone(), Self::translated(object.origin, command)),
-            "rotateSelection" => crate::artifacts::puzzle3d::mutations::rotate_object(object.id.clone(), Some(Self::rotated(object.orientation, command))),
-            _ => crate::artifacts::puzzle3d::mutations::scale_object(object.id.clone(), Some(Self::scaled(object.scale, Self::scale(command)))),
+            "translateSelection" => crate::mutations::move_object(object.id.clone(), Self::translated(object.origin, command)),
+            "rotateSelection" => crate::mutations::rotate_object(object.id.clone(), Some(Self::rotated(object.orientation, command))),
+            _ => crate::mutations::scale_object(object.id.clone(), Some(Self::scaled(object.scale, Self::scale(command)))),
         }
     }
 
-    fn volume_mutation(&self, volume: &crate::artifacts::puzzle3d::Puzzle3dTargetVolume, command: &Puzzle3dCommand) -> Puzzle3dMutation {
+    fn volume_mutation(&self, volume: &crate::Puzzle3dTargetVolume, command: &Puzzle3dCommand) -> Puzzle3dMutation {
         match self.tool_id {
-            "translateSelection" => crate::artifacts::puzzle3d::mutations::move_target_volume(volume.id.clone(), Self::translated(volume.origin, command)),
-            "rotateSelection" => crate::artifacts::puzzle3d::mutations::rotate_target_volume(volume.id.clone(), Some(Self::rotated(volume.orientation, command))),
-            _ => crate::artifacts::puzzle3d::mutations::scale_target_volume(volume.id.clone(), Some(Self::scaled(volume.scale, Self::scale(command)))),
+            "translateSelection" => crate::mutations::move_target_volume(volume.id.clone(), Self::translated(volume.origin, command)),
+            "rotateSelection" => crate::mutations::rotate_target_volume(volume.id.clone(), Some(Self::rotated(volume.orientation, command))),
+            _ => crate::mutations::scale_target_volume(volume.id.clone(), Some(Self::scaled(volume.scale, Self::scale(command)))),
         }
     }
 
@@ -3701,7 +3701,7 @@ struct Puzzle3dPatchInspectorWork {
     item_cursor: usize,
     child_cursor: usize,
     selected: HashSet<String>,
-    pending_attraction: Option<crate::artifacts::puzzle3d::Puzzle3dAttraction>,
+    pending_attraction: Option<crate::Puzzle3dAttraction>,
     mutations: Vec<Puzzle3dMutation>,
 }
 
@@ -3803,44 +3803,44 @@ impl Puzzle3dPatchInspectorWork {
         })
     }
 
-    fn scale(value: Option<crate::artifacts::puzzle3d::Puzzle3dScale>) -> [f64; 3] {
+    fn scale(value: Option<crate::Puzzle3dScale>) -> [f64; 3] {
         match value {
-            Some(crate::artifacts::puzzle3d::Puzzle3dScale::Uniform(value)) => [value; 3],
-            Some(crate::artifacts::puzzle3d::Puzzle3dScale::Vec3(value)) => value,
+            Some(crate::Puzzle3dScale::Uniform(value)) => [value; 3],
+            Some(crate::Puzzle3dScale::Vec3(value)) => value,
             None => [1.0; 3],
         }
     }
 
-    fn object_mutation(command: &Puzzle3dCommand, object: &crate::artifacts::puzzle3d::Puzzle3dObject) -> Option<Puzzle3dMutation> {
+    fn object_mutation(command: &Puzzle3dCommand, object: &crate::Puzzle3dObject) -> Option<Puzzle3dMutation> {
         let args = command.args()?;
         let field = Self::field(command);
         let value = args.get("value");
         let delta = args.get("delta");
         match field {
-            "hidden" => value.and_then(Value::as_bool).map(|value| crate::artifacts::puzzle3d::mutations::change_object_hidden(object.id.clone(), value)),
-            "locked" => value.and_then(Value::as_bool).map(|value| crate::artifacts::puzzle3d::mutations::change_object_locked(object.id.clone(), value)),
-            "label" => Some(crate::artifacts::puzzle3d::mutations::edit_object_label(object.id.clone(), value.and_then(Value::as_str).map(str::to_string))),
-            "objectKind" => Some(crate::artifacts::puzzle3d::mutations::change_object_kind(object.id.clone(), value.and_then(Value::as_str).map(str::to_string))),
-            "meshUrl" => Some(crate::artifacts::puzzle3d::mutations::change_object_mesh(object.id.clone(), value.and_then(Value::as_str).map(str::to_string))),
-            "origin" => value.and_then(value_as_vec3).map(|origin| crate::artifacts::puzzle3d::mutations::move_object(object.id.clone(), origin)),
+            "hidden" => value.and_then(Value::as_bool).map(|value| crate::mutations::change_object_hidden(object.id.clone(), value)),
+            "locked" => value.and_then(Value::as_bool).map(|value| crate::mutations::change_object_locked(object.id.clone(), value)),
+            "label" => Some(crate::mutations::edit_object_label(object.id.clone(), value.and_then(Value::as_str).map(str::to_string))),
+            "objectKind" => Some(crate::mutations::change_object_kind(object.id.clone(), value.and_then(Value::as_str).map(str::to_string))),
+            "meshUrl" => Some(crate::mutations::change_object_mesh(object.id.clone(), value.and_then(Value::as_str).map(str::to_string))),
+            "origin" => value.and_then(value_as_vec3).map(|origin| crate::mutations::move_object(object.id.clone(), origin)),
             _ => {
                 if let Some(axis) = puzzle3d_axis_index(field, "origin") {
                     let mut origin = object.origin;
                     origin[axis] = puzzle3d_resolve_number_edit(origin[axis], value, delta)?;
-                    return Some(crate::artifacts::puzzle3d::mutations::move_object(object.id.clone(), origin));
+                    return Some(crate::mutations::move_object(object.id.clone(), origin));
                 }
                 if let Some(axis) = puzzle3d_axis_index(field, "scale") {
                     let mut scale = Self::scale(object.scale);
                     scale[axis] = puzzle3d_resolve_number_edit(scale[axis], value, delta)?;
-                    return Some(crate::artifacts::puzzle3d::mutations::scale_object(
+                    return Some(crate::mutations::scale_object(
                         object.id.clone(),
-                        Some(crate::artifacts::puzzle3d::Puzzle3dScale::Vec3(scale)),
+                        Some(crate::Puzzle3dScale::Vec3(scale)),
                     ));
                 }
                 let axis = puzzle3d_axis_index(field, "orientation")?;
                 let mut orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
                 orientation[axis] = puzzle3d_resolve_number_edit(orientation[axis], value, delta)?;
-                Some(crate::artifacts::puzzle3d::mutations::rotate_object(object.id.clone(), Some(quat_normalize(orientation))))
+                Some(crate::mutations::rotate_object(object.id.clone(), Some(quat_normalize(orientation))))
             }
         }
     }
@@ -3848,7 +3848,7 @@ impl Puzzle3dPatchInspectorWork {
     fn vortex_mutation(
         command: &Puzzle3dCommand,
         object_id: &str,
-        vortex: &crate::artifacts::puzzle3d::Puzzle3dVortex,
+        vortex: &crate::Puzzle3dVortex,
     ) -> Option<Puzzle3dMutation> {
         let args = command.args()?;
         let field = Self::field(command);
@@ -3873,10 +3873,10 @@ impl Puzzle3dPatchInspectorWork {
                 }
             }
         }
-        Some(crate::artifacts::puzzle3d::mutations::replace_object_vortex(object_id.to_string(), vortex.id.clone(), next))
+        Some(crate::mutations::replace_object_vortex(object_id.to_string(), vortex.id.clone(), next))
     }
 
-    fn attraction_geometry(command: &Puzzle3dCommand, attraction: &crate::artifacts::puzzle3d::Puzzle3dAttraction) -> Option<Puzzle3dMutation> {
+    fn attraction_geometry(command: &Puzzle3dCommand, attraction: &crate::Puzzle3dAttraction) -> Option<Puzzle3dMutation> {
         let args = command.args()?;
         let field = Self::field(command);
         let value = args.get("value");
@@ -3892,27 +3892,17 @@ impl Puzzle3dPatchInspectorWork {
             _ => return None,
         };
         geometry[index] = puzzle3d_resolve_number_edit(geometry[index], value, delta)?;
-        Some(crate::artifacts::puzzle3d::mutations::replace_attraction_geometry(
-            attraction.id.clone(),
-            geometry[0],
-            geometry[1],
-            geometry[2],
-            geometry[3],
-            geometry[4],
-            geometry[5],
-            geometry[6],
-            geometry[7],
-        ))
+        Some(crate::mutations::replace_attraction_geometry(crate::mutations::ReplaceAttractionGeometry { id: attraction.id.clone(), new_gap: geometry[0], new_shift: geometry[1], new_rise: geometry[2], new_rotation: geometry[3], new_turn: geometry[4], new_tilt: geometry[5], new_x: geometry[6], new_y: geometry[7] }))
     }
 
-    fn reference_mutation(command: &Puzzle3dCommand, reference: &crate::artifacts::puzzle3d::Puzzle3dReference) -> Option<Puzzle3dMutation> {
+    fn reference_mutation(command: &Puzzle3dCommand, reference: &crate::Puzzle3dReference) -> Option<Puzzle3dMutation> {
         let args = command.args()?;
         let field = Self::field(command);
         let value = args.get("value");
         let delta = args.get("delta");
         match field {
-            "hidden" => value.and_then(Value::as_bool).map(|value| crate::artifacts::puzzle3d::mutations::change_reference_hidden(reference.id.clone(), value)),
-            "locked" => value.and_then(Value::as_bool).map(|value| crate::artifacts::puzzle3d::mutations::change_reference_locked(reference.id.clone(), value)),
+            "hidden" => value.and_then(Value::as_bool).map(|value| crate::mutations::change_reference_hidden(reference.id.clone(), value)),
+            "locked" => value.and_then(Value::as_bool).map(|value| crate::mutations::change_reference_locked(reference.id.clone(), value)),
             "sourceUrl" | "mediaKind" => {
                 let mut source = reference.source.clone();
                 if field == "sourceUrl" {
@@ -3920,47 +3910,47 @@ impl Puzzle3dPatchInspectorWork {
                 } else {
                     source.media_kind = value.and_then(Value::as_str).map(str::to_string);
                 }
-                Some(crate::artifacts::puzzle3d::mutations::replace_reference_source(reference.id.clone(), source))
+                Some(crate::mutations::replace_reference_source(reference.id.clone(), source))
             }
-            "origin" => value.and_then(value_as_vec3).map(|origin| crate::artifacts::puzzle3d::mutations::move_reference(reference.id.clone(), origin)),
+            "origin" => value.and_then(value_as_vec3).map(|origin| crate::mutations::move_reference(reference.id.clone(), origin)),
             "widthWorld" => puzzle3d_resolve_number_edit(reference.width_world, value, delta)
-                .map(|width| crate::artifacts::puzzle3d::mutations::resize_reference(reference.id.clone(), width)),
+                .map(|width| crate::mutations::resize_reference(reference.id.clone(), width)),
             _ => {
                 let axis = puzzle3d_axis_index(field, "origin")?;
                 let mut origin = reference.origin;
                 origin[axis] = puzzle3d_resolve_number_edit(origin[axis], value, delta)?;
-                Some(crate::artifacts::puzzle3d::mutations::move_reference(reference.id.clone(), origin))
+                Some(crate::mutations::move_reference(reference.id.clone(), origin))
             }
         }
     }
 
-    fn volume_mutation(command: &Puzzle3dCommand, volume: &crate::artifacts::puzzle3d::Puzzle3dTargetVolume) -> Option<Puzzle3dMutation> {
+    fn volume_mutation(command: &Puzzle3dCommand, volume: &crate::Puzzle3dTargetVolume) -> Option<Puzzle3dMutation> {
         let args = command.args()?;
         let field = Self::field(command);
         let value = args.get("value");
         let delta = args.get("delta");
         match field {
-            "hidden" => value.and_then(Value::as_bool).map(|value| crate::artifacts::puzzle3d::mutations::change_target_volume_hidden(volume.id.clone(), value)),
-            "locked" => value.and_then(Value::as_bool).map(|value| crate::artifacts::puzzle3d::mutations::change_target_volume_locked(volume.id.clone(), value)),
-            "origin" => value.and_then(value_as_vec3).map(|origin| crate::artifacts::puzzle3d::mutations::move_target_volume(volume.id.clone(), origin)),
+            "hidden" => value.and_then(Value::as_bool).map(|value| crate::mutations::change_target_volume_hidden(volume.id.clone(), value)),
+            "locked" => value.and_then(Value::as_bool).map(|value| crate::mutations::change_target_volume_locked(volume.id.clone(), value)),
+            "origin" => value.and_then(value_as_vec3).map(|origin| crate::mutations::move_target_volume(volume.id.clone(), origin)),
             _ => {
                 if let Some(axis) = puzzle3d_axis_index(field, "origin") {
                     let mut origin = volume.origin;
                     origin[axis] = puzzle3d_resolve_number_edit(origin[axis], value, delta)?;
-                    return Some(crate::artifacts::puzzle3d::mutations::move_target_volume(volume.id.clone(), origin));
+                    return Some(crate::mutations::move_target_volume(volume.id.clone(), origin));
                 }
                 if let Some(axis) = puzzle3d_axis_index(field, "scale") {
                     let mut scale = Self::scale(volume.scale);
                     scale[axis] = puzzle3d_resolve_number_edit(scale[axis], value, delta)?;
-                    return Some(crate::artifacts::puzzle3d::mutations::scale_target_volume(
+                    return Some(crate::mutations::scale_target_volume(
                         volume.id.clone(),
-                        Some(crate::artifacts::puzzle3d::Puzzle3dScale::Vec3(scale)),
+                        Some(crate::Puzzle3dScale::Vec3(scale)),
                     ));
                 }
                 let axis = puzzle3d_axis_index(field, "orientation")?;
                 let mut orientation = volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
                 orientation[axis] = puzzle3d_resolve_number_edit(orientation[axis], value, delta)?;
-                Some(crate::artifacts::puzzle3d::mutations::rotate_target_volume(volume.id.clone(), Some(quat_normalize(orientation))))
+                Some(crate::mutations::rotate_target_volume(volume.id.clone(), Some(quat_normalize(orientation))))
             }
         }
     }
@@ -4055,7 +4045,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     } else {
                         next.attracted = value.to_string();
                     }
-                    self.push(crate::artifacts::puzzle3d::mutations::disconnect_vortices(attraction.id.clone()))?;
+                    self.push(crate::mutations::disconnect_vortices(attraction.id.clone()))?;
                     self.pending_attraction = Some(next);
                     self.stage = Puzzle3dPatchInspectorStage::AttractionReconnect;
                 } else if let Some(mutation) = Self::attraction_geometry(command, attraction) {
@@ -4065,7 +4055,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dPatchInspectorStage::AttractionReconnect => {
                 let attraction = self.pending_attraction.take().ok_or_else(|| Fault::from("puzzle3d-patch-inspector-attraction-owner"))?;
-                self.push(crate::artifacts::puzzle3d::mutations::connect_vortices(
+                self.push(crate::mutations::connect_vortices(
                     attraction.id,
                     attraction.attracting,
                     attraction.attracted,
@@ -4255,7 +4245,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let Some(object) = snapshot.typed().objects.get(self.object_cursor) else { return Ok(self.complete()) };
                 self.object_cursor += 1;
                 if object.id == requested && !object.locked && !object.hidden {
-                    self.mutations.push(crate::artifacts::puzzle3d::mutations::move_object(object.id.clone(), position));
+                    self.mutations.push(crate::mutations::move_object(object.id.clone(), position));
                     if let Some(vortex) = object.vortices.first() {
                         let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
                         self.source = Some(Puzzle3dWorldRelocateSource {
@@ -4344,7 +4334,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     source.object_orientation,
                 );
                 let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
-                self.mutations.push(crate::artifacts::puzzle3d::mutations::connect_vortices(
+                self.mutations.push(crate::mutations::connect_vortices(
                     id,
                     candidate.vortex_id.clone(),
                     source.vortex_id.clone(),
@@ -4454,8 +4444,8 @@ impl Puzzle3dCreateAttractionWork {
     }
 
     fn endpoint(
-        object: &crate::artifacts::puzzle3d::Puzzle3dObject,
-        vortex: &crate::artifacts::puzzle3d::Puzzle3dVortex,
+        object: &crate::Puzzle3dObject,
+        vortex: &crate::Puzzle3dVortex,
     ) -> Puzzle3dAttractionEndpoint {
         Puzzle3dAttractionEndpoint {
             vortex_id: puzzle3d_vortex_full_id(&object.id, &vortex.id),
@@ -4597,7 +4587,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
                 self.stage = Puzzle3dCreateAttractionStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
-                    artifact_mutations: vec![crate::artifacts::puzzle3d::mutations::connect_vortices(
+                    artifact_mutations: vec![crate::mutations::connect_vortices(
                         id,
                         attracting.vortex_id,
                         attracted.vortex_id,
@@ -4742,7 +4732,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             Puzzle3dSetActiveExampleStage::DeleteAttractions => {
                 if let Some(attraction) = snapshot.typed().attractions.get(self.cursor) {
                     self.cursor += 1;
-                    self.push(crate::artifacts::puzzle3d::mutations::disconnect_vortices(attraction.id.clone()))?;
+                    self.push(crate::mutations::disconnect_vortices(attraction.id.clone()))?;
                     return Ok(Self::progress("puzzle3d-example-delete-attraction", "Removing old attraction", "Alte Anziehung wird entfernt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::DeleteObjects);
@@ -4751,7 +4741,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             Puzzle3dSetActiveExampleStage::DeleteObjects => {
                 if let Some(object) = snapshot.typed().objects.get(self.cursor) {
                     self.cursor += 1;
-                    self.push(crate::artifacts::puzzle3d::mutations::delete_object(object.id.clone()))?;
+                    self.push(crate::mutations::delete_object(object.id.clone()))?;
                     return Ok(Self::progress("puzzle3d-example-delete-object", "Removing old object", "Altes Objekt wird entfernt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::DeleteVolumes);
@@ -4760,7 +4750,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             Puzzle3dSetActiveExampleStage::DeleteVolumes => {
                 if let Some(volume) = snapshot.typed().target_volumes.get(self.cursor) {
                     self.cursor += 1;
-                    self.push(crate::artifacts::puzzle3d::mutations::delete_target_volume(volume.id.clone()))?;
+                    self.push(crate::mutations::delete_target_volume(volume.id.clone()))?;
                     return Ok(Self::progress("puzzle3d-example-delete-volume", "Removing old target volume", "Altes Zielvolumen wird entfernt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::DeleteReferences);
@@ -4769,7 +4759,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             Puzzle3dSetActiveExampleStage::DeleteReferences => {
                 if let Some(reference) = snapshot.typed().references.get(self.cursor) {
                     self.cursor += 1;
-                    self.push(crate::artifacts::puzzle3d::mutations::delete_reference(reference.id.clone()))?;
+                    self.push(crate::mutations::delete_reference(reference.id.clone()))?;
                     return Ok(Self::progress("puzzle3d-example-delete-reference", "Removing old reference", "Alte Referenz wird entfernt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::DeleteCompatibility);
@@ -4778,14 +4768,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             Puzzle3dSetActiveExampleStage::DeleteCompatibility => {
                 if let Some(row) = snapshot.typed().meta.kind_compatibility.get(self.cursor) {
                     self.cursor += 1;
-                    self.push(crate::artifacts::puzzle3d::mutations::disconnect_kind_compatibility(row.source.clone(), row.target.clone()))?;
+                    self.push(crate::mutations::disconnect_kind_compatibility(row.source.clone(), row.target.clone()))?;
                     return Ok(Self::progress("puzzle3d-example-delete-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::Domain);
                 Ok(Self::progress("puzzle3d-example-domain", "Updating document domain", "Dokumentdomäne wird aktualisiert"))
             }
             Puzzle3dSetActiveExampleStage::Domain => {
-                self.push(crate::artifacts::puzzle3d::mutations::change_domain(target.domain.clone()))?;
+                self.push(crate::mutations::change_domain(target.domain.clone()))?;
                 self.advance(Puzzle3dSetActiveExampleStage::Catalogs);
                 Ok(Self::progress("puzzle3d-example-catalogs", "Updating kind catalogs", "Artenkataloge werden aktualisiert"))
             }
@@ -4797,7 +4787,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     .map(|catalogs| dsl::FromValue::from_value(catalogs.clone()))
                     .transpose()
                     .map_err(|_| Fault::from("puzzle3d-set-active-example-catalogs-malformed"))?;
-                self.push(crate::artifacts::puzzle3d::mutations::replace_kind_catalogs(catalogs))?;
+                self.push(crate::mutations::replace_kind_catalogs(catalogs))?;
                 self.advance(Puzzle3dSetActiveExampleStage::CreateObjects);
                 Ok(Self::progress("puzzle3d-example-create-object", "Adding example object", "Beispielobjekt wird hinzugefügt"))
             }
@@ -4806,7 +4796,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     self.cursor += 1;
                     let value = dsl::ToValue::to_value(object);
                     let object = dsl::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-object-malformed"))?;
-                    self.push(crate::artifacts::puzzle3d::mutations::create_object(object, None))?;
+                    self.push(crate::mutations::create_object(object, None))?;
                     return Ok(Self::progress("puzzle3d-example-create-object", "Adding example object", "Beispielobjekt wird hinzugefügt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::CreateAttractions);
@@ -4815,7 +4805,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             Puzzle3dSetActiveExampleStage::CreateAttractions => {
                 if let Some(attraction) = target.attractions.get(self.cursor) {
                     self.cursor += 1;
-                    self.push(crate::artifacts::puzzle3d::mutations::connect_vortices(
+                    self.push(crate::mutations::connect_vortices(
                         attraction.id.clone(),
                         attraction.attracting.clone(),
                         attraction.attracted.clone(),
@@ -4838,7 +4828,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     self.cursor += 1;
                     let value = dsl::ToValue::to_value(volume);
                     let volume = dsl::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-volume-malformed"))?;
-                    self.push(crate::artifacts::puzzle3d::mutations::create_target_volume(volume, None))?;
+                    self.push(crate::mutations::create_target_volume(volume, None))?;
                     return Ok(Self::progress("puzzle3d-example-create-volume", "Adding example target volume", "Beispielzielvolumen wird hinzugefügt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::CreateReferences);
@@ -4849,7 +4839,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     self.cursor += 1;
                     let value = dsl::ToValue::to_value(reference);
                     let reference = dsl::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-reference-malformed"))?;
-                    self.push(crate::artifacts::puzzle3d::mutations::create_reference(reference, None))?;
+                    self.push(crate::mutations::create_reference(reference, None))?;
                     return Ok(Self::progress("puzzle3d-example-create-reference", "Adding example reference", "Beispielreferenz wird hinzugefügt"));
                 }
                 self.advance(Puzzle3dSetActiveExampleStage::CreateCompatibility);
@@ -4858,9 +4848,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             Puzzle3dSetActiveExampleStage::CreateCompatibility => {
                 if let Some(row) = Self::compatibility_rows(target).get(self.cursor).cloned() {
                     self.cursor += 1;
-                    let row: crate::artifacts::puzzle3d::Puzzle3dKindCompatibility =
+                    let row: crate::Puzzle3dKindCompatibility =
                         dsl::FromValue::from_value(row).map_err(|_| Fault::from("puzzle3d-set-active-example-compatibility-malformed"))?;
-                    self.push(crate::artifacts::puzzle3d::mutations::connect_kind_compatibility(
+                    self.push(crate::mutations::connect_kind_compatibility(
                         row.source,
                         row.target,
                         row.bidirectional,
@@ -4924,7 +4914,7 @@ struct Puzzle3dBrushPayloadOwner {
     source_vortex_index: usize,
     origin: [f64; 3],
     orientation: [f64; 4],
-    scale: Option<crate::artifacts::puzzle3d::Puzzle3dScale>,
+    scale: Option<crate::Puzzle3dScale>,
 }
 
 struct Puzzle3dAddBrushObjectWork {
@@ -4937,7 +4927,7 @@ struct Puzzle3dAddBrushObjectWork {
     payload: Option<Puzzle3dBrushPayloadOwner>,
     object_id: Option<String>,
     mesh_url: Option<String>,
-    vortices: Vec<crate::artifacts::puzzle3d::Puzzle3dVortex>,
+    vortices: Vec<crate::Puzzle3dVortex>,
     mutations: Vec<Puzzle3dMutation>,
 }
 
@@ -4979,10 +4969,10 @@ impl Puzzle3dAddBrushObjectWork {
         ])
     }
 
-    fn scale(value: Option<&Value>) -> Option<crate::artifacts::puzzle3d::Puzzle3dScale> {
+    fn scale(value: Option<&Value>) -> Option<crate::Puzzle3dScale> {
         match value {
-            Some(Value::Number(value)) => Some(crate::artifacts::puzzle3d::Puzzle3dScale::Uniform(value.as_f64())),
-            Some(Value::Array(values)) if values.len() >= 3 => Some(crate::artifacts::puzzle3d::Puzzle3dScale::Vec3([
+            Some(Value::Number(value)) => Some(crate::Puzzle3dScale::Uniform(value.as_f64())),
+            Some(Value::Array(values)) if values.len() >= 3 => Some(crate::Puzzle3dScale::Vec3([
                 values.first().and_then(Value::as_f64)?,
                 values.get(1).and_then(Value::as_f64)?,
                 values.get(2).and_then(Value::as_f64)?,
@@ -5107,7 +5097,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let object_id = self.object_id.as_ref().ok_or_else(|| Fault::from("puzzle3d-brush-object-owner"))?;
                 let index = self.vortex_cursor;
                 self.vortex_cursor += 1;
-                self.vortices.push(crate::artifacts::puzzle3d::Puzzle3dVortex {
+                self.vortices.push(crate::Puzzle3dVortex {
                     id: format!("{object_id}:v{index}"),
                     label: None,
                     vortex_kind: template.vortex_kind.clone(),
@@ -5135,7 +5125,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dAddBrushObjectStage::PublishObject => {
                 let payload = self.payload.as_ref().ok_or_else(|| Fault::from("puzzle3d-brush-payload-owner"))?;
-                let object = crate::artifacts::puzzle3d::Puzzle3dObject {
+                let object = crate::Puzzle3dObject {
                     id: self.object_id.clone().ok_or_else(|| Fault::from("puzzle3d-brush-object-owner"))?,
                     label: None,
                     object_kind: Some(payload.object_kind_id.clone()),
@@ -5148,7 +5138,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     hidden: false,
                     locked: false,
                 };
-                self.mutations.push(crate::artifacts::puzzle3d::mutations::create_object(object, None));
+                self.mutations.push(crate::mutations::create_object(object, None));
                 self.stage = Puzzle3dAddBrushObjectStage::PublishAttraction;
                 Ok(Self::progress("puzzle3d-brush-publish-object", "Publishing brush object", "Pinselobjekt wird veröffentlicht"))
             }
@@ -5157,7 +5147,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let object_id = self.object_id.take().ok_or_else(|| Fault::from("puzzle3d-brush-object-owner"))?;
                 let attracted = format!("{object_id}:v{}", payload.source_vortex_index);
                 let attraction_id = format!("attraction-{}-{attracted}", payload.target_vortex_id);
-                self.mutations.push(crate::artifacts::puzzle3d::mutations::connect_vortices(
+                self.mutations.push(crate::mutations::connect_vortices(
                     attraction_id,
                     payload.target_vortex_id,
                     attracted,
@@ -5591,7 +5581,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dRelocateVolumeStage::Origin => {
                 if let Some(origin) = after.and_then(|after| after.get("position")).and_then(value_as_vec3) {
-                    self.mutations.push(crate::artifacts::puzzle3d::mutations::move_target_volume(self.volume_id.clone().ok_or_else(|| Fault::from("puzzle3d-relocate-volume-owner-lost"))?, origin));
+                    self.mutations.push(crate::mutations::move_target_volume(self.volume_id.clone().ok_or_else(|| Fault::from("puzzle3d-relocate-volume-owner-lost"))?, origin));
                 }
                 self.stage = Puzzle3dRelocateVolumeStage::Orientation;
                 Ok(Self::progress("puzzle3d-relocate-volume-orientation", "Preparing volume rotation", "Volumendrehung wird vorbereitet"))
@@ -5604,19 +5594,19 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                         values.get(2).and_then(Value::as_f64).unwrap_or(0.0),
                         values.get(3).and_then(Value::as_f64).unwrap_or(1.0),
                     ];
-                    self.mutations.push(crate::artifacts::puzzle3d::mutations::rotate_target_volume(self.volume_id.clone().ok_or_else(|| Fault::from("puzzle3d-relocate-volume-owner-lost"))?, Some(orientation)));
+                    self.mutations.push(crate::mutations::rotate_target_volume(self.volume_id.clone().ok_or_else(|| Fault::from("puzzle3d-relocate-volume-owner-lost"))?, Some(orientation)));
                 }
                 self.stage = Puzzle3dRelocateVolumeStage::Scale;
                 Ok(Self::progress("puzzle3d-relocate-volume-scale", "Preparing volume scale", "Volumenskalierung wird vorbereitet"))
             }
             Puzzle3dRelocateVolumeStage::Scale => {
                 if let Some(values) = after.and_then(|after| after.get("scale")).and_then(Value::as_array).filter(|values| values.len() >= 3) {
-                    let scale = crate::artifacts::puzzle3d::Puzzle3dScale::Vec3([
+                    let scale = crate::Puzzle3dScale::Vec3([
                         values.first().and_then(Value::as_f64).unwrap_or(1.0),
                         values.get(1).and_then(Value::as_f64).unwrap_or(1.0),
                         values.get(2).and_then(Value::as_f64).unwrap_or(1.0),
                     ]);
-                    self.mutations.push(crate::artifacts::puzzle3d::mutations::scale_target_volume(self.volume_id.clone().ok_or_else(|| Fault::from("puzzle3d-relocate-volume-owner-lost"))?, Some(scale)));
+                    self.mutations.push(crate::mutations::scale_target_volume(self.volume_id.clone().ok_or_else(|| Fault::from("puzzle3d-relocate-volume-owner-lost"))?, Some(scale)));
                 }
                 Ok(self.complete())
             }
@@ -5669,7 +5659,7 @@ struct Puzzle3dAcceptSuggestionWork {
     kind_index: Option<usize>,
     object_id: Option<String>,
     mesh_url: Option<String>,
-    vortices: Vec<crate::artifacts::puzzle3d::Puzzle3dVortex>,
+    vortices: Vec<crate::Puzzle3dVortex>,
     mutations: Vec<Puzzle3dMutation>,
 }
 
@@ -5833,7 +5823,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 };
                 let object_id = self.object_id.as_ref().ok_or_else(|| Fault::from("puzzle3d-accept-object-owner"))?;
                 let index = self.vortices.len();
-                self.vortices.push(crate::artifacts::puzzle3d::Puzzle3dVortex {
+                self.vortices.push(crate::Puzzle3dVortex {
                     id: format!("{object_id}:v{index}"),
                     label: None,
                     vortex_kind: template.vortex_kind.clone(),
@@ -5863,7 +5853,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
             }
             Puzzle3dAcceptSuggestionStage::PublishObject => {
                 let kind = catalogs.objects.get(self.kind_index.ok_or_else(|| Fault::from("puzzle3d-accept-kind-owner"))?).ok_or_else(|| Fault::from("puzzle3d-accept-kind-cursor"))?;
-                let object = crate::artifacts::puzzle3d::Puzzle3dObject {
+                let object = crate::Puzzle3dObject {
                     id: self.object_id.clone().ok_or_else(|| Fault::from("puzzle3d-accept-object-owner"))?,
                     label: None,
                     object_kind: Some(kind.id.clone()),
@@ -5876,7 +5866,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     hidden: false,
                     locked: false,
                 };
-                self.mutations.push(crate::artifacts::puzzle3d::mutations::create_object(object, None));
+                self.mutations.push(crate::mutations::create_object(object, None));
                 self.stage = Puzzle3dAcceptSuggestionStage::PublishAttraction;
                 Ok(Self::progress("puzzle3d-accept-publish-object", "Transferring suggested object", "Vorschlagsobjekt wird übertragen"))
             }
@@ -5884,7 +5874,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let target = self.target_id.take().ok_or_else(|| Fault::from("puzzle3d-accept-target-owner"))?;
                 let object_id = self.object_id.take().ok_or_else(|| Fault::from("puzzle3d-accept-object-owner"))?;
                 let source = format!("{object_id}:v0");
-                self.mutations.push(crate::artifacts::puzzle3d::mutations::connect_vortices(
+                self.mutations.push(crate::mutations::connect_vortices(
                     format!("attraction-{target}-{source}"),
                     target,
                     source,
@@ -6697,7 +6687,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutati
 //#endregion 📬️StorePreparation
 
 impl ArtifactEditor for Puzzle3dPlayApp {
-    const DIALECT: Dialect = crate::artifacts::puzzle3d::PUZZLE3D_DIALECT;
+    const DIALECT: Dialect = crate::PUZZLE3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE3D_FIXTURE_SCHEMA;
     type Snapshot = Puzzle3dPlaySnapshot;
     type Mutation = Puzzle3dMutation;
@@ -7160,9 +7150,9 @@ fn puzzle3d_interaction_definition() -> InteractionDefinition {
 /// known gap for the coordinator, not silently lost.
 pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
     let envelope = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
-    Editor::builder(crate::artifacts::puzzle3d::PUZZLE3D_DIALECT)
+    Editor::builder(crate::PUZZLE3D_DIALECT)
             .document(["semio", "puzzle", "3d"])
-            .artifact_kind(crate::artifacts::puzzle3d::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             .icon_id("puzzle")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
@@ -8820,14 +8810,14 @@ mod tests {
     /// `Mutation<Value>` bridge impl) is what the CW7 law is about.
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::puzzle3d::spr::Puzzle3dStore;
-        use crate::artifacts::puzzle3d::{Puzzle3dObject as TypedObject, PUZZLE_3D_SCHEMA};
+        use crate::spr::Puzzle3dStore;
+        use crate::{Puzzle3dObject as TypedObject, PUZZLE_3D_SCHEMA};
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = semio_framework::io::resolve_ready(Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None))).expect("store");
         let object = TypedObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle3d::mutations::create_object(object, None)], description: None })).expect("apply");
+        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::create_object(object, None)], description: None })).expect("apply");
         let envelope = store.envelope();
         let edit: &Edit<Puzzle3dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework::io::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));

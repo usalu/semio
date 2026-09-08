@@ -1,7 +1,7 @@
 //! 🔍️ Layout play app panel — the inspector: a document summary (was field editors for the current
 //! selection; see `render`'s doc comment for why that's gone).
 
-use crate::artifacts::layout::{LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
+use crate::{LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::terminology::LayoutLabels;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, BuiltNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
@@ -77,7 +77,7 @@ mod semantic_contract {
     #[test]
     fn layout_inspection_summary_matches_the_json_oracle() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️summary.json")).expect("neutral inspector vectors");
-        let mut snapshot = crate::artifacts::layout::schema::default_document();
+        let mut snapshot = crate::schema::default_document();
         snapshot.name = fixture["name"].as_str().expect("document name").into();
         snapshot.pages.clear();
         assert_eq!(snapshot.pages.len(), fixture["pageCount"].as_u64().expect("page count") as usize);

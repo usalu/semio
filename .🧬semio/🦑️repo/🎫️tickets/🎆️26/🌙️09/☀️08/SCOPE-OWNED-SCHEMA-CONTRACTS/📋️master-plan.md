@@ -72,3 +72,11 @@ Relocation review and contract-correction review are separate steps within WP3�
   W6 plugin fixtures (✏️s excl. mutations), W7 mutation aggregates + leaf relocation (non-stdio),
   W8 stdio mutation schemas (500 missing), W9 repo product/coordinator + print + mit-bestand,
   W10 framework modules (excl. 🧬️schema registry). Reports: `📓️wp1-*`, `📓️wp2-*`, `📓️wp4-*`.
+- 2026-09-08 · Wave 1 landed for W2 (tooling: taxonomy keys, catalog, `schema` commands, 8,395 findings
+  baseline), W3 (Rust registry + owned validator, 26 tests), W4 (hub: 10 modules / 143 exports, seeds fixed),
+  W7 (1,766 leaves relocated, 59 aggregates → `$ref` unions), W9 (coordinator API module, Postgres rows,
+  print/mit-bestand). `$id` grammar settled in the contract after W2's `scope-id-duplicate=2249`.
+- 2026-09-08 · Wave 2 launched: W2b (leaf scopes in generator, Rust parity, ajv devDependency, torn reads),
+  W7b (leaf `$id` grammar, 61 architect descriptors, framework/os leaves to draft-07), W9b (sqlite client
+  ownership), W3b (validator `if/then/else` + full draft-07 keywords + runtime entries dump).
+  Routing ledger: `📋️cross-partition-requests.md`. Harness `bun test`: 144 pass / 28 fail, triage queued (row 32).

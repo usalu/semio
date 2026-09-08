@@ -18,8 +18,8 @@
 //! @see https://energyplus.readthedocs.io/en/latest/schema.html
 //! @see ../../../../../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/ENERGY-PLUGIN-END-TO-END/📓️w6-epjson-io.md
 use crate::air_exchange::InfiltrationMethod;
-use crate::artifacts::model::io::export::serializers::artifacts::epjson::v25_2::any::{glazing_construction_name, surface_normal, EpJsonDiagnostic, CONTRACT_OUTPUT_VARIABLES, DUAL_SETPOINT_CONTROL_SCHEDULE};
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::io::export::serializers::artifacts::epjson::v25_2::any::{glazing_construction_name, surface_normal, EpJsonDiagnostic, CONTRACT_OUTPUT_VARIABLES, DUAL_SETPOINT_CONTROL_SCHEDULE};
+use crate::EnergyModelSnapshot;
 use crate::model::{Construction, EntityId, EquipmentGain, Fenestration, GroundTemperatureConfig, IdealLoadsSystem, Infiltration, LightingGain, Material, Model, OutputReportFrequency, OutputVariableSpec, OutsideBoundary, PeopleGain, ScheduleId, Site, Space, Surface, SurfaceClass, Thermostat, Zone};
 use crate::schedule::{ConstantSchedule, DailySchedule, ScheduleInterpolation};
 use pack::json::{Object, Value};
@@ -662,7 +662,7 @@ pub fn model_json_from_epjson(epjson: &str) -> Result<(String, String), String> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::model::io::export::serializers::artifacts::epjson::v25_2::any::encode_model;
+    use crate::io::export::serializers::artifacts::epjson::v25_2::any::encode_model;
 
     fn round_trip(case: &str) -> (String, String) {
         let model = crate::bestest::model(case).expect("bestest case");

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateObject` — a real append-only insert. No-op when the id
 //! already exists in `base`.
-use crate::artifacts::puzzle3d::diff::{Puzzle3dDiff, Puzzle3dObjectsDelta};
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::{Puzzle3dDiff, Puzzle3dObjectsDelta};
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::CreateObject, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

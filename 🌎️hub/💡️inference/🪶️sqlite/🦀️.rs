@@ -155,13 +155,13 @@ pub(crate) struct GisMapApprovalUndoTargetV1 {
 /// 🧾️ Approval reconciliation returns the durable undo handle from the same transaction.
 pub(crate) struct InferenceApprovalReconciliationV1 {
     pub applied: bool,
-    pub undo: directory::os_directory::GisMapApprovalUndoHandleV1,
+    pub undo: GisMapApprovalUndoHandleV1,
 }
 
 /// 🎫️ Durable undo idempotency admission or exact terminal replay.
 pub(crate) enum GisMapApprovalUndoAdmissionV1 {
     Prepared,
-    Replayed(directory::os_directory::GisMapApprovalUndoReceiptV1),
+    Replayed(GisMapApprovalUndoReceiptV1),
 }
 
 /// 🧊 One exact retained undo identity needed to resume a committed Store journal after restart.
@@ -821,7 +821,7 @@ impl InferenceJobLedgerV1 {
         }
         let witness_digest = witness.approval_undo_witness_digest();
         let target_id = sha256(format!("semio.hub.gis-map-approval-undo-target/v1\0{witness_digest}").as_bytes())[..32].to_owned();
-        let undo = directory::os_directory::GisMapApprovalUndoHandleV1 { target_id: target_id.clone(), expected_current: after_frontier.clone() };
+        let undo = GisMapApprovalUndoHandleV1 { target_id: target_id.clone(), expected_current: after_frontier.clone() };
         if phase == "committed" {
             let retained: bool = tx
                 .query_row(
@@ -922,7 +922,7 @@ impl InferenceJobLedgerV1 {
     }
 
     /// 🔁️ Replays only the exact committed target/idempotency tuple to its original owner.
-    pub(crate) fn replayed_gis_map_approval_undo(&self, target_id: &str, idempotency_key: &str, reader: &InferenceReaderV1<'_>) -> Result<Option<directory::os_directory::GisMapApprovalUndoReceiptV1>, InferenceErrorV1> {
+    pub(crate) fn replayed_gis_map_approval_undo(&self, target_id: &str, idempotency_key: &str, reader: &InferenceReaderV1<'_>) -> Result<Option<GisMapApprovalUndoReceiptV1>, InferenceErrorV1> {
         if !hex(target_id, 32) || !hex(idempotency_key, 32) {
             return Err(InferenceErrorV1::Bounds);
         }
@@ -953,7 +953,7 @@ impl InferenceJobLedgerV1 {
                 if !frontier.validate() {
                     return Err(InferenceErrorV1::Storage);
                 }
-                Ok(Some(directory::os_directory::GisMapApprovalUndoReceiptV1 {
+                Ok(Some(GisMapApprovalUndoReceiptV1 {
                     schema: "semio.hub.gis-map-approval-undo-receipt/v1".into(),
                     target_id: target_id.to_owned(),
                     original_job_id: row.6,
@@ -1031,7 +1031,7 @@ impl InferenceJobLedgerV1 {
                     return Err(InferenceErrorV1::Storage);
                 }
                 tx.commit().map_err(storage)?;
-                Ok(GisMapApprovalUndoAdmissionV1::Replayed(directory::os_directory::GisMapApprovalUndoReceiptV1 {
+                Ok(GisMapApprovalUndoAdmissionV1::Replayed(GisMapApprovalUndoReceiptV1 {
                     schema: "semio.hub.gis-map-approval-undo-receipt/v1".into(),
                     target_id: target.target_id.clone(),
                     original_job_id: target.original_job_id.clone(),

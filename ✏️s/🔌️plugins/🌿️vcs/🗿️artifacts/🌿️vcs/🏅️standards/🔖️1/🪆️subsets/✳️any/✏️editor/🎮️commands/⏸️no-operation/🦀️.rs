@@ -1,6 +1,6 @@
 //! 🖱️ 🖱️ VCS play app commands command — `no-operation`.
 
-use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot};
+use crate::{op::VcsDemoMutation, VcsSnapshot};
 use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -9,7 +9,7 @@
 //! the nested states `None` and `Some(None)` are NOT distinguishable in this file's committed diff,
 //! and nothing here asserts that they are.
 
-use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
+use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -38,7 +38,7 @@ async fn appends_a_selection_scoped_length_property() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("create-property-definition applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "create-property-definition/appends-a-selection-scoped-length-property: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.catalogue.property_definitions.len(), 2, "create-property-definition/appends-a-selection-scoped-length-property: the definition list must grow by exactly one");
-    assert_eq!(applied.catalogue.property_definitions[1].kind, crate::artifacts::iso16757::part_1::PropertyKind::Selection, "create-property-definition/appends-a-selection-scoped-length-property: the new definition must keep its Selection kind");
+    assert_eq!(applied.catalogue.property_definitions[1].kind, crate::part_1::PropertyKind::Selection, "create-property-definition/appends-a-selection-scoped-length-property: the new definition must keep its Selection kind");
     assert_eq!(applied.catalogue.property_definitions[1].cardinality.min, 0, "create-property-definition/appends-a-selection-scoped-length-property: the new definition is optional, unlike the committed mandatory height property");
 }
 

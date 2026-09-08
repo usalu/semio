@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🗓️meetings` per Wave C.
 
 use super::RenameMeetingRecord;
-use crate::artifacts::program::diff::{ProgramMeetingsDelta, ProgramMeetingsPatchEntry};
-use crate::artifacts::program::registers::MeetingRecordPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramMeetingsDelta, ProgramMeetingsPatchEntry};
+use crate::registers::MeetingRecordPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameMeetingRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

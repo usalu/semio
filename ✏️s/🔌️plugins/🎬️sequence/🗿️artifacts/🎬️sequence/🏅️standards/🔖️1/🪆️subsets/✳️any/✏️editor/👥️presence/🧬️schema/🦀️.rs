@@ -1,6 +1,6 @@
 //! 🧬️ schema leaf
-use crate::artifacts::sequence::SequenceCamera;
-use schema::ArtifactSchema;
+use crate::SequenceCamera;
+use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]

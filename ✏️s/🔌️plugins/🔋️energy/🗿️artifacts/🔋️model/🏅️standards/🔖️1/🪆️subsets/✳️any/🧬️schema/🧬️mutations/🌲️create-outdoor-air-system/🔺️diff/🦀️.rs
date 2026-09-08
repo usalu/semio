@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateOutdoorAirSystem` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateOutdoorAirSystem, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -17,6 +17,6 @@ pub fn diff(payload: &super::CreateOutdoorAirSystem, base: &EnergyModelSnapshot)
     }
     let mut model = base.model.clone();
     model.outdoor_air_systems.push(crate::model::OutdoorAirSystem { id: payload.id, air_loop_id: payload.air_loop_id, min_oa_flow_m3_s: payload.min_oa_flow_m3_s, economizer_enabled: payload.economizer_enabled });
-    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

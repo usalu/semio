@@ -1,6 +1,6 @@
 //! 🧬️ Block3d snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::block3d::{Block3dVortexKindExtra, Block3dVortexTemplate, BLOCK_3D_SCHEMA};
+use crate::{Block3dVortexKindExtra, Block3dVortexTemplate, BLOCK_3D_SCHEMA};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
@@ -103,7 +103,7 @@ impl Default for Block3dSnapshot {
             schema: BLOCK_3D_SCHEMA.to_string(),
             object_kind: BlockKindIdentity::default(),
             representations: Vec::new(),
-            catalog: crate::artifacts::block3d::catalog_child_handle(&[]),
+            catalog: crate::catalog_child_handle(&[]),
             vortex_kind_extra: Vec::new(),
             vortices: Vec::new(),
             compatibility: Vec::new(),

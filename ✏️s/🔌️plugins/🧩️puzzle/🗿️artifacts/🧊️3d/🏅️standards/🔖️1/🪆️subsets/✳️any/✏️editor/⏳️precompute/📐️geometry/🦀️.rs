@@ -13,7 +13,7 @@
 /// 🗃️ Fixed-capacity storage for owned map entries.
 type FixedOwnerMapPage<K, V, const N: usize> = Box<[Option<(K, V)>; N]>;
 
-use crate::artifacts::puzzle3d::schema::{Quat, Vec3, WorldVolumeProps};
+use crate::schema::{Quat, Vec3, WorldVolumeProps};
 use semio_framework_3d::{collision, rigid};
 use std::borrow::Borrow;
 use std::mem::MaybeUninit;
@@ -1698,7 +1698,7 @@ impl CollisionOverlapState {
 mod tests {
     use super::*;
 
-    use crate::artifacts::puzzle3d::schema::testkit::*;
+    use crate::schema::testkit::*;
     use std::time::{Duration, Instant};
 
     struct TestStepContext {

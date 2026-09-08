@@ -2,8 +2,8 @@
 //! (then `create` was a no-op and there's nothing to undo).
 
 use super::CreateProduct;
-use crate::artifacts::vdi3805::mutations::delete_product;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::mutations::delete_product;
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &CreateProduct, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

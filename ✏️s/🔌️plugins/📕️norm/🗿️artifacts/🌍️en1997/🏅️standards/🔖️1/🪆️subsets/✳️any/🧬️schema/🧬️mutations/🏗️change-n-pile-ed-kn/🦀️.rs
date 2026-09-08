@@ -1,9 +1,9 @@
 //! 🛁 `change-n-pile-ed-kn` payload — changes the En1997 document's `n_pile_ed_kn` (design pile axial load N_Ed [kN]).
 
 
-use crate::artifacts::en1997::En1997Snapshot;
-use crate::artifacts::en1997::diff::En1997Diff;
-use crate::artifacts::en1997::mutations::En1997Mutation;
+use crate::En1997Snapshot;
+use crate::diff::En1997Diff;
+use crate::mutations::En1997Mutation;
 //#region 🔖️ChangeNPileEdKn
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

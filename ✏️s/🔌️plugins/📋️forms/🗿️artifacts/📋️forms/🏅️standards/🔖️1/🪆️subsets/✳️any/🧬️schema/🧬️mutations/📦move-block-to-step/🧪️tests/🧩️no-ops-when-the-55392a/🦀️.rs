@@ -19,8 +19,8 @@
 //! `index.min(blocks.len())` clamp is computed against a list the block has already been lifted out
 //! of, exactly as it is for a genuine move.
 
-use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{materialize_forms_steps, forms_steps, FormQuestion, FormStep, FormsDiff, FormsSnapshot};
+use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::{materialize_forms_steps, forms_steps, FormQuestion, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

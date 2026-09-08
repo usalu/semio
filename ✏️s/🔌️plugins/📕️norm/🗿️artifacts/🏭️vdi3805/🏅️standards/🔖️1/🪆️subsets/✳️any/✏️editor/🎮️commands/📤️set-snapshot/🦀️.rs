@@ -5,8 +5,8 @@
 //! (base + target, since `catalog.products`/`geometry`/`curves` are real id-keyed collections
 //! needing full remove/re-insert), bundled into a single atomic edit.
 
-use crate::artifacts::vdi3805::op::Vdi3805Mutation;
-use crate::artifacts::vdi3805::Vdi3805Snapshot;
+use crate::op::Vdi3805Mutation;
+use crate::Vdi3805Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -30,7 +30,7 @@ pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Vdi3805Snapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::vdi3805::op::Vdi3805Mutation;
+    use crate::op::Vdi3805Mutation;
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]

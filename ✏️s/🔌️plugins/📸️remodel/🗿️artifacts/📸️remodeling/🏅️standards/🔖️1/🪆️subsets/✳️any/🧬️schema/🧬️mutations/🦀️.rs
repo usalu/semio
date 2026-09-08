@@ -3,8 +3,8 @@
 //! leaves); `#[derive(dsl::Mutations)]` generates `impl protocol::Mutation<RemodelingSnapshot>` and
 //! `impl protocol::SemanticMutation<RemodelingSnapshot>` from those payloads — no hand-written
 //! apply/diff/inverse dispatch here.
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::RemodelingDiff;
+use crate::RemodelingSnapshot;
 use protocol::Mutation as _;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -127,7 +127,7 @@ pub fn inverse_remodeling_mutation(base: &RemodelingSnapshot, mutation: &Remodel
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::remodeling::{
+    use crate::{
         default_remodeling_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, PackedF32, PackedU8, QcReportSnapshot,
         ReconstructionJob, ReconstructionStage, RemodelingMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
     };
@@ -151,7 +151,7 @@ mod tests {
             source: Some(VideoSource { name: "front.mp4".into(), container: "mp4".into(), codec: VideoCodec::Avc, duration_ms: 6633.3, frame_count: 199, width: 1920, height: 1080 }),
         });
         let asset_one = ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 };
-        scene.assets.insert("asset-1".into(), crate::artifacts::remodeling::store_remodeling_asset("asset-1", &asset_one));
+        scene.assets.insert("asset-1".into(), crate::store_remodeling_asset("asset-1", &asset_one));
         scene.calibration.cameras.push(CameraCalibration {
             id: "cam-1".into(),
             label: "Front".into(),
@@ -179,7 +179,7 @@ mod tests {
         scene.results.dense =
             Some(DenseCloud { positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])), confidence: Some(PackedF32::from_f32_slice(&[0.9])), classification: Some(PackedU8::from_u8_slice(&[2])) });
         scene.results.mesh = RemodelingMesh {
-            mesh: crate::artifacts::remodeling::mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
+            mesh: crate::mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
             source: MeshSource::Reconstructed,
             texture_asset_id: Some("tex-1".into()),
             watertight: Some(WatertightReportSnapshot {
@@ -207,8 +207,8 @@ mod tests {
                 CameraPosePreview { camera_id: "cam-1".into(), rotation_wxyz: [0.999, 0.001, 0.0, 0.0], translation: [0.1, 0.0, 0.0] },
             ],
         });
-        scene.results.tracks.push(crate::artifacts::remodeling::MotionTrackSummary { id: "track-1".into(), length: 42, class: TrackClass::Moving, mean_speed_m_s: 1.2 });
-        scene.results.geo = Some(crate::artifacts::remodeling::GeoProducts { dsm_asset_id: Some("asset-dsm".into()), dtm_asset_id: Some("asset-dtm".into()), ortho_asset_id: Some("asset-ortho".into()) });
+        scene.results.tracks.push(crate::MotionTrackSummary { id: "track-1".into(), length: 42, class: TrackClass::Moving, mean_speed_m_s: 1.2 });
+        scene.results.geo = Some(crate::GeoProducts { dsm_asset_id: Some("asset-dsm".into()), dtm_asset_id: Some("asset-dtm".into()), ortho_asset_id: Some("asset-ortho".into()) });
         scene.results.qc = Some(QcReportSnapshot {
             reprojection_rms_px: 0.5,
             gcp_checkpoint_rmse: Some(0.02),
@@ -295,14 +295,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn update_params_inverse_law() {
         let base = populated_scene_fixture();
-        assert_mutation_inverse_law(&base, &update_ingest_params(crate::artifacts::remodeling::IngestParams { min_sharpness: 0.9, ..base.params.ingest.clone() })).await;
-        assert_mutation_inverse_law(&base, &update_feature_params(crate::artifacts::remodeling::FeatureParams { target_count: 1, ..base.params.feature.clone() })).await;
-        assert_mutation_inverse_law(&base, &update_match_params(crate::artifacts::remodeling::MatchParams { ratio_test: 0.1, ..base.params.matching.clone() })).await;
-        assert_mutation_inverse_law(&base, &update_sfm_params(crate::artifacts::remodeling::SfmParams { ransac_iterations: 1, ..base.params.sfm.clone() })).await;
-        assert_mutation_inverse_law(&base, &update_dense_params(crate::artifacts::remodeling::DenseParams { max_points: 1, ..base.params.dense.clone() })).await;
-        assert_mutation_inverse_law(&base, &update_mesh_params(crate::artifacts::remodeling::MeshParams { texture_size: 1, ..base.params.mesh.clone() })).await;
-        assert_mutation_inverse_law(&base, &update_motion_params(crate::artifacts::remodeling::MotionParams { enabled: true, ..base.params.motion.clone() })).await;
-        assert_mutation_inverse_law(&base, &update_geo_params(crate::artifacts::remodeling::GeoParams { enabled: true, ..base.params.geo.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_ingest_params(crate::IngestParams { min_sharpness: 0.9, ..base.params.ingest.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_feature_params(crate::FeatureParams { target_count: 1, ..base.params.feature.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_match_params(crate::MatchParams { ratio_test: 0.1, ..base.params.matching.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_sfm_params(crate::SfmParams { ransac_iterations: 1, ..base.params.sfm.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_dense_params(crate::DenseParams { max_points: 1, ..base.params.dense.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_mesh_params(crate::MeshParams { texture_size: 1, ..base.params.mesh.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_motion_params(crate::MotionParams { enabled: true, ..base.params.motion.clone() })).await;
+        assert_mutation_inverse_law(&base, &update_geo_params(crate::GeoParams { enabled: true, ..base.params.geo.clone() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -361,8 +361,8 @@ mod tests {
         // to the deterministic raw-bytes handle (`image_asset_child_handle`) — asserting on the HANDLE
         // (content-addressed, so identical for identical `(mime,data)` regardless of who mints it) is
         // the honest convergence check here, not a round-trip through the working-scene cache.
-        assert_eq!(a_then_b.assets.get("frame-a"), Some(&crate::artifacts::remodeling::image_asset_child_handle("frame-a", &asset_a)));
-        assert_eq!(a_then_b.assets.get("frame-b"), Some(&crate::artifacts::remodeling::image_asset_child_handle("frame-b", &asset_b)));
+        assert_eq!(a_then_b.assets.get("frame-a"), Some(&crate::image_asset_child_handle("frame-a", &asset_a)));
+        assert_eq!(a_then_b.assets.get("frame-b"), Some(&crate::image_asset_child_handle("frame-b", &asset_b)));
     }
 
     /// 🔀️ Same convergence contract across two disjoint operation families (feature params tuning vs.
@@ -370,7 +370,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn concurrent_edits_across_different_op_families_converge() {
         let base = populated_scene_fixture();
-        let op_feature = update_feature_params(crate::artifacts::remodeling::FeatureParams { target_count: 9000, ..base.params.feature.clone() });
+        let op_feature = update_feature_params(crate::FeatureParams { target_count: 9000, ..base.params.feature.clone() });
         let gcp = GroundControlPoint { id: "gcp-99".into(), name: "New".into(), ..GroundControlPoint::default() };
         let op_gcp = create_gcp(gcp.clone());
 

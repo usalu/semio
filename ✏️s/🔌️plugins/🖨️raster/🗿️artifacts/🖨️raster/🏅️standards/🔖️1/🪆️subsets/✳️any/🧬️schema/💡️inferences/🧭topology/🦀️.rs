@@ -6,7 +6,7 @@
 //! cannot express a structural cycle, so this is a static invariant, not an empirical result;
 //! `nodeCount` is the total flattened layer count (`Pixel`/`Group`/`Adjustment` all counted).
 
-use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
+use crate::{RasterLayerNode, RasterSnapshot};
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
@@ -51,7 +51,7 @@ pub fn compute_raster_topology(snapshot: &RasterSnapshot) -> RasterTopology {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::raster::{RasterTransform, RASTER_DOCUMENT_SCHEMA};
+    use crate::{RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
     fn pixel_layer(id: &str) -> RasterLayerNode {
         RasterLayerNode::Pixel { id: id.into(), name: id.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: None, height: None, image_key: None }

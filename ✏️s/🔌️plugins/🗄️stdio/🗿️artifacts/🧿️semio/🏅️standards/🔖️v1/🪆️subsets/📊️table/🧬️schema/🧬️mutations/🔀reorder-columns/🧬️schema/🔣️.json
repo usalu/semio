@@ -1,18 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/reorder-columns.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/reorder-columns/schema.json",
   "title": "ReorderColumns",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "name",
-    "toIndex"
+    "to_index"
   ],
   "properties": {
     "name": {
       "type": "string"
     },
-    "toIndex": {
+    "to_index": {
       "type": "integer",
       "minimum": 0
     }

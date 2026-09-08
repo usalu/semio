@@ -1,9 +1,9 @@
 //! 🌲 `change-pile-n-profiles` payload — changes the En1997 document's `pile_n_profiles` (number of investigated pile profiles).
 
 
-use crate::artifacts::en1997::En1997Snapshot;
-use crate::artifacts::en1997::diff::En1997Diff;
-use crate::artifacts::en1997::mutations::En1997Mutation;
+use crate::En1997Snapshot;
+use crate::diff::En1997Diff;
+use crate::mutations::En1997Mutation;
 //#region 🔖️ChangePileNProfiles
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

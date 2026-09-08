@@ -1,8 +1,8 @@
 //! 🎯️ 🎯️ Remodeling play app commands command — `calibrate-cameras`.
 
-use crate::artifacts::remodeling::mutations::create_camera_calibration;
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::{CameraCalibration, RemodelingSnapshot};
+use crate::mutations::create_camera_calibration;
+use crate::op::RemodelingMutation;
+use crate::{CameraCalibration, RemodelingSnapshot};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -27,7 +27,7 @@ pub fn handle(_payload: &CalibrateCameras, doc: &ArtifactView<'_, RemodelingSnap
             continue;
         }
         let Some(frame) = stream.frames.first() else { continue };
-        let Some((width, height)) = crate::artifacts::remodeling::remodeling_asset_dimensions(scene, &frame.asset_id) else { continue };
+        let Some((width, height)) = crate::remodeling_asset_dimensions(scene, &frame.asset_id) else { continue };
         let (width, height) = (width.max(1), height.max(1));
         let f = f64::from(width.max(height));
         seen.push(camera_id.clone());

@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -13,17 +13,17 @@ pub struct VcsDemoConfig {
 
 //region 📎 App-schema descriptor
 /// 📎 `s.vcs.vcs`'s config and presence schema, owned by this leaf.
-pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
-    ::schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> ::framework_schema::AppSchemaDescriptor {
+    ::framework_schema::AppSchemaDescriptor {
         id: "s.vcs.vcs",
-        config: ::schema::FacetLeaves {
+        config: ::framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        presence: ::schema::FacetLeaves {
+        presence: ::framework_schema::FacetLeaves {
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),

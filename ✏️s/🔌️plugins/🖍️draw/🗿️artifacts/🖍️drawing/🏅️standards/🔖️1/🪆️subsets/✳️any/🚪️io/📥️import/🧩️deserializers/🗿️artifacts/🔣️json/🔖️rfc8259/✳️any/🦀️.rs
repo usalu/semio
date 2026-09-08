@@ -3,7 +3,7 @@
 //! `JsonSnapshot.value` is stdio's own lexeme-preserving `JsonValue` model. `IoFidelity::Exact` —
 //! `DrawingSnapshot`'s own `#[derive(ToValue, FromValue)]` JSON shape round-trips losslessly.
 
-use crate::artifacts::drawing::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
+use crate::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

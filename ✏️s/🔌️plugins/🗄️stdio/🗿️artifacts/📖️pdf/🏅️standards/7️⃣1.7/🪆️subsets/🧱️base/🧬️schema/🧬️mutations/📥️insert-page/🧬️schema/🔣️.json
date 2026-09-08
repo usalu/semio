@@ -1,23 +1,66 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/insert-page.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/insert-page/schema.json",
   "title": "InsertPage",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "index",
     "page"
   ],
   "properties": {
-    "mutation": {
-      "const": "insertPage"
-    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0
     },
     "page": {
-      "type": "object"
+      "$ref": "#/$defs/PdfPage"
+    },
+    "mutation": {
+      "const": "insertPage",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "PdfPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mediaBox"
+      ],
+      "properties": {
+        "mediaBox": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "cropBox": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rotate": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "text": {
+          "type": "string"
+        }
+      }
     }
   }
 }

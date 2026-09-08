@@ -1,7 +1,7 @@
 //! 🧬️ Process3d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, Pose, ProcessStep, Stock, StockQuantity, Workshop, WorkshopMachine};
-use schema::ArtifactSchema;
+use crate::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, Pose, ProcessStep, Stock, StockQuantity, Workshop, WorkshopMachine};
+use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -85,7 +85,7 @@ pub struct Process3dArtifact {
 //#region 🔖️Conversions
 impl Default for Process3dArtifact {
     fn default() -> Self {
-        let base = crate::artifacts::process3d::empty_process3d_snapshot();
+        let base = crate::empty_process3d_snapshot();
         Self {
             workshop: base.workshop,
             stock_id: base.stock_id,
@@ -123,8 +123,8 @@ impl Default for Process3dArtifact {
 
 impl Process3dArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::process3d::Process3dSnapshot {
-        crate::artifacts::process3d::Process3dSnapshot {
+    pub fn to_snapshot(&self) -> crate::Process3dSnapshot {
+        crate::Process3dSnapshot {
             workshop: self.workshop.clone(),
             stock_id: self.stock_id.clone(),
             stock_label: self.stock_label.clone(),
@@ -139,7 +139,7 @@ impl Process3dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::process3d::Process3dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::Process3dSnapshot) -> Self {
         Self {
             workshop: snapshot.workshop,
             stock_id: snapshot.stock_id,
@@ -156,7 +156,7 @@ impl Process3dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::process3d::Process3dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::Process3dSnapshot) {
         self.workshop = snapshot.workshop;
         self.stock_id = snapshot.stock_id;
         self.stock_label = snapshot.stock_label;
@@ -171,31 +171,31 @@ impl Process3dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.process.process3d` — twenty handcrafted schema leaves.
-pub fn process3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn process3d_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.process.process3d",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -207,9 +207,9 @@ pub fn process3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescripto
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::process3d::schema::diff::Process3dDiff;
-    use crate::artifacts::process3d::schema::mutations::Process3dMutation;
-    use crate::artifacts::process3d::schema::snapshot::Process3dSnapshot;
+    use crate::schema::diff::Process3dDiff;
+    use crate::schema::mutations::Process3dMutation;
+    use crate::schema::snapshot::Process3dSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -261,7 +261,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::process3d::Process3dSnapshot;
+    use crate::Process3dSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -322,14 +322,14 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️ExampleFixtures
-pub use crate::artifacts::process3d::dsl::{PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
+pub use crate::document_dsl::{PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
 
-pub fn default_document() -> crate::artifacts::process3d::Process3dSnapshot {
-    crate::artifacts::process3d::Process3dSnapshot::parse_dsl(TIMBER_EXAMPLE_DSL).unwrap_or_default()
+pub fn default_document() -> crate::Process3dSnapshot {
+    crate::Process3dSnapshot::parse_dsl(TIMBER_EXAMPLE_DSL).unwrap_or_default()
 }
 
-pub fn plate_document() -> crate::artifacts::process3d::Process3dSnapshot {
-    crate::artifacts::process3d::Process3dSnapshot::parse_dsl(PLATE_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
+pub fn plate_document() -> crate::Process3dSnapshot {
+    crate::Process3dSnapshot::parse_dsl(PLATE_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
 }
 //#endregion 🔖️ExampleFixtures
 
@@ -348,7 +348,7 @@ fn min_rule(quantity: StockQuantity, parameter: &str, margin: f64) -> Capability
     CapabilityRule::Min { quantity, parameter: parameter.into(), margin }
 }
 
-/// 📦️ The built-in generic catalog — wraps `crate::artifacts::process3d::generic_machines()`, the same
+/// 📦️ The built-in generic catalog — wraps `crate::generic_machines()`, the same
 /// fallback used to seed a document's default workshop, exposed here as an installable `MachineCatalog`
 /// so it appears alongside domain catalogs in the workshop configurator's "installed catalogs" list.
 pub struct GenericCatalog;
@@ -367,7 +367,7 @@ impl MachineCatalog for GenericCatalog {
     }
 
     fn machines(&self) -> Vec<WorkshopMachine> {
-        crate::artifacts::process3d::generic_machines()
+        crate::generic_machines()
     }
 }
 
@@ -926,9 +926,9 @@ pub fn next_step_id() -> String {
 /// (`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4) — `CreateStep`/`DeleteStep` are real
 /// mutations against it now, so these builders compute a real index/cursor from `fixture.step_payloads`
 /// again instead of guessing.
-pub fn insert_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
-    use crate::artifacts::process3d::op::Process3dMutation;
-    use crate::artifacts::process3d::schema::mutations::{change_cursor, create_step};
+pub fn insert_step_mutations(fixture: &crate::Process3dSnapshot, step: ProcessStep) -> Vec<crate::op::Process3dMutation> {
+    use crate::op::Process3dMutation;
+    use crate::schema::mutations::{change_cursor, create_step};
     let index = fixture.resolved_up_to.unwrap_or(fixture.step_payloads.len());
     let mut operations = vec![Process3dMutation::CreateStep(create_step::CreateStep { index, step })];
     if fixture.resolved_up_to.is_some() {
@@ -937,9 +937,9 @@ pub fn insert_step_mutations(fixture: &crate::artifacts::process3d::Process3dSna
     operations
 }
 
-pub fn remove_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dMutation>> {
-    use crate::artifacts::process3d::op::Process3dMutation;
-    use crate::artifacts::process3d::schema::mutations::{change_cursor, delete_step};
+pub fn remove_step_mutations(fixture: &crate::Process3dSnapshot, id: &str) -> Option<Vec<crate::op::Process3dMutation>> {
+    use crate::op::Process3dMutation;
+    use crate::schema::mutations::{change_cursor, delete_step};
     let removed_index = fixture.step_payloads.iter().position(|step| step.id == id)?;
     let mut operations = vec![Process3dMutation::DeleteStep(delete_step::DeleteStep { id: id.to_string() })];
     if let Some(cursor) = fixture.resolved_up_to {
@@ -959,7 +959,7 @@ mod tests {
     //#region 🔖️ExampleFixtures
     /// 🧭️ Every `step.origin` on a document must name a machine+capability that actually exists in
     /// that document's own `workshop` — the mutations' only source of truth for legal origins.
-    fn assert_origins_resolve(document: &crate::artifacts::process3d::Process3dSnapshot) {
+    fn assert_origins_resolve(document: &crate::Process3dSnapshot) {
         for step in &document.step_payloads {
             let origin = step.origin.as_ref().unwrap_or_else(|| panic!("step {:?} is missing its origin", step.id));
             let machine = document.workshop.machines.iter().find(|m| m.id == origin.machine_id).unwrap_or_else(|| panic!("step {:?} references unknown machine {:?}", step.id, origin.machine_id));
@@ -980,11 +980,11 @@ mod tests {
         assert!(document.resolved_up_to.is_none());
 
         let printed = document.print_dsl();
-        let round_tripped = <crate::artifacts::process3d::Process3dSnapshot as ArtifactDsl>::parse_dsl(&printed).expect("timber fixture round trip");
+        let round_tripped = <crate::Process3dSnapshot as ArtifactDsl>::parse_dsl(&printed).expect("timber fixture round trip");
         assert_eq!(round_tripped, document, "timber fixture must round-trip through print_dsl/parse_dsl unchanged");
 
         match &document.stock_payload.solid {
-            crate::artifacts::process3d::WorkingSolid::Box { width, depth, height } => {
+            crate::WorkingSolid::Box { width, depth, height } => {
                 assert!((*width - 3.0).abs() < 1e-9, "timber beam width should be 3.0m, got {width}");
                 assert!((*depth - 0.2).abs() < 1e-9, "timber beam depth should be 0.2m, got {depth}");
                 assert!((*height - 0.3).abs() < 1e-9, "timber beam height should be 0.3m, got {height}");
@@ -1008,11 +1008,11 @@ mod tests {
         assert_eq!(document.resolved_up_to, Some(2));
 
         let printed = document.print_dsl();
-        let round_tripped = <crate::artifacts::process3d::Process3dSnapshot as ArtifactDsl>::parse_dsl(&printed).expect("plate fixture round trip");
+        let round_tripped = <crate::Process3dSnapshot as ArtifactDsl>::parse_dsl(&printed).expect("plate fixture round trip");
         assert_eq!(round_tripped, document, "plate fixture must round-trip through print_dsl/parse_dsl unchanged");
 
         match &document.stock_payload.solid {
-            crate::artifacts::process3d::WorkingSolid::Box { width, depth, height } => {
+            crate::WorkingSolid::Box { width, depth, height } => {
                 assert!((*width - 1.2).abs() < 1e-9, "plate width should be 1.2m, got {width}");
                 assert!((*depth - 0.8).abs() < 1e-9, "plate depth should be 0.8m, got {depth}");
                 assert!((*height - 0.02).abs() < 1e-9, "plate height should be 0.02m, got {height}");
@@ -1024,7 +1024,7 @@ mod tests {
         for (index, step) in document.step_payloads.iter().enumerate() {
             assert_eq!(step.id, format!("drill-{}", index + 1));
             assert!(step.enabled, "step {:?} should be enabled", step.id);
-            assert!(matches!(step.measure, crate::artifacts::process3d::ProcessMeasure::Drill { .. }), "plate step {:?} should be a Drill measure", step.id);
+            assert!(matches!(step.measure, crate::ProcessMeasure::Drill { .. }), "plate step {:?} should be a Drill measure", step.id);
         }
         assert_origins_resolve(&document);
     }
@@ -1279,8 +1279,8 @@ mod tests {
     }
     //#endregion 🔖️ConcreteCatalog
     //#region 🔖️DocumentHelpers
-    fn timeline_fixture(cursor: Option<usize>) -> crate::artifacts::process3d::Process3dSnapshot {
-        use crate::artifacts::process3d::{Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, WorkingSolid, Workshop};
+    fn timeline_fixture(cursor: Option<usize>) -> crate::Process3dSnapshot {
+        use crate::{Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, WorkingSolid, Workshop};
         let step = |id: &str| ProcessStep {
             id: id.into(),
             label: id.into(),
@@ -1292,11 +1292,11 @@ mod tests {
             stock: Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 1.0, depth: 0.5, height: 0.25 }, pose: Pose::default() },
             steps: vec![step("a"), step("b"), step("c"), step("d")],
         };
-        crate::artifacts::process3d::process_working_scene_to_snapshot(&scene, Workshop::default(), cursor)
+        crate::process_working_scene_to_snapshot(&scene, Workshop::default(), cursor)
     }
 
     fn new_step() -> ProcessStep {
-        use crate::artifacts::process3d::{Pose, ProcessMeasure, ProcessStep, WorkingSolid};
+        use crate::{Pose, ProcessMeasure, ProcessStep, WorkingSolid};
         ProcessStep { id: "e".into(), label: "e".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.01, depth: 0.2, height: 0.2 }, pose: Pose::default() } }
     }
 
@@ -1305,7 +1305,7 @@ mod tests {
     /// only pairing under which the step the user just added is the one that becomes visible.
     #[semio_framework_async_macros::async_test]
     async fn inserting_a_step_at_the_cursor_makes_that_step_the_newly_resolved_one() {
-        use crate::artifacts::process3d::op::Process3dMutation;
+        use crate::op::Process3dMutation;
         let fixture = timeline_fixture(Some(2));
         let operations = insert_step_mutations(&fixture, new_step());
         match &operations[0] {
@@ -1320,7 +1320,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn inserting_a_step_with_no_cursor_appends_and_leaves_the_cursor_alone() {
-        use crate::artifacts::process3d::op::Process3dMutation;
+        use crate::op::Process3dMutation;
         let fixture = timeline_fixture(None);
         let operations = insert_step_mutations(&fixture, new_step());
         assert_eq!(operations.len(), 1, "a fully-resolved document needs no cursor mutation");
@@ -1334,7 +1334,7 @@ mod tests {
     /// the cursor must not move; only a deletion strictly inside the prefix pulls it back.
     #[semio_framework_async_macros::async_test]
     async fn removing_a_step_only_pulls_the_cursor_back_when_the_step_was_inside_the_resolved_prefix() {
-        use crate::artifacts::process3d::op::Process3dMutation;
+        use crate::op::Process3dMutation;
         let fixture = timeline_fixture(Some(2));
         assert_eq!(remove_step_mutations(&fixture, "c").expect("step c exists").len(), 1, "deleting the first unresolved step must not move the cursor");
         let inside = remove_step_mutations(&fixture, "b").expect("step b exists");

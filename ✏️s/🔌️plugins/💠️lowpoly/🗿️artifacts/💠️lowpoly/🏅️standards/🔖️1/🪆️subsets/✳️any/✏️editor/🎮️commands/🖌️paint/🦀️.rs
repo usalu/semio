@@ -2,9 +2,9 @@
 //! `canvasPointerDown`/`canvasPointerMove`/`paintStrokeEnd`), single-shot fill (`paintFill`/
 //! `fillBucket`), sampling (`paintSample`) and paint-layer creation (`addPaintLayer`).
 
-use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::schema::{composite_layer_pixels, sample_pixel_from};
-use crate::artifacts::lowpoly::{LowpolyPaintLayer, LowpolySnapshot};
+use crate::op::LowpolyMutation;
+use crate::schema::{composite_layer_pixels, sample_pixel_from};
+use crate::{LowpolyPaintLayer, LowpolySnapshot};
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::editor::lowpoly::view::resolve_active_object_id;
@@ -244,7 +244,7 @@ pub mod add_paint_layer {
         let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(doc.snapshot, cfg.snapshot));
         let name = payload.name.as_deref().unwrap_or("Layer");
         let index = doc.snapshot.objects.iter().find(|object| object.id == object_id).map_or(0, |object| object.paint_layers.len());
-        Ok(Emit::mutations(vec![LowpolyMutation::InsertPaintLayer(crate::artifacts::lowpoly::mutations::insert_paint_layer::InsertPaintLayer { object_id, index, layer: LowpolyPaintLayer::new(name) })]))
+        Ok(Emit::mutations(vec![LowpolyMutation::InsertPaintLayer(crate::mutations::insert_paint_layer::InsertPaintLayer { object_id, index, layer: LowpolyPaintLayer::new(name) })]))
     }
 }
 //#endregion 🔖️AddPaintLayer

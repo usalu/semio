@@ -1,5 +1,5 @@
 //! rewriting -> docx
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 
 pub fn register() {}
 

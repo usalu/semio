@@ -1,6 +1,6 @@
 //! 📝️ Generate-mode window — the input form for the active generation.
 
-use crate::artifacts::flow::FlowSnapshot;
+use crate::FlowSnapshot;
 use crate::editor::flow::config::FlowConfig;
 use crate::editor::flow::terminology::flow_play_labels;
 use crate::editor::flow::{flow_action, ui_value_map, ui_value_text};

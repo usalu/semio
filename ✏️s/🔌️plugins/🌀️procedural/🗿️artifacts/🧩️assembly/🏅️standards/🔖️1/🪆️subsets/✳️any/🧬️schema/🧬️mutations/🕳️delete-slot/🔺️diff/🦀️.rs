@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `DeleteSlot` — removes the id from `slots` AND cascades to every
 //! edge incident to it (real BASE lookup, not a whole-snapshot capture).
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::diff::AssemblyDiff;
+use crate::schema::snapshot::AssemblySnapshot;
 
 pub fn diff(payload: &super::DeleteSlot, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     if !base.slots.iter().any(|slot| slot.id == payload.id) {

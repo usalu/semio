@@ -12,9 +12,9 @@
 //! Source of truth is the committed JSON beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`); the derived encodings come from `fixtures generate`.
 
-use crate::artifacts::procedure::diff::ProcedureDiff;
-use crate::artifacts::procedure::mutations::ProcedureMutation;
-use crate::artifacts::procedure::{Dictionary, ProcedureSnapshot, Path, Step};
+use crate::diff::ProcedureDiff;
+use crate::mutations::ProcedureMutation;
+use crate::{Dictionary, ProcedureSnapshot, Path, Step};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -32,7 +32,7 @@ fn cached_program() -> Path {
 
 fn before() -> ProcedureSnapshot {
     let mut snapshot: ProcedureSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before imperative document decodes");
-    crate::artifacts::procedure::materialize_procedure_flow(&mut snapshot.flow, &cached_program());
+    crate::materialize_procedure_flow(&mut snapshot.flow, &cached_program());
     snapshot
 }
 fn expected_after() -> ProcedureSnapshot {
@@ -52,7 +52,7 @@ async fn the_rejected_delete_leaves_both_scopes_intact() {
     let base = before();
     let carried = protocol::MutationDiff::apply(built_outcome().diff(), &base).expect("an empty diff always applies");
     assert_eq!(carried, expected_after(), "delete-step/rejects-a-root-step-id-addressed-inside-a-branch-body: the rejected delete must leave the committed after-snapshot equal to before");
-    let scene = crate::artifacts::procedure::procedure_working_scene(&carried);
+    let scene = crate::procedure_working_scene(&carried);
     assert!(scene.path.steps.iter().any(|step| step.id == "step-1"), "delete-step/rejects-a-root-step-id-addressed-inside-a-branch-body: the root step named by the payload must survive an out-of-scope delete");
 }
 

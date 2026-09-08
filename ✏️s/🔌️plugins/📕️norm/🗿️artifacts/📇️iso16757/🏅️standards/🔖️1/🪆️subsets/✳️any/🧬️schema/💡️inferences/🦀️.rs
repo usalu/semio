@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::iso16757::Iso16757Snapshot;
-use schema::ArtifactSchema;
+use crate::Iso16757Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::Iso16757Outline;
@@ -44,7 +44,7 @@ impl protocol::InferenceSpec<Iso16757Snapshot> for Iso16757Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::iso16757::standards::v1::subsets::any::schema::Iso16757Builder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Iso16757Builder {
     type Snapshot = Iso16757Snapshot;
     type Inference = Iso16757Inference;
 }
@@ -53,10 +53,10 @@ impl ArtifactInferrer for crate::artifacts::iso16757::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.iso16757.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `iso16757_artifact_schema_descriptor`'s registration.
-pub fn iso16757_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn iso16757_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.iso16757.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -87,12 +87,12 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::iso16757::standards::v1::subsets::any::schema::{part_1, part_2, part_4, part_5};
+use crate::standards::v1::subsets::any::schema::{part_1, part_2, part_4, part_5};
 /// 📋️ Full ISO 16757 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `Iso16757Snapshot -> CheckReport` projection; everything it
 /// composes is a pure helper living in the parent `🧬️schema`.
-use crate::artifacts::iso16757::CatalogueValue;
+use crate::CatalogueValue;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity, QuantityKind};
 use std::collections::{HashMap, HashSet};
 
@@ -153,8 +153,8 @@ pub fn evaluate(document: &Iso16757Snapshot) -> CheckReport {
                 report.push(CheckResult::fail(clause("2", "6.1"), Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 2.0, issue, annex));
             }
         }
-        if let Some(install_space) = geom.spaces.iter().find(|s| s.kind == crate::artifacts::iso16757::part_2::SpaceKind::Installation) {
-            let product_bbox = crate::artifacts::iso16757::part_2::BoundingBox::from_size(0.15, 0.20, 0.10);
+        if let Some(install_space) = geom.spaces.iter().find(|s| s.kind == crate::part_2::SpaceKind::Installation) {
+            let product_bbox = crate::part_2::BoundingBox::from_size(0.15, 0.20, 0.10);
             let clearance_ok = !product_bbox.overlaps(install_space.bounds, 0.05);
             report.push(if clearance_ok {
                 CheckResult::pass(clause("2", "5.3.5"), Quantity::new(QuantityKind::Length, 0.05), Quantity::new(QuantityKind::Length, 0.05), 1.0, "installation clearance", annex)
@@ -197,7 +197,7 @@ pub fn evaluate(document: &Iso16757Snapshot) -> CheckReport {
     }
 
     match runtime.execute("1/(0)", &HashMap::new(), document.script_limits) {
-        Err(crate::artifacts::iso16757::part_5::ScriptError::InvalidExpression(_)) => {
+        Err(crate::part_5::ScriptError::InvalidExpression(_)) => {
             report.push(CheckResult::pass(clause("5", "8"), Quantity::new(QuantityKind::Dimensionless, 1.0), Quantity::new(QuantityKind::Dimensionless, 1.0), 1.0, "script division-by-zero guard", annex));
         }
         _ => {

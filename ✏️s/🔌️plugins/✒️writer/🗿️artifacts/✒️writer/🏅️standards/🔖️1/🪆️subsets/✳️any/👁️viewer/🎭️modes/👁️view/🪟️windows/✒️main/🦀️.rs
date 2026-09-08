@@ -4,7 +4,7 @@
 //! no world-3d/mesh scene, no editor-only chrome (selection/tokens/diagnostics/completions all stay
 //! on the sibling `editor` module's own window, never read from here).
 
-use crate::artifacts::writer::{writer_text, WriterSnapshot};
+use crate::{writer_text, WriterSnapshot};
 use semio_framework_plugin::app::{TextView, TextWindowKit};
 use semio_framework_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowKit};
 
@@ -47,7 +47,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_carries_the_documents_own_text_and_language_read_only() {
-        let document = crate::artifacts::writer::schema::empty_writer_snapshot();
+        let document = crate::schema::empty_writer_snapshot();
         let node = render(&document);
         let json = serde_json::to_string(&node.expect("viewer surface")).unwrap();
         assert!(json.contains("\"readOnly\":true") || json.contains("readOnly"), "viewer text scene must stamp read-only: {json}");

@@ -1,6 +1,6 @@
 //! 🌱️ `create-object` — brings a new id-keyed lowpoly object into existence at a given position.
 
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolyObject, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolyObject, LowpolySnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

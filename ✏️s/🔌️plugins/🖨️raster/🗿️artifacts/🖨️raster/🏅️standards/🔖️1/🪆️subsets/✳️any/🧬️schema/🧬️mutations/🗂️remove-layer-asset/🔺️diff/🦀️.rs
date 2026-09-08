@@ -1,7 +1,7 @@
 //! 🔺️ `remove-layer-asset` sparse diff — a single `assets.entries` removal.
 
-use crate::artifacts::raster::diff::{diff_remove_asset, RasterDiff};
-use crate::artifacts::raster::RasterSnapshot;
+use crate::diff::{diff_remove_asset, RasterDiff};
+use crate::RasterSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveLayerAsset, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {

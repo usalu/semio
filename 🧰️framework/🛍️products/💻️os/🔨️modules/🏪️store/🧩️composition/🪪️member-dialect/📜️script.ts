@@ -1,6 +1,7 @@
 /** 🪪️ Independent closed-coordinate and persisted-envelope admission oracle. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020.js";
 import { createRequire } from "node:module";
 import { testInitialChildIdentityFixture } from "../🌱️initial/🪪️identity/📜️script.ts";
@@ -9,8 +10,11 @@ export function testMemberDialectFixture(): void {
   testInitialChildIdentityFixture();
   const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
   const fixture = JSON.parse(read("./🧪️tests/🔣️.json"));
+  const contracts = new Ajv({ strict: true, allErrors: true });
   const ajv = new Ajv2020({ strict: true, allErrors: true });
-  const validate = ajv.compile(JSON.parse(read("./🧬️schema/🔣️.json")));
+  const admission = JSON.parse(read("./🧬️schema/🔣️.json"));
+  contracts.addSchema(admission);
+  const validate = contracts.getSchema(`${admission.$id}#/$defs/ClosedMemberDialectAdmission`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   const keys = new Set<string>();
   const coordinate = (value: { artifactKind: string; standard: string; subset: string }) => JSON.stringify([value.artifactKind, value.standard, value.subset]);

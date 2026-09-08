@@ -7,7 +7,7 @@
 //! composed child, never exposed on this struct), the mirror and its derive are both gone.
 //!
 //! ⚠️ **The WIRE FORMAT still carries the real `nodes`/`edges` data** (JSON-blob-encoded), not just
-//! the opaque handle — matching flow's own `<flow::FlowFixture as ArtifactDsl>::parse_dsl(text).map(
+//! the opaque handle — matching flow's own `<semio_framework_artifact_flow_flow::FlowFixture as ArtifactDsl>::parse_dsl(text).map(
 //! Self::from_fixture)` precedent exactly. Reasoning: no `LinkResolver`/child-dispatch seam exists
 //! yet (see `🔖️WorkingScene` in the artifact root), so the exact child's local owner is populated
 //! in-process by whatever call sets the `content` field (a mutation diff, `from_fixture`, …). A
@@ -24,8 +24,8 @@
 //! (design.md §1 CORRECTION) — this file keeps only the struct, its pure defaults, and the
 //! framework bridge; no codec logic remains here.
 
-use crate::artifacts::dag::{DagContentChild, DagFixtureEdge, DagNodeSpec};
-use schema::ArtifactSchema;
+use crate::{DagContentChild, DagFixtureEdge, DagNodeSpec};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted DAG document snapshot — schema tag plus the composed `graph` content child.
@@ -48,30 +48,30 @@ impl Default for DagSnapshot {
 
 /// 🌱 Canonical default document used by the play app and examples.
 pub fn default_snapshot() -> DagSnapshot {
-    crate::artifacts::dag::dsl::parse_dsl(crate::artifacts::dag::dsl::DAG_EXAMPLE_TEXT).expect("bundled dag example DSL must parse")
+    crate::document_dsl::parse_dsl(crate::document_dsl::DAG_EXAMPLE_TEXT).expect("bundled dag example DSL must parse")
 }
 //#endregion 🔖️Snapshot
 
 //#region 🔖️FrameworkBridge
-/// 🌉 `infinite_board_port_directed_dag::DagSnapshot` is the FRAMEWORK's own separate persisted
+/// 🌉 `semio_framework_artifact_infinite_dag::DagSnapshot` is the FRAMEWORK's own separate persisted
 /// projection (backs `DagFixture`/`DagHost`), unrelated to and unaware of this plugin's composed
 /// child — the bridge goes through the working-scene converter, never through `nodes`/`edges` fields
 /// (this struct no longer has any).
-impl From<DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
+impl From<DagSnapshot> for semio_framework_artifact_infinite_dag::DagSnapshot {
     fn from(value: DagSnapshot) -> Self {
-        let scene = crate::artifacts::dag::dag_working_scene(&value);
+        let scene = crate::dag_working_scene(&value);
         Self { schema: value.schema, nodes: scene.nodes, edges: scene.edges }
     }
 }
 
-impl From<infinite_board_port_directed_dag::DagSnapshot> for DagSnapshot {
-    fn from(value: infinite_board_port_directed_dag::DagSnapshot) -> Self {
-        let content = crate::artifacts::dag::dag_content_child_with_owner(value.nodes, value.edges);
+impl From<semio_framework_artifact_infinite_dag::DagSnapshot> for DagSnapshot {
+    fn from(value: semio_framework_artifact_infinite_dag::DagSnapshot) -> Self {
+        let content = crate::dag_content_child_with_owner(value.nodes, value.edges);
         Self { schema: value.schema, content }
     }
 }
 
-impl From<&DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
+impl From<&DagSnapshot> for semio_framework_artifact_infinite_dag::DagSnapshot {
     fn from(value: &DagSnapshot) -> Self {
         value.clone().into()
     }
@@ -82,10 +82,10 @@ impl From<&DagSnapshot> for infinite_board_port_directed_dag::DagSnapshot {
 /// not need to import `dag_working_scene`.
 impl DagSnapshot {
     pub fn nodes(&self) -> Vec<DagNodeSpec> {
-        crate::artifacts::dag::dag_working_scene(self).nodes
+        crate::dag_working_scene(self).nodes
     }
     pub fn edges(&self) -> Vec<DagFixtureEdge> {
-        crate::artifacts::dag::dag_working_scene(self).edges
+        crate::dag_working_scene(self).edges
     }
 }
 //#endregion 🔖️FrameworkBridge
@@ -133,7 +133,7 @@ pub fn print_dag_dsl(snapshot: &DagSnapshot) -> String {
 /// `mutate-<kind>` or `inverse-<kind>` names WHICH node moved rather than only that two content
 /// digests differ.
 pub fn dag_scene_summary(snapshot: &DagSnapshot) -> String {
-    let scene = crate::artifacts::dag::dag_working_scene(snapshot);
+    let scene = crate::dag_working_scene(snapshot);
     let nodes = scene.nodes.iter().map(|node| format!("{}({},{})", node.id, node.x, node.y)).collect::<Vec<_>>().join(" ");
     let edges = scene.edges.iter().map(|edge| format!("{}:{}->{}", edge.id, edge.source, edge.target)).collect::<Vec<_>>().join(" ");
     format!("nodes[{nodes}] edges[{edges}]")

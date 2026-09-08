@@ -1,7 +1,7 @@
 //! 💬️ 💬️ Writer play app commands command — `engagement-submit`.
 
-use crate::artifacts::writer::op::{EditText, WriterMutation};
-use crate::artifacts::writer::{writer_text, WriterSnapshot};
+use crate::op::{EditText, WriterMutation};
+use crate::{writer_text, WriterSnapshot};
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use semio_framework_plugin::{engagement_token_matches, strip_engagement_prefix, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -22,7 +22,7 @@ struct WriterEngagementOutcome {
 /// form (wgpu REPL) and the React shell's PascalCased, separator-stripped drafts (e.g. `"Font16"`,
 /// `"LineNumbers"` — see `strip_engagement_prefix`).
 fn apply_engagement(config: &WriterConfig, current_text: &str, language_id: &str, value: &str) -> WriterEngagementOutcome {
-    use crate::artifacts::writer::schema::format_writer_text;
+    use crate::schema::format_writer_text;
 
     let trimmed = value.trim();
     let mut config_mutations = vec![WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value: String::new() }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })];

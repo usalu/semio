@@ -1,7 +1,7 @@
 //! 🗑️ Direct rewriting mutation — `RemoveRuleLayoutPoint`: takes one key out of the `rule_layout` map.
-use crate::artifacts::rewriting::diff::RewritingDiff;
-use crate::artifacts::rewriting::mutations::RewriteRuleMutation;
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::diff::RewritingDiff;
+use crate::mutations::RewriteRuleMutation;
+use crate::RewritingSnapshot;
 
 //#region 🔖️Mutation
 /// 🗑️ `remove-rule-layout-point` payload.

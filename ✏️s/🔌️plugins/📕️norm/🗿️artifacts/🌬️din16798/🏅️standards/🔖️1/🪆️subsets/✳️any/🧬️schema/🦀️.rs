@@ -1,6 +1,6 @@
 //! 🧬️ Din16798 artifact schema — every field of the artifact with its state class.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full Din16798 artifact state across the artifact and presence lanes.
@@ -142,8 +142,8 @@ pub struct Din16798Artifact {
 //#region 🔖️Conversions
 impl Din16798Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::din16798::Din16798Snapshot {
-        crate::artifacts::din16798::Din16798Snapshot {
+    pub fn to_snapshot(&self) -> crate::Din16798Snapshot {
+        crate::Din16798Snapshot {
             annex: self.annex,
             occupancy: self.occupancy.clone(),
             comfort_category: self.comfort_category.clone(),
@@ -210,11 +210,11 @@ impl Din16798Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::din16798::Din16798Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::Din16798Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
-            occupancy: snapshot.occupancy.clone(),
-            comfort_category: snapshot.comfort_category.clone(),
+            occupancy: snapshot.occupancy,
+            comfort_category: snapshot.comfort_category,
             t_op_c: snapshot.t_op_c,
             rh_percent: snapshot.rh_percent,
             air_speed_m_s: snapshot.air_speed_m_s,
@@ -223,7 +223,7 @@ impl Din16798Artifact {
             df_percent: snapshot.df_percent,
             l_aeq_db: snapshot.l_aeq_db,
             persons: snapshot.persons,
-            ida_class: snapshot.ida_class.clone(),
+            ida_class: snapshot.ida_class,
             ventilation_m3_h: snapshot.ventilation_m3_h,
             floor_area_m2: snapshot.floor_area_m2,
             bedrooms: snapshot.bedrooms,
@@ -234,7 +234,7 @@ impl Din16798Artifact {
             sfp_required_class: snapshot.sfp_required_class,
             heat_recovery_eta: snapshot.heat_recovery_eta,
             heat_recovery_eta_min: snapshot.heat_recovery_eta_min,
-            system_type: snapshot.system_type.clone(),
+            system_type: snapshot.system_type,
             years_since_inspection: snapshot.years_since_inspection,
             humidification_required_kg_h: snapshot.humidification_required_kg_h,
             humidification_provided_kg_h: snapshot.humidification_provided_kg_h,
@@ -260,7 +260,7 @@ impl Din16798Artifact {
             cooling_gains_kwh: snapshot.cooling_gains_kwh,
             cooling_utilization_factor: snapshot.cooling_utilization_factor,
             cooling_reference_kwh: snapshot.cooling_reference_kwh,
-            chiller_type: snapshot.chiller_type.clone(),
+            chiller_type: snapshot.chiller_type,
             eer_actual: snapshot.eer_actual,
             q_c_kwh: snapshot.q_c_kwh,
             generation_reference_kwh: snapshot.generation_reference_kwh,
@@ -271,14 +271,14 @@ impl Din16798Artifact {
             storage_t_h: snapshot.storage_t_h,
             storage_allowance_kwh: snapshot.storage_allowance_kwh,
             dhw_delivery_c: snapshot.dhw_delivery_c,
-            duct_class: snapshot.duct_class.clone(),
+            duct_class: snapshot.duct_class,
             duct_test_pressure_pa: snapshot.duct_test_pressure_pa,
             duct_leakage_m3_s_m2: snapshot.duct_leakage_m3_s_m2,
             selected_check_index: None,
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::din16798::Din16798Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::Din16798Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -289,31 +289,31 @@ impl Din16798Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.din16798` — twenty handcrafted schema leaves.
-pub fn din16798_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn din16798_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.din16798",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -325,7 +325,7 @@ pub fn din16798_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::din16798::{Din16798Diff, Din16798Mutation, Din16798Snapshot};
+    use crate::{Din16798Diff, Din16798Mutation, Din16798Snapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -377,7 +377,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::din16798::Din16798Snapshot;
+    use crate::Din16798Snapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

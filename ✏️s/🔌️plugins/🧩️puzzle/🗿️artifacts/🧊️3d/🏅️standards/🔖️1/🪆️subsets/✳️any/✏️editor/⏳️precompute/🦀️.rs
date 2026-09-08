@@ -1,7 +1,7 @@
 //! ⏳️ Puzzle 3d play app — the precompute session: the scene the host syncs in, the registered
 //! collision meshes, the two independent background lanes (brush-candidate caching and fill
 //! planning), and `dispatch`, which drives `Puzzle3dEngineCommand`/`Puzzle3dEngineOutcome` (schema
-//! types, `crate::artifacts::puzzle3d::schema`) through the session. The rules the lanes consult live
+//! types, `crate::schema`) through the session. The rules the lanes consult live
 //! in `🖌️brush/🦀️.rs`, the geometry in `📐️geometry/🦀️.rs`, the fill plan's own state
 //! in `🪣️fill/🦀️.rs`. Rehomed from the former `⚙️engine/⏳️session` (ticket
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): a puzzle-3d artifact is a schema plus an io
@@ -19,16 +19,16 @@ pub use crate::editor::puzzle3d::precompute::brush::apply_brush_placement_to_fix
 pub(crate) const FILL_COUNT_MAX: usize = 1000;
 //#endregion 🔖️Constants
 
-use crate::artifacts::puzzle3d::schema::{
+use crate::schema::{
     puzzle3d_vortex_full_id, BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, FillBuildProgress, FillProgressSummary, Fixture, KindCatalogBundle, PrecomputeLane, Puzzle3dEngineCommand, Puzzle3dEngineOutcome,
     SceneConfig,
 };
-use crate::artifacts::puzzle3d::Puzzle3dError;
+use crate::Puzzle3dError;
 use crate::editor::puzzle3d::precompute::brush::{
     brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, resolve_object_kind_mesh_url, vortex_world_from_object, AttractionVortexContext, TargetVortexWorld,
 };
 use crate::editor::puzzle3d::precompute::fill::{FillBuilder, FillBuilderOwnerCensusCursor, FillBuilderOwnerCensusStep, FillBuilderRetirementCursor, FillPreparationRoots, FillPreviewJsonStep, PlacedCollisionEntry};
-use crate::editor::puzzle3d::precompute::geometry::{pose_isometry, world_bounds, CollisionBody, CollisionOverlapState, CollisionStepContext, CollisionStepResult};
+use crate::editor::puzzle3d::precompute::semio_framework_geometry::{pose_isometry, world_bounds, CollisionBody, CollisionOverlapState, CollisionStepContext, CollisionStepResult};
 use semio_framework_job::{default_now_us, root_cancel_token, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, Operation, RevisionId, StepOutcome};
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
@@ -1088,7 +1088,7 @@ impl Puzzle3dCollision {
         if !self.mesh_sources.contains_key(&url) && self.mesh_sources.len() >= FILL_WORKER_MAX_MESHES {
             return;
         }
-        let Some(body) = crate::editor::puzzle3d::precompute::geometry::collision_body_from_buffers(positions, indices) else {
+        let Some(body) = crate::editor::puzzle3d::precompute::semio_framework_geometry::collision_body_from_buffers(positions, indices) else {
             return;
         };
         if !is_fallback && self.mesh_is_fallback.get(&url) == Some(&false) {
@@ -1497,8 +1497,8 @@ pub struct Puzzle3dPrecomputeSession {
 /// 🪣️ One fixed semantic prefix transition for resumable fill materialization.
 pub(crate) struct FillApplyChunk {
     pub(crate) applied_count: u32,
-    pub(crate) added_objects: Vec<crate::artifacts::puzzle3d::schema::FixtureObject>,
-    pub(crate) added_attractions: Vec<crate::artifacts::puzzle3d::schema::AttractionProps>,
+    pub(crate) added_objects: Vec<crate::schema::FixtureObject>,
+    pub(crate) added_attractions: Vec<crate::schema::AttractionProps>,
     pub(crate) removed_object_ids: Vec<String>,
 }
 
@@ -2039,8 +2039,8 @@ pub(crate) fn fill_job(context: semio_framework_plugin::reactor::jobs::JobCtx, i
 mod tests {
     use super::*;
     use crate::editor::puzzle3d::precompute::fill::FillJobStage;
-    use crate::artifacts::puzzle3d::schema::testkit::*;
-    use crate::artifacts::puzzle3d::schema::{BrushHostRules, BrushKindWeights, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
+    use crate::schema::testkit::*;
+    use crate::schema::{BrushHostRules, BrushKindWeights, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
     
     use std::time::{Duration, Instant};
 
@@ -3045,12 +3045,12 @@ mod tests {
     /// 🖐️ Compile-guard for the 🖐️5d app, which builds its own `Puzzle5dPrecomputeSession` on top of
     /// this one (relocated from the former `⚙️engine` root's `the_5d_facing_engine_surface_stays_public`,
     /// ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): every item it names must stay
-    /// publicly reachable — pure data under `crate::artifacts::puzzle3d::schema::…`, the session/dispatch
+    /// publicly reachable — pure data under `crate::schema::…`, the session/dispatch
     /// surface under `crate::editor::puzzle3d::precompute::…`. A rename or a visibility narrowing breaks
     /// this test long before it breaks 5d.
     #[test]
     fn the_5d_facing_precompute_surface_stays_public() {
-        use crate::artifacts::puzzle3d::Puzzle3dError as GuardError;
+        use crate::Puzzle3dError as GuardError;
 
         let mut session = Puzzle3dPrecomputeSession::new();
         assert!(session.set_scene("{ not json").is_err(), "set_scene surfaces a Puzzle3dError");

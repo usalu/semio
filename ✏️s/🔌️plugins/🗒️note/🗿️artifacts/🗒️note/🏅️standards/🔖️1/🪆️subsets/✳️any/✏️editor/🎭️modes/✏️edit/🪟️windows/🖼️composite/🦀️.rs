@@ -1,6 +1,6 @@
 //! 🖼️ Note play app — the composite (editable) canvas window: the full infinite-canvas surface.
 
-use crate::artifacts::note::{NoteCamera, NoteSnapshot};
+use crate::{NoteCamera, NoteSnapshot};
 use crate::editor::note::config::NoteConfig;
 use crate::editor::note::modes::edit::windows::composite::options;
 use crate::editor::note::terminology::NotePlayLabels;
@@ -54,7 +54,7 @@ pub fn window_measures(document: &NoteSnapshot, camera: &NoteCamera, labels: &No
 // engagement input is always enabled now (its own `engagementSubmit` handler still correctly no-ops
 // unless exactly one block is selected, read via `NoteDispatchCtx`).
 pub fn engagement(document: &NoteSnapshot, camera: &NoteCamera, engagement_input: &str) -> WindowEngagement {
-    let block_count = crate::artifacts::note::schema::flatten_blocks(&document.blocks).len();
+    let block_count = crate::schema::flatten_blocks(&document.blocks).len();
     let zoom = camera.zoom;
     let snap_status = if document.snap_enabled.unwrap_or(false) { format!("snap {}px", document.snap_grid_spacing.unwrap_or(8.0)) } else { "snap off".into() };
     let grid_status = if document.grid_visible.unwrap_or(true) { format!("grid {}px", document.grid_spacing.unwrap_or(32.0)) } else { "grid off".into() };
@@ -88,7 +88,7 @@ pub fn engagement(document: &NoteSnapshot, camera: &NoteCamera, engagement_input
 /// "blocks" domain's presence is a known gap for canvas surfaces this wave (matches lowpoly/gis2d's
 /// `render` precedent), left at `InkCanvasScene::base`'s empty defaults.
 pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, surface_id: &str, view_mode: &str) -> UiAssemblyResult<BuiltNode> {
-    let document_json = crate::artifacts::note::note_canvas_document_json(document, camera);
+    let document_json = crate::note_canvas_document_json(document, camera);
     semio_framework_plugin::scene_surface(surface_id, semio_framework_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, active_utility.into(), view_mode.into(), view_mode == "composite"))
 }
 

@@ -2,8 +2,8 @@
 //! `create` was a no-op).
 
 use super::CreateGeometry;
-use crate::artifacts::vdi3805::mutations::delete_geometry;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::mutations::delete_geometry;
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &CreateGeometry, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

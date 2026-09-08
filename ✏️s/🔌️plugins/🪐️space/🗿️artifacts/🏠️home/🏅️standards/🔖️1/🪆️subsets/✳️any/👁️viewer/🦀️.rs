@@ -4,7 +4,7 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::home::{SHomeSnapshot, HOME_DIALECT, S_HOME_DOCUMENT_SCHEMA};
+use crate::{SHomeSnapshot, HOME_DIALECT, S_HOME_DOCUMENT_SCHEMA};
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use crate::viewer::home::modes::view;
 use crate::viewer::home::modes::view::windows::main;
@@ -54,7 +54,7 @@ pub struct HomeViewer;
 
 impl ArtifactViewer for HomeViewer {
     type Snapshot = SHomeSnapshot;
-    type Mutation = crate::artifacts::home::op::SHomeMutation;
+    type Mutation = crate::op::SHomeMutation;
     // 📇️ Shared with the editor (`crate::editor::home::config::HomeConfig`), not `NoConfig` — the
     // viewer renders the SAME hub-directory-fed table (`crate::home_space_rows`) and must therefore
     // read the SAME folded `directory_json`. `assert_viewer_never_mutates` only asserts the ARTIFACT/

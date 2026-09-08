@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::artifacts::writer::{WriterCamera, WriterEditorSelection, WriterEditorSettings};
+use crate::{WriterCamera, WriterEditorSelection, WriterEditorSettings};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 

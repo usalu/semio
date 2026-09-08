@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `UpdateFeatureParams` — the field is always present, so there is no
 //! missing-target case. A zero target count or a non-finite/negative edge threshold ⇒ Fatal
 //! `mutation.invariant`; identical params ⇒ Warning `mutation.no-op`.
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::RemodelingDiff;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdateFeatureParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

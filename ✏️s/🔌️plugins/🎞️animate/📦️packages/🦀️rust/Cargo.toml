@@ -32,6 +32,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-animate-presentation = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gif = { workspace = true }
 semio-s-artifact-stdio-html = { workspace = true }

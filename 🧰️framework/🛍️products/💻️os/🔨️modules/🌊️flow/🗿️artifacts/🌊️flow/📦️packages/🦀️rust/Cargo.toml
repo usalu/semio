@@ -1,0 +1,31 @@
+[package]
+name = "semio-framework-artifact-flow-flow"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Composable Flow document, mutation, and ownership contracts"
+
+[package.metadata.semio]
+role = "artifact"
+id = "flow-flow"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-infinite-dag = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-framework-replication = { workspace = true }
+semio-framework-os-infinite = { workspace = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+neural_engine = { path = "../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+graph = { path = "../../../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["testkit"] }
+semio-framework-async-macros = { workspace = true }

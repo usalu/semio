@@ -21,7 +21,7 @@
 //! integration work (see `SpaceBundle`'s own doc on `workflow_node_for_app`'s still-path-stem
 //! `artifact_ref`/`config_ref`).
 //!
-//! 🗄️ Memoization is now keyed off the PRIOR SEALED run's own `workflow::RunArtifact.node_records`
+//! 🗄️ Memoization is now keyed off the PRIOR SEALED run's own `semio_framework_artifact_workflow_run::RunArtifact.node_records`
 //! (`prior_node_records`, read-only), not a side-channel `run/state.json` file — that file and its
 //! `RunState`/`NodeRunRecord` types are deleted (there were two parallel memoization mechanisms before
 //! this rework; now there is exactly one). A first run (no prior sealed `RunArtifact`) computes every
@@ -57,8 +57,10 @@ use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};
 use store::{BlobStore, NoBlobStore};
 #[cfg(test)]
-use workflow::{SealRun, StartRun};
-use workflow::{FinishRunNode, MediaContract, PortFingerprint, RunMutation, RunNodeRecord, RunNodeStatus, RunOutputArtifact, RunParameterValue, StartRunNode, Workflow, WorkflowEdge, WorkflowNode, WorkflowParameterBinding};
+use semio_framework_artifact_workflow_run::{SealRun, StartRun};
+
+use semio_framework_artifact_workflow_run::{FinishRunNode, PortFingerprint, RunMutation, RunNodeRecord, RunNodeStatus, RunOutputArtifact, RunParameterValue, StartRunNode};
+use workflow::{MediaContract, Workflow, WorkflowEdge, WorkflowNode, WorkflowParameterBinding};
 
 /// 🚧️ A failure computing a studio's workflow headlessly.
 #[derive(Debug)]
@@ -499,20 +501,20 @@ pub fn convert_media(contract: &MediaContract, media: Media) -> Result<Media, Ru
 //#region 🔖️RunContext
 /// ✍️ Write-only sink for everything one `SpaceRunner::run` call produces — the ONLY thing allowed to
 /// persist bytes for a node's post-import document/config state or accumulate the run's own
-/// `workflow::RunArtifact`. Never reads the source `documents`/`configs` maps `run()` takes, and
+/// `semio_framework_artifact_workflow_run::RunArtifact`. Never reads the source `documents`/`configs` maps `run()` takes, and
 /// `run()` never writes through anything OTHER than this — the structural half of "non-destructive":
 /// `node_artifacts`/`node_configs` are keyed by node id, a distinct key space from the source
 /// `artifact_ref`/`config_ref` strings, so a caller (e.g. `bin.rs`) cannot alias a run-owned write
 /// path onto a source artifact path by construction.
 ///
-/// 🔒️ `record` is the ONLY way this crate ever mutates a `workflow::RunArtifact` — it always goes
-/// through `workflow::apply_run_operation_checked` (never the raw `workflow::apply_run_operation`),
+/// 🔒️ `record` is the ONLY way this crate ever mutates a `semio_framework_artifact_workflow_run::RunArtifact` — it always goes
+/// through `semio_framework_artifact_workflow_run::apply_run_operation_checked` (never the raw `semio_framework_artifact_workflow_run::apply_run_operation`),
 /// so an operation emitted after `Seal` is rejected here with its typed `RunError::MutationApply`, not silently
 /// applied. `SpaceRunner::run` calls `record` for every `NodeStarted`/`NodeFinished`; callers own
 /// `Start` (before `run`) and `Seal` (after), since those two carry run-identity/collection-ref fields
 /// `SpaceRunner` itself has no business knowing about.
 pub struct RunSink {
-    pub document: workflow::RunArtifact,
+    pub document: semio_framework_artifact_workflow_run::RunArtifact,
     /// 🧾️ Every operation `record` has successfully applied, in order — `bin.rs` replays this exact
     /// sequence through a real `store::ArtifactStore` to produce persistable pack+spr bytes for
     /// `SpaceBundle::write_run_document` (the same "build an envelope, `Apply`, `snapshot_pack`"
@@ -523,12 +525,12 @@ pub struct RunSink {
 }
 
 impl RunSink {
-    pub fn new(document: workflow::RunArtifact) -> Self {
+    pub fn new(document: semio_framework_artifact_workflow_run::RunArtifact) -> Self {
         Self { document, mutations: Vec::new(), node_artifacts: BTreeMap::new(), node_configs: BTreeMap::new() }
     }
 
     pub async fn record(&mut self, operation: RunMutation) -> Result<(), RunError> {
-        self.document = workflow::apply_run_operation_checked(&self.document, operation.clone()).await?;
+        self.document = semio_framework_artifact_workflow_run::apply_run_operation_checked(&self.document, operation.clone()).await?;
         self.mutations.push(operation);
         Ok(())
     }
@@ -602,7 +604,7 @@ fn node_fingerprints(node_id: &str, document_spr: &[u8], config_spr: &[u8], bind
 /// - `blobs/` — content-addressed, space-level (backing a `MediaPayload::Binary` value's bytes — see
 ///   `FileBlobStore`; unchanged from the pre-W4 layout, already canonical),
 /// - `cache/media/` — cross-run shared media-fingerprint cache (renamed from `run/media/`),
-/// - `runs/<run id>.run.pack|.spr` — the `workflow::RunArtifact` VCS envelope itself (W5 Lane A);
+/// - `runs/<run id>.run.pack|.spr` — the `semio_framework_artifact_workflow_run::RunArtifact` VCS envelope itself (W5 Lane A);
 ///   `runs/<run id>/nodes/<node id>.document.pack|.spr`/`.config.pack|.spr` — that run's OWN mirrored
 ///   copy of each node's post-import document/config bytes (`run_node_artifact_pack_path`/
 ///   `run_node_config_pack_path` below) — deliberately NOT under `artifacts/`: a run never writes
@@ -803,7 +805,7 @@ impl SpaceBundle {
         std::fs::write(self.collection_spr_path(collection_id), spr).map_err(|source| RunError::Io { path: self.collection_spr_path(collection_id), source })
     }
 
-    /// @emoji 📦️ Reads a run's own `workflow::RunArtifact` pack+spr bytes, `(Vec::new(), Vec::new())`
+    /// @emoji 📦️ Reads a run's own `semio_framework_artifact_workflow_run::RunArtifact` pack+spr bytes, `(Vec::new(), Vec::new())`
     /// if never persisted (no prior run of this id) — mirrors `read_artifact`'s fallback exactly.
     pub fn read_run_document(&self, run_id: &str) -> Result<(Vec<u8>, Vec<u8>), RunError> {
         let pack_path = self.run_artifact_pack_path(run_id);
@@ -957,7 +959,7 @@ pub struct RunReport {
 /// — the `--dry` plan. Reuses exactly the dirty check `run` applies, so the plan can never drift from
 /// what an actual run would do. `documents`/`configs` map a node's `artifact_ref`/`config_ref` string
 /// to its current `(pack, spr)` artifact bytes — missing/absent means "never persisted".
-/// `prior_node_records` is the PRIOR SEALED `workflow::RunArtifact.node_records`, keyed by node id
+/// `prior_node_records` is the PRIOR SEALED `semio_framework_artifact_workflow_run::RunArtifact.node_records`, keyed by node id
 /// (empty for a first-ever run — every node then plans as recomputed).
 pub async fn plan(
     graph: &Workflow,
@@ -1002,7 +1004,7 @@ pub async fn plan(
 }
 
 /// 🕸️ Computes one studio's workflow against an `AppChannelHost`. Node dirtiness is decided purely
-/// from the PRIOR SEALED run's `workflow::RunNodeRecord`: the document's own fingerprint (did the
+/// from the PRIOR SEALED run's `semio_framework_artifact_workflow_run::RunNodeRecord`: the document's own fingerprint (did the
 /// app's document change since last run — e.g. a UI edit), its resolved input fingerprints (did
 /// anything upstream change), and its config's fingerprint (folding in any bound `--param` overlay —
 /// see `node_parameter_overlay_bytes`). A clean node is never opened at all; its cached output
@@ -2348,7 +2350,7 @@ mod tests {
     /// `NodeStarted`/`NodeFinished` through `SpaceRunner::run` on top of this, then (where memoization
     /// across two runs matters) seals it and extracts `prior_node_records_from` for the second `run()`.
     async fn fresh_sink() -> RunSink {
-        let mut sink = RunSink::new(workflow::empty_run_document().await);
+        let mut sink = RunSink::new(semio_framework_artifact_workflow_run::empty_run_document().await);
         sink.record(RunMutation::StartRun(StartRun {
             workflow_ref: "test.workflow".into(),
             workflow_checkpoint_id: String::new(),
@@ -2356,7 +2358,7 @@ mod tests {
             input_snapshot_id: String::new(),
             parameter_values: Vec::new(),
             output_collection_ref: String::new(),
-            trigger: workflow::RunTrigger::Manual { actor: "test".into() },
+            trigger: semio_framework_artifact_workflow_run::RunTrigger::Manual { actor: "test".into() },
         }))
         .await.expect("Start on a fresh sink always applies");
         sink
@@ -2368,7 +2370,7 @@ mod tests {
         let document = sink.document.clone();
         let mutations = sink.mutations.clone();
         let duplicate = RunMutation::StartRun(StartRun {
-            workflow_ref: "test.workflow".into(), workflow_checkpoint_id: String::new(), input_collection_ref: String::new(), input_snapshot_id: String::new(), parameter_values: Vec::new(), output_collection_ref: String::new(), trigger: workflow::RunTrigger::Manual { actor: "test".into() },
+            workflow_ref: "test.workflow".into(), workflow_checkpoint_id: String::new(), input_collection_ref: String::new(), input_snapshot_id: String::new(), parameter_values: Vec::new(), output_collection_ref: String::new(), trigger: semio_framework_artifact_workflow_run::RunTrigger::Manual { actor: "test".into() },
         });
         let error = sink.record(duplicate).await.expect_err("a second Start must be rejected");
         match error {
@@ -2382,9 +2384,9 @@ mod tests {
         assert_eq!(sink.mutations, mutations);
     }
 
-    /// 🧪️ `workflow::RunArtifact.node_records`, keyed by node id — the shape `SpaceRunner::run`'s
+    /// 🧪️ `semio_framework_artifact_workflow_run::RunArtifact.node_records`, keyed by node id — the shape `SpaceRunner::run`'s
     /// `prior_node_records` parameter takes, built from a (test-)sealed prior run's document.
-    fn prior_node_records_from(document: &workflow::RunArtifact) -> BTreeMap<String, RunNodeRecord> {
+    fn prior_node_records_from(document: &semio_framework_artifact_workflow_run::RunArtifact) -> BTreeMap<String, RunNodeRecord> {
         document.node_records.iter().map(|record| (record.node_id.clone(), record.clone())).collect()
     }
 
@@ -2416,7 +2418,7 @@ mod tests {
         let report_1 = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).await.expect("first run");
         assert_eq!(report_1.recomputed, vec!["node-a".to_string(), "node-b".to_string()]);
         assert!(report_1.clean.is_empty());
-        sink_1.record(RunMutation::SealRun(SealRun { status: workflow::RunStatus::Succeeded })).await.expect("seal first run");
+        sink_1.record(RunMutation::SealRun(SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Succeeded })).await.expect("seal first run");
 
         // 🔒️ Non-destructive: the SOURCE `documents`/`configs` maps `run()` read are byte-identical to
         // what was passed in — nothing was written back into them (the load-bearing proof for this wave).
@@ -2442,7 +2444,7 @@ mod tests {
         let configs = empty_configs(&graph);
         let mut sink_1 = fresh_sink().await;
         runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).await.expect("first run");
-        sink_1.record(RunMutation::SealRun(SealRun { status: workflow::RunStatus::Succeeded })).await.expect("seal first run");
+        sink_1.record(RunMutation::SealRun(SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Succeeded })).await.expect("seal first run");
 
         let mut documents_2 = documents.clone();
         // 🧮️ Fingerprints are still `.spr`-bytes hashes (see `node_fingerprints`) — editing the op log
@@ -2472,7 +2474,7 @@ mod tests {
         let configs_1 = empty_configs(&graph);
         let mut sink_1 = fresh_sink().await;
         runner.run(&graph, &documents, &configs_1, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).await.expect("first run");
-        sink_1.record(RunMutation::SealRun(SealRun { status: workflow::RunStatus::Succeeded })).await.expect("seal first run");
+        sink_1.record(RunMutation::SealRun(SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Succeeded })).await.expect("seal first run");
         let prior = prior_node_records_from(&sink_1.document);
 
         let plan_unchanged = plan(&graph, &documents, &configs_1, &[], &[], &prior).await.expect("plan with unchanged config");
@@ -2506,7 +2508,7 @@ mod tests {
 
         let mut sink_1 = fresh_sink().await;
         runner.run(&graph, &documents, &configs, &[], &bindings, &BTreeMap::new(), &mut cache, &mut sink_1).await.expect("first run");
-        sink_1.record(RunMutation::SealRun(SealRun { status: workflow::RunStatus::Succeeded })).await.expect("seal first run");
+        sink_1.record(RunMutation::SealRun(SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Succeeded })).await.expect("seal first run");
         let prior = prior_node_records_from(&sink_1.document);
 
         let plan_unchanged = plan(&graph, &documents, &configs, &[], &bindings, &prior).await.expect("plan with no parameter values yet");

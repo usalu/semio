@@ -1,5 +1,5 @@
 //! model -> json
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::EnergyModelSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::{parse_json_text, write_json_pretty};
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 

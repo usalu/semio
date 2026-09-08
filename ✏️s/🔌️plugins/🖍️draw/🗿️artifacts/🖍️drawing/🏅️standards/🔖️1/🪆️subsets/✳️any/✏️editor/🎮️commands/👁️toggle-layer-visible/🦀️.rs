@@ -1,8 +1,8 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `toggle-layer-visible`.
 
-use crate::artifacts::drawing::op::DrawingMutation;
-use crate::artifacts::drawing::schema::find_drawing_layer;
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::op::DrawingMutation;
+use crate::schema::find_drawing_layer;
+use crate::DrawingSnapshot;
 use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
 use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -18,8 +18,8 @@ pub fn handle(payload: &ToggleLayerVisible, doc: &ArtifactView<'_, DrawingSnapsh
     let document = doc.snapshot;
     match find_drawing_layer(document, &payload.layer_id) {
         Some(layer) => {
-            let visible = !crate::artifacts::drawing::schema::layer_base(layer).visible;
-            Ok(Emit::mutations(vec![crate::artifacts::drawing::mutations::set_layer_visible(payload.layer_id.clone(), visible)]))
+            let visible = !crate::schema::layer_base(layer).visible;
+            Ok(Emit::mutations(vec![crate::mutations::set_layer_visible(payload.layer_id.clone(), visible)]))
         }
         None => Ok(Emit::default()),
     }

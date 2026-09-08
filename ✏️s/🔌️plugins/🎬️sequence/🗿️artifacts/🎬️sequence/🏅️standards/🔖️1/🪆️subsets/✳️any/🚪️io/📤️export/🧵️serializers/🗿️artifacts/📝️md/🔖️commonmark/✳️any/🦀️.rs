@@ -1,6 +1,6 @@
 //! 🚪️ sequence -> md. The complete carrier fixture is embedded in a canonical JSON code block.
 
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::SequenceSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

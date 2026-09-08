@@ -1,7 +1,7 @@
 //! ↩️ Undo mutation for `create-widget`: `delete-widget` by the created widget's own id.
-use crate::artifacts::flow::schema::mutations::delete_widget::DeleteWidget;
-use crate::artifacts::flow::schema::mutations::FlowMutation;
-use crate::artifacts::flow::FlowSnapshot;
+use crate::schema::mutations::delete_widget::DeleteWidget;
+use crate::schema::mutations::FlowMutation;
+use crate::FlowSnapshot;
 use protocol::Identified;
 
 use super::CreateWidget;

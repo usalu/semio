@@ -1,8 +1,8 @@
 //! 🔀 DAG mutation — `ReorderNodes`: position within the (display-order-meaningful, e.g. z-order
 //! layering) node list — never spatial.
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::diff::DagDiff;
+use crate::mutations::DagMutation;
+use crate::DagSnapshot;
 
 //#region 🔖️Mutation
 /// 🔀 `reorder-nodes` payload — FINAL-state full id order.

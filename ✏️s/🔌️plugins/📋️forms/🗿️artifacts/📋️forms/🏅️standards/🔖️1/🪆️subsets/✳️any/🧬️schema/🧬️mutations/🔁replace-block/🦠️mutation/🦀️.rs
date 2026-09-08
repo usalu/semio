@@ -4,7 +4,7 @@
 //! fan-out). Physical dir name (`🩹update-block`, wired by `🦀️.rs`) predates the semantic
 //! rename; the Rust module is still `update_block`, the type/variant/kind are `replace-block`.
 
-use crate::artifacts::forms::{FormMutation, FormQuestion, FormsDiff, FormsSnapshot};
+use crate::{FormMutation, FormQuestion, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔁️ReplaceBlock

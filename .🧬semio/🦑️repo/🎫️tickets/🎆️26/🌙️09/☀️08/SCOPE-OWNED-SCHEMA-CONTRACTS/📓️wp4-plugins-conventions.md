@@ -43,23 +43,43 @@ Derived from `📋️execution-contract.md` §A/§B/§D. Every file this work pa
 
 ## 3. Shared retained-command shape (cross-partition)
 
-The retained-command family shares a *shape*, not content. The shape is exported once by
-`framework.ui` (another worker's partition — see the cross-partition request in
-`📓️wp4-plugins.md`), at `$id https://semio.tech/schema/framework/ui/schema.json`:
+The retained-command family shares a *shape*, not content. The shape is already published by
+`🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json`, `$id https://semio.tech/schema/framework/ui/schema.json`
+(another worker's partition — do not edit it). **Read that file before writing any `$ref`.** As of
+this writing its `$defs` are exactly:
 
-- `#/$defs/RetainedCommandLimits` — named non-negative numeric budgets
-- `#/$defs/RetainedCommandRoute` — one route record
-- `#/$defs/RetainedCommandRoutes` — array of them
+- `RetainedCommandLimits` — the whole retained-command-limits *document*
+  (`oneOf` of `retainedCommandDeclaredLimits` / `retainedCommandCorpusLimits`)
+- `RetainedCommandRoutes` — the route *array*
+- `RetainedCommandRoutesDocument`, `UIDialogModalFixture`
 
-Per-artifact exports reference it and narrow it:
+There is **no** `RetainedCommandRoute` (singular) `$defs` export. Never `$ref` one; never `$ref` into
+that module's `definitions` (contract §A: cross-scope refs point at `$id` + `#/$defs/<ExportId>`).
+
+Per-artifact exports reference the document-level export and narrow it:
 
 ```json
-"limits": { "allOf": [
+"<Artifact>RetainedCommandLimits": { "allOf": [
   { "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandLimits" },
-  { "type": "object", "additionalProperties": false, "required": [...], "properties": { ... } } ] }
+  { "type": "object", "additionalProperties": false, "required": [...],
+    "properties": { ...the per-artifact const law verbatim... } } ] }
 ```
 
-Consumers that compile with Ajv must `addSchema(frameworkUiSchema)` before compiling the export.
+and narrow the route table at the array level:
+
+```json
+"routes": { "allOf": [
+  { "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes" },
+  { "type": "array", "minItems": 18, "maxItems": 18, "items": [ ... ], "additionalItems": false } ] }
+```
+
+Known gap in the framework export (report it, do not work around it in committed code): its
+`definitions.retainedCommandOracle` is `additionalProperties:false` over `library`/`scope`/
+`runtimeDependency` only, so a fixture whose `oracle` also carries `ownedInterface`/`expected`
+cannot satisfy the shared document shape. Where that bites, `$ref` only what does fit and record the
+needed framework change.
+
+Consumers that compile with Ajv must `addSchema(frameworkUiModule)` before compiling the export.
 
 ## 4. Consumer rewiring
 

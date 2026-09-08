@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/create-rig-extrinsic.json",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/create-rig-extrinsic/schema.json",
   "title": "CreateRigExtrinsic",
   "type": "object",
   "additionalProperties": false,

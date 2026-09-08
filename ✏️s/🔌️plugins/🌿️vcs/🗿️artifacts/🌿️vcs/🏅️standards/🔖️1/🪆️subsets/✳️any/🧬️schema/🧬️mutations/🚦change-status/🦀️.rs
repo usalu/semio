@@ -1,6 +1,6 @@
 //! 🚦 VCS mutation — `ChangeStatus`: sets the document's `status` scalar to a new value.
-use crate::artifacts::vcs::mutations::VcsDemoMutation;
-use crate::artifacts::vcs::{VcsDiff, VcsSnapshot};
+use crate::mutations::VcsDemoMutation;
+use crate::{VcsDiff, VcsSnapshot};
 
 //#region 🔖️Mutation
 /// 🚦 `change-status` payload.

@@ -4,9 +4,9 @@
 //! `kind_catalogs` handle + `kind_catalogs_extra` overflow the snapshot actually carries, minting a
 //! fresh content-addressed handle and seeding the working-scene cache so the diff is resolvable
 //! immediately (see `🗿️artifacts/🖐️5d/🦀️.rs`'s `🔖️KindCatalogComposition` region).
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::split_and_seed_kind_catalogs;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::Puzzle5dDiff;
+use crate::split_and_seed_kind_catalogs;
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceKindCatalogs, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

@@ -5,8 +5,8 @@
 //! non-empty `email` (the dialog's own submit) relays the membership upsert to the hub — no optimistic
 //! local mutation.
 
-use crate::artifacts::home::op::SHomeMutation;
-use crate::artifacts::home::SHomeSnapshot;
+use crate::op::SHomeMutation;
+use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 

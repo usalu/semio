@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/store/schema.json",
+  "title": "Store",
+  "$defs": {
+    "GroupReadVisibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "maximumItems", "maximumBytes", "old", "prepared", "cases"],
+      "properties": {
+        "schema": { "const": "artifact-group-read-visibility/v1" },
+        "maximumItems": { "type": "integer", "minimum": 1 },
+        "maximumBytes": { "type": "integer", "minimum": 1 },
+        "old": { "$ref": "#/$defs/GroupReadRoot" },
+        "prepared": { "$ref": "#/$defs/GroupReadRoot" },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/GroupReadCase" }
+        }
+      }
+    },
+    "GroupReadRoot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["snapshot", "generation", "revisionByte", "appliedEditIds", "history"],
+      "properties": {
+        "snapshot": { "type": "integer" },
+        "generation": { "type": "integer", "minimum": 0 },
+        "revisionByte": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "appliedEditIds": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "history": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "GroupReadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "capture", "decision", "fresh", "captured", "oldLeaseCurrent", "preparedLeaseCurrent"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "capture": { "enum": ["pending", "committed"] },
+        "decision": { "enum": ["pending", "committed", "aborted"] },
+        "fresh": { "enum": ["old", "prepared"] },
+        "captured": { "enum": ["old", "prepared"] },
+        "oldLeaseCurrent": { "type": "boolean" },
+        "preparedLeaseCurrent": { "type": "boolean" }
+      }
+    },
+    "GroupCursorVisibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "maximumItems", "maximumBytes", "before", "after", "laws"],
+      "properties": {
+        "schema": { "const": "artifact-group-cursor-visibility/v1" },
+        "maximumItems": { "type": "integer", "minimum": 1 },
+        "maximumBytes": { "type": "integer", "minimum": 1 },
+        "before": { "$ref": "#/$defs/GroupCursor" },
+        "after": { "$ref": "#/$defs/GroupCursor" },
+        "laws": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "GroupCursor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "appliedEditIds": { "type": "array", "items": { "type": "string" } },
+        "redoEditIds": { "type": "array", "items": { "type": "string" } },
+        "checkpointId": { "type": "string" }
+      }
+    }
+  }
+}

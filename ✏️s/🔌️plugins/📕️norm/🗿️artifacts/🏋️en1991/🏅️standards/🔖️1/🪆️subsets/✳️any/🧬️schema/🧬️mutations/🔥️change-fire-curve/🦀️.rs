@@ -1,14 +1,14 @@
 //! 🔥 `change-fire-curve` — sets the En1991 fire curve scalar.
 
 
-use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
+use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeFireCurve {
-    pub new_fire_curve: crate::artifacts::en1991::part_1_2::FireCurve,
+    pub new_fire_curve: crate::part_1_2::FireCurve,
 }
 
 impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeFireCurve {

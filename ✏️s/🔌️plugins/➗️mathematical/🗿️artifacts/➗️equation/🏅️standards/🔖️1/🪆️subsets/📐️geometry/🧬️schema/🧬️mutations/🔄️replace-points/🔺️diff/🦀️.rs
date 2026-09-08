@@ -1,6 +1,6 @@
 //! 🔺️ `replace-points` — sparse diff construction.
 
-use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationGeometry, EquationSnapshot};
+use crate::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationGeometry, EquationSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplacePoints, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {

@@ -9,7 +9,7 @@
 //! semantics), so both functions are preserved byte-for-byte and honestly labeled
 //! `IoFidelity::Lossy` rather than claiming a working conversion. See `📓️w4-sourcing-report.md`
 //! `## openQuestions`.
-use crate::artifacts::curation::schema::snapshot::CurationSnapshot;
+use crate::schema::snapshot::CurationSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

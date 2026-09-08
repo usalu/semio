@@ -1,7 +1,7 @@
 //! 🎯️ `move-point` — absolute spatial reposition of a point in the geometry playground's point
 //! cloud, addressed by its BASE-state index.
 
-use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
+use crate::{EquationMutation, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload

@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::din18599::Din18599Snapshot;
-use schema::ArtifactSchema;
+use crate::Din18599Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::Din18599Outline;
@@ -44,7 +44,7 @@ impl protocol::InferenceSpec<Din18599Snapshot> for Din18599Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::din18599::standards::v1::subsets::any::schema::Din18599Builder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Din18599Builder {
     type Snapshot = Din18599Snapshot;
     type Inference = Din18599Inference;
 }
@@ -53,10 +53,10 @@ impl ArtifactInferrer for crate::artifacts::din18599::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.din18599.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `din18599_artifact_schema_descriptor`'s registration.
-pub fn din18599_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn din18599_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.din18599.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -87,8 +87,8 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::din18599::standards::v1::subsets::any::schema::{part_1, part_10, part_11, part_12, part_2, part_3, part_4, part_5, part_6, part_7, part_8, part_9};
-use crate::artifacts::din18599::BalancingInputs;
+use crate::standards::v1::subsets::any::schema::{part_1, part_10, part_11, part_12, part_2, part_3, part_4, part_5, part_6, part_7, part_8, part_9};
+use crate::BalancingInputs;
 /// 📋️ Full DIN V 18599 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `Din18599Snapshot -> CheckReport` projection; `balance_annual`
@@ -133,7 +133,7 @@ pub fn evaluate(document: &Din18599Snapshot) -> CheckReport {
 #[cfg(test)]
 mod compliance_report_tests {
     use super::*;
-    use crate::artifacts::din18599::standards::v1::subsets::any::schema::{from_building, reference_wall_layers};
+    use crate::standards::v1::subsets::any::schema::{from_building, reference_wall_layers};
     use crate::document::ClimateZoneDe;
 
     fn reference_100m2_inputs() -> BalancingInputs {

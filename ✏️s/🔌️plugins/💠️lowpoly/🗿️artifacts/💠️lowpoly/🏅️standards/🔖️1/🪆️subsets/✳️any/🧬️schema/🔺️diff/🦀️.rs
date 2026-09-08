@@ -1,7 +1,7 @@
 //! 🧬️ Lowpoly diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::lowpoly::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer};
-use schema::ArtifactSchema;
+use crate::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer};
+use framework_schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[artifact_schema(id = "s.lowpoly.lowpoly")]
 pub struct LowpolyDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::lowpoly::schema::LowpolyArtifact>>,
+    pub artifact: Option<Box<crate::schema::LowpolyArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]
@@ -19,7 +19,7 @@ pub struct LowpolyDiff {
     #[state(presence)]
     pub active_object_id: Option<Option<String>>,
     #[state(presence)]
-    pub selection: Option<crate::artifacts::lowpoly::LowpolySelection>,
+    pub selection: Option<crate::LowpolySelection>,
     #[state(presence)]
     pub selected_object_ids: Option<LowpolyStringList>,
     #[state(presence)]

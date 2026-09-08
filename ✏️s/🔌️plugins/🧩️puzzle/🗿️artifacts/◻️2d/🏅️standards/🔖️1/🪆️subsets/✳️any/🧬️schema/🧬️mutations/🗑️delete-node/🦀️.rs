@@ -1,9 +1,9 @@
 //! 🗑 Puzzle2d mutation — `DeleteNode`: removes an id-keyed node (captures cascade — any edge
 //! touching one of this node's handles is severed too, re-`connect-handles`ed by the inverse).
 
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::Puzzle2dDiff;
+use crate::mutations::Puzzle2dMutation;
+use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// 🗑 `delete-node` payload.

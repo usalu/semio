@@ -15,7 +15,7 @@
 //! hand-authoring typed `Deserializer<Puzzle3dSnapshot>`/`Serializer<Puzzle3dSnapshot>` impls for the
 //! foreign formats is real, non-trivial migration work outside this packet's descriptor-emission
 //! scope. `io_declaration()` below is the same `IoDeclaration` shape, built here instead: `native` is
-//! real (reuses `crate::artifacts::puzzle3d::pilot_languages()`'s already-real grammar/protocol
+//! real (reuses `crate::pilot_languages()`'s already-real grammar/protocol
 //! pairs, and a real `store::ArtifactCodec::of::<Puzzle3dSnapshot, Puzzle3dMutation>(...)`), but
 //! `entries: &[]` — the foreign-format hops stay UNREGISTERED on the new `io_mechanism` channel (an
 //! honest gap, not an oversight; `try_build()` still succeeds since an empty batch trivially passes
@@ -24,8 +24,8 @@
 //! relocate `io_declaration()` there as `io()` (verbatim rename), add the typed leaves, and swap
 //! this file's `io: io_declaration()` back to `io: io::io()` to match the template exactly.
 
-use crate::artifacts::puzzle3d::standards::v1::subsets::any::schema;
-use crate::artifacts::puzzle3d::{Puzzle3dMutation, Puzzle3dSnapshot, PUZZLE3D_DIALECT, PUZZLE_3D_SCHEMA};
+use crate::standards::v1::subsets::any::schema;
+use crate::{Puzzle3dMutation, Puzzle3dSnapshot, PUZZLE3D_DIALECT, PUZZLE_3D_SCHEMA};
 use crate::editor::puzzle3d as editor;
 use crate::viewer::puzzle3d as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
@@ -46,7 +46,7 @@ fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInfere
 /// are fixed by that function's own literal `vec![document, op, diff, pack, spr]` order — the same
 /// role→slot mapping `🗒️note`'s `io()` uses for its own five-language array.
 fn io_declaration() -> IoDeclaration {
-    let langs = crate::artifacts::puzzle3d::pilot_languages();
+    let langs = crate::pilot_languages();
     IoDeclaration {
         native: NativeCodecs {
             snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },

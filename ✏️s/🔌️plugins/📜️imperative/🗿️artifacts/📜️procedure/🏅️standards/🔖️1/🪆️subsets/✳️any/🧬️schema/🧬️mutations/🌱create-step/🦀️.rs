@@ -1,8 +1,8 @@
 //! 🌱 Direct Imperative mutation — `CreateStep` brings a new id-keyed `Step` into existence at a
 //! `PathRef` (root path, or a nested `control.*` step's body slot).
-use crate::artifacts::procedure::diff::ProcedureDiff;
-use crate::artifacts::procedure::mutations::ProcedureMutation;
-use crate::artifacts::procedure::{ProcedureSnapshot, PathRef, Step};
+use crate::diff::ProcedureDiff;
+use crate::mutations::ProcedureMutation;
+use crate::{ProcedureSnapshot, PathRef, Step};
 
 //#region 🔖️Mutation
 /// 🌱 `create-step` payload — the full step (its own `bodies` cascade travels with it, no

@@ -1,9 +1,9 @@
 //! 🔺️ `reorder-layers` sparse diff — a tree-aware remove-then-insert move, delegating to
 //! `diff_move_layer` (fixed to be genuinely sparse: no clone-mutate-diff of the whole snapshot).
 
-use crate::artifacts::raster::diff::{diff_move_layer, RasterDiff};
-use crate::artifacts::raster::schema::{find_layer, layer_node_id};
-use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
+use crate::diff::{diff_move_layer, RasterDiff};
+use crate::schema::{find_layer, layer_node_id};
+use crate::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️Diff
 /// 📐️ Finds `target_id`'s current `(parent_id, index)` address, recursing into groups.

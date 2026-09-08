@@ -1,8 +1,8 @@
 //! 🔧 Drawing mutation — `UpdateLayerTraceParams`: sets a trace layer's `params` facet (threshold +
 //! simplify epsilon, always validated/persisted together — the `update` verb's cohesive-facet case).
-use crate::artifacts::drawing::diff::DrawingDiff;
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::{DrawingSnapshot, DrawingTraceParams};
+use crate::diff::DrawingDiff;
+use crate::mutations::DrawingMutation;
+use crate::{DrawingSnapshot, DrawingTraceParams};
 
 //#region 🔖️Mutation
 /// 🔧 `update-layer-trace-params` payload.

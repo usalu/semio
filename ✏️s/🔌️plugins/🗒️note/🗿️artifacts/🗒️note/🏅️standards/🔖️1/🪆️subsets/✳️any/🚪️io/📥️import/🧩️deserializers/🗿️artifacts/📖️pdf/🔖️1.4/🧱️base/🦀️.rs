@@ -1,7 +1,7 @@
 //! 📥️ Imports the first PDF 1.4 page as one text block.
 
-use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot, NoteIdOwner};
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+use crate::schema::{create_note_id, empty_note_snapshot, NoteIdOwner};
+use crate::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -28,7 +28,7 @@ impl Deserializer<NoteSnapshot> for PdfIntoNote {
         let PageDoc { width, height, text } = page;
         let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text, bold: None, italic: None, underline: None, link: None }] }];
         snap.blocks.push(NoteBlockNode::Text {
-            content: crate::artifacts::note::note_text_child_record("pdf-text-1", &paragraphs),
+            content: crate::note_text_child_record("pdf-text-1", &paragraphs),
             id: "pdf-text-1".into(),
             name: "PDF".into(),
             x: 0.0,

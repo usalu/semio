@@ -1,6 +1,1319 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defs": {
+    "ActionInvokeInput": {
+      "additionalProperties": false,
+      "properties": {
+        "approvalHandle": {
+          "type": "string"
+        },
+        "capabilityId": {
+          "type": "string"
+        },
+        "expectedRevision": {
+          "type": "object"
+        },
+        "idempotencyKey": {
+          "type": "string"
+        },
+        "input": {
+          "type": "object"
+        },
+        "preparedActionHandle": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ActionPrepareInput": {
+      "additionalProperties": false,
+      "properties": {
+        "capabilityId": {
+          "type": "string"
+        },
+        "input": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "capabilityId"
+      ],
+      "type": "object"
+    },
+    "ArtifactCreateInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "initial": {},
+        "kind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactId",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "ArtifactCreateOutput": {
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "revision": {
+          "properties": {
+            "artifactId": {
+              "type": "string"
+            },
+            "cursor": {
+              "type": "string"
+            },
+            "headEditId": {
+              "type": "string"
+            }
+          },
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ArtifactCreateTemplateInput": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "template": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "type": "object"
+    },
+    "ArtifactExportInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactId"
+      ],
+      "type": "object"
+    },
+    "ArtifactExportOutput": {
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "contentBase64": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format": {
+          "type": "string"
+        },
+        "mimeType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ArtifactOpenInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactId"
+      ],
+      "type": "object"
+    },
+    "ArtifactOpenOutput": {
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "properties": {
+            "artifactId": {
+              "type": "string"
+            },
+            "cursor": {
+              "type": "string"
+            },
+            "headEditId": {
+              "type": "string"
+            }
+          },
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "sizeBytes": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ArtifactSnapshotInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "revision": {
+          "properties": {
+            "artifactId": {
+              "type": "string"
+            },
+            "cursor": {
+              "type": "string"
+            },
+            "headEditId": {
+              "type": "string"
+            }
+          },
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "artifactId"
+      ],
+      "type": "object"
+    },
+    "ArtifactSnapshotOutput": {
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "packBase64": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "packBytes": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "sprBytes": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ArtifactValidateInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactId"
+      ],
+      "type": "object"
+    },
+    "ArtifactValidateOutput": {
+      "type": "object"
+    },
+    "CallToolResult": {
+      "description": "🧾️ Result of `tools/call` — `is_error: true` is a TOOL execution failure (actionable, for LLM self-correction); a JSON-RPC error response is a PROTOCOL failure (unknown tool, malformed request) instead. See [`McpServer::handle_tools_call`] for the single place this choice is made.",
+      "properties": {
+        "content": {
+          "items": {
+            "$ref": "#/$defs/ContentBlock"
+          },
+          "type": "array"
+        },
+        "isError": {
+          "type": "boolean"
+        },
+        "structuredContent": {}
+      },
+      "required": [
+        "content",
+        "isError"
+      ],
+      "type": "object"
+    },
+    "CapabilitiesDescribeInput": {
+      "additionalProperties": false,
+      "properties": {
+        "capabilityId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "capabilityId"
+      ],
+      "type": "object"
+    },
+    "CapabilitiesDescribeOutput": {
+      "type": "object"
+    },
+    "CapabilitiesSearchInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactKind": {
+          "type": "string"
+        },
+        "kind": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "query": {
+          "type": "string"
+        },
+        "requiresScope": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    },
+    "CapabilitiesSearchOutput": {
+      "properties": {
+        "results": {
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "CapabilityActionInput": {
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "CapabilityGenericInput": {
+      "type": "object"
+    },
+    "CapabilityGenericOutput": {
+      "type": "object"
+    },
+    "ContentBlock": {
+      "description": "📄️ One block of unstructured tool/prompt content (`luna-mcpspec-audit.md` §\"Tools Protocol\").",
+      "oneOf": [
+        {
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "text"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "text",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "data": {
+              "type": "string"
+            },
+            "mimeType": {
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "image"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "data",
+            "mimeType",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "data": {
+              "type": "string"
+            },
+            "mimeType": {
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "audio"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "data",
+            "mimeType",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "mimeType": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "enum": [
+                "resource_link"
+              ],
+              "type": "string"
+            },
+            "uri": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "uri"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "blob": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "mimeType": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "enum": [
+                "resource"
+              ],
+              "type": "string"
+            },
+            "uri": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "uri"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "ContextResolveInput": {
+      "additionalProperties": false,
+      "properties": {
+        "locale": {
+          "type": "string"
+        },
+        "principal": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ContextResolveOutput": {
+      "type": "object"
+    },
+    "ContextSummary": {
+      "description": "🧾️ `context.resolve` response — mints/refreshes the implicit `AgentSession` for stdio clients (`📋️master.md` §\"AgentSession\"). `scopes` are plain capability-id strings rather than `kernel::CapabilityId` — this crate has zero dependency on the kernel crate (§2.6 of this packet's brief), so the newtype cannot be named here.",
+      "properties": {
+        "activeArtifactId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "catalogHash": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        },
+        "principal": {
+          "type": "string"
+        },
+        "scopes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "sessionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "catalogHash",
+        "locale",
+        "principal",
+        "scopes",
+        "sessionId"
+      ],
+      "type": "object"
+    },
+    "GatewayError": {
+      "description": "🚧️ The one error shape every gateway operation returns internally, before a call site decides whether it becomes a JSON-RPC protocol error or a tool-result `isError:true` payload. Implements `std::error::Error` so it composes with `?` in ordinary fallible Rust code, not only at the JSON-RPC/tool-result boundary.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/GatewayErrorCode"
+        },
+        "details": {
+          "default": null
+        },
+        "message": {
+          "type": "string"
+        },
+        "retryable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable"
+      ],
+      "type": "object"
+    },
+    "GatewayErrorCode": {
+      "description": "🏷️ The twelve gateway failure codes every capability surface can raise — see this file's module doc for the frozen source of truth.",
+      "enum": [
+        "INPUT_INVALID",
+        "PRECONDITION_FAILED",
+        "REVISION_CONFLICT",
+        "PERMISSION_DENIED",
+        "APPROVAL_REQUIRED",
+        "PLUGIN_UNAVAILABLE",
+        "SIDE_EFFECT_REJECTED",
+        "CANCELLED",
+        "COMPENSATION_FAILED",
+        "NOT_FOUND",
+        "BUDGET_EXCEEDED",
+        "INTERNAL"
+      ],
+      "type": "string"
+    },
+    "GisMapInferenceApprovalRequestV1": {
+      "additionalProperties": false,
+      "properties": {
+        "jobId": {
+          "pattern": "^[0-9a-f]{32}$",
+          "type": "string"
+        },
+        "proposalHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "schema": {
+          "const": "semio.hub.inference-approval/v1"
+        },
+        "version": {
+          "const": 1
+        }
+      },
+      "required": [
+        "schema",
+        "version",
+        "jobId",
+        "proposalHash"
+      ],
+      "type": "object"
+    },
+    "HandleInput": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "preparedActionHandle": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "preparedActionHandle"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "transactionHandle": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "transactionHandle"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "undoToken": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "undoToken"
+          ],
+          "type": "object"
+        }
+      ],
+      "type": "object"
+    },
+    "InferenceApproveInput": {
+      "additionalProperties": false,
+      "properties": {
+        "jobHandle": {
+          "type": "string"
+        },
+        "proposalHash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "jobHandle",
+        "proposalHash"
+      ],
+      "type": "object"
+    },
+    "InferenceGetInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "inferenceSchema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactId",
+        "inferenceSchema"
+      ],
+      "type": "object"
+    },
+    "InferenceGetOutput": {
+      "type": "object"
+    },
+    "InferenceJobHandleInput": {
+      "additionalProperties": false,
+      "properties": {
+        "after": {
+          "maximum": 16,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "jobHandle": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "jobHandle"
+      ],
+      "type": "object"
+    },
+    "InferenceJobOutput": {
+      "type": "object"
+    },
+    "InferenceListInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "InferenceListOutput": {
+      "properties": {
+        "artifactId": {},
+        "artifactKind": {},
+        "declared": {
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "InferenceSubmitInput": {
+      "additionalProperties": false,
+      "properties": {
+        "documentId": {
+          "type": "string"
+        },
+        "lifetimeMs": {
+          "maximum": 120000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "requestId": {
+          "pattern": "^[0-9a-f]{32}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "documentId"
+      ],
+      "type": "object"
+    },
+    "InvocationReport": {
+      "description": "🧾️ `InvocationReport{invocationId, capabilityId, status, affectedResources, revisionBefore/After, diffUri, warnings, undoToken, postconditions, replayed}` (`📋️master.md` §\"Verify\") — the result re-read after `DispatchReport`/`MergeReport`, and the value an `IdempotencyStore` replay returns verbatim on a repeated `idempotencyKey`.",
+      "properties": {
+        "affectedResources": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "capabilityId": {
+          "type": "string"
+        },
+        "diffUri": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "invocationId": {
+          "type": "string"
+        },
+        "postconditions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "replayed": {
+          "type": "boolean"
+        },
+        "revisionAfter": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RevisionStamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revisionBefore": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RevisionStamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/InvocationStatus"
+        },
+        "undoToken": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "affectedResources",
+        "capabilityId",
+        "invocationId",
+        "postconditions",
+        "replayed",
+        "status",
+        "warnings"
+      ],
+      "type": "object"
+    },
+    "InvocationStatus": {
+      "description": "🏁️ Terminal status of one `action.invoke` — `Succeeded`/`Failed` are self-explanatory, `Cancelled` covers a client-issued `job.cancel`/`notifications/cancelled` landing before completion.",
+      "enum": [
+        "SUCCEEDED",
+        "FAILED",
+        "CANCELLED"
+      ],
+      "type": "string"
+    },
+    "JobCancelInput": {
+      "additionalProperties": false,
+      "properties": {
+        "jobId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "jobId"
+      ],
+      "type": "object"
+    },
+    "JobGetInput": {
+      "additionalProperties": false,
+      "properties": {
+        "jobId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "jobId"
+      ],
+      "type": "object"
+    },
+    "JobSnapshotOutput": {
+      "properties": {
+        "cancelRequested": {
+          "type": "boolean"
+        },
+        "error": {},
+        "jobId": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "message": {},
+        "progress": {},
+        "result": {},
+        "status": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "JobState": {
+      "description": "🏃️ Lifecycle state of a `job_`-prefixed handle (long-running `action.invoke`/background work).",
+      "enum": [
+        "PENDING",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED",
+        "CANCELLED"
+      ],
+      "type": "string"
+    },
+    "JobStatus": {
+      "description": "🧾️ `job.get` response — `progress` is `0.0..=1.0` when known, `result`/`error` are populated only once `state` is terminal (`Succeeded`/`Failed`/`Cancelled`).",
+      "properties": {
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GatewayError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "jobId": {
+          "type": "string"
+        },
+        "progress": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "result": {},
+        "state": {
+          "$ref": "#/$defs/JobState"
+        }
+      },
+      "required": [
+        "jobId",
+        "state"
+      ],
+      "type": "object"
+    },
+    "NullableRevisionStamp": {
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "cursor": {
+          "type": "string"
+        },
+        "headEditId": {
+          "type": "string"
+        }
+      },
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "PreparedActionReport": {
+      "description": "🧾️ Result of `action.prepare` — a `prep_`-prefixed handle (`📋️master.md` §\"AgentSession\", the handle-kind prefix table) bound to `capability_id` and (when the caller supplied one) `expected_revision`; `preview` is the arbitrary structured preview payload a capability's `command_from_action` bridge produced, TTL-bounded by `expires_at_ms` (10 min per the frozen `HandleRecord` TTL table).",
+      "properties": {
+        "capabilityId": {
+          "type": "string"
+        },
+        "expectedRevision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RevisionStamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expiresAtMs": {
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "preparedHandle": {
+          "type": "string"
+        },
+        "preview": {}
+      },
+      "required": [
+        "capabilityId",
+        "expiresAtMs",
+        "preparedHandle",
+        "preview"
+      ],
+      "type": "object"
+    },
+    "Prompt": {
+      "properties": {
+        "arguments": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/PromptArgument"
+          },
+          "type": "array"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "PromptArgument": {
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "required"
+      ],
+      "type": "object"
+    },
+    "PromptGetResult": {
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/PromptMessage"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "messages"
+      ],
+      "type": "object"
+    },
+    "PromptMessage": {
+      "properties": {
+        "content": {
+          "$ref": "#/$defs/ContentBlock"
+        },
+        "role": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "role"
+      ],
+      "type": "object"
+    },
+    "Resource": {
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mimeType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "size": {
+          "minimum": 0.0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uri": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri"
+      ],
+      "type": "object"
+    },
+    "ResourceContent": {
+      "properties": {
+        "blob": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mimeType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uri": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri"
+      ],
+      "type": "object"
+    },
+    "ResourceTemplate": {
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mimeType": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uriTemplate": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uriTemplate"
+      ],
+      "type": "object"
+    },
+    "RevisionStamp": {
+      "description": "🧾️ `RevisionStamp{artifact_id, head_edit_id, cursor}` — read from `AppCommand::ReadHistory` → `HistorySnapshot` (`📋️master.md` §\"Observe\"), the optimistic-concurrency token every `action.invoke{expectedRevision}` and `InvocationReport.revisionBefore/After` carries.",
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "cursor": {
+          "type": "string"
+        },
+        "headEditId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactId",
+        "cursor",
+        "headEditId"
+      ],
+      "type": "object"
+    },
+    "SearchHit": {
+      "description": "🔎️ One `capabilities.search` result — `capability_id` is the full `<plugin_id>.<app_id>.<action_id>` grammar (`📋️master.md` D3/§\"Id grammar\"), never a bare action id.",
+      "properties": {
+        "appId": {
+          "type": "string"
+        },
+        "capabilityId": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "pluginId": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "appId",
+        "capabilityId",
+        "description",
+        "pluginId",
+        "score",
+        "title"
+      ],
+      "type": "object"
+    },
+    "Tool": {
+      "description": "🔧️ One registered tool's descriptor (`luna-mcpspec-audit.md` §\"Tools Protocol\" `tools/list` shape) — `name` must satisfy [`is_valid_tool_name`].",
+      "properties": {
+        "_meta": {},
+        "annotations": {},
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inputSchema": {},
+        "name": {
+          "type": "string"
+        },
+        "outputSchema": {},
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "inputSchema",
+        "name"
+      ],
+      "type": "object"
+    },
+    "TransactionBeginInput": {
+      "additionalProperties": false,
+      "properties": {
+        "preparedHandles": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "preparedHandles"
+      ],
+      "type": "object"
+    },
+    "UiDialogOpenInput": {
+      "additionalProperties": false,
+      "properties": {
+        "args": {
+          "type": "object"
+        },
+        "dialogId": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "dialogId"
+      ],
+      "type": "object"
+    },
+    "UiFocusInput": {
+      "additionalProperties": false,
+      "properties": {
+        "windowId": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "UiFocusOutput": {
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "windowId": {}
+      },
+      "type": "object"
+    },
+    "UiRevealInput": {
+      "additionalProperties": false,
+      "properties": {
+        "anchor": {
+          "enum": [
+            "left",
+            "right",
+            "top",
+            "bottom"
+          ],
+          "type": "string"
+        },
+        "path": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "anchor",
+        "path"
+      ],
+      "type": "object"
+    },
+    "UiRevealOutput": {
+      "properties": {
+        "anchor": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "path": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    }
+  },
   "$id": "https://semio.tech/schema/os/mcp/component.json",
-  "title": "Semio OS MCP Gateway",
-  "$defs": {}
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Semio OS MCP Gateway"
 }

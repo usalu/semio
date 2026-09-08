@@ -11,7 +11,17 @@ E sequence payload+wire, F missing).
 merges D/E wire envelopes into `$defs.Wire` beside `$defs.Payload`, stamps draft-07 + `$id` + `title`,
 rewrites descriptors, and turns every plugin aggregate into a pure relative-`$ref` `oneOf` union.
 
-See `<ticket>/📋️execution-contract.md` §B and `<ticket>/📓️wp0-mutation-leaves.md` §6.
+`--ids` is the idempotent contract §A `$id`-grammar pass, run on its own (`--ids` reports, `--ids --apply`
+writes). It touches nothing but `$id`/`title` and rewrites, for every document of a `🧬️mutations` tree:
+
+    leaf   <leaf>/🧬️schema/🔣️.json   → https://semio.tech/schema/<root scope>/mutation/<semanticKind>/schema.json
+    root   <root>/🔣️.json            → https://semio.tech/schema/<root scope>/mutations.json
+    facet  <root>/<facet>/🔣️.json    → https://semio.tech/schema/<root scope>/mutations/<facet>.json
+
+A mutation leaf is a scope of its own, so its facet filename is `schema`; the aggregate and its text/binary
+facet documents keep the root scope path and vary only the facet filename.
+
+See `<ticket>/📋️execution-contract.md` §A/§B and `<ticket>/📓️wp0-mutation-leaves.md` §6.
 """
 from __future__ import annotations
 import collections, json, os, re, shutil, subprocess, sys
@@ -200,6 +210,287 @@ def apply_aggregate(root: str, leaves: dict[str, dict], report: dict, aggregate_
     report["aggregates"] += 1
 
 
+FACET_DOC_DIRS = ("📝️text", "💾️binary")
+
+
+def leaf_schema_id(scope: str, semantic_kind: str) -> str:
+    """🆔️ Contract §A: a mutation leaf is its own scope, facet `schema`."""
+    return f"https://semio.tech/schema/{scope}/mutation/{semantic_kind}/schema.json"
+
+
+def aggregate_schema_id(scope: str) -> str:
+    """🆔️ Contract §A: the union document is the root scope's `mutations` facet."""
+    return f"https://semio.tech/schema/{scope}/mutations.json"
+
+
+def facet_schema_id(scope: str, facet_dir: str) -> str:
+    """🆔️ Contract §A: a facet document never deepens the scope, it only varies the filename."""
+    return f"https://semio.tech/schema/{scope}/mutations/{ascii_tail(facet_dir)}.json"
+
+
+def relref(files: list[str], grouped: dict[str, list[str]], leaves: dict[str, dict], present: set[str], apply: bool) -> dict:
+    """🔗️ Turns an aggregate's absolute-URL `$ref` into the contract §B relative path to its own leaf.
+
+    An aggregate that names its leaves by `$id` URL breaks the moment the leaf `$id` grammar changes.
+    A leaf whose URL no longer resolves is matched back to a sibling leaf of the same root by
+    `semanticKind`; an unresolvable ref with no unique sibling is refused, never guessed.
+    """
+    index = document_index(files)
+    report = {"aggregates": 0, "rewritten": 0, "refused": [], "edits": []}
+    for root in sorted(grouped):
+        rel = f"{root}/🔣️.json"
+        if rel not in present:
+            continue
+        doc = load(rel)
+        by_kind = {info["descriptor"]["semanticKind"]: leaf for leaf, info in leaves.items() if info["root"] == root}
+        changed = False
+
+        def rewrite(node):
+            nonlocal changed
+            if isinstance(node, list):
+                return [rewrite(item) for item in node]
+            if not isinstance(node, dict):
+                return node
+            out = {}
+            for key, value in node.items():
+                if key == "$ref" and isinstance(value, str) and value.startswith("http"):
+                    target, _, pointer = value.partition("#")
+                    if target not in index:
+                        kind = target.rstrip("/").rsplit("/", 1)[-1].removesuffix(".json")
+                        leaf = by_kind.get(kind)
+                        if leaf is None:
+                            report["refused"].append(f"{rel}: {value} resolves to nothing and no sibling leaf is named {kind}")
+                            out[key] = value
+                            continue
+                        replacement = f"./{leaf[len(root) + 1:]}/{TARGET_REL}" + (f"#{pointer}" if pointer else "")
+                        report["edits"].append(f"{rel}: {value} → {replacement}")
+                        report["rewritten"] += 1
+                        changed = True
+                        out[key] = replacement
+                        continue
+                    out[key] = value
+                else:
+                    out[key] = rewrite(value)
+            return out
+
+        updated = rewrite(doc)
+        report["aggregates"] += 1
+        if changed and apply:
+            save(rel, updated)
+    return report
+
+
+DIALECT_2020 = "https://json-schema.org/draft/2020-12/schema"
+ANNOTATIONS = {"$id", "$schema", "$defs", "definitions", "title", "description", "$comment", "examples", "default", "deprecated", "readOnly", "writeOnly"}
+
+
+class Unresolvable(Exception):
+    """🚧️ A `$ref` whose evaluated property set cannot be established statically."""
+
+
+def document_index(files: list[str]) -> dict[str, tuple[str, dict]]:
+    """🗂️ Every JSON Schema document in the tree, keyed by `$id`, for cross-file `$ref` resolution."""
+    index: dict[str, tuple[str, dict]] = {}
+    for rel in files:
+        if not rel.endswith(".json") or rel.startswith(".🧬semio/") or "/node_modules/" in rel:
+            continue
+        try:
+            with open(os.path.join(REPO, rel), "rb") as probe:
+                if b'"$id"' not in probe.read(4096):
+                    continue
+            doc = load(rel)
+        except Exception:
+            continue
+        if isinstance(doc, dict) and isinstance(doc.get("$id"), str):
+            index.setdefault(doc["$id"], (rel, doc))
+    return index
+
+
+def resolve_ref(ref: str, base_rel: str, index: dict[str, tuple[str, dict]]) -> tuple[str, dict]:
+    """🔗️ Resolves a `$ref` (absolute `$id` URL or repo-relative path, with optional JSON pointer)."""
+    target, _, pointer = ref.partition("#")
+    if target == "":
+        doc_rel, doc = base_rel, load(base_rel)
+    elif target.startswith("http"):
+        if target not in index:
+            raise Unresolvable(ref)
+        doc_rel, doc = index[target]
+    else:
+        doc_rel = os.path.normpath(os.path.join(os.path.dirname(base_rel), __import__("urllib.parse", fromlist=["unquote"]).unquote(target)))
+        if not os.path.isfile(os.path.join(REPO, doc_rel)):
+            raise Unresolvable(ref)
+        doc = load(doc_rel)
+    node = doc
+    for step in [part for part in pointer.split("/") if part]:
+        step = step.replace("~1", "/").replace("~0", "~")
+        if not isinstance(node, dict) or step not in node:
+            raise Unresolvable(ref)
+        node = node[step]
+    return doc_rel, node
+
+
+def evaluated_names(node, base_rel: str, index: dict[str, tuple[str, dict]], seen: frozenset = frozenset()) -> set[str]:
+    """🔑️ The property names a draft 2020-12 `unevaluatedProperties` would count as evaluated here.
+
+    Only the statically decidable applicators appear in this partition: `properties`, `$ref`, `allOf`.
+    Anything else (`patternProperties`, `additionalProperties`, `if`/`then`, `oneOf`, `anyOf`, `not`)
+    raises instead of guessing, so a migration never loosens a schema it did not understand.
+    """
+    if not isinstance(node, dict):
+        raise Unresolvable(repr(node)[:80])
+    names: set[str] = set(node.get("properties", {}))
+    for keyword in ("patternProperties", "additionalProperties", "if", "then", "else", "anyOf", "not", "dependentSchemas"):
+        if keyword in node:
+            raise Unresolvable(f"{base_rel}: unevaluated closure over {keyword}")
+    if "oneOf" in node:
+        raise Unresolvable(f"{base_rel}: unevaluated closure over oneOf")
+    if isinstance(node.get("$ref"), str):
+        key = (base_rel, node["$ref"])
+        if key in seen:
+            raise Unresolvable(f"{base_rel}: cyclic $ref {node['$ref']}")
+        target_rel, target = resolve_ref(node["$ref"], base_rel, index)
+        names |= evaluated_names(target, target_rel, index, seen | {key})
+    for branch in node.get("allOf", []):
+        names |= evaluated_names(branch, base_rel, index, seen)
+    return names
+
+
+def to_draft07(node, base_rel: str, index: dict[str, tuple[str, dict]], report: dict, root: bool):
+    """🕰️ Rewrites one node to draft-07 without loosening it.
+
+    Two 2020-12-only behaviours are in play. `$ref` beside other keywords is evaluated in 2020-12 and
+    IGNORED in draft-07, so every such `$ref` moves into an `allOf` branch. `unevaluatedProperties:
+    false` has no draft-07 keyword; the same closure is `propertyNames` over the enumerated set of
+    names the composition evaluates — exact here because every branch constrains `properties` only.
+    Per-branch `additionalProperties: false` would NOT be equivalent: it would reject the sibling
+    branch's own properties.
+    """
+    if isinstance(node, list):
+        return [to_draft07(item, base_rel, index, report, False) for item in node]
+    if not isinstance(node, dict):
+        return node
+    out = {key: to_draft07(value, base_rel, index, report, False) for key, value in node.items()}
+    if root:
+        out["$schema"] = DRAFT7
+    if "unevaluatedItems" in out:
+        raise Unresolvable(f"{base_rel}: unevaluatedItems")
+    closed = out.pop("unevaluatedProperties", None)
+    if isinstance(out.get("$ref"), str) and any(key not in ANNOTATIONS and key != "$ref" for key in out) | (closed is not None):
+        out["allOf"] = [{"$ref": out.pop("$ref")}, *out.get("allOf", [])]
+        report["refsLifted"] += 1
+    if closed is not None:
+        if closed is not False:
+            raise Unresolvable(f"{base_rel}: unevaluatedProperties is not false")
+        branches = out.get("oneOf")
+        if isinstance(branches, list) and branches and all(isinstance(branch, dict) and ("propertyNames" in branch or branch.get("additionalProperties") is False) for branch in branches):
+            # 🪆️A closure over a `oneOf` whose every branch already closes can never fire: the winning
+            # branch's evaluated set is also the parent's, so the outer keyword is dropped, not translated.
+            report["redundantClosures"] = report.get("redundantClosures", 0) + 1
+            return out
+        names = sorted(evaluated_names(out, base_rel, index))
+        if "additionalProperties" in out:
+            raise Unresolvable(f"{base_rel}: additionalProperties beside unevaluatedProperties")
+        out["propertyNames"] = {"enum": names}
+        report["closuresRewritten"] += 1
+    return out
+
+
+def draft07(files: list[str], grouped: dict[str, list[str]], present: set[str], apply: bool) -> dict:
+    """🕰️ Migrates every 2020-12 document of the partition's mutation trees to draft-07."""
+    index = document_index(files)
+    report = {"documents": 0, "migrated": 0, "refsLifted": 0, "closuresRewritten": 0, "refused": [], "files": []}
+    for rel in sorted(files):
+        if MUT not in rel or rel.startswith(STDIO) or rel.startswith(TICKETS) or not rel.endswith(".json"):
+            continue
+        try:
+            doc = load(rel)
+        except Exception:
+            continue
+        if not isinstance(doc, dict) or doc.get("$schema") != DIALECT_2020:
+            continue
+        report["documents"] += 1
+        before = {"refsLifted": report["refsLifted"], "closuresRewritten": report["closuresRewritten"]}
+        try:
+            out = to_draft07(doc, rel, index, report, True)
+        except Unresolvable as refusal:
+            report["refsLifted"], report["closuresRewritten"] = before["refsLifted"], before["closuresRewritten"]
+            report["refused"].append(str(refusal))
+            continue
+        report["migrated"] += 1
+        report["files"].append(rel)
+        if apply:
+            save(rel, out)
+    return report
+
+
+def reidentify(grouped: dict[str, list[str]], leaves: dict[str, dict], present: set[str], apply: bool) -> dict:
+    """🆔️ Idempotent `$id` rewrite of every mutation document to the contract §A grammar."""
+    report = {"leaves": 0, "leavesChanged": 0, "aggregates": 0, "aggregatesChanged": 0, "facets": 0, "facetsChanged": 0, "titles": 0, "collisions": [], "mapping": {}}
+    seen: dict[str, str] = {}
+
+    def stamp(rel: str, schema_id: str, title: str | None, dialect: str | None = None) -> tuple[bool, bool]:
+        doc = load(rel)
+        if dialect is not None and "$schema" not in doc:
+            doc = {**doc, "$schema": dialect}
+            report["dialectStamped"] = report.get("dialectStamped", 0) + 1
+        before_id, before_title = doc.get("$id"), doc.get("title")
+        body = {k: v for k, v in doc.items() if k not in ("$schema", "$id", "title")}
+        if title is not None and isinstance(before_title, str) and before_title != title and "description" not in body:
+            # 🏷️A leaf `title` is the export id; prose that sat there is kept as the document's description.
+            body = {"description": before_title, **body}
+            report["prosePreserved"] = report.get("prosePreserved", 0) + 1
+        head = {}
+        if "$schema" in doc:
+            head["$schema"] = doc["$schema"]
+        head["$id"] = schema_id
+        head["title"] = title if title is not None else (before_title if before_title is not None else None)
+        if head["title"] is None:
+            del head["title"]
+        out = {**head, **body}
+        if before_id in seen and seen[before_id] != rel:
+            report["collisions"].append(f"{rel}: shares previous $id {before_id} with {seen[before_id]}")
+        if before_id:
+            seen[before_id] = rel
+            if before_id != schema_id:
+                report["mapping"][before_id] = schema_id
+        if apply and out != doc:
+            save(rel, out)
+        return before_id != schema_id, before_title != head.get("title")
+
+    for leaf, info in sorted(leaves.items()):
+        rel = f"{leaf}/{TARGET_REL}"
+        if rel not in present:
+            continue
+        report["leaves"] += 1
+        scope = scope_id(info["root"])
+        changed, title_changed = stamp(rel, leaf_schema_id(scope, info["descriptor"]["semanticKind"]), info["descriptor"].get("aggregateVariant"))
+        report["leavesChanged"] += int(changed)
+        report["titles"] += int(title_changed)
+
+    for root in sorted(grouped):
+        scope = scope_id(root)
+        rel = f"{root}/🔣️.json"
+        if rel in present:
+            report["aggregates"] += 1
+            changed, _ = stamp(rel, aggregate_schema_id(scope), None, DRAFT7)
+            report["aggregatesChanged"] += int(changed)
+        for facet in FACET_DOC_DIRS:
+            facet_rel = f"{root}/{facet}/🔣️.json"
+            if facet_rel not in present:
+                continue
+            report["facets"] += 1
+            changed, _ = stamp(facet_rel, facet_schema_id(scope, facet), None, DRAFT7)
+            report["facetsChanged"] += int(changed)
+
+    final = collections.Counter()
+    for leaf, info in sorted(leaves.items()):
+        rel = f"{leaf}/{TARGET_REL}"
+        if rel in present:
+            final[leaf_schema_id(scope_id(info["root"]), info["descriptor"]["semanticKind"])] += 1
+    report["duplicateTargets"] = {k: v for k, v in final.items() if v > 1}
+    return report
+
+
 def main() -> int:
     apply = "--apply" in sys.argv
     only_plugins = "--plugins-only" in sys.argv
@@ -223,6 +514,27 @@ def main() -> int:
         shape = "oneOf-union" if "oneOf" in doc else "allOf" if "allOf" in doc else "uninhabited" if "not" in doc else "object-snapshot" if doc.get("type") == "object" and "properties" in doc else "other"
         kind = "G-B" if not inline and shape in ("oneOf-union", "allOf", "uninhabited") else "G-A"
         aggregates[root] = {"present": True, "file": rel, "kind": kind, "shape": shape, "inlineDefs": inline, "scope": scope_id(root)}
+
+    if "--relref" in sys.argv:
+        rewired = relref(files, grouped, leaves, present, apply)
+        print(json.dumps(rewired, ensure_ascii=False, indent=1))
+        return 1 if rewired["refused"] else 0
+
+    if "--draft07" in sys.argv:
+        migration = draft07(files, grouped, present, apply)
+        print(json.dumps({k: (v if k not in ("files",) else len(v)) for k, v in migration.items()}, ensure_ascii=False, indent=1))
+        if "--out" in sys.argv:
+            with open(sys.argv[sys.argv.index("--out") + 1], "w", encoding="utf-8") as handle:
+                json.dump(migration, handle, ensure_ascii=False, indent=1)
+        return 1 if migration["refused"] else 0
+
+    if "--ids" in sys.argv:
+        identity = reidentify(grouped, leaves, present, apply)
+        print(json.dumps({k: v for k, v in identity.items() if k != "mapping"}, ensure_ascii=False, indent=1))
+        if "--out" in sys.argv:
+            with open(sys.argv[sys.argv.index("--out") + 1], "w", encoding="utf-8") as handle:
+                json.dump(identity, handle, ensure_ascii=False, indent=1)
+        return 1 if identity["collisions"] or identity["duplicateTargets"] else 0
 
     report = {"relocated": collections.Counter(), "removed": [], "descriptors": 0, "aggregates": 0}
     if apply:

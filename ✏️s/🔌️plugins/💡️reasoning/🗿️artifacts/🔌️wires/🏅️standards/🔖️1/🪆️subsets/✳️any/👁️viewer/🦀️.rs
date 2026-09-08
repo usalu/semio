@@ -4,7 +4,7 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::wires::{WiresSnapshot, MINDMAP_WIRES_SCHEMA, WIRES_DIALECT};
+use crate::{WiresSnapshot, MINDMAP_WIRES_SCHEMA, WIRES_DIALECT};
 use crate::viewer::wires::modes::view;
 use crate::viewer::wires::modes::view::windows::canvas;
 use semio_framework_plugin::app::InteractionView;
@@ -38,7 +38,7 @@ pub struct WiresViewer;
 
 impl ArtifactViewer for WiresViewer {
     type Snapshot = WiresSnapshot;
-    type Mutation = crate::artifacts::wires::WiresMutation;
+    type Mutation = crate::WiresMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -51,7 +51,7 @@ impl ArtifactViewer for WiresViewer {
     const DOCUMENT_SCHEMA: &'static str = MINDMAP_WIRES_SCHEMA;
 
     fn initial_snapshot() -> WiresSnapshot {
-        crate::artifacts::wires::empty_wires_snapshot()
+        crate::empty_wires_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `WiresViewCommand::Noop` variant never carries a config

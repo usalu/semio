@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/video/mutation/insert-sample.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/video/mutation/insert-sample/schema.json",
   "title": "InsertSample",
   "type": "object",
   "additionalProperties": false,

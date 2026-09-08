@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `ChangeObjectKindUnit`.
 
 use crate::BlockKindIdentity;
-use crate::artifacts::block3d::Block3dSnapshot;
-use crate::artifacts::block3d::diff::Block3dDiff;
+use crate::Block3dSnapshot;
+use crate::diff::Block3dDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeObjectKindUnit, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

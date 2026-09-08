@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🎬scenarios` per Wave C.
 
 use super::CreateScenario;
-use crate::artifacts::program::diff::ProgramScenariosDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramScenariosDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
 pub fn diff(payload: &CreateScenario, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

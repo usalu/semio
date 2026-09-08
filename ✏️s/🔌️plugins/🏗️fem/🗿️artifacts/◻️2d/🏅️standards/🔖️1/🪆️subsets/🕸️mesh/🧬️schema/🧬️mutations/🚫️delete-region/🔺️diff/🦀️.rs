@@ -4,9 +4,9 @@
 //! `mutation.target-referenced` (Error) while any load case still carries an area pressure over
 //! this region.
 use super::DeleteRegion;
-use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dRegionsDelta};
-use crate::artifacts::fem2d::mutations::guards;
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::diff::{Fem2dDiff, Fem2dRegionsDelta};
+use crate::mutations::guards;
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteRegion, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

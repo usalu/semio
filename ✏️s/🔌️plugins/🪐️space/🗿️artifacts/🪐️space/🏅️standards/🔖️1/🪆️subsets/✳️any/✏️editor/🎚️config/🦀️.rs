@@ -6,7 +6,7 @@
 
 use protocol::Mutation;
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
+use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
 use semio_framework_os_kernel::os_directory::DirectoryIndexedDocumentViewV1;
 
 //#region 🔖️Member

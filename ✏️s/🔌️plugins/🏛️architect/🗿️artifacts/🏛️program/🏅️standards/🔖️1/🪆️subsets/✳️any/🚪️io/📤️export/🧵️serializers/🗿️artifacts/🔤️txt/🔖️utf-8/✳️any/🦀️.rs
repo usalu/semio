@@ -4,7 +4,7 @@
 //! compiled) -- likely a copy-paste of stdio's own internal json<-txt bridge into the wrong
 //! plugin's txt target folder. Left as an honest stub producing this artifact's own real
 //! snapshot type, pending a real txt import/export implementation.
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramSnapshot;
 pub fn register() {}
 pub fn serialize(_from: &ProgramSnapshot) -> Result<semio_s_artifact_stdio_txt::TxtSnapshot, String> {
     Err("txt export not yet implemented".into())

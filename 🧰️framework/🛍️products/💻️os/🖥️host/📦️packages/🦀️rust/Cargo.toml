@@ -23,6 +23,9 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-artifact-workflow-workflow = { workspace = true }
+semio-framework-artifact-space-space = { workspace = true, optional = true }
+semio-framework-artifact-space-collection = { workspace = true, optional = true }
 semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
@@ -79,5 +82,5 @@ semio-framework-async-macros = { path = "../../../../../🔨️modules/⏳️asy
 
 [features]
 default = []
-space-guest = []
+space-guest = ["dep:semio-framework-artifact-space-space", "dep:semio-framework-artifact-space-collection"]
 os-host-full = ["space-guest", "dep:zip", "semio-framework-os-kernel/sync"]

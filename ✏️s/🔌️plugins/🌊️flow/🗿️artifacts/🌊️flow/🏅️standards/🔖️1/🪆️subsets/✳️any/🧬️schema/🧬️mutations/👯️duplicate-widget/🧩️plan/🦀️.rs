@@ -1,11 +1,11 @@
 //! 🧩️ Plan body for `duplicate-widget`: calls `create-widget` for the copy, then `connect-widgets`
 //! to wire it to its source — the exact leaf kinds it composes, over the SAME shared `Planner` so
 //! `fold_plan_diff`/`fold_plan_inverse` see one continuous local-step sequence.
-use crate::artifacts::flow::schema::mutations::connect_widgets::ConnectWidgets;
-use crate::artifacts::flow::schema::mutations::create_widget::CreateWidget;
-use crate::artifacts::flow::schema::mutations::FlowMutation;
-use crate::artifacts::flow::schema::widget_with_id;
-use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
+use crate::schema::mutations::connect_widgets::ConnectWidgets;
+use crate::schema::mutations::create_widget::CreateWidget;
+use crate::schema::mutations::FlowMutation;
+use crate::schema::widget_with_id;
+use crate::{flow_working_scene, FlowSnapshot};
 use protocol::{Identified, PlanError, Planner};
 
 use super::mutation::DuplicateWidget;
@@ -52,7 +52,7 @@ pub fn precondition(payload: &DuplicateWidget, base: &FlowSnapshot) -> Result<()
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flow::Widget;
+    use semio_framework_artifact_flow_flow::Widget;
     use protocol::{fold_plan_diff, fold_plan_inverse, Mutation, MutationDiff};
 
     fn base_with_source_widget() -> FlowSnapshot {

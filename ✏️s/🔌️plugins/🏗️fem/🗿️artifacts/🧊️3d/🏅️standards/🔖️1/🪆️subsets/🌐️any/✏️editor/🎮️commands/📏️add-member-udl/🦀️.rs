@@ -1,8 +1,8 @@
 //! 🏋️ 🏋️ FEM 3D app commands command — `add-member-udl`.
 
-use crate::artifacts::fem3d::mutations::{add_load, create_load_case};
-use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::{Fem3dSnapshot, FemLoad, FemLoadCase};
+use crate::mutations::{add_load, create_load_case};
+use crate::op::Fem3dMutation;
+use crate::{Fem3dSnapshot, FemLoad, FemLoadCase};
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -29,7 +29,7 @@ fn add_load_mutation(doc: &Fem3dSnapshot, case_id: Option<&str>, load: FemLoad) 
 /// existing case's loads for `next_id` continuity, or starts fresh for a synthesized case.
 fn next_load_id(doc: &Fem3dSnapshot, case_id: Option<&str>) -> String {
     let loads = resolve_load_case(doc, case_id).map(|lc| lc.loads).unwrap_or_default();
-    crate::app_surface::next_id(loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l")
+    crate::app_surface::next_id(loads.iter().map(|l| crate::load_id(l).to_string()), "l")
 }
 
 //#region 🔖️AddNodalLoad

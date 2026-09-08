@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle5d diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::puzzle5d::schema::Puzzle5dArtifact;
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart};
+use crate::schema::Puzzle5dArtifact;
+use crate::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart};
 use artifact_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 

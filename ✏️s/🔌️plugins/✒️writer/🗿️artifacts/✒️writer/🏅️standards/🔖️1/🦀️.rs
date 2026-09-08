@@ -6,7 +6,7 @@
 //! `mimes` below is therefore a documented synthesis (see `## openQuestions`), `extensions` is the
 //! real, carried-over value — same documented shape `📓️w4-sequence-report.md` used for `🎬️sequence`.
 
-use crate::artifacts::writer::standards::v1::subsets;
+use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 

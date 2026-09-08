@@ -6,7 +6,7 @@
 //! (a viewer has no `Config`, so the camera is always `FemCamera::default()`), no results overlay —
 //! that lives in the editor's separate results window, which this viewer does not (yet) mirror.
 
-use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera, FemElement};
+use crate::{element_id, Fem2dSnapshot, FemCamera, FemElement};
 use semio_framework_plugin::{BuiltNode, Canvas2dScene};
 
 //#region 🔖️Constants
@@ -30,7 +30,7 @@ fn screen_2d(x: f64, y: f64) -> (f64, f64) {
     (x * SCALE_2D + ORIGIN_2D, -y * SCALE_2D + ORIGIN_2D)
 }
 
-fn find_node_2d<'a>(nodes: &'a [crate::artifacts::fem2d::FemNode], id: &str) -> Option<&'a crate::artifacts::fem2d::FemNode> {
+fn find_node_2d<'a>(nodes: &'a [crate::FemNode], id: &str) -> Option<&'a crate::FemNode> {
     nodes.iter().find(|n| n.id == id)
 }
 
@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn renders_a_canvas_2d_scene_for_the_default_document() {
-        let document = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
+        let document = crate::schema::empty_fem2d_snapshot();
         let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&document).expect("fixture surface admission"))).expect("fixture projection");
         assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
     }
@@ -122,7 +122,7 @@ mod tests {
     #[test]
     fn renders_mesh_edge_preview_for_the_default_example() {
         use store::ArtifactDsl;
-        let document = Fem2dSnapshot::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).expect("parse default example");
+        let document = Fem2dSnapshot::parse_dsl(crate::dsl::FEM2D_EXAMPLE_TEXT).expect("parse default example");
         let node = render(&document).expect("fixture surface admission");
         let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
         let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");

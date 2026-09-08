@@ -233,7 +233,7 @@ mod subject {
     /// 📤️ The one place the crate is called: the committed model in, the exported epJSON out.
     fn export(ctx: &Context, case: &str) -> Result<(String, Json), String> {
         let model_json = model_text(ctx, case)?;
-        let epjson = semio_s_plugin_energy::artifacts::model::io::export::serializers::artifacts::epjson::v25_2::any::epjson_from_model_json(&model_json).map_err(|error| format!("case {case}: {error}"))?;
+        let epjson = semio_s_artifact_energy_model::io::export::serializers::artifacts::epjson::v25_2::any::epjson_from_model_json(&model_json).map_err(|error| format!("case {case}: {error}"))?;
         let document = semio_repo_test_host::parse_json(&epjson)?;
         Ok((epjson, document))
     }
@@ -256,7 +256,7 @@ mod subject {
             let model_json = model_text(ctx, case)?;
             let (epjson, _) = export(ctx, case)?;
             publish(ctx, &epjson)?;
-            let diagnostics = semio_s_plugin_energy::artifacts::model::io::export::serializers::artifacts::epjson::v25_2::any::epjson_diagnostics_json(&model_json).map_err(|error| format!("case {case}: {error}"))?;
+            let diagnostics = semio_s_artifact_energy_model::io::export::serializers::artifacts::epjson::v25_2::any::epjson_diagnostics_json(&model_json).map_err(|error| format!("case {case}: {error}"))?;
             let codes = match semio_repo_test_host::parse_json(&diagnostics)? {
                 Json::Array(items) => items.iter().map(|item| item.str("code")).collect::<Vec<_>>(),
                 _ => Vec::new(),

@@ -18,8 +18,8 @@
 //! 🎞️ `PresentationMutation` carries NO `#[serde(tag = ...)]`, so its wire shape is serde's EXTERNALLY
 //! tagged default — `{"CreateTile": { … }}`, PascalCase variant name and all.
 
-use crate::artifacts::presentation::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
-use crate::artifacts::presentation::{cache_presentation_working_scene, default_figure_tile_source, PresentationDiff, PresentationSnapshot};
+use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
+use crate::{cache_presentation_working_scene, default_figure_tile_source, PresentationDiff, PresentationSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

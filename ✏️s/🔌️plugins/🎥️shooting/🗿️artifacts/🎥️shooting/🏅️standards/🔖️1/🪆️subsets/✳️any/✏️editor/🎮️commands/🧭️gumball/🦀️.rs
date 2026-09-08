@@ -1,8 +1,8 @@
 //! 🧭️ Shooting play app commands — the transform gumball: translate/rotate/scale the selected assets.
 //! Every drag tick coalesces into one undo step via `Emit::amend`'s coalesce key.
 
-use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::op::ShootingMutation;
+use crate::ShootingSnapshot;
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -37,7 +37,7 @@ pub mod translate_selection {
         if ids.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::amend(vec![ShootingMutation::DragAssets(crate::artifacts::shooting::mutations::drag_assets::DragAssets { asset_ids: ids, dx: payload.dx, dy: payload.dy, dz: payload.dz })], "gumball-translate"))
+            Ok(Emit::amend(vec![ShootingMutation::DragAssets(crate::mutations::drag_assets::DragAssets { asset_ids: ids, dx: payload.dx, dy: payload.dy, dz: payload.dz })], "gumball-translate"))
         }
     }
 }
@@ -62,7 +62,7 @@ pub mod rotate_selection {
         if ids.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::amend(vec![ShootingMutation::RotateAssets(crate::artifacts::shooting::mutations::rotate_assets::RotateAssets { asset_ids: ids, ax: payload.ax, ay: payload.ay, az: payload.az, angle: payload.angle })], "gumball-rotate"))
+            Ok(Emit::amend(vec![ShootingMutation::RotateAssets(crate::mutations::rotate_assets::RotateAssets { asset_ids: ids, ax: payload.ax, ay: payload.ay, az: payload.az, angle: payload.angle })], "gumball-rotate"))
         }
     }
 }
@@ -86,7 +86,7 @@ pub mod scale_selection {
         if ids.is_empty() {
             Ok(Emit::default())
         } else {
-            Ok(Emit::amend(vec![ShootingMutation::ScaleAssets(crate::artifacts::shooting::mutations::scale_assets::ScaleAssets { asset_ids: ids, sx: payload.sx, sy: payload.sy, sz: payload.sz })], "gumball-scale"))
+            Ok(Emit::amend(vec![ShootingMutation::ScaleAssets(crate::mutations::scale_assets::ScaleAssets { asset_ids: ids, sx: payload.sx, sy: payload.sy, sz: payload.sz })], "gumball-scale"))
         }
     }
 }
@@ -109,7 +109,7 @@ mod tests {
         }
         app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
         let restored = app.snapshot().expect("snapshot");
-        let original = crate::artifacts::shooting::schema::default_snapshot().assets.iter().find(|asset| asset.id == asset_id).map(|asset| asset.origin).expect("original origin");
+        let original = crate::schema::default_snapshot().assets.iter().find(|asset| asset.id == asset_id).map(|asset| asset.origin).expect("original origin");
         assert_eq!(restored.assets.iter().find(|asset| asset.id == asset_id).unwrap().origin, original, "undoing the coalesced drag restores the pre-drag origin");
     }
 

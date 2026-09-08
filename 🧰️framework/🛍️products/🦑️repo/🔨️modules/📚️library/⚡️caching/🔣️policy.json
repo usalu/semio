@@ -1,5 +1,5 @@
 {
-  "$schema": "./🧬️policy.schema.json",
+  "$schema": "./🧬️schema/🔣️.json",
   "version": 1,
   "uncached": [
     "setup",

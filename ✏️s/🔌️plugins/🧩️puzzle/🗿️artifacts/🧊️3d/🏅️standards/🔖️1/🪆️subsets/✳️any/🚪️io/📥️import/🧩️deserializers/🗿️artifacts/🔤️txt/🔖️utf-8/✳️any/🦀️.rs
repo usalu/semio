@@ -4,7 +4,7 @@
 //! compiled) -- likely a copy-paste of stdio's own internal json<-txt bridge into the wrong
 //! plugin's txt target folder. Left as an honest stub producing this artifact's own real
 //! snapshot type, pending a real txt import/export implementation.
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::Puzzle3dSnapshot;
 pub fn register() {}
 pub fn deserialize(_from: &semio_s_artifact_stdio_txt::TxtSnapshot) -> Result<Puzzle3dSnapshot, String> {
     Err("txt import not yet implemented".into())

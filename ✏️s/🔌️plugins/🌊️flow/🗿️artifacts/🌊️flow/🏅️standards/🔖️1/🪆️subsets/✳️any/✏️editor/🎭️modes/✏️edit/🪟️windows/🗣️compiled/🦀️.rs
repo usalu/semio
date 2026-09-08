@@ -1,6 +1,6 @@
 //! 🗣️ Flow play app — the compiled-DAG window: the read-only wire literal of the current fixture.
 
-use crate::artifacts::flow::FlowSnapshot;
+use crate::FlowSnapshot;
 use crate::editor::flow::config::FlowConfig;
 use crate::editor::flow::host_from_snapshot;
 use flow::FlowEvalSession;

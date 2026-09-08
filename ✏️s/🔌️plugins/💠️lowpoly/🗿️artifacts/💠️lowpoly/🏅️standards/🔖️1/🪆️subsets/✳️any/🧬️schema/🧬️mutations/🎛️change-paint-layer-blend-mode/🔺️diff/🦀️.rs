@@ -2,9 +2,9 @@
 //! `target-missing` when the object or layer index is absent, Warning `no-op` when unchanged.
 
 use super::ChangePaintLayerBlendMode;
-use crate::artifacts::lowpoly::diff::diff_patch_paint_layer;
-use crate::artifacts::lowpoly::diff::schema::LowpolyPaintLayerPatch;
-use crate::artifacts::lowpoly::{LowpolyDiff, LowpolySnapshot};
+use crate::diff::diff_patch_paint_layer;
+use crate::diff::schema::LowpolyPaintLayerPatch;
+use crate::{LowpolyDiff, LowpolySnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangePaintLayerBlendMode, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

@@ -6,11 +6,11 @@
 //! the former `⚙️engine/🖌️brush` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this
 //! is the interactive brush tool's own decision logic, so it lives with the app, not the artifact.
 
-use crate::artifacts::puzzle3d::schema::{
+use crate::schema::{
     puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushKindWeights, BrushPlacePayload, BrushPreviewState, CableKindCatalog, Fixture, FixtureObject, KindCatalogBundle, KindCompatEntry, ObjectKind,
     ObjectKindVortexTemplate, Quat, Vec3, VortexKindCatalog, VortexProps,
 };
-use crate::editor::puzzle3d::precompute::geometry::{compute_brush_placement_pose, normalize_vec3, quat_rotate_vec, vec3_add};
+use crate::editor::puzzle3d::precompute::semio_framework_geometry::{compute_brush_placement_pose, normalize_vec3, quat_rotate_vec, vec3_add};
 
 const DEFAULT_CABLE_KIND_ID: &str = "cable.link";
 
@@ -581,7 +581,7 @@ pub(crate) fn brush_object_id(fixture: &impl BrushFixtureView, payload: &BrushPl
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle3d::schema::ObjectKindRepresentation;
+    use crate::schema::ObjectKindRepresentation;
 
     #[test]
     fn fill_distribution_excludes_zero_weight_vortices() {

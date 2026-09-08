@@ -1,9 +1,9 @@
 //! ↩️ `change-comfort-category` inverse — restores the pre-change `comfort_category` from BASE state; `change` is its own
 //! inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::din16798::mutations::change_comfort_category::ChangeComfortCategory;
-use crate::artifacts::din16798::mutations::Din16798Mutation;
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::mutations::change_comfort_category::ChangeComfortCategory;
+use crate::mutations::Din16798Mutation;
+use crate::Din16798Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeComfortCategory, base: &Din16798Snapshot) -> Vec<Din16798Mutation> {

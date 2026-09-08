@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/create-document.json",
+  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/create-document/schema.json",
   "title": "CreateDocument",
   "type": "object",
   "additionalProperties": false,

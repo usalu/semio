@@ -3,10 +3,16 @@ import Ajv from "ajv";
 import { strict as assert } from "node:assert";
 import stableStringify from "fast-json-stable-stringify";
 
+//#region 🧬️RetirementContracts
+const contracts = await Bun.file(new URL("../🧬️schema/🔣️.json", import.meta.url)).json();
+const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(contracts);
+/** 🧬️Resolves one named retirement contract export from the module schema. */
+const contract = (exportId: string) => ajv.getSchema(`${contracts.$id}#/$defs/${exportId}`)!;
+//#endregion 🧬️RetirementContracts
+
 //#region 🔣️DomainFixture
 const fixture = await Bun.file(new URL("./🔣️value-retirement.json", import.meta.url)).json();
-const schema = await Bun.file(new URL("./🧬️.schema.json", import.meta.url)).json();
-const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+const validate = contract("ValueRetirementV1");
 assert(validate(fixture), JSON.stringify(validate.errors));
 const bytes = (value: any): number => typeof value === "string" ? Buffer.byteLength(value) : value && typeof value === "object" ? Object.entries(value).reduce((sum, [key, child]) => sum + Buffer.byteLength(key) + bytes(child), 0) : 0;
 for (const row of fixture.cases) {
@@ -27,8 +33,7 @@ console.log("[DEBUG] Neural value-retirement source fixtures=2 hostileRejections
 
 //#region 🧠️CacheFixture
 const cacheFixture = await Bun.file(new URL("./🗃️cache-retirement/🔣️.json", import.meta.url)).json();
-const cacheSchema = await Bun.file(new URL("./🗃️cache-retirement/🧬️.schema.json", import.meta.url)).json();
-const validateCache = new Ajv({ strict: true, allErrors: true }).compile(cacheSchema);
+const validateCache = contract("CacheRetirementV1");
 assert(validateCache(cacheFixture), JSON.stringify(validateCache.errors));
 const cache = new Map<number, Record<string, string>>(); const pending: Record<string, string>[] = [];
 let finalBytes = 0;
@@ -54,8 +59,7 @@ console.log("[DEBUG] Neural cache-retirement source fixtures=1 hostileRejections
 
 //#region 📸️EvaluationOwnership
 const evaluation = await Bun.file(new URL("./🧮️evaluation-owners/🔣️.json", import.meta.url)).json();
-const evaluationSchema = await Bun.file(new URL("./🧮️evaluation-owners/🧬️.schema.json", import.meta.url)).json();
-const validateEvaluation = new Ajv({ strict: true, allErrors: true }).compile(evaluationSchema);
+const validateEvaluation = contract("EvaluationOwnersV1");
 assert(validateEvaluation(evaluation), JSON.stringify(validateEvaluation.errors));
 const node = evaluation.node.text.repeat(evaluation.node.repeat); const payload = evaluation.payload.text.repeat(evaluation.payload.repeat);
 assert.equal(Buffer.byteLength(node) + 2 * Buffer.byteLength(payload) + Buffer.byteLength("seednodelabel"), evaluation.expectedBytes);

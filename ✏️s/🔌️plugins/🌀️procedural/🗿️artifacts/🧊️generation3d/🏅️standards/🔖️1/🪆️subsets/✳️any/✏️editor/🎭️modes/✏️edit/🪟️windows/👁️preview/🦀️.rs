@@ -1,10 +1,10 @@
 //! 👁️ Generation3d play app — the 3D preview window (edit mode): the tessellated evaluated geometry.
 
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::Generation3dConfig;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_scene_status_json, preview_selection_json, preview_status_json, PreviewInteractionMarks, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
-use flow::FlowEvalSession;
+use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{world3d_scene, world3d_sun_measures, ActionDescriptor, BuiltNode, LocalizedLabel, MeasureSelectItem, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
@@ -91,7 +91,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
     crate::scene_surface(
         GENERATION_3D_PLAY_SURFACE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
-        &ui_wgpu::wgpu::World3dScene {
+        &semio_framework_ui::wgpu::World3dScene {
             status_json,
             domain_id: Some(GENERATION_3D_INTERACTION_DOMAIN.into()),
             domain_granularity_id: Some(GENERATION_3D_INTERACTION_GRANULARITY.into()),
@@ -105,7 +105,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_BOX_FILLET;
+    use crate::schema::PROCEDURAL_EXAMPLE_BOX_FILLET;
     use crate::editor::generation3d::commands::set_active_example;
     use crate::editor::generation3d::testkit::{app_with_registry, dispatch, drain_flow_eval_ticks, render as render_body};
     use crate::editor::generation3d::Generation3dCommand;

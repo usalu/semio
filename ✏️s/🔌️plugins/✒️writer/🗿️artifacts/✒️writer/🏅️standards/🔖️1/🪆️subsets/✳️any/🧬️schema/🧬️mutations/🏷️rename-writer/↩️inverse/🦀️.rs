@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `RenameWriter` — reads the BASE id, never the diff.
 use super::RenameWriter;
-use crate::artifacts::writer::schema::mutations::WriterMutation;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::schema::mutations::WriterMutation;
+use crate::WriterSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ Undo restores `base.id`; a document's identity field always has a prior value, so this

@@ -1,9 +1,9 @@
 //! 📥️ 📥️ Remodeling play app commands command — `import-video-done`.
 
-use crate::artifacts::remodeling::mutations::replace_stream_source;
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::schema::video_codec_from_label;
-use crate::artifacts::remodeling::{RemodelingSnapshot, VideoSource};
+use crate::mutations::replace_stream_source;
+use crate::op::RemodelingMutation;
+use crate::schema::video_codec_from_label;
+use crate::{RemodelingSnapshot, VideoSource};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

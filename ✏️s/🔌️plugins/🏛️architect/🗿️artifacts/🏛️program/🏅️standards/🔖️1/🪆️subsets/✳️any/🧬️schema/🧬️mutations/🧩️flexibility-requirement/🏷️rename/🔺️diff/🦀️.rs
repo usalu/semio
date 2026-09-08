@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🧩flexibility` per Wave C.
 
 use super::RenameFlexibilityRequirement;
-use crate::artifacts::program::diff::{ProgramFlexibilityDelta, ProgramFlexibilityPatchEntry};
-use crate::artifacts::program::registers::FlexibilityRequirementPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramFlexibilityDelta, ProgramFlexibilityPatchEntry};
+use crate::registers::FlexibilityRequirementPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameFlexibilityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

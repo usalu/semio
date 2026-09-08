@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff construction for `replace-position-data`.
 use super::ReplacePositionData;
-use crate::artifacts::gismap::diff::{GisMapDiff, GisMapFeaturePatchEntry, GisMapFeaturesDelta};
-use crate::artifacts::gismap::{GisMapSnapshot, MapFeaturePatch};
+use crate::diff::{GisMapDiff, GisMapFeaturePatchEntry, GisMapFeaturesDelta};
+use crate::{GisMapSnapshot, MapFeaturePatch};
 
 //#region 🔹Diff
 /// 🔺️ Builds the sparse `positions` delta directly from the payload — a single `patched` entry —

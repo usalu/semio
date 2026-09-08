@@ -656,8 +656,8 @@ pub(crate) fn escape_op_text_field(value: &str) -> String {
     out
 }
 
-/// ✂️ Inverts {@link escape_op_text_field}.
-pub(crate) fn unescape_op_text_field(value: &str) -> String {
+/// ✂️ Inverts [`escape_op_text_field`] for artifact snapshot commands.
+pub fn unescape_op_text_field(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     let mut chars = value.chars();
     while let Some(ch) = chars.next() {

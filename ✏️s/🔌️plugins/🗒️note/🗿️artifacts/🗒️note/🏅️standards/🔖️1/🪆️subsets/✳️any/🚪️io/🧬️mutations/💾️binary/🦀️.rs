@@ -4,7 +4,7 @@
 //! — is an APP concern, not an artifact one: it now lives in `✏️editor/🦀️.rs`, assembled
 //! from the `🎮️commands/*` payload modules by `semio_framework_plugin::app_commands!`.
 
-use crate::artifacts::note::standards::v1::subsets::any::io::mutations::text::NoteMutation;
+use crate::standards::v1::subsets::any::io::mutations::text::NoteMutation;
 use protocol::OpBinary;
 
 //#region 📡️SemioProtocol
@@ -27,11 +27,11 @@ pub fn decode_op(bytes: &[u8]) -> Result<NoteMutation, protocol::ProtocolError> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::note::NoteSnapshot;
+    use crate::NoteSnapshot;
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = crate::artifacts::note::schema::mutations::change_grid_spacing(Some(24.0));
+        let operation = crate::schema::mutations::change_grid_spacing(Some(24.0));
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -39,9 +39,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn note_document_text_round_trips_store_with_applied_operation() {
-        let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "doc-text-test", crate::artifacts::note::schema::empty_note_snapshot(), None);
+        let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "doc-text-test", crate::schema::empty_note_snapshot(), None);
         let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
-        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::note::schema::mutations::change_grid_spacing(Some(48.0))], description: None }).await.expect("apply");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::schema::mutations::change_grid_spacing(Some(48.0))], description: None }).await.expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
     }
@@ -55,9 +55,9 @@ mod tests {
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
-        let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "command-envelope-demo", crate::artifacts::note::schema::empty_note_snapshot(), None);
+        let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>("note.document", "command-envelope-demo", crate::schema::empty_note_snapshot(), None);
         let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
-        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::note::schema::mutations::change_grid_spacing(Some(48.0))], description: None }).await.expect("apply");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::schema::mutations::change_grid_spacing(Some(48.0))], description: None }).await.expect("apply");
         let edit: &Edit<NoteMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone())).await;
     }
@@ -78,7 +78,7 @@ mod semio_protocol_conformance {
     }
     #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_spr() {
-        let operation = crate::artifacts::note::schema::mutations::change_grid_visible(Some(false));
+        let operation = crate::schema::mutations::change_grid_visible(Some(false));
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");

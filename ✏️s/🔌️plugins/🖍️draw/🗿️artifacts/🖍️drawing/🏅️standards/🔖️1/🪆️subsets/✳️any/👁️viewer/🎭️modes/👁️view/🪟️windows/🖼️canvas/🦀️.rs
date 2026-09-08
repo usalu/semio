@@ -5,8 +5,8 @@
 //! selection, no gesture overlay, no engagement: a viewer has no utilities that edit and emits no
 //! mutations by construction (`ViewEmit`).
 
-use crate::artifacts::drawing::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard};
-use crate::artifacts::drawing::{DrawingArtboard, DrawingCamera, DrawingSnapshot, PathSegment};
+use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard};
+use crate::{DrawingArtboard, DrawingCamera, DrawingSnapshot, PathSegment};
 use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use dsl::DslValue;
 
@@ -105,7 +105,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::artifacts::drawing::schema::default_drawing_document("empty", None);
+        let document = crate::schema::default_drawing_document("empty", None);
         let _node = render(&document);
     }
 }

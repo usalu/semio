@@ -5,8 +5,8 @@
 //! see `👁️set-visibility`-sibling command `🗃️open-artifact-with` for the explicit-role "Open with…"
 //! chooser).
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};

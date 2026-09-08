@@ -13,13 +13,24 @@ silently applied.
   (`🧰️framework/🛍️products/<p>/🔨️modules/<m>`), hub area module (`🌎️hub/<area>`), mutation leaf
   (`…/🧬️schema/🧬️mutations/<leaf>`, declared authority per `mutationPayloadSchemaAuthority`).
   NOT eligible: `🧱️elements/*` (kind ui), `🎯️targets/*`, `📦️packages/*`, any `🧪️*`/`🧫️*` directory,
-  any single contract directory (`🧬️contracts/<x>`).
+  any single contract directory (`🧬️contracts/<x>`). A nested module directory that is a crate root
+  (e.g. `🖱️ui/🧬️contract/`, the `ui-contract` crate) is an eligible nested module scope; only the plural
+  per-contract `🧬️contracts/<x>` shape is forbidden. Scope ids must be derivable from the path: sibling
+  directories whose ASCII tails collide are renamed, never mapped through an override table.
 - **Scope id** = dotted id derived from the module `$id` path after `https://semio.tech/schema/`, e.g.
   `s.writer.writer`, `hub.inference`, `os.directory`, `framework.actor.return`. It is declared in the
   module's `🔣️.json` as `$id` and must equal the id the Rust `ArtifactSchemaDescriptor` registers where
   one exists. Never derive ids by stripping emoji from paths.
 - **Export id** = a PascalCase key of the module's `$defs` (JSON Schema), the same-named `message`
   (proto), `type` (GraphQL), `struct/enum` (Rust), exported `interface/type` + `parse<Export>` function (TS).
+- **`$id` grammar (settled after WP2)**: `https://semio.tech/schema/<scope path>/<facet>.json`. The scope
+  path is every segment before the filename; the filename is the facet (`schema`, `artifact`, `snapshot`,
+  `diff`, `mutations`, `inferences`, `text`, `binary`, …). Scope id = scope path with `/` → `.`. Facet
+  documents of one module (e.g. `📸️snapshot/📝️text/🔣️.json` → `…/<scope path>/snapshot/text.json`) keep the
+  root scope path and only vary the facet filename; they never create a deeper scope. A **mutation leaf is
+  its own scope**: `<leaf>/🧬️schema/🔣️.json` declares `$id …/<root scope path>/mutation/<semanticKind>/schema.json`
+  (scope id `<root>.mutation.<semanticKind>`, facet `schema`, exports `Payload`/`Wire` or the `title`).
+  The catalog generator recognizes a `🧬️mutations/<leaf>/🧬️schema/` module as a scope of its own.
 - **Format ids** = taxonomy `schemaFormats` keys (`🔣️jsonschema`, `🛰️protobuf`, `🔗️graphql`, `🦀️rust`,
   `🟦️typescript`). Normative format for `🧬️data` facets is JSON Schema.
 - **Resolution key** = `(scope id, export id, format id)`. Fixture binding URI: `schema://<scope id>/<ExportId>`
@@ -46,6 +57,9 @@ silently applied.
 - Mutation leaves: the leaf stays the authority; every leaf payload schema moves to the taxonomy default
   `<leaf>/🧬️schema/🔣️.json` and the descriptor `payloadSchema` is updated to that relative path.
   Module aggregates `🧬️mutations/🔣️.json` are pure `$ref` unions (G-B shape), never inline payloads.
+- Fixture directories are named per taxonomy: `🧫️fixtures` (`testFixturesDirName`) for data collections,
+  `🧪️tests` (`testsDirName`) for test cases. `🧪️fixtures` is not a taxonomy name; wave-2 partition owners
+  rename it and rewire readers. Dev-tool output graphs that are serialized and consumed are scope contracts.
 - Wrapper schemas that describe a fixture file (hostile lists, `maximumBytes`, state-machine "spec of one
   example") are NOT contracts: keep the example data, move the real contract into the owner module, and
   express hostile cases as fixture expectations (stage + reason), not as schema.
@@ -54,7 +68,11 @@ silently applied.
 
 - Derived catalog (generated, never hand-edited, provenance header with source hashes):
   `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json`
-  `{ scopes: { <scope id>: { path, formats: {…: file}, exports: [ExportId…], dependsOn: [scope id…], hashes } } }`.
+  `{ scopes: { <scope id>: { path, formats: {…: file}, exports: { <ExportId>: { file, facet } }, dependsOn: [scope id…], hashes } } }`
+  (settled after WP1: each export names the module-relative file that carries it, since facet children
+  such as `🔺️diff/`, `📸️snapshot/`, `💡️inferences/` hold exports of the same scope).
+- A schema document inside a `🧪️*`/`🧫️*` tree is a finding unless the enclosing case declares
+  `inertSchemaData` (parser test inputs). No blanket fixture exemption.
 - Taxonomy additions (`🔣️taxonomy.json`): `schemaScopeOwnerLevels` (eligible levels above),
   `schemaExportResolution` (`schema://` scheme, catalog path), plugin-root `🧬️schema` slot in
   `scopedFileKinds`/`fixedDirectoryContracts`, `schemaJsonDialect` single value.

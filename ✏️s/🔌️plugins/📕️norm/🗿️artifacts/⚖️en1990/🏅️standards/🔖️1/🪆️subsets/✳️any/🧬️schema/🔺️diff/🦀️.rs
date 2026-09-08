@@ -1,7 +1,7 @@
 //! 🧬️ En1990 diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::en1990::En1990QkChild;
-use schema::ArtifactSchema;
+use crate::En1990QkChild;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the En1990 artifact. `q_k` is a single-`Option` composed-child slot

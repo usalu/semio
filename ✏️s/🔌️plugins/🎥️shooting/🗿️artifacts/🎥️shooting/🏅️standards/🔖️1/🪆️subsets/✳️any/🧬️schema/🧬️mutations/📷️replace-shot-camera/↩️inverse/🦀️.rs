@@ -1,8 +1,8 @@
 //! ↩ Inverse constructor for `ReplaceShotCamera` — reconstructed from BASE state.
 
 use super::ReplaceShotCamera;
-use crate::artifacts::shooting::mutations::ShootingMutation;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 
 pub fn inverse(payload: &ReplaceShotCamera, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
     let camera_id = match base.shots.iter().find(|shot| shot.id == payload.shot_id).and_then(|shot| shot.camera_id.clone()) {

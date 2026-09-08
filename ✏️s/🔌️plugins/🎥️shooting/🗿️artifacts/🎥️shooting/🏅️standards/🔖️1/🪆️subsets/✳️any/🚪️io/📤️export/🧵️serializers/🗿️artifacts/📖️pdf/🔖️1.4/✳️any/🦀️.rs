@@ -1,5 +1,5 @@
 //! shooting -> pdf
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::ShootingSnapshot;
 use semio_s_artifact_stdio_pdf::{PdfSnapshot, STDIO_PDF_DOCUMENT_SCHEMA};
 
 pub fn register() {}

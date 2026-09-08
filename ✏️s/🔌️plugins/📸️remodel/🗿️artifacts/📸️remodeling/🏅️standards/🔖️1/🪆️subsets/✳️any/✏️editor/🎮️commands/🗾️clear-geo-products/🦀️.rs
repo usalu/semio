@@ -1,8 +1,8 @@
 //! 🧹️ 🧹️ Remodeling play app commands command — `clear-geo-products`.
 
-use crate::artifacts::remodeling::mutations::replace_geo_products;
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::mutations::replace_geo_products;
+use crate::op::RemodelingMutation;
+use crate::RemodelingSnapshot;
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::block3d::Block3dSnapshot;
+use crate::Block3dSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Block3dSnapshot` to its binary pack form.

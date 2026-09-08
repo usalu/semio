@@ -1,5 +1,5 @@
 //! gisterrain <- png
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::GisTerrainSnapshot;
 use semio_s_artifact_stdio_png::{PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA};
 
 pub fn register() {}

@@ -1,0 +1,93 @@
+{
+  "package": "semio-framework-artifact-workflow-run",
+  "libPath": "../../🦀️.rs",
+  "cases": [
+    {
+      "name": "sealed runs reject later events",
+      "operations": [
+        {
+          "operation": "startRun",
+          "workflowRef": "workflow",
+          "workflowCheckpointId": "checkpoint",
+          "inputCollectionRef": "input",
+          "inputSnapshotId": "snapshot",
+          "parameterValues": [],
+          "outputCollectionRef": "output",
+          "trigger": {
+            "kind": "manual",
+            "actor": "tester"
+          }
+        },
+        {
+          "operation": "appendRunLog",
+          "nodeId": "node",
+          "level": "info",
+          "message": "computed",
+          "at": "2026-09-08T00:00:00.000Z"
+        },
+        {
+          "operation": "sealRun",
+          "status": "succeeded"
+        },
+        {
+          "operation": "appendRunLog",
+          "nodeId": "node",
+          "level": "info",
+          "message": "rejected",
+          "at": "2026-09-08T00:00:00.000Z"
+        }
+      ],
+      "expected": {
+        "schema": "os.run",
+        "status": "succeeded",
+        "sealed": true,
+        "logs": [
+          "computed"
+        ],
+        "rejections": [
+          "mutation.apply.sealed"
+        ]
+      }
+    },
+    {
+      "name": "a run can start only once",
+      "operations": [
+        {
+          "operation": "startRun",
+          "workflowRef": "workflow",
+          "workflowCheckpointId": "checkpoint",
+          "inputCollectionRef": "input",
+          "inputSnapshotId": "snapshot",
+          "parameterValues": [],
+          "outputCollectionRef": "output",
+          "trigger": {
+            "kind": "manual",
+            "actor": "tester"
+          }
+        },
+        {
+          "operation": "startRun",
+          "workflowRef": "workflow",
+          "workflowCheckpointId": "checkpoint",
+          "inputCollectionRef": "input",
+          "inputSnapshotId": "snapshot",
+          "parameterValues": [],
+          "outputCollectionRef": "output",
+          "trigger": {
+            "kind": "manual",
+            "actor": "tester"
+          }
+        }
+      ],
+      "expected": {
+        "schema": "os.run",
+        "status": "running",
+        "sealed": false,
+        "logs": [],
+        "rejections": [
+          "mutation.apply.conflicting-target"
+        ]
+      }
+    }
+  ]
+}

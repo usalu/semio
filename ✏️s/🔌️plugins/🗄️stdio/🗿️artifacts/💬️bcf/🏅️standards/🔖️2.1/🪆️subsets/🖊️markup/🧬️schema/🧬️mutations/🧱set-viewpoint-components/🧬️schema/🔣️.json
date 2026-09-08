@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-viewpoint-components.json",
+  "$id": "https://semio.tech/schema/s/stdio/bcf/2.1/markup/mutation/set-viewpoint-components/schema.json",
   "title": "SetViewpointComponents",
   "type": "object",
   "additionalProperties": false,

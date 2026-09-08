@@ -3,8 +3,8 @@
 //! function rather than an `InferredField` dependency chain — `fixture` is small and always
 //! recomputed wholesale (widget/synapse edits are already coarse-grained mutations).
 
-use crate::artifacts::generation3d::Generation3dSnapshot;
-use flow::Widget;
+use crate::Generation3dSnapshot;
+use semio_framework_artifact_flow_semio_framework_os_flow::Widget;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{BTreeMap, VecDeque};
 
@@ -22,7 +22,7 @@ pub struct Generation3dTopology {
     pub cycle_free: bool,
 }
 
-/// 🪪️ A `flow::Widget`'s stable id, across every variant.
+/// 🪪️ A `semio_framework_artifact_flow_semio_framework_os_flow::Widget`'s stable id, across every variant.
 fn widget_id(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }

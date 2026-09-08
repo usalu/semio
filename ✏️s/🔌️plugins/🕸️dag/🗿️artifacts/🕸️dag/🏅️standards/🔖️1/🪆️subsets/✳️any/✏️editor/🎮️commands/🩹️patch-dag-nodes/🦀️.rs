@@ -1,8 +1,8 @@
 //! 🔧️ 🔧️ DAG play app commands command — `patch-dag-nodes`.
 
-use crate::artifacts::dag::mutations::{change_node_name, replace_node_kind, resize_node};
-use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::mutations::{change_node_name, replace_node_kind, resize_node};
+use crate::op::DagMutation;
+use crate::DagSnapshot;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
@@ -24,7 +24,7 @@ pub fn handle(payload: &PatchDagNodes, doc: &ArtifactView<'_, DagSnapshot>, _cfg
         .iter()
         .filter(|node| payload.node_ids.contains(&node.id))
         .flat_map(|node| {
-            let patch = crate::artifacts::dag::schema::node_patch_for_field(node, &payload.field, Some(payload.value.as_str()));
+            let patch = crate::schema::node_patch_for_field(node, &payload.field, Some(payload.value.as_str()));
             let mut ops = Vec::new();
             if let Some(patch) = patch {
                 if let Some(name) = patch.name {

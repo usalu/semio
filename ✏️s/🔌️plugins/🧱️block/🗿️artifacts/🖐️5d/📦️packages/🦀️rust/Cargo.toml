@@ -1,0 +1,39 @@
+[package]
+name = "semio-s-artifact-block-5d"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Block 5d artifact"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+default = []
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
+pack = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true, optional = true }
+semio-framework-ui-contract = { workspace = true, optional = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

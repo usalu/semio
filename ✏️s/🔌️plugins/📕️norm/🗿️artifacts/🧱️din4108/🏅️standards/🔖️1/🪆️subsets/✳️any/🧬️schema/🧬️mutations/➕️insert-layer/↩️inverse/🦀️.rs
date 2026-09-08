@@ -2,8 +2,8 @@
 //! at, which is also a valid BASE-state index for the follow-up removal.
 
 use super::InsertLayer;
-use crate::artifacts::din4108::mutations::remove_layer;
-use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
+use crate::mutations::remove_layer;
+use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &InsertLayer, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {

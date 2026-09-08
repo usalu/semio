@@ -1,7 +1,7 @@
 //! ➖️ `remove-point` — takes a point out of the geometry playground's point cloud. `index` is
 //! BASE-state, per the addressing convention for index-keyed collections.
 
-use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
+use crate::{EquationMutation, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/replace-growth-plan.json",
+  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/replace-growth-plan/schema.json",
   "title": "ReplaceGrowthPlan",
   "type": "object",
   "additionalProperties": false,

@@ -1,9 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeReferenceWidth`.
 use super::ChangeReferenceWidth;
-use crate::artifacts::cad::diff::apply_reference_patch;
-use crate::artifacts::cad::diff::CadDiff;
-use crate::artifacts::cad::mutations::CadReferencePatch;
-use crate::artifacts::cad::CadSnapshot;
+use crate::diff::apply_reference_patch;
+use crate::diff::CadDiff;
+use crate::mutations::CadReferencePatch;
+use crate::CadSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff

@@ -4,7 +4,7 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
-use crate::artifacts::gismap::{GisMapDrawingChild, GisMapSnapshot, GisMapValueChild};
+use crate::{GisMapDrawingChild, GisMapSnapshot, GisMapValueChild};
 use schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::diff::NodePath;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::{create_node, inverse_semio_drawing_mutation, SemioDrawingMutation};
@@ -44,8 +44,8 @@ pub enum GisMapProposalError {
 /// 🧩️ One bounded typed parent+drawing+value work owner prepared from an immutable Map base.
 #[derive(Debug, PartialEq)]
 pub struct GisMapCreateRegionGroupWorkV1 {
-    pub parent: crate::artifacts::gismap::mutations::GisMapMutation,
-    pub parent_inverse: Vec<crate::artifacts::gismap::mutations::GisMapMutation>,
+    pub parent: crate::mutations::GisMapMutation,
+    pub parent_inverse: Vec<crate::mutations::GisMapMutation>,
     pub drawing_child: GisMapDrawingChild,
     pub drawing: SemioDrawingMutation,
     pub drawing_inverse: Vec<SemioDrawingMutation>,
@@ -56,8 +56,8 @@ pub struct GisMapCreateRegionGroupWorkV1 {
 
 impl GisMapInference {
     /// 🌐️ Produces one typed region mutation, without applying it or granting approval authority.
-    pub fn bounds_proposal(&self, snapshot: &GisMapSnapshot, job_id: &str) -> Result<crate::artifacts::gismap::mutations::GisMapMutation, GisMapProposalError> {
-        use crate::artifacts::gismap::{
+    pub fn bounds_proposal(&self, snapshot: &GisMapSnapshot, job_id: &str) -> Result<crate::mutations::GisMapMutation, GisMapProposalError> {
+        use crate::{
             mutations::{create_region::CreateRegion, GisMapMutation},
             MapFeature,
         };
@@ -90,8 +90,8 @@ impl GisMapInference {
 
     /// 🧬️ Builds exactly one stable-member parent+drawing+value CreateRegion work group.
     pub fn create_region_group_work(&self, snapshot: &GisMapSnapshot, job_id: &str) -> Result<GisMapCreateRegionGroupWorkV1, GisMapProposalError> {
-        use crate::artifacts::gismap::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
-        use crate::artifacts::gismap::schema::{gis_map_descriptor_json, gis_map_snapshot_to_drawing};
+        use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+        use crate::schema::{gis_map_descriptor_json, gis_map_snapshot_to_drawing};
         use dsl::{FromValue, ToValue};
         use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::apply_semio_drawing_mutation;
         use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::apply_semio_value_mutation;
@@ -135,9 +135,9 @@ impl GisMapInference {
             return Err(GisMapProposalError::Composition);
         }
 
-        let before_value = crate::artifacts::gismap::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(snapshot));
-        let after_value = crate::artifacts::gismap::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&after));
-        let value_payload = crate::artifacts::gismap::semio_value_from_serde_json(&serde_json::Value::from(&created.item.data));
+        let before_value = crate::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(snapshot));
+        let after_value = crate::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&after));
+        let value_payload = crate::semio_value_from_serde_json(&serde_json::Value::from(&created.item.data));
         let value = SemioValueMutation::from_value(dsl::DslValue::object([
             ("mutation".into(), dsl::DslValue::String("insertListItem".into())),
             ("path".into(), dsl::DslValue::Array(vec![dsl::DslValue::object([("kind".into(), dsl::DslValue::String("key".into())), ("key".into(), dsl::DslValue::String("regions".into()))])])),
@@ -189,7 +189,7 @@ impl protocol::InferenceSpec<GisMapSnapshot> for GisMapInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::gismap::standards::v1::subsets::any::schema::GismapBuilder {
+impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets::any::schema::GismapBuilder {
     type Snapshot = GisMapSnapshot;
     type Inference = GisMapInference;
 }
@@ -210,7 +210,7 @@ pub fn gismap_artifact_inference_descriptor() -> schema::ArtifactInferenceDescri
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::gismap::{gis_map_snapshot_with_derived_children, MapFeature};
+    use crate::{gis_map_snapshot_with_derived_children, MapFeature};
     use protocol::Inference;
 
     //#region 🧪️InferenceLaws
@@ -227,8 +227,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn map_create_region_group_work_stabilizes_parent_drawing_value_without_image() {
-        use crate::artifacts::gismap::mutations::apply_gis_map_mutation;
-        use crate::artifacts::gismap::schema::{gis_map_descriptor_json, gis_map_snapshot_to_drawing};
+        use crate::mutations::apply_gis_map_mutation;
+        use crate::schema::{gis_map_descriptor_json, gis_map_snapshot_to_drawing};
         use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::apply_semio_drawing_mutation;
         use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::apply_semio_value_mutation;
 
@@ -258,8 +258,8 @@ mod tests {
         }
         assert_eq!(projected_drawing, before_drawing);
 
-        let before_value = crate::artifacts::gismap::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&snapshot));
-        let after_value = crate::artifacts::gismap::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&parent_after));
+        let before_value = crate::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&snapshot));
+        let after_value = crate::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(&parent_after));
         let mut projected_value = before_value.clone();
         apply_semio_value_mutation(&mut projected_value, &work.value);
         assert_eq!(projected_value, after_value);

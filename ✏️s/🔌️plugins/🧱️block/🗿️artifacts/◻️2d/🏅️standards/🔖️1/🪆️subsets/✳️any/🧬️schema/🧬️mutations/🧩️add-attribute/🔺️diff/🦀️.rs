@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `AddAttribute`.
 
-use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::diff::{Block2dAttributesDelta, Block2dDiff};
+use crate::Block2dSnapshot;
+use crate::diff::{Block2dAttributesDelta, Block2dDiff};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddAttribute, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

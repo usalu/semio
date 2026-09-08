@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `ChangeUri`.
 use super::ChangeUri;
-use crate::artifacts::writer::WriterDiff;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::WriterDiff;
+use crate::WriterSnapshot;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse `uri`-only delta, built directly from the payload — real handcrafted construction,

@@ -7,9 +7,9 @@
 //!
 //! A whole-value swap that changes the element's *variant* (bending `Beam` → axial `Bar`) while keeping its id and slot.
 
-use crate::artifacts::fem2d::mutations::Fem2dMutation;
-use crate::artifacts::fem2d::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::mutations::Fem2dMutation;
+use crate::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -34,8 +34,8 @@ fn applies_to_committed_after() {
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("replace-element applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "replace-element/converts-beam-e1-into-a-5d21f5: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.elements.len(), 1, "replace-element/converts-beam-e1-into-a-5d21f5: a replacement must not change the element count");
-    assert!(matches!(snapshot.elements[0], crate::artifacts::fem2d::FemElement::Bar { .. }), "replace-element/converts-beam-e1-into-a-5d21f5: the beam must have become a bar");
-    assert_eq!(crate::artifacts::fem2d::element_id(&snapshot.elements[0]), "e1", "replace-element/converts-beam-e1-into-a-5d21f5: the identity must survive the variant change");
+    assert!(matches!(snapshot.elements[0], crate::FemElement::Bar { .. }), "replace-element/converts-beam-e1-into-a-5d21f5: the beam must have become a bar");
+    assert_eq!(crate::element_id(&snapshot.elements[0]), "e1", "replace-element/converts-beam-e1-into-a-5d21f5: the identity must survive the variant change");
 }
 
 /// ↩️ The inverse is a `replace-element` carrying the beam recovered from `base`, restoring the bending member.
@@ -99,7 +99,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-element/converts-beam-e1-into-a-5d21f5: committed diff JSON is not canonical");
@@ -108,7 +108,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `elements.patched` entry on `before` must leave the bar in `e1`'s original slot.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-element/converts-beam-e1-into-a-5d21f5: committed diff did not carry before to after");
 }

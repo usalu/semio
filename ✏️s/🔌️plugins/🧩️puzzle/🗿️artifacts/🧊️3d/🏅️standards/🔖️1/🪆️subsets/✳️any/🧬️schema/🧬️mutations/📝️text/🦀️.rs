@@ -1,6 +1,6 @@
 //! ⚡️ Puzzle3d artifact — OpText/OpBinary codecs + grammar for `Puzzle3dMutation`.
 
-pub use crate::artifacts::puzzle3d::schema::mutations::{apply_puzzle3d_mutation, inverse_puzzle3d_mutation, puzzle3d_document_delta_operations, Puzzle3dMutation, Puzzle3dPlaySnapshot};
+pub use crate::schema::mutations::{apply_puzzle3d_mutation, inverse_puzzle3d_mutation, puzzle3d_document_delta_operations, Puzzle3dMutation, Puzzle3dPlaySnapshot};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

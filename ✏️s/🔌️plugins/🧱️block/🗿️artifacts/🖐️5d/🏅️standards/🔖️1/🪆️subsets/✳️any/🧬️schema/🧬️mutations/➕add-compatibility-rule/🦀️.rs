@@ -1,9 +1,9 @@
 //! ➕ Block5d mutation — `AddCompatibilityRule`: a grip-kind compatibility rule attachment.
 
 use crate::BlockCompatibilityRule;
-use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::diff::Block5dDiff;
-use crate::artifacts::block5d::mutations::Block5dMutation;
+use crate::Block5dSnapshot;
+use crate::diff::Block5dDiff;
+use crate::mutations::Block5dMutation;
 
 //#region 🔖️Mutation
 /// ➕ `add-compatibility-rule` payload.

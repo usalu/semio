@@ -8,7 +8,7 @@
 //! `Option<String>` (`🔖️ChildCodecPrimitives` below), letting the REST of the document (the readable
 //! `assets`/`shots`/`savedCameras` table grammar) keep its existing derive-generated codec untouched.
 
-use crate::artifacts::shooting::{ShootingAsset, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
+use crate::{ShootingAsset, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 
 //#region 🔖️Snapshot

@@ -1,0 +1,57 @@
+[package]
+name = "semio-s-artifact-lowpoly-lowpoly"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "lowpoly lowpoly artifact"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-s-artifact-stdio-dwg = { workspace = true }
+semio-s-artifact-stdio-gltf = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-las = { workspace = true }
+semio-s-artifact-stdio-obj = { workspace = true }
+semio-s-artifact-stdio-ply = { workspace = true }
+semio-s-artifact-stdio-png = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-stl = { workspace = true }
+semio-s-artifact-stdio-txt = { workspace = true }
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-3d = { path = "../../../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
+semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+serde.workspace = true
+serde_json.workspace = true
+base64_codec = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-pixels = { path = "../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+
+[features]
+# 🧪️ Optional: CAD fixture round-trip tests in `⚙️engine/🧵️media` (Wave 4 must keep CAD compilable).
+cad-fixtures = ["dep:cad_plugin"]
+
+[dependencies.cad_plugin]
+path = "../../../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust"
+package = "semio-s-plugin-cad"
+optional = true
+# 🔌️ Embeds cad as a LIBRARY, so cad's WASM component entry point must stay off: both crates call
+# `plugin_exports!`, which emits `#[no_mangle] semio_plugin_install_bundle`, and two definitions in
+# one component is a `rust-lld: duplicate symbol` link error. Only surfaces at link time — never in
+# `cargo check`/`cargo test` — so it stays invisible until something actually builds the component.
+default-features = false
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

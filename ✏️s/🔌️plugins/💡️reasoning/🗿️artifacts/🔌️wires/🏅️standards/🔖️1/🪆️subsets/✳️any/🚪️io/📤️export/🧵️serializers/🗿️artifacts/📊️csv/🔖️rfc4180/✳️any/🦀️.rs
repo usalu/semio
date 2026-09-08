@@ -3,7 +3,7 @@
 //! node/edge graph concept, so this hop stays the pre-migration honest no-op (an empty CSV
 //! document, no real tabular mapping) — `IoFidelity::Lossy`.
 
-use crate::artifacts::wires::WiresSnapshot;
+use crate::WiresSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

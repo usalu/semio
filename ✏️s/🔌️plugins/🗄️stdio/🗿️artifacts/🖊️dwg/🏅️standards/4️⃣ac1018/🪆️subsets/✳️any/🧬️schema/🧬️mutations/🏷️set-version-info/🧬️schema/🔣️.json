@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/dwg/ac1018/any/mutation/set-version-info.json",
+  "$id": "https://semio.tech/schema/s/stdio/dwg/ac1018/any/mutation/set-version-info/schema.json",
   "title": "SetVersionInfo",
   "type": "object",
   "additionalProperties": false,

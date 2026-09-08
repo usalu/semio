@@ -1,8 +1,8 @@
 //! 🔺️ `change-storage-allowance-kwh` sparse diff construction — writes only `Din16798Diff.storage_allowance_kwh` from the payload.
 
-use crate::artifacts::din16798::diff::Din16798Diff;
-use crate::artifacts::din16798::mutations::change_storage_allowance_kwh::ChangeStorageAllowanceKwh;
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::diff::Din16798Diff;
+use crate::mutations::change_storage_allowance_kwh::ChangeStorageAllowanceKwh;
+use crate::Din16798Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeStorageAllowanceKwh, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {

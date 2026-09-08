@@ -63,7 +63,7 @@ mod tests {
     #[test]
     fn direct_descriptor_and_catalog_bijection() {
         let kinds: Vec<_> = <PdfMutation as protocol::SemanticMutation<PdfSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
-        let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations");
+        let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations");
         let catalog: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(source.join("../../🔣️oracle.json")).unwrap()).unwrap();
         assert_eq!(catalog["mutationCatalogs"][0]["kinds"], serde_json::json!(kinds));
         {

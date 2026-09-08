@@ -21,8 +21,8 @@
 //! supplies the document lane's one-item retained preparation; the six session verbs publish nothing
 //! to a store and declare `HostOnly`.
 
-use crate::artifacts::model::mutations;
-use crate::artifacts::model::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
+use crate::mutations;
+use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use crate::editor::model::modes::edit;
 use crate::editor::model::modes::edit::windows::{simulation, structure, zones};
 use crate::energy_simulation_session::{self as simulation_session, EnergySimulationConfigProjection, EnergySimulationEventKind, EnergySimulationRequestIdentity};
@@ -556,7 +556,7 @@ fn diff_thermostats(kind: &'static str, base: &crate::model::Model, model: &crat
 /// in `📐️cad`'s `reset_document_effect` and `🔱️trinity`'s. A freshly minted envelope has no edits,
 /// so its spr encode is infallible.
 fn load_document_effect(model: &crate::model::Model) -> semio_framework_plugin::kernel::Effect {
-    let snapshot = crate::artifacts::model::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None);
+    let snapshot = crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None);
     let pack = <EnergyModelSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
     let envelope = store::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None);
     let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
@@ -609,7 +609,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
         simulation_session::record_event(render, event).map_err(Fault::from)?;
         return Ok(Emit { description: Some(command.action_id().into()), ..Default::default() });
     }
-    let mut model = crate::artifacts::model::energy_model(doc.snapshot);
+    let mut model = crate::energy_model(doc.snapshot);
     let (kind, description) = match command {
         EnergyModelEditorCommand::SetStructureField { field, value } => {
             match field.as_str() {
@@ -761,7 +761,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
         }
         _ => unreachable!("session events returned before document mutation dispatch"),
     };
-    model_edit(kind, &crate::artifacts::model::energy_model(doc.snapshot), &model, description)
+    model_edit(kind, &crate::energy_model(doc.snapshot), &model, description)
 }
 
 /// 🗓️ A thermostat setpoint reference must resolve inside the model's own `ScheduleSet` — the five
@@ -987,13 +987,14 @@ struct EnergyModelStorePreparation {
 
 /// 🧾️ One retained document edit, authored exactly as the store's live authority describes it.
 fn energy_model_retained_edit<M>(id: String, authority: &store::ArtifactStoreOneItemLiveAuthority, forwards: Vec<M>, inverse: Vec<M>, description: Option<String>) -> protocol::Edit<M> {
+    let mutation_id = protocol::MutationId(format!("{id}#0"));
     protocol::Edit {
-        id: id.clone(),
+        id,
         actor: Some(authority.actor().to_string()),
         forwards,
         inverse,
         mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            mutation_id: Some(mutation_id),
             dependencies: Vec::new(),
             base_version: authority.base_applied_edit_count() as u64,
             author_id: Some(protocol::ActorId(authority.actor().to_string())),
@@ -1309,7 +1310,7 @@ pub fn examples() -> Vec<ExampleSource> {
     example_rows()
         .into_iter()
         .map(|(id, label, model)| {
-            let snapshot = crate::artifacts::model::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None);
+            let snapshot = crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None);
             ExampleSource::new(id, LocalizedLabel::native(label, label), pack::json::to_json_string(&snapshot), "file")
         })
         .collect()
@@ -1509,7 +1510,7 @@ mod tests {
     }
 
     fn snapshot_of(model: &crate::model::Model) -> EnergyModelSnapshot {
-        crate::artifacts::model::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None)
+        crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None)
     }
 
     fn applied(snapshot: &EnergyModelSnapshot, command: &EnergyModelEditorCommand) -> crate::model::Model {

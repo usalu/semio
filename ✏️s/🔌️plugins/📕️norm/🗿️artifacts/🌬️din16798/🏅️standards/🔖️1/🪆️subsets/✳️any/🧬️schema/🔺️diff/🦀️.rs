@@ -1,6 +1,6 @@
 //! 🧬️ Din16798 diff schema — sparse field delta over the artifact.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the Din16798 artifact.
@@ -11,7 +11,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.din16798")]
 pub struct Din16798Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::din16798::schema::Din16798Artifact>>,
+    pub artifact: Option<Box<crate::document_schema::Din16798Artifact>>,
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]

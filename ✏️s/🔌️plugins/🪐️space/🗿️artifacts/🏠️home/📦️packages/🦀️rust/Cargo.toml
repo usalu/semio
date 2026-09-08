@@ -1,0 +1,41 @@
+[package]
+name = "semio-s-artifact-space-home"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Space home artifact"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+default = []
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os-infinite", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-txt = { workspace = true }
+semio-s-artifact-stdio-xlsx = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
+pack = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true, optional = true }
+semio-framework-os-infinite = { workspace = true, optional = true }
+semio-framework-ui-contract = { workspace = true, optional = true }
+semio-framework-ui-scene = { workspace = true, optional = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

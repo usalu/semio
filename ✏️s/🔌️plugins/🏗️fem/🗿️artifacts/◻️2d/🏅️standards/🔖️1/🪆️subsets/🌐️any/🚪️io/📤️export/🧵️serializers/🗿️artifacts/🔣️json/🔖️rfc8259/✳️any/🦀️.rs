@@ -6,7 +6,7 @@
 //! never a re-derived encoder; `dsl::json::from_dsl_value` keeps integers integral across the bridge
 //! instead of widening them to `f64`.
 
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::Fem2dSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

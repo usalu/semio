@@ -1,6 +1,6 @@
 //! 🔍️ Imperative play app panel — inspection: read-only summary of the document.
 
-use crate::artifacts::procedure::ProcedureSnapshot;
+use crate::ProcedureSnapshot;
 use crate::editor::procedure::terminology::ImperativeLabels;
 use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
@@ -29,7 +29,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `🖍️draw`'s `📌️panels/🔍️properties/🦀️.rs`: falls through to a step-count summary until a
 /// resolved-selection render path exists.
 pub fn render(document: &ProcedureSnapshot, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let path = crate::artifacts::procedure::procedure_working_scene(document).path;
+    let path = crate::procedure_working_scene(document).path;
     let field = tree_item_desc("imperative-play-inspector.steps", labels.inspector_steps.as_str(), Some(path.steps.len().to_string()))?;
     let mut fields = semio_framework_plugin::UiFixedList::default();
     fields

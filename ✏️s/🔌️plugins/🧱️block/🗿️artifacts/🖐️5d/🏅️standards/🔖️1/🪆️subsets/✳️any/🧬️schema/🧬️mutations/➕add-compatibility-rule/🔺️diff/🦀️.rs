@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `AddCompatibilityRule`.
 
-use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::diff::{Block5dCompatibilityDelta, Block5dDiff};
+use crate::Block5dSnapshot;
+use crate::diff::{Block5dCompatibilityDelta, Block5dDiff};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddCompatibilityRule, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {

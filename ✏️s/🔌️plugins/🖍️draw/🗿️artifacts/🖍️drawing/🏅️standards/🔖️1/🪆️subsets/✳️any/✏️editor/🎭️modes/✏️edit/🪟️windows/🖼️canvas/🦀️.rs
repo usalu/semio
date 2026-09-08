@@ -1,7 +1,7 @@
 //! 🖼️ Drawing play app — the canvas window's render() (constitutional: was `ui`'s `Render` region).
 
-use crate::artifacts::drawing::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard};
-use crate::artifacts::drawing::{DrawingArtboard, DrawingSnapshot, PathSegment};
+use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard};
+use crate::{DrawingArtboard, DrawingSnapshot, PathSegment};
 use crate::editor::drawing::commands::canvas_pointer_down::{draft_preview_segments, shape_preview_segments, DrawingGesturePreview, DrawingGesturePreviewPhase};
 use crate::editor::drawing::config::DrawingConfig;
 use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, UiAssemblyResult};

@@ -12,8 +12,8 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::gismap::schema::mutations::text::GisMapMutation;
-use crate::artifacts::gismap::{GisMapSnapshot, MapFeature};
+use crate::schema::mutations::text::GisMapMutation;
+use crate::{GisMapSnapshot, MapFeature};
 use protocol::{Mutation, MutationDiff, OpBinary};
 
 //#region 🔖️Codec
@@ -881,7 +881,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
                     self.fail(b"gis-map-store.initializer-envelope-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
-                if envelope.schema != crate::artifacts::gismap::GIS_MAP_SCHEMA || envelope.id.is_empty() || envelope.id.len() > GIS_MAP_OWNED_FIELD_BYTES {
+                if envelope.schema != crate::GIS_MAP_SCHEMA || envelope.id.is_empty() || envelope.id.len() > GIS_MAP_OWNED_FIELD_BYTES {
                     self.fail(b"gis-map-store.initializer-envelope-invalid");
                 } else {
                     self.phase = GisMapStoreInitializationPhase::ValidateEditPair { left: 0, right: 1 };
@@ -1135,8 +1135,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
             GisMapStoreInitializationPhase::RetireCancelled | GisMapStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    self.initial_digest = None;
-                    self.edit_digest = None;
+                    *self.initial_digest = None;
+                    *self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == GisMapStoreInitializationPhase::RetireCancelled {
                         self.phase = GisMapStoreInitializationPhase::Cancelled;
@@ -1189,8 +1189,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
         match self.pump_terminal_retirement() {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                self.initial_digest = None;
-                self.edit_digest = None;
+                *self.initial_digest = None;
+                *self.edit_digest = None;
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }
@@ -1203,8 +1203,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
             return None;
         }
         let candidate = self.candidate.take()?;
-        self.initial_digest = None;
-        self.edit_digest = None;
+        *self.initial_digest = None;
+        *self.edit_digest = None;
         self.terminal_handoff = true;
         Some(candidate)
     }
@@ -1233,11 +1233,11 @@ pub fn gis_map_document_store_initialization_job(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gismap::mutations::{
+    use crate::mutations::{
         create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data,
     };
-    use crate::artifacts::gismap::schema::{default_document, empty_gis_map_snapshot};
-    use crate::artifacts::gismap::GIS_MAP_SCHEMA;
+    use crate::schema::{default_document, empty_gis_map_snapshot};
+    use crate::GIS_MAP_SCHEMA;
     use serde_json::json;
 
     fn dsl_of(value: &serde_json::Value) -> dsl::DslValue {

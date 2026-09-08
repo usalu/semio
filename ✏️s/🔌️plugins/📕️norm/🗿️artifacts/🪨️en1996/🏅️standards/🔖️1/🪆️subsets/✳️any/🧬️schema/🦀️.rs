@@ -1,9 +1,9 @@
 //! 🧱️ EN 1996 artifact schema — every field with its state class.
 
-use crate::artifacts::en1996::En1996Snapshot;
-use crate::artifacts::en1996::MasonryClass;
+use crate::En1996Snapshot;
+use crate::MasonryClass;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, Quantity};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full EN 1996 artifact state (persisted document + shared UI).
@@ -46,9 +46,9 @@ pub struct En1996Artifact {
     #[state(artifact)]
     pub unit: String,
     #[state(artifact)]
-    pub exposure: crate::artifacts::en1996::part_2::ExposureClass,
+    pub exposure: crate::part_2::ExposureClass,
     #[state(artifact)]
-    pub mortar: crate::artifacts::en1996::part_2::MortarClass,
+    pub mortar: crate::part_2::MortarClass,
     #[state(artifact)]
     pub bed_joint_thickness_mm: f64,
     #[state(artifact)]
@@ -159,31 +159,31 @@ impl En1996Artifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub fn en1996_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn en1996_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1996",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -195,7 +195,7 @@ pub fn en1996_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::en1996::{En1996Diff, En1996Mutation, En1996Snapshot};
+    use crate::{En1996Diff, En1996Mutation, En1996Snapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -247,7 +247,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::en1996::En1996Snapshot;
+    use crate::En1996Snapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -312,13 +312,13 @@ semio_framework_plugin::derive_artifact_facets!(
 /// relocated verbatim from the deleted `⚙️engine`. `na_de`, `MasonryUnit`, `AnnexParams`,
 /// `part_1_1`/`part_1_2`/`part_3` and `check_masonry_wall` are pure function libraries; the
 /// snapshot-level composition (`evaluate`, `check_full_masonry`, `annex_params`) lives in
-/// `💡️inferences`. `na_de` re-exports `crate::artifacts::en1990`'s relocated `NaDe`.
+/// `💡️inferences`. `na_de` re-exports `semio_s_artifact_norm_en1990`'s relocated `NaDe`.
 pub mod na_de {
-    pub use crate::artifacts::en1990::standards::v1::subsets::any::schema::na_de::NaDe;
+    pub use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::na_de::NaDe;
 
     /// 🇩️🇪️ Partial factor γ_M per DIN EN 1996-1-1/NA (flat, independent of masonry class).
     pub fn gamma_m() -> f64 {
-        super::AnnexParams { annex: crate::document::AnnexChoice::De, masonry_class: crate::artifacts::en1996::MasonryClass::default(), accidental: false }.gamma_m()
+        super::AnnexParams { annex: crate::document::AnnexChoice::De, masonry_class: crate::MasonryClass::default(), accidental: false }.gamma_m()
     }
 }
 
@@ -443,10 +443,10 @@ pub mod part_1_2 {
 // #endregion 🔖️Part1_2
 
 // #region 🔖️Part2
-/// 🧱️ EN 1996-2 selection of materials & execution: exposure-class durability admissibility and bed-joint execution checks. `ExposureClass`/`MortarClass` live in `crate::artifacts::en1996::part_2` (En1996Snapshot field types); this submodule holds only the compute functions.
+/// 🧱️ EN 1996-2 selection of materials & execution: exposure-class durability admissibility and bed-joint execution checks. `ExposureClass`/`MortarClass` live in `crate::part_2` (En1996Snapshot field types); this submodule holds only the compute functions.
 pub mod part_2 {
     use super::*;
-    use crate::artifacts::en1996::part_2::{ExposureClass, MortarClass};
+    use crate::part_2::{ExposureClass, MortarClass};
 
     /// 📊️ Minimum admissible mortar strength [MPa] for a (unit, exposure) pair; ∞ marks an inadmissible combination.
     fn required_mortar_strength_mpa(exposure: ExposureClass, unit: MasonryUnit) -> f64 {
@@ -575,13 +575,13 @@ mod compliance_helpers_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn exposure_mortar_mx1_clay_m1_admissible() {
-        let result = part_2::check_exposure_mortar(crate::artifacts::en1996::part_2::ExposureClass::Mx1, MasonryUnit::Clay, crate::artifacts::en1996::part_2::MortarClass::M1);
+        let result = part_2::check_exposure_mortar(crate::part_2::ExposureClass::Mx1, MasonryUnit::Clay, crate::part_2::MortarClass::M1);
         assert_eq!(result.status, CheckStatus::Pass);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn exposure_mortar_mx4_aac_inadmissible() {
-        let result = part_2::check_exposure_mortar(crate::artifacts::en1996::part_2::ExposureClass::Mx4, MasonryUnit::Aac, crate::artifacts::en1996::part_2::MortarClass::M20);
+        let result = part_2::check_exposure_mortar(crate::part_2::ExposureClass::Mx4, MasonryUnit::Aac, crate::part_2::MortarClass::M20);
         assert_eq!(result.status, CheckStatus::Fail);
     }
 

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RemoveObjectVortex` — patches the owner object's `vortices` list
 //! and severs any attraction referencing the removed vortex (full id `object_id:vortex_id`).
-use crate::artifacts::puzzle3d::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta};
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta};
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::RemoveObjectVortex, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

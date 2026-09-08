@@ -1,7 +1,7 @@
 //! 🧵️ Note-owned retained command microstate and exact publication contracts.
 
-use crate::artifacts::note::schema::NoteIdOwner;
-use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
+use crate::schema::NoteIdOwner;
+use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use crate::editor::note::commands::{ink_apply_events, patch_blocks};
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use crate::editor::note::{NoteCommand, NoteDispatchCtx, NotePlayApp, NOTE_INTERACTION_BLOCKS};
@@ -135,7 +135,7 @@ fn selected_block_ids(interaction: &protocol::InteractionState) -> Vec<String> {
         .get(NOTE_INTERACTION_BLOCKS)
         .into_iter()
         .flat_map(|selection| selection.ids.iter())
-        .filter_map(|id| crate::artifacts::note::schema::block_id_from_tree_row_id(id))
+        .filter_map(|id| crate::schema::block_id_from_tree_row_id(id))
         .collect()
 }
 
@@ -209,7 +209,7 @@ struct NoteCommandWork {
     cursor: usize,
     replay_target: Option<usize>,
     projection: Option<NoteSnapshot>,
-    accumulated: Emit<crate::artifacts::note::op::NoteMutation, NoteConfigMutation>,
+    accumulated: Emit<crate::op::NoteMutation, NoteConfigMutation>,
     id_owner: Option<NoteIdOwner>,
     workspace_identity: u64,
     complete: bool,
@@ -238,7 +238,7 @@ impl NoteCommandWork {
         })
     }
 
-    fn append(&mut self, mut emit: Emit<crate::artifacts::note::op::NoteMutation, NoteConfigMutation>) -> Result<(), Fault> {
+    fn append(&mut self, mut emit: Emit<crate::op::NoteMutation, NoteConfigMutation>) -> Result<(), Fault> {
         if self.accumulated.description.is_some() && emit.description.is_some() && self.accumulated.description != emit.description {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.description"), "Note semantic units produced incompatible edit descriptions"));
         }
@@ -309,7 +309,7 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         if self.cursor + 1 < self.units.len() {
             for mutation in &emit.artifact_mutations {
                 let current = self.projection.as_ref().unwrap_or(snapshot);
-                self.projection = Some(crate::artifacts::note::schema::mutations::apply_note_mutation(current, mutation).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("note.retained.projection"), error.to_string()))?);
+                self.projection = Some(crate::schema::mutations::apply_note_mutation(current, mutation).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("note.retained.projection"), error.to_string()))?);
             }
         }
         self.append(emit)?;
@@ -550,7 +550,7 @@ struct NoteTextChildMaterializationCursor {
 }
 
 impl NoteTextChildMaterializationCursor {
-    fn new(source: &crate::artifacts::note::NoteTextChild) -> Self {
+    fn new(source: &crate::NoteTextChild) -> Self {
         Self {
             phase: NoteTextChildMaterializationPhase::ChildId,
             string: NoteStringMaterializationCursor::default(),
@@ -565,7 +565,7 @@ impl NoteTextChildMaterializationCursor {
         }
     }
 
-    fn step(&mut self, source: &crate::artifacts::note::NoteTextChild) -> Result<Option<store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>>, String> {
+    fn step(&mut self, source: &crate::NoteTextChild) -> Result<Option<store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>>, String> {
         if self.closing {
             return Err("Note text-child materialization was stepped after cancellation".into());
         }
@@ -669,7 +669,7 @@ struct NoteTextContentMaterializationCursor {
     phase: NoteTextContentMaterializationPhase,
     handle: NoteTextChildMaterializationCursor,
     materialized_handle: Option<store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>>,
-    paragraphs: Vec<crate::artifacts::note::NoteTextParagraph>,
+    paragraphs: Vec<crate::NoteTextParagraph>,
     paragraph_cursor: usize,
     run_cursor: usize,
     text: NoteStringMaterializationCursor,
@@ -681,7 +681,7 @@ struct NoteTextContentMaterializationCursor {
 }
 
 impl NoteTextContentMaterializationCursor {
-    fn new(source: &crate::artifacts::note::NoteTextChild) -> Self {
+    fn new(source: &crate::NoteTextChild) -> Self {
         Self {
             phase: NoteTextContentMaterializationPhase::Handle,
             handle: NoteTextChildMaterializationCursor::new(source),
@@ -698,7 +698,7 @@ impl NoteTextContentMaterializationCursor {
         }
     }
 
-    fn step(&mut self, source: &crate::artifacts::note::NoteTextChild) -> Result<Option<crate::artifacts::note::NoteTextChild>, String> {
+    fn step(&mut self, source: &crate::NoteTextChild) -> Result<Option<crate::NoteTextChild>, String> {
         if self.closing {
             return Err("Note text-content materialization was stepped after cancellation".into());
         }
@@ -713,7 +713,7 @@ impl NoteTextContentMaterializationCursor {
                 if self.paragraph_cursor == source.paragraphs.len() {
                     self.phase = NoteTextContentMaterializationPhase::Complete;
                 } else {
-                    self.paragraphs.push(crate::artifacts::note::NoteTextParagraph { runs: Vec::new() });
+                    self.paragraphs.push(crate::NoteTextParagraph { runs: Vec::new() });
                     self.run_cursor = 0;
                     self.phase = if source.paragraphs[self.paragraph_cursor].runs.is_empty() {
                         self.paragraph_cursor += 1;
@@ -739,7 +739,7 @@ impl NoteTextContentMaterializationCursor {
             }
             NoteTextContentMaterializationPhase::RunComplete => {
                 let run = &source.paragraphs[self.paragraph_cursor].runs[self.run_cursor];
-                self.paragraphs.last_mut().ok_or_else(|| "Note text-content paragraph owner is absent".to_string())?.runs.push(crate::artifacts::note::NoteTextRun {
+                self.paragraphs.last_mut().ok_or_else(|| "Note text-content paragraph owner is absent".to_string())?.runs.push(crate::NoteTextRun {
                     text: self.active_text.take().ok_or_else(|| "Note text-content run owner is absent".to_string())?,
                     bold: run.bold,
                     italic: run.italic,
@@ -755,7 +755,7 @@ impl NoteTextContentMaterializationCursor {
                 }
             }
             NoteTextContentMaterializationPhase::Complete => {
-                return Ok(Some(crate::artifacts::note::NoteTextChild {
+                return Ok(Some(crate::NoteTextChild {
                     handle: self.materialized_handle.take().ok_or_else(|| "Note text-content handle owner is absent".to_string())?,
                     paragraphs: std::mem::take(&mut self.paragraphs),
                 }));
@@ -842,17 +842,17 @@ impl NoteTextContentMaterializationCursor {
 #[derive(Default)]
 struct NoteOwnedRetirement {
     strings: Vec<NoteStringMaterializationCursor>,
-    blocks: Vec<crate::artifacts::note::NoteBlockNode>,
-    block_lists: Vec<Vec<crate::artifacts::note::NoteBlockNode>>,
-    text_children: Vec<crate::artifacts::note::NoteTextChild>,
-    paragraph_lists: Vec<Vec<crate::artifacts::note::NoteTextParagraph>>,
-    run_lists: Vec<Vec<crate::artifacts::note::NoteTextRun>>,
+    blocks: Vec<crate::NoteBlockNode>,
+    block_lists: Vec<Vec<crate::NoteBlockNode>>,
+    text_children: Vec<crate::NoteTextChild>,
+    paragraph_lists: Vec<Vec<crate::NoteTextParagraph>>,
+    run_lists: Vec<Vec<crate::NoteTextRun>>,
     string_lists: Vec<Vec<String>>,
-    table_row_lists: Vec<Vec<Vec<crate::artifacts::note::NoteTableCell>>>,
-    table_cell_lists: Vec<Vec<crate::artifacts::note::NoteTableCell>>,
+    table_row_lists: Vec<Vec<Vec<crate::NoteTableCell>>>,
+    table_cell_lists: Vec<Vec<crate::NoteTableCell>>,
     point_lists: Vec<Vec<[f64; 2]>>,
-    assets: Vec<crate::artifacts::note::NoteImageAsset>,
-    asset_maps: Vec<std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>>,
+    assets: Vec<crate::NoteImageAsset>,
+    asset_maps: Vec<std::collections::BTreeMap<String, crate::NoteImageAsset>>,
     links: Vec<store::ArtifactLink>,
     text_owners: Vec<std::sync::Arc<semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot>>,
 }
@@ -868,11 +868,11 @@ impl NoteOwnedRetirement {
         }
     }
 
-    fn push_text_child(&mut self, child: crate::artifacts::note::NoteTextChild) {
+    fn push_text_child(&mut self, child: crate::NoteTextChild) {
         self.text_children.push(child);
     }
 
-    fn push_asset(&mut self, asset: crate::artifacts::note::NoteImageAsset) {
+    fn push_asset(&mut self, asset: crate::NoteImageAsset) {
         self.assets.push(asset);
     }
 
@@ -891,37 +891,37 @@ impl NoteOwnedRetirement {
         }
     }
 
-    fn enqueue_block(&mut self, block: crate::artifacts::note::NoteBlockNode) {
+    fn enqueue_block(&mut self, block: crate::NoteBlockNode) {
         match block {
-            crate::artifacts::note::NoteBlockNode::Text { id, name, content, font_weight, align, .. } => {
+            crate::NoteBlockNode::Text { id, name, content, font_weight, align, .. } => {
                 self.push_string(id);
                 self.push_string(name);
                 self.push_text_child(content);
                 self.push_string(font_weight);
                 self.push_string(align);
             }
-            crate::artifacts::note::NoteBlockNode::Image { id, name, image_key, .. } => {
+            crate::NoteBlockNode::Image { id, name, image_key, .. } => {
                 self.push_string(id);
                 self.push_string(name);
                 self.push_string(image_key);
             }
-            crate::artifacts::note::NoteBlockNode::Table { id, name, columns, rows, .. } => {
+            crate::NoteBlockNode::Table { id, name, columns, rows, .. } => {
                 self.push_string(id);
                 self.push_string(name);
                 self.string_lists.push(columns);
                 self.table_row_lists.push(rows);
             }
-            crate::artifacts::note::NoteBlockNode::Math { id, name, tex, .. } => {
+            crate::NoteBlockNode::Math { id, name, tex, .. } => {
                 self.push_string(id);
                 self.push_string(name);
                 self.push_string(tex);
             }
-            crate::artifacts::note::NoteBlockNode::Ink { id, name, points, .. } => {
+            crate::NoteBlockNode::Ink { id, name, points, .. } => {
                 self.push_string(id);
                 self.push_string(name);
                 self.point_lists.push(points);
             }
-            crate::artifacts::note::NoteBlockNode::Group { id, name, children, .. } => {
+            crate::NoteBlockNode::Group { id, name, children, .. } => {
                 self.push_string(id);
                 self.push_string(name);
                 self.block_lists.push(children);
@@ -929,7 +929,7 @@ impl NoteOwnedRetirement {
         }
     }
 
-    fn enqueue_text_child(&mut self, mut child: crate::artifacts::note::NoteTextChild) {
+    fn enqueue_text_child(&mut self, mut child: crate::NoteTextChild) {
         self.push_string(std::mem::take(&mut child.handle.child_id));
         self.push_string(std::mem::take(&mut child.handle.target.artifact_id));
         self.push_string(std::mem::take(&mut child.handle.target.dialect.artifact_kind));
@@ -1086,7 +1086,7 @@ enum NoteBlockPayloadMaterialization {
     Text {
         phase: u8,
         content: NoteTextContentMaterializationCursor,
-        materialized_content: Option<crate::artifacts::note::NoteTextChild>,
+        materialized_content: Option<crate::NoteTextChild>,
         font_weight: NoteStringMaterializationCursor,
         materialized_font_weight: Option<String>,
         align: NoteStringMaterializationCursor,
@@ -1103,7 +1103,7 @@ enum NoteBlockPayloadMaterialization {
         cell_cursor: usize,
         string: NoteStringMaterializationCursor,
         columns: Vec<String>,
-        rows: Vec<Vec<crate::artifacts::note::NoteTableCell>>,
+        rows: Vec<Vec<crate::NoteTableCell>>,
     },
     Math {
         tex: NoteStringMaterializationCursor,
@@ -1116,7 +1116,7 @@ enum NoteBlockPayloadMaterialization {
     Group {
         child_cursor: usize,
         active: Option<Box<NoteBlockMaterializationCursor>>,
-        children: Vec<crate::artifacts::note::NoteBlockNode>,
+        children: Vec<crate::NoteBlockNode>,
     },
 }
 
@@ -1130,23 +1130,23 @@ struct NoteBlockMaterializationCursor {
     closing: bool,
 }
 
-fn note_block_common(source: &crate::artifacts::note::NoteBlockNode) -> (&str, &str, f64, f64, f64, f64, f64, bool, bool) {
+fn note_block_common(source: &crate::NoteBlockNode) -> (&str, &str, f64, f64, f64, f64, f64, bool, bool) {
     match source {
-        crate::artifacts::note::NoteBlockNode::Text { id, name, x, y, width, height, rotation, visible, locked, .. }
-        | crate::artifacts::note::NoteBlockNode::Image { id, name, x, y, width, height, rotation, visible, locked, .. }
-        | crate::artifacts::note::NoteBlockNode::Table { id, name, x, y, width, height, rotation, visible, locked, .. }
-        | crate::artifacts::note::NoteBlockNode::Math { id, name, x, y, width, height, rotation, visible, locked, .. }
-        | crate::artifacts::note::NoteBlockNode::Ink { id, name, x, y, width, height, rotation, visible, locked, .. }
-        | crate::artifacts::note::NoteBlockNode::Group { id, name, x, y, width, height, rotation, visible, locked, .. } => {
+        crate::NoteBlockNode::Text { id, name, x, y, width, height, rotation, visible, locked, .. }
+        | crate::NoteBlockNode::Image { id, name, x, y, width, height, rotation, visible, locked, .. }
+        | crate::NoteBlockNode::Table { id, name, x, y, width, height, rotation, visible, locked, .. }
+        | crate::NoteBlockNode::Math { id, name, x, y, width, height, rotation, visible, locked, .. }
+        | crate::NoteBlockNode::Ink { id, name, x, y, width, height, rotation, visible, locked, .. }
+        | crate::NoteBlockNode::Group { id, name, x, y, width, height, rotation, visible, locked, .. } => {
             (id, name, *x, *y, *width, *height, *rotation, *visible, *locked)
         }
     }
 }
 
 impl NoteBlockMaterializationCursor {
-    fn new(source: &crate::artifacts::note::NoteBlockNode) -> Self {
+    fn new(source: &crate::NoteBlockNode) -> Self {
         let payload = match source {
-            crate::artifacts::note::NoteBlockNode::Text { content, .. } => NoteBlockPayloadMaterialization::Text {
+            crate::NoteBlockNode::Text { content, .. } => NoteBlockPayloadMaterialization::Text {
                 phase: 0,
                 content: NoteTextContentMaterializationCursor::new(content),
                 materialized_content: None,
@@ -1155,11 +1155,11 @@ impl NoteBlockMaterializationCursor {
                 align: NoteStringMaterializationCursor::default(),
                 materialized_align: None,
             },
-            crate::artifacts::note::NoteBlockNode::Image { .. } => NoteBlockPayloadMaterialization::Image {
+            crate::NoteBlockNode::Image { .. } => NoteBlockPayloadMaterialization::Image {
                 image_key: NoteStringMaterializationCursor::default(),
                 materialized_image_key: None,
             },
-            crate::artifacts::note::NoteBlockNode::Table { .. } => NoteBlockPayloadMaterialization::Table {
+            crate::NoteBlockNode::Table { .. } => NoteBlockPayloadMaterialization::Table {
                 phase: 0,
                 column_cursor: 0,
                 cell_row_cursor: 0,
@@ -1168,12 +1168,12 @@ impl NoteBlockMaterializationCursor {
                 columns: Vec::new(),
                 rows: Vec::new(),
             },
-            crate::artifacts::note::NoteBlockNode::Math { .. } => NoteBlockPayloadMaterialization::Math {
+            crate::NoteBlockNode::Math { .. } => NoteBlockPayloadMaterialization::Math {
                 tex: NoteStringMaterializationCursor::default(),
                 materialized_tex: None,
             },
-            crate::artifacts::note::NoteBlockNode::Ink { .. } => NoteBlockPayloadMaterialization::Ink { point_cursor: 0, points: Vec::new() },
-            crate::artifacts::note::NoteBlockNode::Group { .. } => NoteBlockPayloadMaterialization::Group { child_cursor: 0, active: None, children: Vec::new() },
+            crate::NoteBlockNode::Ink { .. } => NoteBlockPayloadMaterialization::Ink { point_cursor: 0, points: Vec::new() },
+            crate::NoteBlockNode::Group { .. } => NoteBlockPayloadMaterialization::Group { child_cursor: 0, active: None, children: Vec::new() },
         };
         Self {
             phase: NoteBlockMaterializationPhase::Id,
@@ -1186,7 +1186,7 @@ impl NoteBlockMaterializationCursor {
         }
     }
 
-    fn step(&mut self, source: &crate::artifacts::note::NoteBlockNode) -> Result<Option<crate::artifacts::note::NoteBlockNode>, String> {
+    fn step(&mut self, source: &crate::NoteBlockNode) -> Result<Option<crate::NoteBlockNode>, String> {
         if self.closing {
             return Err("Note block materialization was stepped after cancellation".into());
         }
@@ -1215,8 +1215,8 @@ impl NoteBlockMaterializationCursor {
                 return Ok(Some(match (&mut self.payload, source) {
                     (
                         NoteBlockPayloadMaterialization::Text { materialized_content, materialized_font_weight, materialized_align, .. },
-                        crate::artifacts::note::NoteBlockNode::Text { font_size, .. },
-                    ) => crate::artifacts::note::NoteBlockNode::Text {
+                        crate::NoteBlockNode::Text { font_size, .. },
+                    ) => crate::NoteBlockNode::Text {
                         id,
                         name,
                         x,
@@ -1233,8 +1233,8 @@ impl NoteBlockMaterializationCursor {
                     },
                     (
                         NoteBlockPayloadMaterialization::Image { materialized_image_key, .. },
-                        crate::artifacts::note::NoteBlockNode::Image { .. },
-                    ) => crate::artifacts::note::NoteBlockNode::Image {
+                        crate::NoteBlockNode::Image { .. },
+                    ) => crate::NoteBlockNode::Image {
                         id,
                         name,
                         x,
@@ -1248,8 +1248,8 @@ impl NoteBlockMaterializationCursor {
                     },
                     (
                         NoteBlockPayloadMaterialization::Table { columns, rows, .. },
-                        crate::artifacts::note::NoteBlockNode::Table { .. },
-                    ) => crate::artifacts::note::NoteBlockNode::Table {
+                        crate::NoteBlockNode::Table { .. },
+                    ) => crate::NoteBlockNode::Table {
                         id,
                         name,
                         x,
@@ -1264,8 +1264,8 @@ impl NoteBlockMaterializationCursor {
                     },
                     (
                         NoteBlockPayloadMaterialization::Math { materialized_tex, .. },
-                        crate::artifacts::note::NoteBlockNode::Math { display_mode, .. },
-                    ) => crate::artifacts::note::NoteBlockNode::Math {
+                        crate::NoteBlockNode::Math { display_mode, .. },
+                    ) => crate::NoteBlockNode::Math {
                         id,
                         name,
                         x,
@@ -1280,8 +1280,8 @@ impl NoteBlockMaterializationCursor {
                     },
                     (
                         NoteBlockPayloadMaterialization::Ink { points, .. },
-                        crate::artifacts::note::NoteBlockNode::Ink { stroke_width, color, .. },
-                    ) => crate::artifacts::note::NoteBlockNode::Ink {
+                        crate::NoteBlockNode::Ink { stroke_width, color, .. },
+                    ) => crate::NoteBlockNode::Ink {
                         id,
                         name,
                         x,
@@ -1297,8 +1297,8 @@ impl NoteBlockMaterializationCursor {
                     },
                     (
                         NoteBlockPayloadMaterialization::Group { children, .. },
-                        crate::artifacts::note::NoteBlockNode::Group { .. },
-                    ) => crate::artifacts::note::NoteBlockNode::Group {
+                        crate::NoteBlockNode::Group { .. },
+                    ) => crate::NoteBlockNode::Group {
                         id,
                         name,
                         x,
@@ -1317,11 +1317,11 @@ impl NoteBlockMaterializationCursor {
         Ok(None)
     }
 
-    fn step_payload(&mut self, source: &crate::artifacts::note::NoteBlockNode) -> Result<bool, String> {
+    fn step_payload(&mut self, source: &crate::NoteBlockNode) -> Result<bool, String> {
         match (&mut self.payload, source) {
             (
                 NoteBlockPayloadMaterialization::Text { phase, content, materialized_content, font_weight, materialized_font_weight, align, materialized_align },
-                crate::artifacts::note::NoteBlockNode::Text { content: source_content, font_weight: source_font_weight, align: source_align, .. },
+                crate::NoteBlockNode::Text { content: source_content, font_weight: source_font_weight, align: source_align, .. },
             ) => match *phase {
                 0 => {
                     if let Some(value) = content.step(source_content)? {
@@ -1348,7 +1348,7 @@ impl NoteBlockMaterializationCursor {
             },
             (
                 NoteBlockPayloadMaterialization::Image { image_key, materialized_image_key },
-                crate::artifacts::note::NoteBlockNode::Image { image_key: source_image_key, .. },
+                crate::NoteBlockNode::Image { image_key: source_image_key, .. },
             ) => {
                 if materialized_image_key.is_none() {
                     *materialized_image_key = image_key.step(source_image_key)?;
@@ -1359,7 +1359,7 @@ impl NoteBlockMaterializationCursor {
             }
             (
                 NoteBlockPayloadMaterialization::Table { phase, column_cursor, cell_row_cursor, cell_cursor, string, columns, rows },
-                crate::artifacts::note::NoteBlockNode::Table { columns: source_columns, rows: source_rows, .. },
+                crate::NoteBlockNode::Table { columns: source_columns, rows: source_rows, .. },
             ) => match *phase {
                 0 => {
                     if *column_cursor == source_columns.len() {
@@ -1386,7 +1386,7 @@ impl NoteBlockMaterializationCursor {
                         *cell_row_cursor += 1;
                         *phase = 1;
                     } else if let Some(content) = string.step(&source_row[*cell_cursor].content)? {
-                        rows.last_mut().ok_or_else(|| "Note table row owner is absent".to_string())?.push(crate::artifacts::note::NoteTableCell { content });
+                        rows.last_mut().ok_or_else(|| "Note table row owner is absent".to_string())?.push(crate::NoteTableCell { content });
                         *cell_cursor += 1;
                     }
                     Ok(false)
@@ -1395,7 +1395,7 @@ impl NoteBlockMaterializationCursor {
             },
             (
                 NoteBlockPayloadMaterialization::Math { tex, materialized_tex },
-                crate::artifacts::note::NoteBlockNode::Math { tex: source_tex, .. },
+                crate::NoteBlockNode::Math { tex: source_tex, .. },
             ) => {
                 if materialized_tex.is_none() {
                     *materialized_tex = tex.step(source_tex)?;
@@ -1406,7 +1406,7 @@ impl NoteBlockMaterializationCursor {
             }
             (
                 NoteBlockPayloadMaterialization::Ink { point_cursor, points },
-                crate::artifacts::note::NoteBlockNode::Ink { points: source_points, .. },
+                crate::NoteBlockNode::Ink { points: source_points, .. },
             ) => {
                 if *point_cursor == source_points.len() {
                     Ok(true)
@@ -1418,7 +1418,7 @@ impl NoteBlockMaterializationCursor {
             }
             (
                 NoteBlockPayloadMaterialization::Group { child_cursor, active, children },
-                crate::artifacts::note::NoteBlockNode::Group { children: source_children, .. },
+                crate::NoteBlockNode::Group { children: source_children, .. },
             ) => {
                 if *child_cursor == source_children.len() {
                     return Ok(true);
@@ -1815,7 +1815,7 @@ struct NoteSnapshotMaterializationCursor {
     title: Option<String>,
     block_cursor: usize,
     active_block: Option<Box<NoteBlockMaterializationCursor>>,
-    blocks: Vec<crate::artifacts::note::NoteBlockNode>,
+    blocks: Vec<crate::NoteBlockNode>,
     asset_traversal_string: NoteStringMaterializationCursor,
     last_asset_key: Option<String>,
     active_asset_key: Option<String>,
@@ -1825,7 +1825,7 @@ struct NoteSnapshotMaterializationCursor {
     active_asset_data: Option<String>,
     asset_output_key_string: NoteStringMaterializationCursor,
     active_asset_output_key: Option<String>,
-    assets: std::collections::BTreeMap<String, crate::artifacts::note::NoteImageAsset>,
+    assets: std::collections::BTreeMap<String, crate::NoteImageAsset>,
     linked_artifact: Option<NoteArtifactLinkMaterializationCursor>,
     materialized_linked_artifact: Option<store::ArtifactLink>,
     retirement: NoteOwnedRetirement,
@@ -1959,7 +1959,7 @@ impl NoteSnapshotMaterializationCursor {
             NoteSnapshotMaterializationPhase::AssetComplete => {
                 let (_, source_asset) = self.active_source_asset(source)?;
                 let key = self.active_asset_output_key.take().ok_or_else(|| "Note asset output key owner is absent".to_string())?;
-                let asset = crate::artifacts::note::NoteImageAsset {
+                let asset = crate::NoteImageAsset {
                     mime: self.active_asset_mime.take().ok_or_else(|| "Note asset mime owner is absent".to_string())?,
                     data: self.active_asset_data.take().ok_or_else(|| "Note asset data owner is absent".to_string())?,
                     width: source_asset.width,
@@ -2003,7 +2003,7 @@ impl NoteSnapshotMaterializationCursor {
         Ok(None)
     }
 
-    fn active_source_asset<'a>(&self, source: &'a NoteSnapshot) -> Result<(&'a str, &'a crate::artifacts::note::NoteImageAsset), String> {
+    fn active_source_asset<'a>(&self, source: &'a NoteSnapshot) -> Result<(&'a str, &'a crate::NoteImageAsset), String> {
         let active_key = self.active_asset_key.as_deref().ok_or_else(|| "Note active asset traversal key owner is absent".to_string())?;
         source
             .assets
@@ -2311,10 +2311,10 @@ const NOTE_ROOT_SCALAR_STORE_RETAINED_BYTES: usize = store::ARTIFACT_STORE_ONE_I
 struct NoteRootScalarPreparationFactory;
 
 impl NoteRootScalarPreparationFactory {
-    fn validate_mutation(mutation: &crate::artifacts::note::op::NoteMutation) -> Result<(), String> {
+    fn validate_mutation(mutation: &crate::op::NoteMutation) -> Result<(), String> {
         match mutation {
-            crate::artifacts::note::op::NoteMutation::ChangeGridVisible(_) => Ok(()),
-            crate::artifacts::note::op::NoteMutation::ChangeGridSpacing(payload) => {
+            crate::op::NoteMutation::ChangeGridVisible(_) => Ok(()),
+            crate::op::NoteMutation::ChangeGridSpacing(payload) => {
                 if let Some(spacing) = payload.new_spacing {
                     if !spacing.is_finite() || spacing <= 0.0 {
                         return Err(format!("Grid spacing must be a positive number, got {spacing}."));
@@ -2338,14 +2338,14 @@ struct NoteRootScalarPreparation {
     generation: semio_framework_job::Generation,
     base_revision: [u8; 32],
     base: Option<store::SnapshotRead<NoteSnapshot>>,
-    forward: Option<crate::artifacts::note::op::NoteMutation>,
-    inverse: Option<Vec<crate::artifacts::note::op::NoteMutation>>,
+    forward: Option<crate::op::NoteMutation>,
+    inverse: Option<Vec<crate::op::NoteMutation>>,
     diff: Option<NoteRootScalarDiff>,
     description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     materialization: NoteSnapshotMaterializationCursor,
     post: Option<NoteSnapshot>,
-    prepared: Option<store::ArtifactStoreOneItemPrepared<NoteSnapshot, crate::artifacts::note::op::NoteMutation>>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<NoteSnapshot, crate::op::NoteMutation>>,
     retirement: NoteOwnedRetirement,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     phase: u8,
@@ -2375,10 +2375,10 @@ impl NoteRootScalarPreparation {
     }
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<NoteSnapshot, crate::artifacts::note::op::NoteMutation> for NoteRootScalarPreparationFactory {
+impl store::ArtifactStoreOneItemPreparationFactory<NoteSnapshot, crate::op::NoteMutation> for NoteRootScalarPreparationFactory {
     fn preflight(
         &self,
-        mutation: &crate::artifacts::note::op::NoteMutation,
+        mutation: &crate::op::NoteMutation,
         description: Option<&str>,
         lane: store::HistoryLane,
     ) -> Result<store::ArtifactStoreOneItemFootprint, String> {
@@ -2394,10 +2394,10 @@ impl store::ArtifactStoreOneItemPreparationFactory<NoteSnapshot, crate::artifact
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<NoteSnapshot, crate::artifacts::note::op::NoteMutation>,
+        request: store::ArtifactStoreOneItemPreparationRequest<NoteSnapshot, crate::op::NoteMutation>,
     ) -> Result<
-        Box<dyn store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::artifacts::note::op::NoteMutation>>,
-        store::ArtifactStoreOneItemPreparationRequest<NoteSnapshot, crate::artifacts::note::op::NoteMutation>,
+        Box<dyn store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::op::NoteMutation>>,
+        store::ArtifactStoreOneItemPreparationRequest<NoteSnapshot, crate::op::NoteMutation>,
     > {
         if request.lane != store::HistoryLane::Document
             || request.operation != request.authority.operation()
@@ -2433,7 +2433,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<NoteSnapshot, crate::artifact
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::artifacts::note::op::NoteMutation> for NoteRootScalarPreparation {
+impl store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::op::NoteMutation> for NoteRootScalarPreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
         if !grant.permits_one() || self.cancelled || self.closing {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
@@ -2453,11 +2453,11 @@ impl store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::artifacts::note
             1 => {
                 let base = self.base.as_ref().ok_or_else(|| "Note root-scalar inverse lost its base root".to_string())?.get();
                 self.inverse = Some(vec![match self.forward.as_ref().ok_or_else(|| "Note root-scalar inverse lost its forward owner".to_string())? {
-                    crate::artifacts::note::op::NoteMutation::ChangeGridVisible(_) => crate::artifacts::note::op::NoteMutation::ChangeGridVisible(
-                        crate::artifacts::note::schema::mutations::ChangeGridVisible { new_visible: base.grid_visible },
+                    crate::op::NoteMutation::ChangeGridVisible(_) => crate::op::NoteMutation::ChangeGridVisible(
+                        crate::schema::mutations::ChangeGridVisible { new_visible: base.grid_visible },
                     ),
-                    crate::artifacts::note::op::NoteMutation::ChangeGridSpacing(_) => crate::artifacts::note::op::NoteMutation::ChangeGridSpacing(
-                        crate::artifacts::note::schema::mutations::ChangeGridSpacing { new_spacing: base.grid_spacing },
+                    crate::op::NoteMutation::ChangeGridSpacing(_) => crate::op::NoteMutation::ChangeGridSpacing(
+                        crate::schema::mutations::ChangeGridSpacing { new_spacing: base.grid_spacing },
                     ),
                     _ => return Err("Note root-scalar inverse rejected a non-admitted mutation".into()),
                 }]);
@@ -2466,8 +2466,8 @@ impl store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::artifacts::note
             }
             2 => {
                 self.diff = Some(match self.forward.as_ref().ok_or_else(|| "Note root-scalar diff lost its forward owner".to_string())? {
-                    crate::artifacts::note::op::NoteMutation::ChangeGridVisible(payload) => NoteRootScalarDiff::GridVisible(payload.new_visible),
-                    crate::artifacts::note::op::NoteMutation::ChangeGridSpacing(payload) => {
+                    crate::op::NoteMutation::ChangeGridVisible(payload) => NoteRootScalarDiff::GridVisible(payload.new_visible),
+                    crate::op::NoteMutation::ChangeGridSpacing(payload) => {
                         if let Some(spacing) = payload.new_spacing {
                             if !spacing.is_finite() || spacing <= 0.0 {
                                 return Err(format!("Grid spacing must be a positive number, got {spacing}."));
@@ -2529,11 +2529,11 @@ impl store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::artifacts::note
         self.checkpoint
     }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<NoteSnapshot, crate::artifacts::note::op::NoteMutation>> {
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<NoteSnapshot, crate::op::NoteMutation>> {
         self.prepared.as_ref()
     }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<NoteSnapshot, crate::artifacts::note::op::NoteMutation>> {
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<NoteSnapshot, crate::op::NoteMutation>> {
         self.prepared.take()
     }
 
@@ -2608,7 +2608,7 @@ impl store::ArtifactStoreOneItemPreparation<NoteSnapshot, crate::artifacts::note
     }
 }
 
-pub fn artifact_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<NoteSnapshot, crate::artifacts::note::op::NoteMutation>> {
+pub fn artifact_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<NoteSnapshot, crate::op::NoteMutation>> {
     std::sync::Arc::new(NoteRootScalarPreparationFactory)
 }
 
@@ -2623,7 +2623,7 @@ mod materialization_tests {
     use super::*;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 
-    fn text_child(owner: Option<std::sync::Arc<SemioTextSnapshot>>, child_id: String) -> crate::artifacts::note::NoteTextChild {
+    fn text_child(owner: Option<std::sync::Arc<SemioTextSnapshot>>, child_id: String) -> crate::NoteTextChild {
         let target = store::os_io::ArtifactRef {
             artifact_id: "note-text-artifact".into(),
             dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() },
@@ -2632,10 +2632,10 @@ mod materialization_tests {
             Some(owner) => store::ArtifactChild::new(child_id, target).with_local_owner(owner),
             None => store::ArtifactChild::new(child_id, target),
         };
-        crate::artifacts::note::NoteTextChild { handle, paragraphs: Vec::new() }
+        crate::NoteTextChild { handle, paragraphs: Vec::new() }
     }
 
-    fn materialize(source: &crate::artifacts::note::NoteTextChild) -> store::ArtifactChild<SemioTextSnapshot> {
+    fn materialize(source: &crate::NoteTextChild) -> store::ArtifactChild<SemioTextSnapshot> {
         let mut cursor = NoteTextChildMaterializationCursor::new(source);
         for _ in 0..64 {
             if let Some(child) = cursor.step(source).expect("bounded child metadata copy") {
@@ -2680,7 +2680,7 @@ mod materialization_tests {
     }
 
     fn hostile_snapshot(owner: std::sync::Arc<SemioTextSnapshot>) -> NoteSnapshot {
-        let text = crate::artifacts::note::NoteBlockNode::Text {
+        let text = crate::NoteBlockNode::Text {
             id: "text-1".into(),
             name: "Text".into(),
             x: 1.0,
@@ -2690,10 +2690,10 @@ mod materialization_tests {
             rotation: 5.0,
             visible: true,
             locked: false,
-            content: crate::artifacts::note::NoteTextChild {
+            content: crate::NoteTextChild {
                 handle: text_child(Some(owner), "child-root".into()).handle,
-                paragraphs: vec![crate::artifacts::note::NoteTextParagraph {
-                    runs: vec![crate::artifacts::note::NoteTextRun {
+                paragraphs: vec![crate::NoteTextParagraph {
+                    runs: vec![crate::NoteTextRun {
                         text: "root text".into(),
                         bold: Some(true),
                         italic: Some(false),
@@ -2706,7 +2706,7 @@ mod materialization_tests {
             font_weight: "600".into(),
             align: "center".into(),
         };
-        let table = crate::artifacts::note::NoteBlockNode::Table {
+        let table = crate::NoteBlockNode::Table {
             id: "table-1".into(),
             name: "Table".into(),
             x: 0.0,
@@ -2718,11 +2718,11 @@ mod materialization_tests {
             locked: false,
             columns: vec!["a".into(), "b".into()],
             rows: vec![vec![
-                crate::artifacts::note::NoteTableCell { content: "one".into() },
-                crate::artifacts::note::NoteTableCell { content: "two".into() },
+                crate::NoteTableCell { content: "one".into() },
+                crate::NoteTableCell { content: "two".into() },
             ]],
         };
-        let group = crate::artifacts::note::NoteBlockNode::Group {
+        let group = crate::NoteBlockNode::Group {
             id: "group-1".into(),
             name: "Group".into(),
             x: 0.0,
@@ -2733,7 +2733,7 @@ mod materialization_tests {
             visible: true,
             locked: false,
             children: vec![
-                crate::artifacts::note::NoteBlockNode::Image {
+                crate::NoteBlockNode::Image {
                     id: "image-1".into(),
                     name: "Image".into(),
                     x: 0.0,
@@ -2745,7 +2745,7 @@ mod materialization_tests {
                     locked: false,
                     image_key: "asset-1".into(),
                 },
-                crate::artifacts::note::NoteBlockNode::Math {
+                crate::NoteBlockNode::Math {
                     id: "math-1".into(),
                     name: "Math".into(),
                     x: 0.0,
@@ -2758,7 +2758,7 @@ mod materialization_tests {
                     tex: "x^2".into(),
                     display_mode: true,
                 },
-                crate::artifacts::note::NoteBlockNode::Ink {
+                crate::NoteBlockNode::Ink {
                     id: "ink-1".into(),
                     name: "Ink".into(),
                     x: 0.0,
@@ -2777,7 +2777,7 @@ mod materialization_tests {
         let mut assets = std::collections::BTreeMap::new();
         assets.insert(
             "asset-1".into(),
-            crate::artifacts::note::NoteImageAsset {
+            crate::NoteImageAsset {
                 mime: "image/png".into(),
                 data: "data:image/png;base64,abc".into(),
                 width: Some(10.0),
@@ -2823,7 +2823,7 @@ mod materialization_tests {
             .expect("nested snapshot cursor terminates");
         assert_eq!(materialized, source);
         assert_eq!(cursor.progress().phase, "complete");
-        let crate::artifacts::note::NoteBlockNode::Text { content, .. } = &materialized.blocks[0] else {
+        let crate::NoteBlockNode::Text { content, .. } = &materialized.blocks[0] else {
             panic!("first hostile block must remain text")
         };
         let retained = content.handle.local_owner::<SemioTextSnapshot>().expect("nested typed owner retained");
@@ -2834,7 +2834,7 @@ mod materialization_tests {
     async fn snapshot_materialization_preserves_absent_typed_owner() {
         let owner = std::sync::Arc::new(SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs: Vec::new() });
         let mut source = hostile_snapshot(owner);
-        let crate::artifacts::note::NoteBlockNode::Text { content, .. } = &mut source.blocks[0] else {
+        let crate::NoteBlockNode::Text { content, .. } = &mut source.blocks[0] else {
             panic!("first hostile block must remain text")
         };
         *content = text_child(None, "child-wire-only".into());
@@ -2844,7 +2844,7 @@ mod materialization_tests {
         let materialized = (0..4_096)
             .find_map(|_| cursor.step(operation, generation, &source).expect("bounded wire-only snapshot copy"))
             .expect("wire-only snapshot cursor terminates");
-        let crate::artifacts::note::NoteBlockNode::Text { content, .. } = &materialized.blocks[0] else {
+        let crate::NoteBlockNode::Text { content, .. } = &materialized.blocks[0] else {
             panic!("first hostile block must remain text")
         };
         assert!(content.handle.local_owner::<SemioTextSnapshot>().is_none());
@@ -2854,7 +2854,7 @@ mod materialization_tests {
     async fn snapshot_materialization_cancellation_during_nested_metadata_reaches_terminal_emptiness() {
         let owner = std::sync::Arc::new(SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs: Vec::new() });
         let mut source = hostile_snapshot(owner);
-        let crate::artifacts::note::NoteBlockNode::Text { content, .. } = &mut source.blocks[0] else {
+        let crate::NoteBlockNode::Text { content, .. } = &mut source.blocks[0] else {
             panic!("first hostile block must remain text")
         };
         content.handle.child_id = "metadata".repeat(NOTE_MATERIALIZATION_STRING_CHUNK_BYTES);
@@ -2893,17 +2893,17 @@ mod materialization_tests {
     #[test]
     fn root_scalar_preflight_admits_only_exact_valid_document_mutations() {
         let factory = NoteRootScalarPreparationFactory;
-        let visible = crate::artifacts::note::op::NoteMutation::ChangeGridVisible(
-            crate::artifacts::note::schema::mutations::ChangeGridVisible { new_visible: Some(false) },
+        let visible = crate::op::NoteMutation::ChangeGridVisible(
+            crate::schema::mutations::ChangeGridVisible { new_visible: Some(false) },
         );
-        let spacing = crate::artifacts::note::op::NoteMutation::ChangeGridSpacing(
-            crate::artifacts::note::schema::mutations::ChangeGridSpacing { new_spacing: Some(16.0) },
+        let spacing = crate::op::NoteMutation::ChangeGridSpacing(
+            crate::schema::mutations::ChangeGridSpacing { new_spacing: Some(16.0) },
         );
-        let invalid_spacing = crate::artifacts::note::op::NoteMutation::ChangeGridSpacing(
-            crate::artifacts::note::schema::mutations::ChangeGridSpacing { new_spacing: Some(f64::INFINITY) },
+        let invalid_spacing = crate::op::NoteMutation::ChangeGridSpacing(
+            crate::schema::mutations::ChangeGridSpacing { new_spacing: Some(f64::INFINITY) },
         );
-        let foreign = crate::artifacts::note::op::NoteMutation::RenameNote(
-            crate::artifacts::note::schema::mutations::RenameNote { new_title: Some("foreign".into()) },
+        let foreign = crate::op::NoteMutation::RenameNote(
+            crate::schema::mutations::RenameNote { new_title: Some("foreign".into()) },
         );
         assert!(store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &visible, None, store::HistoryLane::Document).is_ok());
         assert!(store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &spacing, None, store::HistoryLane::Document).is_ok());

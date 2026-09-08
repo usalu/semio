@@ -4,8 +4,8 @@
 //! dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
-use crate::artifacts::cad::CadSnapshot;
-use schema::ArtifactSchema;
+use crate::CadSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use super::bounds::{object_count, scene_bounds, vertex_count, CadBounds};
 
@@ -50,7 +50,7 @@ impl protocol::InferenceSpec<CadSnapshot> for CadInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::cad::standards::v1::subsets::any::schema::CadBuilder {
+impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets::any::schema::CadBuilder {
     type Snapshot = CadSnapshot;
     type Inference = CadInference;
 }
@@ -59,10 +59,10 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::cad::standar
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.cad.cad.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `cad_artifact_schema_descriptor`'s registration.
-pub fn cad_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn cad_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.cad.cad.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -77,7 +77,7 @@ pub fn cad_artifact_inference_descriptor() -> schema::ArtifactInferenceDescripto
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::cad::{empty_cad_snapshot, testkit::sample_model_child};
+    use crate::{empty_cad_snapshot, testkit::sample_model_child};
     use protocol::Inference;
 
     //#region 🧪️InferenceLaws
@@ -102,9 +102,9 @@ mod tests {
 // classification/reclassification (rule 2: pure fn snapshot/objects -> derived objects), not
 // stateful app behaviour.
 mod derive_transformation {
-    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
+    use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
     #[cfg(test)]
-    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
+    use crate::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
 
     use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
     #[cfg(test)]
@@ -482,7 +482,7 @@ pub use derive_transformation::*;
 // Jack `QueryableGraph` adapter over one `CadGeometry` pane (rule 2/CAD-map: query -> D4
 // inference-shaped derived compute).
 mod construct_query {
-    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadGeometry;
+    use crate::standards::v1::subsets::any::io::geometry_import::CadGeometry;
     use graph::dsl::{QueryableEdge, QueryableGraph};
     use graph::manifest::PropertyValue;
     use std::collections::BTreeSet;
@@ -621,7 +621,7 @@ mod construct_query {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{CadEdge, CadEdgeCurve, CadFace, CadPlaneSurface, CadShell, CadSolid, CadVertex, CadWire};
+        use crate::standards::v1::subsets::any::io::geometry_import::{CadEdge, CadEdgeCurve, CadFace, CadPlaneSurface, CadShell, CadSolid, CadVertex, CadWire};
 
         fn box_geometry() -> CadGeometry {
             let corners: [[f64; 3]; 8] = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0]];
@@ -699,10 +699,10 @@ pub use construct_query::*;
 // moved to `🚪️io/🦀️.rs` instead; the interaction statechart moved to the app's own
 // `⚙️engine` (D5 behavioural).
 mod scene_compute {
-    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{
+    use crate::standards::v1::subsets::any::io::geometry_import::{
         centroid_from_fixture_primitives, objects_from_fixture_model, parse_geometry, semio_model_snapshot_from_objects, tessellate_object_mesh, tessellate_object_mesh_from_fixture, CadGeometry, CadObject, CadPrimitiveSlot,
     };
-    use crate::artifacts::cad::{cad_model_child_handle, CadCamera, CadModelChild, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CadWorkingScene, CAD_PLAY_DOCUMENT_SCHEMA};
+    use crate::{cad_model_child_handle, CadCamera, CadModelChild, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CadWorkingScene, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework::parse_contributions;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
@@ -1109,7 +1109,7 @@ mod scene_compute {
     /// document's inline object list for a representative mesh. `CadSnapshot` no longer carries
     /// inline objects (only composed model child HANDLES, unresolved at this boundary) — falls back
     /// to the default box typology unconditionally. Documented reduced-fidelity gap, not silently
-    /// wrong: `document`'s model-child handles are available via `crate::artifacts::cad::
+    /// wrong: `document`'s model-child handles are available via `crate::
     /// cad_pane_model` for a caller that has ALSO resolved the child content and wants to do better.
     pub fn export_mesh_from_scene(document: &CadSnapshot) -> MeshData {
         let _ = document;

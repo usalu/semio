@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📶status-records` per Wave C.
 
 use super::ReplaceStatusRecord;
-use crate::artifacts::program::diff::{ProgramStatusRecordsDelta, ProgramStatusRecordsPatchEntry};
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramStatusRecordsDelta, ProgramStatusRecordsPatchEntry};
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 use protocol::Patchable;
 
 /// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.

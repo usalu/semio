@@ -1,7 +1,7 @@
 //! 📄️ Layout play app panel — the document tree: spreads, pages, frames, parent pages, layers,
 //! stories, links and styles of the current layout document.
 
-use crate::artifacts::layout::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
+use crate::{Frame, LayoutSnapshot, LAYOUT_DOCUMENT_SCHEMA};
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::terminology::LayoutLabels;
 use crate::editor::layout::{layout_action, ui_node_list, ui_value_map, ui_value_text, LAYOUT_GRANULARITY_ELEMENT, LAYOUT_INTERACTION_ELEMENTS};

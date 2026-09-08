@@ -1682,7 +1682,7 @@ mod tests {
     //#endregion 🔖️SchemaExportResolution
 
     //#region 🔖️Draft07OracleVectors
-    const DRAFT07_VECTORS: &str = include_str!("🧪️fixtures/✅️draft07-validation-vectors.json");
+    const DRAFT07_VECTORS: &str = include_str!("🧫️fixtures/✅️draft07-validation-vectors.json");
 
     fn pointer_to_owned_path(pointer: &str) -> String {
         pointer.split('/').skip(1).fold("$".to_string(), |path, segment| if segment.chars().all(|entry| entry.is_ascii_digit()) { format!("{path}[{segment}]") } else { format!("{path}.{segment}") })
@@ -1692,7 +1692,7 @@ mod tests {
     async fn owned_validator_agrees_with_the_shared_draft07_vectors() {
         let vectors = parse_json(DRAFT07_VECTORS).expect("vectors json");
         let cases = vectors.get("cases").and_then(Value::as_array).expect("cases");
-        assert!(cases.len() >= 7, "expected the full vector corpus, found {}", cases.len());
+        assert!(cases.len() >= 16, "expected the full vector corpus, found {}", cases.len());
         for case in cases {
             let id = case.get("id").and_then(Value::as_str).expect("case id");
             let documents: Vec<String> = case.get("documents").and_then(Value::as_array).map(|documents| documents.iter().map(json_to_string).collect()).unwrap_or_default();
@@ -1716,7 +1716,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn owned_pattern_matcher_covers_the_supported_ecma_subset() {
-        let corpus: [(&str, &[(&str, bool)]); 8] = [
+        let corpus: [(&str, &[(&str, bool)]); 11] = [
             ("^[a-z][a-z0-9]*$", &[("scope", true), ("s9", true), ("Scope", false), ("", false)]),
             ("^v\\d{1,3}$", &[("v1", true), ("v123", true), ("v1234", false), ("v", false)]),
             ("^(rust|typescript|graphql)$", &[("rust", true), ("graphql", true), ("proto", false)]),
@@ -1725,6 +1725,9 @@ mod tests {
             ("^\\w+(\\s\\w+)*$", &[("one two three", true), ("one  two", false)]),
             ("^a{2,}b?$", &[("aa", true), ("aaab", true), ("a", false)]),
             ("colou?r", &[("color", true), ("colour", true), ("colr", false)]),
+            ("^(?!0{4}$)[0-9a-f]{4}$", &[("00a0", true), ("0000", false), ("ffff", true)]),
+            ("^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$", &[("a/b", true), ("a/..b", true), ("/a", false), ("a/../b", false), ("..", false)]),
+            ("(?=.*x)ab", &[("abx", true), ("xab", false), ("ab", false)]),
         ];
         for (pattern, cases) in corpus {
             let matcher = crate::PatternMatcher::compile(pattern).unwrap_or_else(|reason| panic!("{pattern}: {reason}"));
@@ -1732,7 +1735,7 @@ mod tests {
                 assert_eq!(matcher.is_match(text), *expected, "pattern {pattern} against {text}");
             }
         }
-        for rejected in ["(?=a)", "a\\1", "\\ba", "[z-a]", "(a", "*a"] {
+        for rejected in ["(?<=a)", "(?<!a)", "a\\1", "\\ba", "[z-a]", "(a", "*a"] {
             assert!(crate::PatternMatcher::compile(rejected).is_err(), "expected {rejected} to be rejected");
         }
     }

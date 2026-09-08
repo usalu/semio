@@ -1,18 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/delete-primitive.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/delete-primitive/schema.json",
   "title": "DeletePrimitive",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "meshId",
-    "primitiveId"
+    "mesh_id",
+    "primitive_id"
   ],
   "properties": {
-    "meshId": {
+    "mesh_id": {
       "type": "string"
     },
-    "primitiveId": {
+    "primitive_id": {
       "type": "string"
     }
   }

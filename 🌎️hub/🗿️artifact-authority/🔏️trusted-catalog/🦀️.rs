@@ -7,7 +7,7 @@ use directory::os_store::{self, ArtifactCodec};
 use semio_framework::{from_dsl_value, to_dsl_value, DslValue, PackageDescriptor, PackageRole, Version};
 use semio_framework_hash::{Hasher, Sha256};
 use semio_framework_plugin_host::{PackageHash, PackageId, PackageRef};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -1341,13 +1341,13 @@ fn decode_package_descriptor(bytes: &[u8]) -> Result<PackageDescriptor, Authorit
     options.limits.max_total_alloc = TRUSTED_DESCRIPTOR_MAX_MATERIALIZATION;
     let value = os_store::pack_rt::decode_wire_value_with_options(bytes, &options).map_err(catalog_error)?;
     reject_duplicate_descriptor_fields(&value)?;
-    let canonical = directory::os_store::pack_rt::encode_wire_value(&value);
+    let canonical = os_store::pack_rt::encode_wire_value(&value);
     if canonical != bytes {
         return Err(catalog("package descriptor is not its exact canonical schema projection"));
     }
     let descriptor: PackageDescriptor = from_dsl_value(value).map_err(catalog_error)?;
     let projection = to_dsl_value(&descriptor).map_err(catalog_error)?;
-    if directory::os_store::pack_rt::encode_wire_value(&projection) != bytes { return Err(catalog("package descriptor is not its exact canonical schema projection")); }
+    if os_store::pack_rt::encode_wire_value(&projection) != bytes { return Err(catalog("package descriptor is not its exact canonical schema projection")); }
     Ok(descriptor)
 }
 
@@ -2087,7 +2087,7 @@ mod tests {
                 let binding = result.expect("verified editor binding").expect("GIS Map editor is bound");
                 assert!(Arc::ptr_eq(binding.catalog(), &catalog));
                 assert_eq!(binding.selection(), catalog.selected_document_open().expect("sole selection"));
-                assert_eq!(binding.service().executable_identity(), semio_s_plugin_gis::artifacts::gismap::gis_map_inference_service().executable_identity());
+                assert_eq!(binding.service().executable_identity(), semio_s_artifact_gis_gismap::gis_map_inference_service().executable_identity());
                 let retained = catalog.packages().iter().find(|package| package.plugin_id() == "gis").expect("verified GIS package").component_bytes().to_vec();
                 let digest = binding.digest().to_owned();
                 std::fs::write(fixture.component_path(0), b"tampered").expect("mutate fixture backing component");

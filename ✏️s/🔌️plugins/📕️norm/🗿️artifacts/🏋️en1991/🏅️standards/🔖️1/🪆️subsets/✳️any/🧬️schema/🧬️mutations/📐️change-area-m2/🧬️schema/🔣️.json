@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1991/1/any/mutation/change-area-m2.json",
+  "$id": "https://semio.tech/schema/s/norm/en1991/1/any/mutation/change-area-m2/schema.json",
   "title": "ChangeAreaM2",
   "type": "object",
   "additionalProperties": false,

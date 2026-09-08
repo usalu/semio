@@ -1,8 +1,8 @@
 //! 🔺️ Imperative artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::procedure::schema::diff::ProcedureDiff;
-use crate::artifacts::procedure::schema::ProcedureArtifact;
-use crate::artifacts::procedure::ProcedureSnapshot;
+use crate::schema::diff::ProcedureDiff;
+use crate::schema::ProcedureArtifact;
+use crate::ProcedureSnapshot;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -95,11 +95,11 @@ pub fn diff_set_snapshot(snapshot: ProcedureSnapshot) -> ProcedureDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::procedure::schema::default_snapshot;
+    use crate::schema::default_snapshot;
 
     #[semio_framework_async_macros::async_test]
     async fn imperative_diff_absorb_whole_artifact_wins() {
-        let mut diff = ProcedureDiff { flow: Some(crate::artifacts::procedure::procedure_flow_child_with_owner(&crate::artifacts::procedure::Path::new())), ..Default::default() };
+        let mut diff = ProcedureDiff { flow: Some(crate::procedure_flow_child_with_owner(&crate::Path::new())), ..Default::default() };
         let replacement = ProcedureDiff { artifact: Some(Box::new(ProcedureArtifact::default())), ..Default::default() };
         diff.absorb(replacement);
         assert!(diff.artifact.is_some());
@@ -113,12 +113,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn flow_handle_replace_round_trips_via_apply() {
         let base = default_snapshot();
-        let mut path = crate::artifacts::procedure::procedure_working_scene(&base).path;
+        let mut path = crate::procedure_working_scene(&base).path;
         assert!(path.steps.iter().any(|step| step.id == "step-1"));
         path.steps.retain(|step| step.id != "step-1");
-        let diff = crate::artifacts::procedure::diff_replace_flow(&path);
+        let diff = crate::diff_replace_flow(&path);
         let next = diff.apply(&base).expect("valid mutation diff");
-        let next_path = crate::artifacts::procedure::procedure_working_scene(&next).path;
+        let next_path = crate::procedure_working_scene(&next).path;
         assert!(next_path.steps.iter().all(|step| step.id != "step-1"));
     }
 }

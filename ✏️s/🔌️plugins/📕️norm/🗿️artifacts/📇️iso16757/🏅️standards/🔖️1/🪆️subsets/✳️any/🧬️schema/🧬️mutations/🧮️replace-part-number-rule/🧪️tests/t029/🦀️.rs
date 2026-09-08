@@ -9,7 +9,7 @@
 //! the nested states `None` and `Some(None)` are NOT distinguishable in this file's committed diff,
 //! and nothing here asserts that they are.
 
-use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
+use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -38,7 +38,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 async fn swaps_the_literal_rule_for_a_height_driven_script() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("replace-part-number-rule applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: the applied state differs from the committed after-snapshot");
-    assert!(matches!(applied.part_number_rule, crate::artifacts::iso16757::part_5::PartNumberRule::Script { .. }), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: the rule must land on the Script variant");
+    assert!(matches!(applied.part_number_rule, crate::part_5::PartNumberRule::Script { .. }), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: the rule must land on the Script variant");
     assert_eq!(applied.part_number_inputs, before().part_number_inputs, "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: replacing the rule must not touch the inputs it will read");
     assert_eq!(applied.script_limits, before().script_limits, "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: nor the budgets the script will run under");
 }
@@ -107,7 +107,7 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed replace-part-number-rule diff decodes");
     let rule = decoded.part_number_rule.as_ref().expect("the committed replace-part-number-rule diff carries the rule");
-    assert!(matches!(rule, crate::artifacts::iso16757::part_5::PartNumberRule::Script { .. }), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: the diff must carry the Script variant");
+    assert!(matches!(rule, crate::part_5::PartNumberRule::Script { .. }), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: the diff must carry the Script variant");
     assert!(decoded.catalogue.is_none(), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: replace-part-number-rule writes `partNumberRule` and must leave `catalogue` untouched");
     assert!(decoded.dictionary.is_none(), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: replace-part-number-rule writes `partNumberRule` and must leave `dictionary` untouched");
     assert!(decoded.selection.is_none(), "replace-part-number-rule/swaps-the-literal-rule-for-a-height-driven-script: replace-part-number-rule writes `partNumberRule` and must leave `selection` untouched");

@@ -9,7 +9,7 @@
 //! duplicating it, a plain whole-snapshot BFS pass, so no `InferredField`/incremental caching is
 //! needed, matching both siblings' own "simple whole-snapshot scalars" rationale).
 
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::Puzzle2dSnapshot;
 use artifact_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
@@ -49,7 +49,7 @@ impl protocol::InferenceSpec<Puzzle2dSnapshot> for Puzzle2dInference {
 /// 🧠️ Uncached: the underlying `fastened_layout_snapshot` BFS re-runs in one pass over the whole
 /// graph — the default `infer_cached` passthrough (just calls `infer`) is exactly right here, no
 /// `InferredField` chain needed (mirrors jack's own `🎛flat-position`/`🧭topology` rationale).
-impl ArtifactInferrer for crate::artifacts::puzzle2d::standards::v1::subsets::any::schema::Puzzle2dBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Puzzle2dBuilder {
     type Snapshot = Puzzle2dSnapshot;
     type Inference = Puzzle2dInference;
 }
@@ -76,7 +76,7 @@ pub fn puzzle2d_artifact_inference_descriptor() -> artifact_schema::ArtifactInfe
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
+    use crate::{Puzzle2dEdge, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
     use protocol::Inference;
 
     //#region 🧸️Fixtures
@@ -85,7 +85,7 @@ mod tests {
         let p = Puzzle2dNode { id: "p".into(), x: 5.0, y: 7.0, anchor: Puzzle2dNodeAnchor::Fixed, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
         let c = Puzzle2dNode { id: "c".into(), anchor: Puzzle2dNodeAnchor::Derived, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
         let e = Puzzle2dEdge { id: "e".into(), source: "p:h".into(), target: "c:h".into(), x: 3.0, y: -2.0, ..Default::default() };
-        Puzzle2dSnapshot { schema: crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA.to_string(), camera: Default::default(), nodes: vec![p, c], edges: vec![e], meta: Default::default() }
+        Puzzle2dSnapshot { schema: crate::PUZZLE_2D_SCHEMA.to_string(), camera: Default::default(), nodes: vec![p, c], edges: vec![e], meta: Default::default() }
     }
     //#endregion 🧸️Fixtures
 
@@ -112,13 +112,13 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️FastenedLayout
-use crate::artifacts::puzzle2d::{Puzzle2dNode, Puzzle2dNodeAnchor};
+use crate::{Puzzle2dNode, Puzzle2dNodeAnchor};
 /// 🔗️ Rehomed from the deleted `⚙️engine/📐️layout` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1e): compose-parity fastened layout, pure derived
 /// compute over a `Puzzle2dSnapshot` — sole consumer is `🎛️flat-position`'s own `compute_flat_position`
 /// (see that file's own `use super::fastened_layout_snapshot;`), so it lives at the inference family
 /// root rather than being duplicated into the slug dir.
-use crate::artifacts::puzzle3d::schema::inferences::flatten::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS};
+use semio_s_artifact_puzzle_3d::schema::inferences::flatten::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 fn round_f(v: f64) -> f64 {
@@ -216,7 +216,7 @@ pub fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
 #[cfg(test)]
 mod fastened_tests {
     use super::*;
-    use crate::artifacts::puzzle2d::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dNodeAnchor, Puzzle2dSnapshot};
+    use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dNodeAnchor, Puzzle2dSnapshot};
 
     #[test]
     fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
@@ -240,7 +240,7 @@ mod fastened_tests {
                     visible: None,
                     locked: None,
                     anchor: Puzzle2dNodeAnchor::Fixed,
-                    handles: vec![crate::artifacts::puzzle2d::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }],
+                    handles: vec![crate::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }],
                 },
                 Puzzle2dNode {
                     id: "c".into(),
@@ -258,7 +258,7 @@ mod fastened_tests {
                     visible: None,
                     locked: None,
                     anchor: Puzzle2dNodeAnchor::Derived,
-                    handles: vec![crate::artifacts::puzzle2d::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }],
+                    handles: vec![crate::Puzzle2dHandle { id: "h".into(), handle_kind: None, angle: 0.0, radius: None, color: None, icon_kind: None, scale: None, visible: None, locked: None }],
                 },
             ],
             edges: vec![Puzzle2dEdge {

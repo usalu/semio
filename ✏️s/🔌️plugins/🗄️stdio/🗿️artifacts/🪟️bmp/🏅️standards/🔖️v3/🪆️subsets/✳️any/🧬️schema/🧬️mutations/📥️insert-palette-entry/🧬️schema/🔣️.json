@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/bmp/v3/any/mutation/insert-palette-entry.json",
+  "$id": "https://semio.tech/schema/s/stdio/bmp/v3/any/mutation/insert-palette-entry/schema.json",
   "title": "InsertPaletteEntryMutation",
   "type": "object",
   "additionalProperties": false,
@@ -18,13 +18,6 @@
     }
   },
   "$defs": {
-    "BmpRowOrder": {
-      "type": "string",
-      "enum": [
-        "bottomUp",
-        "topDown"
-      ]
-    },
     "BmpPaletteEntry": {
       "type": "object",
       "additionalProperties": false,

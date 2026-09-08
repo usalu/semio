@@ -2,25 +2,25 @@
 //! live document AND its own view-only camera/LOD state, so — like `block`/`cad`'s app-level
 //! `world.rs` precedent — this lives at app level rather than in the artifact's `🧬️schema`).
 
-use crate::artifacts::jack::mutations::move_node;
-use crate::artifacts::jack::op::TrinityGraphMutation;
-use crate::artifacts::jack::{port_key, Graph, JackSnapshot, Node, PortDirection};
-use crate::artifacts::rewriting::schema::{ApplyRuleResult, Rule};
-use crate::ast::QueryResult;
-use crate::executor::execute;
-use crate::language_service::{complete as complete_jack, parse};
-use crate::lexer::tokenize as tokenize_jack;
-use infinite_board_port_directed::{
+use semio_s_artifact_trinity_jack::mutations::move_node;
+use semio_s_artifact_trinity_jack::op::TrinityGraphMutation;
+use semio_s_artifact_trinity_jack::{port_key, Graph, JackSnapshot, Node, PortDirection};
+use crate::schema::{ApplyRuleResult, Rule};
+use semio_s_artifact_trinity_jack::ast::QueryResult;
+use semio_s_artifact_trinity_jack::executor::execute;
+use semio_s_artifact_trinity_jack::language_service::{complete as complete_jack, parse};
+use semio_s_artifact_trinity_jack::lexer::tokenize as tokenize_jack;
+use semio_framework_os_infinite::{
     compute_edge_bezier_points, distance_between,
-    force_graph::apply_force_graph_layout_to_fixture_v1_json,
+    force_semio_framework_graph::apply_force_graph_layout_to_fixture_v1_json,
     BoardEngine, CanvasPalette, HandleRole,
 };
-use infinite_board_port_directed_normal::BoardHost;
+use semio_framework_os_infinite::BoardHost;
 pub use infinite_canvas as canvas;
 use std::cell::Cell;
 use std::collections::HashMap;
 
-use crate::artifacts::rewriting::TrinityRewritingError;
+use crate::TrinityRewritingError;
 
 type TrinityBoardEngine = BoardEngine;
 
@@ -281,7 +281,7 @@ fn apply_force_layout_to_trinity_graph(graph: &mut Graph) -> Result<(), TrinityR
 /// 🖥️ Retained trinity graph host on the directed port board engine.
 pub struct TrinityBridge {
     pub graph: Graph,
-    store: crate::artifacts::jack::op::TrinityGraphStore,
+    store: semio_s_artifact_trinity_jack::op::TrinityGraphStore,
     pub engine: TrinityBoardEngine,
     board: BoardHost,
     pub canvas_theme: CanvasPalette,
@@ -299,7 +299,7 @@ pub struct TrinityBridge {
 impl TrinityBridge {
     pub async fn from_graph(graph: &Graph) -> Self {
         let fixture = graph.to_fixture();
-        let store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("trinity-host", fixture)).await.expect("failed to create trinity graph store");
+        let store = semio_s_artifact_trinity_jack::op::TrinityGraphStore::new(semio_s_artifact_trinity_jack::op::create_trinity_graph_envelope("trinity-host", fixture)).await.expect("failed to create trinity graph store");
         let graph = Graph::from_fixture(store.snapshot().expect("projection")).expect("graph");
         let mut host = Self {
             graph,
@@ -332,7 +332,7 @@ impl TrinityBridge {
     }
 
     async fn dispatch(&mut self, operations: Vec<TrinityGraphMutation>) -> Result<(), TrinityRewritingError> {
-        crate::artifacts::jack::op::dispatch_trinity_graph_mutations(&mut self.store, operations).await?;
+        semio_s_artifact_trinity_jack::op::dispatch_trinity_graph_mutations(&mut self.store, operations).await?;
         self.refresh_graph_from_store()
     }
 
@@ -454,8 +454,8 @@ impl TrinityBridge {
 
     pub async fn apply_rewriting_json(&mut self, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewritingError> {
         let rule: Rule = pack::from_json_str(rule_json)?;
-        let bindings = crate::artifacts::rewriting::schema::parse_bindings_json(bindings_json)?;
-        let query = crate::artifacts::rewriting::schema::build_rule_query(&rule, &bindings);
+        let bindings = crate::schema::parse_bindings_json(bindings_json)?;
+        let query = crate::schema::build_rule_query(&rule, &bindings);
         let parsed = parse(&query).map_err(TrinityRewritingError::Jack)?;
         let (result, operations) = execute(&self.graph, &parsed).map_err(TrinityRewritingError::Jack)?;
         if !operations.is_empty() {
@@ -657,10 +657,10 @@ impl TrinityBridge {
     }
 }
 
-/// 🩹️ Delegates to `crate::artifacts::jack::parse_port_key` (the one place the `nodeId@portId`
+/// 🩹️ Delegates to `semio_s_artifact_trinity_jack::parse_port_key` (the one place the `nodeId@portId`
 /// convention is owned) instead of hand-rolling a second splitter here.
 fn trinity_port_endpoint_parts(endpoint: &str) -> (String, String) {
-    crate::artifacts::jack::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), String::new()), |(n, p)| (n.to_string(), p.to_string()))
+    semio_s_artifact_trinity_jack::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), String::new()), |(n, p)| (n.to_string(), p.to_string()))
 }
 
 fn trinity_port_handle_key(node_id: &str, port_id: &str, input: bool) -> String {
@@ -741,10 +741,10 @@ fn trinity_rewriting_page_handle_matches(operation: u64, generation: u64, expect
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jack::PropertyValue;
-    use crate::artifacts::rewriting::schema::{AssignmentJson, Lhs, PatternJson, Rhs};
-    use crate::lexer::TokenSpan as JackTokenSpan;
-    use graph::dsl::Completion as JackCompletion;
+    use semio_s_artifact_trinity_jack::PropertyValue;
+    use crate::schema::{AssignmentJson, Lhs, PatternJson, Rhs};
+    use semio_s_artifact_trinity_jack::lexer::TokenSpan as JackTokenSpan;
+    use semio_framework_graph::dsl::Completion as JackCompletion;
     use store::ArtifactDsl;
 
     #[test]
@@ -827,7 +827,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn nakagin_flat_position_derived() {
         let g = nakagin_graph();
-        let flat = crate::artifacts::jack::schema::inferences::flat_position::compute_flat_position(&g.to_fixture());
+        let flat = semio_s_artifact_trinity_jack::schema::inferences::flat_position::compute_flat_position(&g.to_fixture());
         let root_uv = flat.positions.get("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
         assert_eq!(root_uv.u, 0.0);
         let capsule_uv = flat.positions.get("6947a41b-8c6d-4291-bdd8-96cd535c78fc").unwrap();
@@ -841,7 +841,7 @@ mod tests {
         assert!(!host.engine.edges.is_empty());
         assert!(!host.engine.enforce_acyclic);
         assert_eq!(host.board.nodes.len(), 9);
-        assert!(host.board.nodes.values().all(|node| matches!(node.shape, infinite_board_port_directed::NodeShape::Circle)));
+        assert!(host.board.nodes.values().all(|node| matches!(node.shape, semio_framework_os_infinite::NodeShape::Circle)));
     }
 
     #[semio_framework_async_macros::async_test]

@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::home::SHomeSnapshot;
+use crate::SHomeSnapshot;
 
 /// 📦️ The `home` app's "default" example, embedded at compile time as handcrafted `.shome` DSL text —
 /// exercised by the round-trip test below. Not yet wired into a `.example(...)` manifest registration

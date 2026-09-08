@@ -23,6 +23,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-remodel-remodeling = { workspace = true }
 semio-s-artifact-stdio-avi = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-jpg = { workspace = true }

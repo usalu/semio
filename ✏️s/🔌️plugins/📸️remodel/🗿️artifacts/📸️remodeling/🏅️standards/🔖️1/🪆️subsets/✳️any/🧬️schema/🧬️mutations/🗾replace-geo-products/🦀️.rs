@@ -1,9 +1,9 @@
 //! 🔁 Remodeling mutation — `ReplaceGeoProducts`: whole-value swap of `ReconstructionResults.geo`, a large
 //! structured sub-payload swapped wholesale by the reconstruction engine or a clear/reset command.
 
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::{GeoProducts, RemodelingSnapshot};
+use crate::diff::RemodelingDiff;
+use crate::mutations::RemodelingMutation;
+use crate::{GeoProducts, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 

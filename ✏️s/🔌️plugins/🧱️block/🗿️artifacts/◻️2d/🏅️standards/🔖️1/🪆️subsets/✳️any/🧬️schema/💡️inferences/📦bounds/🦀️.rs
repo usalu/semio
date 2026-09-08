@@ -4,7 +4,7 @@
 //! puzzle2d's flatten pipeline) — it is a single flat catalog of rim placements — so this is a
 //! plain whole-snapshot derivation, not a per-entity `InferredField` chain.
 
-use crate::artifacts::block2d::Block2dSnapshot;
+use crate::Block2dSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned bounding box in the node kind's local (rim) space.
@@ -52,7 +52,7 @@ pub fn compute_block2d_bounds(snapshot: &Block2dSnapshot) -> Block2dBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::block2d::Block2dHandleTemplate;
+    use crate::Block2dHandleTemplate;
     use std::f64::consts::PI;
 
     fn handle(id: &str, angle: f64, radius: f64) -> Block2dHandleTemplate {

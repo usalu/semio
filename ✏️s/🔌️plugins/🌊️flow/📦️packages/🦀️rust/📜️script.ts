@@ -65,8 +65,11 @@ class AddWidgetRetainedCheckScript extends BundleScript {
   async oracle(): Promise<void> {
     const root = new URL("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/", import.meta.url);
     const fixture = await Bun.file(new URL("🧪️fixtures/🧵️add-widget-retained/🔣️.json", root)).json();
-    const schema = await Bun.file(new URL("🧪️fixtures/🧵️add-widget-retained/🧬️.schema.json", root)).json();
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+    const schemaModule = await Bun.file(new URL("../🧬️schema/🔣️.json", root)).json();
+    const ajv = new Ajv({ strict: true, allErrors: true });
+    ajv.addKeyword({ keyword: "x-semio-state", metaSchema: { type: "string" } });
+    for (const numeric of ["double", "float", "int32", "int64", "uint32", "uint64"]) ajv.addFormat(numeric, true);
+    const validate = ajv.addSchema(schemaModule).compile({ $ref: `${schemaModule.$id}#/$defs/FlowAddWidgetRetained` });
     assert(validate(fixture), JSON.stringify(validate.errors));
     const deny = { accepted: false, sessionCalls: 0, parentMutations: 0, childGroups: 0, visibleGroups: 0 };
     const model = (request: any) => {

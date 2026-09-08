@@ -1,6 +1,6 @@
 //! 👥️ Writer presence — shareable live ephemeral state + mutations.
 
-use crate::artifacts::writer::{WriterCamera, WriterEditorSelection};
+use crate::{WriterCamera, WriterEditorSelection};
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 

@@ -75,10 +75,10 @@ impl Element for Bar2 {
         let k = self.e * self.area / l;
         let mut m = MatD::zeros(4, 4);
         let terms = [[cx * cx, cx * cy, -cx * cx, -cx * cy], [cx * cy, cy * cy, -cx * cy, -cy * cy]];
-        for row in 0..2 {
-            for col in 0..4 {
-                m.set(row, col, k * terms[row][col]);
-                m.set(row + 2, col, if col < 2 { -k * terms[row][col] } else { k * terms[row][col - 2] });
+        for (row, terms) in terms.iter().enumerate() {
+            for (col, &term) in terms.iter().enumerate() {
+                m.set(row, col, k * term);
+                m.set(row + 2, col, if col < 2 { -k * term } else { k * terms[col - 2] });
             }
         }
         m
@@ -142,9 +142,9 @@ impl Element for Bar2 {
         let coeff = n / l;
         let proj = [[1.0 - cx * cx, -cx * cy], [-cx * cy, 1.0 - cy * cy]];
         let mut kg = MatD::zeros(4, 4);
-        for row in 0..2 {
-            for col in 0..2 {
-                let v = coeff * proj[row][col];
+        for (row, projection) in proj.iter().enumerate() {
+            for (col, &projection) in projection.iter().enumerate() {
+                let v = coeff * projection;
                 kg.set(row, col, v);
                 kg.set(row, col + 2, -v);
                 kg.set(row + 2, col, -v);
@@ -518,10 +518,8 @@ fn plane_geometric_stiffness(coords: &[[f64; 2]], rule: &[(f64, f64, f64)], shap
         let sigma = d.mul_vec(&eps);
         let (sxx, syy, sxy) = (sigma.get(0), sigma.get(1), sigma.get(2));
         let scale = w * det_j * thickness;
-        for i in 0..n_nodes {
-            let (dix, diy) = (d_n_xy[i][0], d_n_xy[i][1]);
-            for j in 0..n_nodes {
-                let (djx, djy) = (d_n_xy[j][0], d_n_xy[j][1]);
+        for (i, &[dix, diy]) in d_n_xy[..n_nodes].iter().enumerate() {
+            for (j, &[djx, djy]) in d_n_xy[..n_nodes].iter().enumerate() {
                 let s = dix * sxx * djx + dix * sxy * djy + diy * sxy * djx + diy * syy * djy;
                 kg.add_at(2 * i, 2 * j, s * scale);
                 kg.add_at(2 * i + 1, 2 * j + 1, s * scale);

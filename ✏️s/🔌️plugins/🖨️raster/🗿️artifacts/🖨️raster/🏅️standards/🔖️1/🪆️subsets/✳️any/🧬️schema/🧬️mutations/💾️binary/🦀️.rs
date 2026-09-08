@@ -6,8 +6,8 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::raster::op::RasterMutation;
-use crate::artifacts::raster::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterOwnedMap, RasterOwnedMapInsert, RasterOwnedMapPageBacking, RasterSnapshot};
+use crate::op::RasterMutation;
+use crate::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterOwnedMap, RasterOwnedMapInsert, RasterOwnedMapPageBacking, RasterSnapshot};
 use protocol::{Mutation, OpBinary};
 
 /// 📦️ Encodes a `RasterMutation` to its binary command form.
@@ -758,7 +758,7 @@ pub(crate) mod test_support {
 
     pub(crate) fn retire_raster_snapshot(snapshot: RasterSnapshot) {
         let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterSnapshotRetirementFactory, snapshot);
-        let maximum_bytes = RASTER_OWNED_FIELD_BYTES.max(crate::artifacts::raster::RASTER_OWNED_MAP_PAGE_BACKING_BYTES);
+        let maximum_bytes = RASTER_OWNED_FIELD_BYTES.max(crate::RASTER_OWNED_MAP_PAGE_BACKING_BYTES);
         let mut steps = 0_u64;
         let mut idle = 0_u64;
         loop {
@@ -1217,10 +1217,10 @@ impl RasterOwnerTotals {
     fn map<V>(&mut self, value: &RasterOwnedMap<V>, candidate_extra_entries: usize) -> Result<(), &'static str> {
         let source_pages = value.allocated_page_count();
         let candidate_entries = value.len().checked_add(candidate_extra_entries).ok_or("raster-store.preflight-map-entry-overflow")?;
-        if candidate_entries > crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY {
+        if candidate_entries > crate::RASTER_OWNED_MAP_CAPACITY {
             return Err("raster-store.preflight-map-item-capacity");
         }
-        let candidate_pages = candidate_entries.div_ceil(crate::artifacts::raster::RASTER_OWNED_MAP_PAGE_CAPACITY);
+        let candidate_pages = candidate_entries.div_ceil(crate::RASTER_OWNED_MAP_PAGE_CAPACITY);
         let page_bytes = RasterOwnedMap::<V>::conservative_page_credit_bytes();
         self.add(source_pages, source_pages.checked_mul(page_bytes).ok_or("raster-store.preflight-map-source-byte-overflow")?, candidate_pages, candidate_pages.checked_mul(page_bytes).ok_or("raster-store.preflight-map-candidate-byte-overflow")?)
     }
@@ -1752,8 +1752,8 @@ struct RasterLayerCloneAuthority {
 }
 
 impl RasterLayerCloneAuthority {
-    fn mask(source: &Option<crate::artifacts::raster::RasterLayerMask>) -> Option<crate::artifacts::raster::RasterLayerMask> {
-        source.as_ref().map(|value| crate::artifacts::raster::RasterLayerMask { enabled: value.enabled, linked: value.linked, invert: value.invert, width: value.width, height: value.height })
+    fn mask(source: &Option<crate::RasterLayerMask>) -> Option<crate::RasterLayerMask> {
+        source.as_ref().map(|value| crate::RasterLayerMask { enabled: value.enabled, linked: value.linked, invert: value.invert, width: value.width, height: value.height })
     }
 
     fn skeleton(source: &RasterLayerNode) -> RasterLayerNode {
@@ -1764,7 +1764,7 @@ impl RasterLayerCloneAuthority {
                 visible: *visible,
                 opacity: *opacity,
                 blend_mode: String::new(),
-                transform: crate::artifacts::raster::RasterTransform { x: transform.x, y: transform.y, scale_x: transform.scale_x, scale_y: transform.scale_y, rotation: transform.rotation },
+                transform: crate::RasterTransform { x: transform.x, y: transform.y, scale_x: transform.scale_x, scale_y: transform.scale_y, rotation: transform.rotation },
                 mask: Self::mask(mask),
                 width: *width,
                 height: *height,
@@ -1776,7 +1776,7 @@ impl RasterLayerCloneAuthority {
                 visible: *visible,
                 opacity: *opacity,
                 blend_mode: String::new(),
-                transform: crate::artifacts::raster::RasterTransform { x: transform.x, y: transform.y, scale_x: transform.scale_x, scale_y: transform.scale_y, rotation: transform.rotation },
+                transform: crate::RasterTransform { x: transform.x, y: transform.y, scale_x: transform.scale_x, scale_y: transform.scale_y, rotation: transform.rotation },
                 mask: Self::mask(mask),
                 children: Vec::with_capacity(children.capacity().saturating_add(1)),
             },
@@ -1786,7 +1786,7 @@ impl RasterLayerCloneAuthority {
                 visible: *visible,
                 opacity: *opacity,
                 blend_mode: String::new(),
-                transform: crate::artifacts::raster::RasterTransform { x: transform.x, y: transform.y, scale_x: transform.scale_x, scale_y: transform.scale_y, rotation: transform.rotation },
+                transform: crate::RasterTransform { x: transform.x, y: transform.y, scale_x: transform.scale_x, scale_y: transform.scale_y, rotation: transform.rotation },
                 adjustment_kind: String::new(),
                 params: RasterOwnedMap::new(),
             },
@@ -3648,7 +3648,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     self.fail(b"raster-store.initializer-envelope-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
-                if envelope.schema != crate::artifacts::raster::RASTER_DOCUMENT_SCHEMA || envelope.id.is_empty() || envelope.id.len() > RASTER_OWNED_FIELD_BYTES {
+                if envelope.schema != crate::RASTER_DOCUMENT_SCHEMA || envelope.id.is_empty() || envelope.id.len() > RASTER_OWNED_FIELD_BYTES {
                     self.fail(b"raster-store.initializer-envelope-invalid");
                 } else {
                     self.phase = RasterStoreInitializationPhase::ValidateEditPair { left: 0, right: 1 };
@@ -4070,11 +4070,11 @@ pub fn raster_document_store_initialization_job(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::raster::mutations::{
+    use crate::mutations::{
         add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer,
     };
-    use crate::artifacts::raster::schema::empty_raster_document;
-    use crate::artifacts::raster::{RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+    use crate::schema::empty_raster_document;
+    use crate::{RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
     static RASTER_INITIALIZER_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
     static RASTER_STANDALONE_RETIREMENT_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -4105,7 +4105,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn raster_document_text_round_trips_store_with_applied_operation() {
-        use crate::artifacts::raster::RasterSnapshot;
+        use crate::RasterSnapshot;
 
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None);
         let mut store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
@@ -4311,7 +4311,7 @@ mod tests {
             height: Some(1),
             image_key: None,
         });
-        for index in 0..(crate::artifacts::raster::RASTER_OWNED_MAP_PAGE_CAPACITY + 1) {
+        for index in 0..(crate::RASTER_OWNED_MAP_PAGE_CAPACITY + 1) {
             source
                 .assets
                 .insert(
@@ -4552,7 +4552,7 @@ mod tests {
     #[test]
     fn raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_explicitly() {
         let mut assets = RasterOwnedMap::new();
-        for index in 0..crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY {
+        for index in 0..crate::RASTER_OWNED_MAP_CAPACITY {
             assets
                 .insert(
                     format!("asset-{index:02}"),
@@ -4629,7 +4629,7 @@ mod tests {
                 }
             }
         }
-        assert_eq!(page_backings, crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY / crate::artifacts::raster::RASTER_OWNED_MAP_PAGE_CAPACITY);
+        assert_eq!(page_backings, crate::RASTER_OWNED_MAP_CAPACITY / crate::RASTER_OWNED_MAP_PAGE_CAPACITY);
         drop(retirement);
     }
 
@@ -4785,7 +4785,7 @@ mod tests {
         let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
         let mut params = RasterOwnedMap::new();
         let mut first_key_pointer = std::ptr::null();
-        for index in 0..crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY {
+        for index in 0..crate::RASTER_OWNED_MAP_CAPACITY {
             let key = format!("key-{index:02}");
             if index == 0 {
                 first_key_pointer = key.as_ptr();
@@ -4793,7 +4793,7 @@ mod tests {
             let value = dsl::DslValue::Object(vec![("nested".into(), dsl::DslValue::Array(vec![dsl::DslValue::String(format!("value-{index}")), dsl::DslValue::Object(vec![("leaf".into(), dsl::DslValue::uint(index as u64))])]))]);
             params.insert(key, value).expect("maximum populated DSL map remains exactly page admitted");
         }
-        assert_eq!(params.len(), crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY);
+        assert_eq!(params.len(), crate::RASTER_OWNED_MAP_CAPACITY);
         assert_eq!(params.entry_at(0).expect("first exact map owner remains installed").0.as_ptr(), first_key_pointer);
 
         let plus_one_key = String::from("key-plus-one");
@@ -4806,7 +4806,7 @@ mod tests {
 
         let output = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| dsl::DslField::to_value(&params)));
         assert!(output.is_err(), "populated ordinary DSL output is rejected before any whole-map result exists");
-        assert_eq!(params.len(), crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY);
+        assert_eq!(params.len(), crate::RASTER_OWNED_MAP_CAPACITY);
         assert_eq!(params.entry_at(0).expect("panic keeps the first exact key/value/page owner installed").0.as_ptr(), first_key_pointer);
         assert!(matches!(
             store::ErasedSnapshotRetirement::close_step(&mut rejected_retirement, 0, 0).expect("cancellation-shaped zero grant preserves the rejected pair"),
@@ -4833,7 +4833,7 @@ mod tests {
         let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
         let mut params = RasterOwnedMap::new();
         let mut first_key_pointer = std::ptr::null();
-        for index in 0..crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY {
+        for index in 0..crate::RASTER_OWNED_MAP_CAPACITY {
             let key = format!("serde-key-{index:02}");
             if index == 0 {
                 first_key_pointer = key.as_ptr();
@@ -4841,7 +4841,7 @@ mod tests {
             let value = dsl::DslValue::Object(vec![("nested".into(), dsl::DslValue::Array(vec![dsl::DslValue::String(format!("serde-value-{index}")), dsl::DslValue::Object(vec![("leaf".into(), dsl::DslValue::uint(index as u64))])]))]);
             params.insert(key, value).expect("maximum populated serde map remains exactly page admitted");
         }
-        assert_eq!(params.len(), crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY);
+        assert_eq!(params.len(), crate::RASTER_OWNED_MAP_CAPACITY);
         assert_eq!(params.entry_at(0).expect("first serde owner remains installed").0.as_ptr(), first_key_pointer);
 
         let plus_one_key = String::from("serde-key-plus-one");
@@ -4861,7 +4861,7 @@ mod tests {
             RasterLayerNode::Adjustment { params, .. } => params,
             _ => unreachable!("serde fixture remains an adjustment"),
         };
-        assert_eq!(params.len(), crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY);
+        assert_eq!(params.len(), crate::RASTER_OWNED_MAP_CAPACITY);
         assert_eq!(params.entry_at(0).expect("serde fault keeps the first exact owner installed").0.as_ptr(), first_key_pointer);
 
         let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets: RasterOwnedMap::new() };
@@ -4884,7 +4884,7 @@ mod tests {
         }
         let mut params = RasterOwnedMap::new();
         let mut first_param_pointer = std::ptr::null();
-        for index in 0..crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY {
+        for index in 0..crate::RASTER_OWNED_MAP_CAPACITY {
             let key = format!("output-param-{index:02}");
             if index == 0 {
                 first_param_pointer = key.as_ptr();
@@ -4914,7 +4914,7 @@ mod tests {
 
         let mut assets = RasterOwnedMap::new();
         let mut first_asset_pointer = std::ptr::null();
-        for index in 0..crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY {
+        for index in 0..crate::RASTER_OWNED_MAP_CAPACITY {
             let key = format!("output-asset-{index:02}");
             if index == 0 {
                 first_asset_pointer = key.as_ptr();
@@ -4950,8 +4950,8 @@ mod tests {
 
         let layer = RasterLayerNode::Adjustment { id: "retained-output".into(), name: "Retained Output".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "deep".into(), params };
         let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets };
-        assert_eq!(snapshot.require_empty_output_shell(), Err(crate::artifacts::raster::schema::snapshot::RASTER_POPULATED_OUTPUT_ERROR));
-        let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| snapshot.require_empty_output_shell().expect(crate::artifacts::raster::schema::snapshot::RASTER_POPULATED_OUTPUT_ERROR)));
+        assert_eq!(snapshot.require_empty_output_shell(), Err(crate::schema::snapshot::RASTER_POPULATED_OUTPUT_ERROR));
+        let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| snapshot.require_empty_output_shell().expect(crate::schema::snapshot::RASTER_POPULATED_OUTPUT_ERROR)));
         assert!(panic.is_err(), "public DSL panic path contains the fail-closed populated output before allocation");
         let params = match &snapshot.layers[0] {
             RasterLayerNode::Adjustment { params, .. } => params,
@@ -5090,7 +5090,7 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::raster::RasterSnapshot;
+        use crate::RasterSnapshot;
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "command-envelope-demo", empty_raster_document(), None);

@@ -1,6 +1,6 @@
 //! ↩️ Undo mutation for `reorder-synapses`: reorder back to the base-state index.
-use crate::artifacts::flow::schema::mutations::FlowMutation;
-use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
+use crate::schema::mutations::FlowMutation;
+use crate::{flow_working_scene, FlowSnapshot};
 
 use super::ReorderSynapses;
 

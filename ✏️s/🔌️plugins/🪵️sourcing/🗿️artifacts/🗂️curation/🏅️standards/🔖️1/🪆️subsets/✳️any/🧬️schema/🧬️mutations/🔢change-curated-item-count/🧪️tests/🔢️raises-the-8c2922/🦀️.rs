@@ -9,9 +9,9 @@
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`); the derived encodings come from `fixtures generate`.
 
-use crate::artifacts::curation::diff::CurationDiff;
-use crate::artifacts::curation::mutations::SourcingMutation;
-use crate::artifacts::curation::CurationSnapshot;
+use crate::diff::CurationDiff;
+use crate::mutations::SourcingMutation;
+use crate::CurationSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

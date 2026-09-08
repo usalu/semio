@@ -1,7 +1,7 @@
 //! 🧬️ Imperative diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::procedure::{ProcedureFlowChild, ProcedureTextChild};
-use schema::ArtifactSchema;
+use crate::{ProcedureFlowChild, ProcedureTextChild};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the imperative artifact; persistent entries apply via
@@ -15,7 +15,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.imperative.procedure")]
 pub struct ProcedureDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::procedure::schema::ProcedureArtifact>>,
+    pub artifact: Option<Box<crate::schema::ProcedureArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

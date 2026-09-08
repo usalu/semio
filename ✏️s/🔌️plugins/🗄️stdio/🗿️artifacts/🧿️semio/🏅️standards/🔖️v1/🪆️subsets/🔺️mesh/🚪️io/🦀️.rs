@@ -12,15 +12,25 @@ pub mod derived_composition {
     };
     //#region 🔖️IoBridgeImports
     // 🌉️ W4 (mesh↔{gltf,stl,obj,ply,las}) io leaves — real trait impls registered below.
+    #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
+    #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::las::v1_0::any::SemioMeshToLas;
+    #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
+    #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::ply::v1_0::any::SemioMeshToPly;
+    #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
+    #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
+    #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas;
+    #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::obj::v3_0::any::SemioMeshFromObj;
+    #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
+    #[cfg(feature = "conversion-mesh")]
     use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
     //#endregion 🔖️IoBridgeImports
 
@@ -140,6 +150,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-mesh")]
         register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -160,6 +171,7 @@ pub mod derived_composition {
     /// the 10 rows below give all 20 IoKeys (5 formats x 2 directions x 2 perspectives) without
     /// hand-writing each perspective separately.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-mesh")]
     fn io_bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES
@@ -183,7 +195,7 @@ pub mod derived_composition {
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-mesh"))]
     mod tests {
         use super::*;
         use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive};

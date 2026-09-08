@@ -6,8 +6,8 @@
 //! dispatch (this command carries no cursor of its own, so a partial/delta batch would silently
 //! regress the folded members/visibility).
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation, SpaceIndexMember};
 use semio_framework_os_kernel::os_directory::{fold_all, DirectoryEvent, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};

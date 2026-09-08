@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `ChangeGenerationValue`, reconstructed from BASE.
 use super::ChangeGenerationValue;
-use crate::artifacts::generation2d::mutations::change_generation_value;
-use crate::artifacts::generation2d::mutations::Generation2dMutation;
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::mutations::change_generation_value;
+use crate::mutations::Generation2dMutation;
+use crate::Generation2dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangeGenerationValue, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {

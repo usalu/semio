@@ -15,10 +15,10 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::generation2d::Generation2dSnapshot;
-use flow::neural::{Atom, Dictionary, Value as NeuralValue};
-use flow::playbook::{FormGeneration, GenerationPlayState};
-use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use crate::Generation2dSnapshot;
+use semio_framework_artifact_flow_semio_framework_os_flow::neural::{Atom, Dictionary, Value as NeuralValue};
+use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
+use semio_framework_artifact_flow_semio_framework_os_flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use std::collections::BTreeMap;
 
 /// 📦️ The `procedural2d-play` "default" example, embedded at compile time as handcrafted `.generation2d`
@@ -27,7 +27,7 @@ use std::collections::BTreeMap;
 pub const GENERATION2D_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
 
 //#region 🔖️DslMirror
-/// 🔒️ `ValueDsl` mirrors `flow::neural::Value`/`Atom` field-for-field rather than routing through
+/// 🔒️ `ValueDsl` mirrors `semio_framework_artifact_flow_semio_framework_os_flow::neural::Value`/`Atom` field-for-field rather than routing through
 /// the engine's dynamic `Shape::Value`/`DslValue` escape hatch, which merges `Atom::Integer`/
 /// `Atom::Decimal` into one `Number(f64)` case — a real, observable loss of fidelity `ValueDsl`'s own
 /// mutually-exclusive `Option` fields avoid entirely.
@@ -98,7 +98,7 @@ pub fn value_dsl_entries_to_dictionary(entries: &[DictEntryDsl]) -> Dictionary {
     entries.iter().fold(Dictionary::new(), |dict, entry| dict.insert(entry.key.clone(), value_dsl_to_value(&entry.value)))
 }
 
-/// 🎥️ Local twin of `flow::CameraJson`.
+/// 🎥️ Local twin of `semio_framework_artifact_flow_semio_framework_os_flow::CameraJson`.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct CameraJsonDsl {
     x: f64,
@@ -114,7 +114,7 @@ pub fn camera_from_dsl(camera: &CameraJsonDsl) -> CameraJson {
     CameraJson { x: camera.x, y: camera.y, zoom: camera.zoom }
 }
 
-/// 📍️ Local twin of `flow::WidgetLayout`.
+/// 📍️ Local twin of `semio_framework_artifact_flow_semio_framework_os_flow::WidgetLayout`.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct WidgetLayoutDsl {
     x: f64,
@@ -129,7 +129,7 @@ pub fn layout_from_dsl(layout: &WidgetLayoutDsl) -> WidgetLayout {
     WidgetLayout { x: layout.x, y: layout.y }
 }
 
-/// 🔗️ Local twin of `flow::SynapseSpec` — a graph edge (`from@fromPort->to@toPort`) via the
+/// 🔗️ Local twin of `semio_framework_artifact_flow_semio_framework_os_flow::SynapseSpec` — a graph edge (`from@fromPort->to@toPort`) via the
 /// engine's unified `dsl::Wire` shape.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct SynapseSpecDsl {
@@ -155,7 +155,7 @@ pub fn synapse_from_dsl(synapse: SynapseSpecDsl) -> SynapseSpec {
     SynapseSpec { id: synapse.id, from: wire.from.id, to: to.id, from_port: wire.from.port.unwrap_or_default(), to_port: to.port.unwrap_or_default() }
 }
 
-/// 🎛️ Local twin of `flow::Widget` — `Neuron`/`OutputPreview`'s `Dictionary` fields route
+/// 🎛️ Local twin of `semio_framework_artifact_flow_semio_framework_os_flow::Widget` — `Neuron`/`OutputPreview`'s `Dictionary` fields route
 /// through `ValueDsl`; `Cluster`'s `tree`/`flow` are carried as an opaque `dsl::DslValue`.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 pub enum WidgetDsl {
@@ -246,7 +246,7 @@ pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
     })
 }
 
-/// 🧬️ Local twin of `flow::playbook::FormGeneration`.
+/// 🧬️ Local twin of `semio_framework_artifact_playbook_playbook::FormGeneration`.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 pub struct FormGenerationDsl {
     id: String,
@@ -399,7 +399,7 @@ pub fn print_dsl(document: &Generation2dSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::generation2d::GENERATION_2D_SCHEMA;
+    use crate::GENERATION_2D_SCHEMA;
     use semio_framework_os_kernel::os_store::test_support;
     use store::ArtifactDsl;
 
@@ -420,7 +420,7 @@ mod tests {
     #[test]
     fn dsl_round_trip_with_generation_state() {
         let mut projection = Generation2dSnapshot::default();
-        let mut values = flow::playbook::PlaybookValues::new();
+        let mut values = semio_framework_artifact_playbook_playbook::PlaybookValues::new();
         // 🌱️ A fractional literal, not a whole number: a whole-number float still normalizes to an
         // integer-backed `serde_json::Number` somewhere on this round trip — a real, engine-owned
         // behavior, not a bug in this crate's mirror/conversion code — so a whole-number input like
@@ -456,12 +456,12 @@ mod tests {
     /// `protocol::MutationEnvelope`s beside this file's existing dsl/pack round-trip laws.
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::generation2d::op::Generation2dMutation;
+        use crate::op::Generation2dMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let mut store: ArtifactStore<Generation2dSnapshot, Generation2dMutation> = ArtifactStore::new(create_document_envelope(GENERATION_2D_SCHEMA, "generation2d", Generation2dSnapshot::default(), None)).await.expect("valid artifact store fixture");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::generation2d::op::replace_widget(Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::op::replace_widget(Widget::InputNote { id: "note-9".into(), text: String::new() })], description: None }).await.expect("apply");
         let edit: &Edit<Generation2dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         test_support::assert_command_envelope_round_trip::<Generation2dSnapshot, Generation2dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }

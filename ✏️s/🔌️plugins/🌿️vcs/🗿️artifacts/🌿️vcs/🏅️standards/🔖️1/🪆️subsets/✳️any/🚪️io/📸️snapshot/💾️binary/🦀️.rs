@@ -10,7 +10,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::VcsSnapshot;
 use store::PackError;
 
 //#region 🔖️ArtifactPackCodec
@@ -48,12 +48,12 @@ pub fn decode(bytes: &[u8]) -> Result<VcsSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::vcs::op::VcsDemoMutation;
-    use crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA;
+    use crate::op::VcsDemoMutation;
+    use crate::VCS_DOCUMENT_SCHEMA;
 
     #[semio_framework_async_macros::async_test]
     async fn vcs_demo_projection_dsl_pack_equivalence() {
-        let projection = crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot();
+        let projection = crate::standards::v1::subsets::any::schema::empty_vcs_snapshot();
         store::os_store::test_support::assert_dsl_pack_equivalence(&projection);
         let bytes = encode(&projection);
         assert_eq!(decode(&bytes).expect("decode"), projection);
@@ -70,8 +70,8 @@ mod tests {
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let mut store: ArtifactStore<VcsSnapshot, VcsDemoMutation> =
-            ArtifactStore::new(create_document_envelope(VCS_DOCUMENT_SCHEMA, "vcs-demo", crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot(), None)).await.expect("valid artifact store fixture");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::vcs::mutations::rename_vcs("Renamed".into())], description: None }).await.expect("apply");
+            ArtifactStore::new(create_document_envelope(VCS_DOCUMENT_SCHEMA, "vcs-demo", crate::standards::v1::subsets::any::schema::empty_vcs_snapshot(), None)).await.expect("valid artifact store fixture");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::rename_vcs("Renamed".into())], description: None }).await.expect("apply");
         let edit: &Edit<VcsDemoMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<VcsSnapshot, VcsDemoMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }

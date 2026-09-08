@@ -5,7 +5,7 @@
 //! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6), the right tool for
 //! compliance/report data per the contract's own guidance.
 
-use crate::artifacts::en1990::En1990Snapshot;
+use crate::En1990Snapshot;
 // 🚧️ SDK GAP: `WindowKit`/`TableWindowKit`/`TableView` are not yet in `semio_framework_plugin`'s
 // curated crate-root re-export list — only reachable through `app`, same class of gap as `Dialect`.
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
@@ -28,7 +28,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `En1990Snapshot -> UiNode` read: recomputes the compliance report straight off the document
 /// (the same pure inference the editor's results window renders through `NormHost`), then tables it.
 pub fn render(document: &En1990Snapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let report = crate::artifacts::en1990::standards::v1::subsets::any::schema::inferences::evaluate(document);
+    let report = crate::standards::v1::subsets::any::schema::inferences::evaluate(document);
     TableWindowKit::render(&TableView { columns: crate::app_surface::report_table_columns(), rows: crate::app_surface::report_table_rows(&report) })
 }
 //#endregion 🔖️Render

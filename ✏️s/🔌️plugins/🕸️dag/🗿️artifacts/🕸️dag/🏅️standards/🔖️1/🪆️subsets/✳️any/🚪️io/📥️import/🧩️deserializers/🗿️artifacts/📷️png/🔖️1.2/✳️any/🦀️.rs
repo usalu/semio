@@ -4,7 +4,7 @@
 //! `serde_json` — succeeds only for a `PngSnapshot` whose serialized shape happens to already
 //! match `DagSnapshot`'s own, `IoFidelity::Lossy`.
 
-use crate::artifacts::dag::DagSnapshot;
+use crate::DagSnapshot;
 use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};

@@ -5,9 +5,9 @@
 //! (`mutation.target-missing`, Error). `add-load` calls the SAME guard, so the two doors into a
 //! case's `loads` cannot drift apart.
 use super::CreateLoadCase;
-use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dLoadCasesDelta};
-use crate::artifacts::fem2d::mutations::guards;
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::diff::{Fem2dDiff, Fem2dLoadCasesDelta};
+use crate::mutations::guards;
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateLoadCase, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

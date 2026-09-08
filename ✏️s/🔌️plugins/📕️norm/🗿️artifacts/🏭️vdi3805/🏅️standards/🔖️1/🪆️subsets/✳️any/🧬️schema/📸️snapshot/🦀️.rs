@@ -1,7 +1,7 @@
 //! 🧬️ Vdi3805 snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::vdi3805::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
-use schema::ArtifactSchema;
+use crate::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
+use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
@@ -43,7 +43,7 @@ crate::impl_norm_artifact_record!(Vdi3805Snapshot, extension = "vdi3805", envelo
 
 impl Default for Vdi3805Snapshot {
     fn default() -> Self {
-        crate::artifacts::vdi3805::reference_fixture()
+        crate::reference_fixture()
     }
 }
 //#endregion 🔖️Snapshot

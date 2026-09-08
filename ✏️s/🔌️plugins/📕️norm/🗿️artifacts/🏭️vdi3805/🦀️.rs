@@ -1,6 +1,25 @@
 //! 🔧️ VDI 3805 manufacturer product data for building services: Part 1 + sheets 2–100 — document entities.
 
-pub use crate::artifacts::vdi3805::schema::snapshot::Vdi3805Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+pub use semio_s_artifact_norm_contract::{app_surface, config, document, impl_norm_artifact_record, norm_owned_tool_job_factory};
+
+/// 📜 Language-neutral package declaration owned by this artifact.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+
+/// 📦 Validates this artifact's independently compiled package identity.
+pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifactPackage, semio_s_artifact_norm_contract::PackageSchemaError> {
+    semio_s_artifact_norm_contract::package_from_schema(ARTIFACT_DEFINITION_SCHEMA)
+}
+
+pub use crate::document_schema::snapshot::Vdi3805Snapshot;
 
 use crate::document::{NormError, QuantityKind};
 use std::collections::{BTreeMap, BTreeSet};
@@ -1296,7 +1315,8 @@ mod tests {
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use crate::artifacts::definition::{CapabilitySpec as C, ClaimSpec as Q, LocalizationSpec as L};
+    package_descriptor().map_err(|error| semio_framework_plugin::ArtifactDefinitionError::new("artifact.package-schema", error.to_string()))?;
+    use semio_s_artifact_norm_contract::definition::{CapabilitySpec as C, ClaimSpec as Q, LocalizationSpec as L};
     const S: &[Q] = &[Q { namespace: "schema", value: "s.norm.vdi3805" }];
     const I: &[Q] = &[Q { namespace: "schema", value: "s.norm.vdi3805.inference" }];
     const M: &[Q] = &[Q { namespace: "dialect", value: "s.norm.vdi3805@1/*" }];
@@ -1318,14 +1338,14 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         C { identity: "s.norm.vdi3805.localization.en", kind: "localization", descriptor: "VDI 3805 manufacturer product data", claims: &[], localizations: EN },
         C { identity: "s.norm.vdi3805.localization.de", kind: "localization", descriptor: "VDI 3805 Produktdaten der Technischen Gebäudeausrüstung", claims: &[], localizations: DE },
     ];
-    crate::artifacts::definition::assemble_definition("s.norm.vdi3805", ROWS)
+    semio_s_artifact_norm_contract::definition::assemble_definition("s.norm.vdi3805", ROWS)
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::vdi3805::schema::vdi3805_artifact_schema_descriptor())
-        .inferences([crate::artifacts::vdi3805::standards::v1::subsets::any::schema::inferences::vdi3805_artifact_inference_descriptor()])
-        .composers(crate::artifacts::vdi3805::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(crate::document_schema::vdi3805_artifact_schema_descriptor())
+        .inferences([crate::standards::v1::subsets::any::schema::inferences::vdi3805_artifact_inference_descriptor()])
+        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<semio_framework_plugin::EditorApp<crate::editor::vdi3805::Vdi3805PlayApp>>()
         .try_build()
@@ -1343,28 +1363,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "vdi3805.document",
                     extension: Some("vdi3805"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::vdi3805::dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("vdi3805.document"),
                 },
                 dsl::LanguageSpec {
                     id: "vdi3805.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::vdi3805::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("vdi3805.op"),
                 },
                 dsl::LanguageSpec {
                     id: "vdi3805.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::vdi3805::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("vdi3805.diff"),
@@ -1375,8 +1395,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::vdi3805::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("vdi3805.pack"),
                 },
                 dsl::LanguageSpec {
@@ -1385,8 +1405,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::vdi3805::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("vdi3805.spr"),
                 },
             ]
@@ -1394,3 +1414,414 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
         .as_slice()
 }
 //#endregion 🪪️Declaration
+
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod outline {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                        pub use text::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+
+                        #[path = "."]
+                        pub mod replace_product_configuration {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️replace-product-configuration/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️replace-product-configuration/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️replace-product-configuration/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_geometry_connection {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️remove-geometry-connection/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️remove-geometry-connection/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️remove-geometry-connection/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_edition_profile {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-edition-profile/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-edition-profile/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-edition-profile/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod update_manufacturer_file {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️update-manufacturer-file/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️update-manufacturer-file/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️update-manufacturer-file/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod rename_product {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_correction_as_of {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-correction-as-of/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-correction-as-of/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-correction-as-of/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_curve {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️create-curve/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️create-curve/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️create-curve/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod replace_curve_points {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️replace-curve-points/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️replace-curve-points/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️replace-curve-points/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod resize_geometry {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-geometry/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-geometry/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-geometry/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_product {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_edition_profile {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️change-edition-profile/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️change-edition-profile/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖️change-edition-profile/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod add_geometry_connection {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️add-geometry-connection/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️add-geometry-connection/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️add-geometry-connection/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_strict_mode {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-strict-mode/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-strict-mode/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️change-strict-mode/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod replace_geometry_parameters {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-geometry-parameters/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-geometry-parameters/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-geometry-parameters/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_curve {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-curve/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-curve/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-curve/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_geometry {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-geometry/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-geometry/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-geometry/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod delete_product {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-product/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-product/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-product/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod update_limits {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️update-limits/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️update-limits/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️update-limits/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod create_geometry {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️create-geometry/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️create-geometry/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️create-geometry/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+        }
+    }
+}
+
+// ---- Shims: keep pre-migration module paths resolving for external callers ----
+pub mod document_schema {
+    pub use super::standards::v1::subsets::any::schema::*;
+}
+pub mod io {
+    pub use super::standards::v1::subsets::any::io::*;
+}
+pub mod op {
+    pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
+}
+pub mod document_dsl {
+    pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
+}
+pub mod spr {
+    pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
+}
+pub mod diff {
+    pub use crate::standards::v1::subsets::any::schema::diff::*;
+    pub mod schema {
+        pub use crate::standards::v1::subsets::any::schema::diff::*;
+    }
+    pub mod text {
+        pub use crate::standards::v1::subsets::any::schema::diff::text::*;
+    }
+    pub mod pack {
+        pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
+    }
+    pub mod binary {
+        pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
+    }
+}
+pub mod mutations {
+    pub use crate::standards::v1::subsets::any::schema::mutations::*;
+    pub mod schema {
+        pub use crate::standards::v1::subsets::any::schema::mutations::*;
+    }
+    pub mod text {
+        pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
+    }
+    pub mod pack {
+        pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
+    }
+    pub mod binary {
+        pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
+    }
+}
+pub mod snapshot {
+    pub use crate::standards::v1::subsets::any::schema::snapshot::*;
+    pub mod schema {
+        pub use crate::standards::v1::subsets::any::schema::snapshot::*;
+    }
+    pub mod text {
+        pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
+    }
+    pub mod pack {
+        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
+    }
+    pub mod binary {
+        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
+    }
+}
+pub use crate::standards::v1::subsets::any::schema::diff::Vdi3805Diff;
+pub use crate::standards::v1::subsets::any::schema::mutations::Vdi3805Mutation;
+
+#[path = "."]
+pub mod examples {
+    #[path = "."]
+    pub mod demo {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+}
+
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod vdi3805 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
+            pub mod evaluate;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
+            pub mod selected_check;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
+                    pub mod inputs;
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
+            pub mod catalogue;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
+            pub mod document;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
+            pub mod inspection;
+        }
+    }
+}
+
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod vdi3805 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+}

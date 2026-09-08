@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateAnnualSchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateAnnualSchedule, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -22,6 +22,6 @@ pub fn diff(payload: &super::CreateAnnualSchedule, base: &EnergyModelSnapshot) -
     }
     let mut model = base.model.clone();
     model.schedules.annual.insert(payload.index as usize, crate::schedule::AnnualSchedule { id: payload.id, rules: Vec::new(), default_daily_schedule_id: payload.default_daily_schedule_id, holiday_daily_schedule_id: payload.holiday_daily_schedule_id, holiday_dates: Vec::new() });
-    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

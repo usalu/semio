@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1999/1/any/mutation/change-fatigue-m.json",
+  "$id": "https://semio.tech/schema/s/norm/en1999/1/any/mutation/change-fatigue-m/schema.json",
   "title": "ChangeFatigueM",
   "type": "object",
   "additionalProperties": false,

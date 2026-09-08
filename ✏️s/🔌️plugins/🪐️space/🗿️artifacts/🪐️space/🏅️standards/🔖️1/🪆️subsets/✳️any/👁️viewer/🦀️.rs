@@ -5,8 +5,8 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling `✏️editor` (`policyViewerPurityBreaches`).
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
-use crate::artifacts::space::SPACE_INDEX_DIALECT;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::SPACE_INDEX_DIALECT;
 use crate::viewer::space_index::modes::view;
 use crate::viewer::space_index::modes::view::windows::main;
 use semio_framework_plugin::app::{Dialect, InteractionView};
@@ -38,7 +38,7 @@ pub struct SpaceIndexViewer;
 
 impl ArtifactViewer for SpaceIndexViewer {
     type Snapshot = SSpaceSnapshot;
-    type Mutation = crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -48,7 +48,7 @@ impl ArtifactViewer for SpaceIndexViewer {
     type Command = SpaceIndexViewCommand;
 
     const DIALECT: Dialect = SPACE_INDEX_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> SSpaceSnapshot {
         SSpaceSnapshot::default()

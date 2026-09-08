@@ -1,7 +1,7 @@
 //! 🧬️ Curation artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::curation::{CurationSnapshot, CuratedItem, Filters, GeometryRecipe, ObjectKind, ObjectKindExtra, SourcingMutation};
-use schema::ArtifactSchema;
+use crate::{CurationSnapshot, CuratedItem, Filters, GeometryRecipe, ObjectKind, ObjectKindExtra, SourcingMutation};
+use framework_schema::ArtifactSchema;
 use semio_framework::parse_contributions;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
@@ -36,7 +36,7 @@ fn default_contributions_json() -> String {
 
 impl Default for CurationArtifact {
     fn default() -> Self {
-        Self { catalog: crate::artifacts::curation::catalog_child_handle(&[]), stock_extra: Vec::new(), curated: Vec::new(), filters: Filters::default(), locale: "en-US".into(), contributions_json: default_contributions_json() }
+        Self { catalog: crate::catalog_child_handle(&[]), stock_extra: Vec::new(), curated: Vec::new(), filters: Filters::default(), locale: "en-US".into(), contributions_json: default_contributions_json() }
     }
 }
 
@@ -62,31 +62,31 @@ impl CurationArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.sourcing.curation` — twenty handcrafted schema leaves.
-pub fn curation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn curation_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.sourcing.curation",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -261,7 +261,7 @@ pub fn instance_json(kind: &ObjectKind, position: [f64; 3], scale: f64, selected
 /// `crate::apps::curation::config::SourcingCurationConfig` (session-only view state), so this takes it as a
 /// separate parameter rather than reading it off the document.
 pub fn filtered_stock(document: &CurationSnapshot, filters: &Filters) -> Vec<ObjectKind> {
-    crate::artifacts::curation::stock_of(document)
+    crate::stock_of(document)
         .into_iter()
         .filter(|kind| {
             let query = filters.query.trim().to_lowercase();
@@ -740,23 +740,23 @@ pub fn demo_stock() -> Vec<ObjectKind> {
     sourcing_modules("[]").iter().flat_map(|module| module.demo_kinds()).collect()
 }
 
-/// 📄️ The demo-stock example, parsed once from `crate::artifacts::curation::dsl::DEMO_STOCK_TEXT` — the
+/// 📄️ The demo-stock example, parsed once from `crate::dsl::DEMO_STOCK_TEXT` — the
 /// source of truth for every "demo stock" call site (`setActiveExample`, `initial_snapshot`, tests).
 /// The fixture's persisted `catalog` handle is content-addressed from `demo_stock()` (see
-/// `crate::artifacts::curation::catalog_child_handle`) — re-deriving the same stock here and seeding the
+/// `crate::catalog_child_handle`) — re-deriving the same stock here and seeding the
 /// working-scene cache with it resolves that exact handle, since a composed child is a handle only,
 /// never inline content, in the persisted DSL text itself.
 pub fn default_document() -> CurationSnapshot {
-    crate::artifacts::curation::validate_catalog_payload(&demo_stock());
-    <CurationSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curation::dsl::DEMO_STOCK_TEXT).expect("authored demo stock must match the curation schema")
+    crate::validate_catalog_payload(&demo_stock());
+    <CurationSnapshot as store::ArtifactDsl>::parse_dsl(crate::document_dsl::DEMO_STOCK_TEXT).expect("authored demo stock must match the curation schema")
 }
 
 /// 📄️ The empty-curation example, parsed once from
-/// `crate::artifacts::curation::dsl::EMPTY_CURATION_TEXT` — empty stock, so its `catalog` handle is the
+/// `crate::dsl::EMPTY_CURATION_TEXT` — empty stock, so its `catalog` handle is the
 /// same content-addressed empty-catalog handle `CurationSnapshot::default()` mints.
 pub fn empty_document() -> CurationSnapshot {
-    crate::artifacts::curation::validate_catalog_payload(&[]);
-    <CurationSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::curation::dsl::EMPTY_CURATION_TEXT).expect("authored empty curation must match the curation schema")
+    crate::validate_catalog_payload(&[]);
+    <CurationSnapshot as store::ArtifactDsl>::parse_dsl(crate::document_dsl::EMPTY_CURATION_TEXT).expect("authored empty curation must match the curation schema")
 }
 //#endregion 🔖️Fixtures
 
@@ -776,7 +776,7 @@ mod tests {
     use super::*;
 
     fn sample_document() -> CurationSnapshot {
-        crate::artifacts::curation::curation_snapshot_from_stock(demo_stock(), Vec::new())
+        crate::curation_snapshot_from_stock(&demo_stock(), Vec::new())
     }
 
     #[semio_framework_async_macros::async_test]

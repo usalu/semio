@@ -1,7 +1,7 @@
 //! 🧬️ Sequence snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::sequence::{require_sequence_working_scene, sequence_content_child_with_owner, SequenceContentChild, SequenceEdge, SequenceStep, SEQUENCE_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::{require_sequence_working_scene, sequence_content_child_with_owner, SequenceContentChild, SequenceEdge, SequenceStep, SEQUENCE_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted sequence document snapshot. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
@@ -34,7 +34,7 @@ pub fn default_snapshot() -> SequenceSnapshot {
             SequenceStep {
                 id: "step-1".into(),
                 kind: "state.set".into(),
-                params: crate::artifacts::sequence::StepParams::new().insert("key", neural_engine::Value::Atom(neural_engine::Atom::String("counter".into()))).insert("value", neural_engine::Value::Atom(neural_engine::Atom::Integer(0))),
+                params: crate::StepParams::new().insert("key", neural_engine::Value::Atom(neural_engine::Atom::String("counter".into()))).insert("value", neural_engine::Value::Atom(neural_engine::Atom::Integer(0))),
                 x: 0.0,
                 y: 0.0,
                 slot: None,
@@ -43,7 +43,7 @@ pub fn default_snapshot() -> SequenceSnapshot {
             SequenceStep {
                 id: "step-2".into(),
                 kind: "log.print".into(),
-                params: crate::artifacts::sequence::StepParams::new().insert("message", neural_engine::Value::Atom(neural_engine::Atom::String("hello sequence".into()))),
+                params: crate::StepParams::new().insert("message", neural_engine::Value::Atom(neural_engine::Atom::String("hello sequence".into()))),
                 x: 280.0,
                 y: 0.0,
                 slot: None,
@@ -57,7 +57,7 @@ pub fn default_snapshot() -> SequenceSnapshot {
 
 //#region 🔖️Fixture
 /// 🌊️ The plain pre-migration document shape (`{schema, steps, edges}`) — this plugin's own
-/// analog of `flow::FlowFixture`: the live editing representation `SequenceHost` and the WASM
+/// analog of `semio_framework_artifact_flow_flow::FlowFixture`: the live editing representation `SequenceHost` and the WASM
 /// bridge operate on, and the JSON wire contract `SequenceHost::to_json`/`load_json` still speak.
 /// Bridges to/from the composed-child `SequenceSnapshot` via `to_fixture`/`from_fixture` below.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
@@ -72,7 +72,7 @@ impl neural_engine::ColdRetire for SequenceFixture { fn retire_cold(self) { self
 
 impl neural_engine::ColdRetire for SequenceSnapshot {
     fn retire_cold(mut self) {
-        if let Some(owner) = self.content.take_local_owner::<crate::artifacts::sequence::SequenceWorkingScene>().expect("exact sequence scene owner") {
+        if let Some(owner) = self.content.take_local_owner::<crate::SequenceWorkingScene>().expect("exact sequence scene owner") {
             if let Ok(scene) = std::sync::Arc::try_unwrap(owner) { scene.retire_cold(); }
         }
     }

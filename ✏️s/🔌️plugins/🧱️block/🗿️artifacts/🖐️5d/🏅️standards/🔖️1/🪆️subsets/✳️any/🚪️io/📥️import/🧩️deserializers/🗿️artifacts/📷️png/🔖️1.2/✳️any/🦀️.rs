@@ -7,7 +7,7 @@
 //! (`IoFidelity::Lossy`, rank 0 — the router never prefers it over a real hop) so a caller that does
 //! route here gets this reason back rather than a bare "no route" (see `📓️w3-io.md`).
 
-use crate::artifacts::block5d::Block5dSnapshot;
+use crate::Block5dSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

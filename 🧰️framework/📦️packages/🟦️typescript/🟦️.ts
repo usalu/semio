@@ -789,9 +789,9 @@ if (import.meta.vitest) {
 
     it("subscribes to the adapter's exact watch URLs without a product route dependency", async () => {
       const { default: fixture } = await import("../../🔨️modules/🎠️kernel/🧫️fixtures/📡️source-watch.json");
-      const { default: schema } = await import("../../🔨️modules/🎠️kernel/🧫️fixtures/📐️source-watch.schema.json");
+      const { default: schema } = await import("../../🔨️modules/🎠️kernel/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv");
-      expect(new Ajv().validate(schema, fixture)).toBe(true);
+      expect(new Ajv().compile(schema.$defs.SourceWatchFixture)(fixture)).toBe(true);
       const opened: string[] = [], closed: string[] = [];
       vi.stubGlobal("EventSource", class {
         onmessage: ((event: MessageEvent) => void) | null = null;

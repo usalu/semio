@@ -14,6 +14,7 @@
     { "change": "unknown-row", "accepted": false, "schemaAccepted": false },
     { "change": "foreign-package", "accepted": false, "schemaAccepted": false },
     { "change": "crossed-gis-schema", "accepted": false, "schemaAccepted": true },
+    { "change": "changed-pack-record", "accepted": false, "schemaAccepted": true },
     { "change": "foreign-version", "accepted": false, "schemaAccepted": false },
     { "change": "invalid-utf8", "accepted": false, "schemaAccepted": true },
     { "change": "oversize", "accepted": false, "schemaAccepted": true },

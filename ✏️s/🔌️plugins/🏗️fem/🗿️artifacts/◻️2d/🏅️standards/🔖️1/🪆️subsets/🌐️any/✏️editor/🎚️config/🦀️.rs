@@ -5,7 +5,7 @@
 //! `ArtifactStore` (with a real `backwards`), so result-display/camera/locale edits are VCS'd exactly
 //! like document content.
 
-use crate::artifacts::fem2d::FemCamera;
+use crate::FemCamera;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 

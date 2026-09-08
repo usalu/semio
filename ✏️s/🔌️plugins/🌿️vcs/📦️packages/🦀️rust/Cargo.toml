@@ -31,6 +31,7 @@ name = "native_codecs"
 path = "../../📇️native-codecs/🧪️tests/🦀️.rs"
 
 [dependencies]
+semio-s-artifact-vcs-vcs = { workspace = true }
 semio-framework-ui-contract.workspace = true
 semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-s-plugin-stdio ={ path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }

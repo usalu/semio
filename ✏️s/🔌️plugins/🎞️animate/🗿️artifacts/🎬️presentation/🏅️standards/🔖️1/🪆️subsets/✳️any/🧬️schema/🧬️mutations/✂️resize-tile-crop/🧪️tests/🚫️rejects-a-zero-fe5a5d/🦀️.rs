@@ -14,8 +14,8 @@
 //! is the only thing wrong, and it is FATAL: a degenerate crop rect is a geometry invariant breach,
 //! not a miss.
 
-use crate::artifacts::presentation::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
-use crate::artifacts::presentation::{cache_presentation_working_scene, default_figure_tile_source, FigureTileDraft, FigureTileFrame, PresentationDiff, PresentationSnapshot};
+use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
+use crate::{cache_presentation_working_scene, default_figure_tile_source, FigureTileDraft, FigureTileFrame, PresentationDiff, PresentationSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

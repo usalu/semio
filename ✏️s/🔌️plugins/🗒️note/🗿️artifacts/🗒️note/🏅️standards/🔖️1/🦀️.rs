@@ -6,7 +6,7 @@
 //! `## openQuestions`, matching the sequence pilot's identical documented deviation);
 //! `extensions: ["note"]` is the real, carried-over value.
 
-use crate::artifacts::note::standards::v1::subsets;
+use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 

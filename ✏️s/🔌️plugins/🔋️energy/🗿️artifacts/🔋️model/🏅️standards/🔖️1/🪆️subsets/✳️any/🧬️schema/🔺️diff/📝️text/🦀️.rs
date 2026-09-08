@@ -1,9 +1,9 @@
 //! 🔺️ EnergyModel artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::model::schema::diff::*;
+use crate::schema::diff::*;
 
-use crate::artifacts::model::schema::EnergyModelArtifact;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::schema::EnergyModelArtifact;
+use crate::EnergyModelSnapshot;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -113,11 +113,11 @@ pub fn diff_set_snapshot(snapshot: &EnergyModelSnapshot) -> EnergyModelDiff {
 }
 
 /// 🏢️ Whole-model replacement diff — mints+caches `structure`/`zones` together from `model` via
-/// [`crate::artifacts::model::energy_children_from_model`] (ticket
+/// [`crate::energy_children_from_model`] (ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM). Replaces the old `diff_set_model_json` (which set
 /// the now-removed `model_json` field directly).
 pub fn diff_from_model(model: crate::model::Model) -> EnergyModelDiff {
-    let (structure, zones) = crate::artifacts::model::energy_children_from_model(&model);
+    let (structure, zones) = crate::energy_children_from_model(&model);
     EnergyModelDiff { model: Some(model), structure: Some(structure), zones: Some(zones), ..Default::default() }
 }
 
@@ -134,14 +134,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn empty_diff_is_a_no_operation() {
-        let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
+        let base = crate::schema::empty_energy_model_snapshot();
         let diff = EnergyModelDiff::default();
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn preview_results_do_not_enter_snapshot() {
-        let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
+        let base = crate::schema::empty_energy_model_snapshot();
         let diff = diff_set_results_json("{\"ok\":true}");
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
         let artifact = EnergyModelArtifact::from_snapshot(base);
@@ -151,7 +151,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn diff_from_model_regenerates_structure_and_zones_together() {
-        let base = crate::artifacts::model::schema::empty_energy_model_snapshot();
+        let base = crate::schema::empty_energy_model_snapshot();
         let model = crate::model::Model { name: "Demo".into(), ..crate::model::Model::default() };
         let diff = diff_from_model(model);
         let applied = diff.apply(&base).expect("valid mutation diff");

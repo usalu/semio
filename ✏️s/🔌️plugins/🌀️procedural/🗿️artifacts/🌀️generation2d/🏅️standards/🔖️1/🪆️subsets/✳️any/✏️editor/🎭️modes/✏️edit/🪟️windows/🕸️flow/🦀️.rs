@@ -1,10 +1,10 @@
 //! 🕸️ Generation2d play app — the main node-graph window: the editable flow canvas.
 
-use crate::artifacts::generation2d::schema::{fixture_to_workflow, host_from_fixture};
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::schema::{fixture_to_workflow, host_from_fixture};
+use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::Generation2dConfig;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use flow::{flow_backed_node_graph_extras, FlowEvalSession};
+use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

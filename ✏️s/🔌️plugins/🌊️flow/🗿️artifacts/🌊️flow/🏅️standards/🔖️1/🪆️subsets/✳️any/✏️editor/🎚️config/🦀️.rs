@@ -4,9 +4,10 @@
 //! nothing in it survives into the `.flow` document. It still round-trips through a real `ArtifactStore`
 //! (with a real `backwards`), so selection/camera/grid edits are VCS'd exactly like document content.
 
-use crate::artifacts::flow::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
+use crate::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
 use crate::playbook::GenerationPlayState;
-use flow::{CameraJson, FLOW_LOD_MODE_AUTOMATIC};
+use flow::{FLOW_LOD_MODE_AUTOMATIC};
+use semio_framework_artifact_flow_flow::{CameraJson};
 use protocol::Mutation;
 use std::collections::HashMap;
 
@@ -23,8 +24,8 @@ use std::collections::HashMap;
 /// hatch for the same reason. Per-dispatch eval scratch uses a local `FlowEvalSession` in `handle` /
 /// `pending_effects` / `render` (not process globals). `generation_json` stays config-tracked rather than becoming a
 /// document operation (unlike the sibling `procedural_3d`/`procedural_2d` apps' `GenerationMutation`-backed
-/// generations): flow's document model (`flow::FlowMutation`) is a shared kernel crate out of scope
-/// for that conversion. `camera` stays a real `#[dsl(block)]` field since `flow::CameraJson` DOES
+/// generations): flow's document model (`semio_framework_artifact_flow_flow::FlowMutation`) is a shared kernel crate out of scope
+/// for that conversion. `camera` stays a real `#[dsl(block)]` field since `semio_framework_artifact_flow_flow::CameraJson` DOES
 /// derive `dsl::DslRecord`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]

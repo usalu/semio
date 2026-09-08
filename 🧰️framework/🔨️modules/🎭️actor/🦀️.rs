@@ -22,7 +22,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 pub use semio_framework_job as job;
 
-#[path = "🎠️activation/🦀️.rs"]
+#[path = "🎠️activation-reservation/🦀️.rs"]
 pub mod activation;
 
 #[path = "🚪️lifetime/🦀️.rs"]

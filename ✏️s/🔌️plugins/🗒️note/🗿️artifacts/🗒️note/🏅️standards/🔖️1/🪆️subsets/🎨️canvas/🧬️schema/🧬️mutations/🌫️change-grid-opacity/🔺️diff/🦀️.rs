@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `ChangeGridOpacity`.
 use super::ChangeGridOpacity;
-use crate::artifacts::note::NoteDiff;
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteDiff;
+use crate::NoteSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeGridOpacity, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

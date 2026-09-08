@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::vdi3805::Vdi3805Snapshot;
-use ::schema::ArtifactSchema;
+use crate::Vdi3805Snapshot;
+use ::framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::Vdi3805Outline;
@@ -53,10 +53,10 @@ impl ArtifactInferrer for standards::v1::subsets::any::schema::Vdi3805Builder {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.vdi3805.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `vdi3805_artifact_schema_descriptor`'s registration.
-pub fn vdi3805_artifact_inference_descriptor() -> ::schema::ArtifactInferenceDescriptor {
-    ::schema::ArtifactInferenceDescriptor {
+pub fn vdi3805_artifact_inference_descriptor() -> ::framework_schema::ArtifactInferenceDescriptor {
+    ::framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.vdi3805.inference",
-        inference: ::schema::FacetLeaves {
+        inference: ::framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -87,8 +87,8 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::vdi3805::standards::v1::subsets::any::io::{catalog_from_json, catalog_to_json};
-use crate::artifacts::vdi3805::standards::v1::subsets::any::schema::{clause, diagnostics_to_report, fail_check, na_check, parse_native_text, pass_check, serialize_native_text, validate_structure, ANNEX};
+use crate::standards::v1::subsets::any::io::{catalog_from_json, catalog_to_json};
+use crate::standards::v1::subsets::any::schema::{clause, diagnostics_to_report, fail_check, na_check, parse_native_text, pass_check, serialize_native_text, validate_structure, ANNEX};
 /// 📋️ Full VDI 3805 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. Unlike the Eurocode artifacts, every `part_N::check` here takes the whole
@@ -96,7 +96,7 @@ use crate::artifacts::vdi3805::standards::v1::subsets::any::schema::{clause, dia
 /// `SheetParts`/`Session` machinery lives here rather than in `🧬️schema`. `clause`/`na_check`/
 /// `pass_check`/`fail_check`/`validate_structure`/`diagnostics_to_report` are pure helpers imported
 /// from the parent `🧬️schema`; the JSON (de)serializers come from `🚪️io`.
-use crate::artifacts::vdi3805::*;
+use crate::*;
 use crate::document::{CheckReport, CheckResult, Quantity, QuantityKind};
 
 // #region SheetParts

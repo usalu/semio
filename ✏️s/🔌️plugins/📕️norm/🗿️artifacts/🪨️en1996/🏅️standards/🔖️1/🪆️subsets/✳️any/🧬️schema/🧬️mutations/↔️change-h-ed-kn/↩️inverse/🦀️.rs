@@ -1,9 +1,9 @@
 //! ↩️ `change-h-ed-kn` inverse — restores the pre-change `h_ed_kn` from BASE state; `change` is its own
 //! inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::en1996::mutations::change_h_ed_kn::ChangeHEdKn;
-use crate::artifacts::en1996::mutations::En1996Mutation;
-use crate::artifacts::en1996::En1996Snapshot;
+use crate::mutations::change_h_ed_kn::ChangeHEdKn;
+use crate::mutations::En1996Mutation;
+use crate::En1996Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeHEdKn, base: &En1996Snapshot) -> Vec<En1996Mutation> {

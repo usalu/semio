@@ -2,7 +2,7 @@
 //! Physical dir name (`➖remove-step`, wired by `🦀️.rs`) predates the semantic rename; the Rust
 //! module is still `remove_step`, the type/variant/kind are `delete-step`.
 
-use crate::artifacts::forms::{FormMutation, FormsDiff, FormsSnapshot};
+use crate::{FormMutation, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🗑️DeleteStep

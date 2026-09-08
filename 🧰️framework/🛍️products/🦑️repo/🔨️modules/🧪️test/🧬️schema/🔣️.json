@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio-tech.com/schema/repo/test/v2",
+  "$id": "https://semio.tech/schema/repo/test/schema.json",
   "title": "Semio Repository Test Protocol v2",
   "description": "🧬️ Schema-first contract shared by the test coordinator, every native host and every external probe. v2 makes the unit of coverage `artifact × standard × smallest owning subset × runtime mutation × expected outcome class × fixture × subject implementation × platform`, replaces the single-projection result with a multi-artifact bundle, and requires a QUALIFYING third-party oracle for every mutation. Ticket 26/08/27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING, baseline a8d1caf41f68204e73ff5e47ce40c5f543ed442d.",
   "x-semio": {
@@ -2999,6 +2999,9 @@
                     }
                   }
                 }
+              },
+              "rootExport": {
+                "type": "boolean"
               }
             }
           }
@@ -3078,6 +3081,9 @@
                     ]
                   }
                 }
+              },
+              "rootExport": {
+                "type": "boolean"
               }
             }
           }

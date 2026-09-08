@@ -1,7 +1,7 @@
 //! 🔁️ `replace-part-number-rule` — whole-value swap of the part-number derivation rule
 //! (`Literal`/`Table`/`Script` variants differ structurally, so this is a `replace`, not a `change`).
 
-use crate::artifacts::iso16757::{part_5::PartNumberRule, Iso16757Mutation, Iso16757Snapshot};
+use crate::{part_5::PartNumberRule, Iso16757Mutation, Iso16757Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

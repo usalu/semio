@@ -10,7 +10,7 @@
 //! `"layer"`, `HierarchyProvider::Flat`), read via `InteractionView::selection("layers")` instead of
 //! this config.
 
-use crate::artifacts::raster::RasterCamera;
+use crate::RasterCamera;
 use protocol::Mutation;
 
 //#region 🔖️Config
@@ -83,7 +83,7 @@ impl store::ArtifactPack for RasterConfig {
 
 //#endregion 🔖️ArtifactCodec
 
-pub type RasterConfigViewportSize = crate::artifacts::raster::RasterViewportSize;
+pub type RasterConfigViewportSize = crate::RasterViewportSize;
 
 impl Default for RasterConfig {
     fn default() -> Self {

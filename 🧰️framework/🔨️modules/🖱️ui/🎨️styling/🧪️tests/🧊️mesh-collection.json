@@ -20,7 +20,7 @@
   ],
   "placeholder": { "path": "🧊️placeholder.glb", "content": "placeholder" },
   "catalog": {
-    "$schema": "./🧬️catalog.schema.json",
+    "$schema": "./🧬️schema/🔣️.json",
     "version": 1,
     "collections": [],
     "entries": [

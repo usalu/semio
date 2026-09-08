@@ -1,8 +1,8 @@
 //! 🔺 Diff constructor for `ChangeSceneAmbientIntensity`.
 
 use super::ChangeSceneAmbientIntensity;
-use crate::artifacts::shooting::diff::ShootingDiff;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::ShootingDiff;
+use crate::ShootingSnapshot;
 
 pub fn diff(payload: &ChangeSceneAmbientIntensity, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !payload.new_intensity.is_finite() || payload.new_intensity < 0.0 {

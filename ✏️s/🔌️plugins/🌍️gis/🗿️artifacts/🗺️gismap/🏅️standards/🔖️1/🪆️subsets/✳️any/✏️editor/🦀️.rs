@@ -4,14 +4,14 @@
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the map canvas
 //! and its chrome in `🎭️modes/✏️edit/🪟️windows/🗺️map` (+ its `🎚️options/*`), panel trees in
 //! `📌️panels/*`, labels in `🦀️terminology.rs`, view state in `🦀️config.rs`, the shared `MapHost`
-//! projection in `🦀️maphost.rs`, and document-side compute in `crate::artifacts::gismap::schema`.
+//! projection in `🦀️maphost.rs`, and document-side compute in `crate::schema`.
 //! This app's typed media I/O surface (`gis2d_io`/ports/`gis2d_map_media`) lives below in `🔖️Io` —
 //! relocated from the artifact's `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES),
 //! since an `AppIo` surface is app behaviour, not artifact data.
 
-use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
-use crate::artifacts::gismap::{GIS_MAP_SCHEMA, GisMapSnapshot, artifact_kind};
+use crate::op::GisMapMutation;
+use crate::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
+use crate::{GIS_MAP_SCHEMA, GisMapSnapshot, artifact_kind};
 use crate::editor::gis2d::commands::{example, features, inference, locale, shell, view};
 use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::editor::gis2d::modes::edit;
@@ -141,7 +141,7 @@ pub fn gis2d_layer_tree_item(
 //#region 🔖️Io
 /// 🧭️ Relocated from the artifact's `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this app's typed media I/O surface
-/// (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` `crate::artifacts::gismap::artifact_kind()`
+/// (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` `crate::artifact_kind()`
 /// declares (schema/media type/export+import formats/presentation fields copied verbatim), plus the
 /// two app-specific workflow ports (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE
 /// Wave 2 port recipe): `features:in` (any TwoD×Vector producer feeds new/patched
@@ -158,7 +158,7 @@ pub fn gis2d_io() -> AppIo {
         // mirroring the sibling `gis3d_io()` (gis3d app) fix already applied in this ticket.
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation { id: crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind.into(), name: "2D Map".into(), dimension: "2d".into(), component_kind: "gismap".into() },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: crate::GISMAP_DIALECT.artifact_kind.into(), name: "2D Map".into(), dimension: "2d".into(), component_kind: "gismap".into() },
     }
 }
 
@@ -186,7 +186,7 @@ pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
         label: "Map".into(),
         direction: semio_framework_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-        kind_id: Some(crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind.into()),
+        kind_id: Some(crate::GISMAP_DIALECT.artifact_kind.into()),
         required: false,
         multiplicity: semio_framework::PortMultiplicity::Many,
     }
@@ -196,7 +196,7 @@ pub fn gis2d_map_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// payload; reuses the exact descriptor JSON shape the ◻️2d window's renderer/`MapHost` already consume,
 /// so there is exactly one "gis map as JSON" shape in the whole app.
 pub fn gis2d_map_media(document: &GisMapSnapshot) -> Media {
-    Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: crate::artifacts::gismap::schema::gis_map_descriptor_json(document) } }
+    Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: crate::schema::gis_map_descriptor_json(document) } }
 }
 //#endregion 🔖️Io
 
@@ -648,7 +648,7 @@ impl ArtifactEditor for Gis2dPlayApp {
 
     type Command = Gis2dCommand;
 
-    const DIALECT: Dialect = crate::artifacts::gismap::GISMAP_DIALECT;
+    const DIALECT: Dialect = crate::GISMAP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -705,11 +705,11 @@ impl ArtifactEditor for Gis2dPlayApp {
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::gismap::spr::gis_map_envelope_decode_owner_bundle())
+        Some(crate::spr::gis_map_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::gismap::spr::gis_map_document_store_owners())
+        Some(crate::spr::gis_map_document_store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -721,7 +721,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::artifacts::gismap::spr::gis_map_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::spr::gis_map_document_store_initialization_job(envelope, operation, generation))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -737,7 +737,7 @@ impl ArtifactEditor for Gis2dPlayApp {
     }
 
     fn initial_snapshot() -> GisMapSnapshot {
-        crate::artifacts::gismap::schema::default_document()
+        crate::schema::default_document()
     }
 
     /// 🔌️ `features:in`/`map:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the
@@ -898,7 +898,7 @@ impl ArtifactEditor for Gis2dPlayApp {
 
 //#region 🔖️Manifest
 pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::gismap::GISMAP_DIALECT).document(["semio", "gis", "2d"])
+    Editor::builder(crate::GISMAP_DIALECT).document(["semio", "gis", "2d"])
             .artifact_kind(artifact_kind())
             // 🔌️ Typed workflow ports (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) — same
             // constructor fns `gis2d_io()` embeds, so `AppIo.all_ports()` and these declarations can
@@ -1000,7 +1000,7 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
                 ]).default_value(&"colored"),
             ])
             .action_args("setLodMode", vec![
-                ActionArgDef::select("value", LocalizedLabel::native("LOD Mode", "LOD-Modus"), map::options::lod_mode::lod_arg_options()).default_value(&framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC),
+                ActionArgDef::select("value", LocalizedLabel::native("LOD Mode", "LOD-Modus"), map::options::lod_mode::lod_arg_options()).default_value(&semio_framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC),
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
@@ -1087,7 +1087,7 @@ mod tests {
     fn gis_map_envelope_wire() -> Vec<u8> {
         use store::ArtifactPack;
 
-        let snapshot = crate::artifacts::gismap::schema::empty_gis_map_snapshot();
+        let snapshot = crate::schema::empty_gis_map_snapshot();
         let snapshot_pack = snapshot.encode_pack();
         let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         let wire = serde_json::to_vec(&serde_json::json!({
@@ -1105,7 +1105,7 @@ mod tests {
         }))
         .expect("schema-first GIS fixture envelope");
         let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None);
-        let mut retirement = crate::artifacts::gismap::spr::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
+        let mut retirement = crate::spr::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
         for _ in 0..100_000 {
             match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS fixture envelope retirement") {
                 store::SnapshotRetirementStep::Complete => {
@@ -1281,7 +1281,7 @@ mod tests {
         for body_key in [document_panel::GIS2D_PLAY_BODY_DOCUMENT, catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE, inspection_panel::GIS2D_PLAY_BODY_INSPECTION] {
             assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
         }
-        assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind));
+        assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::GISMAP_DIALECT.artifact_kind));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1329,17 +1329,17 @@ mod tests {
     async fn gis2d_io_declares_the_features_in_and_map_out_ports() {
         let io = gis2d_io();
         assert_eq!(io.document_schema, GIS_MAP_SCHEMA);
-        assert_eq!(io.artifact.id, crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind);
+        assert_eq!(io.artifact.id, crate::GISMAP_DIALECT.artifact_kind);
         let ports = io.all_ports().await;
         assert!(ports.iter().any(|port| port.id == "features:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));
         let map_out = ports.iter().find(|port| port.id == "map:out").expect("map:out declared");
         assert_eq!(map_out.direction, semio_framework_plugin::MediaPortDirection::Out);
-        assert_eq!(map_out.kind_id.as_deref(), Some(crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind));
+        assert_eq!(map_out.kind_id.as_deref(), Some(crate::GISMAP_DIALECT.artifact_kind));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn gis2d_map_media_exports_the_document_descriptor() {
-        let document = crate::artifacts::gismap::schema::default_document();
+        let document = crate::schema::default_document();
         let media = gis2d_map_media(&document);
         let MediaPayload::Structured { schema, json } = media.payload else {
             panic!("expected a structured map:out payload");

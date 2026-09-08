@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/din4108/1/any/mutation/change-declared-application-class.json",
+  "$id": "https://semio.tech/schema/s/norm/din4108/1/any/mutation/change-declared-application-class/schema.json",
   "title": "ChangeDeclaredApplicationClass",
   "type": "object",
   "additionalProperties": false,

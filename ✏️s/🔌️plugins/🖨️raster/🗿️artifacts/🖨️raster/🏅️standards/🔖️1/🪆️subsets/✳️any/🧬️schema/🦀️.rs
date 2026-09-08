@@ -1,6 +1,6 @@
 //! 🧬️ Raster artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::raster::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterOwnedMap, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
+use crate::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterOwnedMap, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -125,7 +125,7 @@ pub fn raster_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::raster::{RasterDiff, RasterMutation, RasterSnapshot};
+    use crate::{RasterDiff, RasterMutation, RasterSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -177,7 +177,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::raster::RasterSnapshot;
+    use crate::RasterSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -240,9 +240,9 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️DocumentHelpers
 /// 🌱️ Relocated verbatim from `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
 /// rule 3: pure helpers over document types live in `🧬️schema/`). Every external call site now reads
-/// `crate::artifacts::raster::schema::…` (the artifact root's own pre-existing `pub mod schema { pub
+/// `crate::schema::…` (the artifact root's own pre-existing `pub mod schema { pub
 /// use super::standards::v1::subsets::any::schema::*; }` shim keeps that path resolving).
-use crate::artifacts::raster::{RasterSnapshot, RasterTransform};
+use crate::{RasterSnapshot, RasterTransform};
 
 pub fn create_raster_id(prefix: &str) -> String {
     let next = {
@@ -388,7 +388,7 @@ pub fn semio_fixture_snapshot() -> RasterSnapshot {
     // must be genuinely decodable for `composite_scene_syncs_document_and_assets` to keep proving
     // real embedded pixels survive, not a decode-failure fallback.
     let emblem = RasterImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
-    assets.insert("semio-emblem".into(), crate::artifacts::raster::mint_raster_asset_child("semio-emblem", &emblem)).expect("single fixture asset fits the owned map");
+    assets.insert("semio-emblem".into(), crate::mint_raster_asset_child("semio-emblem", &emblem)).expect("single fixture asset fits the owned map");
     let mut params = RasterOwnedMap::new();
     params.insert("brightness".into(), dsl::DslValue::float(0.12)).expect("first fixture adjustment fits the owned map");
     params.insert("contrast".into(), dsl::DslValue::float(0.08)).expect("second fixture adjustment has a distinct key and fits the owned map");
@@ -425,13 +425,13 @@ pub fn semio_example_document() -> RasterSnapshot {
 /// source of truth instead of being restated in Rust. Falls back to [`empty_raster_document`] when
 /// the carrier does not parse — the same shape `block2d`'s `default_block2d_snapshot` uses.
 pub fn default_raster_document() -> RasterSnapshot {
-    super::snapshot::text::parse_dsl(crate::artifacts::raster::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_raster_document())
+    super::snapshot::text::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_raster_document())
 }
 
 /// 📚️ The committed example document behind one registered example id, or `None` when the id is not
 /// one this subset registers — the lookup `🎮️commands/🎬️set-active-example` resolves against.
 pub fn raster_example_document(example_id: &str) -> Option<RasterSnapshot> {
-    (example_id == crate::artifacts::raster::examples::demo::ID).then(default_raster_document)
+    (example_id == crate::examples::demo::ID).then(default_raster_document)
 }
 
 /// 📄️ Duplicates a layer subtree with freshly minted ids (a new document node, not an operation inverse).
@@ -479,7 +479,7 @@ pub fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
 #[cfg(test)]
 mod boot_document_tests {
     use super::*;
-    use crate::artifacts::raster::standards::v1::subsets::any::schema::mutations::binary::test_support::retire_raster_snapshot;
+    use crate::standards::v1::subsets::any::schema::mutations::binary::test_support::retire_raster_snapshot;
 
     /// 📄️ The boot document is the committed Semio-logo carrier read through the artifact's own text
     /// codec — not the empty scaffold, and not a Rust restatement of the `.dsl.semio` bytes.
@@ -498,7 +498,7 @@ mod boot_document_tests {
     /// 📚️ `raster_example_document` resolves exactly the ids this subset registers, and nothing else.
     #[semio_framework_async_macros::async_test]
     async fn only_a_registered_example_id_resolves_to_a_document() {
-        let registered = raster_example_document(crate::artifacts::raster::examples::demo::ID).expect("the demo example id resolves");
+        let registered = raster_example_document(crate::examples::demo::ID).expect("the demo example id resolves");
         let expected = default_raster_document();
         assert_eq!(registered, expected);
         assert!(raster_example_document("not-a-real-example").is_none());

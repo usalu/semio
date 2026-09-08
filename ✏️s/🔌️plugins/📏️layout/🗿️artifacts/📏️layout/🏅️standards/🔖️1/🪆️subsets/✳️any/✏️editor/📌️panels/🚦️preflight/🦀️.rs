@@ -4,7 +4,7 @@
 //! artifact engine: it takes `&LayoutLabels`, an app-owned terminology type, and artifacts must never
 //! depend on apps.
 
-use crate::artifacts::layout::{Frame, LayoutSnapshot};
+use crate::{Frame, LayoutSnapshot};
 use crate::editor::layout::terminology::{layout_labels, preflight_msg, LayoutLabels};
 use crate::editor::layout::{layout_action, ui_value_map, ui_value_text};
 use semio_framework_plugin::{tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, UiValue};
@@ -34,7 +34,7 @@ pub struct PreflightIssue {
     pub page_id: Option<String>,
 }
 
-fn resolve_link_state(link: &crate::artifacts::layout::ImageLink) -> &str {
+fn resolve_link_state(link: &crate::ImageLink) -> &str {
     if let Some(state) = link.state.as_deref() {
         return state;
     }
@@ -68,7 +68,7 @@ fn resolve_run_style(doc: &LayoutSnapshot, paragraph_style_id: Option<&str>, cha
 pub fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<PreflightIssue> {
     let mut issues = Vec::new();
     for page in &doc.pages {
-        let resolved = crate::artifacts::layout::schema::resolve_page(doc, page);
+        let resolved = crate::schema::resolve_page(doc, page);
         for entry in resolved {
             let frame = &entry.frame;
             if !frame.visible() {
@@ -254,7 +254,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn preflight_finds_missing_asset() {
-        let issues = run_layout_preflight(&crate::artifacts::layout::schema::default_document(), LayoutLabels::labels(semio_framework_plugin::Locale::En, semio_framework_plugin::Terminology::Native));
+        let issues = run_layout_preflight(&crate::schema::default_document(), LayoutLabels::labels(semio_framework_plugin::Locale::En, semio_framework_plugin::Terminology::Native));
         assert!(issues.iter().any(|issue| issue.code == "asset.missing"));
         let mut app = layout_app().await;
         let json = render_body(&mut app, LAYOUT_PLAY_BODY_PREFLIGHT).await;

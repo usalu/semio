@@ -1,6 +1,6 @@
 //! 📦️ FEM 3D artifact — binary document surface + laws (constitutional: pack).
 
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::Fem3dSnapshot;
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -23,7 +23,7 @@ pub fn decode(bytes: &[u8]) -> Result<Fem3dSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::fem3d::{FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use crate::{FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use std::collections::BTreeMap;
 
     // #region 🔖️Fixtures
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn fem3d_pack_agrees_with_dsl_for_bundled_default_example() {
-        let document = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("parse default example");
+        let document = crate::dsl::parse_dsl(crate::dsl::FEM3D_EXAMPLE_TEXT).expect("parse default example");
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
 
@@ -115,7 +115,7 @@ mod semio_protocol_conformance {
     }
     #[test]
     fn verify_protocol_bytes_against_encoded_pack() {
-        use crate::artifacts::fem3d::Fem3dSnapshot;
+        use crate::Fem3dSnapshot;
         let document = Fem3dSnapshot::default();
         let bytes = encode(&document);
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");

@@ -1,10 +1,10 @@
 //! 📸️ Exact Flow snapshot ownership handoff; local scene and wire strings retire separately.
 
-use flow::retained::{FlowOwner, FlowRetirement};
-use crate::artifacts::flow::{FlowSnapshot, FlowWorkingScene};
+use semio_framework_artifact_flow_flow::retained::{FlowOwner, FlowRetirement};
+use crate::{FlowSnapshot, FlowWorkingScene};
 use std::{mem::ManuallyDrop, sync::Arc};
 
-const _: () = assert!(!std::mem::needs_drop::<flow::CameraJson>());
+const _: () = assert!(!std::mem::needs_drop::<semio_framework_artifact_flow_flow::CameraJson>());
 
 //#region 🧹️SnapshotOwnership
 pub struct SnapshotRetirementFactory;

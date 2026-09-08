@@ -1,1 +1,136 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","oneOf":[{"allOf":[{"$ref":"🚀️start-run/🧬️schema/🔣️.json#/$defs/payload"},{"type":"object","required":["operation"],"properties":{"operation":{"const":"startRun"}}}],"unevaluatedProperties":false},{"allOf":[{"$ref":"▶️start-run-node/🧬️schema/🔣️.json#/$defs/payload"},{"type":"object","required":["operation"],"properties":{"operation":{"const":"startRunNode"}}}],"unevaluatedProperties":false},{"allOf":[{"$ref":"✅️finish-run-node/🧬️schema/🔣️.json#/$defs/payload"},{"type":"object","required":["operation"],"properties":{"operation":{"const":"finishRunNode"}}}],"unevaluatedProperties":false},{"allOf":[{"$ref":"🪵️append-run-log/🧬️schema/🔣️.json#/$defs/payload"},{"type":"object","required":["operation"],"properties":{"operation":{"const":"appendRunLog"}}}],"unevaluatedProperties":false},{"allOf":[{"$ref":"🔏️seal-run/🧬️schema/🔣️.json#/$defs/payload"},{"type":"object","required":["operation"],"properties":{"operation":{"const":"sealRun"}}}],"unevaluatedProperties":false}],"unevaluatedProperties":false}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/workflow/run/mutations.json",
+  "type": "object",
+  "oneOf": [
+    {
+      "allOf": [
+        {
+          "$ref": "🚀️start-run/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "startRun"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "inputCollectionRef",
+          "inputSnapshotId",
+          "operation",
+          "outputCollectionRef",
+          "parameterValues",
+          "trigger",
+          "workflowCheckpointId",
+          "workflowRef"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "▶️start-run-node/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "startRunNode"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "nodeId",
+          "operation"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "✅️finish-run-node/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "finishRunNode"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "nodeRecord",
+          "operation"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "🪵️append-run-log/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "appendRunLog"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "at",
+          "level",
+          "message",
+          "nodeId",
+          "operation"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "🔏️seal-run/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "sealRun"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "operation",
+          "status"
+        ]
+      }
+    }
+  ]
+}

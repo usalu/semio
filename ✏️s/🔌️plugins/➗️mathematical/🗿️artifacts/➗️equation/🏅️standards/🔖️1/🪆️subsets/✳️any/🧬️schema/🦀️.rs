@@ -1,8 +1,8 @@
 //! 🧬️ Equation artifact schema — every field with its state class.
 
-use crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot;
-use crate::artifacts::equation::{EquationComputedChild, EquationGeometry, EquationGraph, EquationNotationChild, EquationResultsChild};
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot;
+use crate::{EquationComputedChild, EquationGeometry, EquationGraph, EquationNotationChild, EquationResultsChild};
+use framework_schema::ArtifactSchema;
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️Artifact
@@ -74,28 +74,28 @@ impl FromValue for EquationArtifact {
 //#region 🔖️Conversions
 impl Default for EquationArtifact {
     fn default() -> Self {
-        Self::from_snapshot(crate::artifacts::equation::EquationSnapshot::default())
+        Self::from_snapshot(crate::EquationSnapshot::default())
     }
 }
 
 impl EquationArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::equation::EquationSnapshot {
-        crate::artifacts::equation::EquationSnapshot { notation: self.notation.clone(), results: self.results.clone(), computed: self.computed.clone(), equation: self.equation.clone() }
+    pub fn to_snapshot(&self) -> crate::EquationSnapshot {
+        crate::EquationSnapshot { notation: self.notation.clone(), results: self.results.clone(), computed: self.computed.clone(), equation: self.equation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::equation::EquationSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::EquationSnapshot) -> Self {
         Self { notation: snapshot.notation, results: snapshot.results, computed: snapshot.computed, equation: snapshot.equation, ..Self::default_ui() }
     }
 
     fn default_ui() -> Self {
-        let default_snapshot = crate::artifacts::equation::equation_snapshot_with_state(EquationGraph::default(), EquationGeometry::default());
+        let default_snapshot = crate::equation_snapshot_with_state(EquationGraph::default(), EquationGeometry::default());
         Self { notation: default_snapshot.notation, results: default_snapshot.results, computed: default_snapshot.computed, equation: default_snapshot.equation, camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0, locale: "en-US".into() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::equation::EquationSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::EquationSnapshot) {
         self.notation = snapshot.notation;
         self.results = snapshot.results;
         self.computed = snapshot.computed;
@@ -106,31 +106,31 @@ impl EquationArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.mathematical.equation` — twenty handcrafted schema leaves.
-pub fn equation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn equation_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.mathematical.equation",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),

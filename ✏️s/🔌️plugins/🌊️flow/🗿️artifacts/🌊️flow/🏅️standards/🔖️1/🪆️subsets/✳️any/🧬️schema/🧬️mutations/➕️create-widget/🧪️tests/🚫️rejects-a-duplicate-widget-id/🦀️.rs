@@ -17,8 +17,8 @@
 //! content handle with the very widget the committed mutation payload carries: the id collision the
 //! Fatal guards against. Nothing here is invented.
 
-use crate::artifacts::flow::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
-use crate::artifacts::flow::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
+use crate::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
+use crate::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
 use flow::OrderedMap;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

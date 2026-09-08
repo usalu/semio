@@ -2,8 +2,8 @@
 //! user's catalog-choice token and name. The host re-resolves the kind, mints the identity, and owns
 //! the durable creation saga before any open effect.
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

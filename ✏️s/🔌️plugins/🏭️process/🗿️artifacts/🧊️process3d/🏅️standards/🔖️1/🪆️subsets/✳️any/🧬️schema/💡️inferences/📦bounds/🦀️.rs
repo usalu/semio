@@ -11,7 +11,7 @@
 //! empty placeholder minted for `WorkingSolid::ImportedMesh`/`ImportedSolid`) degenerates to a
 //! single point at `pose.position` — honest given what the brep content alone can tell us.
 
-use crate::artifacts::process3d::Pose;
+use crate::Pose;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -73,7 +73,7 @@ pub fn brep_bounding_box(solid: &SemioBrepSnapshot, pose: &Pose) -> BoundingBox 
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::process3d::{brep_snapshot_for_working_solid, WorkingSolid};
+    use crate::{brep_snapshot_for_working_solid, WorkingSolid};
 
     #[semio_framework_async_macros::async_test]
     async fn default_box_stock_bounds_are_unit_cube() {

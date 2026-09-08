@@ -1,9 +1,9 @@
 //! 📄️ 📄️ Drawing play app commands command — `set-active-example`.
 
-use crate::artifacts::drawing::op::DrawingMutation;
-use crate::artifacts::drawing::schema::default_drawing_document;
-use crate::artifacts::drawing::standards::v1::subsets::any::examples;
-use crate::artifacts::drawing::{ArtifactDsl, DrawingSnapshot};
+use crate::op::DrawingMutation;
+use crate::schema::default_drawing_document;
+use crate::standards::v1::subsets::any::examples;
+use crate::{ArtifactDsl, DrawingSnapshot};
 use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use dsl::{FromValue, ToValue};

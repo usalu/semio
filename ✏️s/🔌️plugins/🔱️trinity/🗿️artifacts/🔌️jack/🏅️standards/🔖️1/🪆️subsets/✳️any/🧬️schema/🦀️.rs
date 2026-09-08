@@ -3,7 +3,7 @@
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes`/`edges` replaced by a single
 //! composed `content: JackContentChild` slot, matching `DagArtifact`'s own field swap exactly.
 
-use crate::artifacts::jack::{Camera, JackContentChild, Manifest};
+use crate::{Camera, JackContentChild, Manifest};
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -130,12 +130,12 @@ pub struct JackEditorSelection {
 impl Default for JackArtifact {
     fn default() -> Self {
         Self {
-            schema: crate::artifacts::jack::TRINITY_GRAPH_SCHEMA.into(),
+            schema: crate::TRINITY_GRAPH_SCHEMA.into(),
             name: String::new(),
             manifest_id: None,
             manifest: Manifest::default(),
             camera: Camera::default(),
-            content: crate::artifacts::jack::jack_content_child_with_owner(Vec::new(), Vec::new()),
+            content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()),
             root_node_id: None,
             active_fixture_id: String::new(),
             jack_query: String::new(),
@@ -155,8 +155,8 @@ impl Default for JackArtifact {
 
 impl JackArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::jack::JackSnapshot {
-        crate::artifacts::jack::JackSnapshot {
+    pub fn to_snapshot(&self) -> crate::JackSnapshot {
+        crate::JackSnapshot {
             schema: self.schema.clone(),
             name: self.name.clone(),
             manifest_id: self.manifest_id.clone(),
@@ -168,13 +168,13 @@ impl JackArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::jack::JackSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::JackSnapshot) -> Self {
         let viewport_camera = snapshot.camera.clone();
         Self { schema: snapshot.schema, name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, content: snapshot.content, root_node_id: snapshot.root_node_id, viewport_camera, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::jack::JackSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::JackSnapshot) {
         self.schema = snapshot.schema;
         self.name = snapshot.name;
         self.manifest_id = snapshot.manifest_id;
@@ -185,13 +185,13 @@ impl JackArtifact {
     }
 
     /// 🔎 Live node list, read through the working-scene cache.
-    pub fn nodes(&self) -> Vec<crate::artifacts::jack::Node> {
-        crate::artifacts::jack::jack_working_scene_for_handle(&self.content).nodes
+    pub fn nodes(&self) -> Vec<crate::Node> {
+        crate::jack_working_scene_for_handle(&self.content).nodes
     }
 
     /// 🔎 Live edge list, read through the working-scene cache.
-    pub fn edges(&self) -> Vec<crate::artifacts::jack::Edge> {
-        crate::artifacts::jack::jack_working_scene_for_handle(&self.content).edges
+    pub fn edges(&self) -> Vec<crate::Edge> {
+        crate::jack_working_scene_for_handle(&self.content).edges
     }
 }
 //#endregion 🔖️Conversions
@@ -235,8 +235,8 @@ pub fn jack_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 
 //#region 🔖️EmptyDocument
 /// 📦️ An empty trinity graph fixture — the app's zero-state initial document.
-pub fn empty_jack_document() -> crate::artifacts::jack::JackSnapshot {
-    crate::artifacts::jack::empty_trinity_graph_fixture()
+pub fn empty_jack_document() -> crate::JackSnapshot {
+    crate::empty_trinity_graph_fixture()
 }
 //#endregion 🔖️EmptyDocument
 
@@ -256,7 +256,7 @@ mod empty_document_tests {
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::jack::{JackDiff, JackSnapshot, TrinityGraphMutation};
+    use crate::{JackDiff, JackSnapshot, TrinityGraphMutation};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -308,7 +308,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::jack::JackSnapshot;
+    use crate::JackSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

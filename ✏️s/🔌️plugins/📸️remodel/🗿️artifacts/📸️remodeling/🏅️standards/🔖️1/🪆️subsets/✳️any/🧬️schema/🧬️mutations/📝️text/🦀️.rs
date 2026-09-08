@@ -1,7 +1,7 @@
 //! ⚡️ Remodeling artifact — OpText/OpBinary codecs + grammar for serializing `RemodelingMutation`.
 //! Mutation apply/inverse live in `🧬️mutations`; this facet only handcrafts the op wire forms.
 
-pub use crate::artifacts::remodeling::schema::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
+pub use crate::schema::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

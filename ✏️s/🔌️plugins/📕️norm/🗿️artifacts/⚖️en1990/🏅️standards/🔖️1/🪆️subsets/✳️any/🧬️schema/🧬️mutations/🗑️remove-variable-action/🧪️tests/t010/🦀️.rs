@@ -7,7 +7,7 @@
 //! `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio` encodings are derived from it by
 //! `fixtures generate` and are asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::en1990::{En1990Diff, En1990Mutation, En1990Snapshot};
+use crate::{En1990Diff, En1990Mutation, En1990Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -37,7 +37,7 @@ async fn applies_to_committed_after() {
     let snapshot = applied();
     assert_eq!(snapshot.q_k.child_id, before().q_k.child_id, "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: a refused removal must not re-mint the q_k handle");
     assert!(
-        crate::artifacts::en1990::en1990_qk(&before()).is_empty(),
+        crate::en1990_qk(&before()).is_empty(),
         "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: the unseeded working-scene cache must read back an empty entry list — the reason index 0 is missing"
     );
     assert!(<En1990Mutation as protocol::Mutation<En1990Snapshot>>::inverse(&mutation(), &before()).is_empty(), "remove-variable-action/refuses-to-remove-action-0-from-an-unseeded-child-slot: removing an absent index has nothing to undo");

@@ -5,9 +5,9 @@
 //! on `LowpolyPlayApp` (mirrors `flow`'s `Mutex<FlowEvalSession>` pattern) so `render(&self, ..)` can
 //! still read texture/transform preview state while `handle(&self, ..)` locks it mutably for dispatch.
 
-use crate::artifacts::lowpoly::op::{LowpolyMutation, PixelRun};
-use crate::artifacts::lowpoly::schema::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush};
-use crate::artifacts::lowpoly::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
+use crate::op::{LowpolyMutation, PixelRun};
+use crate::schema::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush};
+use crate::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::view::build_doc;
@@ -140,30 +140,30 @@ pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> Lowpo
 /// first populated field wins. Transform sub-field priority (position, then rotation, then scale)
 /// matches the gumball's own single-axis-per-drag gesture (`translate_selection`/`rotate_selection`/
 /// `scale_selection` each mutate exactly one `LowpolyTransform` field via `apply_transform`).
-pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::artifacts::lowpoly::LowpolyTransform, patch: &LowpolyObjectPatch, before_mesh_workspace: &str, after_mesh_workspace: &str) -> Option<LowpolyMutation> {
+pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::LowpolyTransform, patch: &LowpolyObjectPatch, before_mesh_workspace: &str, after_mesh_workspace: &str) -> Option<LowpolyMutation> {
     if let Some(new_name) = &patch.name {
-        return Some(LowpolyMutation::RenameObject(crate::artifacts::lowpoly::mutations::rename_object::RenameObject { id, new_name: new_name.clone() }));
+        return Some(LowpolyMutation::RenameObject(crate::mutations::rename_object::RenameObject { id, new_name: new_name.clone() }));
     }
     if let Some(new_smooth_shading) = patch.smooth_shading {
-        return Some(LowpolyMutation::ChangeObjectSmoothShading(crate::artifacts::lowpoly::mutations::change_object_smooth_shading::ChangeObjectSmoothShading { id, new_smooth_shading }));
+        return Some(LowpolyMutation::ChangeObjectSmoothShading(crate::mutations::change_object_smooth_shading::ChangeObjectSmoothShading { id, new_smooth_shading }));
     }
     if let Some(transform) = &patch.transform {
         if transform.position != before_transform.position {
-            return Some(LowpolyMutation::MoveObject(crate::artifacts::lowpoly::mutations::move_object::MoveObject { id, new_position: transform.position }));
+            return Some(LowpolyMutation::MoveObject(crate::mutations::move_object::MoveObject { id, new_position: transform.position }));
         }
         if transform.rotation != before_transform.rotation {
-            return Some(LowpolyMutation::RotateObject(crate::artifacts::lowpoly::mutations::rotate_object::RotateObject { id, new_rotation: transform.rotation }));
+            return Some(LowpolyMutation::RotateObject(crate::mutations::rotate_object::RotateObject { id, new_rotation: transform.rotation }));
         }
         if transform.scale != before_transform.scale {
-            return Some(LowpolyMutation::ScaleObject(crate::artifacts::lowpoly::mutations::scale_object::ScaleObject { id, new_scale: transform.scale }));
+            return Some(LowpolyMutation::ScaleObject(crate::mutations::scale_object::ScaleObject { id, new_scale: transform.scale }));
         }
     }
     if before_mesh_workspace != after_mesh_workspace {
         if after_mesh_workspace.is_empty() {
-            return Some(LowpolyMutation::DeleteMesh(crate::artifacts::lowpoly::mutations::delete_mesh::DeleteMesh { id }));
+            return Some(LowpolyMutation::DeleteMesh(crate::mutations::delete_mesh::DeleteMesh { id }));
         }
-        let handle = crate::artifacts::lowpoly::mesh_child_handle(&id, after_mesh_workspace);
-        return Some(LowpolyMutation::CreateMesh(crate::artifacts::lowpoly::mutations::create_mesh::CreateMesh { id, child_id: handle.child_id, target: handle.target, mesh_workspace: after_mesh_workspace.to_string() }));
+        let handle = crate::mesh_child_handle(&id, after_mesh_workspace);
+        return Some(LowpolyMutation::CreateMesh(crate::mutations::create_mesh::CreateMesh { id, child_id: handle.child_id, target: handle.target, mesh_workspace: after_mesh_workspace.to_string() }));
     }
     None
 }
@@ -241,7 +241,7 @@ pub struct LowpolyScratch {
     /// 👻️ Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖️GesturePreview`.
     preview_seq: u64,
     /// 🕸️ Live half-edge-mesh JSON per object id — see this struct's own doc comment. Seeded from
-    /// `crate::artifacts::lowpoly::schema::default_mesh_workspace()` on `Default::default()` so a
+    /// `crate::schema::default_mesh_workspace()` on `Default::default()` so a
     /// freshly booted session can immediately reload the mesh `ArtifactApp::initial_snapshot()`
     /// (`default_snapshot()`) describes; real interactive objects get their own entry from
     /// `mesh_edit`/`LowpolyDocument::add_primitive` as they are created/edited. NEVER the persisted
@@ -271,7 +271,7 @@ impl Default for LowpolyScratch {
             transform_drag_active: false,
             texture_cache: PaintTextureLut::default(),
             preview_seq: 0,
-            mesh_workspace: crate::artifacts::lowpoly::schema::default_mesh_workspace(),
+            mesh_workspace: crate::schema::default_mesh_workspace(),
             current_selection: LowpolySelection::default(),
         }
     }
@@ -415,7 +415,7 @@ impl LowpolyScratch {
         if runs.is_empty() {
             return Emit::default();
         }
-        Emit::commit(vec![LowpolyMutation::EditPaintLayer(crate::artifacts::lowpoly::mutations::edit_paint_layer::EditPaintLayer { object_id: session.object_id, layer_index: session.layer_index, runs })], "Paint stroke")
+        Emit::commit(vec![LowpolyMutation::EditPaintLayer(crate::mutations::edit_paint_layer::EditPaintLayer { object_id: session.object_id, layer_index: session.layer_index, runs })], "Paint stroke")
     }
 
     /// @emoji 🖌️ One mid-drag paint tick: brush/eraser/fill mutate the stroke scratch, eyedropper samples
@@ -471,7 +471,7 @@ impl LowpolyScratch {
             return Emit::default();
         }
         self.stroke_dirty += 1;
-        Emit::commit(vec![LowpolyMutation::EditPaintLayer(crate::artifacts::lowpoly::mutations::edit_paint_layer::EditPaintLayer { object_id, layer_index, runs })], "Fill")
+        Emit::commit(vec![LowpolyMutation::EditPaintLayer(crate::mutations::edit_paint_layer::EditPaintLayer { object_id, layer_index, runs })], "Fill")
     }
 
     /// @emoji 🧲️ Runs one gumball transform delta against a working scratch document. Mid-drag it emits
@@ -609,7 +609,7 @@ pub(crate) struct LowpolyTransientState {
 
 impl Default for LowpolyTransientState {
     fn default() -> Self {
-        Self { stroke: None, stroke_drag_active: false, stroke_dirty: 0, transform: None, transform_drag_active: false, preview_seq: 0, mesh_workspace: Arc::new(crate::artifacts::lowpoly::schema::default_mesh_workspace().into_iter().collect()) }
+        Self { stroke: None, stroke_drag_active: false, stroke_dirty: 0, transform: None, transform_drag_active: false, preview_seq: 0, mesh_workspace: Arc::new(crate::schema::default_mesh_workspace().into_iter().collect()) }
     }
 }
 
@@ -1016,7 +1016,7 @@ impl LowpolyScratch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::schema::default_snapshot;
+    use crate::schema::default_snapshot;
 
     #[test]
     fn transient_schema_pack_and_typed_scratch_round_trip_exactly() {

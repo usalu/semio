@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ConnectNodes`.
-use crate::artifacts::dag::diff::text::diff_replace_content;
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::{dag_working_scene, DagFixtureEdge, DagSnapshot};
+use crate::diff::text::diff_replace_content;
+use crate::diff::DagDiff;
+use crate::{dag_working_scene, DagFixtureEdge, DagSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ConnectNodes, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {
@@ -9,8 +9,8 @@ pub fn diff(payload: &super::mutation::ConnectNodes, base: &DagSnapshot) -> prot
     if scene.edges.iter().any(|edge| edge.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An edge with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
-    let (source_node, _) = crate::artifacts::dag::schema::split_endpoint(&payload.source);
-    let (target_node, _) = crate::artifacts::dag::schema::split_endpoint(&payload.target);
+    let (source_node, _) = crate::schema::split_endpoint(&payload.source);
+    let (target_node, _) = crate::schema::split_endpoint(&payload.target);
     if !scene.nodes.iter().any(|node| node.id == source_node) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Source node \"{}\" does not exist.", source_node), [source_node]);
     }
@@ -21,8 +21,8 @@ pub fn diff(payload: &super::mutation::ConnectNodes, base: &DagSnapshot) -> prot
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Node \"{}\" cannot connect to itself.", source_node), [source_node]);
     }
     if scene.edges.iter().any(|edge| {
-        let (edge_source, _) = crate::artifacts::dag::schema::split_endpoint(&edge.source);
-        let (edge_target, _) = crate::artifacts::dag::schema::split_endpoint(&edge.target);
+        let (edge_source, _) = crate::schema::split_endpoint(&edge.source);
+        let (edge_target, _) = crate::schema::split_endpoint(&edge.target);
         edge_source == source_node && edge_target == target_node
     }) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("\"{}\" is already connected to \"{}\"; parallel edges are not allowed.", source_node, target_node));
@@ -49,8 +49,8 @@ fn would_create_cycle(edges: &[DagFixtureEdge], source: &str, target: &str) -> b
             continue;
         }
         for edge in edges {
-            let (from, _) = crate::artifacts::dag::schema::split_endpoint(&edge.source);
-            let (to, _) = crate::artifacts::dag::schema::split_endpoint(&edge.target);
+            let (from, _) = crate::schema::split_endpoint(&edge.source);
+            let (to, _) = crate::schema::split_endpoint(&edge.target);
             if from == node {
                 stack.push(to);
             }

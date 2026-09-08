@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/declare-entity.json",
+  "$id": "https://semio.tech/schema/s/stdio/xml/1.0/valid/mutation/declare-entity/schema.json",
   "title": "DeclareEntity",
   "type": "object",
   "additionalProperties": false,

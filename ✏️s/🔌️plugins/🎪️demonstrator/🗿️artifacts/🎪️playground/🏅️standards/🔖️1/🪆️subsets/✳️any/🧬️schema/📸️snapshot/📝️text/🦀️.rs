@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 
 /// 📄️ The `demo` example checkpoint.
 pub const PLAYGROUND_DEMO_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
@@ -28,7 +28,7 @@ mod tests {
 
     #[test]
     fn playground_snapshot_dsl_round_trips() {
-        store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::playground::standards::v1::subsets::any::schema::empty_playground_snapshot());
+        store::os_store::test_support::assert_dsl_round_trip(&crate::standards::v1::subsets::any::schema::empty_playground_snapshot());
     }
 
     #[test]

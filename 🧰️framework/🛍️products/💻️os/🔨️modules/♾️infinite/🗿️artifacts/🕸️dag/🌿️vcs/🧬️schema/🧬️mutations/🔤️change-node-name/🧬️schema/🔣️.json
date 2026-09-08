@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/infinite/dag/vcs/mutation/change-node-name/schema.json",
+  "title": "ChangeNodeName",
+  "type": "object",
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": [
+        "id",
+        "newName"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "newName": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/payload"
+    }
+  ],
+  "propertyNames": {
+    "enum": [
+      "id",
+      "newName"
+    ]
+  }
+}

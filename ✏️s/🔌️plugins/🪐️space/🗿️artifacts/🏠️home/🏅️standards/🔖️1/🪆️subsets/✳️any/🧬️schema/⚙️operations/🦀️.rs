@@ -5,10 +5,10 @@
 //! apply/diff/inverse dispatch here. Whole-document replace (the old `SetSnapshot`) is banned; it
 //! goes through `ArtifactStore::reset` (non-history), never through this enum.
 
-use crate::artifacts::home::schema::mutations::SHomeMutation;
+use crate::schema::mutations::SHomeMutation;
 #[cfg(test)]
-use crate::artifacts::home::schema::mutations::{change_catalog_generation, register_s_home_mutation_descriptors};
-use crate::artifacts::home::SHomeSnapshot;
+use crate::schema::mutations::{change_catalog_generation, register_s_home_mutation_descriptors};
+use crate::SHomeSnapshot;
 
 //#region 🧪️Tests
 #[cfg(test)]

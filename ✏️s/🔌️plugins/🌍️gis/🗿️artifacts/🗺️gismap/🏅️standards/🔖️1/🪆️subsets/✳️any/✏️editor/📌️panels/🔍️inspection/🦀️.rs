@@ -1,6 +1,6 @@
 //! 🔍️ GIS 2D play app panel — the inspector: map-view settings plus the selected layer's fields.
 
-use crate::artifacts::gismap::GIS_MAP_SCHEMA;
+use crate::GIS_MAP_SCHEMA;
 use crate::editor::gis2d::config::{layer_visible, Gis2dConfig};
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use crate::editor::gis2d::{ui_label, ui_node_list, GIS_MAP_LAYER_IDS};

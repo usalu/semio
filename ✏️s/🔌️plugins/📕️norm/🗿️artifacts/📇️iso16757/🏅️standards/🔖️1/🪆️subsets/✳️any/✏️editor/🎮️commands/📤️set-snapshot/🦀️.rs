@@ -5,8 +5,8 @@
 //! (base + target, since `product_groups`/`products`/`property_definitions`/`subjects` are real
 //! id-keyed collections needing full remove/re-insert), bundled into a single atomic edit.
 
-use crate::artifacts::iso16757::op::Iso16757Mutation;
-use crate::artifacts::iso16757::Iso16757Snapshot;
+use crate::op::Iso16757Mutation;
+use crate::Iso16757Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -30,7 +30,7 @@ pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Iso16757Snapshot
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::iso16757::op::Iso16757Mutation;
+    use crate::op::Iso16757Mutation;
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]

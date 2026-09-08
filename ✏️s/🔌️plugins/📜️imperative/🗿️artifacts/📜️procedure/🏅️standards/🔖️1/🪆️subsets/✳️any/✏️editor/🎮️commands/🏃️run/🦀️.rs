@@ -1,7 +1,7 @@
 //! 👁️ 👁️ Imperative play app commands command — `run`.
 
-use crate::artifacts::procedure::mutations::ProcedureMutation;
-use crate::artifacts::procedure::ProcedureSnapshot;
+use crate::mutations::ProcedureMutation;
+use crate::ProcedureSnapshot;
 use crate::editor::procedure::config::ImperativeConfigMutation;
 use crate::editor::procedure::engine::ImperativeHost;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

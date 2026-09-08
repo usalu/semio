@@ -1,9 +1,9 @@
 //! 🔺️ Sparse diff builder for `UnbindWeatherFile` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyLinkSlotDelta;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyLinkSlotDelta;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(_payload: &super::UnbindWeatherFile, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

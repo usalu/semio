@@ -1,8 +1,8 @@
 //! 🖱️ 🖱️ Layout play app commands command — `canvas-drop`.
 
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::LayoutDropPreviewState;
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::mutations::LayoutMutation;
+use crate::LayoutDropPreviewState;
+use crate::LayoutSnapshot;
 use crate::editor::layout::commands::{add_frame, add_page};
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::config::LayoutConfigMutation;

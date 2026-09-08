@@ -1,9 +1,9 @@
 //! ↩️ `reorder-layers` inverse — the layer's pre-move tree address from `base`. Missing target ⇒
 //! `Vec::new()`.
 
-use crate::artifacts::raster::mutations::RasterMutation;
-use crate::artifacts::raster::schema::locate_layer;
-use crate::artifacts::raster::RasterSnapshot;
+use crate::mutations::RasterMutation;
+use crate::schema::locate_layer;
+use crate::RasterSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::ReorderLayers, base: &RasterSnapshot) -> Vec<RasterMutation> {

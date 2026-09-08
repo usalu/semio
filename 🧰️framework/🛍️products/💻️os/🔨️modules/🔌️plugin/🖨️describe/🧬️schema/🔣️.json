@@ -1,0 +1,224 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/describe/component.json",
+  "title": "Semio OS Plugin Describe",
+  "$defs": {
+    "DescribeContractId": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*/v[0-9]+$" },
+    "DescribeLawId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "DescribeSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "DescribeHex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})*$" },
+    "DescribeEnvironmentPair": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+        { "type": "string", "minLength": 1, "maxLength": 256 },
+        { "type": ["string", "null"], "maxLength": 16384 }
+      ],
+      "additionalItems": false
+    },
+    "EmissionBudgetV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "cases"],
+      "properties": {
+        "format": { "$ref": "#/$defs/DescribeContractId" },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "budgetMs", "elapsedMs", "expired", "remainingMs"],
+            "properties": {
+              "name": { "enum": ["unlimited", "before-limit", "at-limit", "after-limit", "already-exhausted"] },
+              "budgetMs": { "type": "integer", "minimum": -1 },
+              "elapsedMs": { "type": "integer", "minimum": 0 },
+              "expired": { "type": "boolean" },
+              "remainingMs": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "FreshProcessV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "maxOutputBytes", "diagnosticChars", "cases"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/DescribeContractId" },
+        "maxOutputBytes": { "type": "integer", "minimum": 1, "maximum": 268435456 },
+        "diagnosticChars": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+        "cases": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "mode", "stdout", "stderr", "exitCode", "reason", "diagnostic"],
+            "properties": {
+              "name": { "type": "string", "pattern": "^[a-z-]+$" },
+              "mode": { "enum": ["exit", "missing", "cancel", "timeout", "flood", "pre-cancel"] },
+              "stdout": { "type": "string", "maxLength": 1000 },
+              "stderr": { "type": "string", "maxLength": 1000 },
+              "exitCode": { "type": "integer", "minimum": 0, "maximum": 255 },
+              "reason": { "enum": ["exit", "spawn-error", "cancelled", "timeout", "output-limit"] },
+              "diagnostic": { "type": "string", "maxLength": 200 }
+            }
+          }
+        }
+      }
+    },
+    "FreshSourceEpochV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "toolchain", "environment", "legs", "files"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/DescribeContractId" },
+        "toolchain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cargo", "rustc"],
+          "properties": {
+            "cargo": { "type": "string", "minLength": 1, "maxLength": 8192 },
+            "rustc": { "type": "string", "minLength": 1, "maxLength": 8192 }
+          }
+        },
+        "environment": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/DescribeEnvironmentPair" } },
+        "legs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "package", "args"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+              "package": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+              "args": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "type": "string", "maxLength": 4096 } }
+            }
+          }
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32768,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256", "byteLength", "mode"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+              "sha256": { "$ref": "#/$defs/DescribeSha256" },
+              "byteLength": { "type": "integer", "minimum": 0, "maximum": 4194304 },
+              "mode": { "type": "integer", "minimum": 0, "maximum": 4095 }
+            }
+          }
+        }
+      }
+    },
+    "FreshSourceEpochLawsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "limits", "files", "legs", "cases"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/DescribeContractId" },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fileBytes", "totalBytes", "files", "legs"],
+          "properties": {
+            "fileBytes": { "type": "integer", "minimum": 1, "maximum": 268435456 },
+            "totalBytes": { "type": "integer", "minimum": 1, "maximum": 4294967296 },
+            "files": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+            "legs": { "type": "integer", "minimum": 1, "maximum": 1024 }
+          }
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32768,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "text"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1, "maxLength": 4096 },
+              "text": { "type": "string", "maxLength": 4194304 }
+            }
+          }
+        },
+        "legs": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "package", "args", "inputs"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+              "package": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+              "args": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+              "inputs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+            }
+          }
+        },
+        "cases": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/DescribeLawId" } }
+      }
+    },
+    "FreshStagingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "componentHex", "componentSha256", "componentBlake3", "coreHex", "laws"],
+      "properties": {
+        "schema": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*\\.v[0-9]+$" },
+        "componentHex": { "$ref": "#/$defs/DescribeHex" },
+        "componentSha256": { "$ref": "#/$defs/DescribeSha256" },
+        "componentBlake3": { "$ref": "#/$defs/DescribeSha256" },
+        "coreHex": { "$ref": "#/$defs/DescribeHex" },
+        "laws": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/DescribeLawId" } }
+      }
+    },
+    "RustDepInfoLawsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "maximumBytes", "cases"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/DescribeContractId" },
+        "maximumBytes": { "type": "integer", "minimum": 1, "maximum": 268435456 },
+        "cases": {
+          "type": "array",
+          "minItems": 19,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "text", "expected"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "text": { "type": "string" },
+              "expected": {
+                "oneOf": [
+                  { "type": "null" },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["targets", "inputs", "environment"],
+                    "properties": {
+                      "targets": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+                      "inputs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+                      "environment": { "type": "array", "items": { "$ref": "#/$defs/DescribeEnvironmentPair" } }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

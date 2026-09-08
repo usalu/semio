@@ -5,9 +5,9 @@
 //! `SemanticMutation` (see `../🦀️.rs`'s `🔖️Mutations` region) — the wire-text/wire-binary
 //! codecs stay handcrafted here.
 
-pub use crate::artifacts::en1994::schema::mutations::En1994Mutation;
+pub use crate::document_schema::mutations::En1994Mutation;
 
-use crate::artifacts::en1994::schema::mutations::{
+use crate::document_schema::mutations::{
     change_annex::ChangeAnnex, change_d_mm::ChangeDMm, change_deck_type::ChangeDeckType, change_delta_sigma_mpa::ChangeDeltaSigmaMpa, change_delta_tau_stud_mpa::ChangeDeltaTauStudMpa,
     change_e_cm_mpa::ChangeECmMpa, change_eta::ChangeEta, change_f_ck_mpa::ChangeFCkMpa, change_f_u_mpa::ChangeFUMpa, change_f_y_mpa::ChangeFYMpa,
     change_fatigue_detail::ChangeFatigueDetail, change_fire_rating::ChangeFireRating, change_h_sc_mm::ChangeHScMm, change_insulation_thickness_mm::ChangeInsulationThicknessMm,

@@ -39,6 +39,7 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-s-artifact-process-process3d = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-ifc = { workspace = true }

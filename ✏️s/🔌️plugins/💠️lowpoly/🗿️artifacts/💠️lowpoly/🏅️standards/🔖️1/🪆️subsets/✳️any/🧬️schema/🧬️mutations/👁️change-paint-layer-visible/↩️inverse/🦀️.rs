@@ -1,7 +1,7 @@
 //! ↩️ `change-paint-layer-visible` — undo restores the base-state flag; missing object/index ⇒ `Vec::new()`.
 
 use super::ChangePaintLayerVisible;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangePaintLayerVisible, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

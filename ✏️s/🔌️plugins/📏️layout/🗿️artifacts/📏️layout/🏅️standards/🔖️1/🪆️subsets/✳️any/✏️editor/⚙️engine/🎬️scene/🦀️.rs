@@ -11,9 +11,9 @@
 //! `compose_svg_from_drawing`/`rect_path_segments`/`LayoutError` (io/codec-dispatch territory) stayed
 //! at `🚪️io` — this file reaches both by qualified path, which is the normal app→artifact direction.
 
-use crate::artifacts::layout::io::LayoutError;
-use crate::artifacts::layout::schema::{parse_layout_document, resolve_page};
-use crate::artifacts::layout::{Frame, LayoutBounds, LayoutRect, LayoutSnapshot, Page, ParagraphStyle, TextStory};
+use crate::io::LayoutError;
+use crate::schema::{parse_layout_document, resolve_page};
+use crate::{Frame, LayoutBounds, LayoutRect, LayoutSnapshot, Page, ParagraphStyle, TextStory};
 use infinite_canvas::camera::{self, Camera, Viewport};
 use infinite_canvas::{Affine, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
 #[cfg(test)]
@@ -372,7 +372,7 @@ mod tests {
     use super::*;
 
     fn sample_document() -> LayoutSnapshot {
-        crate::artifacts::layout::dsl::parse_dsl(crate::artifacts::layout::dsl::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
+        crate::dsl::parse_dsl(crate::dsl::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
     }
 
     #[semio_framework_async_macros::async_test]
@@ -560,13 +560,13 @@ mod tests {
         let doc = sample_document();
         let json = dsl::os_pack::to_json_string(&doc);
         let bytes = export_package_zip_headless_batch(&json, "[]").expect("package export succeeds");
-        assert_eq!(doc.schema, crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA);
+        assert_eq!(doc.schema, crate::LAYOUT_DOCUMENT_SCHEMA);
         assert!(bytes.starts_with(b"PK"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn svg_export_contains_path_and_wraps_a_valid_document() {
-        crate::artifacts::layout::io::ensure_stdio_semio_drawing_registered();
+        crate::io::ensure_stdio_semio_drawing_registered();
         let doc = sample_document();
         let svg = export_document_svg_headless_batch(&doc, "page-1").expect("svg export succeeds");
         assert!(svg.starts_with("<svg"));

@@ -6,9 +6,9 @@
 //! en1990/en1992 precedent).
 
 
-use crate::artifacts::en1995::En1995Snapshot;
-use crate::artifacts::en1995::diff::En1995Diff;
-use crate::artifacts::en1995::mutations::En1995Mutation;
+use crate::En1995Snapshot;
+use crate::diff::En1995Diff;
+use crate::mutations::En1995Mutation;
 use crate::document::AnnexChoice;
 
 //#region 🔖️ChangeAnnex

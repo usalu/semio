@@ -1,8 +1,8 @@
 //! 🔺️ `change-alloy` sparse diff construction — writes only `En1999Diff.alloy` from the payload.
 
-use crate::artifacts::en1999::diff::En1999Diff;
-use crate::artifacts::en1999::mutations::change_alloy::ChangeAlloy;
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::diff::En1999Diff;
+use crate::mutations::change_alloy::ChangeAlloy;
+use crate::En1999Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeAlloy, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {

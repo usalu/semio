@@ -6,7 +6,7 @@
 //! for the actual pixel payload, under its own distinct window kind id (`ImageWindowKit::window_kind()`
 //! is reserved for the Composite window — reusing it verbatim here would collide on id/body_key).
 
-use crate::artifacts::raster::RasterSnapshot;
+use crate::RasterSnapshot;
 use crate::viewer::raster::modes::view::windows::composite;
 use semio_framework_plugin::app::{ImageWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
@@ -64,7 +64,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::artifacts::raster::schema::empty_raster_document();
+        let document = crate::schema::empty_raster_document();
         let _node = render(&document).expect("bounded fixture");
     }
 }

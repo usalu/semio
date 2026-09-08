@@ -2,9 +2,9 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::presentation::mutations::create_tile::CreateTile;
-use crate::artifacts::presentation::op::PresentationMutation;
-use crate::artifacts::presentation::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
+use crate::mutations::create_tile::CreateTile;
+use crate::op::PresentationMutation;
+use crate::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
 use crate::editor::animate::{interaction_select_effect, new_tile_id, PresentationDispatchCtx};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -22,7 +22,7 @@ pub fn handle(payload: &AddTile, doc: &ArtifactView<'_, PresentationSnapshot>, _
     let id = new_tile_id("tile");
     let crop = payload.crop.clone().unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
     let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop };
-    let tile_count = crate::artifacts::presentation::presentation_working_scene(deck).1.len();
+    let tile_count = crate::presentation_working_scene(deck).1.len();
     let mut emit = Emit::mutations(vec![PresentationMutation::CreateTile(CreateTile { index: tile_count, tile })]);
     emit.effects.push(interaction_select_effect(&[id], "replace"));
     Ok(emit)
@@ -45,11 +45,11 @@ mod tests {
     async fn add_delete_and_rename_tile_round_trip_through_operations() {
         let mut app = presentation_app().await;
         app.dispatch_typed(PresentationCommand::AddTile(AddTile { crop: None }), &meta("local")).await.expect("add tile");
-        let tile_id = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
+        let tile_id = crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
         app.dispatch_typed(PresentationCommand::RenameTiles(rename_tiles::RenameTiles { ids: vec![tile_id.clone()], value: "Hero".into() }), &meta("local")).await.expect("rename");
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1[0].name, "Hero");
+        assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].name, "Hero");
         app.dispatch_typed(PresentationCommand::DeleteTile(delete_tile::DeleteTile { id: tile_id }), &meta("local")).await.expect("delete");
-        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
+        assert!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -57,11 +57,11 @@ mod tests {
         use semio_framework_plugin::PluginApp;
         let mut app = presentation_app().await;
         app.dispatch_typed(PresentationCommand::AddTile(AddTile { crop: None }), &meta("local")).await.expect("add tile");
-        let tile_id = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
+        let tile_id = crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
         app.dispatch_typed(PresentationCommand::PatchTileCrops(patch_tile_crops::PatchTileCrops { ids: vec![tile_id], field: "width".into(), value: 0.5 }), &meta("local")).await.expect("patch crop");
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1[0].crop.width, 0.5);
+        assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].crop.width, 0.5);
         app.handle_action("undo", None, &meta("local")).await.expect("undo");
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1[0].crop.width, 0.2);
+        assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].crop.width, 0.2);
     }
 
     /// 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
@@ -74,7 +74,7 @@ mod tests {
         use semio_framework_plugin::{PluginApp, INTERACTION_SELECT_ACTION_ID};
         let mut app = presentation_app_with_registry().await;
         seed_2x2(&mut app).await;
-        let first_id = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
+        let first_id = crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
         let targets = dsl::os_pack::json::to_string(&dsl::os_pack::json::Value::Array(vec![dsl::os_pack::json::object([
             ("granularity".to_string(), dsl::os_pack::json::Value::from(PRESENTATION_INTERACTION_GRANULARITY)),
             ("id".to_string(), dsl::os_pack::json::Value::from(first_id)),
@@ -87,7 +87,7 @@ mod tests {
         ]);
         app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("select");
         app.dispatch_typed(PresentationCommand::DeleteSelection(delete_selection::DeleteSelection {}), &meta("local")).await.expect("delete selection");
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 3, "only the selected tile is removed");
+        assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 3, "only the selected tile is removed");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -95,17 +95,17 @@ mod tests {
         let mut app = presentation_app().await;
         seed_2x2(&mut app).await;
         app.dispatch_typed(PresentationCommand::DeleteTile(delete_tile::DeleteTile { id: "does-not-exist".into() }), &meta("local")).await.expect("delete missing");
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4, "unknown ids are filtered out before dispatch");
+        assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4, "unknown ids are filtered out before dispatch");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_tiles_with_blank_value_leaves_name_unchanged() {
         let mut app = presentation_app().await;
         app.dispatch_typed(PresentationCommand::AddTile(AddTile { crop: None }), &meta("local")).await.expect("add tile");
-        let tile_id = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
-        let before = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1[0].name.clone();
+        let tile_id = crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
+        let before = crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].name.clone();
         app.dispatch_typed(PresentationCommand::RenameTiles(rename_tiles::RenameTiles { ids: vec![tile_id], value: "   ".into() }), &meta("local")).await.expect("rename blank");
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1[0].name, before, "whitespace-only rename is rejected");
+        assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].name, before, "whitespace-only rename is rejected");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -113,18 +113,18 @@ mod tests {
         let mut app = presentation_app().await;
         app.dispatch_typed(PresentationCommand::AddTile(AddTile { crop: None }), &meta("local")).await.expect("add tile");
         app.dispatch_typed(PresentationCommand::RenameTiles(rename_tiles::RenameTiles { ids: vec!["nope".into()], value: "Hero".into() }), &meta("local")).await.expect("rename unknown");
-        assert_ne!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1[0].name, "Hero");
+        assert_ne!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1[0].name, "Hero");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn patch_tile_crops_covers_all_fields_across_multiple_tiles() {
         let mut app = presentation_app().await;
         seed_2x2(&mut app).await;
-        let ids: Vec<String> = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.iter().map(|tile| tile.id.clone()).collect();
+        let ids: Vec<String> = crate::presentation_working_scene(&app.snapshot().expect("projection")).1.iter().map(|tile| tile.id.clone()).collect();
         for field in ["x", "y", "width", "height"] {
             app.dispatch_typed(PresentationCommand::PatchTileCrops(patch_tile_crops::PatchTileCrops { ids: ids.clone(), field: field.into(), value: 0.4 }), &meta("local")).await.expect("patch field");
         }
-        for tile in &crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1 {
+        for tile in &crate::presentation_working_scene(&app.snapshot().expect("projection")).1 {
             assert_eq!(tile.crop.width, 0.4);
             assert_eq!(tile.crop.height, 0.4);
         }
@@ -134,7 +134,7 @@ mod tests {
     async fn patch_tile_crops_targeting_no_existing_tile_is_a_no_op() {
         let mut app = presentation_app().await;
         app.dispatch_typed(PresentationCommand::PatchTileCrops(patch_tile_crops::PatchTileCrops { ids: vec!["ghost".into()], field: "width".into(), value: 0.4 }), &meta("local")).await.expect("patch ghost");
-        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
+        assert!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]

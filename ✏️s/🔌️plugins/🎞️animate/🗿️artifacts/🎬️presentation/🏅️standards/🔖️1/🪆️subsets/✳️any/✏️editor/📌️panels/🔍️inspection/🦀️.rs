@@ -1,6 +1,6 @@
 //! 🔍️ Animate presentation app panel — the inspector: field editors for the selected tile(s).
 
-use crate::artifacts::presentation::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
+use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use crate::editor::animate::terminology::AnimatePresentationLabels;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_framework_ui_contract::{column, field, section, text, BuiltNode};
@@ -31,7 +31,7 @@ pub fn definition() -> PanelTabDefinition {
 /// `🖍️draw`'s `properties` panel (`🎛️apps/🖍️draw/📌️panels/🔍️properties/🦀️.rs`): falls through
 /// to a schema/tile-count summary until a resolved-selection render path exists.
 pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(deck);
+    let (_, tiles) = crate::presentation_working_scene(deck);
     let schema = ui_node(text(ui_label(PRESENTATION_DOCUMENT_SCHEMA)?), "animate-presentation-play-inspector.schema.value")?;
     let tile_count = ui_node(text(ui_label(tiles.len().to_string())?), "animate-presentation-play-inspector.tiles.value")?;
     let schema = ui_node(ui_children(field(ui_label(labels.details_schema_field.as_str())?), [schema])?, "animate-presentation-play-inspector.schema")?;
@@ -77,8 +77,8 @@ mod semantic_contract {
     #[test]
     fn presentation_semantic_panels_match_the_json_oracle() {
         let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️panels.json")).expect("neutral UI vectors");
-        let document = crate::artifacts::presentation::default_presentation_snapshot();
-        let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(&document);
+        let document = crate::default_presentation_snapshot();
+        let (_, tiles) = crate::presentation_working_scene(&document);
         for row in vectors["cases"].as_array().expect("locales") {
             let labels = semio_framework_plugin::resolve_labels_for_locale::<AnimatePresentationLabels>(row["locale"].as_str().expect("locale"));
             let tree = project(crate::editor::animate::panels::artifact::render(&document, labels).expect("document"));

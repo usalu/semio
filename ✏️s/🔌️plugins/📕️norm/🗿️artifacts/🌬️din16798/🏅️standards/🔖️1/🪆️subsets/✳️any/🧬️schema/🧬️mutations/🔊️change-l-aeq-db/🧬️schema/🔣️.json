@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/din16798/1/any/mutation/change-l-aeq-db.json",
+  "$id": "https://semio.tech/schema/s/norm/din16798/1/any/mutation/change-l-aeq-db/schema.json",
   "title": "ChangeLAeqDb",
   "type": "object",
   "additionalProperties": false,

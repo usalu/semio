@@ -7,7 +7,7 @@
 use crate::editor::gis2d::config::Gis2dConfig;
 use crate::editor::gis2d::gis2d_window_action;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
-use framework_surface::tiled_map::{gis_map_lod_scale_json, GIS_MAP_LOD_MODE_AUTOMATIC};
+use semio_framework_surface::tiled_map::{gis_map_lod_scale_json, GIS_MAP_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{ActionArgOption, LocalizedLabel, MeasureSelectItem, WindowMeasure};
 use serde_json::Value;
 

@@ -11,7 +11,7 @@
 //! templates' `position`/`radius3d` fields (the part's 3d-projection rim geometry), expressed as a
 //! plain `Inference` impl (no per-entity `InferredField` caching needed).
 
-use crate::artifacts::block5d::Block5dSnapshot;
+use crate::Block5dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
@@ -53,7 +53,7 @@ impl protocol::InferenceSpec<Block5dSnapshot> for Block5dInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::block5d::standards::v1::subsets::any::schema::Block5dBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Block5dBuilder {
     type Snapshot = Block5dSnapshot;
     type Inference = Block5dInference;
 }
@@ -117,7 +117,7 @@ pub fn block5d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescr
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::block5d::{Block5dGripTemplate, BLOCK_5D_SCHEMA};
+    use crate::{Block5dGripTemplate, BLOCK_5D_SCHEMA};
     use crate::BlockKindIdentity;
     use protocol::Inference;
 

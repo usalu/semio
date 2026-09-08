@@ -12,8 +12,8 @@
 //! moves. `blocks` is deliberately outside this payload, so the seeded step's block list plays no
 //! part in the comparison. The seeded header is the committed payload's own, verbatim.
 
-use crate::artifacts::playbook::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
-use crate::artifacts::playbook::{attach_playbook_steps, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
+use crate::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
+use crate::{attach_playbook_steps, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

@@ -1,8 +1,22 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/required-extension/add.json",
-  "title": "GltfRequireExtensionMutation",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/add-required-extension/schema.json",
+  "title": "GltfRequireExtensionPayload",
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "extension",
+    "position"
+  ],
+  "properties": {
+    "extension": {
+      "type": "string"
+    },
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
   "x-semio": {
     "id": "s.stdio.gltf.mutation.add-required-extension.v1",
     "version": 1,

@@ -4,9 +4,9 @@
 //! here, one keyword per semantic verb, grammar `keyword key=value`. Every variant carries exactly
 //! one scalar/enum field, so each arm is a single key.
 
-pub use crate::artifacts::en1991::schema::mutations::En1991Mutation;
+pub use crate::document_schema::mutations::En1991Mutation;
 
-use crate::artifacts::en1991::schema::mutations::{
+use crate::document_schema::mutations::{
     change_accidental_mass_t::ChangeAccidentalMassT, change_accidental_speed_km_h::ChangeAccidentalSpeedKmH, change_annex::ChangeAnnex, change_area_m2::ChangeAreaM2,
     change_assumed_gk_kn_m2::ChangeAssumedGKKnM2, change_bridge_lane::ChangeBridgeLane, change_bridge_lane_width_m::ChangeBridgeLaneWidthM, change_bridge_moment_resistance_knm::ChangeBridgeMomentResistanceKnm,
     change_bridge_span_m::ChangeBridgeSpanM, change_category::ChangeCategory, change_cd::ChangeCD, change_construction_activity::ChangeConstructionActivity, change_crane_class::ChangeCraneClass,
@@ -338,7 +338,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1991Mutation> {
         En1991Mutation::ChangeSelfWeightMaterial(ChangeSelfWeightMaterial { new_self_weight_material: "reinforced_concrete".to_string() }),
         En1991Mutation::ChangeSelfWeightThicknessM(ChangeSelfWeightThicknessM { new_self_weight_thickness_m: 0.2 }),
         En1991Mutation::ChangeAssumedGKKnM2(ChangeAssumedGKKnM2 { new_assumed_g_k_kn_m2: 6.0 }),
-        En1991Mutation::ChangeFireCurve(ChangeFireCurve { new_fire_curve: crate::artifacts::en1991::part_1_2::FireCurve::Standard }),
+        En1991Mutation::ChangeFireCurve(ChangeFireCurve { new_fire_curve: crate::part_1_2::FireCurve::Standard }),
         En1991Mutation::ChangeFireResistanceMin(ChangeFireResistanceMin { new_fire_resistance_min: 30.0 }),
         En1991Mutation::ChangeFireMemberCapacityC(ChangeFireMemberCapacityC { new_fire_member_capacity_c: 900.0 }),
         En1991Mutation::ChangeSnowZone(ChangeSnowZone { new_snow_zone: 2 }),

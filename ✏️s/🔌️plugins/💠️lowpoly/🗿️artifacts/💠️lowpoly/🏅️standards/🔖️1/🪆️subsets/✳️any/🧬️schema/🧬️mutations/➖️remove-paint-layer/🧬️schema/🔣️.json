@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/1/any/mutation/remove-paint-layer.json",
+  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/1/any/mutation/remove-paint-layer/schema.json",
   "title": "RemovePaintLayer",
   "type": "object",
   "additionalProperties": false,

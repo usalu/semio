@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeManifestId` — patches the document `meta.manifestId`.
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::Puzzle2dDiff;
+use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeManifestId, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {

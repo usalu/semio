@@ -18,9 +18,9 @@
 //! "one accessor every render/export/inference call site funnels through" pattern the migration
 //! recipe's §3 prescribes.
 
-use crate::artifacts::process3d::{Capability, MeasureKind, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
+use crate::{Capability, MeasureKind, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
 use protocol::Inference;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
 use semio_framework_os_kernel::{FromValue, ToValue};
@@ -80,7 +80,7 @@ impl protocol::InferenceSpec<Process3dSnapshot> for Process3dInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::process3d::standards::v1::subsets::any::schema::Process3dBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Process3dBuilder {
     type Snapshot = Process3dSnapshot;
     type Inference = Process3dInference;
 
@@ -290,7 +290,7 @@ pub fn capability_for_measure_kind(workshop: &Workshop, kind: MeasureKind) -> (W
             }
         }
     }
-    for machine in crate::artifacts::process3d::generic_machines() {
+    for machine in crate::generic_machines() {
         for capability in machine.capabilities.iter() {
             if capability.recipe.measure_kind() == kind {
                 return (machine.clone(), capability.clone());
@@ -333,8 +333,8 @@ pub fn validate_capability(capability: &Capability, ctx: &ValidationContext) -> 
         .iter()
         .filter_map(|rule| {
             let (quantity, parameter_id, margin, is_min) = match rule {
-                crate::artifacts::process3d::CapabilityRule::Min { quantity, parameter, margin } => (*quantity, parameter.as_str(), *margin, true),
-                crate::artifacts::process3d::CapabilityRule::Max { quantity, parameter, margin } => (*quantity, parameter.as_str(), *margin, false),
+                crate::CapabilityRule::Min { quantity, parameter, margin } => (*quantity, parameter.as_str(), *margin, true),
+                crate::CapabilityRule::Max { quantity, parameter, margin } => (*quantity, parameter.as_str(), *margin, false),
             };
             let value = parameter_value(capability, parameter_id)?;
             let actual = quantity_value(ctx, quantity);
@@ -404,10 +404,10 @@ pub fn measure_for_capability(capability: &Capability, position: Option<[f64; 3]
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.process.process3d.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `process3d_artifact_schema_descriptor`'s registration.
-pub fn process3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn process3d_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.process.process3d.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -422,7 +422,7 @@ pub fn process3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDes
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::process3d::{ProcessStep, StepOrigin};
+    use crate::{ProcessStep, StepOrigin};
 
     //#region 🧪️InferenceLaws
     #[semio_framework_async_macros::async_test]

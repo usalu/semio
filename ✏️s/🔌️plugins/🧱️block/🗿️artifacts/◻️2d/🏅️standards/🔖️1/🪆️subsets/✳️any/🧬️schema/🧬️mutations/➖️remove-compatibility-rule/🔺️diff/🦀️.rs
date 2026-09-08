@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `RemoveCompatibilityRule`.
 
-use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::diff::{Block2dCompatibilityDelta, Block2dDiff};
+use crate::Block2dSnapshot;
+use crate::diff::{Block2dCompatibilityDelta, Block2dDiff};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveCompatibilityRule, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

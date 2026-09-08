@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::Din16798Snapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.

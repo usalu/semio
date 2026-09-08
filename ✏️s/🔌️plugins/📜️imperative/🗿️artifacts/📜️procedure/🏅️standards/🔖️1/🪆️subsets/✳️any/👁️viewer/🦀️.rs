@@ -5,8 +5,8 @@
 //! or draft mutation. MUST NOT import anything from the sibling editor module
 //! (`policyViewerPurityBreaches` forbids it outright, including the substring in comments).
 
-use crate::artifacts::procedure::schema::default_snapshot;
-use crate::artifacts::procedure::{ProcedureSnapshot, PROCEDURE_DIALECT, PROCEDURE_DOCUMENT_SCHEMA};
+use crate::schema::default_snapshot;
+use crate::{ProcedureSnapshot, PROCEDURE_DIALECT, PROCEDURE_DOCUMENT_SCHEMA};
 use crate::viewer::procedure::modes::view;
 use crate::viewer::procedure::modes::view::windows::{main, script};
 use semio_framework_plugin::{ArtifactView, ComponentTree, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
@@ -43,7 +43,7 @@ pub struct ImperativeViewer;
 
 impl ArtifactViewer for ImperativeViewer {
     type Snapshot = ProcedureSnapshot;
-    type Mutation = crate::artifacts::procedure::mutations::ProcedureMutation;
+    type Mutation = crate::mutations::ProcedureMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

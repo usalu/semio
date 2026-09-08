@@ -1,9 +1,9 @@
 //! 📚 Puzzle5d mutation — `ReplaceKindCatalogs`: whole-value swap of the fixture-carried typed
 //! kind-catalog bundle (`parts`/`grips`/`fasteners`/`ropes` catalogs together, one manifest-import
 //! gesture).
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::{Puzzle5dKindCatalogs, Puzzle5dSnapshot};
+use crate::diff::Puzzle5dDiff;
+use crate::mutations::Puzzle5dMutation;
+use crate::{Puzzle5dKindCatalogs, Puzzle5dSnapshot};
 
 //#region 🔖️Mutation
 /// 📚 `replace-kind-catalogs` payload — `None` clears the catalogs.

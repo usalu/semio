@@ -4,8 +4,8 @@
 //! state, not compliance content. Declared as a `view_action`, so the registry's kind discipline
 //! actively rejects it if it ever starts emitting document operations.
 
-use crate::artifacts::en1993::op::En1993Mutation;
-use crate::artifacts::en1993::En1993Snapshot;
+use crate::op::En1993Mutation;
+use crate::En1993Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

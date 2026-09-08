@@ -1,7 +1,7 @@
 //! 🔺️ `update-script-limits` — sparse diff construction.
 
 use super::mutation::UpdateScriptLimits;
-use crate::artifacts::iso16757::{part_5::ScriptLimits, Iso16757Diff, Iso16757Snapshot};
+use crate::{part_5::ScriptLimits, Iso16757Diff, Iso16757Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &UpdateScriptLimits, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {

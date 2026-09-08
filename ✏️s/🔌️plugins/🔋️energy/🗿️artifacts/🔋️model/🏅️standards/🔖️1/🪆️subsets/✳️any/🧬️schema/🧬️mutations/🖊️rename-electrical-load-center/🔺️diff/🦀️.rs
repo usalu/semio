@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `RenameElectricalLoadCenter` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameElectricalLoadCenter, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -22,6 +22,6 @@ pub fn diff(payload: &super::RenameElectricalLoadCenter, base: &EnergyModelSnaps
     if let Some(item) = model.electrical_load_centers.iter_mut().find(|item| item.id == payload.id) {
         item.name = payload.new_name.clone();
     }
-    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

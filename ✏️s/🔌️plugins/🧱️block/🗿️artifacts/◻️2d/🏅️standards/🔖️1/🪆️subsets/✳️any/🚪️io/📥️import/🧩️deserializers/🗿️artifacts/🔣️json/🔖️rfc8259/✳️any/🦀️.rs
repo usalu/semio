@@ -1,7 +1,7 @@
 //! 🚪️ block2d ← json — foreign `Deserializer<Block2dSnapshot>` on the framework's `io_mechanism`
 //! channel, the exact inverse of the sibling `📤️export` leaf: `IoFidelity::Exact`.
 
-use crate::artifacts::block2d::{Block2dSnapshot, BLOCK_2D_SCHEMA};
+use crate::{Block2dSnapshot, BLOCK_2D_SCHEMA};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

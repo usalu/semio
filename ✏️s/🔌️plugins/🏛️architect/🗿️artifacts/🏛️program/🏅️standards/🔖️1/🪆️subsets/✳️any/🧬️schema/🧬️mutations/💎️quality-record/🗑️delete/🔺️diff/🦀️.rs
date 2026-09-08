@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `💎quality` per Wave C.
 
 use super::DeleteQualityRecord;
-use crate::artifacts::program::diff::ProgramQualityDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramQualityDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteQualityRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

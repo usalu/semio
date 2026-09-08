@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📌requirements` per Wave C.
 
 use super::CreateRequirement;
-use crate::artifacts::program::diff::ProgramRequirementsDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramRequirementsDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
 pub fn diff(payload: &CreateRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

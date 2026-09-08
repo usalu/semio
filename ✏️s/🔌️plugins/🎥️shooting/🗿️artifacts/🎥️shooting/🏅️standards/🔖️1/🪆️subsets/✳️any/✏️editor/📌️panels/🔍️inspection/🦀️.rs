@@ -1,6 +1,6 @@
 //! 🔍️ Shooting inspector — edits the selected or active shot through semantic field controls.
 
-use crate::artifacts::shooting::{ShootingShot, ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
+use crate::{ShootingShot, ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::editor::shooting::{shooting_action, ui_capacity_error, ui_children, ui_label, ui_node, ui_text, ui_value_list, ui_value_map, ui_value_text};
@@ -55,7 +55,7 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> semio_f
 /// 🔍️ Resolves shot configuration selection, then the document's active shot, then a localized summary.
 pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let selected = cfg.selected_shot_ids.first().and_then(|id| snapshot.shots.iter().find(|shot| &shot.id == id));
-    let group = if let Some(shot) = selected.or_else(|| crate::artifacts::shooting::schema::active_shot(snapshot)) {
+    let group = if let Some(shot) = selected.or_else(|| crate::schema::active_shot(snapshot)) {
         shot_inspector_group(shot, labels)?
     } else {
         let summary = [
@@ -96,7 +96,7 @@ mod semantic_contract {
     #[test]
     fn shooting_semantic_panels_match_the_json_oracle() {
         let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️panels.json")).expect("neutral UI vectors");
-        let mut snapshot = crate::artifacts::shooting::schema::default_snapshot();
+        let mut snapshot = crate::schema::default_snapshot();
         let cfg = ShootingConfig::default();
         for row in vectors["cases"].as_array().expect("locales") {
             let labels = semio_framework_plugin::resolve_labels_for_locale::<ShootingLabels>(row["locale"].as_str().expect("locale"));

@@ -6,13 +6,13 @@
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/<window>`. This file dispatches and stitches.
 
 use dsl::json;
-use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::standards::v1::subsets::any::io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
-use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{
+use crate::op::CadMutation;
+use crate::standards::v1::subsets::any::io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
+use crate::standards::v1::subsets::any::schema::inferences::{
     cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, forest_play_scene, next_cad_id, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE,
     CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
 };
-use crate::artifacts::cad::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
+use crate::{artifact_kind, cad_pane_from_model_definition_id, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
 use crate::editor::cad::commands::camera::{set_camera, set_projection, set_projection_param};
 use crate::editor::cad::commands::contribution::set_contributions;
 use crate::editor::cad::commands::engagement::{engagement_abort, engagement_input, engagement_possible_select, engagement_repeat_last, engagement_submit, world_pointer_down, world_pointer_move};
@@ -634,8 +634,8 @@ pub fn patch_objects_mutations(_document: &CadSnapshot, _object_ids: &[String], 
     Vec::new()
 }
 
-pub(crate) fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject {
-    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
+pub(crate) fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> crate::standards::v1::subsets::any::io::geometry_import::CadObject {
+    use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
     let label = TYPOLOGY_CATALOG.iter().find(|entry| entry.typology == typology).map_or("Object", |entry| entry.label);
     let extent = match typology {
         t if t.contains("column") => Some([0.5, 0.5, 3.0]),
@@ -1249,7 +1249,7 @@ struct CadConfigStorePreparation {
     closing: bool,
 }
 
-fn cad_projection_retained_bytes(projection: &crate::artifacts::cad::CadProjectionDsl) -> usize {
+fn cad_projection_retained_bytes(projection: &crate::CadProjectionDsl) -> usize {
     projection.kind.len()
         .saturating_add(projection.orthographic_view.len())
         .saturating_add(projection.axonometric_variant.len())
@@ -1717,7 +1717,7 @@ impl ArtifactEditor for CadPlayApp {
         Some(Box::new(crate::editor::cad::presence::retirement::CadPresenceStoreDisposer::new()))
     }
 
-    const DIALECT: Dialect = crate::artifacts::cad::CAD_DIALECT;
+    const DIALECT: Dialect = crate::CAD_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -1796,7 +1796,7 @@ impl ArtifactEditor for CadPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::cad::config::schema::app_schema_descriptor())
     }
 
@@ -1842,7 +1842,7 @@ impl ArtifactEditor for CadPlayApp {
         // Composing the imported element into the Shape pane's `SemioModelSnapshot` CHILD needs a
         // child-dispatch seam on `Emit<CadMutation, _>` that does not exist yet
         // (`🔌️plugin/🦀️.rs` framework-kernel surface, W1-owned). Documented no-op.
-        match crate::artifacts::cad::standards::v1::subsets::any::io::import_cad_object_by_extension(name, &payload) {
+        match crate::standards::v1::subsets::any::io::import_cad_object_by_extension(name, &payload) {
             Some(_element) => Ok(Emit::default()),
             None => Err(MediaError::Payload(port.to_string(), "unrecognized geometry payload".into())),
         }
@@ -1905,7 +1905,7 @@ impl ArtifactEditor for CadPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
+        crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: cad_runtime_from_config(cfg.snapshot) };
         let labels = cad_labels(cfg.snapshot);
         let window_kind_id = match body_key {
@@ -1980,7 +1980,7 @@ pub fn cad_dislocate_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
 /// whole objects (`"object"`, the default granularity) plus component-level vertex/edge/face
 /// picking, all `u32` ids stringified at the `InteractionTarget` boundary (round-tripped back to
 /// `u32` inside command handlers, e.g. `🎮️commands/🔄️transform`). CAUTION: NOT the same thing as
-/// `crate::artifacts::cad::standards::v1::subsets::any::io::InteractionSpec` (a CAD-artifact DSL
+/// `crate::standards::v1::subsets::any::io::InteractionSpec` (a CAD-artifact DSL
 /// type for engagement statecharts, `🗿️artifacts/📐️cad/…/🎬️interaction-spec/🦀️.rs`) —
 /// unrelated, pre-existing, untouched by this migration.
 pub fn cad_interaction_definition() -> semio_framework_plugin::InteractionDefinition {
@@ -2007,7 +2007,7 @@ pub fn cad_interaction_definition() -> semio_framework_plugin::InteractionDefini
 }
 
 pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::cad::CAD_DIALECT).document(["semio", "cad"])
+    Editor::builder(crate::CAD_DIALECT).document(["semio", "cad"])
             .command({
                 let mut definition = CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) };
                 definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
@@ -2148,7 +2148,7 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             // `.example(...)`/`.workflow(...)` on this builder, so the old
             // `CAD_EXAMPLE_FOREST_LEFT` app-level example registration and the no-op `.workflow("cad",
             // …)` call are dropped here (not silently: reported in the packet's migration report).
-            // The subset's own `📚️examples/🎬️demo` facet (`crate::artifacts::cad::examples::...`,
+            // The subset's own `📚️examples/🎬️demo` facet (`crate::examples::...`,
             // real content, pre-existing) is the modern, role-agnostic replacement surface for this.
             .build_definition()
 }
@@ -2157,12 +2157,12 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
 //#region 🔖️WorkingSceneFixtures
 /// 🌲️ The Concrete Forest Left example's REAL per-pane object content, built straight from the
 /// same fixture JSON `forest_play_scene()`'s (persisted, handle-only) `CadSnapshot` is built from —
-/// see `crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::forest_pane_bundle`.
+/// see `crate::standards::v1::subsets::any::schema::inferences::forest_pane_bundle`.
 /// This is the app-layer `CadWorkingScene` counterpart to `forest_play_scene()`: use `forest_play_scene()`
 /// for `drive`/render dispatch (a `CadSnapshot`, composed-child HANDLES only) and this for reading
 /// actual object data in tests/render-path exemplars.
 pub fn forest_working_scene() -> CadWorkingScene {
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::forest_pane_bundle;
+    use crate::standards::v1::subsets::any::schema::inferences::forest_pane_bundle;
     let (objects, geometry) = forest_pane_bundle(CadPaneId::Shape);
     let (building_objects, building_geometry) = forest_pane_bundle(CadPaneId::Building);
     let (energy_objects, energy_geometry) = forest_pane_bundle(CadPaneId::Energy);
@@ -2311,12 +2311,12 @@ pub(crate) mod testkit {
 mod tests {
     use super::testkit::*;
     use super::*;
-    use crate::artifacts::cad::standards::v1::subsets::any::io::scene_from_spatial_payload;
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{
+    use crate::standards::v1::subsets::any::io::scene_from_spatial_payload;
+    use crate::standards::v1::subsets::any::schema::inferences::{
         align_mesh_to_fixture_centroid, default_document, object_mesh_data, run_derive_from_geometry, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z,
         CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
     };
-    use crate::artifacts::cad::{empty_cad_snapshot, CadNode, CAD_PLAY_DOCUMENT_SCHEMA};
+    use crate::{empty_cad_snapshot, CadNode, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework_plugin::{ActionKind, AppActionRegistry, EditorApp, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
     use store::{Backbone, BackboneMessage, MemoryBackbone};
 
@@ -2505,7 +2505,7 @@ mod tests {
     fn retained_artifact_store_preparation_is_bounded_exact_and_reversible() {
         let base = empty_cad_snapshot();
         let node = CadNode { id: "node-retained".into(), label: "Retained".into(), kind: "group".into() };
-        let mutation = CadMutation::CreateNode(crate::artifacts::cad::mutations::create_node::CreateNode { node: node.clone() });
+        let mutation = CadMutation::CreateNode(crate::mutations::create_node::CreateNode { node: node.clone() });
         let footprint = admit_cad_artifact_mutation(&mutation).expect("bounded CAD Artifact mutation");
         assert_eq!(footprint.work_items, 1);
         let (post, inverse, forward) = prepare_cad_artifact(&base, mutation.clone()).expect("exact CAD Artifact preparation");

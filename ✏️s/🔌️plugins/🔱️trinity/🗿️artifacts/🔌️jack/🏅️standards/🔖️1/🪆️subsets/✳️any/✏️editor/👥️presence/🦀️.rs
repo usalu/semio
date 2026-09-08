@@ -1,6 +1,6 @@
 //! 👥️ Jack presence — shareable live ephemeral state + mutations.
 
-use crate::artifacts::jack::Camera;
+use crate::Camera;
 use std::collections::BTreeMap;
 use store::ArtifactPack;
 

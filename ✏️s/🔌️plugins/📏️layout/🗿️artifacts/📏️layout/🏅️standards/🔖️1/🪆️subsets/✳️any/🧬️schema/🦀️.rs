@@ -1,6 +1,6 @@
 //! 🧬️ Layout artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::layout::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, LayoutDropPreviewState, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
+use crate::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, LayoutDropPreviewState, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -105,8 +105,8 @@ impl Default for LayoutArtifact {
 
 impl LayoutArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::layout::LayoutSnapshot {
-        crate::artifacts::layout::LayoutSnapshot {
+    pub fn to_snapshot(&self) -> crate::LayoutSnapshot {
+        crate::LayoutSnapshot {
             schema: self.schema.clone(),
             name: self.name.clone(),
             grid: self.grid.clone(),
@@ -125,7 +125,7 @@ impl LayoutArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::layout::LayoutSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::LayoutSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             name: snapshot.name,
@@ -146,7 +146,7 @@ impl LayoutArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::layout::LayoutSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::LayoutSnapshot) {
         self.schema = snapshot.schema;
         self.name = snapshot.name;
         self.grid = snapshot.grid;
@@ -203,7 +203,7 @@ pub fn layout_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::layout::{LayoutDiff, LayoutMutation, LayoutSnapshot};
+    use crate::{LayoutDiff, LayoutMutation, LayoutSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug)]
@@ -217,7 +217,7 @@ pub mod derived_construction {
         type Mutation = LayoutMutation;
         type Diff = LayoutDiff;
         fn empty() -> Self {
-            Self { snapshot: crate::artifacts::layout::schema::default_document(), diagnostics: Vec::new() }
+            Self { snapshot: crate::schema::default_document(), diagnostics: Vec::new() }
         }
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
@@ -255,7 +255,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::layout::LayoutSnapshot;
+    use crate::LayoutSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -305,20 +305,20 @@ pub use derived_analysis::*;
 //#region 📄️Document
 /// 📄️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — pure over `LayoutSnapshot`/`Page`, no engine state, no app type.
-pub fn parse_layout_document(json: &str) -> Result<crate::artifacts::layout::LayoutSnapshot, crate::artifacts::layout::io::LayoutError> {
-    let doc: crate::artifacts::layout::LayoutSnapshot = dsl::os_pack::json::from_json_str(json)?;
+pub fn parse_layout_document(json: &str) -> Result<crate::LayoutSnapshot, crate::io::LayoutError> {
+    let doc: crate::LayoutSnapshot = dsl::os_pack::json::from_json_str(json)?;
     if doc.schema != LAYOUT_DOCUMENT_SCHEMA {
-        return Err(crate::artifacts::layout::io::LayoutError::UnexpectedSchema(doc.schema));
+        return Err(crate::io::LayoutError::UnexpectedSchema(doc.schema));
     }
     Ok(doc)
 }
 
 pub struct ResolvedFrame {
-    pub frame: crate::artifacts::layout::Frame,
+    pub frame: crate::Frame,
     pub inherited: bool,
 }
 
-pub fn resolve_page<'a>(doc: &'a crate::artifacts::layout::LayoutSnapshot, page: &'a Page) -> Vec<ResolvedFrame> {
+pub fn resolve_page<'a>(doc: &'a crate::LayoutSnapshot, page: &'a Page) -> Vec<ResolvedFrame> {
     let mut frames = Vec::new();
     if let Some(parent_id) = &page.parent_page_id {
         if let Some(parent) = doc.parent_pages.iter().find(|p| p.id == *parent_id) {
@@ -339,12 +339,12 @@ pub fn resolve_page<'a>(doc: &'a crate::artifacts::layout::LayoutSnapshot, page:
 /// 📄️ The bundled sample fixture, parsed once — the source of truth for `LayoutPlayApp::initial_snapshot`
 /// and the app manifest's `.example(...)` document. Relocated from the deleted `⚙️engine` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-pub fn default_document() -> crate::artifacts::layout::LayoutSnapshot {
+pub fn default_document() -> crate::LayoutSnapshot {
     build_demo_layout_snapshot()
 }
 
-fn build_demo_layout_snapshot() -> crate::artifacts::layout::LayoutSnapshot {
-    crate::artifacts::layout::LayoutSnapshot {
+fn build_demo_layout_snapshot() -> crate::LayoutSnapshot {
+    crate::LayoutSnapshot {
         schema: LAYOUT_DOCUMENT_SCHEMA.into(),
         name: "Demo".into(),
         grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: true },
@@ -358,11 +358,11 @@ fn build_demo_layout_snapshot() -> crate::artifacts::layout::LayoutSnapshot {
             width: 400.0,
             height: 500.0,
             layer_ids: vec!["layer-parent".into()],
-            layers: vec![crate::artifacts::layout::Layer { id: "layer-parent".into(), name: "Master".into(), visible: true, locked: false, object_ids: vec!["frame-inherited".into()] }],
-            frames: vec![crate::artifacts::layout::Frame::Rect {
+            layers: vec![crate::Layer { id: "layer-parent".into(), name: "Master".into(), visible: true, locked: false, object_ids: vec!["frame-inherited".into()] }],
+            frames: vec![crate::Frame::Rect {
                 id: "frame-inherited".into(),
                 layer_id: "layer-parent".into(),
-                bounds: crate::artifacts::layout::LayoutBounds { x: 50.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 },
+                bounds: crate::LayoutBounds { x: 50.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 },
                 locked: None,
                 visible: None,
                 fill: None,
@@ -378,36 +378,36 @@ fn build_demo_layout_snapshot() -> crate::artifacts::layout::LayoutSnapshot {
                 parent_page_id: Some("parent-1".into()),
                 width: 400.0,
                 height: 500.0,
-                margins: crate::artifacts::layout::PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
-                columns: crate::artifacts::layout::PageColumns { count: 1, gutter: 0.0 },
+                margins: crate::PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
+                columns: crate::PageColumns { count: 1, gutter: 0.0 },
                 guides: Vec::new(),
                 layer_ids: vec!["layer-1".into()],
-                layers: vec![crate::artifacts::layout::Layer { id: "layer-1".into(), name: "Content".into(), visible: true, locked: false, object_ids: vec!["frame-text-1".into(), "frame-image-1".into(), "frame-1".into()] }],
+                layers: vec![crate::Layer { id: "layer-1".into(), name: "Content".into(), visible: true, locked: false, object_ids: vec!["frame-text-1".into(), "frame-image-1".into(), "frame-1".into()] }],
                 frames: vec![
-                    crate::artifacts::layout::Frame::Text {
+                    crate::Frame::Text {
                         id: "frame-text-1".into(),
                         layer_id: "layer-1".into(),
-                        bounds: crate::artifacts::layout::LayoutBounds { x: 156.0, y: 220.0, width: 80.0, height: 40.0, rotation: 0.0 },
+                        bounds: crate::LayoutBounds { x: 156.0, y: 220.0, width: 80.0, height: 40.0, rotation: 0.0 },
                         locked: None,
                         visible: None,
                         story_id: "story-1".into(),
                         thread_next: None,
                         columns: 1,
-                        inset: crate::artifacts::layout::LayoutRect { x: 0.0, y: 0.0, width: 80.0, height: 40.0 },
+                        inset: crate::LayoutRect { x: 0.0, y: 0.0, width: 80.0, height: 40.0 },
                         wrap_mode: "box".into(),
                     },
-                    crate::artifacts::layout::Frame::Image {
+                    crate::Frame::Image {
                         id: "frame-image-1".into(),
                         layer_id: "layer-1".into(),
-                        bounds: crate::artifacts::layout::LayoutBounds { x: 136.0, y: 435.0, width: 60.0, height: 40.0, rotation: 0.0 },
+                        bounds: crate::LayoutBounds { x: 136.0, y: 435.0, width: 60.0, height: 40.0, rotation: 0.0 },
                         locked: None,
                         visible: None,
                         link_id: "link-missing".into(),
                     },
-                    crate::artifacts::layout::Frame::Rect {
+                    crate::Frame::Rect {
                         id: "frame-1".into(),
                         layer_id: "layer-1".into(),
-                        bounds: crate::artifacts::layout::LayoutBounds { x: 10.0, y: 10.0, width: 40.0, height: 40.0, rotation: 0.0 },
+                        bounds: crate::LayoutBounds { x: 10.0, y: 10.0, width: 40.0, height: 40.0, rotation: 0.0 },
                         locked: None,
                         visible: None,
                         fill: Some([1.0, 1.0, 1.0, 1.0]),
@@ -423,8 +423,8 @@ fn build_demo_layout_snapshot() -> crate::artifacts::layout::LayoutSnapshot {
                 parent_page_id: None,
                 width: 400.0,
                 height: 500.0,
-                margins: crate::artifacts::layout::PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
-                columns: crate::artifacts::layout::PageColumns { count: 1, gutter: 0.0 },
+                margins: crate::PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
+                columns: crate::PageColumns { count: 1, gutter: 0.0 },
                 guides: Vec::new(),
                 layer_ids: Vec::new(),
                 layers: Vec::new(),
@@ -465,12 +465,12 @@ pub fn text_to_rgba(text: &str) -> Option<[f32; 4]> {
 mod document_tests {
     use super::*;
 
-    fn rect_frame(id: &str, visible: Option<bool>) -> crate::artifacts::layout::Frame {
-        crate::artifacts::layout::Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: crate::artifacts::layout::LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: None, visible, fill: None, stroke: None }
+    fn rect_frame(id: &str, visible: Option<bool>) -> crate::Frame {
+        crate::Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: crate::LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: None, visible, fill: None, stroke: None }
     }
 
-    fn base_doc() -> crate::artifacts::layout::LayoutSnapshot {
-        crate::artifacts::layout::LayoutSnapshot {
+    fn base_doc() -> crate::LayoutSnapshot {
+        crate::LayoutSnapshot {
             schema: LAYOUT_DOCUMENT_SCHEMA.into(),
             name: "t".into(),
             grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
@@ -508,13 +508,13 @@ mod document_tests {
             parent_page_id: Some("parent-1".into()),
             width: 100.0,
             height: 100.0,
-            margins: crate::artifacts::layout::PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
-            columns: crate::artifacts::layout::PageColumns { count: 1, gutter: 0.0 },
+            margins: crate::PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
+            columns: crate::PageColumns { count: 1, gutter: 0.0 },
             guides: Vec::new(),
             layer_ids: Vec::new(),
             layers: Vec::new(),
             frames: Vec::new(),
-            overrides: vec![crate::artifacts::layout::PageOverride { object_id: "frame-a".into(), bounds: None, visible: None, locked: None }],
+            overrides: vec![crate::PageOverride { object_id: "frame-a".into(), bounds: None, visible: None, locked: None }],
         };
         let resolved = resolve_page(&doc, &page_with_parent);
         assert_eq!(resolved.len(), 2);
@@ -539,11 +539,11 @@ mod document_tests {
     async fn parse_layout_document_rejects_wrong_schema_and_invalid_json() {
         let wrong_schema = r#"{"schema":"other.schema","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[]}"#;
         let error = parse_layout_document(wrong_schema).expect_err("wrong schema must fail");
-        assert!(matches!(error, crate::artifacts::layout::io::LayoutError::UnexpectedSchema(schema) if schema == "other.schema"));
+        assert!(matches!(error, crate::io::LayoutError::UnexpectedSchema(schema) if schema == "other.schema"));
 
         let invalid_json = "not json";
         let error = parse_layout_document(invalid_json).expect_err("invalid json must fail");
-        assert!(matches!(error, crate::artifacts::layout::io::LayoutError::Json(_)));
+        assert!(matches!(error, crate::io::LayoutError::Json(_)));
     }
 
     #[semio_framework_async_macros::async_test]

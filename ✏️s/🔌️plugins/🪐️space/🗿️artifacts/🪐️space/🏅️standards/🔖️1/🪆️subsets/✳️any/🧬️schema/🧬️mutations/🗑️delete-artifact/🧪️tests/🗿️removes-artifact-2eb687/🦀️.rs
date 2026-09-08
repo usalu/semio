@@ -4,9 +4,9 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`, not here.
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDiff;
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

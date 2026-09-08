@@ -13,7 +13,7 @@
 //! computed, never authored). Unlike most W4 subsets, this artifact already carries real
 //! hand-authored `dsl::LanguageSpec`s (`pilot_languages()`, artifact root) from the OLD
 //! `declaration().languages(...)` channel — `NativeCodecs` below wires them in via
-//! `crate::artifacts::curation::language_spec` rather than leaving every `LanguagePair` `None`.
+//! `crate::language_spec` rather than leaving every `LanguagePair` `None`.
 //!
 //! ⚠️ Fidelity honesty: `json` import/export is a genuine structural `serde_json::Value` bridge
 //! (`IoFidelity::Exact`). `zip`/`png`/`stl`/`obj` import/export are PRE-EXISTING non-functional
@@ -25,9 +25,9 @@
 
 //#region 🔖️IoDeclaration
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::artifacts::curation::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::artifacts::curation::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use crate::artifacts::curation::{language_spec, CurationSnapshot, SourcingMutation, SOURCING_CURATION_SCHEMA, SOURCING_DIALECT};
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::{language_spec, CurationSnapshot, SourcingMutation, SOURCING_CURATION_SCHEMA, SOURCING_DIALECT};
     use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;

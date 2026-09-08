@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/draw/drawing/1/structure/mutation/create-layer.json",
+  "$id": "https://semio.tech/schema/s/draw/drawing/1/structure/mutation/create-layer/schema.json",
   "title": "CreateLayer",
   "type": "object",
   "additionalProperties": false,

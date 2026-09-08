@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `CreateRepresentation`.
 
-use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::diff::{Block5dDiff, Block5dRepresentationsDelta};
+use crate::Block5dSnapshot;
+use crate::diff::{Block5dDiff, Block5dRepresentationsDelta};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateRepresentation, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {

@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle2d diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::puzzle2d::schema::Puzzle2dArtifact;
-use crate::artifacts::puzzle2d::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode};
+use crate::schema::Puzzle2dArtifact;
+use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode};
 use artifact_schema::ArtifactSchema;
 
 //#region 🔖️Diff

@@ -1,7 +1,7 @@
 //! 🔺️ VCS artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::vcs::schema::VcsArtifact;
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::schema::VcsArtifact;
+use crate::VcsSnapshot;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use crate::artifacts::vcs::schema::diff::*;
+pub use crate::schema::diff::*;
 
 //#region 🔖️Apply
 pub fn apply_tags_delta(tags: &[String], delta: &VcsTagsDelta) -> protocol::MutationApplyResult<Vec<String>> {
@@ -148,7 +148,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn empty_diff_is_a_no_operation() {
-        let base = crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot();
+        let base = crate::standards::v1::subsets::any::schema::empty_vcs_snapshot();
         let diff = VcsDiff::default();
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
     }

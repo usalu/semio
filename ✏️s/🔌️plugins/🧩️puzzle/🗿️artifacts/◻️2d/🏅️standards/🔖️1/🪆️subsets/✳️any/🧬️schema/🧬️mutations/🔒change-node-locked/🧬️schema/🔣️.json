@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/puzzle/2d/1/any/mutation/change-node-locked.json",
+  "$id": "https://semio.tech/schema/s/puzzle/2d/1/any/mutation/change-node-locked/schema.json",
   "title": "ChangeNodeLocked",
   "description": "The `change-node-locked` mutation record — internally tagged `\"mutation\": \"changeNodeLocked\"`, the one branch the aggregate `../🔣️.json` union carries for this kind.",
   "type": "object",

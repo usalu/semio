@@ -4,7 +4,7 @@
 //! plain whole-snapshot scalar (per the family root's own "simple whole-snapshot scalars"
 //! guidance) — no `InferredField`/incremental caching needed for a handful of `{x, y}` points.
 
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 
 //#region 🔖️Bounds
 /// 📦 Axis-aligned 2d bounding box over `rule_layout`'s node positions.
@@ -46,7 +46,7 @@ pub fn compute_bounds(snapshot: &RewritingSnapshot) -> RewritingBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::rewriting::LayoutPoint;
+    use crate::LayoutPoint;
     use std::collections::BTreeMap;
 
     #[semio_framework_async_macros::async_test]

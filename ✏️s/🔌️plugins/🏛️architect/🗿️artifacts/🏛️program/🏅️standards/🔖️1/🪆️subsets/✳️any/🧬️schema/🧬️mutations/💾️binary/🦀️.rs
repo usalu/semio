@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::program::schema::mutations::text::ProgramMutation;
+use crate::schema::mutations::text::ProgramMutation;
 use protocol::OpBinary;
 
 /// 📡️ Encodes an Architect operation for transport or persistence.
@@ -29,7 +29,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<ProgramMutation, protocol::ProtocolErro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::kernel::EntityId;
+    use crate::kernel::EntityId;
 
     #[semio_framework_async_macros::async_test]
     async fn disconnect_adjacency_round_trips_through_the_binary_codec() {

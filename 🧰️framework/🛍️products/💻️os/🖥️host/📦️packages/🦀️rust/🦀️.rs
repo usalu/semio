@@ -18,7 +18,7 @@ mod retirement;
 
 //#region 🔖️OsHostFull
 #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
-use semio_framework::workflow as workflow_kernel;
+use semio_framework_artifact_workflow_workflow as workflow_kernel;
 
 #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 #[path = "../../../🔨️modules/🪐️space/🦀️.rs"]

@@ -1,7 +1,7 @@
 //! 🔺️ `remove-geometry-connection` — sparse diff construction.
 
 use super::RemoveGeometryConnection;
-use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
+use crate::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &RemoveGeometryConnection, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {

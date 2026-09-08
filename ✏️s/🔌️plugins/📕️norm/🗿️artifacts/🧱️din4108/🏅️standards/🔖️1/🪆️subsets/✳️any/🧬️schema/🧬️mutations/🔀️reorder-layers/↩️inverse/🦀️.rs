@@ -2,7 +2,7 @@
 //! (`📓️taxonomy.md`'s addressing convention #3); out-of-range BASE `from` ⇒ `Vec::new()`.
 
 use super::ReorderLayers;
-use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
+use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReorderLayers, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {

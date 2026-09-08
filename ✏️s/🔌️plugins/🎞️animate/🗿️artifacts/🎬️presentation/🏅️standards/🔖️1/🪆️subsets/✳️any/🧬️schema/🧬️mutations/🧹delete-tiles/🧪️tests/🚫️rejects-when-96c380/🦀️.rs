@@ -13,8 +13,8 @@
 //! `mutation.partial`. This case pins the total-miss end of that threshold with TWO addressed ids,
 //! so the diagnostic's target is a genuinely variadic address, not a fixed pair.
 
-use crate::artifacts::presentation::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
-use crate::artifacts::presentation::{PresentationDiff, PresentationSnapshot};
+use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
+use crate::{PresentationDiff, PresentationSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

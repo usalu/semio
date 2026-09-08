@@ -43,7 +43,7 @@ pub const BROWSER_EVENT_KEY_DOWN: u16 = 1_808;
 pub const BROWSER_EVENT_KEY_UP: u16 = 1_809;
 pub const BROWSER_EVENT_TEXT: u16 = 1_810;
 pub const BROWSER_EVENT_CLOSE: u16 = 1_811;
-pub const BROWSER_HOST_SCHEMA_JSON: &str = include_str!("../../🧬️schema/🔣️.json");
+pub const BROWSER_HOST_CONTRACT_JSON: &str = include_str!("../../🤝️contract.json");
 pub const BROWSER_HOST_TRACE_FIXTURE: &str = include_str!("../../🧪️fixtures/📊️.tsv");
 pub const BROWSER_HOST_LIMITS_FIXTURE: &str = include_str!("../../🧪️fixtures/📐️browser-host-limits.tsv");
 pub const BROWSER_HOST_FRAMING_FIXTURE: &str = include_str!("../../🧪️fixtures/🧪️browser-host-framing/📊️.tsv");
@@ -764,8 +764,8 @@ mod tests {
 
     #[test]
     fn browser_schema_and_canonical_trace_decode_without_dependencies() {
-        assert!(BROWSER_HOST_SCHEMA_JSON.contains("\"semanticUnitsPerGrant\": 1"));
-        assert!(BROWSER_HOST_SCHEMA_JSON.contains("\"encodedEventBytes\": 1051"));
+        assert!(BROWSER_HOST_CONTRACT_JSON.contains("\"semanticUnitsPerGrant\": 1"));
+        assert!(BROWSER_HOST_CONTRACT_JSON.contains("\"encodedEventBytes\": 1051"));
         assert!(BROWSER_HOST_LIMITS_FIXTURE.contains("event-bytes\t1024\t1025"));
         assert!(BROWSER_HOST_LIMITS_FIXTURE.contains("encoded-event-bytes\t1051\t1052\tlimit-exceeded-before-copy"));
         assert_eq!(BROWSER_HOST_FRAMING_FIXTURE.lines().skip(1).count(), 8);

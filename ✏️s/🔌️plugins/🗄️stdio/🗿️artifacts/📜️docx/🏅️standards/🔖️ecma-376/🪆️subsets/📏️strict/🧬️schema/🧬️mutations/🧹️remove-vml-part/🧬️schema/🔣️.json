@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutation/remove-vml-part.json",
+  "$id": "https://semio.tech/schema/s/stdio/docx/ecma-376/strict/mutation/remove-vml-part/schema.json",
   "title": "RemoveVmlPart",
   "type": "object",
   "additionalProperties": false,

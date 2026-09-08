@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import type { ShellDialogV1 } from "../🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🟦️.ts";
+import type { ShellDialogV1 } from "../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
 import React, {
   type KeyboardEvent,
   type ReactElement,

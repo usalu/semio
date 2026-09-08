@@ -2,8 +2,8 @@
 //! (a no-op if already empty); the inverse captures the escrowed handle from BASE so undo restores
 //! it exactly.
 
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
@@ -16,7 +16,7 @@ pub struct DeleteEnergyModel {}
 impl MutationKind<CadSnapshot, CadMutation> for DeleteEnergyModel {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "energy-model", kind: "delete-energy-model", record: "DeletedEnergyModel" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {

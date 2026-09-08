@@ -5,14 +5,14 @@
 //! `config::RewritingConfig`, written via `config::RewritingConfigMutation`s. Every rule/parameter/
 //! before-fixture edit flows through the semantic `RewriteRuleMutation` vocabulary (`edit-*` body
 //! replaces, `change-*`/`remove-*` map upserts) — see
-//! `crate::artifacts::rewriting::rewriting_snapshot_mutations`, the seam commands that still
+//! `crate::rewriting_snapshot_mutations`, the seam commands that still
 //! compute a whole `next: RewritingSnapshot` use to emit granular mutations. The
 //! `TrinityRewritingCommand` enum stays hand-rolled (TEMPLATE §5.1 fallback, same rationale as `jack`).
 
-use crate::artifacts::jack::{Camera, JackSnapshot, Node, PropertyValue};
-use crate::artifacts::rewriting::op::RewriteRuleMutation;
-use crate::artifacts::rewriting::schema::{ParameterKind, Rhs};
-use crate::artifacts::rewriting::{LayoutPoint, RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
+use semio_s_artifact_trinity_jack::{Camera, JackSnapshot, Node, PropertyValue};
+use crate::op::RewriteRuleMutation;
+use crate::schema::{ParameterKind, Rhs};
+use crate::{LayoutPoint, RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use crate::editor::rewriting::config::{RewritingConfig, RewritingConfigMutation};
 use crate::editor::rewriting::presence::{RewritingPresence, RewritingPresenceMutation};
 use semio_framework_plugin::{
@@ -176,10 +176,10 @@ pub(crate) fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
     JackSnapshot::from_json(json).ok()
 }
 
-fn build_rule_from_state(state: &RewritingSnapshot) -> Result<crate::artifacts::rewriting::schema::Rule, String> {
-    let lhs: crate::artifacts::rewriting::schema::Lhs = pack::from_json_str(&state.lhs_json).map_err(|e| e.to_string())?;
+fn build_rule_from_state(state: &RewritingSnapshot) -> Result<crate::schema::Rule, String> {
+    let lhs: crate::schema::Lhs = pack::from_json_str(&state.lhs_json).map_err(|e| e.to_string())?;
     let rhs: Rhs = pack::from_json_str(&state.rhs_json).map_err(|e| e.to_string())?;
-    Ok(crate::artifacts::rewriting::schema::Rule { name: TRINITY_REWRITING_PLAY_RULE_NAME.into(), lhs, rhs })
+    Ok(crate::schema::Rule { name: TRINITY_REWRITING_PLAY_RULE_NAME.into(), lhs, rhs })
 }
 
 pub(crate) fn compiled_jack_query(state: &RewritingSnapshot) -> String {
@@ -188,21 +188,21 @@ pub(crate) fn compiled_jack_query(state: &RewritingSnapshot) -> String {
         Err(_) => return String::new(),
     };
     let bindings_json = pack::to_json_string(&state.parameter_bindings);
-    crate::artifacts::rewriting::schema::rule_query_json(&rule_json, &bindings_json)
+    crate::schema::rule_query_json(&rule_json, &bindings_json)
         .ok()
         .and_then(|json| pack::parse_json(&json).ok())
         .and_then(|value| value.get("query").and_then(|query| query.as_str()).map(str::to_string))
-        .unwrap_or_else(|| build_rule_from_state(state).map(|rule| crate::artifacts::rewriting::schema::build_rule_query(&rule, &state.parameter_bindings)).unwrap_or_default())
+        .unwrap_or_else(|| build_rule_from_state(state).map(|rule| crate::schema::build_rule_query(&rule, &state.parameter_bindings)).unwrap_or_default())
 }
 
 fn apply_rewriting_to_fixture(before_json: &str, state: &RewritingSnapshot) -> String {
-    let Ok(mut graph) = crate::artifacts::jack::Graph::load_json(before_json) else {
+    let Ok(mut graph) = semio_s_artifact_trinity_jack::Graph::load_json(before_json) else {
         return before_json.into();
     };
     let Ok(rule) = build_rule_from_state(state) else {
         return before_json.into();
     };
-    if crate::artifacts::rewriting::schema::apply_rule(&mut graph, &rule, &state.parameter_bindings).is_ok() {
+    if crate::schema::apply_rule(&mut graph, &rule, &state.parameter_bindings).is_ok() {
         graph.fixture_json().unwrap_or_else(|_| before_json.into())
     } else {
         before_json.into()
@@ -220,14 +220,14 @@ fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64, rule_lay
     Node { id: id.into(), name: name.into(), kind: kind.into(), x, y, width: 160.0, height: 56.0, ports: vec![], properties: Default::default() }
 }
 
-fn lhs_semantic_graph_fixture(lhs: &crate::artifacts::rewriting::schema::Lhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
+fn lhs_semantic_graph_fixture(lhs: &crate::schema::Lhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
     let mut nodes = vec![semantic_rule_node("lhs-match", "rewriting.match", &format!("{}:{}", lhs.pattern.left_var, lhs.pattern.left_kind), 0.0, 0.0, rule_layout)];
     let mut edges = Vec::new();
     if let Some(where_clause) = lhs.where_clause.as_deref().filter(|value| !value.trim().is_empty()) {
         nodes.push(semantic_rule_node("lhs-where", "rewriting.where", where_clause, 220.0, 80.0, rule_layout));
-        edges.push(crate::artifacts::jack::Edge { id: "lhs-match-where".into(), kind: "rewriting.flow".into(), source: "lhs-match@out".into(), target: "lhs-where@in".into(), properties: Default::default() });
+        edges.push(semio_s_artifact_trinity_jack::Edge { id: "lhs-match-where".into(), kind: "rewriting.flow".into(), source: "lhs-match@out".into(), target: "lhs-where@in".into(), properties: Default::default() });
     }
-    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "lhs".into(), Some("nakagin".into()), crate::artifacts::jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges, None)
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "lhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges, None)
 }
 
 fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
@@ -266,21 +266,21 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPo
     if nodes.is_empty() {
         nodes.push(semantic_rule_node("rhs-empty", "rewriting.create", "result:Piece", 0.0, 0.0, rule_layout));
     }
-    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "rhs".into(), Some("nakagin".into()), crate::artifacts::jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges, None)
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "rhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges, None)
 }
 
 pub(crate) fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
-    let Ok(lhs) = pack::from_json_str::<crate::artifacts::rewriting::schema::Lhs>(lhs_json) else {
+    let Ok(lhs) = pack::from_json_str::<crate::schema::Lhs>(lhs_json) else {
         return nakagin_fixture_json();
     };
-    crate::artifacts::jack::Graph::from_fixture(lhs_semantic_graph_fixture(&lhs, rule_layout)).ok().and_then(|graph| graph.fixture_json().ok()).unwrap_or_else(nakagin_fixture_json)
+    semio_s_artifact_trinity_jack::Graph::from_fixture(lhs_semantic_graph_fixture(&lhs, rule_layout)).ok().and_then(|graph| graph.fixture_json().ok()).unwrap_or_else(nakagin_fixture_json)
 }
 
 pub(crate) fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
     let Ok(rhs) = pack::from_json_str::<Rhs>(rhs_json) else {
         return nakagin_fixture_json();
     };
-    crate::artifacts::jack::Graph::from_fixture(rhs_semantic_graph_fixture(&rhs, rule_layout)).ok().and_then(|graph| graph.fixture_json().ok()).unwrap_or_else(nakagin_fixture_json)
+    semio_s_artifact_trinity_jack::Graph::from_fixture(rhs_semantic_graph_fixture(&rhs, rule_layout)).ok().and_then(|graph| graph.fixture_json().ok()).unwrap_or_else(nakagin_fixture_json)
 }
 
 /// 🕹️ Used by `interaction_topology` to hang a var-reference `TopologyNode` off its graph node
@@ -521,7 +521,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
                 let fixture = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let fixture_json = fixture.to_json().map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let _ = doc;
-                Ok(Emit::mutations(vec![crate::artifacts::rewriting::mutations::edit_before_fixture(fixture_json)]))
+                Ok(Emit::mutations(vec![crate::mutations::edit_before_fixture(fixture_json)]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -536,7 +536,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
                 let bytes = ArtifactPack::encode_pack(&fixture);
                 Ok(Media {
                     media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
-                    payload: MediaPayload::Structured { schema: crate::artifacts::jack::TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                    payload: MediaPayload::Structured { schema: semio_s_artifact_trinity_jack::TRINITY_GRAPH_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
                 })
             }
             "document:out" => {
@@ -661,8 +661,8 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         if let Some(fixture) = parse_fixture_json(&state.before_fixture_json) {
             let mut parent_of: BTreeMap<String, String> = BTreeMap::new();
             for edge in fixture.edges() {
-                let source = crate::artifacts::jack::port_node_id(&edge.source).unwrap_or(&edge.source).to_string();
-                let target = crate::artifacts::jack::port_node_id(&edge.target).unwrap_or(&edge.target).to_string();
+                let source = semio_s_artifact_trinity_jack::port_node_id(&edge.source).unwrap_or(&edge.source).to_string();
+                let target = semio_s_artifact_trinity_jack::port_node_id(&edge.target).unwrap_or(&edge.target).to_string();
                 parent_of.entry(target).or_insert(source);
             }
             for node in fixture.nodes() {
@@ -678,12 +678,12 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         // "nakagin" manifest — the synthetic `rewriting.*` clause kinds fail that validation and the
         // wrapper silently falls back to the nakagin fixture, which would leave the "graph" domain's
         // topology missing every `lhs-*`/`rhs-*` id entirely.
-        if let Ok(lhs) = pack::from_json_str::<crate::artifacts::rewriting::schema::Lhs>(&state.lhs_json) {
+        if let Ok(lhs) = pack::from_json_str::<crate::schema::Lhs>(&state.lhs_json) {
             let lhs_fixture = lhs_semantic_graph_fixture(&lhs, &state.rule_layout);
             let mut parent_of: BTreeMap<String, String> = BTreeMap::new();
             for edge in lhs_fixture.edges() {
-                let source = crate::artifacts::jack::port_node_id(&edge.source).unwrap_or(&edge.source).to_string();
-                let target = crate::artifacts::jack::port_node_id(&edge.target).unwrap_or(&edge.target).to_string();
+                let source = semio_s_artifact_trinity_jack::port_node_id(&edge.source).unwrap_or(&edge.source).to_string();
+                let target = semio_s_artifact_trinity_jack::port_node_id(&edge.target).unwrap_or(&edge.target).to_string();
                 parent_of.entry(target).or_insert(source);
             }
             for node in lhs_fixture.nodes() {
@@ -801,7 +801,7 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::rewriting::schema::Rhs;
+    use crate::schema::Rhs;
     use protocol::{OpBinary, OpText};
     use semio_framework_plugin::{testkit, App, EditorApp, Locale, PluginApp, Terminology, VcsArtifactApp, ViewModel};
 

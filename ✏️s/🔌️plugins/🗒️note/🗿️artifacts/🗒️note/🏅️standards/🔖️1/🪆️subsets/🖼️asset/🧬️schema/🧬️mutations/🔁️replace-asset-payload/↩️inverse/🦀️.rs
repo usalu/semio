@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ReplaceAssetPayload`.
 use super::ReplaceAssetPayload;
-use crate::artifacts::note::schema::mutations::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::schema::mutations::NoteMutation;
+use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceAssetPayload, base: &NoteSnapshot) -> Vec<NoteMutation> {

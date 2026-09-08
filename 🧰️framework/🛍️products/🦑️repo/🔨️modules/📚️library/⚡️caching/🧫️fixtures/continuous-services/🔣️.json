@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "semio": {
+      "continuousSharing": false
+    }
+  },
+  "runs": [
+    "first",
+    "second"
+  ],
+  "expectedServices": 2,
+  "preservesOtherService": true,
+  "cases": [
+    {
+      "name": "isolated",
+      "sharing": false,
+      "cancelFirst": false,
+      "services": 2
+    },
+    {
+      "name": "cancelled",
+      "sharing": false,
+      "cancelFirst": true,
+      "services": 2
+    },
+    {
+      "name": "default-sharing",
+      "sharing": true,
+      "cancelFirst": false,
+      "services": 1
+    },
+    {
+      "name": "vite-cancelled",
+      "sharing": false,
+      "cancelFirst": true,
+      "services": 2,
+      "vite": true
+    }
+  ],
+  "cancellationExitCode": 130
+}

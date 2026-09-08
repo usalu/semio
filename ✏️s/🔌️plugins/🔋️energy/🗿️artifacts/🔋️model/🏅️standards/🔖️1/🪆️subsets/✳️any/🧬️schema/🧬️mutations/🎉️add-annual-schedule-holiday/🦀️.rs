@@ -1,8 +1,8 @@
 //! 🎉️ Energy model mutation — `AddAnnualScheduleHoliday`: Marks one calendar date as a holiday of a year, so lookups on it take the holiday profile instead of the matching rule. The dates are a set, but a JSON array positionally, so the payload carries the position the date takes.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

@@ -7,8 +7,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -113,7 +113,7 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::cad::diff::CadDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
+    let decoded: crate::diff::CadDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
     let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-building-model/vacates-the-building-slot: committed diff JSON is not canonical");
@@ -134,7 +134,7 @@ async fn committed_diff_applies_to_after() {
     let in_memory = mutation().diff(&base).diff().clone();
     assert_eq!(in_memory.apply(&base).expect("the in-memory diff applies"), expected_after(), "delete-building-model/vacates-the-building-slot: the in-memory diff must carry before to after");
 
-    let decoded: crate::artifacts::cad::diff::CadDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
-    assert_eq!(decoded, crate::artifacts::cad::diff::CadDiff::default(), "delete-building-model/vacates-the-building-slot: a `null` buildingModel is indistinguishable from an untouched one, so the decoded diff is empty");
+    let decoded: crate::diff::CadDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
+    assert_eq!(decoded, crate::diff::CadDiff::default(), "delete-building-model/vacates-the-building-slot: a `null` buildingModel is indistinguishable from an untouched one, so the decoded diff is empty");
     assert_eq!(decoded.apply(&base).expect("the decoded diff applies"), base, "delete-building-model/vacates-the-building-slot: the JSON-decoded diff is inert — the vacate intent is lost on the wire");
 }

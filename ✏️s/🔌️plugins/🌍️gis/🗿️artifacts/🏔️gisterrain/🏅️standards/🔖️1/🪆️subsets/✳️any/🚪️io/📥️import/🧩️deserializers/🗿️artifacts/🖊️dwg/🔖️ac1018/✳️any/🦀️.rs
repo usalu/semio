@@ -1,5 +1,5 @@
 //! gisterrain <- dwg
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::GisTerrainSnapshot;
 use semio_s_artifact_stdio_dwg::{DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
 
 pub fn register() {}

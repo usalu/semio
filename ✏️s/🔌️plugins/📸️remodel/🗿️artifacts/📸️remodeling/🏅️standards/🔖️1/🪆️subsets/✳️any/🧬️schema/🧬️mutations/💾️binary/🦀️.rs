@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::remodeling::schema::mutations::text::RemodelingMutation;
+use crate::schema::mutations::text::RemodelingMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `RemodelingMutation` to its binary command form.
@@ -23,12 +23,12 @@ pub fn decode_op(bytes: &[u8]) -> Result<RemodelingMutation, protocol::ProtocolE
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::remodeling::default_remodeling_scene;
+    use crate::default_remodeling_scene;
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let scene = default_remodeling_scene();
-        let operation = crate::artifacts::remodeling::mutations::update_feature_params(scene.params.feature);
+        let operation = crate::mutations::update_feature_params(scene.params.feature);
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -43,7 +43,7 @@ mod tests {
         let mut store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         let mut feature_params = store.snapshot().expect("initial projection").params.feature;
         feature_params.target_count = 12345;
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::remodeling::mutations::update_feature_params(feature_params)], description: None }).await.expect("apply");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::update_feature_params(feature_params)], description: None }).await.expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&store).await;
         store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     }

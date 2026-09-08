@@ -2,9 +2,9 @@
 //! `no-op` when the pose is unchanged.
 
 use super::ReplaceSavedCameraView;
-use crate::artifacts::shooting::diff::{ShootingDiff, ShootingSavedCameraPatchEntry, ShootingSavedCamerasDelta};
-use crate::artifacts::shooting::ShootingSavedCameraPatch;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::{ShootingDiff, ShootingSavedCameraPatchEntry, ShootingSavedCamerasDelta};
+use crate::ShootingSavedCameraPatch;
+use crate::ShootingSnapshot;
 
 pub fn diff(payload: &ReplaceSavedCameraView, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let Some(existing) = base.saved_cameras.iter().find(|camera| camera.id == payload.id) else {

@@ -12,7 +12,7 @@
 // (this was always true; it was only ever masked because the lib itself failed to compile first,
 // so cargo never got far enough to check this file — see the lib's own W1 fix history).
 extern crate semio_framework as store;
-extern crate semio_framework as workflow;
+extern crate semio_framework_artifact_workflow_workflow as workflow;
 extern crate semio_framework_os_kernel as protocol;
 
 use semio_framework_os_run::{plan, register_builtin_converters, MediaCache, RunSink, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
@@ -153,7 +153,7 @@ struct Args {
     dry: bool,
     watch: bool,
     only_node: Option<String>,
-    /// 🎛️ `--param <parameter_id>=<value>` (repeatable) — resolved into `workflow::RunParameterValue`s
+    /// 🎛️ `--param <parameter_id>=<value>` (repeatable) — resolved into `semio_framework_artifact_workflow_run::RunParameterValue`s
     /// applied as a config-fingerprint overlay on bound node configs before dirty-checking (see
     /// `semio_framework_os_run::node_parameter_overlay_bytes`'s doc for why this affects the
     /// fingerprint rather than the raw config bytes this crate sends to the app).
@@ -227,7 +227,7 @@ fn main() {
 /// writes the resulting pack+spr to `runs/<RUN_ID>.run.pack|.spr`, plus every node document/config
 /// `sink` accumulated — the ONLY two places this CLI ever writes bytes for a run.
 async fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
-    let envelope = protocol::create_document_envelope::<workflow::RunArtifact, workflow::RunMutation>(workflow::S_RUN_SCHEMA, RUN_ID, workflow::empty_run_document().await, None);
+    let envelope = protocol::create_document_envelope::<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation>(semio_framework_artifact_workflow_run::S_RUN_SCHEMA, RUN_ID, semio_framework_artifact_workflow_run::empty_run_document().await, None);
     let mut document_store = protocol::ArtifactStore::new(envelope).await.map_err(|error| error.to_string())?;
     if !sink.mutations.is_empty() {
         document_store.dispatch(protocol::ArtifactCommand::Apply { mutations: sink.mutations.clone(), description: None }).await.map_err(|error| error.to_string())?;
@@ -284,17 +284,17 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         configs.insert(node.config_ref.clone(), bundle.read_config(&node.config_ref)?);
     }
 
-    let parameter_values: Vec<workflow::RunParameterValue> = args.params.iter().map(|(parameter_id, value)| workflow::RunParameterValue { parameter_id: parameter_id.clone(), value: value.clone() }).collect();
+    let parameter_values: Vec<semio_framework_artifact_workflow_run::RunParameterValue> = args.params.iter().map(|(parameter_id, value)| semio_framework_artifact_workflow_run::RunParameterValue { parameter_id: parameter_id.clone(), value: value.clone() }).collect();
 
     // 🗄️ Memoization ground truth: the PRIOR SEALED run's own `node_records`, keyed by node id — empty
     // (first run ever, or the prior run never sealed) means every node computes fresh. Replaces the
     // deleted `run/state.json`-backed `RunState`.
-    let prior_node_records: BTreeMap<String, workflow::RunNodeRecord> = {
+    let prior_node_records: BTreeMap<String, semio_framework_artifact_workflow_run::RunNodeRecord> = {
         let (run_pack, run_spr) = bundle.read_run_document(RUN_ID)?;
         if run_pack.is_empty() {
             BTreeMap::new()
         } else {
-            let parsed: protocol::ParsedDocumentText<workflow::RunArtifact, workflow::RunMutation> = protocol::parse_document_pack(&run_pack, &run_spr).await.map_err(|error| error.to_string())?;
+            let parsed: protocol::ParsedDocumentText<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation> = protocol::parse_document_pack(&run_pack, &run_spr).await.map_err(|error| error.to_string())?;
             parsed.snapshot.node_records.into_iter().map(|record| (record.node_id.clone(), record)).collect()
         }
     };
@@ -316,15 +316,15 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let mut runner = SpaceRunner::new(host, blob_store, args.policy);
     let mut cache = FileMediaCache::new(bundle.media_cache_dir());
 
-    let mut sink = RunSink::new(workflow::empty_run_document().await);
-    sink.record(workflow::RunMutation::StartRun(workflow::StartRun {
+    let mut sink = RunSink::new(semio_framework_artifact_workflow_run::empty_run_document().await);
+    sink.record(semio_framework_artifact_workflow_run::RunMutation::StartRun(semio_framework_artifact_workflow_run::StartRun {
         workflow_ref: args.bundle.display().to_string(),
         workflow_checkpoint_id: String::new(),
         input_collection_ref: String::new(),
         input_snapshot_id: String::new(),
         parameter_values: parameter_values.clone(),
         output_collection_ref: String::new(),
-        trigger: workflow::RunTrigger::Manual { actor: "cli".into() },
+        trigger: semio_framework_artifact_workflow_run::RunTrigger::Manual { actor: "cli".into() },
     })).await
     .map_err(|error| error.to_string())?;
 
@@ -343,15 +343,15 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         Ok(report) => {
             println!("recomputed: {:?}", report.recomputed);
             println!("clean:      {:?}", report.clean);
-            sink.record(workflow::RunMutation::SealRun(workflow::SealRun { status: workflow::RunStatus::Succeeded })).await.map_err(|error| error.to_string())?;
+            sink.record(semio_framework_artifact_workflow_run::RunMutation::SealRun(semio_framework_artifact_workflow_run::SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Succeeded })).await.map_err(|error| error.to_string())?;
             persist_run(&bundle, &sink).await?;
             Ok(())
         }
         Err(error) => {
             // 🧾️ A failed run still gets a real, sealed audit trail — readonly-over-source holds even
             // on failure, and a later invocation can see WHY the last run failed.
-            let _ = sink.record(workflow::RunMutation::AppendRunLog(workflow::AppendRunLog { node_id: String::new(), level: "error".into(), message: error.to_string(), at: protocol::now_iso() })).await;
-            let _ = sink.record(workflow::RunMutation::SealRun(workflow::SealRun { status: workflow::RunStatus::Failed })).await;
+            let _ = sink.record(semio_framework_artifact_workflow_run::RunMutation::AppendRunLog(semio_framework_artifact_workflow_run::AppendRunLog { node_id: String::new(), level: "error".into(), message: error.to_string(), at: protocol::now_iso() })).await;
+            let _ = sink.record(semio_framework_artifact_workflow_run::RunMutation::SealRun(semio_framework_artifact_workflow_run::SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Failed })).await;
             persist_run(&bundle, &sink).await?;
             Err(error.into())
         }

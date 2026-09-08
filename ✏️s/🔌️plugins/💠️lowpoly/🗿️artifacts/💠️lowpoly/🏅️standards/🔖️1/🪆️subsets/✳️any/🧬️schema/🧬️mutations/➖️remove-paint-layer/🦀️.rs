@@ -2,7 +2,7 @@
 //! layer list at a BASE-state index. Reuses this directory's pre-existing path (glue.rs still
 //! `#[path]`-wires it) — same kebab slug survives the semantic-mutations rewrite unchanged.
 
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 

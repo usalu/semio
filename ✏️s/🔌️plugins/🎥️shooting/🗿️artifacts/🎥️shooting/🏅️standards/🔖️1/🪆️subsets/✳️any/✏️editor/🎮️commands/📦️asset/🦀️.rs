@@ -1,12 +1,12 @@
 //! 📦️ Shooting play app commands — asset activation, bulk field patches, creation and GLB import.
 
-use crate::artifacts::shooting::mutations::change_asset_url::ChangeAssetUrl;
-use crate::artifacts::shooting::mutations::create_asset::CreateAsset;
-use crate::artifacts::shooting::mutations::rename_asset::RenameAsset;
-use crate::artifacts::shooting::mutations::set_active_asset::SetActiveAsset as SetActiveAssetMutation;
-use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::schema::next_shooting_id;
-use crate::artifacts::shooting::{ShootingAsset, ShootingSnapshot};
+use crate::mutations::change_asset_url::ChangeAssetUrl;
+use crate::mutations::create_asset::CreateAsset;
+use crate::mutations::rename_asset::RenameAsset;
+use crate::mutations::set_active_asset::SetActiveAsset as SetActiveAssetMutation;
+use crate::op::ShootingMutation;
+use crate::schema::next_shooting_id;
+use crate::{ShootingAsset, ShootingSnapshot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};

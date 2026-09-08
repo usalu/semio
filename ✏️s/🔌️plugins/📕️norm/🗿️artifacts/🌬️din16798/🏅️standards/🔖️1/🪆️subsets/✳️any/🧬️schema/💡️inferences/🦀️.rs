@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::din16798::Din16798Snapshot;
-use schema::ArtifactSchema;
+use crate::Din16798Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::Din16798Outline;
@@ -44,7 +44,7 @@ impl protocol::InferenceSpec<Din16798Snapshot> for Din16798Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::din16798::standards::v1::subsets::any::schema::Din16798Builder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Din16798Builder {
     type Snapshot = Din16798Snapshot;
     type Inference = Din16798Inference;
 }
@@ -53,10 +53,10 @@ impl ArtifactInferrer for crate::artifacts::din16798::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.din16798.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `din16798_artifact_schema_descriptor`'s registration.
-pub fn din16798_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn din16798_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.din16798.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -87,7 +87,7 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::din16798::standards::v1::subsets::any::schema::{annex_params, part_1, part_13, part_15, part_17, part_3, part_5_1, part_5_2, part_7, part_9};
+use crate::standards::v1::subsets::any::schema::{annex_params, part_1, part_13, part_15, part_17, part_3, part_5_1, part_5_2, part_7, part_9};
 /// 📋️ Full DIN EN 16798 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `Din16798Snapshot -> CheckReport` projection; everything it composes

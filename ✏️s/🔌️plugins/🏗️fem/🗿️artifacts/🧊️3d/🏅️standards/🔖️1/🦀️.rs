@@ -7,7 +7,7 @@
 //! `extensions: ["fem3d"]` is the real, carried-over value from `definition()`'s
 //! `s.fem3d.codec.document.v1` row.
 
-use crate::artifacts::fem3d::standards::v1::subsets;
+use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 

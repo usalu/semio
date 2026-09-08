@@ -18,9 +18,9 @@
 //! The committed BASE deliberately holds the edge's `target` endpoint (`node-beta`) so that the
 //! `["source", "target"]` scan order is what decides which id gets named.
 
-use crate::artifacts::wires::mutations::{DisconnectNodes, WiresMutation};
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::{find_board_edge, find_board_node};
-use crate::artifacts::wires::{materialize_wires_content, WiresDiff, WiresSnapshot};
+use crate::mutations::{DisconnectNodes, WiresMutation};
+use crate::standards::v1::subsets::any::schema::inferences::{find_board_edge, find_board_node};
+use crate::{materialize_wires_content, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

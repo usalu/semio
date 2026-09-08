@@ -15,8 +15,8 @@
 //! exact child owner for the committed handle with the very node the committed mutation payload
 //! carries — the collision the `mutation.duplicate-id` Fatal guards against.
 
-use crate::artifacts::dag::mutations::{apply_dag_mutation, inverse_dag_mutation, DagMutation};
-use crate::artifacts::dag::{DagDiff, DagSnapshot, DagWorkingScene};
+use crate::mutations::{apply_dag_mutation, inverse_dag_mutation, DagMutation};
+use crate::{DagDiff, DagSnapshot, DagWorkingScene};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

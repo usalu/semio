@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::GisMapSnapshot;
 
 /// 🗺️ The bundled "reuse map" example document, handcrafted in the `.gismap` DSL.
 pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
@@ -26,7 +26,7 @@ pub fn print_dsl(document: &GisMapSnapshot) -> String {
 mod tests {
 
     use super::*;
-    use crate::artifacts::gismap::MapFeature;
+    use crate::MapFeature;
     use serde_json::json;
 
     #[semio_framework_async_macros::async_test]
@@ -46,7 +46,7 @@ mod tests {
         assert_eq!(parse_dsl(&print_dsl(&document)).expect("reparse"), document);
     }
 
-    /// 🧬️ `MapFeature::data` is `dsl::DslValue` (deliberately untyped — see `crate::artifacts::gismap`'s
+    /// 🧬️ `MapFeature::data` is `dsl::DslValue` (deliberately untyped — see `crate`'s
     /// doc comment) — round-trips every shape (nested object/array, bool, null, negative number) the
     /// generic value grammar has to reconstruct. `depth` is kept as a float literal for this fixture;
     /// `dsl::DslValue::Number`'s `UInt`/`Int`/`Float` variants now preserve the same JSON int-vs-float

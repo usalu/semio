@@ -1,7 +1,7 @@
 //! Puzzle5d mutation — `ChangePartAnchor`: changes whether a part keeps its stored plane or resets to default XY.
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::Puzzle5dDiff;
+use crate::mutations::Puzzle5dMutation;
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
 /// `change-part-anchor` payload.
@@ -13,7 +13,7 @@ use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 #[dsl(keyword = "change-part-anchor")]
 pub struct ChangePartAnchor {
     pub id: String,
-    pub new_anchor: crate::artifacts::puzzle5d::Puzzle5dPartAnchor,
+    pub new_anchor: crate::Puzzle5dPartAnchor,
 }
 
 impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangePartAnchor {
@@ -35,6 +35,6 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangePartAn
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_part_anchor(id: String, new_anchor: crate::artifacts::puzzle5d::Puzzle5dPartAnchor) -> Puzzle5dMutation {
+pub fn change_part_anchor(id: String, new_anchor: crate::Puzzle5dPartAnchor) -> Puzzle5dMutation {
     Puzzle5dMutation::ChangePartAnchor(ChangePartAnchor { id, new_anchor })
 }

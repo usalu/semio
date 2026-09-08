@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
-use crate::artifacts::lowpoly::LowpolySnapshot;
-use schema::ArtifactSchema;
+use crate::LowpolySnapshot;
+use framework_schema::ArtifactSchema;
 
 use super::bounds::{scene_bounds, LowpolyBounds};
 
@@ -43,7 +43,7 @@ impl protocol::InferenceSpec<LowpolySnapshot> for LowpolyInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::lowpoly::standards::v1::subsets::any::schema::LowpolyBuilder {
+impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets::any::schema::LowpolyBuilder {
     type Snapshot = LowpolySnapshot;
     type Inference = LowpolyInference;
 }
@@ -52,10 +52,10 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::lowpoly::sta
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.lowpoly.lowpoly.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `lowpoly_artifact_schema_descriptor`'s registration.
-pub fn lowpoly_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn lowpoly_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.lowpoly.lowpoly.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -75,7 +75,7 @@ mod tests {
     //#region 🧪️InferenceLaws
     #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
-        let snapshot = crate::artifacts::lowpoly::snapshot_from_mesh_json("{}", "o1", "Object 1");
+        let snapshot = crate::snapshot_from_mesh_json("{}", "o1", "Object 1");
         assert_eq!(LowpolyInference::infer(&snapshot), LowpolyInference::infer(&snapshot));
     }
 

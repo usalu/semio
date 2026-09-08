@@ -2,14 +2,14 @@
 //!
 //! Every variant wraps the payload owned by its direct `<mutation>/🦀️.rs` leaf.
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDiff;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 pub use super::create_artifact::{create_artifact, CreateArtifact};
 pub use super::delete_artifact::{delete_artifact, DeleteArtifact};
 pub use super::rename_artifact::{rename_artifact, RenameArtifact};
 pub use super::touch_artifact::{touch_artifact, TouchArtifact};
-pub use crate::artifacts::space::standards::v1::subsets::any::schema::operations::*;
+pub use crate::standards::v1::subsets::any::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Semantic S Space index mutation vocabulary.

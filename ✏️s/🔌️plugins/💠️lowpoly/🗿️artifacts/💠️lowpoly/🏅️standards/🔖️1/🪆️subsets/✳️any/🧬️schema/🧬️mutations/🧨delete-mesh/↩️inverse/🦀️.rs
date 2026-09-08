@@ -8,8 +8,8 @@
 //! for an undo of a delete specifically.
 
 use super::DeleteMesh;
-use crate::artifacts::lowpoly::mutations::create_mesh;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::mutations::create_mesh;
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteMesh, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

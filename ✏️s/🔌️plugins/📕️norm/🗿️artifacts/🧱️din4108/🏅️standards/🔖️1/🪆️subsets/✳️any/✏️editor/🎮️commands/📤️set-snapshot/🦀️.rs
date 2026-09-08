@@ -5,8 +5,8 @@
 //! (base + target, since `layers` is a real ordered collection needing full remove/re-insert),
 //! bundled into a single atomic edit.
 
-use crate::artifacts::din4108::op::Din4108Mutation;
-use crate::artifacts::din4108::Din4108Snapshot;
+use crate::op::Din4108Mutation;
+use crate::Din4108Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -30,7 +30,7 @@ pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Din4108Snapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::din4108::op::Din4108Mutation;
+    use crate::op::Din4108Mutation;
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]

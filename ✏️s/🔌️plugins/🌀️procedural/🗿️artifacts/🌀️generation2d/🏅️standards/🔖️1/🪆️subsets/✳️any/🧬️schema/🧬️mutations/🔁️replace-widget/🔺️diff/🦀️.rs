@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff for `ReplaceWidget`, built directly from `(payload, base)`.
 use super::ReplaceWidget;
-use crate::artifacts::generation2d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::generation2d::mutations::widget_index;
-use crate::artifacts::generation2d::{widget_id, Generation2dDiff, Generation2dSnapshot};
+use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::mutations::widget_index;
+use crate::{widget_id, Generation2dDiff, Generation2dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceWidget, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

@@ -3,7 +3,7 @@
 //! `Deserializer`'s row shape: id + kind + one JSON-encoded params column. `edges` are never
 //! written (a flat grid has no edge concept), so this hop is `IoFidelity::Lossy`.
 
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::SequenceSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

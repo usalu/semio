@@ -1,7 +1,7 @@
 //! ↩️ `rename-paint-layer` — undo restores the base-state name; missing object/index ⇒ `Vec::new()`.
 
 use super::RenamePaintLayer;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &RenamePaintLayer, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

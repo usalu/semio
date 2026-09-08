@@ -4,7 +4,7 @@
 //! collection (`create`/`update`/`delete-widget`), a relationship/edge collection of synapses
 //! (`connect`/`update`/`disconnect-synapse`), a per-widget position map (`move-widget` /
 //! `delete-widget-position`), two document-level scalars (`update-camera`, `change-schema`), and an
-//! id-keyed generation collection bridged from `flow::playbook::GenerationMutation`
+//! id-keyed generation collection bridged from `semio_framework_artifact_playbook_playbook::GenerationMutation`
 //! (`create`/`delete`/`rename-generation`, `change-generation-value`). Every variant wraps exactly
 //! one `🧬️mutations/<kind>/🦠️mutation` payload struct implementing
 //! `protocol::MutationKind<Generation3dSnapshot, Generation3dMutation>`; `#[derive(dsl::Mutations)]`
@@ -25,10 +25,10 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::generation3d::diff::Generation3dDiff;
-use crate::artifacts::generation3d::{widget_id, Generation3dSnapshot};
-use flow::playbook::GenerationMutation;
-use flow::FlowFixture;
+use crate::diff::Generation3dDiff;
+use crate::{widget_id, Generation3dSnapshot};
+use semio_framework_artifact_playbook_playbook::GenerationMutation;
+use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
 
@@ -199,10 +199,10 @@ pub const KINDS: &[&str] = &[
 //#endregion 🔖️Mutations
 
 //#region 🔖️GenerationBridge
-/// 🌉️ Bridges one `flow::playbook::GenerationMutation` (the framework's own generation-editing
+/// 🌉️ Bridges one `semio_framework_artifact_playbook_playbook::GenerationMutation` (the framework's own generation-editing
 /// vocabulary — `Add`/`Remove`/`Rename`/`UpdateValues`) onto this facet's semantic
 /// `Generation3dMutation` variants, so app-layer callers that already hold a `GenerationMutation`
-/// (from `flow::playbook::generation_operations`) need only swap the mapping function at the call
+/// (from `semio_framework_artifact_playbook_playbook::generation_operations`) need only swap the mapping function at the call
 /// site, not learn this facet's internal triad-leaf module paths.
 pub fn generation_mutation_to_generation3d(operation: GenerationMutation) -> Generation3dMutation {
     match operation {
@@ -217,7 +217,7 @@ pub fn generation_mutation_to_generation3d(operation: GenerationMutation) -> Gen
 //#region 🔖️FixtureDiffing
 /// 🔀️ Diffs two fixtures into a minimal, invertible, mergeable semantic mutation set — signature
 /// preserved from the pre-migration generic-vocabulary version (`🏗️builder`/app callers reach this
-/// via `crate::artifacts::generation3d::schema::commit_fixture`, unchanged) but every pushed
+/// via `crate::schema::commit_fixture`, unchanged) but every pushed
 /// mutation is now a real semantic variant.
 pub fn generation3d_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<Generation3dMutation> {
     let mut operations = Vec::new();
@@ -285,7 +285,7 @@ pub fn inverse_generation3d_mutation(projection: &Generation3dSnapshot, mutation
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::generation3d::schema::empty_generation3d_snapshot;
+    use crate::schema::empty_generation3d_snapshot;
     use change_generation_value::ChangeGenerationValue;
     use change_schema::ChangeSchema;
     use connect_synapse::ConnectSynapse;
@@ -295,8 +295,8 @@ mod tests {
     use delete_widget::DeleteWidget;
     use delete_widget_position::DeleteWidgetPosition;
     use disconnect_synapse::DisconnectSynapse;
-    use flow::playbook::FormGeneration;
-    use flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
+    use semio_framework_artifact_playbook_playbook::FormGeneration;
+    use semio_framework_artifact_flow_semio_framework_os_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
     use move_widget::MoveWidget;
     use protocol::Mutation;
     
@@ -347,7 +347,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn store_applies_widget_create() {
-        let mut store = ArtifactStore::<Generation3dSnapshot, Generation3dMutation>::new(store::create_document_envelope(crate::artifacts::generation3d::GENERATION_3D_SCHEMA, "generation3d", empty_generation3d_snapshot(), None))
+        let mut store = ArtifactStore::<Generation3dSnapshot, Generation3dMutation>::new(store::create_document_envelope(crate::GENERATION_3D_SCHEMA, "generation3d", empty_generation3d_snapshot(), None))
             .await.expect("valid artifact store fixture");
         store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).await.expect("apply");
         assert!(store.snapshot().expect("snapshot").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));

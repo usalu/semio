@@ -1,7 +1,7 @@
 //! 📜️ DAG document text codec. The graph snapshot owns the canonical node/edge wire grammar;
 //! the artifact reconstructs its composed child owner when decoding that graph.
 
-use crate::artifacts::dag::{DagSnapshot, DAG_DOCUMENT_SCHEMA};
+use crate::{DagSnapshot, DAG_DOCUMENT_SCHEMA};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -31,13 +31,13 @@ impl store::ArtifactDsl for DagSnapshot {
         "dag.dag"
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let graph = <infinite_board_port_directed_dag::DagSnapshot as store::ArtifactDsl>::parse_dsl(text)?;
+        let graph = <semio_framework_artifact_infinite_dag::DagSnapshot as store::ArtifactDsl>::parse_dsl(text)?;
         let mut snapshot: Self = graph.into();
         snapshot.schema = DAG_DOCUMENT_SCHEMA.into();
         Ok(snapshot)
     }
     fn print_dsl(&self) -> String {
-        let graph = infinite_board_port_directed_dag::DagSnapshot::from(self);
+        let graph = semio_framework_artifact_infinite_dag::DagSnapshot::from(self);
         store::ArtifactDsl::print_dsl(&graph)
     }
 }
@@ -51,8 +51,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn dump_example_dsl_when_requested() {
         if std::env::var("DUMP_DAG_EXAMPLE").is_ok() {
-            use crate::artifacts::dag::snapshot::schema::DagSnapshot;
-            use crate::artifacts::dag::{dag_content_child_with_owner, DagFixtureEdge, DagNodeSpec, DAG_DOCUMENT_SCHEMA};
+            use crate::snapshot::schema::DagSnapshot;
+            use crate::{dag_content_child_with_owner, DagFixtureEdge, DagNodeSpec, DAG_DOCUMENT_SCHEMA};
             let nodes = vec![DagNodeSpec { id: "slider-a".into(), name: "A".into(), ..Default::default() }, DagNodeSpec { id: "slider-b".into(), name: "B".into(), x: 200.0, ..Default::default() }];
             let edges = vec![DagFixtureEdge { id: "edge-1".into(), source: "slider-a@out".into(), target: "slider-b@in".into(), ..Default::default() }];
             let content = dag_content_child_with_owner(nodes, edges);
@@ -64,14 +64,14 @@ mod tests {
     #[test]
     fn demo_graph_matches_the_language_neutral_json_oracle() {
         let snapshot = parse_dsl(DAG_EXAMPLE_TEXT).expect("demo DSL");
-        let graph = infinite_board_port_directed_dag::DagSnapshot::from(&snapshot);
+        let graph = semio_framework_artifact_infinite_dag::DagSnapshot::from(&snapshot);
         let expected: serde_json::Value = serde_json::from_str(include_str!("../../../📚️examples/🎬️demo/🧪️fixtures/🧾️scene.json")).expect("demo JSON oracle");
         let observed = serde_json::json!({
             "nodes": graph.nodes.iter().map(|node| (&node.id, &node.name, node.x, node.y)).collect::<Vec<_>>(),
             "edges": graph.edges.iter().map(|edge| (&edge.id, &edge.source, &edge.target)).collect::<Vec<_>>(),
         });
         assert_eq!(observed, expected);
-        let reparsed = <infinite_board_port_directed_dag::DagSnapshot as store::ArtifactDsl>::parse_dsl(&print_dsl(&snapshot)).expect("shared graph grammar");
+        let reparsed = <semio_framework_artifact_infinite_dag::DagSnapshot as store::ArtifactDsl>::parse_dsl(&print_dsl(&snapshot)).expect("shared graph grammar");
         assert_eq!(reparsed, graph);
     }
 

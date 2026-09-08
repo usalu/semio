@@ -1,7 +1,7 @@
 //! Puzzle3d mutation — `ScaleTargetVolume`: changes a target volume's freeform pose scale.
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::Puzzle3dDiff;
+use crate::mutations::Puzzle3dMutation;
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
 /// `scale-target-volume` payload.
@@ -13,7 +13,7 @@ use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 #[dsl(keyword = "scale-target-volume")]
 pub struct ScaleTargetVolume {
     pub id: String,
-    pub new_scale: Option<crate::artifacts::puzzle3d::Puzzle3dScale>,
+    pub new_scale: Option<crate::Puzzle3dScale>,
 }
 
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ScaleTargetVolume {
@@ -35,6 +35,6 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ScaleTargetV
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn scale_target_volume(id: String, new_scale: Option<crate::artifacts::puzzle3d::Puzzle3dScale>) -> Puzzle3dMutation {
+pub fn scale_target_volume(id: String, new_scale: Option<crate::Puzzle3dScale>) -> Puzzle3dMutation {
     Puzzle3dMutation::ScaleTargetVolume(ScaleTargetVolume { id, new_scale })
 }

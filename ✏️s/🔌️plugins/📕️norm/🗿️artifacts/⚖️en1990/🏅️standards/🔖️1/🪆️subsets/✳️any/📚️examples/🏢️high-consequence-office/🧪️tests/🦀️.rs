@@ -6,8 +6,8 @@ async fn primary_asset_is_nonempty() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::artifacts::en1990::schema::inferences::En1990Inference;
-    use crate::artifacts::en1990::En1990Snapshot;
+    use crate::document_schema::inferences::En1990Inference;
+    use crate::En1990Snapshot;
     use protocol::Inference;
     let snapshot = En1990Snapshot::default();
     assert_eq!(En1990Inference::infer(&snapshot), En1990Inference::infer(&snapshot));
@@ -15,8 +15,8 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::artifacts::en1990::schema::inferences::En1990Inference;
-    use crate::artifacts::en1990::En1990Snapshot;
+    use crate::document_schema::inferences::En1990Inference;
+    use crate::En1990Snapshot;
     use protocol::Inference;
     assert_eq!(En1990Inference::infer(&En1990Snapshot::default()), En1990Inference::default());
 }

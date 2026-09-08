@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-comments2.json",
+  "$id": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-comments2/schema.json",
   "title": "SetComments2",
   "type": "object",
   "additionalProperties": false,

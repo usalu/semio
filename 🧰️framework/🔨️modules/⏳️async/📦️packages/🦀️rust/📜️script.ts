@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync }
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
 import assert from "node:assert/strict";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmdStatus, resolveTestLevel, runExactCargoLaws } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 function exactCargoStageEnvironments() {
@@ -18,9 +18,10 @@ function exactCargoStageEnvironments() {
 class WorkerMaintenanceCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-maintenance-check accepts only --native");
-    const owner = join(this.root, "../../🔔️maintenance");
+    const owner = join(this.root, "../../🔔️maintenance"), export_ = "MaintenanceFixture";
     const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🔣️.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🧪️fixtures/🧬️.schema.json"), "utf8")));
+    const module_ = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(module_).getSchema(`${module_.$id}#/$defs/${export_}`)!;
     assert(validate(fixture), JSON.stringify(validate.errors));
     const owners = new Map<string, { requested: boolean; running: boolean; closing: boolean }>();
     for (const step of fixture.lifecycle) {
@@ -56,9 +57,10 @@ class WorkerMaintenanceCheckScript extends BundleScript {
 class WorkerDeferredWakeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-deferred-wake-check accepts only --native");
-    const owner = join(this.root, "../../🔔️deferred-wake");
+    const owner = join(this.root, "../../🔔️deferred-wake"), export_ = "DeferredWakeFixture";
     const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🔣️.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🧪️fixtures/🧬️.schema.json"), "utf8")));
+    const module_ = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(module_).getSchema(`${module_.$id}#/$defs/${export_}`)!;
     assert(validate(fixture), JSON.stringify(validate.errors));
     const capacity = fixture.capacity;
     assert.equal(capacity.partitions, capacity.backendControls);
@@ -140,9 +142,10 @@ class WorkerDeferredWakeCheckScript extends BundleScript {
 class WorkerPoolUseCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-pool-use-check accepts only --native");
-    const owner = join(this.root, "../../🔐️use");
+    const owner = join(this.root, "../../🔐️use"), export_ = "UseFixture";
     const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🔣️.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🧪️fixtures/🧬️.schema.json"), "utf8")));
+    const module_ = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(module_).getSchema(`${module_.$id}#/$defs/${export_}`)!;
     assert(validate(fixture), JSON.stringify(validate.errors));
     for (const row of fixture.cases) {
       let state = "open";

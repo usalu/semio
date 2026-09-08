@@ -1,5 +1,5 @@
 //! puzzle5d <- zip
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::Puzzle5dSnapshot;
 use semio_s_artifact_stdio_zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 
 pub fn register() {}

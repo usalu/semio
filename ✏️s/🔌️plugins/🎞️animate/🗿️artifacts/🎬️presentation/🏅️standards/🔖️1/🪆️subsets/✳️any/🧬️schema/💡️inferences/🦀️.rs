@@ -4,7 +4,7 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::PresentationSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
@@ -88,7 +88,7 @@ pub fn presentation_artifact_inference_descriptor() -> schema::ArtifactInference
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::presentation::{FigureTileDraft, FigureTileFrame};
+    use crate::{FigureTileDraft, FigureTileFrame};
     use protocol::Inference;
 
     //#region 🧸️Fixtures
@@ -97,8 +97,8 @@ mod tests {
     }
 
     fn sample_snapshot() -> PresentationSnapshot {
-        let (source, _) = crate::artifacts::presentation::presentation_working_scene(&PresentationSnapshot::default());
-        crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &[tile("tile-1", "First"), tile("tile-2", "Second"), tile("tile-3", "Third")])
+        let (source, _) = crate::presentation_working_scene(&PresentationSnapshot::default());
+        crate::presentation_snapshot_with_tiles(&source, &[tile("tile-1", "First"), tile("tile-2", "Second"), tile("tile-3", "Third")])
     }
     //#endregion 🧸️Fixtures
 

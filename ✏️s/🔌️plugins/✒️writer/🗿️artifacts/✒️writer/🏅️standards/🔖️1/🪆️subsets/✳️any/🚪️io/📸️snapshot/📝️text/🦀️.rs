@@ -2,7 +2,7 @@
 //! REAL `store::ArtifactDsl` impl for `WriterSnapshot` (design.md §1 CORRECTION: the native codec
 //! is one bidirectional thing, unsplit, so it lives here rather than mirrored under import/export).
 
-use crate::artifacts::writer::{WriterDocumentChild, WriterSnapshot};
+use crate::{WriterDocumentChild, WriterSnapshot};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -155,8 +155,8 @@ pub fn print_writer_dsl(snapshot: &WriterSnapshot) -> String {
 /// call site below (`setActiveExample`, `.example("jack", ...)`, tests, "file-text"); never re-embed the
 /// raw text.
 pub fn jack_example_document() -> WriterSnapshot {
-    let mut document = parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::writer::schema::empty_writer_snapshot());
-    crate::artifacts::writer::attach_writer_document_text(&mut document.document, JACK_QUERY_TEXT);
+    let mut document = parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::schema::empty_writer_snapshot());
+    crate::attach_writer_document_text(&mut document.document, JACK_QUERY_TEXT);
     document
 }
 
@@ -168,8 +168,8 @@ pub fn jack_example_json() -> String {
 
 /// 📄️ The `dag.jack` example, parsed once from {@link DAG_JACK_EXAMPLE_TEXT} — see {@link jack_example_document}.
 pub fn dag_jack_example_document() -> WriterSnapshot {
-    let mut document = parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::artifacts::writer::schema::empty_writer_snapshot());
-    crate::artifacts::writer::attach_writer_document_text(&mut document.document, DAG_JACK_QUERY_TEXT);
+    let mut document = parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| crate::schema::empty_writer_snapshot());
+    crate::attach_writer_document_text(&mut document.document, DAG_JACK_QUERY_TEXT);
     document
 }
 
@@ -183,7 +183,7 @@ pub fn dag_jack_example_json() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::writer::schema;
+    use crate::schema;
 
     #[semio_framework_async_macros::async_test]
     async fn jack_example_dsl_round_trips() {
@@ -199,7 +199,7 @@ mod tests {
 
     /// ✍️ Hand-built representative document exercising the multiline/quoted-text path.
     fn jack_snapshot() -> WriterSnapshot {
-        crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
+        crate::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
     #[semio_framework_async_macros::async_test]

@@ -9,9 +9,9 @@
 //! `JsonSnapshot::value` is stdio's own `JsonValue` (key-order/lexeme-preserving RFC8259 model,
 //! never `serde_json::Value` — see that snapshot module's own doc). Bridges via json's own text
 //! codec rather than a per-leaf structural converter, mirroring `s/plugin/lowpoly`'s identical leaf.
-use crate::artifacts::curation::CurationSnapshot;
+use crate::CurationSnapshot;
 use dsl::FromValue;
-use crate::artifacts::curation::SOURCING_CURATION_SCHEMA;
+use crate::SOURCING_CURATION_SCHEMA;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

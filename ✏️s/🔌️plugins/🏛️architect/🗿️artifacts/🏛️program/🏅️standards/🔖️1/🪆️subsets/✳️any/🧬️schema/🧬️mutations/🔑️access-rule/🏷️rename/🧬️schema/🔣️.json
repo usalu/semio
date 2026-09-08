@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/rename-access-rule.json",
+  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/rename-access-rule/schema.json",
   "title": "RenameAccessRule",
   "type": "object",
   "additionalProperties": false,

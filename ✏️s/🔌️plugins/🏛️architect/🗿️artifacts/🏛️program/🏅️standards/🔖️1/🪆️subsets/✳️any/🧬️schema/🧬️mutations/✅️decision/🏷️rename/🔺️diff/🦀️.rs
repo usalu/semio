@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `✅decisions` per Wave C.
 
 use super::RenameDecision;
-use crate::artifacts::program::diff::{ProgramDecisionsDelta, ProgramDecisionsPatchEntry};
-use crate::artifacts::program::registers::DecisionPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramDecisionsDelta, ProgramDecisionsPatchEntry};
+use crate::registers::DecisionPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameDecision, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

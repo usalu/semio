@@ -19,33 +19,59 @@ name = "fixture_sweep"
 path = "../../🧪️tests/🦀️.rs"
 
 [dependencies]
-semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-artifact-playbook-playbook = { workspace = true }
+semio-framework-artifact-space-space = { workspace = true }
+semio-framework-artifact-space-collection = { workspace = true }
+semio-s-artifact-animate-presentation = { workspace = true }
+semio-s-artifact-block-2d = { workspace = true }
+semio-s-artifact-block-3d = { workspace = true }
+semio-s-artifact-block-5d = { workspace = true }
+semio-s-artifact-cad-cad = { workspace = true }
+semio-s-artifact-dag-dag = { workspace = true }
+semio-s-artifact-draw-drawing = { workspace = true }
+semio-s-artifact-fem-2d = { workspace = true }
+semio-s-artifact-fem-3d = { workspace = true }
+semio-s-artifact-gis-gismap = { workspace = true }
+semio-s-artifact-gis-gisterrain = { workspace = true }
+semio-s-artifact-imperative-procedure = { workspace = true }
+semio-s-artifact-layout-layout = { workspace = true }
+semio-s-artifact-lowpoly-lowpoly = { workspace = true }
+semio-s-artifact-mathematical-equation = { workspace = true }
+semio-s-artifact-norm-din16798 = { workspace = true }
+semio-s-artifact-norm-din18599 = { workspace = true }
+semio-s-artifact-norm-din4108 = { workspace = true }
+semio-s-artifact-norm-en1990 = { workspace = true }
+semio-s-artifact-norm-en1991 = { workspace = true }
+semio-s-artifact-norm-en1992 = { workspace = true }
+semio-s-artifact-norm-en1993 = { workspace = true }
+semio-s-artifact-norm-en1994 = { workspace = true }
+semio-s-artifact-norm-en1995 = { workspace = true }
+semio-s-artifact-norm-en1996 = { workspace = true }
+semio-s-artifact-norm-en1997 = { workspace = true }
+semio-s-artifact-norm-en1998 = { workspace = true }
+semio-s-artifact-norm-en1999 = { workspace = true }
+semio-s-artifact-norm-iso16757 = { workspace = true }
+semio-s-artifact-norm-vdi3805 = { workspace = true }
+semio-s-artifact-note-note = { workspace = true }
+semio-s-artifact-procedural-generation2d = { workspace = true }
+semio-s-artifact-procedural-generation3d = { workspace = true }
+semio-s-artifact-process-process3d = { workspace = true }
+semio-s-artifact-puzzle-2d = { workspace = true }
+semio-s-artifact-puzzle-3d = { workspace = true }
+semio-s-artifact-puzzle-5d = { workspace = true }
+semio-s-artifact-raster-raster = { workspace = true }
+semio-s-artifact-reasoning-wires = { workspace = true }
+semio-s-artifact-remodel-remodeling = { workspace = true }
+semio-s-artifact-sequence-sequence = { workspace = true }
+semio-s-artifact-shooting-shooting = { workspace = true }
+semio-s-artifact-sourcing-curation = { workspace = true }
+semio-s-artifact-space-home = { workspace = true }
+semio-s-artifact-trinity-jack = { workspace = true }
+semio-s-artifact-trinity-rewriting = { workspace = true }
+semio-s-artifact-vcs-vcs = { workspace = true }
+semio-s-artifact-writer-writer = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-block = { path = "../../../../../../../../✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust", package = "semio-s-plugin-block" }
-cad_document = { path = "../../../../../../../../✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust", package = "semio-s-plugin-cad" }
-dag_app = { path = "../../../../../../../../✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust", package = "semio-s-plugin-dag" }
-draw = { path = "../../../../../../../../✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust", package = "semio-s-plugin-draw" }
-fem = { path = "../../../../../../../../✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust", package = "semio-s-plugin-fem" }
 flow_app = { path = "../../../../🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
-gis = { path = "../../../../../../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", package = "semio-s-plugin-gis" }
-home = { path = "../../../../../../../../✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust", package = "semio-s-plugin-space" }
-imperative = { path = "../../../../../../../../✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust", package = "semio-s-plugin-imperative" }
-layout = { path = "../../../../../../../../✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust", package = "semio-s-plugin-layout" }
-lowpoly = { path = "../../../../../../../../✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust", package = "semio-s-plugin-lowpoly" }
-mathematical = { path = "../../../../../../../../✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust", package = "semio-s-plugin-mathematical" }
-norm = { path = "../../../../../../../../✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust", package = "semio-s-plugin-norm" }
-note_app = { path = "../../../../../../../../✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", package = "semio-s-plugin-note" }
-presentation = { path = "../../../../../../../../✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust", package = "semio-s-plugin-animate" }
-procedural = { path = "../../../../../../../../✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust", package = "semio-s-plugin-procedural" }
-process_3d = { path = "../../../../../../../../✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust", package = "semio-s-plugin-process" }
-puzzle = { path = "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
-raster = { path = "../../../../../../../../✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust", package = "semio-s-plugin-raster" }
-reasoning_mindmap_plugin = { path = "../../../../../../../../✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust", package = "semio-s-plugin-reasoning-mindmap" }
-remodel = { path = "../../../../../../../../✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust", package = "semio-s-plugin-remodel" }
 semio_framework_os = { path = "../../../../../🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
-sequence = { path = "../../../../../../../../✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust", package = "semio-s-plugin-sequence" }
-shooting = { path = "../../../../../../../../✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust", package = "semio-s-plugin-shooting" }
-sourcing = { path = "../../../../../../../../✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust", package = "semio-s-plugin-sourcing" }
-trinity = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", package = "semio-s-plugin-trinity" }
-vcs_app = { path = "../../../../../../../../✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust", package = "semio-s-plugin-vcs" }
-writer = { path = "../../../../../../../../✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust", package = "semio-s-plugin-writer" }

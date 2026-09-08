@@ -1,9 +1,9 @@
 //! 🧬️ ProgramSnapshot artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::program::kernel::*;
-use crate::artifacts::program::registers::*;
+use crate::kernel::*;
+use crate::registers::*;
 use graph::{orient_endpoints, Undirected};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full program artifact state across the artifact, presence and config lanes.
@@ -145,10 +145,10 @@ pub struct ProgramArtifact {
     pub templates: Vec<TemplateRecord>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
-    pub knowledge: crate::artifacts::program::ProgramKnowledgeChild,
+    pub knowledge: crate::ProgramKnowledgeChild,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.table")]
-    pub benchmarks: crate::artifacts::program::ProgramBenchmarksChild,
+    pub benchmarks: crate::ProgramBenchmarksChild,
     #[state(artifact)]
     pub traces: Vec<TraceLink>,
     #[state(artifact)]
@@ -181,14 +181,14 @@ pub struct ProgramArtifact {
 //#region 🔖️Conversions
 impl Default for ProgramArtifact {
     fn default() -> Self {
-        Self::from_snapshot(crate::artifacts::program::empty_plugin())
+        Self::from_snapshot(crate::empty_plugin())
     }
 }
 
 impl ProgramArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::program::ProgramSnapshot {
-        crate::artifacts::program::ProgramSnapshot {
+    pub fn to_snapshot(&self) -> crate::ProgramSnapshot {
+        crate::ProgramSnapshot {
             schema: self.schema.clone(),
             meta: self.meta.clone(),
             project: self.project.clone(),
@@ -263,7 +263,7 @@ impl ProgramArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::program::ProgramSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::ProgramSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             meta: snapshot.meta,
@@ -350,7 +350,7 @@ impl ProgramArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::program::ProgramSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::ProgramSnapshot) {
         self.schema = snapshot.schema;
         self.meta = snapshot.meta;
         self.project = snapshot.project;
@@ -427,31 +427,31 @@ impl ProgramArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.architect.program` — twenty handcrafted schema leaves.
-pub fn program_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn program_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.architect.program",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -463,9 +463,9 @@ pub fn program_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::program::schema::diff::ProgramDiff;
-    use crate::artifacts::program::schema::mutations::ProgramMutation;
-    use crate::artifacts::program::schema::snapshot::ProgramSnapshot;
+    use crate::schema::diff::ProgramDiff;
+    use crate::schema::mutations::ProgramMutation;
+    use crate::schema::snapshot::ProgramSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -517,7 +517,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::program::ProgramSnapshot;
+    use crate::ProgramSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

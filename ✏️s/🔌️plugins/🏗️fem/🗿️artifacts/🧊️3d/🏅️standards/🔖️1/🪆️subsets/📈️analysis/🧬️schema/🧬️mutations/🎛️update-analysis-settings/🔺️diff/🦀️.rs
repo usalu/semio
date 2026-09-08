@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `UpdateAnalysisSettings`.
 use super::UpdateAnalysisSettings;
-use crate::artifacts::fem3d::diff::Fem3dDiff;
-use crate::artifacts::fem3d::mutations::{analysis_breach, invariant};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::diff::Fem3dDiff;
+use crate::mutations::{analysis_breach, invariant};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &UpdateAnalysisSettings, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

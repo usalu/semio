@@ -1,7 +1,7 @@
 //! ↩️ `move-object` — undo restores the base-state position; missing id ⇒ `Vec::new()`.
 
 use super::MoveObject;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &MoveObject, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

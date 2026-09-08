@@ -3,8 +3,8 @@
 //! restructuring (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️fanout-brief.md`
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
-use crate::artifacts::program::registers::ComplianceRecord;
-use crate::artifacts::program::{ProgramDiff, ProgramMutation, ProgramSnapshot};
+use crate::registers::ComplianceRecord;
+use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🌱️ Brings a new compliance record row into existence in `program.compliance_records`.

@@ -6,7 +6,7 @@
 //! algorithm so `cycleFree` genuinely reports whether the referenced conditions ever form a cycle,
 //! rather than assuming one never occurs.
 
-use crate::artifacts::playbook::{PlaybookExpr, PlaybookStep};
+use crate::{PlaybookExpr, PlaybookStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
 
@@ -136,7 +136,7 @@ fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> Playboo
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::playbook::PlaybookBlock;
+    use crate::PlaybookBlock;
 
     fn block(id: &str, condition: Option<PlaybookExpr>) -> PlaybookBlock {
         PlaybookBlock {

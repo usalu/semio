@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `👥stakeholders` per Wave C.
 
 use super::RenameStakeholder;
-use crate::artifacts::program::diff::{ProgramStakeholdersDelta, ProgramStakeholdersPatchEntry};
-use crate::artifacts::program::registers::StakeholderPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramStakeholdersDelta, ProgramStakeholdersPatchEntry};
+use crate::registers::StakeholderPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameStakeholder, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -1,9 +1,9 @@
 //! 🔧 `change-w-mm3` payload — changes the En1995 document's `w_mm3` (EN 1995 input).
 
 
-use crate::artifacts::en1995::En1995Snapshot;
-use crate::artifacts::en1995::diff::En1995Diff;
-use crate::artifacts::en1995::mutations::En1995Mutation;
+use crate::En1995Snapshot;
+use crate::diff::En1995Diff;
+use crate::mutations::En1995Mutation;
 //#region 🔖️ChangeWMm3
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

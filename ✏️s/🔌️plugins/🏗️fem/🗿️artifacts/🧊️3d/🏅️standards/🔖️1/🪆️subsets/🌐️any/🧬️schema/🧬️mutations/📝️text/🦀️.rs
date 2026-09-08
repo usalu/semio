@@ -1,6 +1,6 @@
 //! ⚡️ Fem3d artifact — OpText/OpBinary codecs + grammar for `Fem3dMutation`.
 
-pub use crate::artifacts::fem3d::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation, Fem3dMutation};
+pub use crate::schema::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation, Fem3dMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

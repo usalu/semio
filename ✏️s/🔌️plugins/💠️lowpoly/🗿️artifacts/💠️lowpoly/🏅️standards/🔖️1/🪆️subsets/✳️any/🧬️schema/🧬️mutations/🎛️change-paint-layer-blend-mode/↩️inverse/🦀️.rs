@@ -2,7 +2,7 @@
 //! object/index ⇒ `Vec::new()`.
 
 use super::ChangePaintLayerBlendMode;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangePaintLayerBlendMode, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

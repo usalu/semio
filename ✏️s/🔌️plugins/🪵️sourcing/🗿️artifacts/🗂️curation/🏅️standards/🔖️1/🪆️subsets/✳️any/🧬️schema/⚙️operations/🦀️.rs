@@ -4,7 +4,7 @@
 //! genuinely id-keyed, user-editable collection (the curation selection — which objects, how many
 //! units of each) addressed by `object_id`. `stock` is deliberately NOT represented in this enum:
 //! it is a bulk-populated reference catalogue (seeded from
-//! `crate::artifacts::curation::schema::sourcing_modules("[]")`/hot-installed `sourcing.module`
+//! `crate::schema::sourcing_modules("[]")`/hot-installed `sourcing.module`
 //! contributions), never hand-authored item-by-item by a user — whole-catalogue population goes
 //! through `store::ArtifactStore::reset` (see `crate::apps::curation::reset_document_effect`), same
 //! non-history path as whole-document replace, never through this mutation enum. `CuratedItem` has
@@ -16,8 +16,8 @@
 //!
 //! The three semantic payloads are mounted from their direct mutation leaves in `🦀️.rs`.
 
-use crate::artifacts::curation::schema::mutations::SourcingMutation;
-use crate::artifacts::curation::CurationSnapshot;
+use crate::schema::mutations::SourcingMutation;
+use crate::CurationSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -65,10 +65,10 @@ pub fn inverse_sourcing_mutation_steps(mutation: &SourcingMutation, base: &Curat
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::curation::mutations::{ChangeCuratedItemCount, CreateCuratedItem, DeleteCuratedItem};
+    use crate::mutations::{ChangeCuratedItemCount, CreateCuratedItem, DeleteCuratedItem};
     use super::*;
 
-    use crate::artifacts::curation::CuratedItem;
+    use crate::CuratedItem;
     use protocol::Mutation;
 
     /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
@@ -94,7 +94,7 @@ mod tests {
     /// mutations have a real target, and `beam-kvh-c24` left uncurated so `create` has a real
     /// not-yet-existing target — mirrors `din16798`'s `sample_snapshot()` fixture shape.
     fn sample_snapshot() -> CurationSnapshot {
-        crate::artifacts::curation::curation_snapshot_from_stock(crate::artifacts::curation::schema::demo_stock(), vec![CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 2 }])
+        crate::curation_snapshot_from_stock(&crate::schema::demo_stock(), vec![CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 2 }])
     }
 
     /// ⚖️ One value per `SourcingMutation` variant — the closed set the semantics/round-trip tests

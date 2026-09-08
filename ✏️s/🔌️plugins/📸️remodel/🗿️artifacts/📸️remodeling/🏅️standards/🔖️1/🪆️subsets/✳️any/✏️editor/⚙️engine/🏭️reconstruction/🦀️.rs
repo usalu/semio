@@ -531,9 +531,9 @@ impl MeshingPreparation {
     }
 
     fn include(&mut self, point: [f64; 3]) {
-        for axis in 0..3 {
-            self.bounds_min[axis] = self.bounds_min[axis].min(point[axis]);
-            self.bounds_max[axis] = self.bounds_max[axis].max(point[axis]);
+        for (axis, coordinate) in point.into_iter().enumerate() {
+            self.bounds_min[axis] = self.bounds_min[axis].min(coordinate);
+            self.bounds_max[axis] = self.bounds_max[axis].max(coordinate);
         }
     }
 }

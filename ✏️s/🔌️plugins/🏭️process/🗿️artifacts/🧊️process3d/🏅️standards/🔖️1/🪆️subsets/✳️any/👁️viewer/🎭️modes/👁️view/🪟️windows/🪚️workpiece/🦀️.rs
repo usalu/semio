@@ -8,8 +8,8 @@
 //! `NoConfig` — a read-only surface needs no persisted per-session view state for a first pass),
 //! documented as an intentional simplification, not a bug — mirrors `📐️cad`'s own viewer window.
 
-use crate::artifacts::process3d::schema::inferences::processed_mesh;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::schema::inferences::processed_mesh;
+use crate::Process3dSnapshot;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_os_kernel::json;
@@ -56,7 +56,7 @@ fn default_camera_json() -> String {
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave-4 gap, not introduced here) — real parity
 /// with the editor's *current* behavior, not a regression.
 fn view_preview_payload(fixture: &Process3dSnapshot) -> (String, String) {
-    let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
+    let scene = crate::process_working_scene_from_snapshot(fixture);
     let mesh = processed_mesh(&scene, fixture.resolved_up_to).unwrap_or_else(|| mesh_from_kind(PROCESS3D_VIEW_FALLBACK_MESH_KIND));
     let meshes = json::Value::Array(vec![json::object([("id".to_string(), json::Value::String("processed".to_string())), ("data".to_string(), json::Value::from(mesh))])]);
     let floats = |values: [f64; 3]| json::Value::Array(values.into_iter().map(json::Value::from).collect());
@@ -99,7 +99,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_world_scene_contains_processed_mesh() {
-        let fixture = crate::artifacts::process3d::empty_process3d_snapshot();
+        let fixture = crate::empty_process3d_snapshot();
         let node = serde_json::to_string(&render(&fixture).expect("bounded workpiece")).expect("render json");
         assert!(node.contains("processed"), "expected the processed mesh id in scene json: {node}");
     }

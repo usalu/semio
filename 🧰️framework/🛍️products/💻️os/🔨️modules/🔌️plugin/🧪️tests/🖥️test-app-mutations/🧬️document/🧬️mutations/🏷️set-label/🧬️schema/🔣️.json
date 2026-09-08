@@ -1,1 +1,15 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["value"],"properties":{"value":{"type":"string"}}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/plugin/tests/test-app-mutations/document/mutation/set-label/schema.json",
+  "title": "SetLabel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value"
+  ],
+  "properties": {
+    "value": {
+      "type": "string"
+    }
+  }
+}

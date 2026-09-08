@@ -2,8 +2,8 @@
 //! captured pre-state (`base`), never by structurally inverting the diff. Split from
 //! `🏷️update-meta` per Wave C.
 
-use crate::artifacts::program::ProgramMutation;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramMutation;
+use crate::ProgramSnapshot;
 
 /// ↩️ Undo by restoring the pre-state meta wholesale.
 pub fn inverse(_payload: &super::ReplaceMeta, base: &ProgramSnapshot) -> Vec<ProgramMutation> {

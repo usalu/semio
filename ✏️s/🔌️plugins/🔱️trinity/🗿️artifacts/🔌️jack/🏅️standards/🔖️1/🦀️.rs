@@ -2,7 +2,7 @@
 //! MECHANISM, fleet-trinity-recipe). Exports `standard() -> StandardDeclaration`, mounting subset
 //! `any` (this artifact's only subset).
 
-use crate::artifacts::jack::standards::v1::subsets;
+use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 

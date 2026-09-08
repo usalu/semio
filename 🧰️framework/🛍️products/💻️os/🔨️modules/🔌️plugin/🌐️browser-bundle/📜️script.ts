@@ -18,6 +18,19 @@ export type BrowserActorBuildControl = Readonly<{ cancelled?: () => boolean; pro
 
 const browserActorMaximumBytes = 64 * 1024 * 1024;
 const browserActorRepoRoot = resolve(import.meta.dir, "../../../../../..");
+
+type SchemaValidator = ((value: unknown) => boolean) & { readonly errors?: unknown };
+
+/** 🧬️ Compiles one named export of the browser-bundle schema module against the repository draft-07 dialect. */
+async function browserBundleValidator(exportId: string): Promise<SchemaValidator> {
+  const { default: Ajv } = await import("ajv");
+  const document = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(document);
+  const validate = ajv.getSchema(`${document.$id}#/$defs/${exportId}`);
+  if (!validate) throw new Error(`browser bundle schema: unknown export ${exportId}`);
+  return validate as SchemaValidator;
+}
 let browserActorBuildOccupied = false;
 const browserActorInterfaces = Object.freeze(["semio:framework/pure@1.0.0", "semio:framework/host-async@1.0.0", ...browserWasiInterfaces].sort());
 const browserActorAsyncImports = Object.freeze([
@@ -156,7 +169,7 @@ function captureBrowserCodegenPolicyInputs(runtime: BrowserActorRuntimeSnapshot,
   const parser = { name: "typescript", version: "5.9.3", manifestSha256: hash(parserManifestBytes), lockRowSha256: locked("typescript", "5.9.3"), entry: { logicalPath: "typescript/lib/typescript.js", sha256: hash(parserBytes), byteLength: parserBytes.byteLength } };
   const paths = [
     { logicalPath: "browser/📜️script.ts", path: fileURLToPath(import.meta.url) },
-    { logicalPath: "browser/🧬️codegen-policy/🧬️.schema.json", path: join(import.meta.dir, "🧬️codegen-policy/🧬️.schema.json") },
+    { logicalPath: "browser/🧬️schema/🔣️.json", path: join(import.meta.dir, "🧬️schema/🔣️.json") },
     { logicalPath: "repo/execution/🟦️.ts", path: resolve(import.meta.dir, "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts") },
     { logicalPath: "repo/normalization/🟦️.ts", path: resolve(import.meta.dir, "../../../../🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts") },
   ];
@@ -638,7 +651,6 @@ async function instantiateFreshComponent(imports, control = {}) {
 }
 
 export async function testClosedBrowserComponentFactory(repoRoot: string): Promise<void> {
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   await testBrowserActorCodegenManifest();
   await testBrowserCodegenCapsule(repoRoot);
   await testBrowserCodegenSources(repoRoot);
@@ -648,7 +660,7 @@ export async function testClosedBrowserComponentFactory(repoRoot: string): Promi
   await testClosedBrowserActorBundle(repoRoot);
   const fixtureRoot = join(import.meta.dir, "🧪️fixtures/🧊️component-factory");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  const validate = await browserBundleValidator("ComponentFactoryV1");
   assert(validate(fixture), JSON.stringify(validate.errors));
   const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
   assert(artifactBase?.includes("🗑️generated"), "browser factory law requires ticket-generated evidence root");
@@ -730,10 +742,9 @@ export async function testClosedBrowserComponentFactory(repoRoot: string): Promi
 
 /** 🔐️ Compares an immutable compiler capsule with native WebAssembly and rejects executable closure escapes. */
 async function testBrowserCodegenCapsule(repoRoot: string): Promise<void> {
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const root = join(import.meta.dir, "🧪️fixtures/🔒️compiler-capsule");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  const validate = await browserBundleValidator("CompilerCapsuleV1");
   assert(validate(fixture), JSON.stringify(validate.errors));
   const cores = fixture.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") }));
   const closed = closeBrowserCodegenModule(fixture.source, cores);
@@ -771,10 +782,9 @@ async function testBrowserCodegenCapsule(repoRoot: string): Promise<void> {
 
 /** 📸️ Compares captured compiler source semantics with Node and tests replacement after onLoad. */
 async function testBrowserCodegenSources(repoRoot: string): Promise<void> {
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const root = join(import.meta.dir, "🧪️fixtures/📸️compiler-sources");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  const validate = await browserBundleValidator("CompilerSourcesV1");
   assert(validate(fixture), JSON.stringify(validate.errors));
   const evidence = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "browser-compiler-sources-"));
   const directory = join(evidence, "source");
@@ -820,9 +830,8 @@ async function testBrowserCodegenSources(repoRoot: string): Promise<void> {
 
 /** 🔏️ Compares policy snapshots and digests with independent canonical JSON and WebCrypto. */
 async function testBrowserCodegenPolicy(repoRoot: string): Promise<void> {
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧪️fixtures/🔏️codegen-policy/🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️codegen-policy/🧬️.schema.json"), "utf8")));
+  const validate = await browserBundleValidator("CodegenPolicyV1");
   const { default: stableStringify } = await import("fast-json-stable-stringify");
   const digest = { sha256: "a".repeat(64), byteLength: 8 };
   const input = {
@@ -871,10 +880,8 @@ async function testBrowserCodegenPolicy(repoRoot: string): Promise<void> {
 
 /** 📦️ Compares generated-manifest admission with the strict schema and canonical array ordering. */
 async function testBrowserActorCodegenManifest(): Promise<void> {
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧪️fixtures/📦️codegen-manifest/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(import.meta.dir, "🧬️codegen-manifest/🧬️.schema.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+  const validate = await browserBundleValidator("CodegenManifestV1");
   const oracle = (value: typeof fixture.valid) => Boolean(validate(value)) && [value.files, value.importInterfaces].every(items => JSON.stringify(items) === JSON.stringify([...items].sort()));
   assert.equal(oracle(fixture.valid), true);
   assert.deepEqual(parseBrowserActorCodegenManifest(fixture.valid), fixture.valid);
@@ -888,10 +895,9 @@ async function testBrowserActorCodegenManifest(): Promise<void> {
 
 /** 🎭️ Qualifies one closed ESM with a real canonical pure import and exact actor shutdown. */
 async function testClosedBrowserActorBundle(repoRoot: string): Promise<void> {
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const root = join(import.meta.dir, "🧪️fixtures/🧊️actor-factory");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  const validate = await browserBundleValidator("ActorFactoryV1");
   assert(validate(fixture), JSON.stringify(validate.errors));
   const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
   assert(artifactBase?.includes("🗑️generated"));
@@ -924,7 +930,7 @@ async function testClosedBrowserActorBundle(repoRoot: string): Promise<void> {
   await assert.rejects(buildClosedBrowserActorArtifactV1(componentBytes, { cancelled: () => scratchCancelled, progress(phase) { if (phase === "codegen") { assert.equal(scratchNames().filter(name => !scratchBefore.includes(name)).length, 1); scratchCancelled = true; } } }), { message: "browser actor artifact: cancelled" });
   assert.equal(scratchCancelled, true);
   assert.deepEqual(scratchNames(), scratchBefore);
-  const validatePolicy = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️codegen-policy/🧬️.schema.json"), "utf8")));
+  const validatePolicy = await browserBundleValidator("CodegenPolicyV1");
   const policy = JSON.parse(artifact.policyCanonical);
   assert(validatePolicy(policy), JSON.stringify(validatePolicy.errors));
   assert.equal(artifact.policySha256, Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(artifact.policyCanonical))).toString("hex"));
@@ -1099,10 +1105,9 @@ async function testClosedBrowserActorBundle(repoRoot: string): Promise<void> {
 
 /** 🧪️ Exercises actor-local host request and stream retirement against schema-owned traces. */
 async function testBrowserHostActivation(): Promise<void> {
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const root = join(import.meta.dir, "🧪️fixtures/🌐️host-activation");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+  const validate = await browserBundleValidator("HostActivationV1");
   assert(validate(fixture), JSON.stringify(validate.errors));
   const { createBrowserHostActivation } = await import("./🌐️host/🟦️.ts");
   const program = ts.createProgram([join(import.meta.dir, "🌐️host/🟦️.ts")], { noEmit: true, strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, lib: ["lib.es2023.d.ts", "lib.dom.d.ts"], types: [], skipLibCheck: true });

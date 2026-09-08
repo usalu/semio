@@ -1,6 +1,6 @@
 //! 📋️ Flow widget duplication as a replayable, bounded child-content continuation.
 
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use flow::FlowEvalSession;
 use semio_framework::kernel::{Effect, UiDirtyScope};
@@ -308,7 +308,7 @@ mod tests {
 
     async fn source_id(app: &FlowApp) -> String {
         let fixture = app.snapshot().expect("Flow snapshot").to_fixture();
-        crate::artifacts::flow::schema::widget_id(fixture.widgets.first().expect("default Flow widget")).to_string()
+        crate::schema::widget_id(fixture.widgets.first().expect("default Flow widget")).to_string()
     }
 
     async fn reidentify_parent(app: &mut FlowApp, parent_id: &str) {

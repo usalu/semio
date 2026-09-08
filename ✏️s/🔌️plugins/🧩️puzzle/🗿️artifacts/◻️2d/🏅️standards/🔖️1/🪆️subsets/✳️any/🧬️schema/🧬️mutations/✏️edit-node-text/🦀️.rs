@@ -1,8 +1,8 @@
 //! ✏️️ Puzzle2d mutation — `EditNodeText`: replaces a node's authored display text.
 
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::Puzzle2dDiff;
+use crate::mutations::Puzzle2dMutation;
+use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// ✏️️ `edit-node-text` payload.

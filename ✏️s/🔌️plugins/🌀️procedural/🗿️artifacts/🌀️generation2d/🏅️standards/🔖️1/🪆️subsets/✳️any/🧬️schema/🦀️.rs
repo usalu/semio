@@ -1,17 +1,21 @@
 //! 🧬️ Generation2d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::generation2d::snapshot::schema::Generation2dSnapshot;
-use flow::dag::DagFixture;
-use flow::forms_bridge::apply_generation_values_to_fixture;
-use flow::playbook::GenerationPlayRoot;
-use flow::render_scene_json;
-use flow::CameraJson;
-use flow::FlowFixture;
-use flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowHost};
+use crate::snapshot::schema::Generation2dSnapshot;
+use semio_framework_artifact_infinite_dag::DagFixture;
+#[cfg(feature = "component-app-assembly")]
+use semio_framework_os_flow::forms_bridge::apply_generation_values_to_fixture;
+use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
+#[cfg(feature = "component-app-assembly")]
+use semio_framework_os_flow::render_scene_json;
+use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
+use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
+#[cfg(feature = "component-app-assembly")]
+use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowHost};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactDsl;
-use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+#[cfg(feature = "component-app-assembly")]
+use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Generation2dArtifact
 /// 🧬️ Generation2dArtifact facet type.
@@ -110,7 +114,7 @@ pub fn generation2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::generation2d::{Generation2dDiff, Generation2dMutation, Generation2dSnapshot};
+    use crate::{Generation2dDiff, Generation2dMutation, Generation2dSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -162,7 +166,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::generation2d::Generation2dSnapshot;
+    use crate::Generation2dSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -225,12 +229,14 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️DocumentHelpers
 /// 🧬️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
 /// pure helpers over document types (`FlowFixture`/`DagFixture`/eval `Value`), not app-referencing.
+#[cfg(feature = "component-app-assembly")]
 pub fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
     let mut host = FlowHost::from_fixture(fixture.clone());
     host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
     host
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
     flow_host_with_session(fixture, session)
 }
@@ -239,17 +245,19 @@ pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalS
 /// Diffs against the host-normalized baseline (not the raw projection) so `FlowHost`'s own
 /// dedupe/dag-rebuild normalization does not leak spurious collection operations — only the actual
 /// mutation becomes an operation, which keeps concurrent disjoint edits mergeable on the backbone.
-pub fn host_operations(fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::artifacts::generation2d::op::Generation2dMutation> {
+#[cfg(feature = "component-app-assembly")]
+pub fn host_operations(fixture: &FlowFixture, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::op::Generation2dMutation> {
     let mut host = host_from_fixture(fixture);
     let baseline = host.fixture.clone();
     mutate(&mut host);
-    crate::artifacts::generation2d::op::generation2d_fixture_operations(&baseline, &host.fixture)
+    crate::op::generation2d_fixture_operations(&baseline, &host.fixture)
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
@@ -278,6 +286,7 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<NodeGraphNodeRecord>, V
     (nodes, edges)
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn collect_drawing_handles_from_eval(value: &dsl::json::Value, handles: &mut Vec<String>) {
     match value {
         dsl::json::Value::Object(map) => {
@@ -299,6 +308,7 @@ pub fn collect_drawing_handles_from_eval(value: &dsl::json::Value, handles: &mut
     }
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn affine_transform_array(value: &dsl::json::Value) -> [f64; 6] {
     if let Some(matrix) = value.as_array() {
         let mut out = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
@@ -314,6 +324,7 @@ pub fn affine_transform_array(value: &dsl::json::Value) -> [f64; 6] {
     [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn path_segments_from_node(node: &dsl::json::Value) -> Vec<dsl::json::Value> {
     if let Some(segments) = node.get("segments").and_then(|entry| entry.as_array()) {
         return segments.clone();
@@ -328,6 +339,7 @@ pub fn path_segments_from_node(node: &dsl::json::Value) -> Vec<dsl::json::Value>
     Vec::new()
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<dsl::json::Value> {
     let scene_json = render_scene_json(handle);
     let Ok(scene) = dsl::json::parse(&scene_json) else {
@@ -360,7 +372,8 @@ pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<dsl::
         .collect()
 }
 
-pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &flow::playbook::PlaybookValues) -> String {
+#[cfg(feature = "component-app-assembly")]
+pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
     let fixture_json = dsl::json::to_json_string(fixture);
     let object: dsl::json::Object = values.iter().map(|(key, value)| (key.clone(), dsl::json::from_dsl_value(value))).collect();
     let patched = apply_generation_values_to_fixture(&fixture_json, &object);
@@ -369,6 +382,7 @@ pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &flow::playboo
     host.evaluate().unwrap_or_default()
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn generation_preview_layers(eval_json: &str) -> String {
     let prefix = "generation2d-generate-preview";
     let mut layers = Vec::new();
@@ -387,7 +401,7 @@ pub fn generation_preview_layers(eval_json: &str) -> String {
 /// 📄️ The `procedural2d-play` "default" document — parsed from the bundled `.generation2d` example
 /// fixture, falling back to the empty document if the fixture ever fails to parse.
 pub fn default_snapshot() -> Generation2dSnapshot {
-    Generation2dSnapshot::parse_dsl(crate::artifacts::generation2d::dsl::GENERATION2D_EXAMPLE_TEXT).unwrap_or_default()
+    Generation2dSnapshot::parse_dsl(crate::dsl::GENERATION2D_EXAMPLE_TEXT).unwrap_or_default()
 }
 
 pub fn empty_generation2d_snapshot() -> Generation2dSnapshot {

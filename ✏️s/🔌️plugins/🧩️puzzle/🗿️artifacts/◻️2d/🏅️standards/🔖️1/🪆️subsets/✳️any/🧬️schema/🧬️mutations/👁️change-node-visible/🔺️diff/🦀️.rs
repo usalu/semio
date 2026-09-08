@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeNodeVisible` — patches the one addressed node in place.
-use crate::artifacts::puzzle2d::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta};
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::{Puzzle2dDiff, Puzzle2dNodePatch, Puzzle2dNodePatchEntry, Puzzle2dNodesDelta};
+use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeNodeVisible, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {

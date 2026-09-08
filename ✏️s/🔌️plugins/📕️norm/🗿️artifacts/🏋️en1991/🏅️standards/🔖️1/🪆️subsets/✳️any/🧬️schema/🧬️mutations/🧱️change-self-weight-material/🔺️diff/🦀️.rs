@@ -1,7 +1,7 @@
 //! 🔺️ `change-self-weight-material` — sparse diff construction.
 
 use super::ChangeSelfWeightMaterial;
-use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
+use crate::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSelfWeightMaterial, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {

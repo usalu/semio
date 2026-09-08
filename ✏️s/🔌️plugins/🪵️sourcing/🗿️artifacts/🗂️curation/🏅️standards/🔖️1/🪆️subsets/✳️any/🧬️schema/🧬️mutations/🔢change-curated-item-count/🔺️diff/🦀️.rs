@@ -1,8 +1,8 @@
 //! 🔺 Sparse diff builder for `ChangeCuratedItemCount` — a real single-field patch (never a whole-
 //! snapshot capture). Error `target-missing` when absent, Warning `no-op` when the count is
 //! unchanged.
-use crate::artifacts::curation::diff::{CurationCuratedDelta, CurationCuratedPatchEntry, CurationDiff};
-use crate::artifacts::curation::CurationSnapshot;
+use crate::diff::{CurationCuratedDelta, CurationCuratedPatchEntry, CurationDiff};
+use crate::CurationSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeCuratedItemCount, base: &CurationSnapshot) -> protocol::MutationOutcome<CurationDiff> {

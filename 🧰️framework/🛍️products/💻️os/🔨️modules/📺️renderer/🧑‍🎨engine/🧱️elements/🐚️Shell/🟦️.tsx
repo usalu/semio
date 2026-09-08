@@ -9,7 +9,7 @@
 // #region 🔌️Adapters
 import React, { Component, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import type { ShellDialogV1 } from "../🏛️ShellHost/🧬️contracts/🗨️dialog-origin/🟦️.ts";
+import type { ShellDialogV1 } from "../🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
 import {
   ANCHORS,
   Button,

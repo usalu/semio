@@ -9,7 +9,9 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub(crate) use semio_s_artifact_stdio_contract::{base64_standard, impl_serde_op_codec};
+#[cfg(feature = "component-app-assembly")]
+pub(crate) use semio_s_artifact_stdio_contract::base64_standard;
+pub(crate) use semio_s_artifact_stdio_contract::impl_serde_op_codec;
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
@@ -117,10 +119,10 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::standards::v1_1::subsets::base::schema::svg_artifact_schema_descriptor())
+        .schema(standards::v1_1::subsets::base::schema::svg_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::standards::v1_1::subsets::base::schema::inferences::svg_artifact_inference_descriptor()])
-        .composers(crate::standards::v1_1::engine::io_registry::entries())
+        .inferences([standards::v1_1::subsets::base::schema::inferences::svg_artifact_inference_descriptor()])
+        .composers(standards::v1_1::engine::io_registry::entries())
         .subset_validators(declared_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA)
@@ -136,8 +138,8 @@ fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValid
     ENTRIES
         .get_or_init(|| {
             vec![
-                semio_framework_plugin::subset_validator_entry_of::<crate::standards::v1_1::subsets::tiny::io::SvgTinyValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<crate::standards::v1_1::subsets::basic::io::SvgBasicValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<standards::v1_1::subsets::tiny::io::SvgTinyValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<standards::v1_1::subsets::basic::io::SvgBasicValidator>(),
             ]
         })
         .as_slice()
@@ -157,28 +159,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.svg",
                     extension: Some("svg"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::standards::v1_1::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1_1::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1_1::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1_1::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_1::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_1::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_1::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_1::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.svg"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.svg.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::standards::v1_1::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1_1::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1_1::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1_1::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_1::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_1::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_1::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_1::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.svg.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.svg.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::standards::v1_1::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1_1::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1_1::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_1::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.svg.diff"),
@@ -189,8 +191,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1_1::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1_1::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_1::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_1::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.svg.pack"),
                 },
                 dsl::LanguageSpec {
@@ -199,8 +201,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1_1::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1_1::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_1::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_1::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.svg.spr"),
                 },
             ]

@@ -1,26 +1,35 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-page-crop-box.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-page-crop-box/schema.json",
   "title": "SetPageCropBox",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
-    "index",
-    "cropBox"
+    "index"
   ],
   "properties": {
-    "mutation": {
-      "const": "setPageCropBox"
-    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0
     },
     "cropBox": {
-      "type": [
-        "array",
-        "null"
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        {
+          "type": "null"
+        }
       ]
+    },
+    "mutation": {
+      "const": "setPageCropBox",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     }
   }
 }

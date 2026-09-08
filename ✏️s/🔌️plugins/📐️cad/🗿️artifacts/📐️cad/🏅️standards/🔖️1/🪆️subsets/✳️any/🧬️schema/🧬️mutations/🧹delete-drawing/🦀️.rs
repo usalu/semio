@@ -1,8 +1,8 @@
 //! 🧹️ `delete-drawing` — removes the entry matching `child_id` from `drawings`. Idempotent no-op
 //! if absent; the inverse escrows the removed handle from BASE.
 
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
@@ -17,7 +17,7 @@ pub struct DeleteDrawing {
 impl MutationKind<CadSnapshot, CadMutation> for DeleteDrawing {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "drawing", kind: "delete-drawing", record: "DeletedDrawing" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {

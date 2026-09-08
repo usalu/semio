@@ -18919,37 +18919,41 @@ var _catalog_default2 = {
     { pluginId: "writer", directoryName: "✒️writer" }
   ]
 };
-/* ../../../../../../🔌️plugin/📇️registry/📦️deployment/📐️schema.json */
-var _schema_default = {
+/* ../../../../../../🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json */
+var __default = {
   $schema: "http://json-schema.org/draft-07/schema#",
-  type: "object",
-  additionalProperties: false,
-  required: ["version", "modules"],
-  definitions: {
-    moduleRoutes: {
+  $id: "https://semio.tech/schema/os/plugin/registry/deployment/component.json",
+  title: "Semio OS Plugin Registry Deployment",
+  $defs: {
+    DeploymentCatalogV1: {
+      type: "object",
+      additionalProperties: false,
+      required: ["version", "modules"],
+      properties: {
+        version: { const: 1 },
+        modules: {
+          type: "array",
+          minItems: 1,
+          maxItems: 256,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["pluginId", "directoryName"],
+            properties: {
+              pluginId: { type: "string", pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$", maxLength: 128 },
+              directoryName: { $ref: "semio:installation-directory-v1" }
+            }
+          }
+        }
+      }
+    },
+    DeploymentModuleRoutesV1: {
       type: "object",
       additionalProperties: false,
       required: ["plugin", "extension"],
       properties: {
         plugin: { const: "/🔌️plugin-modules" },
         extension: { const: "/🧩️extension-modules" }
-      }
-    }
-  },
-  properties: {
-    version: { const: 1 },
-    modules: {
-      type: "array",
-      minItems: 1,
-      maxItems: 256,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["pluginId", "directoryName"],
-        properties: {
-          pluginId: { type: "string", pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$", maxLength: 128 },
-          directoryName: { $ref: "semio:installation-directory-v1" }
-        }
       }
     }
   }
@@ -18959,31 +18963,39 @@ var _routes_default = {
   plugin: "/🔌️plugin-modules",
   extension: "/🧩️extension-modules"
 };
-/* ../../../../../../🧩️extension/📐️directory.schema.json */
-var _directory_schema_default = {
+/* ../../../../../../🧩️extension/🧬️schema/🔣️.json */
+var __default2 = {
   $schema: "http://json-schema.org/draft-07/schema#",
-  $id: "semio:installation-directory-v1",
-  type: "string",
-  pattern: "^(?![📁📂📄])(?:\\p{Extended_Pictographic}\\uFE0F(?:\\u200D\\p{Extended_Pictographic}\\uFE0F)*|[0-9#*]\\uFE0F\\u20E3)[a-z0-9]+(?:-[a-z0-9]+)*$",
-  maxLength: 192
+  $id: "https://semio.tech/schema/os/extension/component.json",
+  title: "OS Extension Contracts",
+  $defs: {
+    InstallationDirectoryV1: {
+      title: "Installation Directory V1",
+      type: "string",
+      pattern: "^(?![📁📂📄])(?:\\p{Extended_Pictographic}\\uFE0F(?:\\u200D\\p{Extended_Pictographic}\\uFE0F)*|[0-9#*]\\uFE0F\\u20E3)[a-z0-9]+(?:-[a-z0-9]+)*$",
+      maxLength: 192
+    }
+  }
 };
 
 /* ../../../../../../🧩️extension/🟦️.ts */
-var pattern = new RegExp(_directory_schema_default.pattern, "u");
+var schema = __default2.$defs.InstallationDirectoryV1;
+var pattern = new RegExp(schema.pattern, "u");
 var segmenter = new Intl.Segmenter("und", { granularity: "grapheme" });
 function installationDirectoryEmoji(name) {
-  if (typeof name !== "string" || [...name].length > _directory_schema_default.maxLength || name !== name.normalize("NFC") || !pattern.test(name))
+  if (typeof name !== "string" || [...name].length > schema.maxLength || name !== name.normalize("NFC") || !pattern.test(name))
     throw new Error("Installation directory requires one explicit non-generic emoji and a portable slug");
   return [...segmenter.segment(name)][0].segment.replaceAll("️", "");
 }
 
 /* ../../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts */
-var idSpec = _schema_default.properties.modules.items.properties.pluginId;
+var schema2 = __default.$defs.DeploymentCatalogV1;
+var idSpec = schema2.properties.modules.items.properties.pluginId;
 var idPattern = new RegExp(idSpec.pattern, "u");
 function parseModuleRoutes(input) {
   if (!input || typeof input !== "object" || Array.isArray(input))
     throw new Error("Invalid module routes");
-  const value = input, properties = _schema_default.definitions.moduleRoutes.properties;
+  const value = input, properties = __default.$defs.DeploymentModuleRoutesV1.properties;
   if (Object.keys(value).sort().join(",") !== "extension,plugin" || value.plugin !== properties.plugin.const || value.extension !== properties.extension.const)
     throw new Error("Module routes must match their exact schema authority");
   return Object.freeze({ plugin: value.plugin, extension: value.extension });
@@ -23588,7 +23600,7 @@ function pluginHandleForBridge(handle) {
 }
 /* ../../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json */
 var _catalog_default3 = {
-  $schema: "./🧬️catalog.schema.json",
+  $schema: "./🧬️schema/🔣️.json",
   version: 1,
   collections: [
     {
@@ -23617,7 +23629,7 @@ var _catalog_default3 = {
 };
 /* ../../../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json */
 var _catalog_default4 = {
-  $schema: "./🧬️catalog.schema.json",
+  $schema: "./🧬️schema/🔣️.json",
   version: 1,
   entries: [
     { url: "/mesh/🧊️base.glb", path: "🧱️bases/⬛️base/🧊️base.glb" },

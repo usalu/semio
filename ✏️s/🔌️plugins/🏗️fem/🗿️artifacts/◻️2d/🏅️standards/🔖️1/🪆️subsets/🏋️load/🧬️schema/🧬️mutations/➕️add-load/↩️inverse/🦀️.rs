@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `AddLoad` — a `remove-load` of the just-added load id, only if the case existed.
 use super::AddLoad;
-use crate::artifacts::fem2d::load_id;
-use crate::artifacts::fem2d::mutations::{remove_load, Fem2dMutation};
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::load_id;
+use crate::mutations::{remove_load, Fem2dMutation};
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &AddLoad, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {

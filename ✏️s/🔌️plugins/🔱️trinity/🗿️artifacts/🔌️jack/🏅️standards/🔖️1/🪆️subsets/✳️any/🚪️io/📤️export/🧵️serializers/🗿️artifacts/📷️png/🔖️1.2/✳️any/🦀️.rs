@@ -1,5 +1,5 @@
 //! jack -> png
-use crate::artifacts::jack::JackSnapshot;
+use crate::JackSnapshot;
 
 pub fn register() {}
 

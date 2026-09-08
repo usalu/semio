@@ -1,7 +1,7 @@
 //! 🔧️ 🔧️ Imperative play app commands command — `move-step`.
 
-use crate::artifacts::procedure::mutations::{reorder_steps, ProcedureMutation};
-use crate::artifacts::procedure::{ProcedureSnapshot, PathRef, Step};
+use crate::mutations::{reorder_steps, ProcedureMutation};
+use crate::{ProcedureSnapshot, PathRef, Step};
 use crate::editor::procedure::config::{ImperativeConfig, ImperativeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `owner` names a real top-level step, avoiding an unresolvable or unknown reference that would
 /// otherwise address nothing.
 fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ProcedureSnapshot) -> PathRef {
-    let path = crate::artifacts::procedure::procedure_working_scene(document).path;
+    let path = crate::procedure_working_scene(document).path;
     match (owner, slot) {
         (Some(owner), Some(slot)) if path.steps.iter().any(|step| step.id == owner) => PathRef { owner: Some(owner.to_string()), slot: Some(slot.to_string()) },
         _ => PathRef::default(),
@@ -22,7 +22,7 @@ fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ProcedureSn
 /// 🔎️ Resolves the step list a `PathRef` addresses — the root path, or a nested `control.*` step's slot
 /// (an unmaterialized slot reads as empty).
 fn steps_at(document: &ProcedureSnapshot, path_ref: &PathRef) -> Vec<Step> {
-    let path = crate::artifacts::procedure::procedure_working_scene(document).path;
+    let path = crate::procedure_working_scene(document).path;
     match (&path_ref.owner, &path_ref.slot) {
         (Some(owner), Some(slot)) => path.steps.iter().find(|step| &step.id == owner).and_then(|step| step.bodies.get(slot)).map(|body| body.steps.clone()).unwrap_or_default(),
         _ => path.steps,

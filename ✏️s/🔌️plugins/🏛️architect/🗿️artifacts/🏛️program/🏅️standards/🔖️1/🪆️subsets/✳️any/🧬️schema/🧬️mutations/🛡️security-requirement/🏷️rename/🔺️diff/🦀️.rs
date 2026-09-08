@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🛡️security` per Wave C.
 
 use super::RenameSecurityRequirement;
-use crate::artifacts::program::diff::{ProgramSecurityDelta, ProgramSecurityPatchEntry};
-use crate::artifacts::program::registers::SecurityRequirementPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramSecurityDelta, ProgramSecurityPatchEntry};
+use crate::registers::SecurityRequirementPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameSecurityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

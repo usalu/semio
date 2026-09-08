@@ -2,8 +2,8 @@
 //! was a no-op).
 
 use super::CreateCurve;
-use crate::artifacts::vdi3805::mutations::delete_curve;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::mutations::delete_curve;
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &CreateCurve, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

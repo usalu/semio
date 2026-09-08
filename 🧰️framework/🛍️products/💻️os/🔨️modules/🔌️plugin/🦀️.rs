@@ -29130,7 +29130,7 @@ pub mod plugin_runtime {
     /// so the one decode site per loop can emit a distinct `plugin.internal.*` wire fault code
     /// instead of collapsing thirteen unrelated conditions into one opaque string. The language
     /// neutral vector table is `🩺️runtime-fault-vectors.json`, validated by
-    /// `🧯️runtime-fault-vectors.schema.json` and consumed by the React shell's window-fault
+    /// `🚪️lifetime/🧬️schema/🔣️.json#/$defs/RuntimeFaultVectorsV1` and consumed by the React shell's window-fault
     /// classifier.
     #[derive(Clone, Copy, PartialEq, Eq, Debug)]
     #[repr(u8)]
@@ -33393,8 +33393,8 @@ pub mod plugin_runtime {
             // "descriptor gate: N/<total> crates have a 🔣️.json" census line — that count is
             // the thing that should trend toward `<total>` as this list grows, never this test alone.
             #[cfg(test)]
-            #[semio_framework_async_macros::async_test]
-            async fn descriptor_is_fresh() {
+            #[test]
+            fn descriptor_is_fresh() {
                 __semio_install_plugin_bundle();
                 let plugin_id = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_manifest(runtime))).plugin_id;
                 let assembled = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($describe(runtime)));

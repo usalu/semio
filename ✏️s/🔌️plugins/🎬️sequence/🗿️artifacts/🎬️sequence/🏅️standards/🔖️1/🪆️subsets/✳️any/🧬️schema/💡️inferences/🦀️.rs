@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::sequence::SequenceSnapshot;
-use schema::ArtifactSchema;
+use crate::SequenceSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 
@@ -75,10 +75,10 @@ impl ArtifactInferrer for SequenceInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.sequence.sequence.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `sequence_artifact_schema_descriptor`'s registration.
-pub fn sequence_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn sequence_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.sequence.sequence.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -93,7 +93,7 @@ pub fn sequence_artifact_inference_descriptor() -> schema::ArtifactInferenceDesc
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::sequence::{SequenceEdge, SequenceFixture, SequenceStep, StepParams};
+    use crate::{SequenceEdge, SequenceFixture, SequenceStep, StepParams};
     use protocol::Inference;
 
     //#region 🧸️Fixtures
@@ -102,7 +102,7 @@ mod tests {
     }
 
     fn sample_snapshot() -> SequenceSnapshot {
-        SequenceSnapshot::from_fixture(SequenceFixture { schema: crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA.into(), steps: vec![step("a"), step("b")], edges: vec![SequenceEdge { id: "e1".into(), from: "a".into(), to: "b".into() }] })
+        SequenceSnapshot::from_fixture(SequenceFixture { schema: crate::SEQUENCE_DOCUMENT_SCHEMA.into(), steps: vec![step("a"), step("b")], edges: vec![SequenceEdge { id: "e1".into(), from: "a".into(), to: "b".into() }] })
     }
     //#endregion 🧸️Fixtures
 

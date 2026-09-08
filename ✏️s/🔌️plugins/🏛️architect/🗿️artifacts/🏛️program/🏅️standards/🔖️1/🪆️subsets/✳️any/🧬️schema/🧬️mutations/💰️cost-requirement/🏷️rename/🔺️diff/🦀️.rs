@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `💰costs` per Wave C.
 
 use super::RenameCostRequirement;
-use crate::artifacts::program::diff::{ProgramCostsDelta, ProgramCostsPatchEntry};
-use crate::artifacts::program::registers::CostRequirementPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramCostsDelta, ProgramCostsPatchEntry};
+use crate::registers::CostRequirementPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameCostRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

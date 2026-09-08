@@ -1,6 +1,6 @@
 //! playbook <- pdf
-use crate::artifacts::playbook::empty_playbook_snapshot;
-use crate::artifacts::playbook::PlaybookSnapshot;
+use crate::empty_playbook_snapshot;
+use crate::PlaybookSnapshot;
 pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<PlaybookSnapshot, String> {
     let _ = bytes;

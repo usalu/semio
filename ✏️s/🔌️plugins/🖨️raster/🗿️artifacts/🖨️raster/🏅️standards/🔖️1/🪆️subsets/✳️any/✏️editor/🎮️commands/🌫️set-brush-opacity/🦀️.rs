@@ -1,7 +1,7 @@
 //! 🖌️ 🖌️ Raster play app commands command — `set-brush-opacity`.
 
-use crate::artifacts::raster::op::RasterMutation;
-use crate::artifacts::raster::RasterSnapshot;
+use crate::op::RasterMutation;
+use crate::RasterSnapshot;
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

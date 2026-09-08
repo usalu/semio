@@ -1,7 +1,7 @@
 //! 🌱 DAG mutation — `CreateNode`: brings a new id-keyed node into existence.
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::{DagNodeSpec, DagSnapshot};
+use crate::diff::DagDiff;
+use crate::mutations::DagMutation;
+use crate::{DagNodeSpec, DagSnapshot};
 
 //#region 🔖️Mutation
 /// 🌱 `create-node` payload — full initial payload (position/size/kind/properties all fixed at

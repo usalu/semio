@@ -3,8 +3,8 @@
 //! via `reset_document_effect` (a `Effect::LoadDocument`) — per `📓️taxonomy.md`, whole-document
 //! replace has no `Mutation`-enum representative.
 
-use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolySnapshot;
+use crate::op::LowpolyMutation;
+use crate::LowpolySnapshot;
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -56,7 +56,7 @@ pub mod set_fixture_json {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::schema::default_snapshot;
+    use crate::schema::default_snapshot;
     use crate::editor::lowpoly::config::LowpolyConfig;
     use crate::editor::lowpoly::testkit::{app, dispatch};
     use crate::editor::lowpoly::LowpolyCommand;
@@ -67,8 +67,8 @@ mod tests {
     /// store, that's the real host's job), same pattern as the already-migrated `shooting` sibling.
     #[semio_framework_async_macros::async_test]
     async fn import_snapshot_json_replaces_the_whole_document() {
-        let mesh_json = crate::artifacts::lowpoly::schema::default_mesh_workspace()["obj-1"].clone();
-        let replacement = crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-x", "X");
+        let mesh_json = crate::schema::default_mesh_workspace()["obj-1"].clone();
+        let replacement = crate::snapshot_from_mesh_json(&mesh_json, "obj-x", "X");
         let json = serde_json::to_string(&Into::<serde_json::Value>::into(dsl::ToValue::to_value(&replacement))).unwrap();
         let snapshot = default_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();

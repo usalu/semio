@@ -5,9 +5,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::drawing::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
-use crate::artifacts::drawing::schema::find_drawing_layer;
-use crate::artifacts::drawing::{DrawingLayerNode, DrawingSnapshot};
+use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
+use crate::schema::find_drawing_layer;
+use crate::{DrawingLayerNode, DrawingSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -107,7 +107,7 @@ async fn produces_committed_diff() {
     assert_eq!(delta.patched[0].id, "trace-a", "the entry addresses the trace layer");
     let patch = &delta.patched[0].patch;
     let blob = patch.trace_params_json.as_deref().expect("the trace-params lane is populated");
-    let params: crate::artifacts::drawing::DrawingTraceParams = serde_json::from_str(blob).expect("the params blob is itself valid JSON");
+    let params: crate::DrawingTraceParams = serde_json::from_str(blob).expect("the params blob is itself valid JSON");
     assert_eq!((params.threshold, params.simplify_epsilon), (0.8, 0.25), "both parameters ride in the one blob");
     assert!(patch.boolean_operation.is_none(), "the sibling variant-specific lane stays empty");
     assert!(!blob.contains("sourceKey"), "the trace source is not part of the params facet");
@@ -117,7 +117,7 @@ async fn produces_committed_diff() {
 /// re-encodes byte-for-byte, so the file is a faithful `DrawingDiff`, not prose that merely resembles one.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::drawing::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "update-layer-trace-params/sharpens-the-trace: committed diff JSON is not canonical");
@@ -127,7 +127,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::drawing::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::drawing::DrawingDiff as protocol::MutationDiff<DrawingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::DrawingDiff as protocol::MutationDiff<DrawingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "update-layer-trace-params/sharpens-the-trace: committed diff did not carry before to after");
 }

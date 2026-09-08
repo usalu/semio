@@ -15,11 +15,11 @@
 //! error here — an upsert simply inserts — so its only non-applying branch is `mutation.no-op` for a
 //! value that already matches. This case pins the applied UPDATE of an existing key.
 
-use crate::artifacts::jack::PropertyValue;
-use crate::artifacts::rewriting::diff::RewritingDiff;
-use crate::artifacts::rewriting::mutations::RewriteRuleMutation;
-use crate::artifacts::rewriting::RewritingSnapshot;
-use crate::artifacts::rewriting::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
+use semio_s_artifact_trinity_jack::PropertyValue;
+use crate::diff::RewritingDiff;
+use crate::mutations::RewriteRuleMutation;
+use crate::RewritingSnapshot;
+use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

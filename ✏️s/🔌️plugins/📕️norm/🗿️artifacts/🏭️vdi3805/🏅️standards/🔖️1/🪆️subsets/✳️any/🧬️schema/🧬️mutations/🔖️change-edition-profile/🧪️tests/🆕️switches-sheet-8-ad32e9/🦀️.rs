@@ -7,7 +7,7 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -34,7 +34,7 @@ fn applied() -> Vdi3805Snapshot {
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let snapshot = applied();
-    assert_eq!(snapshot.edition_profile.get("8"), Some(&crate::artifacts::vdi3805::EditionProfileChoice::Current), "change-edition-profile/switches-sheet-8-from-legacy-to-current: sheet 8 must resolve to the Current profile");
+    assert_eq!(snapshot.edition_profile.get("8"), Some(&crate::EditionProfileChoice::Current), "change-edition-profile/switches-sheet-8-from-legacy-to-current: sheet 8 must resolve to the Current profile");
     assert_eq!(snapshot.edition_profile.len(), 1, "change-edition-profile/switches-sheet-8-from-legacy-to-current: an upsert of an existing key must not add a second override");
     assert_eq!(snapshot, expected_after(), "change-edition-profile/switches-sheet-8-from-legacy-to-current: applied state differs from committed after-snapshot");
 }
@@ -104,7 +104,7 @@ async fn produces_committed_diff() {
     let raised_diff = raised.diff();
     assert_eq!(
         raised_diff.edition_profile.as_ref().and_then(|map| map.get("8")),
-        Some(&crate::artifacts::vdi3805::EditionProfileChoice::Current),
+        Some(&crate::EditionProfileChoice::Current),
         "change-edition-profile/switches-sheet-8-from-legacy-to-current: the diff must publish editionProfile with sheet 8 = Current"
     );
     assert!(raised_diff.correction_as_of.is_none(), "change-edition-profile/switches-sheet-8-from-legacy-to-current: a per-sheet override must not move the document-wide correction cut-off");

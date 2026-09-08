@@ -7,12 +7,12 @@
 //! Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: the old opaque `model_json` field is gone —
 //! `structure`/`zones` are composed `s.stdio.semio.value`/`table` children, so the whole-snapshot
 //! derivation now reads the real typed `crate::model::Model` behind them (via
-//! `crate::artifacts::model::energy_model`, the working-scene accessor) and census over ITS OWN
+//! `crate::energy_model`, the working-scene accessor) and census over ITS OWN
 //! first-party `pack::json` serialization (`Model` derives `ToValue`) — always a full JSON object,
 //! never a possibly-malformed opaque body.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use schema::ArtifactSchema;
+use crate::EnergyModelSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
@@ -61,7 +61,7 @@ impl protocol::InferenceSpec<EnergyModelSnapshot> for EnergyModelInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::model::standards::v1::subsets::any::schema::ModelBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::ModelBuilder {
     type Snapshot = EnergyModelSnapshot;
     type Inference = EnergyModelInference;
 }
@@ -70,10 +70,10 @@ impl ArtifactInferrer for crate::artifacts::model::standards::v1::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.energy.model.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `energy_model_artifact_schema_descriptor`'s registration.
-pub fn energy_model_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn energy_model_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.energy.model.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -91,7 +91,7 @@ mod tests {
     use protocol::Inference;
 
     fn populated_snapshot() -> EnergyModelSnapshot {
-        crate::artifacts::model::energy_snapshot_with_state("energy.model", &crate::model::Model { name: "demo".into(), zones: Vec::new(), ..crate::model::Model::default() }, None)
+        crate::energy_snapshot_with_state("energy.model", &crate::model::Model { name: "demo".into(), zones: Vec::new(), ..crate::model::Model::default() }, None)
     }
 
     #[semio_framework_async_macros::async_test]
@@ -109,7 +109,7 @@ mod tests {
     async fn entries_counts_top_level_model_fields_and_bytes() {
         let snapshot = populated_snapshot();
         let inferred = EnergyModelInference::infer(&snapshot);
-        let expected_json = pack::json::to_json_string(&crate::artifacts::model::energy_model(&snapshot));
+        let expected_json = pack::json::to_json_string(&crate::energy_model(&snapshot));
         assert_eq!(inferred.entries.byte_size, expected_json.len() as u32);
         assert!(inferred.entries.entry_count > 0);
     }

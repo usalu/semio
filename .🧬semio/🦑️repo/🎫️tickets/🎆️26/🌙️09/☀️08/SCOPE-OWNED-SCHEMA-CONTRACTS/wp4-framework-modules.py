@@ -29,12 +29,6 @@ def pas(s):
     return "".join(p[:1].upper() + p[1:] for p in re.split(r"[-_.\s]+", s) if p)
 
 
-# ── scope path overrides (documented collisions / non-eligible owner levels) ──
-SCOPE_OVERRIDE = {
-    # sibling dirs 🎠️activation and 🪪️activation both ascii-tail to "activation"
-    MODROOT + "🎭️actor/🎠️activation": "framework/actor/activation-reservation",
-}
-
 # owner hoists: 🧱️elements/* is not an eligible scope owner level (contract §A)
 MODULE_HOIST = {
     MODROOT + "🖱️ui/🧱️elements/📨️UIDialog": MODROOT + "🖱️ui",
@@ -53,8 +47,6 @@ FIXDIRS = {
 
 
 def scope_path(module):
-    if module in SCOPE_OVERRIDE:
-        return SCOPE_OVERRIDE[module]
     rel = module[len(MODROOT):]
     return "framework/" + "/".join(at(s) for s in rel.split("/"))
 
@@ -249,7 +241,10 @@ UI_SHARED_DEFINITIONS = OrderedDict([
         "required": ["library", "scope", "runtimeDependency"],
         "properties": {"library": {"type": "string", "minLength": 1},
                        "scope": {"type": "string", "minLength": 1},
-                       "runtimeDependency": {"type": "boolean"}}}),
+                       "runtimeDependency": {"type": "boolean"},
+                       "ownedInterface": {"type": "string", "minLength": 1},
+                       "expected": {"type": "object",
+                                    "additionalProperties": {"anyOf": [{"type": "integer"}, {"type": "boolean"}]}}}}),
     ("retainedCommandRouteDisposition", {
         "type": "object", "additionalProperties": False,
         "required": ["id", "disposition", "lanes"],
@@ -315,6 +310,8 @@ UI_SHARED_DEFS = OrderedDict([
     ("RetainedCommandRoutesDocument", {
         "type": "object", "additionalProperties": False, "required": ["schema", "routes"],
         "properties": {"schema": {"type": "string", "minLength": 1},
+                       "maximumRawBytes": {"type": "integer", "minimum": 0},
+                       "maximumWorkItems": {"type": "integer", "minimum": 0},
                        "routes": {"$ref": "#/$defs/RetainedCommandRoutes"}}}),
 ])
 UI_MODULE = MODROOT + "🖱️ui"

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/ungroup-node.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/ungroup-node/schema.json",
   "title": "UngroupNode",
   "type": "object",
   "additionalProperties": false,
@@ -9,10 +9,28 @@
   ],
   "properties": {
     "at": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 0
+      "$ref": "#/$defs/NodePath"
+    }
+  },
+  "$defs": {
+    "NodePath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer"
+      ],
+      "properties": {
+        "layer": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
       }
     }
   }

@@ -3,9 +3,9 @@
 //! directory name stays `📋steps` — see the migration report's `sharedFileRequests` for the rename
 //! once a later pass can touch `🦀️.rs`).
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{Process3dSnapshot, ProcessStep};
+use crate::diff::Process3dDiff;
+use crate::mutations::Process3dMutation;
+use crate::{Process3dSnapshot, ProcessStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️CreateStep

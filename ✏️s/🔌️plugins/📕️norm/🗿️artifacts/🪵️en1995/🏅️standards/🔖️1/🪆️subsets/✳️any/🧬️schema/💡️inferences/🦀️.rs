@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::en1995::En1995Snapshot;
-use schema::ArtifactSchema;
+use crate::En1995Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::En1995Outline;
@@ -44,7 +44,7 @@ impl protocol::InferenceSpec<En1995Snapshot> for En1995Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::en1995::standards::v1::subsets::any::schema::En1995Builder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1995Builder {
     type Snapshot = En1995Snapshot;
     type Inference = En1995Inference;
 }
@@ -53,10 +53,10 @@ impl ArtifactInferrer for crate::artifacts::en1995::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1995.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1995_artifact_schema_descriptor`'s registration.
-pub fn en1995_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn en1995_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1995.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -87,7 +87,7 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::en1995::standards::v1::subsets::any::schema::{check_glulam_beam, k_crit, k_mod, lambda_rel_m, part_1_1, part_1_2, part_2, ServiceClass};
+use crate::standards::v1::subsets::any::schema::{check_glulam_beam, k_crit, k_mod, lambda_rel_m, part_1_1, part_1_2, part_2, ServiceClass};
 /// 📋️ Full EN 1995 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1995Snapshot -> CheckReport` projection; everything it composes

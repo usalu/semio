@@ -1,7 +1,7 @@
 //! 🔍️ 🔍️ Writer play app commands command — `lint-document`.
 
-use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::op::WriterMutation;
+use crate::WriterSnapshot;
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -19,7 +19,7 @@ pub fn handle(_payload: &LintDocument, _doc: &ArtifactView<'_, WriterSnapshot>, 
 #[cfg(test)]
 mod tests {
     use super::LintDocument;
-    use crate::artifacts::writer::{writer_text, WriterSnapshot};
+    use crate::{writer_text, WriterSnapshot};
     use crate::editor::writer::commands::set_active_example;
     use crate::editor::writer::testkit::new_app_with_registry;
     use crate::editor::writer::WriterCommand;

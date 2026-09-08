@@ -1,5 +1,5 @@
 //! gisterrain -> png
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::GisTerrainSnapshot;
 
 pub fn register() {}
 

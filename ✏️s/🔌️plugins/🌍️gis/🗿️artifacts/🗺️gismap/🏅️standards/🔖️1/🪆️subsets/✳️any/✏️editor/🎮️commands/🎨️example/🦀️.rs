@@ -1,8 +1,8 @@
 //! 🎨️ GIS 2D play app command — loading a bundled example map.
 
-use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::schema::{default_document, positions_operations, regions_operations, routes_operations};
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::op::GisMapMutation;
+use crate::schema::{default_document, positions_operations, regions_operations, routes_operations};
+use crate::GisMapSnapshot;
 use crate::editor::gis2d::config::{mutations as config_mutations, Gis2dConfig, Gis2dConfigMutation};
 use crate::editor::gis2d::maphost::map_host_from;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

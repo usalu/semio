@@ -6,9 +6,9 @@
 //! document content. Selection/hover moved OUT of this config into the framework-owned "elements"
 //! interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 
-use crate::artifacts::layout::LayoutCamera;
+use crate::LayoutCamera;
 use semio_framework_value_derive::{FromValue, ToValue};
-pub use crate::artifacts::layout::LayoutDropPreviewState;
+pub use crate::LayoutDropPreviewState;
 #[cfg(test)]
 use protocol::Mutation;
 

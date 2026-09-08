@@ -1,8 +1,8 @@
 //! 💔 Puzzle5d mutation — `DisconnectKindCompatibility`: revokes one grip-kind-id pair's fasten
 //! allowance.
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::Puzzle5dDiff;
+use crate::mutations::Puzzle5dMutation;
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
 /// 💔 `disconnect-kind-compatibility` payload.

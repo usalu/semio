@@ -73,8 +73,10 @@ class TestScript extends BundleScript {
     const plugin = resolve(this.root, "../..");
     const authority = resolve(plugin, "🧪️publication-authority");
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
-    const schema = await Bun.file(resolve(authority, "🧬️.schema.json")).json();
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
+    const module = await Bun.file(resolve(plugin, "🧬️schema", "🔣️.json")).json() as { $id: string };
+    const ajv = new Ajv({ allErrors: true, strict: true });
+    ajv.addSchema(module);
+    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/BlockPublicationAuthority` });
     if (!validate(fixture)) throw new Error(`Block fixture failed strict Ajv: ${JSON.stringify(validate.errors)}`);
     const sources = new Map<string, string>();
     for (const app of fixture.apps) sources.set(app.owner, await Bun.file(resolve(plugin, app.source)).text());

@@ -1,21 +1,17 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/reorder-nodes.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/reorder-nodes/schema.json",
   "title": "ReorderNodes",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "from",
     "parent",
+    "from",
     "to"
   ],
   "properties": {
     "parent": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 0
-      }
+      "$ref": "#/$defs/NodePath"
     },
     "from": {
       "type": "integer",
@@ -24,6 +20,28 @@
     "to": {
       "type": "integer",
       "minimum": 0
+    }
+  },
+  "$defs": {
+    "NodePath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer"
+      ],
+      "properties": {
+        "layer": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
     }
   }
 }

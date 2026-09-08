@@ -18,9 +18,9 @@
 
 //#region 🔖️IoDeclaration
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::artifacts::dag::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::artifacts::dag::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use crate::artifacts::dag::{DagMutation, DagSnapshot, DAG_DIALECT, DAG_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::{DagMutation, DagSnapshot, DAG_DIALECT, DAG_DOCUMENT_SCHEMA};
     use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;

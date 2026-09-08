@@ -1,8 +1,8 @@
 //! ✨️ EN 1999 artifact schema — every field with its state class.
 
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::En1999Snapshot;
 use crate::document::AnnexChoice;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full EN 1999 artifact state (persisted document + shared UI).
@@ -178,31 +178,31 @@ impl En1999Artifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-pub fn en1999_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn en1999_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1999",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -214,7 +214,7 @@ pub fn en1999_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::en1999::{En1999Diff, En1999Mutation, En1999Snapshot};
+    use crate::{En1999Diff, En1999Mutation, En1999Snapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -266,7 +266,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::en1999::En1999Snapshot;
+    use crate::En1999Snapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -331,12 +331,12 @@ semio_framework_plugin::derive_artifact_facets!(
 /// relocated verbatim from the deleted `⚙️engine`. `na_de`, `part_1_1` through `part_1_5`,
 /// `bending_resistance_knm`/`buckling_resistance_kn` and `check_aluminium_member` are pure function
 /// libraries; the snapshot-level composition (`evaluate`, `check_full_aluminium`) lives in
-/// `💡️inferences`. `na_de` re-exports `crate::artifacts::en1990`'s relocated `NaDe`.
+/// `💡️inferences`. `na_de` re-exports `semio_s_artifact_norm_en1990`'s relocated `NaDe`.
 use crate::document::{CheckReport, CheckResult, ClauseId, Quantity};
 
 // #region 🔖️NaDe
 pub mod na_de {
-    pub use crate::artifacts::en1990::standards::v1::subsets::any::schema::na_de::NaDe;
+    pub use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::na_de::NaDe;
     use crate::document::AnnexChoice;
 
     pub const HAZ_ZONE_MM: f64 = 25.0;

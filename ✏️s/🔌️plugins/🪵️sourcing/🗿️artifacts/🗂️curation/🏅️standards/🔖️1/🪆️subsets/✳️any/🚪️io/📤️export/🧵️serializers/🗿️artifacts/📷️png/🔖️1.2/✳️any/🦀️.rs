@@ -3,7 +3,7 @@
 //! direction is symmetrically non-functional (encodes `CurationSnapshot`'s own pack, then tries to
 //! decode it as a `PngSnapshot` pack — always fails for a format mismatch), preserved byte-for-byte
 //! and labeled `IoFidelity::Lossy` honestly rather than claiming a working conversion.
-use crate::artifacts::curation::schema::snapshot::CurationSnapshot;
+use crate::schema::snapshot::CurationSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

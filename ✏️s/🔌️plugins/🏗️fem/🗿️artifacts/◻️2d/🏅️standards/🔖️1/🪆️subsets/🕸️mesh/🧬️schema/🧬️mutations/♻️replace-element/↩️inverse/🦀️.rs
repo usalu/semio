@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `ReplaceElement` — recovers the pre-mutation element from `base`.
 use super::ReplaceElement;
-use crate::artifacts::fem2d::element_id;
-use crate::artifacts::fem2d::mutations::Fem2dMutation;
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::element_id;
+use crate::mutations::Fem2dMutation;
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceElement, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {

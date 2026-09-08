@@ -1,6 +1,6 @@
 //! 🪟️ 🧩️ Flow play app commands command — `add-widget`.
 
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use flow::FlowEvalSession;
 use semio_framework::kernel::UiDirtyScope;
@@ -24,13 +24,13 @@ fn child_add_widget_fault(message: impl Into<String>) -> Fault {
 }
 
 fn child_add_widget_mutation(content: &SemioFlowSnapshot, config: &FlowConfig, session: &FlowEvalSession, descriptor: &str, x: f64, y: f64) -> Result<SemioFlowMutation, Fault> {
-    let (widgets, synapses, layout) = crate::artifacts::flow::working_from_flow_content_snapshot(content);
-    let fixture = flow::FlowFixture { schema: flow::FLOW_DOCUMENT_SCHEMA.into(), camera: Default::default(), widgets, synapses, layout };
+    let (widgets, synapses, layout) = crate::working_from_flow_content_snapshot(content);
+    let fixture = semio_framework_artifact_flow_flow::FlowFixture { schema: semio_framework_artifact_flow_flow::FLOW_DOCUMENT_SCHEMA.into(), camera: Default::default(), widgets, synapses, layout };
     let mut host = flow::flow_host_with_session(&fixture, session);
     crate::editor::flow::seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     crate::editor::flow::apply_canvas_options(&mut host, config);
     let id = host.add_widget(descriptor, x, y).map_err(|error| child_add_widget_fault(error.to_string()))?;
-    let post = crate::artifacts::flow::flow_content_snapshot_from_working(&host.fixture.widgets, &host.fixture.synapses, &host.fixture.layout);
+    let post = crate::flow_content_snapshot_from_working(&host.fixture.widgets, &host.fixture.synapses, &host.fixture.layout);
     let expected_len = content.nodes.len().checked_add(1).ok_or_else(|| child_add_widget_fault("Flow child node count overflow"))?;
     if post.schema != content.schema || post.nodes.len() != expected_len || post.nodes[..content.nodes.len()] != content.nodes || post.edges != content.edges {
         return Err(child_add_widget_fault("Flow host add-widget produced a delta outside one appended typed node"));
@@ -109,7 +109,7 @@ mod tests {
         dispatch(&mut app, FlowCommand::PatchFlowWidgets(crate::editor::flow::commands::patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["slider".into()], field: "value".into(), value: "7.5".into() })).await;
         let patched = app.snapshot().expect("snapshot");
         let patched_widgets = patched.to_fixture().widgets;
-        assert!(patched_widgets.iter().any(|widget| matches!(widget, flow::Widget::InputSlider { id, value, .. } if id == "slider" && (value - 7.5).abs() < f64::EPSILON)), "slider must carry the parsed value: {patched_widgets:?}");
+        assert!(patched_widgets.iter().any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::InputSlider { id, value, .. } if id == "slider" && (value - 7.5).abs() < f64::EPSILON)), "slider must carry the parsed value: {patched_widgets:?}");
     }
 }
 //#endregion 🧪️Tests

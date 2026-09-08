@@ -1,9 +1,9 @@
 //! ↩️ `change-tank-mass-t` inverse — restores the pre-change `tank_mass_t` from BASE state; `change` is its own
 //! inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::en1998::mutations::change_tank_mass_t::ChangeTankMassT;
-use crate::artifacts::en1998::mutations::En1998Mutation;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::mutations::change_tank_mass_t::ChangeTankMassT;
+use crate::mutations::En1998Mutation;
+use crate::En1998Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeTankMassT, base: &En1998Snapshot) -> Vec<En1998Mutation> {

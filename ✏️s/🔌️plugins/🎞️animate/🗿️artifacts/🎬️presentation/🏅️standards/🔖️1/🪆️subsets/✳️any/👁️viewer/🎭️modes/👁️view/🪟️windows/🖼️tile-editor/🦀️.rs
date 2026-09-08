@@ -1,5 +1,5 @@
 //! 🖼️ Animate viewer — the tile-editor window: a read-only canvas-2d render of the source figure
-//! backdrop plus its crop tiles, built from `crate::artifacts::presentation::presentation_working_scene` (the
+//! backdrop plus its crop tiles, built from `crate::presentation_working_scene` (the
 //! same artifact-level pure accessor the editor's own tile-editor window uses) — this file itself
 //! imports nothing from the sibling editor surface (`policyViewerPurityBreaches` forbids it outright).
 //! No engagement bar, no selection overlay, no tile-morph prompt: a viewer has no utilities that edit
@@ -12,7 +12,7 @@
 //! would lose the layout entirely. A bespoke pure render function, mirroring the editor's own
 //! `Canvas2dScene` approach, is the honest fit.
 
-use crate::artifacts::presentation::{FigureTileFrame, PresentationSnapshot};
+use crate::{FigureTileFrame, PresentationSnapshot};
 use semio_framework_plugin::{LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_contract::BuiltNode;
 use semio_framework_ui_scene::Canvas2dScene;
@@ -70,7 +70,7 @@ fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) 
 /// editor's own canvas renders, with no selection/engagement overlay (a viewer has neither).
 fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
     const SCALE: f64 = 1000.0;
-    let (source, tiles) = crate::artifacts::presentation::presentation_working_scene(deck);
+    let (source, tiles) = crate::presentation_working_scene(deck);
     let mut layers = Vec::new();
     let (sx, sy, sw, sh) = frame_to_canvas(&source.frame, SCALE);
     let has_image_src = !source.src.trim().is_empty() && source.kind != "pdf";
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn renders_canvas_2d_scene() {
-        let deck = crate::artifacts::presentation::default_presentation_snapshot();
+        let deck = crate::default_presentation_snapshot();
         // 🌱️ `BuiltNode` deliberately has no `ToValue`/`FromValue` (framework `🦀️builder.rs`'s own
         // "DslValue-free exception" for `UiValue`-embedding types), so this reads the surface kind
         // back off the `Debug` rendering instead of round-tripping through JSON.
@@ -126,10 +126,10 @@ mod tests {
 
     #[test]
     fn source_frame_renders_as_actual_image_layer_behind_tiles() {
-        let deck = crate::artifacts::presentation::default_presentation_snapshot();
+        let deck = crate::default_presentation_snapshot();
         let layers_json = deck_to_canvas_layers(&deck);
         let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
-        let (source, _) = crate::artifacts::presentation::presentation_working_scene(&deck);
+        let (source, _) = crate::presentation_working_scene(&deck);
         assert!(!source.src.trim().is_empty());
         let source_layer = layers.first().expect("source layer is first (renders behind tiles)");
         assert_eq!(source_layer.get("id").and_then(|v| v.as_str()), Some("source-frame"));
@@ -139,10 +139,10 @@ mod tests {
 
     #[test]
     fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
-        let base = crate::artifacts::presentation::default_presentation_snapshot();
-        let (mut source, tiles) = crate::artifacts::presentation::presentation_working_scene(&base);
+        let base = crate::default_presentation_snapshot();
+        let (mut source, tiles) = crate::presentation_working_scene(&base);
         source.src = String::new();
-        let deck = crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &tiles);
+        let deck = crate::presentation_snapshot_with_tiles(&source, &tiles);
         let layers_json = deck_to_canvas_layers(&deck);
         let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
         let source_layer = layers.first().expect("source layer presentation");

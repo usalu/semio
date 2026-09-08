@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-daylight-zone-glare-limit.json",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-daylight-zone-glare-limit/schema.json",
   "title": "ChangeDaylightZoneGlareLimit",
   "type": "object",
   "additionalProperties": false,

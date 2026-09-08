@@ -2,9 +2,9 @@
 //! map. Inverse partner of `add-layer-asset` (see that leaf for why this pair exists).
 
 pub mod mutation {
-use crate::artifacts::raster::diff::RasterDiff;
-use crate::artifacts::raster::mutations::RasterMutation;
-use crate::artifacts::raster::RasterSnapshot;
+use crate::diff::RasterDiff;
+use crate::mutations::RasterMutation;
+use crate::RasterSnapshot;
 
 //#region 🔖️RemoveLayerAsset
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]

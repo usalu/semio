@@ -6,8 +6,8 @@
 //! (`ViewEmit`), so every step's questions render flat, in document order, showing each question's
 //! typed default value as plain text.
 
-use crate::artifacts::forms::schema::{default_value_for_question, dsl_to_value, is_extension_question_kind, json_string_value};
-use crate::artifacts::forms::{forms_steps, FormQuestion, FormsSnapshot};
+use crate::schema::{default_value_for_question, dsl_to_value, is_extension_question_kind, json_string_value};
+use crate::{forms_steps, FormQuestion, FormsSnapshot};
 use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_contract as ui;
 use ui::{Buildable, HasBase, HasChildren};
@@ -94,7 +94,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_node_for_the_default_document() {
-        let document = crate::artifacts::forms::schema::building_component_spec();
+        let document = crate::schema::building_component_spec();
         let node = render(&document).unwrap();
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"container\""));
@@ -102,7 +102,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_falls_back_to_a_placeholder_for_an_empty_document() {
-        let document = crate::artifacts::forms::schema::empty_forms_snapshot();
+        let document = crate::schema::empty_forms_snapshot();
         let node = render(&document).unwrap();
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("No steps"));

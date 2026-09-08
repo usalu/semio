@@ -1,7 +1,7 @@
 //! 🧵️ Lowpoly play app commands — UV unwrap + seam marking (`unwrapActive`/`markUvSeam`/`clearSeam`).
 
-use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolySnapshot;
+use crate::op::LowpolyMutation;
+use crate::LowpolySnapshot;
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::{map_kernel_err, mesh_edit, LowpolyScratch};
 use semio_framework_3d::mesh::EdgeId;

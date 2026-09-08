@@ -1,6 +1,6 @@
 //! 🎭️ Raster play app panel — masked layers.
 
-use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot as RasterDocument};
+use crate::{RasterLayerNode, RasterSnapshot as RasterDocument};
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
 use crate::editor::raster::{mask_row_id, ui_label, RASTER_TREE_PREFIX};

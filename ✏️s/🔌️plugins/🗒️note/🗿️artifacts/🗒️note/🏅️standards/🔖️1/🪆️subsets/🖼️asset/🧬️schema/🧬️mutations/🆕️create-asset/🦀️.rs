@@ -1,7 +1,7 @@
 //! 🆕 Note mutation — `CreateAsset`: brings a new id-keyed image asset into existence.
 
-use crate::artifacts::note::{NoteDiff, NoteSnapshot};
-use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::{NoteDiff, NoteSnapshot};
+use crate::schema::mutations::NoteMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -16,11 +16,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct CreateAsset {
     pub key: String,
     #[dsl(block)]
-    pub asset: crate::artifacts::note::NoteImageAsset,
+    pub asset: crate::NoteImageAsset,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_asset(key: String, asset: crate::artifacts::note::NoteImageAsset) -> NoteMutation {
+pub fn create_asset(key: String, asset: crate::NoteImageAsset) -> NoteMutation {
     NoteMutation::CreateAsset(CreateAsset { key, asset })
 }
 

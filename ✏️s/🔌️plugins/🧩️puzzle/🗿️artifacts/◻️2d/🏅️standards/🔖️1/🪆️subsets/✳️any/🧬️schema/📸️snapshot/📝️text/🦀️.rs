@@ -7,7 +7,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::Puzzle2dSnapshot;
 
 /// 📄️ The `concrete-forest` example fixture, handcrafted in the `.puzzle2d` DSL.
 pub const PUZZLE2D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio");
@@ -28,7 +28,7 @@ pub fn print_dsl(document: &Puzzle2dSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle2d::{Puzzle2dCamera, Puzzle2dCompatSpecificity, Puzzle2dEdge, Puzzle2dHandle, Puzzle2dKindCompatibility, Puzzle2dMeta, Puzzle2dNode};
+    use crate::{Puzzle2dCamera, Puzzle2dCompatSpecificity, Puzzle2dEdge, Puzzle2dHandle, Puzzle2dKindCompatibility, Puzzle2dMeta, Puzzle2dNode};
 
     /// 📜️ Both real example fixtures (migrated from the legacy `.2d.json` shape — see ticket
     /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle2d` DSL text and round-trip
@@ -111,15 +111,15 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::puzzle2d::op::Puzzle2dMutation;
-        use crate::artifacts::puzzle2d::spr::Puzzle2dStore;
-        use crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA;
+        use crate::op::Puzzle2dMutation;
+        use crate::spr::Puzzle2dStore;
+        use crate::PUZZLE_2D_SCHEMA;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = semio_framework::io::resolve_ready(Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None))).expect("store");
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
-        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle2d::mutations::create_node(node, None)], description: None })).expect("apply");
+        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::create_node(node, None)], description: None })).expect("apply");
         let envelope = store.envelope();
         let edit: &Edit<Puzzle2dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework::io::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn puzzle2d_dsl_parses_edge_with_all_connection_params() {
-        use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot};
+        use crate::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot};
         let snapshot = Puzzle2dSnapshot {
             nodes: vec![Puzzle2dNode { id: "n1".into(), x: 0.0, y: 0.0, ..Puzzle2dNode::default() }, Puzzle2dNode { id: "n2".into(), x: 10.0, y: 0.0, ..Puzzle2dNode::default() }],
             edges: vec![Puzzle2dEdge { id: "e1".into(), source: "n1".into(), target: "n2".into(), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 10.0, turn: 20.0, tilt: 30.0, x: 4.0, y: 5.0, ..Puzzle2dEdge::default() }],

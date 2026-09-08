@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/node/change-extras.json",
-  "title": "GltfChangeNodeExtraDataMutation",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-extra-data/schema.json",
+  "title": "GltfChangeNodeExtraDataPayload",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,63 +14,123 @@
       "minimum": 0
     },
     "data": {
+      "$ref": "#/$defs/GltfDataPresence"
+    }
+  },
+  "$defs": {
+    "GltfDataPresence": {
       "oneOf": [
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state"
+          ],
           "properties": {
             "state": {
               "const": "absent"
             }
-          },
-          "required": [
-            "state"
-          ],
-          "additionalProperties": false
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "value"
+          ],
           "properties": {
             "state": {
               "const": "present"
             },
             "value": {
-              "$ref": "#/$defs/gltfJson"
+              "$ref": "#/$defs/GltfJson"
             }
-          },
-          "required": [
-            "state",
-            "value"
-          ],
-          "additionalProperties": false
+          }
         }
       ]
-    }
-  },
-  "$defs": {
-    "gltfJson": {
-      "anyOf": [
+    },
+    "GltfJson": {
+      "oneOf": [
         {
-          "type": "null"
+          "type": "string",
+          "const": "Null"
         },
         {
-          "type": "boolean"
-        },
-        {
-          "type": "number"
-        },
-        {
-          "type": "string"
-        },
-        {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/gltfJson"
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Bool"
+          ],
+          "properties": {
+            "Bool": {
+              "type": "boolean"
+            }
           }
         },
         {
           "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/gltfJson"
+          "additionalProperties": false,
+          "required": [
+            "Number"
+          ],
+          "properties": {
+            "Number": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "String"
+          ],
+          "properties": {
+            "String": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Array"
+          ],
+          "properties": {
+            "Array": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GltfJson"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Object"
+          ],
+          "properties": {
+            "Object": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/GltfJson"
+                  }
+                ],
+                "additionalItems": false,
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
           }
         }
       ]

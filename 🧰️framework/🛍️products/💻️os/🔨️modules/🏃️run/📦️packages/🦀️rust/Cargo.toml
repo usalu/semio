@@ -20,6 +20,8 @@ name = "semio-framework-os-run"
 path = "../../🚀️bin.rs"
 
 [dependencies]
+semio-framework-artifact-workflow-workflow = { workspace = true }
+semio-framework-artifact-workflow-run = { workspace = true }
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-actor = { workspace = true }
 semio-framework-os = { path = "../../../../🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }

@@ -5,7 +5,7 @@
 //! (that one lives in the separate `🔺️diff/📝️text` facet this artifact does not have this wave; kept
 //! here instead, see `$T/📓️w1-e-report.md` scope note).
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceArtifactRow};
+use crate::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceArtifactRow};
 use schema::ArtifactSchema;
 
 //#region 🔖️Diff

@@ -1,8 +1,8 @@
 //! 🧬️ En1990 snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::en1990::En1990QkChild;
+use crate::En1990QkChild;
 use crate::document::AnnexChoice;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 
@@ -238,7 +238,7 @@ impl store::ArtifactPack for En1990Snapshot {
 
 impl Default for En1990Snapshot {
     fn default() -> Self {
-        let q_k = crate::artifacts::en1990::en1990_qk_child_from_entries(&[En1990QkEntry { category: "office".into(), value: 50.0 }, En1990QkEntry { category: "wind".into(), value: 30.0 }]);
+        let q_k = crate::en1990_qk_child_from_entries(&[En1990QkEntry { category: "office".into(), value: 50.0 }, En1990QkEntry { category: "wind".into(), value: 30.0 }]);
         Self { g_k: 100.0, q_k, resistance_kn: 300.0, consequence_class: 2, annex: AnnexChoice::De, seismic_a_ed_kn: 40.0 }
     }
 }

@@ -1,9 +1,9 @@
 //! 🔍️ Generation3d play app panel — the selection inspector.
 
-use crate::artifacts::generation3d::widget_id;
+use crate::widget_id;
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use flow::{FlowFixture, Widget};
+use semio_framework_artifact_flow_semio_framework_os_flow::{FlowFixture, Widget};
 use semio_framework_plugin::plugin_app_close_prelude::{field, input, Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::{tree_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 

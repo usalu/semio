@@ -7,9 +7,9 @@
 //! per-type encoder, matching the `iso16757` sibling facet's precedent for structured fields
 //! (applied here to scalars too, since this facet has none of iso16757's nested entity records).
 
-pub use crate::artifacts::en1993::schema::mutations::En1993Mutation;
+pub use crate::document_schema::mutations::En1993Mutation;
 
-use crate::artifacts::en1993::schema::mutations::{
+use crate::document_schema::mutations::{
     change_annex::ChangeAnnex, update_bolt_inputs::UpdateBoltInputs, update_bridge_inputs::UpdateBridgeInputs, update_cold_formed_inputs::UpdateColdFormedInputs,
     update_crane_inputs::UpdateCraneInputs, update_fatigue_inputs::UpdateFatigueInputs, update_fire_inputs::UpdateFireInputs, update_hss_inputs::UpdateHssInputs,
     update_member_properties::UpdateMemberProperties, update_pile_inputs::UpdatePileInputs, update_plated_inputs::UpdatePlatedInputs, update_silo_shell_inputs::UpdateSiloShellInputs,

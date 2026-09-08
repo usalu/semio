@@ -23,6 +23,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020.js";
+import draft07MetaSchema from "ajv/dist/refs/json-schema-draft-07.json" with { type: "json" };
 import { osMcpSchema } from "../../🧬️schema/🟦️.ts";
 
 //#region 🔖️Surface
@@ -196,17 +197,27 @@ const compileDraft07 = (schema: object) => new Ajv({ strict: true }).compile(sch
 const canonicalJson = (value: unknown): string =>
   JSON.stringify(value, (_key, member) => (member !== null && typeof member === "object" && !Array.isArray(member) ? Object.fromEntries(Object.entries(member as object).sort(([left], [right]) => (left < right ? -1 : 1))) : member));
 
-/** 🪞️ Reads hub's own approval contract and asserts the `os.mcp` mirror is value-space identical.
- *
- * 🚧️ hub's module document `🌎️hub/💡️inference/🧬️schema/🔣️.json` publishes no approval export today
- * (its `$defs` cover the job-submission side only), so the authority read here is the document that
- * DOES carry it — `🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json#/$defs/request`, the same
- * one hub's own `InferenceApprovalRequestV1::decode` law reads. Nothing under `🌎️hub/` is written. */
+/** 🔗️ Replaces every `{"$ref": "#/$defs/X"}` with the document's own `X`, so a mirror that inlines a
+ * pattern can be compared with an authority that names it. */
+function inlineLocalRefs(value: unknown, document: { $defs: Record<string, unknown> }): unknown {
+  if (Array.isArray(value)) return value.map((member) => inlineLocalRefs(member, document));
+  if (value === null || typeof value !== "object") return value;
+  const record = value as Record<string, unknown>;
+  const reference = typeof record.$ref === "string" && record.$ref.startsWith("#/$defs/") ? record.$ref.slice("#/$defs/".length) : undefined;
+  if (reference !== undefined) return inlineLocalRefs(document.$defs[reference], document);
+  return Object.fromEntries(Object.entries(record).map(([key, member]) => [key, inlineLocalRefs(member, document)]));
+}
+
+/** 🪞️ Reads hub's own approval contract
+ * (`🌎️hub/💡️inference/🧬️schema/🔣️.json#/$defs/InferenceApprovalRequestV1`, the document hub's
+ * `InferenceApprovalRequestV1::decode` law is written against) and asserts the `os.mcp` mirror is
+ * value-space identical. hub names its `jobId`/`proposalHash` patterns through `$ref`s, so those are
+ * inlined before comparing. Nothing under `🌎️hub/` is written. */
 export function proveOsMirrorsHubApprovalAuthority(repoRoot: string): { readonly authority: string; readonly compared: number } {
-  const hubModule = JSON.parse(readFileSync(resolve(repoRoot, "🌎️hub/💡️inference/🧬️schema/🔣️.json"), "utf8")) as { $defs: Record<string, unknown> };
-  must(!("approval" in hubModule.$defs) && !("InferenceApprovalRequestV1" in hubModule.$defs), "hub's module schema grew an approval export — point this mirror at it instead of the fixture document");
-  const authorityPath = "🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json";
-  const authority = (JSON.parse(readFileSync(resolve(repoRoot, authorityPath), "utf8")) as { $defs: { request: Record<string, unknown> } }).$defs.request;
+  const authorityPath = "🌎️hub/💡️inference/🧬️schema/🔣️.json";
+  const hub = JSON.parse(readFileSync(resolve(repoRoot, authorityPath), "utf8")) as { $defs: Record<string, unknown> };
+  must("InferenceApprovalRequestV1" in hub.$defs, `${authorityPath} publishes no InferenceApprovalRequestV1 export`);
+  const authority = inlineLocalRefs(hub.$defs.InferenceApprovalRequestV1, hub) as Record<string, unknown>;
   const mirror = osMcpSchema("GisMapInferenceApprovalRequestV1") as Record<string, unknown>;
   let compared = 0;
   for (const keyword of ["type", "additionalProperties", "required", "properties"] as const) {
@@ -230,6 +241,10 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
 
   let ajv = 0;
   const fixtureValidator = new Ajv2020({ strict: true });
+  // 🧬️ hub's own module document is draft-07 while this fixture schema is 2020-12; teaching the
+  // 2020-12 instance the draft-07 meta-schema is what lets ONE validator host both, instead of
+  // forking the corpus.
+  fixtureValidator.addMetaSchema(draft07MetaSchema);
   fixtureValidator.addSchema(JSON.parse(readFileSync(resolve(repoRoot, "🌎️hub/💡️inference/🧬️schema/🔣️.json"), "utf8")));
   const validateFixture = fixtureValidator.compile(fixtureSchema);
   must(validateFixture(fixture), `the shared fixture failed its shared schema: ${JSON.stringify(validateFixture.errors)}`);

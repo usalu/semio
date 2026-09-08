@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeUri` — reads the BASE uri, never the diff.
 use super::ChangeUri;
-use crate::artifacts::writer::schema::mutations::WriterMutation;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::schema::mutations::WriterMutation;
+use crate::WriterSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ Undo restores `base.uri`.

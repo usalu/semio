@@ -1,61 +1,55 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/create-edge.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/create-edge/schema.json",
   "title": "CreateEdge",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "id",
-    "kind",
-    "label",
     "source",
     "target"
   ],
   "properties": {
     "id": {
-      "title": "GraphEdgeId",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "value"
-      ],
-      "properties": {
-        "value": {
-          "type": "string"
-        }
-      }
+      "$ref": "#/$defs/GraphEdgeId"
     },
     "source": {
-      "title": "GraphNodeId",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "value"
-      ],
-      "properties": {
-        "value": {
-          "type": "string"
-        }
-      }
+      "$ref": "#/$defs/GraphNodeId"
     },
     "target": {
-      "title": "GraphNodeId",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "value"
-      ],
-      "properties": {
-        "value": {
-          "type": "string"
-        }
-      }
+      "$ref": "#/$defs/GraphNodeId"
     },
     "kind": {
       "type": "string"
     },
     "label": {
       "type": "string"
+    }
+  },
+  "$defs": {
+    "GraphEdgeId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "GraphNodeId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
     }
   }
 }

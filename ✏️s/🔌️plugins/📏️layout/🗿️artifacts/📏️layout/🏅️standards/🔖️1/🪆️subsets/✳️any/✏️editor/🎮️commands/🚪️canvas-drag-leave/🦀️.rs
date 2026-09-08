@@ -1,8 +1,8 @@
 //! 🖱️ 🖱️ Layout play app commands command — `canvas-drag-leave`.
 
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::LayoutDropPreviewState;
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::mutations::LayoutMutation;
+use crate::LayoutDropPreviewState;
+use crate::LayoutSnapshot;
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::config::LayoutConfigMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

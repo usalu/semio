@@ -1,8 +1,8 @@
 //! 🗑 Puzzle5d mutation — `DeletePart`: removes an id-keyed part (captures cascade — any fastener
 //! touching one of this part's grips is severed too, re-`connect-grips`ed by the inverse).
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::Puzzle5dDiff;
+use crate::mutations::Puzzle5dMutation;
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
 /// 🗑 `delete-part` payload.

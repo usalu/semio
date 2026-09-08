@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::flow::FlowSnapshot;
+use crate::FlowSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `FlowSnapshot` to its binary pack form.
@@ -23,7 +23,7 @@ pub fn decode(bytes: &[u8]) -> Result<FlowSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::flow::dsl;
+    use crate::document_dsl as dsl;
 
     #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {

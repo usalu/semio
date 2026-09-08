@@ -490,6 +490,19 @@
       }
     },
 
+    "InviteRedemptionCallV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "user", "actor", "credential", "failure"],
+      "properties": {
+        "kind": { "enum": ["redeem", "revoke", "append-forged", "restart", "rebuild"] },
+        "user": { "enum": ["same", "other", "missing"] },
+        "actor": { "enum": ["exact", "different"] },
+        "credential": { "enum": ["exact", "wrong-selector", "wrong-secret"] },
+        "failure": { "enum": ["none", "after-marker", "after-event", "after-projection"] }
+      }
+    },
+
     "InviteAcceptanceMarkerV1": {
       "type": "object",
       "additionalProperties": false,

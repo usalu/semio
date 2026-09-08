@@ -2,7 +2,8 @@
 
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 
-use semio_framework_os::{create_backbone_document, WorkflowMutation, WorkflowSnapshot, S_SPACE_SCHEMA};
+use semio_framework_artifact_space_space::{empty_space_snapshot, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA};
+use semio_framework_os::{create_backbone_document, WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 
 
@@ -29,7 +30,7 @@ pub fn handle(payload: &OpenSpace, _doc: &ArtifactView<'_, WorkflowSnapshot>, _c
                     demo.name
                 }
             };
-            let projection = semio_framework_os::empty_space_snapshot(&name, semio_framework_os::SpaceKind::Atelier, semio_framework_os::SpaceVisibility::Private);
+            let projection = empty_space_snapshot(&name, SpaceKind::Atelier, SpaceVisibility::Private);
             Some(create_backbone_document(S_SPACE_SCHEMA, "demo", &name, projection))
         } else {
             None

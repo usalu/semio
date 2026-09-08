@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🎓workshops` per Wave C.
 
 use super::DeleteWorkshop;
-use crate::artifacts::program::diff::ProgramWorkshopsDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramWorkshopsDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteWorkshop, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ConnectHandles` — a real append-only insert (never a
 //! whole-snapshot capture). No-op when the id already exists in `base`.
-use crate::artifacts::puzzle2d::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta};
-use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dSnapshot};
+use crate::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta};
+use crate::{Puzzle2dEdge, Puzzle2dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ConnectHandles, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {

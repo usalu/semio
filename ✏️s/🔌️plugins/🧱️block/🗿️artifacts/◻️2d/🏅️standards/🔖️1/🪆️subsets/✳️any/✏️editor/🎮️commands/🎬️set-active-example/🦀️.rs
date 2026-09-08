@@ -9,7 +9,7 @@ pub const BLOCK2D_EXAMPLE_RIGHT: &str = "hexagonal-cut-concrete-forest-right";
 /// ✏️ Emits the minimal ordered batch of semantic mutations that carries `current` to `next` — the
 /// whole-document-load replacement for a document-wide replace mutation (banned outright).
 fn replace_document_operations(current: &Block2dSnapshot, next: &Block2dSnapshot) -> Vec<Block2dMutation> {
-    use crate::artifacts::block2d::mutations as m;
+    use crate::mutations as m;
     let mut ops = Vec::new();
 
     if next.node_kind.name != current.node_kind.name {
@@ -141,8 +141,8 @@ fn replace_document_operations(current: &Block2dSnapshot, next: &Block2dSnapshot
 }
 //#endregion 🔖️ReplaceDocument
 
-use crate::artifacts::block2d::op::Block2dMutation;
-use crate::artifacts::block2d::Block2dSnapshot;
+use crate::op::Block2dMutation;
+use crate::Block2dSnapshot;
 use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -155,8 +155,8 @@ pub struct SetActiveExample {
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
     let example = match payload.id.as_str() {
-        BLOCK2D_EXAMPLE_LEFT => crate::artifacts::block2d::dsl::parse_dsl(crate::artifacts::block2d::dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
-        BLOCK2D_EXAMPLE_RIGHT => crate::artifacts::block2d::dsl::parse_dsl(crate::artifacts::block2d::dsl::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).ok(),
+        BLOCK2D_EXAMPLE_LEFT => crate::dsl::parse_dsl(crate::dsl::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
+        BLOCK2D_EXAMPLE_RIGHT => crate::dsl::parse_dsl(crate::dsl::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).ok(),
         _ => None,
     };
     match example {

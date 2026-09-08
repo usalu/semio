@@ -12,6 +12,8 @@ Subcommands
   author      — write `<leaf>/🧬️schema/🔣️.json` for every leaf missing its declared schema
   relocate    — move an existing leaf schema onto the canonical `🧬️schema/🔣️.json` path
   aggregates  — rewrite `🧬️mutations/🔣️.json` as a pure `$ref` union over its leaves
+  ids         — rewrite every leaf/aggregate `$id` to the contract §A grammar, proving id uniqueness
+  casing      — plan the camelCase conformance change: containers to annotate + fixtures it re-cases
   verify      — descriptor-path / dialect / `$id` / `title` structural check
 """
 
@@ -57,6 +59,23 @@ SCALARS = {
 }
 
 ANY_VALUE_NAMES = {"DslValue", "JsonValue", "Value", "GltfJson", "JsonNode"}
+
+# 🧩 The two `#[value(with = …)]` codecs stdio payloads reach, each read from its own function body:
+# `ordered_attr_map_from_value` (📸️snapshot/🦀️.rs:228) maps `Vec<(String, usize)>` onto a plain object,
+# and `deserialize_page` (📥️insert-page/🦀️.rs:28) decodes `PageDoc` through a `PagePayload` that names
+# exactly `PageDoc`'s own fields, so the payload type itself is the honest shape.
+CUSTOM_CODECS = {
+    "ordered_attr_map_from_value": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "ordered_attr_map_to_value": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "deserialize_page": None,
+}
+
+# ✍️ Types whose `ToValue`/`FromValue` are hand-written, so no attribute on the declaration describes
+# their wire shape — each entry is read from that impl. `GltfMorphTarget` (📸️snapshot/🦀️.rs:413-421)
+# routes through `ordered_attr_map_*`, so it is an object of accessor indices, not an array of pairs.
+HANDWRITTEN_TYPES = {
+    "GltfMorphTarget": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+}
 
 
 # ───────────────────────────── naming ─────────────────────────────
@@ -106,9 +125,17 @@ def apply_case(words: list[str], case: str | None) -> str | None:
     return None
 
 
+# 🧭 `casing` (cross-partition request 46) answers "what would the wire look like if every container
+# that declares no `rename_all` declared `camelCase`?". Setting this makes the projection model the
+# POST-change crate; it is never set while authoring or auditing the tree.
+ASSUME_CAMEL_CASE = False
+
+
 def field_wire_name(ident: str, rename: str | None, rename_all: str | None) -> str:
     if rename is not None:
         return rename
+    if rename_all is None and ASSUME_CAMEL_CASE:
+        rename_all = "camelCase"
     cased = apply_case(snake_words(ident), rename_all)
     return cased if cased is not None else ident
 
@@ -123,20 +150,70 @@ def variant_wire_name(ident: str, rename: str | None, rename_all: str | None) ->
 # ───────────────────────────── rust parsing ─────────────────────────────
 
 
-COMMENT_SCAN = re.compile(r'r#"[\s\S]*?"#|"(?:[^"\\]|\\.)*"|//[^\n]*|/\*[\s\S]*?\*/')
-
-
-def _blank(match: "re.Match[str]") -> str:
-    text = match.group(0)
-    if text.startswith('"') or text.startswith('r#"'):
-        return text
-    return "".join(character if character == "\n" else " " for character in text)
+# 🔍 The four lexical openers a Rust file can present at any point. A regex `sub` over the whole file
+# cannot do this job: leftmost-match semantics let a quote inside one construct swallow the opener of
+# the next, which silently deleted a documented field from a struct body.
+LEXICAL_OPENER = re.compile(r"r#*\"|\"|'(?:\\.|[^\\'\n])'|//|/\*")
 
 
 def strip_comments(text: str) -> str:
-    """🧹 Blanks line and block comments in place — offsets and line breaks are preserved so every
-    later scan (attribute runs, brace matching) keeps working on the original coordinates."""
-    return COMMENT_SCAN.sub(_blank, text)
+    """🧹 Blanks line and block comments, scanning string, raw-string and char literals rather than
+    matching them, so offsets, line breaks and every declaration survive intact."""
+    blanks: list[tuple[int, int]] = []
+    index = 0
+    length = len(text)
+    while index < length:
+        match = LEXICAL_OPENER.search(text, index)
+        if match is None:
+            break
+        start = match.start()
+        token = match.group(0)
+        if token.startswith("r"):
+            hashes = token.count("#")
+            close = text.find('"' + "#" * hashes, start + len(token))
+            index = length if close == -1 else close + 1 + hashes
+        elif token == '"':
+            cursor = start + 1
+            while cursor < length:
+                if text[cursor] == "\\":
+                    cursor += 2
+                    continue
+                if text[cursor] == '"':
+                    cursor += 1
+                    break
+                cursor += 1
+            index = cursor
+        elif token.startswith("'"):
+            index = match.end()
+        elif token == "//":
+            close = text.find("\n", start)
+            close = length if close == -1 else close
+            blanks.append((start, close))
+            index = close
+        else:
+            depth = 1
+            cursor = start + 2
+            while cursor < length and depth > 0:
+                if text.startswith("/*", cursor):
+                    depth += 1
+                    cursor += 2
+                elif text.startswith("*/", cursor):
+                    depth -= 1
+                    cursor += 2
+                else:
+                    cursor += 1
+            blanks.append((start, cursor))
+            index = cursor
+    if not blanks:
+        return text
+    pieces: list[str] = []
+    previous = 0
+    for start, close in blanks:
+        pieces.append(text[previous:start])
+        pieces.append("".join(character if character == "\n" else " " for character in text[start:close]))
+        previous = close
+    pieces.append(text[previous:])
+    return "".join(pieces)
 
 
 def match_block(text: str, open_index: int) -> int:
@@ -318,9 +395,19 @@ def read_type(body: str, cursor: int) -> tuple[str, int]:
     return body[cursor:end].strip(), end
 
 
-def parse_named_fields(body: str) -> list[tuple[str, str, FieldAttrs]]:
-    """📋 `(ident, rust type, attributes)` for one named-field body, attribute runs kept out of the scan."""
-    fields: list[tuple[str, str, FieldAttrs]] = []
+class Fields(list):
+    """📋 A parsed field list that remembers anything in the body it could not account for."""
+
+    gaps: list[str] = []
+
+
+def parse_named_fields(body: str) -> Fields:
+    """📋 `(ident, rust type, attributes)` for one named-field body, attribute runs kept out of the scan.
+
+    Text the scan cannot read as an attribute or a field is recorded as a GAP rather than skipped: a
+    silently dropped field produces a schema that is wrong in the one way nothing downstream can see."""
+    fields = Fields()
+    fields.gaps = []
     cursor = 0
     while cursor < len(body):
         cursor, attributes = skip_attributes(body, cursor)
@@ -329,6 +416,7 @@ def parse_named_fields(body: str) -> list[tuple[str, str, FieldAttrs]]:
         match = re.compile(r"(?:pub(?:\s*\([^)]*\))?\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*:").match(body, cursor)
         if match is None:
             comma = body.find(",", cursor)
+            fields.gaps.append(body[cursor : comma if comma != -1 else len(body)].strip()[:80])
             if comma == -1:
                 break
             cursor = comma + 1
@@ -441,7 +529,7 @@ def index_rust_into(index: dict[str, list[TypeDef]], root: str) -> None:
                             if depth == 0:
                                 break
                         end += 1
-                    payload = split_top_level(re.sub(r"\bpub\b", "", text[cursor + 1 : end]))
+                    payload = split_top_level(re.sub(r"#\[[^\]]*\]", "", re.sub(r"\bpub\b", "", text[cursor + 1 : end])))
                     kind = "tuple-struct" if kind == "struct" else kind
                 else:
                     payload = []
@@ -449,8 +537,10 @@ def index_rust_into(index: dict[str, list[TypeDef]], root: str) -> None:
                 definition = TypeDef(kind, type_name, container, payload, relative)
                 definition.generics = [parameter.split(":")[0].strip() for parameter in split_top_level((generics or "<>")[1:-1]) if parameter.strip() != "" and not parameter.strip().startswith("'") and not parameter.strip().startswith("const ")]
                 index[type_name].append(definition)
-            for match in re.finditer(r"\bpub\s+type\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:<[^=]*>)?\s*=\s*([^;]+);", text):
-                index[match.group(1)].append(TypeDef("alias", match.group(1), Container(""), match.group(2).strip(), relative))
+            for match in re.finditer(r"\bpub(?:\s*\([^)]*\))?\s+type\s+([A-Za-z_][A-Za-z0-9_]*)\s*(<[^=]*>)?\s*=\s*([^;]+);", text):
+                alias = TypeDef("alias", match.group(1), Container(""), match.group(3).strip(), relative)
+                alias.generics = [parameter.split(":")[0].strip() for parameter in split_top_level((match.group(2) or "<>")[1:-1]) if parameter.strip() != "" and not parameter.strip().startswith("'")]
+                index[match.group(1)].append(alias)
 
 
 def nearest(candidates: list[TypeDef], owner: str) -> TypeDef:
@@ -481,6 +571,7 @@ class Projector:
         self.defs: "OrderedDict[str, dict]" = OrderedDict()
         self.stack: list[str] = []
         self.bindings: dict[str, str] = {}
+        self.inlining: set[str] = set()
 
     # 🔗️ `ArtifactChild<S>` hand-writes `ToValue`/`FromValue` (🏪️store/🦀️.rs:2817-2837): the phantom
     # marker and the local owner never reach the wire, so its shape is fixed and generic-free.
@@ -499,7 +590,15 @@ class Projector:
     def project(self, rust_type: str) -> dict:
         rust_type = rust_type.strip()
         if rust_type in self.bindings:
-            return self.project(self.bindings[rust_type])
+            # 🔁️ A generic parameter can be bound to its own name (`Sampler<T>` reached as `Sampler<T>`);
+            # the binding is dropped while resolving it so the substitution cannot chase its own tail.
+            bound = self.bindings[rust_type]
+            saved = self.bindings
+            self.bindings = {name: value for name, value in saved.items() if name != rust_type}
+            try:
+                return self.project(bound)
+            finally:
+                self.bindings = saved
         if re.match(r"^(?:[a-z_]+::)*ArtifactChild\s*<", rust_type):
             reference = self.project("ArtifactRef")
             if reference != {"$ref": "#/$defs/ArtifactRef"}:
@@ -553,7 +652,9 @@ class Projector:
         match = re.match(r"^([A-Za-z_][A-Za-z0-9_:]*)\s*<(.+)>$", rust_type, re.S)
         if match:
             definition = self.lookup(match.group(1))
-            arguments = split_top_level(match.group(2))
+            # 🧬️ Substitute the CURRENT bindings into the arguments first: inside `GltfCollectionDiff<T, D>`
+            # the field `Vec<GltfModified<D>>` names `D`, which only means something in this instantiation.
+            arguments = [self.bindings.get(argument, argument) for argument in split_top_level(match.group(2))]
             if definition is None or len(definition.generics) != len(arguments):
                 raise Unmapped(f"generic type: {rust_type}")
             saved = self.bindings
@@ -570,6 +671,8 @@ class Projector:
         return self.project_definition(definition)
 
     def project_definition(self, definition: TypeDef, inline: bool = False) -> dict:
+        if definition.name in HANDWRITTEN_TYPES:
+            return dict(HANDWRITTEN_TYPES[definition.name])
         if definition.kind == "alias":
             return self.project(definition.payload)
         if definition.kind == "unit-struct":
@@ -584,7 +687,13 @@ class Projector:
             raise Unmapped(f"{definition.name}: #[value(transparent)] on a non-single-field container")
         name = definition.name
         if inline:
-            return self.project_struct(definition) if definition.kind == "struct" else self.project_enum(definition)
+            if name in self.inlining:
+                raise Unmapped(f"{name}: generic instantiation is self-referential and cannot be inlined")
+            self.inlining.add(name)
+            try:
+                return self.project_struct(definition) if definition.kind == "struct" else self.project_enum(definition)
+            finally:
+                self.inlining.discard(name)
         if name in self.defs:
             return {"$ref": f"#/$defs/{name}"}
         if name in self.stack:
@@ -600,22 +709,28 @@ class Projector:
 
     def project_struct(self, definition: TypeDef) -> dict:
         container = definition.container
+        for gap in getattr(definition.payload, "gaps", []):
+            raise Unmapped(f"{definition.name}: unreadable text in the struct body ({gap!r})")
         properties: "OrderedDict[str, dict]" = OrderedDict()
         required: list[str] = []
         flattened: list[dict] = []
         for ident, rust_type, attributes in definition.payload:
             if attributes.skip:
                 continue
+            override = None
             if attributes.custom is not None:
-                if not attributes.custom.endswith("deserialize_double_option"):
+                codec = attributes.custom.split("::")[-1]
+                if codec.endswith("deserialize_double_option"):
+                    attributes.default = True
+                elif codec in CUSTOM_CODECS:
+                    override = CUSTOM_CODECS[codec]
+                else:
                     raise Unmapped(f"{definition.name}.{ident}: custom codec {attributes.custom}")
-                attributes.default = True
             if attributes.flatten:
                 flattened.append(self.project(rust_type))
                 continue
             wire = field_wire_name(ident, attributes.rename, container.rename_all)
-            schema = self.project(rust_type)
-            properties[wire] = schema
+            properties[wire] = dict(override) if override is not None else self.project(rust_type)
             optional = attributes.default or container.default or re.match(r"^Option\s*<", rust_type.strip()) is not None
             if not optional:
                 required.append(wire)
@@ -747,7 +862,9 @@ def leaves() -> list[dict]:
                 "standard": standard,
                 "subset": subset,
                 "leaf": leaf,
-                "id": f"{ID_ROOT}/{artifact}/{standard}/{subset}/mutation/{leaf}.json",
+                # 🆔 Execution contract §A: a mutation leaf is its own scope, keyed by the descriptor's
+                # `semanticKind` — never by the leaf directory path (gltf nests `<domain>/<verb>`).
+                "id": f"{ID_ROOT}/{artifact}/{standard}/{subset}/mutation/{descriptor['semanticKind']}/schema.json",
                 "declared": os.path.join(directory, *descriptor["payloadSchema"].split("/")),
                 "canonical": os.path.join(directory, SCHEMA_DIR, "🔣️.json"),
                 "module": os.path.join(REPO, os.sep.join(segments[: mutation_index + 1])),
@@ -767,7 +884,16 @@ def aggregate_representation(module: str) -> dict:
     if not os.path.isfile(path):
         return {"kind": "absent", "tag": None, "content": None, "renameAll": None, "title": None}
     text = strip_comments(open(path, encoding="utf8").read())
-    match = re.search(r"\bpub enum ([A-Za-z_][A-Za-z0-9_]*)\s*\{", text)
+    # 🎯 The aggregate is the enum carrying `#[mutations(...)]`, not merely the first `pub enum` in the
+    # file — a mutations root may declare a helper vocabulary enum (e.g. a path segment) above it.
+    match = None
+    for candidate in re.finditer(r"\bpub enum ([A-Za-z_][A-Za-z0-9_]*)\s*\{", text):
+        run, _ = attribute_runs(text, candidate.start())
+        if "#[mutations(" in run.replace(" ", ""):
+            match = candidate
+            break
+    if match is None:
+        match = re.search(r"\bpub enum ([A-Za-z_][A-Za-z0-9_]*)\s*\{", text)
     if match is None:
         reexport = re.search(r"pub use crate::standards::([A-Za-z0-9_]+)::subsets::([A-Za-z0-9_]+)::schema::mutations::\*\s*;", text)
         if reexport is not None:
@@ -953,6 +1079,57 @@ def command_author(write: bool) -> None:
         print("  REFUSED", path, "::", problem)
 
 
+def command_audit(write: bool) -> None:
+    """🔎 Compares every leaf schema on disk against the projection of its own Rust payload type and, with
+    `--write`, replaces the ones whose top-level wire keys disagree. The crate is the authority: a
+    hand-authored schema that names fields the payload struct does not put on the wire is wrong."""
+    index = shared_index()
+    agreed = 0
+    replaced: list[str] = []
+    unprojectable: list[tuple[str, str]] = []
+    for leaf in leaves():
+        document, problem = build_document(leaf, index)
+        if document is None:
+            unprojectable.append((leaf["rel"], problem or "unknown"))
+            continue
+        current = json.load(open(leaf["canonical"], encoding="utf8")) if os.path.isfile(leaf["canonical"]) else {}
+        if schema_body(current) == schema_body(document):
+            agreed += 1
+            continue
+        replaced.append(leaf["rel"])
+        if write:
+            # 📎 The projection replaces the SHAPE; annotations the payload struct cannot express
+            # (`x-semio*` vocabulary metadata, a hand-written top-level `description`) are carried over.
+            for key, value in current.items():
+                if key.startswith("x-semio") or (key == "description" and "description" not in document):
+                    document[key] = value
+            dump(leaf["canonical"], ordered(document))
+    print(f"leaf schemas agreeing with their Rust payload={agreed} disagreeing={len(replaced)} unprojectable={len(unprojectable)} (write={write})")
+    for path in replaced:
+        print("  DRIFTED", path)
+    for path, problem in unprojectable:
+        print("  UNPROJECTABLE", path, "::", problem)
+
+
+def schema_body(document: dict) -> str:
+    """🧾 The part of a leaf schema the Rust payload decides — identity and prose annotations excluded."""
+    body = {key: value for key, value in document.items() if key not in ("$schema", "$id", "title", "description") and not key.startswith("x-semio")}
+    return json.dumps(body, sort_keys=True, ensure_ascii=False)
+
+
+def top_level_keys(document: dict) -> tuple:
+    """🔑 The identity a projection and a hand-authored document must agree on: the wire key set, which
+    keys are required, and (for a union payload) the branch count."""
+    properties = document.get("properties")
+    if isinstance(properties, dict):
+        return ("object", tuple(sorted(properties)), tuple(sorted(document.get("required", []))))
+    if isinstance(document.get("oneOf"), list):
+        return ("union", len(document["oneOf"]))
+    if isinstance(document.get("enum"), list):
+        return ("enum", tuple(sorted(str(value) for value in document["enum"])))
+    return ("opaque",)
+
+
 def command_relocate(write: bool) -> None:
     moved = 0
     rewritten = 0
@@ -1127,6 +1304,207 @@ def command_projections(write: bool) -> None:
         print("  SKIPPED", entry)
 
 
+def declaration_line(path: str, kind: str, name: str) -> tuple[int, int]:
+    """📍 1-based line of a `struct`/`enum` declaration and of the first line of its attribute run —
+    the insertion point for a new container attribute. `(0, 0)` when the declaration cannot be located."""
+    absolute = os.path.join(REPO, path)
+    try:
+        raw = open(absolute, encoding="utf8").read()
+    except OSError:
+        return (0, 0)
+    text = strip_comments(raw)
+    keyword = "struct" if kind.endswith("struct") else kind
+    match = re.search(rf"\b(?:pub(?:\s*\([^)]*\))?\s+)?{keyword}\s+{re.escape(name)}\s*(?:<[^{{;(]*>)?\s*[{{(;]", text)
+    if match is None:
+        return (0, 0)
+    _, attribute_start = attribute_runs(text, match.start())
+    return (text.count("\n", 0, match.start()) + 1, text.count("\n", 0, attribute_start) + 1)
+
+
+def reachable_definitions(leaf: dict, index: dict[str, list[TypeDef]]) -> "OrderedDict[str, TypeDef]":
+    """🕸️ Every named struct/enum the leaf's projection walks through, root first."""
+    seen: "OrderedDict[str, TypeDef]" = OrderedDict()
+    original_struct, original_enum = Projector.project_struct, Projector.project_enum
+
+    def remember(definition: TypeDef) -> None:
+        seen.setdefault(f"{definition.path}::{definition.name}", definition)
+
+    def patched_struct(self, definition):  # type: ignore[no-untyped-def]
+        remember(definition)
+        return original_struct(self, definition)
+
+    def patched_enum(self, definition):  # type: ignore[no-untyped-def]
+        remember(definition)
+        return original_enum(self, definition)
+
+    Projector.project_struct, Projector.project_enum = patched_struct, patched_enum
+    try:
+        build_document(leaf, index)
+    finally:
+        Projector.project_struct, Projector.project_enum = original_struct, original_enum
+    return seen
+
+
+def rename_map(before: dict, after: dict) -> dict[str, str]:
+    """🔤 snake → camel field renames between two projections of the same leaf, read off the property
+    key sets rather than re-deriving the casing."""
+    renames: dict[str, str] = {}
+
+    def walk(left, right) -> None:
+        if isinstance(left, dict) and isinstance(right, dict):
+            left_properties, right_properties = left.get("properties"), right.get("properties")
+            if isinstance(left_properties, dict) and isinstance(right_properties, dict):
+                for old, new in zip(left_properties, right_properties):
+                    if old != new:
+                        renames[old] = new
+            for key in left:
+                if key in right:
+                    walk(left[key], right[key])
+        elif isinstance(left, list) and isinstance(right, list) and len(left) == len(right):
+            for one, other in zip(left, right):
+                walk(one, other)
+
+    walk(before, after)
+    return renames
+
+
+def has_free_map(document) -> bool:
+    """🗺️ True when the projection contains a string-keyed map, i.e. object keys that are DATA and must
+    not be re-cased by a key substitution."""
+    if isinstance(document, dict):
+        if isinstance(document.get("additionalProperties"), dict):
+            return True
+        return any(has_free_map(value) for value in document.values())
+    if isinstance(document, list):
+        return any(has_free_map(value) for value in document)
+    return False
+
+
+def recase(node, renames: dict[str, str]):
+    if isinstance(node, dict):
+        return OrderedDict((renames.get(key, key), recase(value, renames)) for key, value in node.items())
+    if isinstance(node, list):
+        return [recase(value, renames) for value in node]
+    return node
+
+
+def command_casing() -> None:
+    """🐫 Plans cross-partition requests 46 and 49 without building stdio: every container reached by a
+    leaf projection that declares no `#[value(rename_all)]`, with the file:line to annotate, plus the
+    committed fixtures whose keys the annotation moves."""
+    global ASSUME_CAMEL_CASE
+    index = shared_index()
+    inventory = leaves()
+    roots: dict[str, TypeDef] = {}
+    reached: "OrderedDict[str, TypeDef]" = OrderedDict()
+    per_leaf: dict[str, "OrderedDict[str, TypeDef]"] = {}
+    for leaf in inventory:
+        found = reachable_definitions(leaf, index)
+        per_leaf[leaf["rel"]] = found
+        if found:
+            roots[next(iter(found))] = found[next(iter(found))]
+        for key, definition in found.items():
+            reached.setdefault(key, definition)
+    bare = OrderedDict((key, definition) for key, definition in reached.items() if definition.container.rename_all is None and definition.container.rename_all_fields is None)
+    print(f"reached-containers={len(reached)} without-rename-all={len(bare)} roots={len(roots)} roots-without-rename-all={len([key for key in roots if key in bare])}")
+    print("## containers to annotate")
+    for key, definition in bare.items():
+        declaration, attributes = declaration_line(definition.path, definition.kind, definition.name)
+        multiword = [ident for ident, _, _ in definition.payload if "_" in ident] if definition.kind == "struct" and not isinstance(definition.payload, str) else []
+        print(f"ANNOTATE\t{definition.path}:{declaration}\tattrs@{attributes}\t{definition.kind}\t{definition.name}\troot={'yes' if key in roots else 'no'}\tmultiword={len(multiword)}\t{','.join(multiword)}")
+    print("## fixtures")
+    for leaf in inventory:
+        fixtures = fixture_paths(leaf)
+        if not fixtures:
+            continue
+        before, problem = build_document(leaf, index)
+        if before is None:
+            print(f"FIXTURE-UNPROJECTABLE\t{leaf['rel']}\t{problem}")
+            continue
+        ASSUME_CAMEL_CASE = True
+        try:
+            after, _ = build_document(leaf, index)
+        finally:
+            ASSUME_CAMEL_CASE = False
+        renames = rename_map(before, after) if after is not None else {}
+        for fixture in fixtures:
+            data = json.load(open(fixture, encoding="utf8"), object_pairs_hook=OrderedDict)
+            touched = sorted(name for name in renames if name in json.dumps(data, ensure_ascii=False))
+            if not touched:
+                continue
+            relative = os.path.relpath(fixture, REPO)
+            flag = "REVIEW" if has_free_map(before) else "MECHANICAL"
+            print(f"FIXTURE\t{flag}\t{relative}\t{';'.join(f'{name}->{renames[name]}' for name in touched)}")
+            print("FIXTURE-JSON\t" + json.dumps(recase(data, renames), ensure_ascii=False))
+
+
+def fixture_paths(leaf: dict) -> list[str]:
+    """🧪 The leaf's committed wire vectors (`🧪️tests/<case>/🦠️mutation/🔣️.json`)."""
+    tests = os.path.join(leaf["dir"], "🧪️tests")
+    found: list[str] = []
+    for directory, _, files in os.walk(tests):
+        if os.path.basename(directory) != "🦠️mutation" or "🔣️.json" not in files:
+            continue
+        found.append(os.path.join(directory, "🔣️.json"))
+    return sorted(found)
+
+
+def command_ids(write: bool) -> None:
+    """🆔 Rewrites every leaf `$id` to the execution-contract §A grammar and proves the result is a
+    bijection: 915 leaves → 915 distinct ids. The body is untouched (`$id` is identity, not shape), so
+    this is independent of `audit`, whose comparison deliberately excludes `$id`."""
+    inventory = leaves()
+    claimed: dict[str, list[str]] = defaultdict(list)
+    for leaf in inventory:
+        claimed[leaf["id"]].append(leaf["rel"])
+    collisions = {identity: paths for identity, paths in claimed.items() if len(paths) > 1}
+    rewritten: list[str] = []
+    unchanged = 0
+    missing: list[str] = []
+    for leaf in inventory:
+        path = leaf["canonical"]
+        if not os.path.isfile(path):
+            missing.append(leaf["rel"])
+            continue
+        document = json.load(open(path, encoding="utf8"), object_pairs_hook=OrderedDict)
+        if document.get("$id") == leaf["id"]:
+            unchanged += 1
+            continue
+        document["$id"] = leaf["id"]
+        rewritten.append(leaf["rel"])
+        if write:
+            dump(path, ordered(document))
+    aggregates = 0
+    aggregate_rewritten: list[str] = []
+    aggregate_claimed: dict[str, list[str]] = defaultdict(list)
+    for module, members in aggregate_roots().items():
+        path = os.path.join(module, "🔣️.json")
+        if not os.path.isfile(path):
+            continue
+        first = members[0]
+        identity = f"{ID_ROOT}/{first['artifact']}/{first['standard']}/{first['subset']}/mutations.json"
+        aggregates += 1
+        aggregate_claimed[identity].append(os.path.relpath(path, REPO))
+        document = json.load(open(path, encoding="utf8"), object_pairs_hook=OrderedDict)
+        if document.get("$id") == identity:
+            continue
+        document["$id"] = identity
+        aggregate_rewritten.append(os.path.relpath(path, REPO))
+        if write:
+            dump(path, ordered(document))
+    aggregate_collisions = {identity: paths for identity, paths in aggregate_claimed.items() if len(paths) > 1}
+    print(f"leaves={len(inventory)} distinct-ids={len(claimed)} collisions={len(collisions)} rewritten={len(rewritten)} already-correct={unchanged} missing-file={len(missing)} (write={write})")
+    print(f"owning-aggregates={aggregates} distinct-aggregate-ids={len(aggregate_claimed)} aggregate-collisions={len(aggregate_collisions)} aggregate-rewritten={len(aggregate_rewritten)}")
+    for identity, paths in list(collisions.items())[:40]:
+        print("   COLLISION", identity)
+        for path in paths:
+            print("      ", path)
+    for identity, paths in list(aggregate_collisions.items())[:40]:
+        print("   AGGREGATE COLLISION", identity, paths)
+    for path in missing[:20]:
+        print("   MISSING", path)
+
+
 def command_verify() -> None:
     inventory = leaves()
     problems: list[str] = []
@@ -1170,12 +1548,18 @@ def main() -> int:
         command_census()
     elif command == "author":
         command_author(write)
+    elif command == "audit":
+        command_audit(write)
     elif command == "relocate":
         command_relocate(write)
     elif command == "aggregates":
         command_aggregates(write)
     elif command == "projections":
         command_projections(write)
+    elif command == "ids":
+        command_ids(write)
+    elif command == "casing":
+        command_casing()
     elif command == "verify":
         command_verify()
     else:

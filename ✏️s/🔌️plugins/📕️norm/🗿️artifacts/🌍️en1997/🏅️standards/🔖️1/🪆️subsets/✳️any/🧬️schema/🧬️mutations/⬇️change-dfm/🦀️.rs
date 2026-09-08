@@ -1,9 +1,9 @@
 //! 🧺 `change-dfm` payload — changes the En1997 document's `d_f_m` (founding depth D_f [m]).
 
 
-use crate::artifacts::en1997::En1997Snapshot;
-use crate::artifacts::en1997::diff::En1997Diff;
-use crate::artifacts::en1997::mutations::En1997Mutation;
+use crate::En1997Snapshot;
+use crate::diff::En1997Diff;
+use crate::mutations::En1997Mutation;
 //#region 🔖️ChangeDFM
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

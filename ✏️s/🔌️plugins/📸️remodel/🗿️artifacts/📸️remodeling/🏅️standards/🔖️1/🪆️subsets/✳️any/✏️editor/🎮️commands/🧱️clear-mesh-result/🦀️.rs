@@ -1,8 +1,8 @@
 //! 🧹️ 🧹️ Remodeling play app commands command — `clear-mesh-result`.
 
-use crate::artifacts::remodeling::mutations::replace_mesh_result;
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::{MeshSource, RemodelingMesh, RemodelingSnapshot};
+use crate::mutations::replace_mesh_result;
+use crate::op::RemodelingMutation;
+use crate::{MeshSource, RemodelingMesh, RemodelingSnapshot};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Results
 /// 🫙️ An empty mesh result — what `clearMeshResult`/`clearResult` leave behind.
 fn empty_result() -> RemodelingMesh {
-    RemodelingMesh { mesh: crate::artifacts::remodeling::empty_remodeling_mesh_handle(), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
+    RemodelingMesh { mesh: crate::empty_remodeling_mesh_handle(), source: MeshSource::Placeholder, texture_asset_id: None, watertight: None }
 }
 //#endregion 🔖️Results
 

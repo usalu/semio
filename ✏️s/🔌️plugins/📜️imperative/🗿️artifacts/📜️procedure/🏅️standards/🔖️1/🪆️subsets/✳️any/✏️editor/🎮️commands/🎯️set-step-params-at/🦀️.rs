@@ -1,8 +1,8 @@
 //! 🔧️ 🔧️ Imperative play app commands command — `set-step-params-at`.
 
-use crate::artifacts::procedure::dsl::ValueDsl;
-use crate::artifacts::procedure::mutations::{edit_step_params, ProcedureMutation};
-use crate::artifacts::procedure::{ProcedureSnapshot, PathRef, Step};
+use crate::document_dsl::ValueDsl;
+use crate::mutations::{edit_step_params, ProcedureMutation};
+use crate::{ProcedureSnapshot, PathRef, Step};
 use crate::editor::procedure::config::{ImperativeConfig, ImperativeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use std::collections::BTreeMap;
@@ -14,7 +14,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `owner` names a real top-level step, avoiding an unresolvable or unknown reference that would
 /// otherwise address nothing.
 fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ProcedureSnapshot) -> PathRef {
-    let path = crate::artifacts::procedure::procedure_working_scene(document).path;
+    let path = crate::procedure_working_scene(document).path;
     match (owner, slot) {
         (Some(owner), Some(slot)) if path.steps.iter().any(|step| step.id == owner) => PathRef { owner: Some(owner.to_string()), slot: Some(slot.to_string()) },
         _ => PathRef::default(),
@@ -24,7 +24,7 @@ fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ProcedureSn
 /// 🔎️ Resolves the step list a `PathRef` addresses — the root path, or a nested `control.*` step's slot
 /// (an unmaterialized slot reads as empty).
 fn steps_at(document: &ProcedureSnapshot, path_ref: &PathRef) -> Vec<Step> {
-    let path = crate::artifacts::procedure::procedure_working_scene(document).path;
+    let path = crate::procedure_working_scene(document).path;
     match (&path_ref.owner, &path_ref.slot) {
         (Some(owner), Some(slot)) => path.steps.iter().find(|step| &step.id == owner).and_then(|step| step.bodies.get(slot)).map(|body| body.steps.clone()).unwrap_or_default(),
         _ => path.steps,
@@ -76,7 +76,7 @@ pub fn handle(payload: &SetStepParamsAt, doc: &ArtifactView<'_, ProcedureSnapsho
     let document = doc.snapshot;
     if resolve_contains(document, payload.owner.as_deref(), payload.slot.as_deref(), &payload.id) {
         let path_ref = path_ref_from(payload.owner.as_deref(), payload.slot.as_deref(), document);
-        Ok(Emit::mutations(vec![edit_step_params(path_ref, payload.id.clone(), crate::artifacts::procedure::dsl::value_dsl_map_to_dictionary(&payload.params))]))
+        Ok(Emit::mutations(vec![edit_step_params(path_ref, payload.id.clone(), crate::document_dsl::value_dsl_map_to_dictionary(&payload.params))]))
     } else {
         Ok(Emit::default())
     }

@@ -4,8 +4,8 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::drawing::schema::default_drawing_document;
-use crate::artifacts::drawing::{DrawingSnapshot, DRAWING_DIALECT, DRAWING_DOCUMENT_SCHEMA};
+use crate::schema::default_drawing_document;
+use crate::{DrawingSnapshot, DRAWING_DIALECT, DRAWING_DOCUMENT_SCHEMA};
 use crate::viewer::drawing::modes::view;
 use crate::viewer::drawing::modes::view::windows::canvas;
 use semio_framework_plugin::app::InteractionView;
@@ -40,7 +40,7 @@ pub struct DrawingViewer;
 
 impl ArtifactViewer for DrawingViewer {
     type Snapshot = DrawingSnapshot;
-    type Mutation = crate::artifacts::drawing::op::DrawingMutation;
+    type Mutation = crate::op::DrawingMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

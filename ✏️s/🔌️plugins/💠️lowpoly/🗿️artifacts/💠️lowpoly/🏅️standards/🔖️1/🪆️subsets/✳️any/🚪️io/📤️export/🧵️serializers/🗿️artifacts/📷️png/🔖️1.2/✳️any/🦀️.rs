@@ -12,9 +12,9 @@
 //! hex-encoded -- the same reuse principle as the txt/obj/ply leaves, never a second grammar. A
 //! document with no paint layer anywhere falls back to a 1x1 opaque-white placeholder raster (PNG
 //! requires a non-zero IHDR width/height) since the tEXt chunk alone still carries full fidelity.
-use crate::artifacts::lowpoly::schema::snapshot::text::print_dsl;
-use crate::artifacts::lowpoly::schema::snapshot::{enc_str, LowpolySnapshot};
-use crate::artifacts::lowpoly::LOWPOLY_PAINT_TEXTURE_SIZE;
+use crate::schema::snapshot::text::print_dsl;
+use crate::schema::snapshot::{enc_str, LowpolySnapshot};
+use crate::LOWPOLY_PAINT_TEXTURE_SIZE;
 use semio_s_artifact_stdio_png::engine::encode_png;
 use semio_s_artifact_stdio_png::schema::snapshot::{PngChunkMarker, PngTextChunk, PngTextKind};
 use semio_s_artifact_stdio_png::PngSnapshot;

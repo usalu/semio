@@ -1,14 +1,14 @@
 //! 🔺️ Sparse diff construction for `resize-tile-crop`.
 use super::ResizeTileCrop;
-use crate::artifacts::presentation::diff::PresentationDiff;
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::diff::PresentationDiff;
+use crate::PresentationSnapshot;
 
 //#region 🔹Diff
 /// 🔺️ Reads the working-scene `(source, tiles)` off `base.presentation`, applies the crop-only
 /// patch to the addressed tile, and mints a new content-addressed `presentation` handle for the
 /// result — real handcrafted construction from `(payload, base)`, never apply-then-capture.
 pub fn diff(payload: &ResizeTileCrop, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
-    let (source, mut tiles) = crate::artifacts::presentation::presentation_working_scene(base);
+    let (source, mut tiles) = crate::presentation_working_scene(base);
     let Some(existing) = tiles.iter().find(|tile| tile.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Tile \"{}\" does not exist.", payload.id), ["tiles".to_string(), payload.id.clone()]);
     };
@@ -25,6 +25,6 @@ pub fn diff(payload: &ResizeTileCrop, base: &PresentationSnapshot) -> protocol::
     if let Some(tile) = tiles.iter_mut().find(|tile| tile.id == payload.id) {
         tile.crop = payload.new_crop.clone();
     }
-    protocol::MutationOutcome::new(crate::artifacts::presentation::diff::diff_set_presentation(&source, &tiles))
+    protocol::MutationOutcome::new(crate::diff::diff_set_presentation(&source, &tiles))
 }
 //#endregion 🔹Diff

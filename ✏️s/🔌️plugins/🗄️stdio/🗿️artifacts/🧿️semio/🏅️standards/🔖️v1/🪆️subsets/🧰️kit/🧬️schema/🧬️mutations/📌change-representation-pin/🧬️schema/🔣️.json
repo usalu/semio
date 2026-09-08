@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/change-representation-pin.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/change-representation-pin/schema.json",
   "title": "ChangeRepresentationPin",
   "type": "object",
   "additionalProperties": false,
@@ -14,32 +14,78 @@
       "minimum": 0
     },
     "pin": {
+      "$ref": "#/$defs/LinkPin"
+    }
+  },
+  "$defs": {
+    "LinkPin": {
       "oneOf": [
         {
           "type": "object",
-          "properties": {
-            "kind": {
-              "const": "Checkpoint"
-            }
-          },
+          "additionalProperties": false,
           "required": [
             "kind"
           ],
-          "additionalProperties": false
+          "properties": {
+            "kind": {
+              "const": "head"
+            }
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
           "properties": {
             "kind": {
-              "const": "Snapshot"
+              "const": "checkpoint"
+            },
+            "id": {
+              "type": "string"
             }
-          },
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
           "required": [
-            "kind"
+            "kind",
+            "blob"
           ],
-          "additionalProperties": false
+          "properties": {
+            "kind": {
+              "const": "snapshot"
+            },
+            "blob": {
+              "$ref": "#/$defs/BlobRef"
+            }
+          }
         }
       ]
+    },
+    "BlobRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hash",
+        "size",
+        "mediaType"
+      ],
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediaType": {
+          "type": "string"
+        }
+      }
     }
   }
 }

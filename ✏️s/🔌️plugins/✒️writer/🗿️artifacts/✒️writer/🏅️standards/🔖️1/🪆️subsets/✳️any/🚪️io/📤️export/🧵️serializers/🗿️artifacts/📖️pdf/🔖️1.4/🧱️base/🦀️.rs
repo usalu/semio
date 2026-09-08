@@ -1,6 +1,6 @@
 //! 📤️ Exports Writer text as one US Letter page in the PDF 1.4 base subset.
 
-use crate::artifacts::writer::{writer_text, WriterSnapshot};
+use crate::{writer_text, WriterSnapshot};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
@@ -24,7 +24,7 @@ mod tests {
     use super::*;
     #[semio_framework_async_macros::async_test]
     async fn writer_into_pdf_preserves_text_and_page_size() {
-        let snapshot = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plaintext", "writer://id", "hello");
+        let snapshot = crate::writer_snapshot_with_text("writer.document", "id", "plaintext", "writer://id", "hello");
         let outcome = WriterIntoPdf::serialize(&snapshot).await.expect("serialize");
         let IoPayload::Binary(bytes) = outcome.value else { panic!("expected binary payload") };
         let decoded = <PdfSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");

@@ -112,9 +112,9 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::schema::dwg_artifact_schema_descriptor())
+        .schema(schema::dwg_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::schema::inferences::dwg_artifact_inference_descriptor()])
+        .inferences([schema::inferences::dwg_artifact_inference_descriptor()])
         .composers(dwg_combined_composer_entries())
         .languages(pilot_languages())
         .document_codec_bare::<DwgSnapshot, DwgMutation>(STDIO_DWG_DOCUMENT_SCHEMA)
@@ -130,9 +130,9 @@ fn dwg_combined_composer_entries() -> &'static [semio_framework_plugin::Composer
     static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| {
-            crate::standards::v_ac1018::engine::io_registry::entries()
+            standards::v_ac1018::engine::io_registry::entries()
                 .iter()
-                .chain(crate::standards::v_ac1024::engine::io_registry::entries().iter())
+                .chain(standards::v_ac1024::engine::io_registry::entries().iter())
                 .map(|e| ComposerEntry { writes: e.writes, reads: e.reads, compose: e.compose })
                 .collect()
         })
@@ -151,28 +151,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.dwg",
                     extension: Some("dwg"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.dwg"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.dwg.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.dwg.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.dwg.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.dwg.diff"),
@@ -183,8 +183,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.dwg.pack"),
                 },
                 dsl::LanguageSpec {
@@ -193,8 +193,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.dwg.spr"),
                 },
             ]

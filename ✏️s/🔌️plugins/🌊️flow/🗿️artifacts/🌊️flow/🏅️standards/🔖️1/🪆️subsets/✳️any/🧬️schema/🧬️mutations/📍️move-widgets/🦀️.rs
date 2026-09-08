@@ -1,13 +1,13 @@
 //! 📍️ Absolute repositions (or clears, when an entry's `layout` is `None`) one or more widgets at
 //! once. Plural by taxonomy design (`## Bulk / plural mutations`): the framework host bridge's own
-//! diffing (`flow::flow_fixture_operations`) already batches every changed layout key into one
+//! diffing (`semio_framework_artifact_flow_flow::flow_fixture_operations`) already batches every changed layout key into one
 //! `SetLayout` op per real drag gesture, so this mirrors that batch 1:1 rather than splitting into
 //! per-widget mutations.
 
-use crate::artifacts::flow::FlowSnapshot;
-use crate::artifacts::flow::schema::diff::text::FlowDiff;
-use crate::artifacts::flow::schema::mutations::FlowMutation;
-use flow::FlowLayoutEntry;
+use crate::FlowSnapshot;
+use crate::schema::diff::text::FlowDiff;
+use crate::schema::mutations::FlowMutation;
+use semio_framework_artifact_flow_flow::FlowLayoutEntry;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 📍️MoveWidgets

@@ -4,7 +4,7 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::Generation3dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -44,7 +44,7 @@ impl protocol::InferenceSpec<Generation3dSnapshot> for Generation3dInference {
 /// 💡️ `topology` is a whole-snapshot scalar (see `🧭topology/🦀️.rs`), so the default
 /// `ArtifactInferrer::infer_cached` passthrough (plain `infer`, no `InferenceCache`/`InferenceSession`
 /// involvement) is exactly right — nothing here benefits from per-entity incremental caching.
-impl ArtifactInferrer for crate::artifacts::generation3d::standards::v1::subsets::any::schema::Generation3dBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Generation3dBuilder {
     type Snapshot = Generation3dSnapshot;
     type Inference = Generation3dInference;
 }
@@ -72,7 +72,7 @@ pub fn generation3d_artifact_inference_descriptor() -> schema::ArtifactInference
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use flow::{FlowFixture, SynapseSpec, Widget};
+    use semio_framework_artifact_flow_semio_framework_os_flow::{FlowFixture, SynapseSpec, Widget};
     use protocol::Inference;
 
     //#region 🧸️Fixtures
@@ -80,7 +80,7 @@ mod tests {
         let mut snapshot = Generation3dSnapshot::default();
         snapshot.fixture = FlowFixture {
             schema: "flow.fixture".into(),
-            camera: flow::CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+            camera: semio_framework_artifact_flow_semio_framework_os_flow::CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
                 Widget::InputSlider { id: "a".into(), label: "A".into(), value: 1.0, min: 0.0, max: 10.0, step: 1.0 },
                 Widget::Neuron { id: "b".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: false },

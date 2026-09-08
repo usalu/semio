@@ -4,7 +4,7 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::remodeling::{default_remodeling_scene, RemodelingSnapshot, REMODELING_DIALECT, REMODELING_DOCUMENT_SCHEMA};
+use crate::{default_remodeling_scene, RemodelingSnapshot, REMODELING_DIALECT, REMODELING_DOCUMENT_SCHEMA};
 use crate::viewer::remodeling::modes::view;
 use crate::viewer::remodeling::modes::view::windows::model;
 use semio_framework_plugin::app::InteractionView;
@@ -37,7 +37,7 @@ pub struct RemodelingViewer;
 
 impl ArtifactViewer for RemodelingViewer {
     type Snapshot = RemodelingSnapshot;
-    type Mutation = crate::artifacts::remodeling::op::RemodelingMutation;
+    type Mutation = crate::op::RemodelingMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

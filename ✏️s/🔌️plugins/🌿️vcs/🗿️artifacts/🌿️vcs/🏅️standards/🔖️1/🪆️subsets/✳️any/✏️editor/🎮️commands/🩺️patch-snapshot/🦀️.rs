@@ -1,6 +1,6 @@
 //! 🩹️ 🩹️ VCS play app commands command — `patch-snapshot`.
 
-use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot};
+use crate::{op::VcsDemoMutation, VcsSnapshot};
 use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🩹️ Builds the `VcsDemoMutation` for a `patchSnapshot` field write — mirrors
 /// `shooting_ui::shot_patch_for_field`'s string-keyed field dispatch.
 fn vcs_patch_operation_for_field(field: &str, value: &str) -> Option<VcsDemoMutation> {
-    use crate::artifacts::vcs::mutations::{change_counter, change_notes, change_status, rename_vcs};
+    use crate::mutations::{change_counter, change_notes, change_status, rename_vcs};
     match field {
         "title" => Some(rename_vcs(value.into())),
         "counter" => value.parse::<i64>().ok().map(change_counter),

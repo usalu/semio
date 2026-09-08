@@ -1,10 +1,176 @@
 {
   "valid": [
-    { "input": ["run", "@semio-tech/mit-bestand-demonstrator:prepare-dev"], "args": ["run", "@semio-tech/mit-bestand-demonstrator:prepare-dev"], "env": { "SEMIO_BUILD_MODE": "dev", "SEMIO_RENDERER": "react" } },
-    { "input": ["run", "@semio-tech/mit-bestand-demonstrator:prepare-release", "--graph=stdout"], "args": ["run", "@semio-tech/mit-bestand-demonstrator:prepare-release", "--graph=stdout"], "env": { "SEMIO_BUILD_MODE": "ship", "SEMIO_RENDERER": "react" } }
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:prepare-dev"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:prepare-dev"
+      ],
+      "env": {
+        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_RENDERER": "react"
+      }
+    },
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:prepare-release",
+        "--graph=stdout"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:prepare-release",
+        "--graph=stdout"
+      ],
+      "env": {
+        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_RENDERER": "react"
+      }
+    },
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:build"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:build"
+      ],
+      "env": {
+        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_RENDERER": "react"
+      }
+    },
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:dev"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:dev"
+      ],
+      "env": {
+        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_RENDERER": "react"
+      },
+      "watch": "@semio-tech/mit-bestand-demonstrator:activate-dev"
+    },
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:serve"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:serve"
+      ],
+      "env": {
+        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_RENDERER": "react"
+      }
+    },
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:activate-dev"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:activate-dev"
+      ],
+      "env": {
+        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_RENDERER": "react"
+      }
+    },
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:dev",
+        "--graph=stdout"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:dev",
+        "--graph=stdout"
+      ],
+      "env": {
+        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_RENDERER": "react"
+      }
+    },
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:prepare-e2e"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:prepare-e2e"
+      ],
+      "env": {
+        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_RENDERER": "react"
+      }
+    },
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:serve-e2e"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:serve-e2e"
+      ],
+      "env": {
+        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_RENDERER": "react"
+      }
+    },
+    {
+      "input": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:test-e2e"
+      ],
+      "args": [
+        "run",
+        "@semio-tech/mit-bestand-demonstrator:test-e2e"
+      ],
+      "env": {
+        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_RENDERER": "react"
+      }
+    }
   ],
   "invalid": [
-    ["run", "@semio-tech/mit-bestand-demonstrator:prepare-dev", "--", "--release"],
-    ["run", "@semio-tech/mit-bestand-demonstrator:prepare-release", "--", "dev"]
+    [
+      "run",
+      "@semio-tech/mit-bestand-demonstrator:prepare-dev",
+      "--",
+      "--release"
+    ],
+    [
+      "run",
+      "@semio-tech/mit-bestand-demonstrator:prepare-release",
+      "--",
+      "dev"
+    ],
+    [
+      "run",
+      "@semio-tech/mit-bestand-demonstrator:build",
+      "--",
+      "--outDir",
+      "elsewhere"
+    ],
+    [
+      "run",
+      "@semio-tech/mit-bestand-demonstrator:dev",
+      "--",
+      "--release"
+    ]
   ]
 }

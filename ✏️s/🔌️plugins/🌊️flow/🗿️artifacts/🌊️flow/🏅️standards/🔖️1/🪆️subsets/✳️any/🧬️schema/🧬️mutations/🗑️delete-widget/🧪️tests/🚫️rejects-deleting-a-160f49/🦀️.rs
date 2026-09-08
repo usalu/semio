@@ -16,9 +16,9 @@
 //! is provably a lookup miss inside a non-empty `scene.widgets`, not the trivially empty scene an
 //! unresolved handle would fail soft to.
 
-use crate::artifacts::flow::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
-use crate::artifacts::flow::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
-use flow::{Widget, WidgetLayout};
+use crate::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
+use crate::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
+use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
 use flow::OrderedMap;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

@@ -1,6 +1,6 @@
 //! 🖌️ Block 3D play app — world window option: the surface-brush's vortex-kind/radius/flip group.
 
-use crate::artifacts::block3d::Block3dSnapshot;
+use crate::Block3dSnapshot;
 use crate::editor::block3d::config::Block3dConfig;
 use crate::editor::block3d::terminology::Block3dLabels;
 use crate::editor::block3d::world::resolve_brush_vortex_kind_id;
@@ -26,7 +26,7 @@ pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, labels: &Bl
                 id: "block3d-brush-kind".into(),
                 label: Some(labels.vortex_kinds.as_str().to_string()),
                 value: resolve_brush_vortex_kind_id(definition, config),
-                items: crate::artifacts::block3d::vortex_kinds_of(definition).iter().map(|kind| MeasureSelectItem { id: kind.id.clone(), value: kind.id.clone(), label: kind.label.clone() }).collect(),
+                items: crate::vortex_kinds_of(definition).iter().map(|kind| MeasureSelectItem { id: kind.id.clone(), value: kind.id.clone(), label: kind.label.clone() }).collect(),
                 on_change: crate::editor::block3d::block3d_window_action("setBrushVortexKind", None),
             },
             WindowMeasure::Slider {

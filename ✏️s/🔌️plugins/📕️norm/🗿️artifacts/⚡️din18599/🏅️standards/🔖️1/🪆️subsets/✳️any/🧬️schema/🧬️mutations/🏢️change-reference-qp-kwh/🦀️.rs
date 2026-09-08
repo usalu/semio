@@ -1,9 +1,9 @@
 //! 🔽 `change-reference-qp-kwh` payload — changes the Din18599 document's `reference_q_p_kwh` (reference primary energy demand Q_p [kWh]).
 
 
-use crate::artifacts::din18599::Din18599Snapshot;
-use crate::artifacts::din18599::diff::Din18599Diff;
-use crate::artifacts::din18599::mutations::Din18599Mutation;
+use crate::Din18599Snapshot;
+use crate::diff::Din18599Diff;
+use crate::mutations::Din18599Mutation;
 //#region 🔖️ChangeReferenceQPKwh
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

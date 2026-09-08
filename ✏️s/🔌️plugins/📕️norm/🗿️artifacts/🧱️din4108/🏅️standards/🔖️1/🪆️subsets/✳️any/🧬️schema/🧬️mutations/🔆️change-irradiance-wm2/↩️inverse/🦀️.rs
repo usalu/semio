@@ -1,7 +1,7 @@
 //! ↩️ `change-irradiance-w-m2` — undo restores BASE's `irradiance_w_m2`.
 
 use super::ChangeIrradianceWM2;
-use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
+use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeIrradianceWM2, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {

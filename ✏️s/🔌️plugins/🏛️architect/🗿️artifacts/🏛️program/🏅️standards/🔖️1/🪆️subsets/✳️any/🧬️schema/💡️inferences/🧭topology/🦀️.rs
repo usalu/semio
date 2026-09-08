@@ -7,7 +7,7 @@
 //! pure function rather than an `InferredField` chain — the family root's
 //! `impl protocol::Inference<ProgramSnapshot>` calls it directly.
 
-use crate::artifacts::program::standards::v1::subsets::any::schema::registers::ProgramElement;
+use crate::standards::v1::subsets::any::schema::registers::ProgramElement;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 
 //#region 🔖️ProgramTopology
@@ -165,8 +165,8 @@ fn topo_order(ids: &[String], parent_of: &HashMap<String, Option<String>>) -> Ve
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::program::kernel::{EntityHeader, EntityId, QuantitySpec};
-    use crate::artifacts::program::standards::v1::subsets::any::schema::registers::ProgramElementKind;
+    use crate::kernel::{EntityHeader, EntityId, QuantitySpec};
+    use crate::standards::v1::subsets::any::schema::registers::ProgramElementKind;
 
     fn element(id: &str, parent: Option<&str>) -> ProgramElement {
         ProgramElement {

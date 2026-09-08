@@ -3,9 +3,9 @@
 //! (verb `remove`, distinct from `change-weight`'s `change`) so `ChangeWeight`'s own inverse over an
 //! absent prior entry has a genuine removal to delegate to — a true undo, not a lossy approximation.
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::mutations::AssemblyMutation;
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::diff::AssemblyDiff;
+use crate::mutations::AssemblyMutation;
+use crate::schema::snapshot::AssemblySnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️RemoveWeight

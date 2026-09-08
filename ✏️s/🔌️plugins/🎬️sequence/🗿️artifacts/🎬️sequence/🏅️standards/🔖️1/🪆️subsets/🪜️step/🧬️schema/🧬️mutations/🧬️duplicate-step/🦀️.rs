@@ -1,7 +1,7 @@
 //! 🧬️ Sequence mutation — `DuplicateStep`: copies a step to a new identity/position.
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::diff::SequenceDiff;
+use crate::mutations::SequenceMutation;
+use crate::SequenceSnapshot;
 
 //#region 🔖️Mutation
 /// 🧬️ `duplicate-step` payload — source step id, the copy's new id, and its FINAL position.
@@ -45,7 +45,7 @@ impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for DuplicateSte
 #[cfg(test)]
 mod mutation_law_tests {
     use super::*;
-    use crate::artifacts::sequence::default_snapshot;
+    use crate::default_snapshot;
     use protocol::{
         os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_inverse_law},
         Mutation,

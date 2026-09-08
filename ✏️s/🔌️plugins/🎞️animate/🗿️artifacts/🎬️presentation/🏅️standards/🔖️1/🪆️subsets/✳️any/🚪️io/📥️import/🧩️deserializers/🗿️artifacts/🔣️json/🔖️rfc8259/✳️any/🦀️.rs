@@ -3,7 +3,7 @@
 //! round-trips through `serde_json` untouched (via stdio's own `JsonSnapshot::to_serde_value()`
 //! bridge), so this hop is `IoFidelity::Exact`.
 
-use crate::artifacts::presentation::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
+use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

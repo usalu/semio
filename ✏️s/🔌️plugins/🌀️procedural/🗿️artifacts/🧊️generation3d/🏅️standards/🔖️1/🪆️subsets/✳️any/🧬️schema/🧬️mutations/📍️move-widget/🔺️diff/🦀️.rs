@@ -1,10 +1,10 @@
 //! 🔺️ `move-widget` sparse diff construction.
 
-use crate::artifacts::generation3d::diff::Generation3dDiff;
-use crate::artifacts::generation3d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::generation3d::mutations::move_widget::MoveWidget;
-use crate::artifacts::generation3d::mutations::widget_index;
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::diff::Generation3dDiff;
+use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::mutations::move_widget::MoveWidget;
+use crate::mutations::widget_index;
+use crate::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta upserting one widget's position.
 pub fn diff(payload: &MoveWidget, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {

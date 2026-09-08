@@ -1,12 +1,12 @@
 //! 🧱️ 🧱️ Fem2d play app commands command — `add-region`.
 
-use crate::artifacts::fem2d::op::Fem2dMutation;
-use crate::artifacts::fem2d::FemRegion;
+use crate::op::Fem2dMutation;
+use crate::FemRegion;
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
+type Fem2dSnapshot = crate::Fem2dSnapshot;
 
 //#region 🔖️AddNode
 //#endregion 🔖️AddNode
@@ -46,5 +46,5 @@ pub fn handle(payload: &AddRegion, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: 
     let id = crate::app_surface::next_id(snapshot.regions.iter().map(|r| r.id.clone()), "r");
     let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.height], [payload.x, payload.y + payload.height]];
     let region = FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness: payload.thickness.unwrap_or(0.02), material_id: payload.material_id.clone(), mesh_size: payload.mesh_size.unwrap_or(0.25) };
-    Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::CreateRegion { region })]))
+    Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(crate::mutations::create_region::CreateRegion { region })]))
 }

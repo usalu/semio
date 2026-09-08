@@ -3,9 +3,9 @@
 
 pub mod export_registers_csv {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::export_registers_csv;
-    use crate::artifacts::program::ProgramSnapshot;
+    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::inferences::export_registers_csv;
+    use crate::ProgramSnapshot;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
     
@@ -22,8 +22,8 @@ pub mod export_registers_csv {
 
 pub mod import_registers_csv {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::ProgramSnapshot;
+    use crate::op::ProgramMutation;
+    use crate::ProgramSnapshot;
     use crate::editor::architect::behavior::{import_registers_csv, MergeStrategy};
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -51,8 +51,8 @@ pub mod import_registers_csv {
 
 pub mod export_program {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::ProgramSnapshot;
+    use crate::op::ProgramMutation;
+    use crate::ProgramSnapshot;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
     
@@ -62,15 +62,15 @@ pub mod export_program {
 
     pub fn handle(_payload: &ExportProgram, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
-        let dsl_text = crate::artifacts::program::dsl::print(program);
+        let dsl_text = crate::document_dsl::print(program);
         Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{}.architect.dsl", program.meta.document_id), mime_type: "text/plain".into(), data: dsl_text, encoding: None }))
     }
 }
 
 pub mod import_program_request {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::ProgramSnapshot;
+    use crate::op::ProgramMutation;
+    use crate::ProgramSnapshot;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
     
@@ -91,8 +91,8 @@ pub mod import_program_request {
 
 pub mod import_program {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::ProgramSnapshot;
+    use crate::op::ProgramMutation;
+    use crate::ProgramSnapshot;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     
@@ -103,7 +103,7 @@ pub mod import_program {
     }
 
     pub fn handle(payload: &ImportProgram, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let Ok(next_program) = crate::artifacts::program::dsl::parse(&payload.payload) else {
+        let Ok(next_program) = crate::document_dsl::parse(&payload.payload) else {
             return Ok(Emit::default());
         };
         Ok(Emit { effects: vec![crate::editor::architect::reset_document_effect(&next_program)], ..Default::default() })

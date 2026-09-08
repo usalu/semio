@@ -1,6 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:semio:testkit:transaction:command-close:v1",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/tests/mutation-fixtures/transaction/command-close/component.json",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -31,9 +31,7 @@
             "required": [
               "id"
             ]
-          },
-          "minContains": 1,
-          "maxContains": 1
+          }
         },
         {
           "contains": {
@@ -46,9 +44,7 @@
             "required": [
               "id"
             ]
-          },
-          "minContains": 1,
-          "maxContains": 1
+          }
         },
         {
           "contains": {
@@ -61,9 +57,7 @@
             "required": [
               "id"
             ]
-          },
-          "minContains": 1,
-          "maxContains": 1
+          }
         },
         {
           "contains": {
@@ -76,9 +70,7 @@
             "required": [
               "id"
             ]
-          },
-          "minContains": 1,
-          "maxContains": 1
+          }
         },
         {
           "contains": {
@@ -91,9 +83,7 @@
             "required": [
               "id"
             ]
-          },
-          "minContains": 1,
-          "maxContains": 1
+          }
         },
         {
           "contains": {
@@ -106,9 +96,7 @@
             "required": [
               "id"
             ]
-          },
-          "minContains": 1,
-          "maxContains": 1
+          }
         }
       ],
       "items": {
@@ -124,8 +112,14 @@
         ],
         "properties": {
           "id": {
-            "type": "string",
-            "minLength": 1
+            "enum": [
+              "before-begin-close",
+              "zero-items",
+              "zero-bytes",
+              "short-bytes",
+              "exact-external-completion",
+              "exact-pending-completion"
+            ]
           },
           "beginClose": {
             "type": "boolean"

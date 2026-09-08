@@ -1,9 +1,9 @@
 //! 🌱 `create-layer` — brings a new `RasterLayerNode` into existence at a tree address.
 
 pub mod mutation {
-use crate::artifacts::raster::diff::RasterDiff;
-use crate::artifacts::raster::mutations::RasterMutation;
-use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
+use crate::diff::RasterDiff;
+use crate::mutations::RasterMutation;
+use crate::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️CreateLayer
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]
@@ -27,11 +27,11 @@ impl protocol::MutationKind<RasterSnapshot, RasterMutation> for CreateLayer {
     }
 
     fn label(&self) -> String {
-        format!("Create layer \"{}\"", crate::artifacts::raster::schema::layer_name(&self.layer))
+        format!("Create layer \"{}\"", crate::schema::layer_name(&self.layer))
     }
 
     fn target(&self) -> Vec<String> {
-        vec![crate::artifacts::raster::schema::layer_node_id(&self.layer).to_string()]
+        vec![crate::schema::layer_node_id(&self.layer).to_string()]
     }
 }
 //#endregion 🔖️CreateLayer

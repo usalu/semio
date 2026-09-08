@@ -1,1 +1,44 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","$defs":{"payload":{"type":"object","required":["nodeId","level","message","at"],"properties":{"nodeId":{"type":"string"},"level":{"type":"string"},"message":{"type":"string"},"at":{"type":"string"}}}},"allOf":[{"$ref":"#/$defs/payload"}],"unevaluatedProperties":false}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/workflow/run/mutation/append-run-log/schema.json",
+  "title": "AppendRunLog",
+  "type": "object",
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": [
+        "nodeId",
+        "level",
+        "message",
+        "at"
+      ],
+      "properties": {
+        "nodeId": {
+          "type": "string"
+        },
+        "level": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "at": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/payload"
+    }
+  ],
+  "propertyNames": {
+    "enum": [
+      "at",
+      "level",
+      "message",
+      "nodeId"
+    ]
+  }
+}

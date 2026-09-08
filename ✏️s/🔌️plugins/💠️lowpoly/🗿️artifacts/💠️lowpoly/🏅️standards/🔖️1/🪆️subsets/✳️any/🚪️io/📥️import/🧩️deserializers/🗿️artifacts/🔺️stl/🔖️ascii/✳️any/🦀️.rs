@@ -3,7 +3,7 @@
 //! 🐛️ See the export leaf's doc comment: honest stub, not a silent pack-envelope lie. Real STL
 //! import would need to synthesize a `LowpolyObject` (and a resolvable mesh child artifact) from
 //! parsed triangles -- an out-of-scope architecture change, not a pure `&StlSnapshot -> …` mapping.
-use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
+use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_stl::StlSnapshot;
 
 pub fn register() {}

@@ -1,5 +1,5 @@
 //! generation2d -> svg
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::Generation2dSnapshot;
 
 pub fn register() {}
 

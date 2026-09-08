@@ -1,7 +1,7 @@
 //! 📄️ Wires play app panel — the document tree: identities and relationships of the current fixture.
 
-use crate::artifacts::wires::schema::{dsl_id, fixture_edges, wires_identities, wires_relationships};
-use crate::artifacts::wires::WiresSnapshot;
+use crate::schema::{dsl_id, fixture_edges, wires_identities, wires_relationships};
+use crate::WiresSnapshot;
 use crate::editor::wires::terminology::WiresLabels;
 use crate::editor::wires::{ui_value_map, ui_value_text, wires_action, WIRES_GRANULARITY_EDGE, WIRES_GRANULARITY_NODE, WIRES_INTERACTION_GRAPH};
 use semio_framework_plugin::{
@@ -71,7 +71,7 @@ fn selection_args(id: &str, granularity: &str) -> semio_framework_plugin::UiAsse
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub fn render(document: &WiresSnapshot, labels: &WiresLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let wires = &document.wires_fixture;
-    let board = &crate::artifacts::wires::wires_working_board(document);
+    let board = &crate::wires_working_board(document);
     let mut identity_items = UiFixedList::<BuiltNode>::default();
     for identity in wires_identities(wires) {
         let node_id = identity.get("nodeId").and_then(|value| value.as_str()).ok_or_else(|| PluginAssemblyError::new("ui.document", "wires identity node id is required"))?;

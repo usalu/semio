@@ -64,7 +64,10 @@
         "primaryVariant",
         "command",
         "forbiddenCommandImports",
-        "forbiddenOrchestration"
+        "forbiddenOrchestration",
+        "site",
+        "development",
+        "e2e"
       ],
       "properties": {
         "schemaVersion": {
@@ -113,6 +116,83 @@
           "items": {
             "type": "string",
             "minLength": 1
+          }
+        },
+        "site": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "command",
+            "output",
+            "owner",
+            "profile"
+          ],
+          "properties": {
+            "command": {
+              "type": "string",
+              "pattern": "📜️script\\.ts$"
+            },
+            "output": {
+              "const": "dist/site"
+            },
+            "owner": {
+              "const": "demonstrator:site"
+            },
+            "profile": {
+              "const": "release"
+            }
+          }
+        },
+        "development": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "activationTarget",
+            "watchTarget",
+            "port"
+          ],
+          "properties": {
+            "activationTarget": {
+              "type": "string",
+              "minLength": 1
+            },
+            "watchTarget": {
+              "type": "string",
+              "minLength": 1
+            },
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            }
+          }
+        },
+        "e2e": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "owner",
+            "directory",
+            "testCommand",
+            "browserTarget"
+          ],
+          "properties": {
+            "owner": {
+              "type": "string",
+              "minLength": 1
+            },
+            "directory": {
+              "type": "string",
+              "minLength": 1
+            },
+            "testCommand": {
+              "type": "string",
+              "minLength": 1
+            },
+            "browserTarget": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         }
       }

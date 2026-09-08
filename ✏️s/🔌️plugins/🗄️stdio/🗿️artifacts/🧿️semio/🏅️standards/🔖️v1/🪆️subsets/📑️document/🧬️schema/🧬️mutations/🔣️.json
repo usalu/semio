@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutations.json",
-  "title": "DocPathSegment",
+  "title": "SemioDocumentMutation",
   "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
@@ -12,10 +12,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "insertBlock"
             }
           }
@@ -30,10 +30,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "insertImage"
             }
           }
@@ -48,10 +48,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "insertStyle"
             }
           }
@@ -66,10 +66,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "removeBlock"
             }
           }
@@ -84,10 +84,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "removeImage"
             }
           }
@@ -102,10 +102,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "removeStyle"
             }
           }
@@ -120,10 +120,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setBlockContent"
             }
           }
@@ -138,10 +138,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setHeadingLevel"
             }
           }
@@ -156,10 +156,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setImageBlock"
             }
           }
@@ -174,10 +174,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setImageBytes"
             }
           }
@@ -192,10 +192,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setListOrdered"
             }
           }
@@ -210,10 +210,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setParagraphStyle"
             }
           }
@@ -228,10 +228,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setRunStyle"
             }
           }
@@ -246,10 +246,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setRunText"
             }
           }
@@ -264,10 +264,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setSnapshot"
             }
           }
@@ -282,10 +282,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setStyleBasedOn"
             }
           }
@@ -300,10 +300,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setStyleName"
             }
           }

@@ -7,7 +7,7 @@
 //! (same shape as note's own fix for this exact leaf,
 //! `🗒️note/.../🔣️json/🔖️rfc8259/✳️any/🦀️.rs`): goes through stdio's own
 //! `JsonSnapshot::to_serde_value` bridge plus stdio's own real `parse_json_text`.
-use crate::artifacts::playbook::{PlaybookSnapshot, PLAYBOOK_DOCUMENT_SCHEMA};
+use crate::{PlaybookSnapshot, PLAYBOOK_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_json::schema::snapshot::{parse_json_text, JsonSnapshot};
 use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 pub fn register() {}

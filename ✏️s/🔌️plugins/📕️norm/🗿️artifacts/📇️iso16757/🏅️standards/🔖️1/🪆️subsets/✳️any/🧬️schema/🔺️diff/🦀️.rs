@@ -1,7 +1,7 @@
 //! 🧬️ Iso16757 diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::iso16757::CatalogueValue;
-use schema::ArtifactSchema;
+use crate::CatalogueValue;
+use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
@@ -13,23 +13,23 @@ use std::collections::BTreeMap;
 #[artifact_schema(id = "s.norm.iso16757")]
 pub struct Iso16757Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::iso16757::schema::Iso16757Artifact>>,
+    pub artifact: Option<Box<crate::document_schema::Iso16757Artifact>>,
     #[state(artifact)]
-    pub catalogue: Option<crate::artifacts::iso16757::part_1::Catalogue>,
+    pub catalogue: Option<crate::part_1::Catalogue>,
     #[state(artifact)]
-    pub dictionary: Option<crate::artifacts::iso16757::part_4::Dictionary>,
+    pub dictionary: Option<crate::part_4::Dictionary>,
     #[state(artifact)]
-    pub geometry: Option<crate::artifacts::iso16757::part_2::GeometryCatalogue>,
+    pub geometry: Option<crate::part_2::GeometryCatalogue>,
     #[state(artifact)]
-    pub selection: Option<crate::artifacts::iso16757::part_1::SelectionRequest>,
+    pub selection: Option<crate::part_1::SelectionRequest>,
     #[state(artifact)]
-    pub part_number_rule: Option<crate::artifacts::iso16757::part_5::PartNumberRule>,
+    pub part_number_rule: Option<crate::part_5::PartNumberRule>,
     #[state(artifact)]
     pub part_number_inputs: Option<BTreeMap<String, CatalogueValue>>,
     #[state(artifact)]
-    pub script_limits: Option<crate::artifacts::iso16757::part_5::ScriptLimits>,
+    pub script_limits: Option<crate::part_5::ScriptLimits>,
     #[state(artifact)]
-    pub exchange_process: Option<crate::artifacts::iso16757::part_5::ExchangeProcess>,
+    pub exchange_process: Option<crate::part_5::ExchangeProcess>,
     #[state(presence)]
     pub selected_check_index: Option<Option<u32>>,
 }

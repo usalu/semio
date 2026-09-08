@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::artifacts::fem2d::FemCamera;
+use crate::FemCamera;
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 

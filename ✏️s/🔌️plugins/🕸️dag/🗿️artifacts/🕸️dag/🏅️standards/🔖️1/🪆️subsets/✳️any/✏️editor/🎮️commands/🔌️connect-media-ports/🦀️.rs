@@ -1,8 +1,8 @@
 //! 🕸️ 🕸️ DAG play app commands command — `connect-media-ports`.
 
-use crate::artifacts::dag::mutations::connect_nodes;
-use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::mutations::connect_nodes;
+use crate::op::DagMutation;
+use crate::DagSnapshot;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
@@ -17,7 +17,7 @@ pub struct ConnectMediaPorts {
 
 pub fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
-    match crate::artifacts::dag::schema::connect_edge(document, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
+    match crate::schema::connect_edge(document, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id) {
         Ok(edge) => Ok(Emit::mutations(vec![connect_nodes(edge.id, edge.source, edge.target, edge.route_style, edge.properties)])),
         Err(_) => Ok(Emit::default()),
     }

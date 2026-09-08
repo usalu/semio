@@ -1,7 +1,7 @@
 //! ❓️ ❓️ Forms play app commands command — `move-question`.
 
-use crate::artifacts::forms::schema::{locate_question, update_block_operation, value_to_dsl};
-use crate::artifacts::forms::{forms_steps, op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
+use crate::schema::{locate_question, update_block_operation, value_to_dsl};
+use crate::{forms_steps, op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -73,7 +73,7 @@ pub fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         "single" | "multi" => {
             let mut question = question_shell(id, if kind == "single" { "Single Select" } else { "Multi Select" }.into(), kind.into());
             question.default = if kind == "multi" { Some(value_to_dsl(&Value::Array(vec![]))) } else { None };
-            question.options = Some(vec![crate::artifacts::forms::FormQuestionOption { value: "a".into(), label: "Option A".into() }, crate::artifacts::forms::FormQuestionOption { value: "b".into(), label: "Option B".into() }]);
+            question.options = Some(vec![crate::FormQuestionOption { value: "a".into(), label: "Option A".into() }, crate::FormQuestionOption { value: "b".into(), label: "Option B".into() }]);
             question
         }
         "note" => {
@@ -192,7 +192,7 @@ pub fn handle(payload: &MoveQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cf
     let target_id = payload.target_id.as_deref().unwrap_or(&payload.question_id);
     let resolved_index = payload.index.map_or_else(|| resolve_question_insert_index(spec, &payload.to_step_id, target_id, &payload.position).unwrap_or(0), |value| value as usize);
     Ok(Emit {
-        artifact_mutations: vec![FormMutation::MoveBlockToStep(crate::artifacts::forms::mutations::move_block_to_step::mutation::MoveBlockToStep {
+        artifact_mutations: vec![FormMutation::MoveBlockToStep(crate::mutations::move_block_to_step::mutation::MoveBlockToStep {
             step_id: source.step_id,
             block_id: payload.question_id.clone(),
             to_step_id: payload.to_step_id.clone(),

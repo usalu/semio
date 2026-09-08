@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `DeleteSurface` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteSurface, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -19,7 +19,7 @@ pub fn diff(payload: &super::DeleteSurface, base: &EnergyModelSnapshot) -> proto
     model.surfaces.retain(|item| item.id != payload.id);
     model.fenestrations.retain(|item| item.surface_id != payload.id);
     model.adjacency_pairs.retain(|item| item.surface_a_id != payload.id && item.surface_b_id != payload.id);
-    let outcome = protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model));
+    let outcome = protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model));
     if fenestrations + pairs == 0 {
         return outcome;
     }

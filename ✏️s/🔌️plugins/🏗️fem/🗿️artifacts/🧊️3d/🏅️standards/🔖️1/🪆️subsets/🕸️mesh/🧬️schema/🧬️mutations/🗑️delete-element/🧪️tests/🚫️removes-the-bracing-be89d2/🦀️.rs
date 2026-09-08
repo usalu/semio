@@ -7,9 +7,9 @@
 //!
 //! Un-bracing the frame is a one-collection edit: the shared nodes, material and section rows all stay.
 
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -34,7 +34,7 @@ fn applies_to_committed_after() {
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("delete-element applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "delete-element/removes-the-bracing-be89d2: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.elements.len(), 1, "delete-element/removes-the-bracing-be89d2: only the frame may remain");
-    assert_eq!(crate::artifacts::fem3d::element_id(&snapshot.elements[0]), "f1", "delete-element/removes-the-bracing-be89d2: the frame is the survivor");
+    assert_eq!(crate::element_id(&snapshot.elements[0]), "f1", "delete-element/removes-the-bracing-be89d2: the frame is the survivor");
     assert_eq!(snapshot.nodes.len(), 3, "delete-element/removes-the-bracing-be89d2: no node may be swept up with the brace");
 }
 
@@ -84,7 +84,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "delete-element/removes-the-bracing-be89d2: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "delete-element/removes-the-bracing-be89d2: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "delete-element/removes-the-bracing-be89d2: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "delete-element/removes-the-bracing-be89d2: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "delete-element/removes-the-bracing-be89d2: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("delete-element/removes-the-bracing-be89d2: unknown outcome status {other:?}"),
@@ -106,7 +106,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-element/removes-the-bracing-be89d2: committed diff JSON is not canonical");
@@ -115,7 +115,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `elements.removed` id on `before` must leave only the frame.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-element/removes-the-bracing-be89d2: committed diff did not carry before to after");
 }

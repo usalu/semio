@@ -37,7 +37,7 @@ pub fn measure(config: &FlowConfig, labels: &FlowPlayLabels) -> WindowMeasure {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::flow::schema::FLOW_DEFAULT_PROXIMITY_DISTANCE;
+    use crate::schema::FLOW_DEFAULT_PROXIMITY_DISTANCE;
     use crate::editor::flow::terminology::flow_play_labels;
 
     #[semio_framework_async_macros::async_test]

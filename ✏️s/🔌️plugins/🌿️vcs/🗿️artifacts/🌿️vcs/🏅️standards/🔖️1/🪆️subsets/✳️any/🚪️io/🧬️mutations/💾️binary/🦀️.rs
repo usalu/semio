@@ -11,7 +11,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::vcs::op::VcsDemoMutation;
+use crate::op::VcsDemoMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `VcsDemoMutation` to its binary state-patch form.
@@ -31,7 +31,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = crate::artifacts::vcs::mutations::change_counter(7);
+        let operation = crate::mutations::change_counter(7);
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);

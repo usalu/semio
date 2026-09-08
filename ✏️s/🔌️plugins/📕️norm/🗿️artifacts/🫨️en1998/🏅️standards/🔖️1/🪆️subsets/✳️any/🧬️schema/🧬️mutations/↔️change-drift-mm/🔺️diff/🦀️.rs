@@ -1,8 +1,8 @@
 //! 🔺️ `change-drift-mm` sparse diff construction — writes only `En1998Diff.drift_mm` from the payload.
 
-use crate::artifacts::en1998::diff::En1998Diff;
-use crate::artifacts::en1998::mutations::change_drift_mm::ChangeDriftMm;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::diff::En1998Diff;
+use crate::mutations::change_drift_mm::ChangeDriftMm;
+use crate::En1998Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeDriftMm, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {

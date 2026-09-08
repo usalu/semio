@@ -7,9 +7,9 @@
 //! itself (reading `jack_working_scene(base)`, applying its specific semantics to a clone) and calls
 //! `diff_replace_content`.
 
-use crate::artifacts::jack::schema::diff::JackDiff;
-use crate::artifacts::jack::schema::JackArtifact;
-use crate::artifacts::jack::{Edge, JackSnapshot, Node};
+use crate::schema::diff::JackDiff;
+use crate::schema::JackArtifact;
+use crate::{Edge, JackSnapshot, Node};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -162,7 +162,7 @@ impl MutationDiff<JackSnapshot> for JackDiff {
 /// content-addressed handle for the new `(nodes, edges)` scene and wraps it as a whole-handle-replace
 /// sparse diff. Mirrors `dag`'s `diff_replace_content` precedent exactly.
 pub fn diff_replace_content(nodes: Vec<Node>, edges: Vec<Edge>) -> JackDiff {
-    JackDiff { content: Some(crate::artifacts::jack::jack_content_child_with_owner(nodes, edges)), ..Default::default() }
+    JackDiff { content: Some(crate::jack_content_child_with_owner(nodes, edges)), ..Default::default() }
 }
 //#endregion 🔖️Apply
 

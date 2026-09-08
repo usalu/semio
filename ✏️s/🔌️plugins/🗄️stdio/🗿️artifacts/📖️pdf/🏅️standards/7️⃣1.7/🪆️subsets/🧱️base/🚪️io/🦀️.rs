@@ -2977,7 +2977,7 @@ mod tests {
         use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
         use semio_framework_plugin::{AnalyzeSource, ArtifactAnalyzer, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
 
-        let original = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/🎓️bachelor-thesis.pdf")).expect("read bachelor thesis fixture");
+        let original = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../temp/📄️bachelor-thesis.pdf")).expect("read bachelor thesis fixture");
         let base = decode_pdf(&original).expect("decode bachelor thesis fixture");
         let assert_original = |label: &str, actual: Vec<u8>| {
             let first_difference = actual.iter().zip(&original).position(|(actual, expected)| actual != expected).or_else(|| (actual.len() != original.len()).then_some(actual.len().min(original.len())));

@@ -124,6 +124,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-model")]
         register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -144,6 +145,7 @@ pub mod derived_composition {
     /// mirror serializer gives the other two) — four `IoKey`s per (subset, format) pair from these two
     /// rows, no hand-written reverse registration needed.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-model")]
     fn io_bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES
@@ -160,7 +162,7 @@ pub mod derived_composition {
     //#endregion 🔖️IoBridges
 
     //#region 🔖️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-model"))]
     mod tests {
         use super::*;
         use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;

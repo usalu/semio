@@ -1,7 +1,7 @@
 //! 🔄️ Sequence play app commands — auto-layout (`reorganize`) and its flow-direction setting.
 
-use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::mutations::SequenceMutation;
+use crate::SequenceSnapshot;
 use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::editor::sequence::ops_from_host_mutation;
 use infinite_board_port_directed_dag::{DagLayoutOptions, DagLayoutOrientation};

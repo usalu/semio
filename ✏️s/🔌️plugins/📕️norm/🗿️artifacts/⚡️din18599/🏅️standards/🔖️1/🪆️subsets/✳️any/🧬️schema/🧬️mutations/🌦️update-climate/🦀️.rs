@@ -6,9 +6,9 @@
 //! app's own input surface — an inseparable ≥2-field facet, not independently-set scalars.
 
 
-use crate::artifacts::din18599::{Din18599Snapshot, MonthlyClimate};
-use crate::artifacts::din18599::diff::Din18599Diff;
-use crate::artifacts::din18599::mutations::Din18599Mutation;
+use crate::{Din18599Snapshot, MonthlyClimate};
+use crate::diff::Din18599Diff;
+use crate::mutations::Din18599Mutation;
 //#region 🔖️UpdateClimate
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

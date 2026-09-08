@@ -2,8 +2,8 @@
 //! (a struct field, not an id-keyed collection). The invariant is checked BEFORE the
 //! identical-resubmission warning, the one guard order the whole vocabulary follows — non-finite
 //! thresholds ⇒ Fatal.
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::RemodelingDiff;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdateSfmParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

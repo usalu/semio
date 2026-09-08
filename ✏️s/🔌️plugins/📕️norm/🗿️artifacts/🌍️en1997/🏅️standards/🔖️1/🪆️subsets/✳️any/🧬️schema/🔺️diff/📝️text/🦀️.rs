@@ -1,14 +1,14 @@
 //! 🔺️ En1997 artifact — sparse field diff runtime.
 
-use crate::artifacts::en1997::schema::diff::*;
+use crate::document_schema::diff::*;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::en1997::schema::En1997Artifact;
-use crate::artifacts::en1997::En1997Snapshot;
+use crate::document_schema::En1997Artifact;
+use crate::En1997Snapshot;
 use protocol::MutationDiff;
 
 //#region 🔖️Apply
@@ -218,13 +218,13 @@ pub fn diff_set_snapshot(snapshot: &En1997Snapshot) -> En1997Diff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::en1997::mutations::En1997Mutation;
+    use crate::mutations::En1997Mutation;
     use protocol::{Mutation as _, MutationDiff};
 
     #[semio_framework_async_macros::async_test]
     async fn change_mutation_diff_updates_only_its_field() {
         let base = En1997Snapshot::default();
-        let mutation = En1997Mutation::ChangeVEdKn(crate::artifacts::en1997::mutations::change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 });
+        let mutation = En1997Mutation::ChangeVEdKn(crate::mutations::change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 });
         let outcome = mutation.diff(&base);
         let mut expected = base.clone();
         expected.v_ed_kn = 620.0;

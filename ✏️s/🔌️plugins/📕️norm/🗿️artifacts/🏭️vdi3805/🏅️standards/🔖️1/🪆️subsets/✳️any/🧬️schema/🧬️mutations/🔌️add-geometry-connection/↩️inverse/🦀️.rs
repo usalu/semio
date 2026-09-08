@@ -2,8 +2,8 @@
 //! previously absent (this mutation upserts, so a fresh connection's undo is `remove`).
 
 use super::AddGeometryConnection;
-use crate::artifacts::vdi3805::mutations::remove_geometry_connection;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::mutations::remove_geometry_connection;
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &AddGeometryConnection, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

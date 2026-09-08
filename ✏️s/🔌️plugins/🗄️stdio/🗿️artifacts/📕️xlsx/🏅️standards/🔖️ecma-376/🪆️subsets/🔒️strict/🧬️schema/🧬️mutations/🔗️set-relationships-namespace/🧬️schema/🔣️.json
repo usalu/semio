@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/strict/mutation/set-relationships-namespace.json",
+  "$id": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/strict/mutation/set-relationships-namespace/schema.json",
   "title": "SetRelationshipsNamespace",
   "type": "object",
   "additionalProperties": false,

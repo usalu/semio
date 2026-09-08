@@ -1,7 +1,7 @@
 //! 🌱 Puzzle5d mutation — `CreatePart`: brings a new id-keyed part into existence.
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dSnapshot};
+use crate::diff::Puzzle5dDiff;
+use crate::mutations::Puzzle5dMutation;
+use crate::{Puzzle5dPart, Puzzle5dSnapshot};
 
 //#region 🔖️Mutation
 /// 🌱 `create-part` payload — full initial payload at an optional FINAL-state `index` (`None`

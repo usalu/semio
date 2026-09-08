@@ -6,8 +6,8 @@
 //! the sibling command/panel/window nodes moved here too, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
-use crate::artifacts::vdi3805::op::Vdi3805Mutation;
-use crate::artifacts::vdi3805::Vdi3805Snapshot;
+use crate::op::Vdi3805Mutation;
+use crate::Vdi3805Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use crate::editor::vdi3805::commands::{evaluate, selected_check, set_snapshot};
 use crate::editor::vdi3805::modes::edit as edit_mode;
@@ -66,7 +66,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
 
     type Command = Vdi3805Command;
 
-    const DIALECT: Dialect = crate::artifacts::vdi3805::VDI3805_DIALECT;
+    const DIALECT: Dialect = crate::VDI3805_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.norm.vdi3805/v1";
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -105,7 +105,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
 
     /// 📎️ All fifteen norm apps share NormConfig (see crate::config::schema doc) — one
     /// AppSchemaDescriptor for all fifteen, registered idempotently by whichever app binds first.
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::config::schema::app_schema_descriptor())
     }
 
@@ -186,7 +186,7 @@ impl crate::document::NormFamily for Vdi3805Family {
     }
 
     fn evaluate(document: &Vdi3805Snapshot) -> crate::document::CheckReport {
-        crate::artifacts::vdi3805::standards::v1::subsets::any::schema::inferences::evaluate(document)
+        crate::standards::v1::subsets::any::schema::inferences::evaluate(document)
     }
 }
 
@@ -195,9 +195,9 @@ pub type Host = NormHost<Vdi3805Family>;
 
 //#region ðï¸Manifest
 pub fn create_vdi3805_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::vdi3805::VDI3805_DIALECT)
+    Editor::builder(crate::VDI3805_DIALECT)
             .document(["semio", "norm", VARIANT])
-            .artifact_kind(crate::artifacts::vdi3805::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             .io(crate::app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
             .mode_def(edit_mode::definition())
             .default_mode_id(crate::app_surface::MODE_EDIT)

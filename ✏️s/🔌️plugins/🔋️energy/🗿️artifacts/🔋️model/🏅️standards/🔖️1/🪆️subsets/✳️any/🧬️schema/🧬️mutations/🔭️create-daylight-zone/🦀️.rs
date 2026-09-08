@@ -1,8 +1,8 @@
 //! 🔭️ Energy model mutation — `CreateDaylightZone`: Puts a daylighting control on one zone: an illuminance target the electric lighting dims toward, a glare index limit and the visible transmittance the control sees the window through.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

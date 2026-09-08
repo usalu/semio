@@ -18,18 +18,18 @@
 //! of the four fixed model slots plus the `drawings` collection — approved verbs only, per
 //! `📌️important.md`.
 
-use crate::artifacts::cad::diff::CadDiff;
-use crate::artifacts::cad::CadSnapshot;
+use crate::diff::CadDiff;
+use crate::CadSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️InternalPatches
-/// 🩹 Option-bag field delta for [`crate::artifacts::cad::CadNode`] — INTERNAL diff-construction glue only.
+/// 🩹 Option-bag field delta for [`crate::CadNode`] — INTERNAL diff-construction glue only.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct CadNodePatch {
     pub label: Option<String>,
 }
 
-/// 🩹 Option-bag field delta for [`crate::artifacts::cad::CadReference`] — INTERNAL diff-construction glue only.
+/// 🩹 Option-bag field delta for [`crate::CadReference`] — INTERNAL diff-construction glue only.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct CadReferencePatch {
@@ -132,14 +132,14 @@ use super::replace_references;
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use crate::artifacts::cad::mutations::{
+    use crate::mutations::{
         change_active_model_definition::ChangeActiveModelDefinition, change_reference_hidden::ChangeReferenceHidden, change_reference_locked::ChangeReferenceLocked,
         change_reference_width::ChangeReferenceWidth, create_building_model::CreateBuildingModel, create_drawing::CreateDrawing, create_energy_model::CreateEnergyModel, create_node::CreateNode,
         create_shape_model::CreateShapeModel, create_structure_classic_model::CreateStructureClassicModel, delete_building_model::DeleteBuildingModel, delete_drawing::DeleteDrawing,
         delete_energy_model::DeleteEnergyModel, delete_node::DeleteNode, delete_shape_model::DeleteShapeModel, delete_structure_classic_model::DeleteStructureClassicModel,
         move_reference::MoveReference, rename_node::RenameNode, replace_reference_media::ReplaceReferenceMedia, replace_references::ReplaceReferences,
     };
-    use crate::artifacts::cad::testkit::{sample_model_child, sample_reference, sample_scene};
+    use crate::testkit::{sample_model_child, sample_reference, sample_scene};
     use protocol::Mutation;
 
     /// ⚖️ One value per `CadMutation` variant — the closed set every wire law below iterates.
@@ -156,7 +156,7 @@ pub mod tests {
             CadMutation::DeleteStructureClassicModel(DeleteStructureClassicModel {}),
             CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-fresh".into(), target: sample.target.to_uri() }),
             CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-fresh".into() }),
-            CadMutation::CreateNode(CreateNode { node: crate::artifacts::cad::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } }),
+            CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } }),
             CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() }),
             CadMutation::RenameNode(RenameNode { node_id: "node-1".into(), new_label: "Renamed".into() }),
             CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_hidden: true }),
@@ -264,7 +264,7 @@ pub mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_node_duplicate_id_never_applies() {
         let base = sample_scene();
-        let duplicate = CadMutation::CreateNode(CreateNode { node: crate::artifacts::cad::CadNode { id: "node-1".into(), label: "Dup".into(), kind: "group".into() } });
+        let duplicate = CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-1".into(), label: "Dup".into(), kind: "group".into() } });
         store::os_spr::testkit::assert_fatal_never_applies(&duplicate.diff(&base)).await;
     }
 
@@ -304,7 +304,7 @@ pub mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_node_outcome_obeys_the_policy_matrix() {
         let base = sample_scene();
-        store::os_spr::testkit::assert_outcome_policy_matrix(&base, &CadMutation::CreateNode(CreateNode { node: crate::artifacts::cad::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } })).await;
+        store::os_spr::testkit::assert_outcome_policy_matrix(&base, &CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } })).await;
     }
 
     #[semio_framework_async_macros::async_test]

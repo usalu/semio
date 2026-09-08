@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/workflow/workflow/mutation/remove-input/schema.json",
+  "title": "RemoveInput",
+  "type": "object",
+  "properties": {
+    "input_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "input_id"
+  ],
+  "additionalProperties": false
+}

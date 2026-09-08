@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/unflatten-node.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/unflatten-node/schema.json",
   "title": "UnflattenNode",
   "type": "object",
   "additionalProperties": false,
@@ -10,63 +10,362 @@
   ],
   "properties": {
     "at": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 0
-      }
+      "$ref": "#/$defs/NodePath"
     },
     "original": {
+      "$ref": "#/$defs/DrawNode"
+    }
+  },
+  "$defs": {
+    "NodePath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer"
+      ],
+      "properties": {
+        "layer": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "DrawNode": {
       "oneOf": [
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "segments"
+          ],
           "properties": {
             "kind": {
-              "const": "Path"
+              "const": "path"
+            },
+            "segments": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PathSegment"
+              }
+            },
+            "style": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value",
+            "at"
+          ],
           "properties": {
             "kind": {
-              "const": "Text"
+              "const": "text"
+            },
+            "value": {
+              "type": "string"
+            },
+            "at": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "style": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "transform"
+          ],
           "properties": {
             "kind": {
-              "const": "Group"
+              "const": "group"
+            },
+            "transform": {
+              "$ref": "#/$defs/SemioTransform"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/DrawNode"
+              }
             }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "at",
+            "width",
+            "height",
+            "mime",
+            "bytes"
+          ],
           "properties": {
             "kind": {
-              "const": "Image"
+              "const": "image"
+            },
+            "at": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "mime": {
+              "type": "string"
+            },
+            "bytes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
             }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          }
         }
       ]
+    },
+    "PathSegment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "moveTo"
+            },
+            "to": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "lineTo"
+            },
+            "to": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "c1",
+            "c2",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cubicTo"
+            },
+            "c1": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "c2": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "to": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "c",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "quadTo"
+            },
+            "c": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "to": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rx",
+            "ry",
+            "xRotation",
+            "largeArc",
+            "sweep",
+            "to"
+          ],
+          "properties": {
+            "kind": {
+              "const": "arcTo"
+            },
+            "rx": {
+              "type": "number"
+            },
+            "ry": {
+              "type": "number"
+            },
+            "xRotation": {
+              "type": "number"
+            },
+            "largeArc": {
+              "type": "boolean"
+            },
+            "sweep": {
+              "type": "boolean"
+            },
+            "to": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "close"
+            }
+          }
+        }
+      ]
+    },
+    "SemioPoint2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioTransform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "translation",
+        "rotation",
+        "scale"
+      ],
+      "properties": {
+        "translation": {
+          "$ref": "#/$defs/SemioPoint3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/SemioQuaternion"
+        },
+        "scale": {
+          "$ref": "#/$defs/SemioPoint3"
+        }
+      }
+    },
+    "SemioPoint3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioQuaternion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z",
+        "w"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        }
+      }
     }
   }
 }

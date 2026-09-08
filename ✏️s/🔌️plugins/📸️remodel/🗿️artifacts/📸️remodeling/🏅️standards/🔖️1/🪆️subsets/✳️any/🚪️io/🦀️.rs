@@ -16,7 +16,7 @@
 //! (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, #2553): serializer dispatch is IO, not
 //! engine behaviour.
 
-use crate::artifacts::remodeling::{
+use crate::{
     default_remodeling_scene, image_asset_child_handle, remodeling_asset, replayable_remodeling_mesh_handle, resolve_bounded_remodeling_mesh, FrameRef, ImageAsset, MediaKind, MediaStream, MeshSource, PackedF32, PackedU8, RemodelingDurableArtifact,
     RemodelingMesh, RemodelingSnapshot, SparseCloud,
 };
@@ -390,8 +390,8 @@ pub fn image_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Resu
 /// `📥️import` leaf's `deserialize_bytes`, all of which were cross-type `ArtifactPack` casts. Foreign
 /// dialects now reach this subset only through the typed `IoEntry` rows `io()` publishes.
 pub mod derived_composition {
-    use crate::artifacts::remodeling::standards::v1::subsets::any::schema::RemodelingAnalyzer;
-    use crate::artifacts::remodeling::RemodelingSnapshot;
+    use crate::standards::v1::subsets::any::schema::RemodelingAnalyzer;
+    use crate::RemodelingSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
@@ -432,7 +432,7 @@ pub use derived_composition::*;
 /// `compose_export_*` rows that sat beside it are deleted (see this file's module doc); every foreign
 /// hop now lives on the typed `io()` channel below.
 pub fn native_composer_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
-    use crate::artifacts::remodeling::standards::v1::subsets::any::schema::RemodelingComposer;
+    use crate::standards::v1::subsets::any::schema::RemodelingComposer;
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::ComposerEntry>> = std::sync::OnceLock::new();
     ENTRIES.get_or_init(|| vec![semio_framework_plugin::composer_entry_of::<RemodelingComposer>()]).as_slice()
 }
@@ -443,9 +443,9 @@ pub fn native_composer_entries() -> &'static [semio_framework_plugin::ComposerEn
 /// `dsl::LanguageSpec`s plus one `IoEntry` per registered foreign hop, preflighted and registered by
 /// `commit_artifact_declarations` (one `io_register` per subset).
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::artifacts::remodeling::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::artifacts::remodeling::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use crate::artifacts::remodeling::{RemodelingMutation, RemodelingSnapshot, REMODELING_DIALECT, REMODELING_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::{RemodelingMutation, RemodelingSnapshot, REMODELING_DIALECT, REMODELING_DOCUMENT_SCHEMA};
     use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
@@ -460,28 +460,28 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     id: "remodeling.document",
                     extension: Some("remodeling"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::remodeling::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::remodeling::dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::remodeling::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::remodeling::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("remodeling.document"),
                 },
                 dsl::LanguageSpec {
                     id: "remodeling.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::remodeling::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::remodeling::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::remodeling::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::remodeling::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("remodeling.op"),
                 },
                 dsl::LanguageSpec {
                     id: "remodeling.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::remodeling::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::remodeling::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("remodeling.diff"),
@@ -492,8 +492,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::remodeling::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::remodeling::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("remodeling.pack"),
                 },
                 dsl::LanguageSpec {
@@ -502,8 +502,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::remodeling::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::remodeling::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("remodeling.spr"),
                 },
             ]
@@ -561,8 +561,8 @@ mod io_tests {
     //! rows (`las` 0.11, `ply-rs`, `tobj`, `stl_io`) that belong in this subset's `🔮️oracle/🔣️.json`.
 
     use super::*;
-    use crate::artifacts::remodeling::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::artifacts::remodeling::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use semio_framework::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
     use semio_framework_plugin::mesh_from_kind;
@@ -765,7 +765,7 @@ mod io_tests {
         let pixels: Vec<u8> = (0..4 * 4 * 4).map(|i| (i % 256) as u8).collect();
         let image = SemioImageSnapshot { width: 4, height: 4, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: pixels.clone() }], ..SemioImageSnapshot::default() };
         let asset = image_asset_from_semio_image_snapshot(&image).expect("real png bridge encode");
-        scene.assets.insert("tex-1".into(), crate::artifacts::remodeling::store_remodeling_asset("tex-1", &asset));
+        scene.assets.insert("tex-1".into(), crate::store_remodeling_asset("tex-1", &asset));
         scene.results.mesh.texture_asset_id = Some("tex-1".into());
         let result = remodeling_png_export(&scene).expect("png export");
         assert_eq!(result.mime_type, "image/png");

@@ -2,7 +2,7 @@
 //! STANDARD-SUBSET-MECHANISM design.md §3). See the sibling `Deserializer`'s doc comment: this
 //! direction is symmetrically non-functional (format mismatch), preserved byte-for-byte and
 //! labeled `IoFidelity::Lossy` honestly.
-use crate::artifacts::curation::schema::snapshot::CurationSnapshot;
+use crate::schema::snapshot::CurationSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

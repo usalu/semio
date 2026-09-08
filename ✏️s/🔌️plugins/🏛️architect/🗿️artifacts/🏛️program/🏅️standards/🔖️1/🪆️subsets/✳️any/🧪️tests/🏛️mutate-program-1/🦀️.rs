@@ -343,12 +343,12 @@ const EXAMPLE_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/�
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_architect::artifacts::program::io::export::serializers::artifacts::zip::v2_0::any as export_zip;
-    use semio_s_plugin_architect::artifacts::program::standards::v1::subsets::any::schema::mutations::{
+    use semio_s_artifact_architect_program::io::export::serializers::artifacts::zip::v2_0::any as export_zip;
+    use semio_s_artifact_architect_program::standards::v1::subsets::any::schema::mutations::{
         apply_program_mutation_outcome, decode_program_mutation_json, decode_program_snapshot_json, encode_program_snapshot_json, inverse_program_mutation_steps, ProgramMutation,
     };
-    use semio_s_plugin_architect::artifacts::program::standards::v1::subsets::any::schema::snapshot::{parse_program_dsl, print_program_dsl};
-    use semio_s_plugin_architect::artifacts::program::ProgramSnapshot;
+    use semio_s_artifact_architect_program::standards::v1::subsets::any::schema::snapshot::{parse_program_dsl, print_program_dsl};
+    use semio_s_artifact_architect_program::ProgramSnapshot;
     use semio_s_plugin_stdio_test_oracle::law;
 
     fn block_on<F: std::future::Future>(future: F) -> F::Output {

@@ -10,7 +10,7 @@
 //! positions, expressed as a plain `Inference` impl (no per-entity `InferredField` caching needed —
 //! there is nothing to invalidate incrementally over a flat template list).
 
-use crate::artifacts::block3d::Block3dSnapshot;
+use crate::Block3dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
@@ -52,7 +52,7 @@ impl protocol::InferenceSpec<Block3dSnapshot> for Block3dInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::block3d::standards::v1::subsets::any::schema::Block3dBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Block3dBuilder {
     type Snapshot = Block3dSnapshot;
     type Inference = Block3dInference;
 }
@@ -84,7 +84,7 @@ pub fn puzzle3d_catalog_fragment(definition: &Block3dSnapshot, wanted_tags: &[&s
         "meshUrl": resolve_active_mesh_url(definition, wanted_tags),
         "vortices": vortices,
     });
-    let vortex_kinds: Vec<Value> = crate::artifacts::block3d::vortex_kinds_of(definition).iter().map(|kind| json!({ "id": kind.id.as_str(), "name": kind.name.as_str(), "label": kind.label.as_str(), "color": kind.color.as_str(), "defaultCableKind": kind.default_cable_kind.as_str() })).collect();
+    let vortex_kinds: Vec<Value> = crate::vortex_kinds_of(definition).iter().map(|kind| json!({ "id": kind.id.as_str(), "name": kind.name.as_str(), "label": kind.label.as_str(), "color": kind.color.as_str(), "defaultCableKind": kind.default_cable_kind.as_str() })).collect();
     let kind_compatibility: Vec<Value> = definition.compatibility.iter().map(|rule| json!({ "source": rule.source.as_str(), "target": rule.target.as_str(), "bidirectional": rule.bidirectional })).collect();
     json!({
         "schema": "manifest",
@@ -118,7 +118,7 @@ pub fn block3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescr
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::block3d::{Block3dVortexTemplate, BLOCK_3D_SCHEMA};
+    use crate::{Block3dVortexTemplate, BLOCK_3D_SCHEMA};
     use crate::{BlockKindIdentity, BlockRepresentation};
     use protocol::Inference;
 

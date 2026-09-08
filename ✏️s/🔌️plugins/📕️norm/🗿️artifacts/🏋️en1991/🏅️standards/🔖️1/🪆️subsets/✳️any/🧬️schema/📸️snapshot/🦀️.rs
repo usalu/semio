@@ -1,11 +1,11 @@
 //! 🧬️ En1991 snapshot schema — artifact-lane fields only.
 
 use crate::document::{AnnexChoice, ImposedCategory};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 pub mod part_1_2 {
-    pub use crate::artifacts::en1991::part_1_2::FireCurve;
+    pub use crate::part_1_2::FireCurve;
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]

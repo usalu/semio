@@ -1,7 +1,7 @@
 //! 🔺️ `create-geometry` — sparse diff construction.
 
 use super::CreateGeometry;
-use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
+use crate::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
 /// 🔺️ A duplicate id is `mutation.duplicate-id` — an id-keyed entity that already exists cannot be

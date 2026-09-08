@@ -1,8 +1,8 @@
 //! 🏋️ 🏋️ FEM 3D app commands command — `add-nodal-load`.
 
-use crate::artifacts::fem3d::mutations::{add_load, create_load_case};
-use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::{Fem3dSnapshot, FemLoad, FemLoadCase};
+use crate::mutations::{add_load, create_load_case};
+use crate::op::Fem3dMutation;
+use crate::{Fem3dSnapshot, FemLoad, FemLoadCase};
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -29,7 +29,7 @@ fn add_load_mutation(doc: &Fem3dSnapshot, case_id: Option<&str>, load: FemLoad) 
 /// existing case's loads for `next_id` continuity, or starts fresh for a synthesized case.
 fn next_load_id(doc: &Fem3dSnapshot, case_id: Option<&str>) -> String {
     let loads = resolve_load_case(doc, case_id).map(|lc| lc.loads).unwrap_or_default();
-    crate::app_surface::next_id(loads.iter().map(|l| crate::artifacts::fem3d::load_id(l).to_string()), "l")
+    crate::app_surface::next_id(loads.iter().map(|l| crate::load_id(l).to_string()), "l")
 }
 
 //#region 🔖️AddNodalLoad
@@ -59,7 +59,7 @@ fn next_load_id(doc: &Fem3dSnapshot, case_id: Option<&str>) -> String {
 #[dsl(keyword = "add-nodal-load")]
 pub struct AddNodalLoad {
     pub node_id: String,
-    pub dof: crate::artifacts::fem3d::FemDof,
+    pub dof: crate::FemDof,
     pub value: f64,
     pub case_id: Option<String>,
 }
@@ -94,7 +94,7 @@ mod tests {
         let mut app = fem3d_empty_app().await;
         dispatch(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 0.0, y: 0.0, z: 0.0 })).await;
         let node_id = app.snapshot().expect("snapshot").nodes[0].id.clone();
-        dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id, dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: None })).await;
+        dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id, dof: crate::FemDof::Tz, value: -5000.0, case_id: None })).await;
         let snapshot = app.snapshot().expect("snapshot");
         assert_eq!(snapshot.load_cases.len(), 1);
         assert_eq!(snapshot.load_cases[0].id, "case-1");
@@ -115,7 +115,7 @@ mod tests {
         let mut app = app_with_load_case().await;
         dispatch(&mut app, Fem3dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false })).await;
         let live_case_id = app.snapshot().expect("snapshot").load_cases[1].id.clone();
-        dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id: "n2".into(), dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: Some(live_case_id) })).await;
+        dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id: "n2".into(), dof: crate::FemDof::Tz, value: -5000.0, case_id: Some(live_case_id) })).await;
         let snapshot = app.snapshot().expect("snapshot");
         assert!(snapshot.load_cases[1].loads.iter().any(|l| matches!(l, FemLoad::Nodal { .. })));
         assert!(snapshot.load_cases[0].loads.is_empty(), "the untargeted case must stay untouched");

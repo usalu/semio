@@ -2158,10 +2158,8 @@ impl InteractiveJob for MeshJob {
             MeshJobStage::IndexEdges => {
                 let face_count = self.triangulation.as_ref().map_or(0, |triangulation| triangulation.triangles.len());
                 if self.edge_index_candidate.is_none() {
-                    if self.edge_index_cursor < face_count {
-                        if !self.begin_edge_index_candidate(self.edge_index_cursor, self.edge_index_local_cursor) {
-                            return Self::fail(b"mesh-edge-index-triangle".to_vec());
-                        }
+                    if self.edge_index_cursor < face_count && !self.begin_edge_index_candidate(self.edge_index_cursor, self.edge_index_local_cursor) {
+                        return Self::fail(b"mesh-edge-index-triangle".to_vec());
                     }
                 } else {
                     match self.advance_edge_index_candidate() {

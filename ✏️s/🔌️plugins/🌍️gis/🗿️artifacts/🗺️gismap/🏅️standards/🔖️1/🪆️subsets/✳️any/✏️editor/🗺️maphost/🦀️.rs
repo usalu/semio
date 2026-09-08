@@ -4,10 +4,10 @@
 //! app-only view state (`Gis2dConfig`), and an artifact must never depend on an app. Every
 //! `🎮️commands/*` node that has to hit-test, frame or query the live map goes through here.
 
-use crate::artifacts::gismap::schema::gis_map_descriptor_json;
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::schema::gis_map_descriptor_json;
+use crate::GisMapSnapshot;
 use crate::editor::gis2d::config::Gis2dConfig;
-use framework_surface::tiled_map::MapHost;
+use semio_framework_surface::tiled_map::MapHost;
 use serde_json::Value;
 
 //#region 🔖️MapHost
@@ -39,7 +39,7 @@ pub fn map_host_from(document: &GisMapSnapshot, cfg: &Gis2dConfig) -> MapHost {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gismap::schema::default_document;
+    use crate::schema::default_document;
 
     #[semio_framework_async_macros::async_test]
     async fn the_host_mirrors_the_document_features_and_the_config_camera() {

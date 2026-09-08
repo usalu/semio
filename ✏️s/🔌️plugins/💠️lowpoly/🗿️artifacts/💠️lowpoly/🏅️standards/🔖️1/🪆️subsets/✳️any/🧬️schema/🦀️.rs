@@ -1,7 +1,7 @@
 //! 🧬️ Lowpoly artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::lowpoly::{LowpolyObject, LowpolyPaintLayer, LowpolySelection, LOWPOLY_PAINT_TEXTURE_SIZE};
-use schema::ArtifactSchema;
+use crate::{LowpolyObject, LowpolyPaintLayer, LowpolySelection, LOWPOLY_PAINT_TEXTURE_SIZE};
+use framework_schema::ArtifactSchema;
 use semio_framework_3d::mesh::HalfedgeMesh;
 use semio_framework_plugin::MeshData;
 
@@ -92,7 +92,7 @@ pub struct LowpolyArtifact {
 impl Default for LowpolyArtifact {
     fn default() -> Self {
         Self {
-            schema: crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA.into(),
+            schema: crate::LOWPOLY_DOCUMENT_SCHEMA.into(),
             objects: Vec::new(),
             active_object_id: None,
             selection: LowpolySelection::default(),
@@ -135,17 +135,17 @@ impl Default for LowpolyArtifact {
 
 impl LowpolyArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::lowpoly::LowpolySnapshot {
-        crate::artifacts::lowpoly::LowpolySnapshot { schema: self.schema.clone(), objects: self.objects.clone() }
+    pub fn to_snapshot(&self) -> crate::LowpolySnapshot {
+        crate::LowpolySnapshot { schema: self.schema.clone(), objects: self.objects.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::lowpoly::LowpolySnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::LowpolySnapshot) -> Self {
         Self { schema: snapshot.schema, objects: snapshot.objects, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::lowpoly::LowpolySnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::LowpolySnapshot) {
         self.schema = snapshot.schema;
         self.objects = snapshot.objects;
     }
@@ -154,31 +154,31 @@ impl LowpolyArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.lowpoly.lowpoly` — twenty handcrafted schema leaves.
-pub fn lowpoly_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn lowpoly_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.lowpoly.lowpoly",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -193,7 +193,7 @@ pub fn lowpoly_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
 /// 🧺 One caller-owned default document pair. The parent snapshot owns only the exact
 /// `ArtifactChild` handle while the app session owns its matching mesh payload.
 pub struct LowpolyOwnedDefaultDocument {
-    pub snapshot: crate::artifacts::lowpoly::LowpolySnapshot,
+    pub snapshot: crate::LowpolySnapshot,
     pub mesh_workspace: std::collections::HashMap<String, String>,
 }
 
@@ -202,13 +202,13 @@ pub struct LowpolyOwnedDefaultDocument {
 pub fn default_owned_document() -> LowpolyOwnedDefaultDocument {
     let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim");
     let mesh_json = mesh.to_json().expect("mesh json");
-    let snapshot = crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-1", "Unit Box");
+    let snapshot = crate::snapshot_from_mesh_json(&mesh_json, "obj-1", "Unit Box");
     let mesh_workspace = std::collections::HashMap::from([("obj-1".to_string(), mesh_json)]);
     LowpolyOwnedDefaultDocument { snapshot, mesh_workspace }
 }
 
 /// 🎞️ Default document projection used by tests and the play app.
-pub fn default_snapshot() -> crate::artifacts::lowpoly::LowpolySnapshot {
+pub fn default_snapshot() -> crate::LowpolySnapshot {
     default_owned_document().snapshot
 }
 
@@ -219,20 +219,20 @@ pub fn default_mesh_workspace() -> std::collections::HashMap<String, String> {
 
 /// 🔧️ Shared by the app's compute session and the `edit-paint-layer`/`insert-paint-layer` mutation
 /// leaves — a mutable lookup of an object by id within a projection. Relocated from `⚙️engine`.
-pub fn object_mut<'a>(projection: &'a mut crate::artifacts::lowpoly::LowpolySnapshot, object_id: &str) -> Option<&'a mut LowpolyObject> {
+pub fn object_mut<'a>(projection: &'a mut crate::LowpolySnapshot, object_id: &str) -> Option<&'a mut LowpolyObject> {
     projection.objects.iter_mut().find(|object| object.id == object_id)
 }
 
 /// 🔧️ Shared by the app's compute session and `edit-paint-layer`'s `↩️inverse` leaf (which reads the
 /// currently-stored bytes at each run's offset to compute the undo runs). Relocated from `⚙️engine`.
-pub fn layer_pixels_at<'a>(projection: &'a crate::artifacts::lowpoly::LowpolySnapshot, object_id: &str, layer_index: usize) -> Option<&'a [u8]> {
+pub fn layer_pixels_at<'a>(projection: &'a crate::LowpolySnapshot, object_id: &str, layer_index: usize) -> Option<&'a [u8]> {
     projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map(|layer| layer.pixels.as_slice())
 }
 
 /// 🔎 Returns whether `s.lowpoly.lowpoly` is present in the process-local schema registry. Relocated
 /// from `⚙️engine` alongside `default_snapshot` (same rule; mirrors `s.space.home`'s identical move).
 pub fn artifact_schema_registered() -> bool {
-    ::schema::artifact_schema_descriptor_registered("s.lowpoly.lowpoly")
+    ::framework_schema::artifact_schema_descriptor_registered("s.lowpoly.lowpoly")
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -273,7 +273,7 @@ pub fn mesh_data_from_transfer(transfer: &dsl::DslValue, paint_texture: Option<S
 pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<serde_json::Value, String> {
     let halfedge = HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|err| format!("{err:?}"))?;
     let mesh_json = halfedge.to_json().map_err(|err| format!("{err:?}"))?;
-    let snapshot = crate::artifacts::lowpoly::snapshot_from_mesh_json(&mesh_json, "obj-1", "Imported Mesh");
+    let snapshot = crate::snapshot_from_mesh_json(&mesh_json, "obj-1", "Imported Mesh");
     Ok(dsl::ToValue::to_value(&snapshot).into())
 }
 
@@ -435,9 +435,9 @@ pub fn pixel_runs_from_diff(before: &[u8], after: &[u8]) -> Vec<(u32, Vec<u8>)> 
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::lowpoly::schema::diff::LowpolyDiff;
-    use crate::artifacts::lowpoly::schema::mutations::LowpolyMutation;
-    use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
+    use crate::schema::diff::LowpolyDiff;
+    use crate::schema::mutations::LowpolyMutation;
+    use crate::schema::snapshot::LowpolySnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -489,7 +489,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::lowpoly::LowpolySnapshot;
+    use crate::LowpolySnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -553,12 +553,12 @@ semio_framework_plugin::derive_artifact_facets!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::empty_paint_pixels;
+    use crate::empty_paint_pixels;
 
     #[semio_framework_async_macros::async_test]
     async fn default_snapshot_has_unit_box_object() {
         let projection = default_snapshot();
-        assert_eq!(projection.schema, crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA);
+        assert_eq!(projection.schema, crate::LOWPOLY_DOCUMENT_SCHEMA);
         assert_eq!(projection.objects.len(), 1);
         assert_eq!(projection.objects[0].id, "obj-1");
         assert_eq!(projection.objects[0].name, "Unit Box");
@@ -581,7 +581,7 @@ mod tests {
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
         let json = serde_json::to_string(&Into::<serde_json::Value>::into(dsl::ToValue::to_value(&projection))).unwrap();
-        let restored: crate::artifacts::lowpoly::LowpolySnapshot = dsl::FromValue::from_value(dsl::DslValue::from(serde_json::from_str::<serde_json::Value>(&json).unwrap())).unwrap();
+        let restored: crate::LowpolySnapshot = dsl::FromValue::from_value(dsl::DslValue::from(serde_json::from_str::<serde_json::Value>(&json).unwrap())).unwrap();
         assert_eq!(restored, projection);
     }
 
@@ -592,8 +592,8 @@ mod tests {
         // `LowpolyEngine` never exposed a `snapshot()`/apply-mutation API either) and constructed
         // the since-removed `LowpolyMutation::ObjectsPatch` bag variant. Rewritten against the real
         // `protocol::Mutation` diff/apply/inverse contract and the new `rename-object` mutation.
-        use crate::artifacts::lowpoly::mutations::rename_object;
-        use crate::artifacts::lowpoly::LowpolyMutation;
+        use crate::mutations::rename_object;
+        use crate::LowpolyMutation;
         use protocol::{Mutation, MutationDiff};
         let base = default_snapshot();
         let object_id = base.objects[0].id.clone();
@@ -683,7 +683,7 @@ mod tests {
 //#region 🔖️ExportConcreteForestMeshTests
 #[cfg(all(test, feature = "cad-fixtures"))]
 mod export_concrete_forest_mesh_tests {
-    use cad_plugin::artifacts::cad::io::geometry_import::{objects_from_fixture_model, parse_geometry};
+    use semio_s_artifact_cad_cad::io::geometry_import::{objects_from_fixture_model, parse_geometry};
     use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
     use std::collections::HashMap;

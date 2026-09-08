@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/extension/component.json",
+  "title": "OS Extension Contracts",
+  "$defs": {
+    "InstallationDirectoryV1": {
+      "title": "Installation Directory V1",
+      "type": "string",
+      "pattern": "^(?![📁📂📄])(?:\\p{Extended_Pictographic}\\uFE0F(?:\\u200D\\p{Extended_Pictographic}\\uFE0F)*|[0-9#*]\\uFE0F\\u20E3)[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 192
+    }
+  }
+}

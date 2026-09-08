@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `DeleteTargetVolume` — a real removal, never a whole-snapshot capture.
-use crate::artifacts::puzzle3d::diff::{Puzzle3dDiff, Puzzle3dTargetVolumesDelta};
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::{Puzzle3dDiff, Puzzle3dTargetVolumesDelta};
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::DeleteTargetVolume, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

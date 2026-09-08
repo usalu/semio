@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/library/caching/vite/session/schema.json",
+  "$ref": "#/$defs/Session",
+  "$defs": {
+    "Session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "id",
+        "owner",
+        "pid"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.nx.service/v1"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "Ready": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "session",
+        "url"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.nx.service-ready/v1"
+        },
+        "session": {
+          "$ref": "#/$defs/Session"
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^http://127\\.0\\.0\\.1:[1-9][0-9]{0,4}/$"
+        }
+      }
+    }
+  }
+}

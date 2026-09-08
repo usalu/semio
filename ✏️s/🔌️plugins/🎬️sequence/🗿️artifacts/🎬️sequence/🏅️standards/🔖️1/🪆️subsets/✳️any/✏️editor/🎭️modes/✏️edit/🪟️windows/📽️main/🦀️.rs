@@ -1,6 +1,6 @@
 //! 📽️ Sequence play app — the main node-graph window: the editable step/flow canvas.
 
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::SequenceSnapshot;
 use crate::editor::sequence::config::SequenceConfig;
 use crate::editor::sequence::host_from_snapshot;
 use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
@@ -38,7 +38,7 @@ fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "next".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-fn fixture_to_workflow(fixture: &infinite_board_port_directed_dag::DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
+fn fixture_to_workflow(fixture: &semio_framework_artifact_infinite_dag::DagFixture) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let nodes: Vec<NodeGraphNodeRecord> = fixture
         .nodes
         .iter()

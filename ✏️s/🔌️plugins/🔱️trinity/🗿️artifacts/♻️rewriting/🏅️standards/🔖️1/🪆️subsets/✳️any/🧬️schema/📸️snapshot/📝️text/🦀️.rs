@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 use store::ArtifactDsl;
 
 /// 📄️ The bundled Nakagin `label-core` rewrite rule, handcrafted in the `.rewriting` DSL — mirrors the
@@ -28,8 +28,8 @@ pub fn print_dsl(document: &RewritingSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jack::PropertyValue;
-    use crate::artifacts::rewriting::LayoutPoint;
+    use semio_s_artifact_trinity_jack::PropertyValue;
+    use crate::LayoutPoint;
     use ::store::os_store::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip};
     use std::collections::BTreeMap;
 

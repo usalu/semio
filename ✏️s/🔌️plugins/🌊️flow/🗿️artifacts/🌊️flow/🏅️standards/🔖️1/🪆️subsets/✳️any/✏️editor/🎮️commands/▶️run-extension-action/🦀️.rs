@@ -1,6 +1,6 @@
 //! 🧩️ 🧩️ Flow play app commands command — `run-extension-action`.
 
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::commands::evaluate::evaluate_result;
 use crate::editor::flow::commands::reorganize::reorganize_operations;
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};

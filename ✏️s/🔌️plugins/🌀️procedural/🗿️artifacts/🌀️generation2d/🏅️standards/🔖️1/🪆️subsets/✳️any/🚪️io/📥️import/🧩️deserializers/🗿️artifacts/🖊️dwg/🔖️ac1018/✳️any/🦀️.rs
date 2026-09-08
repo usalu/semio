@@ -1,5 +1,5 @@
 //! generation2d <- dwg
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::Generation2dSnapshot;
 use semio_s_artifact_stdio_dwg::{DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
 
 pub fn register() {}

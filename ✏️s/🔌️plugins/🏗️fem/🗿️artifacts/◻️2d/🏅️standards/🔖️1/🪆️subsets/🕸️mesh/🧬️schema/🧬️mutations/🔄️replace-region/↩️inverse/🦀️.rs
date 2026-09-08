@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ReplaceRegion` — recovers the pre-mutation region from `base`.
 use super::ReplaceRegion;
-use crate::artifacts::fem2d::mutations::Fem2dMutation;
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::mutations::Fem2dMutation;
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceRegion, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {

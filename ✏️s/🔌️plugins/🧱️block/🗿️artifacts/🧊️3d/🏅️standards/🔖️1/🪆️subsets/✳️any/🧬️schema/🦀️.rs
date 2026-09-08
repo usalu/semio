@@ -1,7 +1,7 @@
 //! 🧬️ Block3d artifact schema — every field with its state class.
 
-use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};
-use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexKindExtra, Block3dVortexTemplate};
+use crate::{Block3dBrushPreview, Block3dWindowView};
+use crate::{Block3dSnapshot, Block3dVortexKindExtra, Block3dVortexTemplate};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
@@ -168,7 +168,7 @@ pub fn block3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::block3d::{Block3dDiff, Block3dMutation, Block3dSnapshot};
+    use crate::{Block3dDiff, Block3dMutation, Block3dSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -220,7 +220,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::block3d::Block3dSnapshot;
+    use crate::Block3dSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

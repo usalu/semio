@@ -2,7 +2,7 @@
 //! by id.
 
 
-use crate::artifacts::vdi3805::{CurvePoint, Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{CurvePoint, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

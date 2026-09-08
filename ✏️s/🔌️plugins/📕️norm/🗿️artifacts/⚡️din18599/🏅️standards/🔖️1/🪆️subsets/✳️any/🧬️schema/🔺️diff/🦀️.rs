@@ -1,6 +1,6 @@
 //! 🧬️ Din18599 diff schema — sparse field delta over the artifact.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the Din18599 artifact. `climate` is a single-`Option` composed-child
@@ -17,7 +17,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Diff {
     #[state(artifact)]
-    pub use_class: Option<crate::artifacts::din18599::UseClass>,
+    pub use_class: Option<crate::UseClass>,
     #[state(artifact)]
     pub heated_area_m2: Option<f64>,
     #[state(artifact)]
@@ -28,7 +28,7 @@ pub struct Din18599Diff {
     pub h_v: Option<f64>,
     #[state(artifact)]
     #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle::optional"))]
-    pub climate: Option<crate::artifacts::din18599::Din18599ClimateChild>,
+    pub climate: Option<crate::Din18599ClimateChild>,
     #[state(artifact)]
     pub internal_gains_w_m2: Option<f64>,
     #[state(artifact)]

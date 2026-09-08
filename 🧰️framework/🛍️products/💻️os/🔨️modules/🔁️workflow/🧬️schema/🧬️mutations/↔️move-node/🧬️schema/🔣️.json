@@ -1,1 +1,0 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"node_id":{"type":"string"},"x":{"type":"number"},"y":{"type":"number"}},"required":["node_id","x","y"],"additionalProperties":false}

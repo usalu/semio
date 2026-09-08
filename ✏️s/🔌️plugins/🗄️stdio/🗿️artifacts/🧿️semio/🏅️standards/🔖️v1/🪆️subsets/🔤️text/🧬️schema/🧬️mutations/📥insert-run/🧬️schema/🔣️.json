@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/insert-run.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/insert-run/schema.json",
   "title": "InsertRun",
   "type": "object",
   "additionalProperties": false,
@@ -14,14 +14,13 @@
       "minimum": 0
     },
     "run": {
-      "title": "SemioTextRun",
+      "$ref": "#/$defs/SemioTextRun"
+    }
+  },
+  "$defs": {
+    "SemioTextRun": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "content",
-        "language",
-        "marks"
-      ],
       "properties": {
         "language": {
           "type": "string"
@@ -32,30 +31,34 @@
         "marks": {
           "type": "array",
           "items": {
-            "title": "SemioTextMark",
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "href",
-              "kind"
-            ],
-            "properties": {
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "Bold",
-                  "Italic",
-                  "Code",
-                  "Link"
-                ]
-              },
-              "href": {
-                "type": "string"
-              }
-            }
+            "$ref": "#/$defs/SemioTextMark"
           }
         }
       }
+    },
+    "SemioTextMark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/SemioTextMarkKind"
+        },
+        "href": {
+          "type": "string"
+        }
+      }
+    },
+    "SemioTextMarkKind": {
+      "type": "string",
+      "enum": [
+        "bold",
+        "italic",
+        "code",
+        "link"
+      ]
     }
   }
 }

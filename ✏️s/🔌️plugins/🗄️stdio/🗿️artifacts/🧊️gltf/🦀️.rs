@@ -100,11 +100,11 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::schema::gltf_artifact_schema_descriptor())
+        .schema(schema::gltf_artifact_schema_descriptor())
         .formats(formats)
-        .inferences(crate::schema::inferences::gltf_artifact_inference_descriptors())
+        .inferences(schema::inferences::gltf_artifact_inference_descriptors())
         .inference_services(gltf_inference_services())
-        .composers(crate::engine::io_registry::entries())
+        .composers(engine::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA)
         .try_build()
@@ -205,9 +205,9 @@ fn gltf_inference_leaf_service(inference_schema: &'static str, infer: ArtifactIn
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
-    let descriptor = crate::schema::inferences::gltf_inference_leaf_service_descriptor(id).ok_or_else(|| ArtifactInferenceExecutionError::new("stdio.gltf.inference.unknown-leaf", id))?;
+    let descriptor = schema::inferences::gltf_inference_leaf_service_descriptor(id).ok_or_else(|| ArtifactInferenceExecutionError::new("stdio.gltf.inference.unknown-leaf", id))?;
     let snapshot = <GltfSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.snapshot-decode", error.to_string()))?;
-    let assembly = <crate::schema::GltfBuilder as ArtifactInferrer>::infer(&snapshot);
+    let assembly = <schema::GltfBuilder as ArtifactInferrer>::infer(&snapshot);
     let value = (descriptor.encode)(&assembly.geometry.overall);
     let policy_hash = format!("{:016x}", stable_hash(request.policy));
     let dependency_hashes = request.dependencies.iter().map(|(name, bytes)| format!("{name}:{:016x}", stable_hash(bytes))).collect::<Vec<_>>();
@@ -215,7 +215,7 @@ fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRe
     let provenance = value.get("provenance").map(|provenance| pack::json_to_string(&pack::json_from_dsl_value(provenance))).into_iter().collect();
     let quality = value.get("quality").map_or_else(|| "unknown".into(), |quality| pack::json_to_string(&pack::json_from_dsl_value(quality)));
     let validity = value.get("validity").and_then(dsl::DslValue::as_str).unwrap_or("indeterminate").to_owned();
-    let envelope = crate::io::inferences::text::GltfInferenceLeafEnvelope {
+    let envelope = io::inferences::text::GltfInferenceLeafEnvelope {
         id: id.into(),
         algorithm_version: descriptor.algorithm_version,
         policy_hash: policy_hash.clone(),
@@ -227,7 +227,7 @@ fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRe
         provenance,
         value,
     };
-    let canonical_payload = crate::io::inferences::binary::encode_gltf_inference_leaf_binary(&envelope).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.leaf-binary-encode", error.to_string()))?;
+    let canonical_payload = io::inferences::binary::encode_gltf_inference_leaf_binary(&envelope).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.leaf-binary-encode", error.to_string()))?;
     Ok(ArtifactInferenceExecution { canonical_payload, diagnostics: Vec::new(), validity, quality: envelope.quality, complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
 }
 
@@ -585,28 +585,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.gltf",
                     extension: Some("gltf"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.gltf"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.gltf.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::io::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::io::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::io::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::io::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(io::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(io::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.gltf.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.gltf.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.gltf.diff"),
@@ -617,8 +617,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.gltf.pack"),
                 },
                 dsl::LanguageSpec {
@@ -627,8 +627,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::io::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::io::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(io::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.gltf.spr"),
                 },
             ]

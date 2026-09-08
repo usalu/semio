@@ -4,7 +4,7 @@
 //! of perpetuating the mislabeled payload. See the sibling import leaf's `stdio_gap` note: stdio
 //! has no drawing<->dwg bridge yet, so real DWG export is out of scope for this cutover regardless.
 
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::DrawingSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

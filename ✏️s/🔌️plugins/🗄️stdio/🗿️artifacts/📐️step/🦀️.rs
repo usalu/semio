@@ -92,10 +92,10 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::schema::step_artifact_schema_descriptor())
+        .schema(schema::step_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::schema::inferences::step_artifact_inference_descriptor()])
-        .composers(crate::engine::io_registry::entries())
+        .inferences([schema::inferences::step_artifact_inference_descriptor()])
+        .composers(engine::io_registry::entries())
         .subset_validators(step_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA)
@@ -112,12 +112,12 @@ fn step_subset_validators() -> &'static [semio_framework_plugin::SubsetValidator
     ENTRIES
         .get_or_init(|| {
             vec![
-                subset_validator_entry_of::<crate::standards::v_ap214::subsets::cc1::io::StepCc1Validator>(),
-                subset_validator_entry_of::<crate::standards::v_ap214::subsets::cc2::io::StepCc2Validator>(),
-                subset_validator_entry_of::<crate::standards::v_ap214::subsets::cc3::io::StepCc3Validator>(),
-                subset_validator_entry_of::<crate::standards::v_ap214::subsets::cc4::io::StepCc4Validator>(),
-                subset_validator_entry_of::<crate::standards::v_ap214::subsets::cc5::io::StepCc5Validator>(),
-                subset_validator_entry_of::<crate::standards::v_ap214::subsets::cc6::io::StepCc6Validator>(),
+                subset_validator_entry_of::<standards::v_ap214::subsets::cc1::io::StepCc1Validator>(),
+                subset_validator_entry_of::<standards::v_ap214::subsets::cc2::io::StepCc2Validator>(),
+                subset_validator_entry_of::<standards::v_ap214::subsets::cc3::io::StepCc3Validator>(),
+                subset_validator_entry_of::<standards::v_ap214::subsets::cc4::io::StepCc4Validator>(),
+                subset_validator_entry_of::<standards::v_ap214::subsets::cc5::io::StepCc5Validator>(),
+                subset_validator_entry_of::<standards::v_ap214::subsets::cc6::io::StepCc6Validator>(),
             ]
         })
         .as_slice()
@@ -137,28 +137,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.step",
                     extension: Some("step"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.step"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.step.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.step.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.step.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.step.diff"),
@@ -169,8 +169,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.step.pack"),
                 },
                 dsl::LanguageSpec {
@@ -179,8 +179,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.step.spr"),
                 },
             ]

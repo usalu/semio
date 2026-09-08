@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/remove-triangle.json",
+  "$id": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/remove-triangle/schema.json",
   "title": "RemoveTriangle",
   "type": "object",
   "additionalProperties": false,

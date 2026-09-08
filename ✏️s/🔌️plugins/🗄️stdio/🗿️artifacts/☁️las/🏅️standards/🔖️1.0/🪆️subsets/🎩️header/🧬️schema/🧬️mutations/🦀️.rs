@@ -764,14 +764,8 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[test]
     fn codec_retention_law() {
-        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/☁️las/📚️examples/🎬️demo/🖼️assets/🧊️.las"));
-        let snap = match bytes {
-            Ok(b) => crate::engine::decode_las(&b).expect("decode fixture"),
-            // Fixture path is relative to this crate's manifest dir under the workspace layout;
-            // fall back to a synthetic snapshot so this law still exercises decode -> encode ->
-            // decode identity even if the workspace root differs at test time.
-            Err(_) => base_snapshot(),
-        };
+        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1.0/🪆️subsets/🎩️header/📚️examples/🎬️demo/🖼️assets/🧊️.las")).expect("read committed LAS fixture");
+        let snap = crate::engine::decode_las(&bytes).expect("decode fixture");
         let reencoded = crate::engine::encode_las(&snap).expect("re-encode fixture");
         let redecoded = crate::engine::decode_las(&reencoded).expect("re-decode fixture");
         // Structural fields are always recomputed on encode (see `LasHeader`'s doc comment); the

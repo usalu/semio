@@ -4,7 +4,7 @@
 //! import would need to synthesize `LowpolyObject`s (and resolvable mesh child artifacts) from
 //! parsed nodes/meshes -- an out-of-scope architecture change, not a pure `&GltfSnapshot -> …`
 //! mapping.
-use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
+use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_gltf::GltfSnapshot;
 
 pub fn register() {}

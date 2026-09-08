@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/mutation/set-dimensions.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/mutation/set-dimensions/schema.json",
   "title": "SetDimensions",
   "type": "object",
   "additionalProperties": false,

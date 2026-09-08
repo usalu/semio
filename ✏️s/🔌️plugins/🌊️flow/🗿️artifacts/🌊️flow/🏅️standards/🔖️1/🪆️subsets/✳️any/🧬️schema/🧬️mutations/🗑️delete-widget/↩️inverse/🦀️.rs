@@ -2,12 +2,12 @@
 //! its layout entry, then re-`connect`s severed synapses at ascending original indices (taxonomy
 //! `## Addressing convention` §5 — inverse always computed from `base`, never by inverting the diff
 //! structurally).
-use crate::artifacts::flow::schema::mutations::connect_widgets::ConnectWidgets;
-use crate::artifacts::flow::schema::mutations::create_widget::CreateWidget;
-use crate::artifacts::flow::schema::mutations::move_widgets::MoveWidgets;
-use crate::artifacts::flow::schema::mutations::FlowMutation;
-use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
-use flow::FlowLayoutEntry;
+use crate::schema::mutations::connect_widgets::ConnectWidgets;
+use crate::schema::mutations::create_widget::CreateWidget;
+use crate::schema::mutations::move_widgets::MoveWidgets;
+use crate::schema::mutations::FlowMutation;
+use crate::{flow_working_scene, FlowSnapshot};
+use semio_framework_artifact_flow_flow::FlowLayoutEntry;
 use protocol::Identified;
 
 use super::DeleteWidget;

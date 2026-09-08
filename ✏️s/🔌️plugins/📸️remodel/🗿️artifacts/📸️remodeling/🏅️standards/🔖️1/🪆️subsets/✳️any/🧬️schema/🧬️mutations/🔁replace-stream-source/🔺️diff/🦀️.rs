@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceStreamSource`. A missing stream ⇒ Error
 //! `mutation.target-missing`.
-use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingMediaStreamList};
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::{RemodelingDiff, RemodelingMediaStreamList};
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceStreamSource, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

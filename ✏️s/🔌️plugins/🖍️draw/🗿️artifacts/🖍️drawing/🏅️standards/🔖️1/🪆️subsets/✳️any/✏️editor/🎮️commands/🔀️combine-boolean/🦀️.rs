@@ -1,8 +1,8 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `combine-boolean`.
 
-use crate::artifacts::drawing::op::DrawingMutation;
-use crate::artifacts::drawing::schema::create_drawing_boolean_layer;
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::op::DrawingMutation;
+use crate::schema::create_drawing_boolean_layer;
+use crate::DrawingSnapshot;
 use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
 use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -22,5 +22,5 @@ pub fn handle(payload: &CombineBoolean, doc: &ArtifactView<'_, DrawingSnapshot>,
         return Ok(Emit::default());
     }
     let layer = create_drawing_boolean_layer("Boolean", &payload.operation, ids);
-    Ok(Emit { artifact_mutations: vec![crate::artifacts::drawing::mutations::create_layer(None, Some(document.layers.len()), layer)], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![crate::mutations::create_layer(None, Some(document.layers.len()), layer)], ..Default::default() })
 }

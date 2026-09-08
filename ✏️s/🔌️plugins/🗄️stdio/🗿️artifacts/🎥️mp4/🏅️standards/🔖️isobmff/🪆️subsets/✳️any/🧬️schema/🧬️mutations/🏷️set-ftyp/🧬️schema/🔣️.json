@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/mp4/isobmff/any/mutation/set-ftyp.json",
+  "$id": "https://semio.tech/schema/s/stdio/mp4/isobmff/any/mutation/set-ftyp/schema.json",
   "title": "SetFtyp",
   "type": "object",
   "additionalProperties": false,

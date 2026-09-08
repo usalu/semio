@@ -3,11 +3,17 @@
 //! import/export leaves under 📥️import/🧩️deserializers and 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
+    #[cfg(feature = "conversion-cad")]
     use crate::standards::v1::subsets::cad::io::export::serializers::artifacts::dwg::v_ac1024::any::SemioCadToDwg;
+    #[cfg(feature = "conversion-cad")]
     use crate::standards::v1::subsets::cad::io::export::serializers::artifacts::dxf::v_r12::any::SemioCadToDxf;
+    #[cfg(feature = "conversion-cad")]
     use crate::standards::v1::subsets::cad::io::export::serializers::artifacts::step::v_ap214::any::SemioCadToStep;
+    #[cfg(feature = "conversion-cad")]
     use crate::standards::v1::subsets::cad::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioCadFromDwg;
+    #[cfg(feature = "conversion-cad")]
     use crate::standards::v1::subsets::cad::io::import::deserializers::artifacts::dxf::v_r12::any::SemioCadFromDxf;
+    #[cfg(feature = "conversion-cad")]
     use crate::standards::v1::subsets::cad::io::import::deserializers::artifacts::step::v_ap214::any::SemioCadFromStep;
     use crate::standards::v1::subsets::cad::schema::snapshot::{CadEntity, SemioCadSnapshot};
     use crate::standards::v1::subsets::cad::schema::SemioCadAnalyzer;
@@ -113,8 +119,10 @@ pub mod derived_composition {
     /// unsupported-content bridge (this codec's D1/D2 decode depth never reaches entity bitcode);
     /// step bridges only the two AP214 curve entities (LINE/CIRCLE) with a real B-rep/solid
     /// equivalent — see each pair's own leaf doc comment for the full rationale.
+    #[cfg(feature = "conversion-cad")]
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-cad")]
     fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES
             .get_or_init(|| {
@@ -141,6 +149,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-cad")]
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -155,7 +164,7 @@ pub mod derived_composition {
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-cad"))]
     mod tests {
         use super::*;
         use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;

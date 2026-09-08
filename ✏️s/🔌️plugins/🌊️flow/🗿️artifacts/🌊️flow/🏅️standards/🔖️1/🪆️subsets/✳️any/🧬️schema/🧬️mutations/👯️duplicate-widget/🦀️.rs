@@ -5,8 +5,8 @@
 //! A composite owns no `🔺️diff`/`↩️inverse` of its own — both fold from `plan` via
 //! `protocol::fold_plan_diff`/`fold_plan_inverse`, wired in by `#[derive(dsl_derive::CompositeMutation)]`.
 
-use crate::artifacts::flow::FlowSnapshot;
-use crate::artifacts::flow::schema::mutations::FlowMutation;
+use crate::FlowSnapshot;
+use crate::schema::mutations::FlowMutation;
 use protocol::{CompositeMutationKind, PlanError, Planner, SemanticDescriptor};
 
 //#region 👯️DuplicateWidget

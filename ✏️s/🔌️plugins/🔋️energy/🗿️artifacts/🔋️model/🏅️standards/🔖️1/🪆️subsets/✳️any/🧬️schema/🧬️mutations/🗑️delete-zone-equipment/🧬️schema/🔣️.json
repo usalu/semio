@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/delete-zone-equipment.json",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/delete-zone-equipment/schema.json",
   "title": "DeleteZoneEquipment",
   "type": "object",
   "additionalProperties": false,

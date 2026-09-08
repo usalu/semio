@@ -2,8 +2,8 @@
 //! empty (`Vec::new()`) when the slot was already absent (nothing to undo).
 
 use super::DeleteShapeModel;
-use crate::artifacts::cad::mutations::{create_shape_model, CadMutation};
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::{create_shape_model, CadMutation};
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &DeleteShapeModel, base: &CadSnapshot) -> Vec<CadMutation> {

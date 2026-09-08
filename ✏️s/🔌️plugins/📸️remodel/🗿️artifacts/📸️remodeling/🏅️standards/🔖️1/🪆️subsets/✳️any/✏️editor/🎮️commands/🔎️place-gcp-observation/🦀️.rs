@@ -1,8 +1,8 @@
 //! 🎯️ 🎯️ Remodeling play app commands command — `place-gcp-observation`.
 
-use crate::artifacts::remodeling::mutations::add_gcp_observation;
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::{GcpObservation, RemodelingSnapshot};
+use crate::mutations::add_gcp_observation;
+use crate::op::RemodelingMutation;
+use crate::{GcpObservation, RemodelingSnapshot};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

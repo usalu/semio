@@ -7,9 +7,9 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use crate::artifacts::curation::schema::mutations::SourcingMutation;
-use crate::artifacts::curation::schema::mutations::{change_curated_item_count, create_curated_item, delete_curated_item};
-use crate::artifacts::curation::CuratedItem;
+pub use crate::schema::mutations::SourcingMutation;
+use crate::schema::mutations::{change_curated_item_count, create_curated_item, delete_curated_item};
+use crate::CuratedItem;
 use protocol::OpText;
 
 //#region 🔖️OpText

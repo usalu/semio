@@ -1,6 +1,6 @@
 //! 🛍️ Animate presentation app panel — the catalogue: tile-seeding templates and the active figure source.
 
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::PresentationSnapshot;
 use crate::editor::animate::terminology::AnimatePresentationLabels;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use semio_framework_ui_contract::{button, column, field, input, section, text, BuiltNode, HasBase, InputKind, Trigger, UiValue};
@@ -34,7 +34,7 @@ fn catalogue_button(id: &str, label: &str, action: &str, args: Option<UiValue>) 
 }
 
 fn source_args() -> semio_framework_plugin::UiAssemblyResult<UiValue> {
-    let source = crate::artifacts::presentation::default_figure_tile_source();
+    let source = crate::default_figure_tile_source();
     let frame = ui_map([("height", UiValue::Number(source.frame.height)), ("width", UiValue::Number(source.frame.width)), ("x", UiValue::Number(source.frame.x)), ("y", UiValue::Number(source.frame.y))])?;
     let mut entries = vec![("frame", frame), ("kind", UiValue::Text(ui_text(&source.kind)?))];
     if let Some(value) = source.pdf_page { entries.push(("pdfPage", UiValue::Number(f64::from(value)))); }
@@ -44,7 +44,7 @@ fn source_args() -> semio_framework_plugin::UiAssemblyResult<UiValue> {
 }
 
 pub fn render(deck: &PresentationSnapshot, labels: &AnimatePresentationLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let (source, _) = crate::artifacts::presentation::presentation_working_scene(deck);
+    let (source, _) = crate::presentation_working_scene(deck);
     let templates = [
         ui_node(text(ui_label(labels.catalogue_seed_desc.as_str())?), "animate.presentation.play.catalogue.description")?,
         catalogue_button("animate.presentation.play.catalogue.seed-2x2", labels.catalogue_seed_2x2.as_str(), "seedGrid", Some(ui_map([("columns", UiValue::Number(2.0)), ("rows", UiValue::Number(2.0))])?))?,

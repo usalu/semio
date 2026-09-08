@@ -1,0 +1,899 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/norm/schema.json",
+  "$defs": {
+    "NormRetainedCommandDispositions": {
+      "title": "NormRetainedCommandDispositions",
+      "description": "📕️ The language-neutral cohort law every Norm editor is measured against: the one shared bounded command-job factory, the three publication contracts and the three routes it publishes, the fifteen norm variants that carry them, the 45 retained identities that census implies, and the owned second-implementation oracle that reads it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "factory",
+        "publicationContracts",
+        "routes",
+        "apps",
+        "expected",
+        "oracle"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 2
+        },
+        "factory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "payloadSchema",
+            "maximumRawBytes",
+            "shared"
+          ],
+          "properties": {
+            "type": {
+              "const": "NormBoundedCommandJobFactory"
+            },
+            "payloadSchema": {
+              "const": "norm.tool-command.v1"
+            },
+            "maximumRawBytes": {
+              "const": 8192
+            },
+            "shared": {
+              "const": true
+            }
+          }
+        },
+        "publicationContracts": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": [
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedPublicationContract"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "toolId": {
+                      "const": "setSnapshot"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedPublicationContract"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "toolId": {
+                      "const": "evaluate"
+                    },
+                    "lanes": {
+                      "const": [
+                        "HostOnly"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedPublicationContract"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "toolId": {
+                      "const": "setSelectedCheckIndex"
+                    },
+                    "lanes": {
+                      "const": [
+                        "Config"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "additionalItems": false
+        },
+        "routes": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": [
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedRoute"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "const": "setSnapshot"
+                    },
+                    "emittedLanes": {
+                      "const": [
+                        "artifact"
+                      ]
+                    },
+                    "publicationLanes": {
+                      "const": [
+                        "Artifact"
+                      ]
+                    },
+                    "execution": {
+                      "const": "bounded"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedRoute"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "const": "evaluate"
+                    },
+                    "emittedLanes": {
+                      "const": []
+                    },
+                    "publicationLanes": {
+                      "const": [
+                        "HostOnly"
+                      ]
+                    },
+                    "execution": {
+                      "const": "bounded"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedRoute"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "const": "setSelectedCheckIndex"
+                    },
+                    "emittedLanes": {
+                      "const": [
+                        "config"
+                      ]
+                    },
+                    "publicationLanes": {
+                      "const": [
+                        "Config"
+                      ]
+                    },
+                    "execution": {
+                      "const": "bounded"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "additionalItems": false
+        },
+        "apps": {
+          "type": "array",
+          "minItems": 15,
+          "maxItems": 15,
+          "uniqueItems": true,
+          "items": [
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "din4108"
+                    },
+                    "controller": {
+                      "const": "s.norm.din4108@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.din4108/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "din16798"
+                    },
+                    "controller": {
+                      "const": "s.norm.din16798@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.din16798/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "din18599"
+                    },
+                    "controller": {
+                      "const": "s.norm.din18599@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.din18599/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "en1990"
+                    },
+                    "controller": {
+                      "const": "s.norm.en1990@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.en1990/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "en1991"
+                    },
+                    "controller": {
+                      "const": "s.norm.en1991@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.en1991/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "en1992"
+                    },
+                    "controller": {
+                      "const": "s.norm.en1992@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.en1992/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "en1993"
+                    },
+                    "controller": {
+                      "const": "s.norm.en1993@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.en1993/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "en1994"
+                    },
+                    "controller": {
+                      "const": "s.norm.en1994@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.en1994/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "en1995"
+                    },
+                    "controller": {
+                      "const": "s.norm.en1995@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.en1995/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "en1996"
+                    },
+                    "controller": {
+                      "const": "s.norm.en1996@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.en1996/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "en1997"
+                    },
+                    "controller": {
+                      "const": "s.norm.en1997@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.en1997/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "en1998"
+                    },
+                    "controller": {
+                      "const": "s.norm.en1998@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.en1998/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "en1999"
+                    },
+                    "controller": {
+                      "const": "s.norm.en1999@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.en1999/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "iso16757"
+                    },
+                    "controller": {
+                      "const": "s.norm.iso16757@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.iso16757/v1"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/NormRetainedApp"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "variant": {
+                      "const": "vdi3805"
+                    },
+                    "controller": {
+                      "const": "s.norm.vdi3805@1/*#editor"
+                    },
+                    "documentSchema": {
+                      "const": "semio.norm.vdi3805/v1"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "additionalItems": false
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "apps",
+            "routesPerApp",
+            "identities",
+            "retained",
+            "batchOnlyPendingRewrite"
+          ],
+          "properties": {
+            "apps": {
+              "const": 15
+            },
+            "routesPerApp": {
+              "const": 3
+            },
+            "identities": {
+              "const": 45
+            },
+            "retained": {
+              "const": 45
+            },
+            "batchOnlyPendingRewrite": {
+              "const": 0
+            }
+          }
+        },
+        "oracle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "library",
+            "scope",
+            "ownedInterface",
+            "runtimeDependency"
+          ],
+          "properties": {
+            "library": {
+              "const": "serde_json"
+            },
+            "scope": {
+              "const": "test-only-existing-dependency"
+            },
+            "ownedInterface": {
+              "const": "NormRetainedDispositionOracle"
+            },
+            "runtimeDependency": {
+              "const": false
+            }
+          }
+        }
+      }
+    },
+    "NormRetainedPublicationContract": {
+      "title": "NormRetainedPublicationContract",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "toolId",
+        "lanes"
+      ],
+      "properties": {
+        "toolId": {
+          "type": "string"
+        },
+        "lanes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "HostOnly",
+              "Artifact",
+              "Config",
+              "Draft",
+              "Presence",
+              "Transient",
+              "Child"
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "NormRetainedRoute": {
+      "title": "NormRetainedRoute",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "emittedLanes",
+        "publicationLanes",
+        "execution",
+        "admission",
+        "reducer"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "emittedLanes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "artifact",
+              "config",
+              "draft",
+              "presence",
+              "transient",
+              "child",
+              "host"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "publicationLanes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "HostOnly",
+              "Artifact",
+              "Config",
+              "Draft",
+              "Presence",
+              "Transient",
+              "Child"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "execution": {
+          "enum": [
+            "bounded",
+            "resumable",
+            "placeholder"
+          ]
+        },
+        "admission": {
+          "const": "migrated"
+        },
+        "reducer": {
+          "type": "string",
+          "minLength": 24
+        }
+      }
+    },
+    "NormRetainedApp": {
+      "title": "NormRetainedApp",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "variant",
+        "controller",
+        "documentSchema"
+      ],
+      "properties": {
+        "variant": {
+          "type": "string"
+        },
+        "controller": {
+          "type": "string"
+        },
+        "documentSchema": {
+          "type": "string"
+        }
+      }
+    },
+    "NormConfigMutationCases": {
+      "title": "NormConfigMutationCases",
+      "description": "📕️ The `semio.norm.config-mutation/v1` conformance vector: the reducer cases, the hostile payloads, and the text and binary wire rows the independent TypeScript oracle in `📦️packages/🦀️rust/📜️script.ts` replays against the owned `☑️change-selected-check-index` payload schema.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractId",
+        "cases",
+        "invalid",
+        "text",
+        "binary"
+      ],
+      "properties": {
+        "contractId": {
+          "const": "semio.norm.config-mutation/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "before",
+              "payload",
+              "after",
+              "warning"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/NormConfigMutationCaseId"
+              },
+              "before": {
+                "$ref": "#/$defs/NormConfigMutationCaseIndex"
+              },
+              "payload": {
+                "type": "object"
+              },
+              "after": {
+                "$ref": "#/$defs/NormConfigMutationCaseIndex"
+              },
+              "warning": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "invalid": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object"
+          }
+        },
+        "text": {
+          "type": "array",
+          "minItems": 13,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "wire",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/NormConfigMutationCaseId"
+              },
+              "wire": {
+                "type": "string",
+                "maxLength": 256
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "after": {
+                "$ref": "#/$defs/NormConfigMutationCaseIndex"
+              }
+            }
+          }
+        },
+        "binary": {
+          "type": "array",
+          "minItems": 25,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "hex",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/NormConfigMutationCaseId"
+              },
+              "hex": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{2})*$",
+                "maxLength": 64
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "after": {
+                "$ref": "#/$defs/NormConfigMutationCaseIndex"
+              }
+            }
+          }
+        }
+      }
+    },
+    "NormConfigMutationCaseId": {
+      "title": "NormConfigMutationCaseId",
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "NormConfigMutationCaseIndex": {
+      "title": "NormConfigMutationCaseIndex",
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "NormSurfaceRenderCases": {
+      "title": "NormSurfaceRenderCases",
+      "description": "📕️ The `semio.norm.surface-render/v1` inventory: the thirty `s.norm.<variant>@1/*#<role>` app identities the fifteen playground variants publish, and the body keys each role's window must render.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractId",
+        "rows"
+      ],
+      "properties": {
+        "contractId": {
+          "const": "semio.norm.surface-render/v1"
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 30,
+          "maxItems": 30,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "variant",
+              "role",
+              "appId",
+              "bodyKeys"
+            ],
+            "properties": {
+              "variant": {
+                "enum": [
+                  "din4108",
+                  "din16798",
+                  "din18599",
+                  "en1990",
+                  "en1991",
+                  "en1992",
+                  "en1993",
+                  "en1994",
+                  "en1995",
+                  "en1996",
+                  "en1997",
+                  "en1998",
+                  "en1999",
+                  "iso16757",
+                  "vdi3805"
+                ]
+              },
+              "role": {
+                "enum": [
+                  "editor",
+                  "viewer"
+                ]
+              },
+              "appId": {
+                "type": "string",
+                "pattern": "^s\\.norm\\.[a-z0-9]+@1/\\*#(editor|viewer)$"
+              },
+              "bodyKeys": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 6,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

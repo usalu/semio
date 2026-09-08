@@ -1,9 +1,9 @@
 //! 🔺️ `rename-layer` sparse diff — writes only the layer's `name` via the existing `diff_patch_layer`
 //! helper (the `RasterLayerPatch` here is a diff-internal type only, never the mutation's own payload).
 
-use crate::artifacts::raster::diff::{diff_patch_layer, RasterDiff};
-use crate::artifacts::raster::schema::{find_layer, layer_name};
-use crate::artifacts::raster::{RasterLayerPatch, RasterSnapshot};
+use crate::diff::{diff_patch_layer, RasterDiff};
+use crate::schema::{find_layer, layer_name};
+use crate::{RasterLayerPatch, RasterSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameLayer, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {

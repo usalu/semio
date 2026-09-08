@@ -1,5 +1,5 @@
 //! puzzle5d -> zip
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::Puzzle5dSnapshot;
 
 pub fn register() {}
 

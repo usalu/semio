@@ -1,8 +1,8 @@
 //! ♻️ Drawing mutation — `ReplaceLayerStroke`: whole-value swap of one layer's structured `stroke`
 //! sub-payload.
-use crate::artifacts::drawing::diff::DrawingDiff;
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::{DrawingSnapshot, StrokeStyle};
+use crate::diff::DrawingDiff;
+use crate::mutations::DrawingMutation;
+use crate::{DrawingSnapshot, StrokeStyle};
 
 //#region 🔖️Mutation
 /// ♻️ `replace-layer-stroke` payload.

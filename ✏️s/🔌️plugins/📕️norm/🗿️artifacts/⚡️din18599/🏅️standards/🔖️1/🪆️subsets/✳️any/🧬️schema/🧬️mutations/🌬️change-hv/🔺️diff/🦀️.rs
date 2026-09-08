@@ -1,8 +1,8 @@
 //! 🔺️ `change-hv` sparse diff construction — writes only `Din18599Diff.h_v` from the payload.
 
-use crate::artifacts::din18599::diff::Din18599Diff;
-use crate::artifacts::din18599::mutations::change_h_v::ChangeHV;
-use crate::artifacts::din18599::Din18599Snapshot;
+use crate::diff::Din18599Diff;
+use crate::mutations::change_h_v::ChangeHV;
+use crate::Din18599Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeHV, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {

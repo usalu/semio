@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceJob` — a whole-value swap of `job`, which is always present
 //! on the snapshot, so there is no missing-target case to detect.
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::RemodelingDiff;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceJob, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

@@ -1,8 +1,8 @@
 //! 🔺️ Sourcing curation artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::curation::schema::diff::{CurationCuratedDelta, CurationDiff, CurationStockExtraDelta};
-use crate::artifacts::curation::schema::CurationArtifact;
-use crate::artifacts::curation::{CurationSnapshot, CuratedItem, ObjectKindExtra};
+use crate::schema::diff::{CurationCuratedDelta, CurationDiff, CurationStockExtraDelta};
+use crate::schema::CurationArtifact;
+use crate::{CurationSnapshot, CuratedItem, ObjectKindExtra};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar

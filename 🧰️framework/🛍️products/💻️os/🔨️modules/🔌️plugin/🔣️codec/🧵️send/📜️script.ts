@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import _ from "lodash";
 
 //#region 🧬️Contract
@@ -209,7 +209,7 @@ function inspect(fixture: Fixture, sources: Sources): Inspection {
 
 //#region 🧪️IndependentOracles
 function modelAndSchema(fixture: Fixture, schema: object): void {
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));
   const independent = _.sortBy(_.uniq(_.flatMap(fixture.routes, route => route.sites)));
   assert.equal(_.flatMap(fixture.routes, route => route.sites).length, independent.length, "no duplicated route obligations");

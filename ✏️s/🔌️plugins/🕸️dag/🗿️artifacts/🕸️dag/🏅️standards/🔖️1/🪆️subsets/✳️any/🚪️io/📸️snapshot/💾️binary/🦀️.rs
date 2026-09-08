@@ -1,11 +1,11 @@
 //! 📦️ DAG artifact — native binary codec (`impl store::ArtifactPack for DagSnapshot`), moved here
 //! wholesale from the old `🧬️schema/📸️snapshot` codec home (design.md §1 CORRECTION — see the
 //! sibling `📝️text` facet's module doc for the full rationale). Distinct from the FRAMEWORK's own
-//! separate `infinite_board_port_directed_dag::DagSnapshot` codec. This module carries the encode/
+//! separate `semio_framework_artifact_infinite_dag::DagSnapshot` codec. This module carries the encode/
 //! decode primitives plus the thin artifact-facing `encode`/`decode` wrappers and the pack↔dsl
 //! equivalence law.
 
-use crate::artifacts::dag::{DagFixtureEdge, DagNodeSpec, DagSnapshot, DAG_DOCUMENT_SCHEMA};
+use crate::{DagFixtureEdge, DagNodeSpec, DagSnapshot, DAG_DOCUMENT_SCHEMA};
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -42,7 +42,7 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
 
 fn encode_dag_snapshot_binary(s: &DagSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let scene = crate::artifacts::dag::dag_working_scene(s);
+    let scene = crate::dag_working_scene(s);
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
     write_str_lp(&mut out, &s.schema);
@@ -60,7 +60,7 @@ fn decode_dag_snapshot_binary(bytes: &[u8]) -> Result<DagSnapshot, String> {
     let schema = read_str_lp(&mut reader)?;
     let nodes: Vec<DagNodeSpec> = dsl::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
     let edges: Vec<DagFixtureEdge> = dsl::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|e| e.to_string())?;
-    let content = crate::artifacts::dag::dag_content_child_with_owner(nodes, edges);
+    let content = crate::dag_content_child_with_owner(nodes, edges);
     Ok(DagSnapshot { schema, content })
 }
 //#endregion 🔖️BinaryPrimitives
@@ -90,7 +90,7 @@ impl store::ArtifactPack for DagSnapshot {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::dag::dsl;
+    use crate::document_dsl as dsl;
 
     #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {
@@ -107,15 +107,15 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::dag::op::DagMutation;
-        use crate::artifacts::dag::DAG_DOCUMENT_SCHEMA;
+        use crate::op::DagMutation;
+        use crate::DAG_DOCUMENT_SCHEMA;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let document = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), content: crate::artifacts::dag::dag_content_child_with_owner(Vec::new(), Vec::new()) };
+        let document = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), content: crate::dag_content_child_with_owner(Vec::new(), Vec::new()) };
         let mut store: ArtifactStore<DagSnapshot, DagMutation> = ArtifactStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag-demo", document, None)).await.expect("valid artifact store fixture");
-        let node = crate::artifacts::dag::schema::default_node_for_kind("note", "node-1", 0.0, 0.0);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::dag::mutations::create_node(node)], description: None }).await.expect("apply");
+        let node = crate::schema::default_node_for_kind("note", "node-1", 0.0, 0.0);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::create_node(node)], description: None }).await.expect("apply");
         let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }
@@ -137,7 +137,7 @@ mod semio_protocol_conformance {
 
     #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_pack() {
-        let document = crate::artifacts::dag::dsl::parse_dsl(crate::artifacts::dag::dsl::DAG_EXAMPLE_TEXT).expect("parse fixture");
+        let document = crate::document_dsl::parse_dsl(crate::document_dsl::DAG_EXAMPLE_TEXT).expect("parse fixture");
         let bytes = encode(&document);
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");

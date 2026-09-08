@@ -1,8 +1,8 @@
 //! 🔺️ `change-sheet-w-el-mm3` sparse diff construction — writes only `En1999Diff.sheet_w_el_mm3` from the payload.
 
-use crate::artifacts::en1999::diff::En1999Diff;
-use crate::artifacts::en1999::mutations::change_sheet_w_el_mm3::ChangeSheetWElMm3;
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::diff::En1999Diff;
+use crate::mutations::change_sheet_w_el_mm3::ChangeSheetWElMm3;
+use crate::En1999Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSheetWElMm3, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {

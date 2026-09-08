@@ -1,6 +1,6 @@
 //! 🔘️ `change-object-smooth-shading` — flips the mesh's smooth/flat shading flag.
 
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 

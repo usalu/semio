@@ -4,7 +4,7 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact mutation.
 //! Must not import anything from the sibling mutation-capable surface (`policyViewerPurityBreaches`).
 
-use crate::artifacts::model::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
+use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use crate::viewer::model::modes::view;
 use crate::viewer::model::modes::view::windows::{simulation, structure, zones};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ViewEmit, Viewer};

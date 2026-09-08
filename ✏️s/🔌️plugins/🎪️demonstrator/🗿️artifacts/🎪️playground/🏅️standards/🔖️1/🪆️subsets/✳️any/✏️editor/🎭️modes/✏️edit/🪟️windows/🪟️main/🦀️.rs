@@ -1,7 +1,7 @@
 //! 🪟️ Playground editor — the `main` window: the document's one `schema` field as an editable text
 //! buffer, built from the framework's `TextWindowKit` (contract §2.6).
 
-use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 

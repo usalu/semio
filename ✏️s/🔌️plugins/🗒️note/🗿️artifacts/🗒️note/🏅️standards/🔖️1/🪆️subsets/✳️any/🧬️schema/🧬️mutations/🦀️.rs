@@ -7,8 +7,8 @@
 //! setter, the put-synonym asset upsert, and the whole-document-replace escape hatch — see
 //! `📓️taxonomy.md`/`📓️derivation-rules.md` in ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`).
 
-use crate::artifacts::note::NoteDiff;
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteDiff;
+use crate::NoteSnapshot;
 use protocol::{Mutation, MutationDiff};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -62,39 +62,39 @@ pub enum NoteMutation {
 //#endregion 🔖️Mutations
 
 //#region 🔖️Reexports
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::change_block_font_size::{change_block_font_size, ChangeBlockFontSize};
-pub use crate::artifacts::note::standards::v1::subsets::ink::schema::mutations::change_block_ink_width::{change_block_ink_width, ChangeBlockInkWidth};
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::change_block_locked::{change_block_locked, ChangeBlockLocked};
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::change_block_visible::{change_block_visible, ChangeBlockVisible};
-pub use crate::artifacts::note::standards::v1::subsets::ink::schema::mutations::change_eraser_radius::{change_eraser_radius, ChangeEraserRadius};
-pub use crate::artifacts::note::standards::v1::subsets::canvas::schema::mutations::change_grid_opacity::{change_grid_opacity, ChangeGridOpacity};
-pub use crate::artifacts::note::standards::v1::subsets::canvas::schema::mutations::change_grid_spacing::{change_grid_spacing, ChangeGridSpacing};
-pub use crate::artifacts::note::standards::v1::subsets::canvas::schema::mutations::change_grid_subdivisions::{change_grid_subdivisions, ChangeGridSubdivisions};
-pub use crate::artifacts::note::standards::v1::subsets::canvas::schema::mutations::change_grid_visible::{change_grid_visible, ChangeGridVisible};
-pub use crate::artifacts::note::standards::v1::subsets::ink::schema::mutations::change_pencil_width::{change_pencil_width, ChangePencilWidth};
-pub use crate::artifacts::note::standards::v1::subsets::canvas::schema::mutations::change_snap_enabled::{change_snap_enabled, ChangeSnapEnabled};
-pub use crate::artifacts::note::standards::v1::subsets::canvas::schema::mutations::change_snap_grid_spacing::{change_snap_grid_spacing, ChangeSnapGridSpacing};
-pub use crate::artifacts::note::standards::v1::subsets::asset::schema::mutations::create_asset::{create_asset, CreateAsset};
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::create_block::{create_block, CreateBlock};
-pub use crate::artifacts::note::standards::v1::subsets::asset::schema::mutations::delete_asset::{delete_asset, DeleteAsset};
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::delete_block::{delete_block, DeleteBlock};
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::delete_blocks::{delete_blocks, DeleteBlocks};
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::drag_blocks::{drag_blocks, DragBlocks};
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::duplicate_block::{duplicate_block, DuplicateBlock};
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::duplicate_blocks::{duplicate_blocks, DuplicateBlocks};
-pub use crate::artifacts::note::standards::v1::subsets::ink::schema::mutations::edit_block_ink_stroke::{edit_block_ink_stroke, EditBlockInkStroke};
-pub use crate::artifacts::note::standards::v1::subsets::math::schema::mutations::edit_block_math::{edit_block_math, EditBlockMath};
-pub use crate::artifacts::note::standards::v1::subsets::text::schema::mutations::edit_block_text::{edit_block_text, EditBlockText};
-pub use crate::artifacts::note::standards::v1::subsets::table::schema::mutations::insert_table_column::{insert_table_column, InsertTableColumn};
-pub use crate::artifacts::note::standards::v1::subsets::table::schema::mutations::insert_table_row::{insert_table_row, InsertTableRow};
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::move_block::{move_block, MoveBlock};
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::move_block_to_container::{move_block_to_container, MoveBlockToContainer};
-pub use crate::artifacts::note::standards::v1::subsets::table::schema::mutations::remove_table_column::{remove_table_column, RemoveTableColumn};
-pub use crate::artifacts::note::standards::v1::subsets::table::schema::mutations::remove_table_row::{remove_table_row, RemoveTableRow};
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::rename_block::{rename_block, RenameBlock};
-pub use crate::artifacts::note::standards::v1::subsets::document::schema::mutations::rename_note::{rename_note, RenameNote};
-pub use crate::artifacts::note::standards::v1::subsets::asset::schema::mutations::replace_asset_payload::{replace_asset_payload, ReplaceAssetPayload};
-pub use crate::artifacts::note::standards::v1::subsets::block::schema::mutations::resize_block::{resize_block, ResizeBlock};
+pub use crate::standards::v1::subsets::block::schema::mutations::change_block_font_size::{change_block_font_size, ChangeBlockFontSize};
+pub use crate::standards::v1::subsets::ink::schema::mutations::change_block_ink_width::{change_block_ink_width, ChangeBlockInkWidth};
+pub use crate::standards::v1::subsets::block::schema::mutations::change_block_locked::{change_block_locked, ChangeBlockLocked};
+pub use crate::standards::v1::subsets::block::schema::mutations::change_block_visible::{change_block_visible, ChangeBlockVisible};
+pub use crate::standards::v1::subsets::ink::schema::mutations::change_eraser_radius::{change_eraser_radius, ChangeEraserRadius};
+pub use crate::standards::v1::subsets::canvas::schema::mutations::change_grid_opacity::{change_grid_opacity, ChangeGridOpacity};
+pub use crate::standards::v1::subsets::canvas::schema::mutations::change_grid_spacing::{change_grid_spacing, ChangeGridSpacing};
+pub use crate::standards::v1::subsets::canvas::schema::mutations::change_grid_subdivisions::{change_grid_subdivisions, ChangeGridSubdivisions};
+pub use crate::standards::v1::subsets::canvas::schema::mutations::change_grid_visible::{change_grid_visible, ChangeGridVisible};
+pub use crate::standards::v1::subsets::ink::schema::mutations::change_pencil_width::{change_pencil_width, ChangePencilWidth};
+pub use crate::standards::v1::subsets::canvas::schema::mutations::change_snap_enabled::{change_snap_enabled, ChangeSnapEnabled};
+pub use crate::standards::v1::subsets::canvas::schema::mutations::change_snap_grid_spacing::{change_snap_grid_spacing, ChangeSnapGridSpacing};
+pub use crate::standards::v1::subsets::asset::schema::mutations::create_asset::{create_asset, CreateAsset};
+pub use crate::standards::v1::subsets::block::schema::mutations::create_block::{create_block, CreateBlock};
+pub use crate::standards::v1::subsets::asset::schema::mutations::delete_asset::{delete_asset, DeleteAsset};
+pub use crate::standards::v1::subsets::block::schema::mutations::delete_block::{delete_block, DeleteBlock};
+pub use crate::standards::v1::subsets::block::schema::mutations::delete_blocks::{delete_blocks, DeleteBlocks};
+pub use crate::standards::v1::subsets::block::schema::mutations::drag_blocks::{drag_blocks, DragBlocks};
+pub use crate::standards::v1::subsets::block::schema::mutations::duplicate_block::{duplicate_block, DuplicateBlock};
+pub use crate::standards::v1::subsets::block::schema::mutations::duplicate_blocks::{duplicate_blocks, DuplicateBlocks};
+pub use crate::standards::v1::subsets::ink::schema::mutations::edit_block_ink_stroke::{edit_block_ink_stroke, EditBlockInkStroke};
+pub use crate::standards::v1::subsets::math::schema::mutations::edit_block_math::{edit_block_math, EditBlockMath};
+pub use crate::standards::v1::subsets::text::schema::mutations::edit_block_text::{edit_block_text, EditBlockText};
+pub use crate::standards::v1::subsets::table::schema::mutations::insert_table_column::{insert_table_column, InsertTableColumn};
+pub use crate::standards::v1::subsets::table::schema::mutations::insert_table_row::{insert_table_row, InsertTableRow};
+pub use crate::standards::v1::subsets::block::schema::mutations::move_block::{move_block, MoveBlock};
+pub use crate::standards::v1::subsets::block::schema::mutations::move_block_to_container::{move_block_to_container, MoveBlockToContainer};
+pub use crate::standards::v1::subsets::table::schema::mutations::remove_table_column::{remove_table_column, RemoveTableColumn};
+pub use crate::standards::v1::subsets::table::schema::mutations::remove_table_row::{remove_table_row, RemoveTableRow};
+pub use crate::standards::v1::subsets::block::schema::mutations::rename_block::{rename_block, RenameBlock};
+pub use crate::standards::v1::subsets::document::schema::mutations::rename_note::{rename_note, RenameNote};
+pub use crate::standards::v1::subsets::asset::schema::mutations::replace_asset_payload::{replace_asset_payload, ReplaceAssetPayload};
+pub use crate::standards::v1::subsets::block::schema::mutations::resize_block::{resize_block, ResizeBlock};
 //#endregion 🔖️Reexports
 
 //#region 🔖️Helpers
@@ -232,12 +232,12 @@ mod kinds_catalog {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::note::{NoteBlockNode, NoteImageAsset};
+    use crate::{NoteBlockNode, NoteImageAsset};
     use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;
 
     fn sample_snapshot() -> NoteSnapshot {
-        let mut snapshot = crate::artifacts::note::schema::empty_note_snapshot();
+        let mut snapshot = crate::schema::empty_note_snapshot();
         snapshot.blocks.push(NoteBlockNode::Text {
             id: "b1".into(),
             name: "Text".into(),
@@ -248,7 +248,7 @@ mod tests {
             rotation: 0.0,
             visible: true,
             locked: false,
-            content: crate::artifacts::note::note_text_child_record("b1", &[]),
+            content: crate::note_text_child_record("b1", &[]),
             font_size: 18.0,
             font_weight: "normal".into(),
             align: "left".into(),
@@ -265,7 +265,7 @@ mod tests {
             visible: true,
             locked: false,
             columns: vec!["A".into(), "B".into()],
-            rows: vec![vec![crate::artifacts::note::NoteTableCell { content: String::new() }, crate::artifacts::note::NoteTableCell { content: String::new() }]],
+            rows: vec![vec![crate::NoteTableCell { content: String::new() }, crate::NoteTableCell { content: String::new() }]],
         });
         snapshot.blocks.push(NoteBlockNode::Math { id: "b4".into(), name: "Math".into(), x: 0.0, y: 0.0, width: 100.0, height: 40.0, rotation: 0.0, visible: true, locked: false, tex: "x".into(), display_mode: true });
         snapshot.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "d".into(), width: None, height: None });
@@ -336,7 +336,7 @@ mod tests {
             rotation: 0.0,
             visible: true,
             locked: false,
-            content: crate::artifacts::note::note_text_child_record("b99", &[]),
+            content: crate::note_text_child_record("b99", &[]),
             font_size: 18.0,
             font_weight: "normal".into(),
             align: "left".into(),
@@ -344,7 +344,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &create_block(new_block.clone(), None, None)).await;
         assert_mutation_inverse_law(&base, &delete_block("b1".into())).await;
         assert_mutation_inverse_law(&base, &delete_blocks(vec!["b1".into(), "b3".into()])).await;
-        let dup = crate::artifacts::note::schema::clone_block(&mut crate::artifacts::note::schema::NoteIdOwner::new("mutation-test", 0), base.blocks.iter().find(|b| crate::artifacts::note::schema::block_id(b) == "b1").unwrap());
+        let dup = crate::schema::clone_block(&mut crate::schema::NoteIdOwner::new("mutation-test", 0), base.blocks.iter().find(|b| crate::schema::block_id(b) == "b1").unwrap());
         assert_mutation_inverse_law(&base, &duplicate_block("b1".into(), dup)).await;
     }
 
@@ -365,7 +365,7 @@ mod tests {
         assert_mutation_inverse_law(&base, &move_block("b1".into(), 42.0, -8.0)).await;
         assert_mutation_inverse_law(&base, &resize_block("b1".into(), 120.0, 60.0)).await;
         assert_mutation_inverse_law(&base, &change_block_font_size("b1".into(), 24.0)).await;
-        assert_mutation_inverse_law(&base, &edit_block_text("b1".into(), vec![crate::artifacts::note::NoteTextParagraph { runs: Vec::new() }])).await;
+        assert_mutation_inverse_law(&base, &edit_block_text("b1".into(), vec![crate::NoteTextParagraph { runs: Vec::new() }])).await;
         assert_mutation_inverse_law(&base, &edit_block_math("b4".into(), "y = mx + b".into())).await;
         assert_mutation_inverse_law(&base, &change_block_ink_width("b2".into(), 6.0)).await;
         assert_mutation_inverse_law(&base, &edit_block_ink_stroke("b2".into(), vec![[0.0, 0.0], [1.0, 1.0]], 1.0, 2.0, 10.0, 10.0)).await;
@@ -393,7 +393,7 @@ mod tests {
             rotation: 0.0,
             visible: true,
             locked: false,
-            content: crate::artifacts::note::note_text_child_record("b100", &[]),
+            content: crate::note_text_child_record("b100", &[]),
             font_size: 18.0,
             font_weight: "normal".into(),
             align: "left".into(),
@@ -429,7 +429,7 @@ mod tests {
             rotation: 0.0,
             visible: true,
             locked: false,
-            content: crate::artifacts::note::note_text_child_record("b1", &[]),
+            content: crate::note_text_child_record("b1", &[]),
             font_size: 18.0,
             font_weight: "normal".into(),
             align: "left".into(),
@@ -502,7 +502,7 @@ mod tests {
             rotation: 0.0,
             visible: true,
             locked: false,
-            content: crate::artifacts::note::note_text_child_record("b101", &[]),
+            content: crate::note_text_child_record("b101", &[]),
             font_size: 18.0,
             font_weight: "normal".into(),
             align: "left".into(),

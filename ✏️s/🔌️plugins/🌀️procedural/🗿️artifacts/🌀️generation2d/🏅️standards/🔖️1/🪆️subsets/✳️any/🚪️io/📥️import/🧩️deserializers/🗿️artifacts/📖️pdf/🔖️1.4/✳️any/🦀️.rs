@@ -1,5 +1,5 @@
 //! generation2d <- pdf
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::Generation2dSnapshot;
 use semio_s_artifact_stdio_pdf::{PdfSnapshot, STDIO_PDF_DOCUMENT_SCHEMA};
 
 pub fn register() {}

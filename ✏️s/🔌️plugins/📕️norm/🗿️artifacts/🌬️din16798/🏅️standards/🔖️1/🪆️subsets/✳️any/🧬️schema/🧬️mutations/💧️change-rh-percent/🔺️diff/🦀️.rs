@@ -1,8 +1,8 @@
 //! 🔺️ `change-rh-percent` sparse diff construction — writes only `Din16798Diff.rh_percent` from the payload.
 
-use crate::artifacts::din16798::diff::Din16798Diff;
-use crate::artifacts::din16798::mutations::change_rh_percent::ChangeRhPercent;
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::diff::Din16798Diff;
+use crate::mutations::change_rh_percent::ChangeRhPercent;
+use crate::Din16798Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeRhPercent, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {

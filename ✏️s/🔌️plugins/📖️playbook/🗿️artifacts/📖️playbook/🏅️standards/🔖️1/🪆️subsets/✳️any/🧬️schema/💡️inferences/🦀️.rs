@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::playbook::PlaybookSnapshot;
-use schema::ArtifactSchema;
+use crate::PlaybookSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -48,7 +48,7 @@ impl protocol::InferenceSpec<PlaybookSnapshot> for PlaybookInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::playbook::standards::v1::subsets::any::schema::PlaybookBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::PlaybookBuilder {
     type Snapshot = PlaybookSnapshot;
     type Inference = PlaybookInference;
 }
@@ -57,10 +57,10 @@ impl ArtifactInferrer for crate::artifacts::playbook::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.playbook.playbook.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `playbook_artifact_schema_descriptor`'s registration.
-pub fn playbook_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn playbook_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.playbook.playbook.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -82,9 +82,9 @@ mod tests {
     /// `PlaybookSnapshot` no longer has that field; it composes `document`/`flow` children instead)
     /// and minted through `playbook_snapshot_with_steps` so the working-scene cache is seeded.
     fn step_with_conditional_block() -> PlaybookSnapshot {
-        use crate::artifacts::playbook::PlaybookBlock;
+        use crate::PlaybookBlock;
 
-        fn block(id: &str, kind: &str, condition: Option<crate::artifacts::playbook::PlaybookExpr>) -> PlaybookBlock {
+        fn block(id: &str, kind: &str, condition: Option<crate::PlaybookExpr>) -> PlaybookBlock {
             PlaybookBlock {
                 id: id.into(),
                 label: id.into(),
@@ -109,13 +109,13 @@ mod tests {
             }
         }
 
-        let steps = vec![crate::artifacts::playbook::PlaybookStep {
+        let steps = vec![crate::PlaybookStep {
             id: "s1".into(),
             title: "Step 1".into(),
             description: None,
-            blocks: vec![block("material", "single", None), block("finish", "text", Some(crate::artifacts::playbook::PlaybookExpr::Truthy { expr: Box::new(crate::artifacts::playbook::PlaybookExpr::Var { name: "material".into() }) }))],
+            blocks: vec![block("material", "single", None), block("finish", "text", Some(crate::PlaybookExpr::Truthy { expr: Box::new(crate::PlaybookExpr::Var { name: "material".into() }) }))],
         }];
-        crate::artifacts::playbook::playbook_snapshot_with_steps("playbook.playbook", "playbook", "1", None, steps)
+        crate::playbook_snapshot_with_steps("playbook.playbook", "playbook", "1", None, steps)
     }
     //#endregion 🧸️Fixtures
 

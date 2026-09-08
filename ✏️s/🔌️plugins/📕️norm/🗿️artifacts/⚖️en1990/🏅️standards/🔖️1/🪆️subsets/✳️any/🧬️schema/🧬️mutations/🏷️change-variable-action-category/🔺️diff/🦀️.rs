@@ -4,7 +4,7 @@
 //! 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2).
 
 use super::ChangeVariableActionCategory;
-use crate::artifacts::en1990::{en1990_qk, en1990_qk_child_from_entries, En1990Diff, En1990Snapshot};
+use crate::{en1990_qk, en1990_qk_child_from_entries, En1990Diff, En1990Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeVariableActionCategory, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {

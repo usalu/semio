@@ -6,7 +6,7 @@
 
 #![cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::Puzzle3dSnapshot;
 use crate::editor::puzzle3d::Puzzle3dPlayApp;
 use semio_framework_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
 use std::cell::RefCell;

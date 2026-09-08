@@ -1,9 +1,10 @@
 //! 🪟️ 🧩️ Flow play app commands command — `patch-flow-widgets`.
 
-use crate::artifacts::flow::schema::widget_id;
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::schema::widget_id;
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
-use flow::{FlowEvalSession, Widget};
+use flow::{FlowEvalSession};
+use semio_framework_artifact_flow_flow::{Widget};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -40,7 +41,7 @@ fn patched_widgets_fixture(snapshot: &FlowSnapshot, widget_ids: &[String], field
 pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let fixture = doc.snapshot;
     let next = patched_widgets_fixture(fixture, &payload.widget_ids, &payload.field, &payload.value);
-    let operations = crate::artifacts::flow::schema::mutations::snapshot_operations(fixture, &next);
+    let operations = crate::schema::mutations::snapshot_operations(fixture, &next);
     if operations.is_empty() {
         Ok(Emit::default())
     } else {

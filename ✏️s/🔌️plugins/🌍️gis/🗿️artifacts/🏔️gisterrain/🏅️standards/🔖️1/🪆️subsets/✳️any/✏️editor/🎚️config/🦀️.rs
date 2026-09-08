@@ -3,7 +3,7 @@
 //! Session-only but real, undoable config: panning and selecting never enter the document's undo
 //! history, but they still round-trip through the config `ArtifactStore` with a true `backwards`.
 //! The terrain's one editable property (exaggeration) is document state and lives in
-//! `crate::artifacts::gisterrain`.
+//! `crate`.
 
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -126,7 +126,7 @@ impl protocol::OpBinary for Gis3dConfigMutation {
 //#region 🌉️TestBridge
 /// 🔮️ One JSON report of applying a `set-camera`/`set-locale` mutation to a `Gis3dConfig`, for a
 /// language-neutral test adapter — the identical shape and purpose
-/// `crate::artifacts::gisterrain::gis_terrain_mutation_report_json` already establishes for the
+/// `crate::gis_terrain_mutation_report_json` already establishes for the
 /// terrain's own document-level mutations, applied here to gis3d's editor-config artifact (shard
 /// G4, this ticket).
 ///

@@ -1,7 +1,7 @@
 //! 💀️ `delete-object` — removes an id-keyed lowpoly object (mesh, transform and every paint layer
 //! it owns are captured wholesale, since they live embedded on the object itself).
 
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 

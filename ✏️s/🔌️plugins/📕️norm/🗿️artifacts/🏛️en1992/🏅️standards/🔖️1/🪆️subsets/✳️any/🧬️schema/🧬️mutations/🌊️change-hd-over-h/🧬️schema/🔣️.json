@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1992/1/any/mutation/change-hd-over-h.json",
+  "$id": "https://semio.tech/schema/s/norm/en1992/1/any/mutation/change-hd-over-h/schema.json",
   "title": "ChangeHdOverH",
   "type": "object",
   "additionalProperties": false,

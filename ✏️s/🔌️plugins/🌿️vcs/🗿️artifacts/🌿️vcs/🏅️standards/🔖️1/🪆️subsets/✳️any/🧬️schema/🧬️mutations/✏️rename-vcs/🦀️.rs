@@ -1,6 +1,6 @@
 //! ✏️ VCS mutation — `RenameVcs`: changes the document's identity `title` field.
-use crate::artifacts::vcs::mutations::VcsDemoMutation;
-use crate::artifacts::vcs::{VcsDiff, VcsSnapshot};
+use crate::mutations::VcsDemoMutation;
+use crate::{VcsDiff, VcsSnapshot};
 
 //#region 🔖️Mutation
 /// ✏️ `rename-vcs` payload — `new_title` per the taxonomy's naming convention for identity fields.

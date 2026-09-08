@@ -1,34 +1,163 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["outer", "nested"],
-  "properties": {
-    "outer": {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/store/tests/owned-schema-record/schema.json",
+  "title": "Store Owned Schema Record",
+  "$defs": {
+    "OwnedSchemaRecord": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["fields", "valid", "invalid", "pages", "cancellation"],
+      "required": [
+        "outer",
+        "nested"
+      ],
       "properties": {
-        "fields": {"type": "object", "required": ["required", "optional"], "properties": {"required": {"type": "array", "items": {"type": "string"}}, "optional": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false},
-        "valid": {"type": "array", "items": {"$ref": "#/$defs/sourceCase"}},
-        "invalid": {"type": "array", "items": {"$ref": "#/$defs/invalidCase"}},
-        "pages": {"type": "array", "items": {"$ref": "#/$defs/pageCase"}},
-        "cancellation": {"type": "array", "items": {"$ref": "#/$defs/pageCase"}}
+        "outer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fields",
+            "valid",
+            "invalid",
+            "pages",
+            "cancellation"
+          ],
+          "properties": {
+            "fields": {
+              "type": "object",
+              "required": [
+                "required",
+                "optional"
+              ],
+              "properties": {
+                "required": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "optional": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "valid": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SourceCase"
+              }
+            },
+            "invalid": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/InvalidCase"
+              }
+            },
+            "pages": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PageCase"
+              }
+            },
+            "cancellation": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PageCase"
+              }
+            }
+          }
+        },
+        "nested": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "valid",
+            "invalid"
+          ],
+          "properties": {
+            "valid": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SourceCase"
+              }
+            },
+            "invalid": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/InvalidCase"
+              }
+            }
+          }
+        }
       }
     },
-    "nested": {
+    "SourceCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["valid", "invalid"],
+      "required": [
+        "name",
+        "source"
+      ],
       "properties": {
-        "valid": {"type": "array", "items": {"$ref": "#/$defs/sourceCase"}},
-        "invalid": {"type": "array", "items": {"$ref": "#/$defs/invalidCase"}}
+        "name": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "InvalidCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "source",
+        "referenceCode",
+        "nativeCode"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "referenceCode": {
+          "type": "string"
+        },
+        "nativeCode": {
+          "type": "string"
+        }
+      }
+    },
+    "PageCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "pageBytes",
+        "chunks"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "pageBytes": {
+          "const": 4096
+        },
+        "chunks": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
-  },
-  "$defs": {
-    "sourceCase": {"type": "object", "additionalProperties": false, "required": ["name", "source"], "properties": {"name": {"type": "string"}, "source": {"type": "string"}}},
-    "invalidCase": {"type": "object", "additionalProperties": false, "required": ["name", "source", "referenceCode", "nativeCode"], "properties": {"name": {"type": "string"}, "source": {"type": "string"}, "referenceCode": {"type": "string"}, "nativeCode": {"type": "string"}}},
-    "pageCase": {"type": "object", "additionalProperties": false, "required": ["name", "pageBytes", "chunks"], "properties": {"name": {"type": "string"}, "pageBytes": {"const": 4096}, "chunks": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "string"}}}}
   }
 }

@@ -1,8 +1,8 @@
 //! 🔺️ `change-t-op-c` sparse diff construction — writes only `Din16798Diff.t_op_c` from the payload.
 
-use crate::artifacts::din16798::diff::Din16798Diff;
-use crate::artifacts::din16798::mutations::change_t_op_c::ChangeTOpC;
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::diff::Din16798Diff;
+use crate::mutations::change_t_op_c::ChangeTOpC;
+use crate::Din16798Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeTOpC, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {

@@ -1,8 +1,8 @@
 //! ↩️ Inverse reconstruction for `create-tile` — undo deletes the created tile.
 use super::CreateTile;
-use crate::artifacts::presentation::mutations::delete_tile::DeleteTile;
-use crate::artifacts::presentation::mutations::PresentationMutation;
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::mutations::delete_tile::DeleteTile;
+use crate::mutations::PresentationMutation;
+use crate::PresentationSnapshot;
 
 //#region 🔹Inverse
 /// ↩️ Undo removes the tile this mutation created, addressed by its own id (captured from the

@@ -325,7 +325,7 @@ impl<D: SequenceDomain> SequenceBridge<D> {
         }
     }
 
-    fn accept_request(&mut self, request: AbiRequest) -> Result<(), AbiPortRejection> {
+    fn accept_request(&mut self, request: &AbiRequest) -> Result<(), AbiPortRejection> {
         let message = || AbiMessage::Request(request.clone());
         if self.closing {
             return Err(AbiPortRejection { code: AbiErrorCode::Closed, message: message() });
@@ -433,7 +433,7 @@ impl<D: SequenceDomain> SequenceBridge<D> {
         }
     }
 
-    fn accept_event_ack(&mut self, reply: AbiReply) -> Result<(), AbiErrorCode> {
+    fn accept_event_ack(&mut self, reply: &AbiReply) -> Result<(), AbiErrorCode> {
         let index = request_slot(reply.request_id);
         let entry = self.events[index].ok_or(AbiErrorCode::LateReply)?;
         if entry.request_id != reply.request_id || entry.generation != reply.generation {
@@ -622,12 +622,9 @@ impl<D: SequenceDomain> AbiPort for SequenceBridge<D> {
             return Err(AbiPortRejection { code, message });
         }
         match message {
-            AbiMessage::Request(request) => self.accept_request(request),
+            AbiMessage::Request(request) => self.accept_request(&request),
             AbiMessage::Control(control) => self.accept_control(control).map_err(|code| AbiPortRejection { code, message: AbiMessage::Control(control) }),
-            AbiMessage::Reply(reply) => {
-                let copy = reply.clone();
-                self.accept_event_ack(reply).map_err(|code| AbiPortRejection { code, message: AbiMessage::Reply(copy) })
-            }
+            AbiMessage::Reply(reply) => self.accept_event_ack(&reply).map_err(|code| AbiPortRejection { code, message: AbiMessage::Reply(reply) }),
             other => Err(AbiPortRejection { code: AbiErrorCode::MalformedTag, message: other }),
         }
     }

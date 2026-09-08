@@ -1,8 +1,8 @@
 //! ↩️ `change-cursor` inverse — reconstructs the pre-move cursor value from BASE state; `change` is
 //! its own inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::mutations::Process3dMutation;
+use crate::Process3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::ChangeCursor, base: &Process3dSnapshot) -> Vec<Process3dMutation> {

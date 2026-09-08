@@ -1,8 +1,8 @@
 //! 🆕️ `create-position` mutation payload — adds a new position feature to `positions`.
 
-use crate::artifacts::gismap::{GisMapSnapshot, MapFeature};
-use crate::artifacts::gismap::diff::GisMapDiff;
-use crate::artifacts::gismap::mutations::GisMapMutation;
+use crate::{GisMapSnapshot, MapFeature};
+use crate::diff::GisMapDiff;
+use crate::mutations::GisMapMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/model/mutation/remove-relation.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/model/mutation/remove-relation/schema.json",
   "title": "RemoveRelation",
   "type": "object",
   "additionalProperties": false,

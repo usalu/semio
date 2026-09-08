@@ -3,12 +3,12 @@
 //! real content digest). Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: the old opaque
 //! `model_json` field is gone — since a composed child slot can only ever hold a real, typed
 //! `Model` (never arbitrary/malformed text), this leaf now census over
-//! `crate::artifacts::model::energy_model(snapshot)`'s own first-party `pack::json` serialization
+//! `crate::energy_model(snapshot)`'s own first-party `pack::json` serialization
 //! (`Model` derives `ToValue`), which is ALWAYS a full JSON object (`Model` derives `Default`,
 //! every field always present) rather than treating the body as an opaque, possibly-malformed byte
 //! string.
 
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::EnergyModelSnapshot;
 use semio_framework_os_kernel::{DslValue, ToValue};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use std::collections::hash_map::DefaultHasher;
@@ -30,7 +30,7 @@ pub struct EnergyModelEntries {
 /// those same bytes. Std-only (`DefaultHasher`), same reasoning as `🏠️home/🆔digest`: no external
 /// hash crate needed for a single scalar byte-string digest.
 pub fn compute_energy_model_entries(snapshot: &EnergyModelSnapshot) -> EnergyModelEntries {
-    let model = crate::artifacts::model::energy_model(snapshot);
+    let model = crate::energy_model(snapshot);
     let json = pack::json::to_json_string(&model);
     let bytes = json.as_bytes();
     let entry_count = match model.to_value() {
@@ -68,7 +68,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn top_level_field_count_is_stable_regardless_of_content() {
-        let snapshot = crate::artifacts::model::energy_snapshot_with_state("energy.model", &crate::model::Model { name: "demo".into(), ..crate::model::Model::default() }, None);
+        let snapshot = crate::energy_snapshot_with_state("energy.model", &crate::model::Model { name: "demo".into(), ..crate::model::Model::default() }, None);
         let entries = compute_energy_model_entries(&snapshot);
         assert_eq!(entries.entry_count, MODEL_FIELD_COUNT);
     }
@@ -86,8 +86,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn different_bodies_yield_different_digests() {
-        let a = crate::artifacts::model::energy_snapshot_with_state("energy.model", &crate::model::Model::default(), None);
-        let b = crate::artifacts::model::energy_snapshot_with_state("energy.model", &crate::model::Model { name: "x".into(), ..crate::model::Model::default() }, None);
+        let a = crate::energy_snapshot_with_state("energy.model", &crate::model::Model::default(), None);
+        let b = crate::energy_snapshot_with_state("energy.model", &crate::model::Model { name: "x".into(), ..crate::model::Model::default() }, None);
         assert_ne!(compute_energy_model_entries(&a).content_digest, compute_energy_model_entries(&b).content_digest);
     }
 }

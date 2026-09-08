@@ -1,7 +1,7 @@
 //! ↩️ `update-manufacturer-file` — undo restores BASE's whole header facet.
 
 use super::UpdateManufacturerFile;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &UpdateManufacturerFile, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

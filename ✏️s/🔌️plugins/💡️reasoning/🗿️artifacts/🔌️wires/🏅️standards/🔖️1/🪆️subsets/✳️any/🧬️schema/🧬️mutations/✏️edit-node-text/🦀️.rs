@@ -1,9 +1,9 @@
 //! ✏️ Wires mutation — `EditNodeText`: replaces one board node's authored `text` label
 //! (`📓️taxonomy.md`'s `edit` verb — an authored content body, not a bare scalar rename).
 
-use crate::artifacts::wires::diff::WiresDiff;
-use crate::artifacts::wires::mutations::WiresMutation;
-use crate::artifacts::wires::WiresSnapshot;
+use crate::diff::WiresDiff;
+use crate::mutations::WiresMutation;
+use crate::WiresSnapshot;
 
 //#region 🔖️Mutation
 /// ✏️ `edit-node-text` payload.

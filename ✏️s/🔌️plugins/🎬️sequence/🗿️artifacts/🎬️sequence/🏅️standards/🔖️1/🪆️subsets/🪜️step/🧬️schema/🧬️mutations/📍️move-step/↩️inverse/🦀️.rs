@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `MoveStep` — the OLD `(x, y)` looked up from BASE. Missing target ⇒ `Vec::new()`.
-use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::{sequence_working_scene, SequenceSnapshot};
+use crate::mutations::SequenceMutation;
+use crate::{sequence_working_scene, SequenceSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::MoveStep, base: &SequenceSnapshot) -> Vec<SequenceMutation> {

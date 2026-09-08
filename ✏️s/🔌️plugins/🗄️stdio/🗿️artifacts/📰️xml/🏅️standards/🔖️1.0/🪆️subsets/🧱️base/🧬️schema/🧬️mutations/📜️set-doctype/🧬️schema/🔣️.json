@@ -1,11 +1,117 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/xml/1.0/base/mutation/set-doctype.json",
+  "$id": "https://semio.tech/schema/s/stdio/xml/1.0/base/mutation/set-doctype/schema.json",
   "title": "SetDoctypePayload",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
-    "doctype": {}
+    "doctype": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/XmlDoctype"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "XmlDoctype": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "externalId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlExternalId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "declarations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/XmlDtdDeclaration"
+          }
+        }
+      }
+    },
+    "XmlExternalId": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "systemId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "system"
+            },
+            "systemId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "publicId",
+            "systemId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "public"
+            },
+            "publicId": {
+              "type": "string"
+            },
+            "systemId": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "XmlDtdDeclaration": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "parameter",
+            "name",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "entity"
+            },
+            "parameter": {
+              "type": "boolean"
+            },
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
   }
 }

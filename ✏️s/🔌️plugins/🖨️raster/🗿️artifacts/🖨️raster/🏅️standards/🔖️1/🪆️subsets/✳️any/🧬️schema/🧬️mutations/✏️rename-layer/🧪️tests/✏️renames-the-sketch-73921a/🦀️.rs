@@ -8,9 +8,9 @@
 //! other verb addresses by is deliberately left alone, which is what separates it from a
 //! delete/create pair.
 
-use crate::artifacts::raster::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
-use crate::artifacts::raster::schema::{find_layer, layer_name};
-use crate::artifacts::raster::{RasterDiff, RasterSnapshot};
+use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::schema::{find_layer, layer_name};
+use crate::{RasterDiff, RasterSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

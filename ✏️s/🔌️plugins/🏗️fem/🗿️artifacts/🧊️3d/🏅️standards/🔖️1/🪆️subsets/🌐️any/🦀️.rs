@@ -4,7 +4,7 @@
 //! `🧬️schema`/`🚪️io`/`👁️viewer`/`✏️editor`/`📚️examples` children — `crate::editor::fem3d`/
 //! `crate::viewer::fem3d` stay mounted at the plugin's top-level `editor`/`viewer` modules (`🗒️note`/
 //! `🖍️draw` recipe §5 gotcha 1), not here. `examples` is read via the plugin-root SHIM path
-//! `crate::artifacts::fem3d::examples::demo` — the deep `standards::v1::subsets::any::examples` path
+//! `crate::examples::demo` — the deep `standards::v1::subsets::any::examples` path
 //! does not resolve for this plugin (this crate's own `🦀️.rs` only mounts `examples` directly
 //! under `artifacts::fem3d`, same shape trinity's jack/rewrite hit, not note's).
 //!
@@ -16,8 +16,8 @@
 //! the declaration into `🚪️io/🦀️.rs` as `io()`. See that file's own module doc for the per-format
 //! fidelity table.
 
-use crate::artifacts::fem3d::standards::v1::subsets::any::{io, schema};
-use crate::artifacts::fem3d::FEM3D_DIALECT;
+use crate::standards::v1::subsets::any::{io, schema};
+use crate::FEM3D_DIALECT;
 use crate::editor::fem3d as editor;
 use crate::viewer::fem3d as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
@@ -26,7 +26,7 @@ use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::artifacts::fem3d::examples::demo::source()]).as_slice()
+    EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
 }
 
 fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {

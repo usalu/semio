@@ -1,6 +1,6 @@
 //! 🧨️ `delete-mesh` — clears an object's `mesh` CHILD slot. Idempotent; inverse escrows from BASE.
 
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 

@@ -1,13 +1,13 @@
 {
   "delivery": {
-    "$schema": "./🧬️catalog.schema.json",
+    "$schema": "./🧬️schema/🔣️.json",
     "version": 1,
     "collections": [{ "catalog": "📦️sources/📇️catalog.json", "root": "📦️sources", "output": "🏗️models" }],
     "entries": [{ "url": "/mesh/🥽️fallback.glb", "source": "🥽️placeholder/🧊️mesh.glb", "path": "🥽️placeholder/🧊️mesh.glb" }]
   },
   "catalogs": {
     "📦️sources/📇️catalog.json": {
-      "$schema": "./🧬️catalog.schema.json",
+      "$schema": "./🧬️schema/🔣️.json",
       "version": 1,
       "entries": [
         { "url": "/mesh/🏠️house.glb", "path": "🏠️house/🧊️shape.glb" },

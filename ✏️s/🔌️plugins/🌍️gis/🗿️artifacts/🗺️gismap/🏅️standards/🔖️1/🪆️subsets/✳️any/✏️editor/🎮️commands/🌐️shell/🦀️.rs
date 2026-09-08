@@ -1,8 +1,8 @@
 //! 🌐️ GIS 2D play app command — the Shell-kind effect that opens a picked feature's source URL
 //! through the host.
 
-use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::op::GisMapMutation;
+use crate::GisMapSnapshot;
 use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::editor::gis2d::maphost::map_host_from;
 use semio_framework_plugin::kernel::Effect;

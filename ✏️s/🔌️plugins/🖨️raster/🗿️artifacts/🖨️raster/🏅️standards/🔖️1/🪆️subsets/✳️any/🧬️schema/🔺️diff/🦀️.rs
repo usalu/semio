@@ -1,6 +1,6 @@
 //! 🧬️ Raster diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterViewportSize};
+use crate::{RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterViewportSize};
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 #[artifact_schema(id = "s.raster.raster")]
 pub struct RasterDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::raster::schema::RasterArtifact>>,
+    pub artifact: Option<Box<crate::schema::RasterArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

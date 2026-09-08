@@ -2,8 +2,8 @@
 //! dispatches this once identity resolves, so `HomeConfig.client_id`/`client_name` are reachable —
 //! without it `HomeConfigMutation::SetClient` would be dead code with no caller.
 
-use crate::artifacts::home::op::SHomeMutation;
-use crate::artifacts::home::SHomeSnapshot;
+use crate::op::SHomeMutation;
+use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 

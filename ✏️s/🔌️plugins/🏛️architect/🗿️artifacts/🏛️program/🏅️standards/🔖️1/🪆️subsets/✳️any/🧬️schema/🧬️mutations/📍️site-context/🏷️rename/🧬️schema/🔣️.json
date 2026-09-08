@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/rename-site-context.json",
+  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/rename-site-context/schema.json",
   "title": "RenameSiteContext",
   "type": "object",
   "additionalProperties": false,

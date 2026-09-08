@@ -1,10 +1,10 @@
 //! 🕸️ 🕸️ Generation2d play app commands command — `reorganize`.
 
-use crate::artifacts::generation2d::op::Generation2dMutation;
-use crate::artifacts::generation2d::schema::host_operations;
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::op::Generation2dMutation;
+use crate::schema::host_operations;
+use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use flow::FlowEvalSession;
+use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -39,7 +39,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn node_graph_viewport_sets_camera() {
         let mut app = app().await;
-        dispatch(&mut app, Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: dsl::json::to_json_string(&flow::CameraJson { x: 1.0, y: 2.0, zoom: 3.0 }) })).await;
+        dispatch(&mut app, Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport_json: dsl::json::to_json_string(&semio_framework_artifact_flow_semio_framework_os_flow::CameraJson { x: 1.0, y: 2.0, zoom: 3.0 }) })).await;
     }
 }
 //#endregion 🧪️Tests

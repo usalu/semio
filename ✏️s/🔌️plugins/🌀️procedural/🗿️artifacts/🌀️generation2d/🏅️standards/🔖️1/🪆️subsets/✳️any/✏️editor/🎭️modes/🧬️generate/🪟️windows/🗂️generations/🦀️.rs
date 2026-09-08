@@ -1,7 +1,7 @@
 //! 🗂️ Generation2d play app — the generations list window (generate mode).
 
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use flow::playbook::GenerationPlayState;
+use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, SurfaceKind, Terminology, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

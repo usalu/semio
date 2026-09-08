@@ -1,8 +1,8 @@
 //! 🔺️ `change-tower-q-nominal` sparse diff construction — writes only `En1998Diff.tower_q_nominal` from the payload.
 
-use crate::artifacts::en1998::diff::En1998Diff;
-use crate::artifacts::en1998::mutations::change_tower_q_nominal::ChangeTowerQNominal;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::diff::En1998Diff;
+use crate::mutations::change_tower_q_nominal::ChangeTowerQNominal;
+use crate::En1998Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeTowerQNominal, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {

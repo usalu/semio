@@ -21,7 +21,8 @@
 pub use infinite_canvas as canvas;
 pub use infinite_canvas::board::ports::directed_dag as dag;
 
-use dag::{dag_screen_to_world, fit_node_size, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagNodeKind, DagNodeSpec, IoPortSpec};
+use dag::{dag_screen_to_world, fit_node_size, DagHost};
+use semio_framework_artifact_infinite_dag::{DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
 use semio_framework_os_kernel::{DomainHover, DomainSelection, SelectionMethod};
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
 // ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.

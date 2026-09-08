@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/insert-array-element.json",
+  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/insert-array-element/schema.json",
   "title": "InsertArrayElement",
   "type": "object",
   "additionalProperties": false,
@@ -23,9 +23,9 @@
     "value": {
       "description": "any JSON value"
     },
-    "kind": {
+    "mutation": {
       "const": "insertArrayElement",
-      "description": "Aggregate discriminator spliced in by JsonIJsonRoot; absent when the payload stands alone."
+      "description": "Aggregate discriminator spliced in by JsonIJsonMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

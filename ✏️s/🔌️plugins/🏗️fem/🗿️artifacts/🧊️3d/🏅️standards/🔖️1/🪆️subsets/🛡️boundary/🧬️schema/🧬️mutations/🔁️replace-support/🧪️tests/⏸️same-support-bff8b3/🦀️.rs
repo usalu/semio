@@ -12,9 +12,9 @@
 //!
 //! Re-pinning a foot that is already pinned in exactly those three DOFs is a no-op WARNING.
 
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -47,7 +47,7 @@ fn applies_to_committed_after() {
 #[test]
 fn a_redundant_write_is_a_warning_not_a_rejection() {
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "replace-support/same-support-bff8b3: a no-op must carry the identity diff");
+    assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "replace-support/same-support-bff8b3: a no-op must carry the identity diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-support/same-support-bff8b3: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "replace-support/same-support-bff8b3: a redundant write is reported as no-op, never as target-missing");
@@ -93,7 +93,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed identity diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-support/same-support-bff8b3: committed diff JSON is not canonical");
@@ -102,8 +102,8 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed identity delta on `before` reproduces the committed `after`.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-support/same-support-bff8b3: committed diff did not carry before to after");
 }
 

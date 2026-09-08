@@ -2,9 +2,9 @@
 //! already matches: a single `layers.removed` entry, cascade handled at apply-time by
 //! `remove_layer_from_tree` recursing into the whole removed subtree).
 
-use crate::artifacts::raster::diff::{diff_remove_layer, RasterDiff};
-use crate::artifacts::raster::schema::find_layer;
-use crate::artifacts::raster::RasterSnapshot;
+use crate::diff::{diff_remove_layer, RasterDiff};
+use crate::schema::find_layer;
+use crate::RasterSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteLayer, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {

@@ -2,8 +2,8 @@
 //! `target-missing` when absent, Warning `no-op` when the flag is unchanged.
 
 use super::ChangeObjectSmoothShading;
-use crate::artifacts::lowpoly::diff::diff_objects_patch;
-use crate::artifacts::lowpoly::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot};
+use crate::diff::diff_objects_patch;
+use crate::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeObjectSmoothShading, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::GisTerrainSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `GisTerrainSnapshot` to its binary pack form.
@@ -23,7 +23,7 @@ pub fn decode(bytes: &[u8]) -> Result<GisTerrainSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gisterrain::dsl;
+    use crate::dsl;
 
     #[semio_framework_async_macros::async_test]
     async fn gis3d_terrain_document_pack_agrees_with_dsl_for_bundled_reuse_example() {

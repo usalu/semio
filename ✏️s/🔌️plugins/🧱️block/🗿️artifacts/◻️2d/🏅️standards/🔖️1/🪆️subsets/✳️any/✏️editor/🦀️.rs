@@ -3,12 +3,12 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the board window
 //! in `🎭️modes/✏️edit/🪟️windows/📋️board`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`,
-//! view state in `🦀️config.rs`, document-side compute in `crate::artifacts::block2d::schema`, and this
+//! view state in `🦀️config.rs`, document-side compute in `crate::schema`, and this
 //! app's own typed media I/O surface + plugin registration (below — constitutional: general, an
 //! artifact must never depend on an app, so both live here rather than under `🗿️artifacts`).
 
-use crate::artifacts::block2d::op::Block2dMutation;
-use crate::artifacts::block2d::{artifact_kind, Block2dSnapshot, BLOCK_2D_SCHEMA};
+use crate::op::Block2dMutation;
+use crate::{artifact_kind, Block2dSnapshot, BLOCK_2D_SCHEMA};
 use crate::editor::block2d::commands::patch_node_kind;
 use crate::editor::block2d::commands::{add_compatibility_rule, remove_compatibility_rule};
 use crate::editor::block2d::commands::{add_handle, remove_handle};
@@ -137,9 +137,9 @@ pub fn block2d_io() -> AppIo {
 //#region 🔌️Registration
 // 🗂️ `Block2dSnapshot`'s pack↔dsl codec, `block2d`'s artifact schema/inference descriptors, its
 // composer table and its pilot-language grammars now register declaratively via
-// `crate::artifacts::block2d::artifact()` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME,
+// `crate::artifact()` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME,
 // `descriptor-prep`; previously `declaration()`, ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
-// M1/W1d), consumed by `.declare_artifact(crate::artifacts::block2d::artifact())` in the plugin root
+// M1/W1d), consumed by `.declare_artifact(crate::artifact())` in the plugin root
 // (`🧱️block/🦀️.rs`) — replacing this app's former side-effecting `register()`. Nothing
 // app-scope-only remains here: `Block2dPlayApp::app_schema()` now returns
 // `crate::editor::block2d::config::schema::app_schema_descriptor()` directly (ticket W1c), so the
@@ -410,7 +410,7 @@ impl ArtifactEditor for Block2dPlayApp {
 
     type Command = Block2dCommand;
 
-    const DIALECT: Dialect = crate::artifacts::block2d::BLOCK2D_DIALECT;
+    const DIALECT: Dialect = crate::BLOCK2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_2D_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -465,9 +465,9 @@ impl ArtifactEditor for Block2dPlayApp {
 
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document (the same DSL
     /// `setActiveExample` parses), so every window renders real content instead of the all-`Default`
-    /// empty node kind — see `crate::artifacts::block2d::schema::default_block2d_snapshot`.
+    /// empty node kind — see `crate::schema::default_block2d_snapshot`.
     fn initial_snapshot() -> Block2dSnapshot {
-        crate::artifacts::block2d::schema::default_block2d_snapshot()
+        crate::schema::default_block2d_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -558,7 +558,7 @@ impl ArtifactEditor for Block2dPlayApp {
             let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let fragment = crate::artifacts::block2d::schema::inferences::puzzle2d_manifest_fragment(doc.snapshot);
+        let fragment = crate::schema::inferences::puzzle2d_manifest_fragment(doc.snapshot);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
@@ -566,7 +566,7 @@ impl ArtifactEditor for Block2dPlayApp {
 
 //#region 🔖️Manifest
 pub fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::block2d::BLOCK2D_DIALECT)
+    Editor::builder(crate::BLOCK2D_DIALECT)
             .document(["semio", "block", "2d"])
             .artifact_kind(artifact_kind())
             // 🗂️ The puzzle2d catalog artifact this app's new `"catalog:out"` port produces — see
@@ -860,7 +860,7 @@ mod tests {
         assert_eq!(booted.node_kind.id, "Hexagonal Cut Concrete Forest Left");
         assert_eq!(booted.handles.len(), 11);
         assert!(!booted.handle_kinds.is_empty());
-        assert_ne!(booted, crate::artifacts::block2d::schema::empty_block2d_snapshot());
+        assert_ne!(booted, crate::schema::empty_block2d_snapshot());
         assert!(testkit::render(&mut app, board::BLOCK2D_BODY_BOARD).await.contains("Hexagonal Cut Concrete Forest Left"));
     }
 

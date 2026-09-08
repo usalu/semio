@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📑reports` per Wave C.
 
 use super::RenameReportRecord;
-use crate::artifacts::program::diff::{ProgramReportsDelta, ProgramReportsPatchEntry};
-use crate::artifacts::program::registers::ReportRecordPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramReportsDelta, ProgramReportsPatchEntry};
+use crate::registers::ReportRecordPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameReportRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

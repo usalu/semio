@@ -15,8 +15,8 @@
 //! is `None` — exactly the pair this committed payload restates, taking the verb's own
 //! `mutation.no-op` guard.
 
-use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::UpdateGraphAlgorithm;
-use crate::artifacts::equation::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
+use crate::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::UpdateGraphAlgorithm;
+use crate::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::ToValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

@@ -1,8 +1,8 @@
 //! 🔺 Diff constructor for `CreateShot`. Fatal `duplicate-id` on an existing id.
 
 use super::CreateShot;
-use crate::artifacts::shooting::diff::{ShootingDiff, ShootingShotsDelta};
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::{ShootingDiff, ShootingShotsDelta};
+use crate::ShootingSnapshot;
 
 pub fn diff(payload: &CreateShot, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if base.shots.iter().any(|shot| shot.id == payload.shot.id) {

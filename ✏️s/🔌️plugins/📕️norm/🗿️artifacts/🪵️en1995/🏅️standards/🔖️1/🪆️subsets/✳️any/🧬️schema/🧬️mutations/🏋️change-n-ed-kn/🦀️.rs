@@ -1,9 +1,9 @@
 //! 🔧 `change-n-ed-kn` payload — changes the En1995 document's `n_ed_kn` (EN 1995 input).
 
 
-use crate::artifacts::en1995::En1995Snapshot;
-use crate::artifacts::en1995::diff::En1995Diff;
-use crate::artifacts::en1995::mutations::En1995Mutation;
+use crate::En1995Snapshot;
+use crate::diff::En1995Diff;
+use crate::mutations::En1995Mutation;
 //#region 🔖️ChangeNEdKn
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

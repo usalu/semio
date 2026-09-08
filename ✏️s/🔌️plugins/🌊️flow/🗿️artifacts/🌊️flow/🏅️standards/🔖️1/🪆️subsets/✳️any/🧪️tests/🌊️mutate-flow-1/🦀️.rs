@@ -37,9 +37,9 @@ const BASE_SCENE: &str = "local://🔣️.json";
 mod subject {
     use super::{BASE_SCENE, FLOW_ASSET};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_flow::artifacts::flow::dsl::{parse_dsl, print_dsl};
-    use semio_s_plugin_flow::artifacts::flow::mutations::{apply_flow_mutation, decode_flow_mutation_json, decode_flow_scene_json, encode_flow_projection_json, inverse_flow_mutation, FlowMutation};
-    use semio_s_plugin_flow::artifacts::flow::{flow_content_child_handle_and_cache, FlowSnapshot};
+    use semio_s_artifact_flow_flow::document_dsl::{parse_dsl, print_dsl};
+    use semio_s_artifact_flow_flow::mutations::{apply_flow_mutation, decode_flow_mutation_json, decode_flow_scene_json, encode_flow_projection_json, inverse_flow_mutation, FlowMutation};
+    use semio_s_artifact_flow_flow::{flow_content_child_handle_and_cache, FlowSnapshot};
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
 
     //#region 🔖️CommittedInput

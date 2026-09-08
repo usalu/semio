@@ -4,7 +4,7 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact mutation. Must
 //! not import anything from the sibling mutation-capable surface (`policyViewerPurityBreaches`).
 
-use crate::artifacts::assembly::{AssemblyMutation, AssemblySnapshot, ASSEMBLY_DIALECT, ASSEMBLY_DOCUMENT_SCHEMA};
+use crate::{AssemblyMutation, AssemblySnapshot, ASSEMBLY_DIALECT, ASSEMBLY_DOCUMENT_SCHEMA};
 use crate::viewer::assembly::modes::view;
 use crate::viewer::assembly::modes::view::windows::structure;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};

@@ -1,6 +1,6 @@
 //! 🧬️ Fem3d diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::fem3d::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use crate::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[artifact_schema(id = "s.fem.fem3d")]
 pub struct Fem3dDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::fem3d::schema::Fem3dArtifact>>,
+    pub artifact: Option<Box<crate::schema::Fem3dArtifact>>,
     #[state(artifact)]
     pub nodes: Option<Fem3dNodesDelta>,
     #[state(artifact)]

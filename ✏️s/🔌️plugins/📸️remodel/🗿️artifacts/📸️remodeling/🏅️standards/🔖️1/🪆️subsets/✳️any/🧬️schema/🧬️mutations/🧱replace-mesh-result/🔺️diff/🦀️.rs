@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceMeshResult` — `results.mesh` is always present (defaults to a
 //! placeholder box), so there is no target-missing case; identical resubmission ⇒ Warning.
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::RemodelingDiff;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceMeshResult, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

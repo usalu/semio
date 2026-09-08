@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/wav/riff-pcm/any/mutation/set-fmt.json",
+  "$id": "https://semio.tech/schema/s/stdio/wav/riff-pcm/any/mutation/set-fmt/schema.json",
   "title": "SetFmt",
   "type": "object",
   "additionalProperties": false,

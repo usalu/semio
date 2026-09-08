@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/fem/2d/1/material/mutation/replace-material.json",
+  "$id": "https://semio.tech/schema/s/fem/2d/1/material/mutation/replace-material/schema.json",
   "title": "ReplaceMaterial",
   "description": "The `replace-material` mutation payload as it travels the wire: internally tagged with `\"mutation\": \"replaceMaterial\"`, camelCase throughout. Structural only — the plausibility and geometry bounds this kind enforces live in the SNAPSHOT schema, because they are properties of a valid document rather than of a well-formed payload; each is annotated there with the `mutations::guards` function that raises them.",
   "type": "object",

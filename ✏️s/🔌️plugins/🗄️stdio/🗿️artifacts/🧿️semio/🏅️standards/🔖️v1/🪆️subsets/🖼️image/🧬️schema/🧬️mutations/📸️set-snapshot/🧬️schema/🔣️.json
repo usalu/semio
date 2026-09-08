@@ -1,90 +1,127 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/mutation/set-snapshot.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/mutation/set-snapshot/schema.json",
   "title": "SetSnapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema",
-    "width",
-    "height",
-    "colorspace",
-    "bitDepth",
-    "frames",
-    "metadata"
+    "snapshot"
   ],
   "properties": {
-    "schema": {
-      "type": "string"
-    },
-    "width": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "height": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "colorspace": {
-      "type": "string",
-      "enum": [
-        "Rgb",
-        "Rgba",
-        "Grayscale",
-        "GrayscaleAlpha",
-        "Indexed"
-      ]
-    },
-    "bitDepth": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "frames": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "delayMs": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "rgba8": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
-        },
-        "required": [
-          "delayMs",
-          "rgba8"
-        ],
-        "additionalProperties": false
-      }
-    },
-    "metadata": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "key",
-          "value"
-        ],
-        "additionalProperties": false
-      }
+    "snapshot": {
+      "$ref": "#/$defs/SemioImageSnapshot"
     },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "SemioImageSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "colorspace": {
+          "$ref": "#/$defs/SemioColorspace"
+        },
+        "bitDepth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioImageFrame"
+          }
+        },
+        "icc": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioImageMetadataEntry"
+          }
+        }
+      }
+    },
+    "SemioColorspace": {
+      "type": "string",
+      "enum": [
+        "rgb",
+        "rgba",
+        "grayscale",
+        "grayscaleAlpha",
+        "indexed"
+      ]
+    },
+    "SemioImageFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "delayMs"
+      ],
+      "properties": {
+        "delayMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rgba8": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "SemioImageMetadataEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
     }
   }
 }

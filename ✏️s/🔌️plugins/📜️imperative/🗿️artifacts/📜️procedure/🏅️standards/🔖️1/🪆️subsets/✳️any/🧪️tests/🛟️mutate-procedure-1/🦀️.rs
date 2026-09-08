@@ -120,8 +120,8 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_imperative::artifacts::procedure::standards::v1::subsets::any::schema::mutations::{apply_procedure_mutation_reporting, decode_procedure_mutation_json, procedure_program_summary, inverse_procedure_mutation_steps, seed_procedure_flow_json, ProcedureMutation};
-    use semio_s_plugin_imperative::artifacts::procedure::standards::v1::subsets::any::schema::snapshot::{decode_procedure_snapshot_json, encode_procedure_snapshot_json, parse_procedure_dsl, print_procedure_dsl, ProcedureSnapshot};
+    use semio_s_artifact_imperative_procedure::standards::v1::subsets::any::schema::mutations::{apply_procedure_mutation_reporting, decode_procedure_mutation_json, procedure_program_summary, inverse_procedure_mutation_steps, seed_procedure_flow_json, ProcedureMutation};
+    use semio_s_artifact_imperative_procedure::standards::v1::subsets::any::schema::snapshot::{decode_procedure_snapshot_json, encode_procedure_snapshot_json, parse_procedure_dsl, print_procedure_dsl, ProcedureSnapshot};
 
     //#region 🔖️FixtureDecode
     /// 🧫️ The committed before-snapshot for one kind, with its composed flow child resolved to the

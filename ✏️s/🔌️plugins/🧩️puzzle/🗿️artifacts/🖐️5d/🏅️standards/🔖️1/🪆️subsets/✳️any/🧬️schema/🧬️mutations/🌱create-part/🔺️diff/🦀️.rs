@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreatePart` — a real append-only insert. No-op when the id already
 //! exists in `base`.
-use crate::artifacts::puzzle5d::diff::{Puzzle5dDiff, Puzzle5dPartsDelta};
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::{Puzzle5dDiff, Puzzle5dPartsDelta};
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreatePart, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

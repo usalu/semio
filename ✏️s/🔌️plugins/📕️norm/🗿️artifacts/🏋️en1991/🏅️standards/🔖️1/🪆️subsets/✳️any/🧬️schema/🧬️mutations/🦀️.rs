@@ -27,7 +27,7 @@
 //! wave-2 precedent, whose orphaned `🟤️set-snapshot` stub is deleted along with its dangling glue
 //! mount). Each triad directory carries its own unique emoji prefix within this facet.
 
-use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
+use crate::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Mutations
 use super::change_accidental_mass_t;
@@ -259,9 +259,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn change_fire_curve_round_trips() {
         let base = En1991Snapshot::default();
-        let mutation = En1991Mutation::ChangeFireCurve(change_fire_curve::ChangeFireCurve { new_fire_curve: crate::artifacts::en1991::part_1_2::FireCurve::Hydrocarbon });
+        let mutation = En1991Mutation::ChangeFireCurve(change_fire_curve::ChangeFireCurve { new_fire_curve: crate::part_1_2::FireCurve::Hydrocarbon });
         let after = round_trip(&base, &mutation);
-        assert_eq!(after.fire_curve, crate::artifacts::en1991::part_1_2::FireCurve::Hydrocarbon);
+        assert_eq!(after.fire_curve, crate::part_1_2::FireCurve::Hydrocarbon);
     }
 
     #[semio_framework_async_macros::async_test]

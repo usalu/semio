@@ -1,7 +1,7 @@
 //! ⚙️ Sequence generic detection assembly, store bridges, and cross-kind laws.
 
-use crate::artifacts::sequence::schema::mutations::*;
-use crate::artifacts::sequence::{SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep};
+use crate::schema::mutations::*;
+use crate::{SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep};
 use protocol::Mutation;
 use std::collections::BTreeMap;
 
@@ -100,7 +100,7 @@ pub fn decode_sequence_scene_json(text: &str) -> Result<(Vec<SequenceStep>, Vec<
 /// projecting it would compare the same content twice and pin a value the standard library does not
 /// promise.
 pub fn encode_sequence_projection_json(snapshot: &SequenceSnapshot) -> String {
-    let scene = crate::artifacts::sequence::sequence_working_scene(snapshot);
+    let scene = crate::sequence_working_scene(snapshot);
     dsl::os_pack::to_json_string(&SequenceFixture { schema: snapshot.schema.clone(), steps: scene.steps, edges: scene.edges })
 }
 //#endregion 🔖️CaseBridges
@@ -109,7 +109,7 @@ pub fn encode_sequence_projection_json(snapshot: &SequenceSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::sequence::{default_snapshot, SequenceStep, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
+    use crate::{default_snapshot, SequenceStep, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
     use protocol::os_spr::testkit::assert_mutation_inverse_law;
     use protocol::SemanticMutation;
     use store::{create_document_envelope, ArtifactCommand};

@@ -135,7 +135,7 @@ impl Puzzle5dArtifactVcs {
 #[wasm_bindgen::prelude::wasm_bindgen(js_name = puzzle5dParseDslJson)]
 pub fn puzzle5d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
     use store::ArtifactDsl;
-    let projection = crate::artifacts::puzzle5d::Puzzle5dSnapshot::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    let projection = crate::Puzzle5dSnapshot::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
     Ok(dsl::json::to_json_string(&projection))
 }
 //#endregion 🔖️WasmBridge

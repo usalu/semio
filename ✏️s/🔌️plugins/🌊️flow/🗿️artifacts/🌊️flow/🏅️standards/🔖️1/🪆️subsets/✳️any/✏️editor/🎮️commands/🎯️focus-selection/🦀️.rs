@@ -1,6 +1,6 @@
 //! 🗂️ 🗂️ Flow play app commands command — `focus-selection`.
 
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::{flow_graph_selection_domains, focus_selection_camera, FLOW_INTERACTION_GRAPH};
 use flow::FlowEvalSession;

@@ -1,31 +1,99 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-snapshot.json",
+  "$id": "https://semio.tech/schema/s/stdio/gif/89a/base/mutation/set-snapshot/schema.json",
   "title": "SetSnapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema",
-    "width",
-    "height",
-    "backgroundColorIndex",
-    "pixelAspectRatio",
-    "frames"
+    "snapshot"
   ],
   "properties": {
-    "schema": {
-      "type": "string"
+    "snapshot": {
+      "$ref": "#/$defs/GifSnapshot"
     },
-    "width": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "height": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "gct": {
+    "mutation": {
+      "const": "setSnapshot",
+      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "GifSnapshot": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "gct": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GifColorTable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "backgroundColorIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "pixelAspectRatio": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "loopCount": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GifFrame"
+          }
+        },
+        "comments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "appExtensions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GifAppExtension"
+          }
+        }
+      }
+    },
+    "GifColorTable": {
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
         "sorted": {
           "type": "boolean"
@@ -33,200 +101,228 @@
         "colors": {
           "type": "array",
           "items": {
-            "type": "object",
-            "properties": {
-              "r": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "g": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "b": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": [
-              "r",
-              "g",
-              "b"
-            ],
-            "additionalProperties": false
+            "$ref": "#/$defs/GifRgb"
           }
         }
-      },
-      "required": [
-        "sorted",
-        "colors"
-      ],
-      "additionalProperties": false
-    },
-    "backgroundColorIndex": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "pixelAspectRatio": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "loopCount": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "frames": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "left": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "top": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "width": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "height": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "interlace": {
-            "type": "boolean"
-          },
-          "lct": {
-            "type": "object",
-            "properties": {
-              "sorted": {
-                "type": "boolean"
-              },
-              "colors": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "r": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "g": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "b": {
-                      "type": "integer",
-                      "minimum": 0
-                    }
-                  },
-                  "required": [
-                    "r",
-                    "g",
-                    "b"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            },
-            "required": [
-              "sorted",
-              "colors"
-            ],
-            "additionalProperties": false
-          },
-          "delayCs": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "disposal": {
-            "type": "string",
-            "enum": [
-              "Unspecified",
-              "DoNotDispose",
-              "RestoreToBackground",
-              "RestoreToPrevious"
-            ]
-          },
-          "transparentIndex": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "userInput": {
-            "type": "boolean"
-          },
-          "plainText": {
-            "type": "object",
-            "properties": {
-              "left": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "top": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "width": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "height": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "cellWidth": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "cellHeight": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "fgColorIndex": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "bgColorIndex": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "text": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "left",
-              "top",
-              "width",
-              "height",
-              "cellWidth",
-              "cellHeight",
-              "fgColorIndex",
-              "bgColorIndex",
-              "text"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "required": [
-          "left",
-          "top",
-          "width",
-          "height",
-          "interlace",
-          "delayCs",
-          "disposal",
-          "userInput"
-        ],
-        "additionalProperties": false
       }
     },
-    "mutation": {
-      "const": "setSnapshot",
-      "description": "Aggregate discriminator spliced in by GifMutation; absent when the payload stands alone."
+    "GifRgb": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b"
+      ],
+      "properties": {
+        "r": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "g": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "GifFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "left",
+        "top",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "left": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "top": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "interlace": {
+          "type": "boolean"
+        },
+        "lct": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GifColorTable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "delayCs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "disposal": {
+          "$ref": "#/$defs/GifDisposal"
+        },
+        "transparentIndex": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "userInput": {
+          "type": "boolean"
+        },
+        "plainText": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GifPlainText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GifDisposal": {
+      "type": "string",
+      "enum": [
+        "unspecified",
+        "doNotDispose",
+        "restoreToBackground",
+        "restoreToPrevious"
+      ]
+    },
+    "GifPlainText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "left",
+        "top",
+        "width",
+        "height",
+        "cellWidth",
+        "cellHeight",
+        "fgColorIndex",
+        "bgColorIndex"
+      ],
+      "properties": {
+        "left": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "top": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "cellWidth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "cellHeight": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "fgColorIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "bgColorIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "GifAppExtension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identifier",
+        "authCode"
+      ],
+      "properties": {
+        "identifier": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 8,
+          "maxItems": 8
+        },
+        "authCode": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
     }
   }
 }

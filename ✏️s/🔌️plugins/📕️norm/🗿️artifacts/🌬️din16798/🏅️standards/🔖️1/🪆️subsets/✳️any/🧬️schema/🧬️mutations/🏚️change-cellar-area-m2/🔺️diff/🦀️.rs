@@ -1,8 +1,8 @@
 //! 🔺️ `change-cellar-area-m2` sparse diff construction — writes only `Din16798Diff.cellar_area_m2` from the payload.
 
-use crate::artifacts::din16798::diff::Din16798Diff;
-use crate::artifacts::din16798::mutations::change_cellar_area_m2::ChangeCellarAreaM2;
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::diff::Din16798Diff;
+use crate::mutations::change_cellar_area_m2::ChangeCellarAreaM2;
+use crate::Din16798Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeCellarAreaM2, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {

@@ -13,9 +13,9 @@
 //! A solid extruded by nothing is a surface, and this artifact has no surface element. Zero and negative
 //! heights are refused together.
 
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -48,7 +48,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 #[test]
 fn the_refusal_is_the_declared_diagnostic() {
     let produced = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "replace-solid/zero-height-2b131a: a refused mutation must carry the empty diff");
+    assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "replace-solid/zero-height-2b131a: a refused mutation must carry the empty diff");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "replace-solid/zero-height-2b131a: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.invariant", "replace-solid/zero-height-2b131a: the refusal is reported as mutation.invariant");

@@ -1,8 +1,8 @@
 //! ⚓️ Puzzle2d mutation — `ChangeNodeAnchor`: changes whether a node keeps its stored pose or derives it from edges.
 
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::Puzzle2dDiff;
+use crate::mutations::Puzzle2dMutation;
+use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// ⚓️ `change-node-anchor` payload.
@@ -14,11 +14,11 @@ use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 #[dsl(keyword = "change-node-anchor")]
 pub struct ChangeNodeAnchor {
     pub id: String,
-    pub new_anchor: crate::artifacts::puzzle2d::Puzzle2dNodeAnchor,
+    pub new_anchor: crate::Puzzle2dNodeAnchor,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_node_anchor(id: String, new_anchor: crate::artifacts::puzzle2d::Puzzle2dNodeAnchor) -> Puzzle2dMutation {
+pub fn change_node_anchor(id: String, new_anchor: crate::Puzzle2dNodeAnchor) -> Puzzle2dMutation {
     Puzzle2dMutation::ChangeNodeAnchor(ChangeNodeAnchor { id, new_anchor })
 }
 

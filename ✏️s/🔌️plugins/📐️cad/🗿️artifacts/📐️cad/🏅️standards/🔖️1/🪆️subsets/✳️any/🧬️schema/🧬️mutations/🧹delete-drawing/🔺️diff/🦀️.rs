@@ -1,8 +1,8 @@
 //! 🔺️ `delete-drawing` — sparse diff construction, built directly from `(payload, base)`.
 
 use super::DeleteDrawing;
-use crate::artifacts::cad::diff::{CadDiff, CadDrawingChildList};
-use crate::artifacts::cad::CadSnapshot;
+use crate::diff::{CadDiff, CadDrawingChildList};
+use crate::CadSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteDrawing, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {

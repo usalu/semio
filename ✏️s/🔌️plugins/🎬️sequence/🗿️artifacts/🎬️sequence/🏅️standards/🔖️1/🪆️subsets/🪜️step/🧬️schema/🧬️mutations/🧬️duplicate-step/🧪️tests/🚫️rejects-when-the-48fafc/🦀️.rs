@@ -13,9 +13,9 @@
 //! pins the second — the seeded scene holds the source AND a step already occupying the requested
 //! new id, so the source lookup genuinely succeeds before the collision rejects.
 
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
-use crate::artifacts::sequence::{SequenceSnapshot, SequenceStep, SequenceWorkingScene, StepParams};
+use crate::diff::SequenceDiff;
+use crate::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
+use crate::{SequenceSnapshot, SequenceStep, SequenceWorkingScene, StepParams};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -117,7 +117,7 @@ async fn inverse_targets_the_new_id_even_though_that_step_predates_this_mutation
         panic!("duplicate-step's inverse must be a delete-step, got {:?}", inverse[0]);
     };
     assert_eq!(undo.id, "step-copy", "the inverse deletes the requested new id, never the source");
-    assert!(crate::artifacts::sequence::sequence_working_scene(&base).steps.iter().any(|step| step.id == undo.id), "the id the inverse targets is a step that existed before this mutation was ever attempted");
+    assert!(crate::sequence_working_scene(&base).steps.iter().any(|step| step.id == undo.id), "the id the inverse targets is a step that existed before this mutation was ever attempted");
 }
 
 /// 🪪️ The fixture is bound to `duplicate-step`'s own descriptor, whose address is the NEW id — the

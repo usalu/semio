@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `DeleteNode` — recreates the captured node from `base`.
 use super::DeleteNode;
-use crate::artifacts::cad::mutations::create_node;
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::create_node;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteNode, base: &CadSnapshot) -> Vec<CadMutation> {

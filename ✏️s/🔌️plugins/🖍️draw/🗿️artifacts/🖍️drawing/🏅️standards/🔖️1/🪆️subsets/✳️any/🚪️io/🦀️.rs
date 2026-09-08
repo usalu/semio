@@ -7,8 +7,8 @@
 //! deleted alongside them.
 
 //#region 🔖️SemioBridge
-use crate::artifacts::drawing::schema::{drawing_layer_world_bounds, flatten_drawing_document_to_scene_nodes, flatten_drawing_layers, DrawingSceneNode};
-use crate::artifacts::drawing::{DrawingSnapshot, FillStyle, PathSegment};
+use crate::schema::{drawing_layer_world_bounds, flatten_drawing_document_to_scene_nodes, flatten_drawing_layers, DrawingSceneNode};
+use crate::{DrawingSnapshot, FillStyle, PathSegment};
 /// 🌉️ Relocated verbatim from the `⚙️engine` directory (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 5: sniff/codec dispatch and
 /// cross-format bridge functions live in `🚪️io/`).
@@ -59,7 +59,7 @@ fn resolve_drawing_document_artboard(doc: &DrawingSnapshot) -> (u32, u32) {
 /// quaternion, axis scale, zero-z translation) — the same decomposition stdio's own svg↔drawing
 /// bridge applies on its side (`matrix_to_semio_transform` in that leaf).
 fn matrix_to_semio_transform(matrix: [f64; 6]) -> SemioTransform {
-    let transform = crate::artifacts::drawing::schema::drawing_matrix_to_transform(matrix);
+    let transform = crate::schema::drawing_matrix_to_transform(matrix);
     SemioTransform {
         translation: SemioPoint3 { x: transform.x, y: transform.y, z: 0.0 },
         rotation: SemioQuaternion { x: 0.0, y: 0.0, z: (transform.rotation / 2.0).sin(), w: (transform.rotation / 2.0).cos() },
@@ -186,9 +186,9 @@ pub fn drawing_document_json_to_svg(value: &dsl::DslValue) -> Result<(String, u3
 
 //#region 🔖️IoDeclaration
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::artifacts::drawing::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::artifacts::drawing::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use crate::artifacts::drawing::{DrawingMutation, DrawingSnapshot, DRAWING_DIALECT, DRAWING_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::{DrawingMutation, DrawingSnapshot, DRAWING_DIALECT, DRAWING_DOCUMENT_SCHEMA};
     use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
@@ -238,8 +238,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::drawing::schema::{create_drawing_image_layer, create_drawing_shape_layer_rect, default_drawing_document, default_layer_base};
-    use crate::artifacts::drawing::{DrawingImageAsset, DrawingLayerNode, DrawingTextBody, StrokeStyle};
+    use crate::schema::{create_drawing_image_layer, create_drawing_shape_layer_rect, default_drawing_document, default_layer_base};
+    use crate::{DrawingImageAsset, DrawingLayerNode, DrawingTextBody, StrokeStyle};
 
     /// 🌉️ Ported from the pre-migration `drawing_document_to_svg_renders_shape_text_image_and_gradient_nodes`
     /// (same shape/text/image/gradient coverage) onto the new `SemioDrawingSnapshot`→`io_dispatch`

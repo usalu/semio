@@ -9,7 +9,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.demonstrator.playground")]
 pub struct PlaygroundDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::playground::standards::v1::subsets::any::schema::PlaygroundArtifact>>,
+    pub artifact: Option<Box<crate::standards::v1::subsets::any::schema::PlaygroundArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
 }

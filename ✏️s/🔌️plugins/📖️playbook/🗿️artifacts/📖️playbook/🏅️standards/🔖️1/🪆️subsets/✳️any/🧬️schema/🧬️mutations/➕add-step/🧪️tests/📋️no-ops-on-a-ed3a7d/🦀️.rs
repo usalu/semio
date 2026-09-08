@@ -17,8 +17,8 @@
 //! collision. The seeded scene holds exactly the step the committed payload asks to add; nothing
 //! about it is invented.
 
-use crate::artifacts::playbook::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
-use crate::artifacts::playbook::{attach_playbook_steps, PlaybookDiff, PlaybookSnapshot};
+use crate::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
+use crate::{attach_playbook_steps, PlaybookDiff, PlaybookSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

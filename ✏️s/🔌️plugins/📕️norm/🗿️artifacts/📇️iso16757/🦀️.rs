@@ -1,7 +1,26 @@
 //! 📦️ ISO 16757 building-services product catalogue: parts 1, 2, 4, 5 — document entities.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+pub use semio_s_artifact_norm_contract::{app_surface, config, document, impl_norm_artifact_record, norm_owned_tool_job_factory};
+
+/// 📜 Language-neutral package declaration owned by this artifact.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+
+/// 📦 Validates this artifact's independently compiled package identity.
+pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifactPackage, semio_s_artifact_norm_contract::PackageSchemaError> {
+    semio_s_artifact_norm_contract::package_from_schema(ARTIFACT_DEFINITION_SCHEMA)
+}
+
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::artifacts::iso16757::schema::snapshot::Iso16757Snapshot;
+pub use crate::document_schema::snapshot::Iso16757Snapshot;
 
 use std::collections::BTreeMap;
 
@@ -1064,7 +1083,8 @@ mod tests {
 /// `register_artifact_inferences()`/`register_io()`, each of which called a global registry directly
 /// from the plugin root's `.setup()` fan-out (`register_norm_exports`, deleted by this same wave).
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use crate::artifacts::definition::{CapabilitySpec as C, ClaimSpec as Q, LocalizationSpec as L};
+    package_descriptor().map_err(|error| semio_framework_plugin::ArtifactDefinitionError::new("artifact.package-schema", error.to_string()))?;
+    use semio_s_artifact_norm_contract::definition::{CapabilitySpec as C, ClaimSpec as Q, LocalizationSpec as L};
     const S: &[Q] = &[Q { namespace: "schema", value: "s.norm.iso16757" }];
     const I: &[Q] = &[Q { namespace: "schema", value: "s.norm.iso16757.inference" }];
     const M: &[Q] = &[Q { namespace: "dialect", value: "s.norm.iso16757@1/*" }];
@@ -1086,14 +1106,14 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         C { identity: "s.norm.iso16757.localization.en", kind: "localization", descriptor: "ISO 16757 building-services product catalogue exchange", claims: &[], localizations: EN },
         C { identity: "s.norm.iso16757.localization.de", kind: "localization", descriptor: "ISO 16757 Austausch von Produktdaten der technischen Gebäudeausrüstung", claims: &[], localizations: DE },
     ];
-    crate::artifacts::definition::assemble_definition("s.norm.iso16757", ROWS)
+    semio_s_artifact_norm_contract::definition::assemble_definition("s.norm.iso16757", ROWS)
 }
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::iso16757::schema::iso16757_artifact_schema_descriptor())
-        .inferences([crate::artifacts::iso16757::standards::v1::subsets::any::schema::inferences::iso16757_artifact_inference_descriptor()])
-        .composers(crate::artifacts::iso16757::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(crate::document_schema::iso16757_artifact_schema_descriptor())
+        .inferences([crate::standards::v1::subsets::any::schema::inferences::iso16757_artifact_inference_descriptor()])
+        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<semio_framework_plugin::EditorApp<crate::editor::iso16757::Iso16757PlayApp>>()
         .try_build()
@@ -1111,28 +1131,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "iso16757.document",
                     extension: Some("iso16757"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::en1999::dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_norm_en1999::document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_norm_en1999::document_dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_norm_en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_norm_en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("iso16757.document"),
                 },
                 dsl::LanguageSpec {
                     id: "iso16757.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::artifacts::en1999::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::en1999::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_norm_en1999::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_norm_en1999::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_norm_en1999::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_norm_en1999::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("iso16757.op"),
                 },
                 dsl::LanguageSpec {
                     id: "iso16757.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::artifacts::en1999::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::artifacts::en1999::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(semio_s_artifact_norm_en1999::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_norm_en1999::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("iso16757.diff"),
@@ -1143,8 +1163,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_norm_en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_norm_en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("iso16757.pack"),
                 },
                 dsl::LanguageSpec {
@@ -1153,8 +1173,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::artifacts::en1999::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_norm_en1999::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_norm_en1999::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("iso16757.spr"),
                 },
             ]
@@ -1162,3 +1182,414 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
         .as_slice()
 }
 //#endregion 🪪️Declaration
+
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod schema {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
+                        pub mod text;
+                    }
+                    #[path = "."]
+                    pub mod inferences {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
+                        pub mod text;
+                        #[path = "."]
+                        pub mod outline {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                    #[path = "."]
+                    pub mod diff {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
+                        pub mod text;
+                        pub use text::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                    }
+                    #[path = "."]
+                    pub mod mutations {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
+                        pub mod binary;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
+                        pub mod text;
+
+                        #[path = "."]
+                        pub mod remove_selection_constraint {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-selection-constraint/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-selection-constraint/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-selection-constraint/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod rename_product {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod rename_product_group {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rename-product-group/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rename-product-group/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rename-product-group/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod add_selection_constraint {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️add-selection-constraint/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️add-selection-constraint/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️add-selection-constraint/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod remove_part_number_input {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️remove-part-number-input/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️remove-part-number-input/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️remove-part-number-input/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod create_product_group {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️create-product-group/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️create-product-group/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️create-product-group/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod create_property_definition {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-property-definition/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-property-definition/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-property-definition/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod create_subject {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-subject/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-subject/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-subject/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod change_selection_class {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️change-selection-class/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️change-selection-class/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️change-selection-class/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod rename_manufacturer {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️rename-manufacturer/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️rename-manufacturer/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️rename-manufacturer/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod rename_catalogue {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️rename-catalogue/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️rename-catalogue/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️rename-catalogue/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod create_product {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod replace_part_number_rule {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-part-number-rule/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-part-number-rule/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-part-number-rule/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod change_exchange_process {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-exchange-process/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-exchange-process/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-exchange-process/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod change_part_number_input {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-part-number-input/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-part-number-input/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-part-number-input/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod update_script_limits {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️update-script-limits/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️update-script-limits/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️update-script-limits/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod delete_product {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-product/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-product/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-product/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod delete_product_group {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-product-group/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-product-group/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-product-group/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod delete_property_definition {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️delete-property-definition/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️delete-property-definition/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️delete-property-definition/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod delete_subject {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-subject/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-subject/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-subject/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod change_selection_series {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️change-selection-series/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️change-selection-series/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️change-selection-series/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                    }
+                }
+                #[path = "."]
+                pub mod io {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+                    mod component;
+                    pub use component::*;
+                }
+            }
+        }
+    }
+}
+
+// ---- Shims: keep pre-migration module paths resolving for external callers ----
+pub mod document_schema {
+    pub use super::standards::v1::subsets::any::schema::*;
+}
+pub mod io {
+    pub use super::standards::v1::subsets::any::io::*;
+}
+pub mod op {
+    pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
+}
+pub mod document_dsl {
+    pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
+}
+pub mod spr {
+    pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
+}
+pub mod diff {
+    pub use crate::standards::v1::subsets::any::schema::diff::*;
+    pub mod schema {
+        pub use crate::standards::v1::subsets::any::schema::diff::*;
+    }
+    pub mod text {
+        pub use crate::standards::v1::subsets::any::schema::diff::text::*;
+    }
+    pub mod pack {
+        pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
+    }
+    pub mod binary {
+        pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
+    }
+}
+pub mod mutations {
+    pub use crate::standards::v1::subsets::any::schema::mutations::*;
+    pub mod schema {
+        pub use crate::standards::v1::subsets::any::schema::mutations::*;
+    }
+    pub mod text {
+        pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
+    }
+    pub mod pack {
+        pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
+    }
+    pub mod binary {
+        pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
+    }
+}
+pub mod snapshot {
+    pub use crate::standards::v1::subsets::any::schema::snapshot::*;
+    pub mod schema {
+        pub use crate::standards::v1::subsets::any::schema::snapshot::*;
+    }
+    pub mod text {
+        pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
+    }
+    pub mod pack {
+        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
+    }
+    pub mod binary {
+        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
+    }
+}
+pub use crate::standards::v1::subsets::any::schema::diff::Iso16757Diff;
+pub use crate::standards::v1::subsets::any::schema::mutations::Iso16757Mutation;
+pub use crate::standards::v1::subsets::any::schema::snapshot::Iso16757Snapshot;
+
+#[path = "."]
+pub mod examples {
+    #[path = "."]
+    pub mod demo {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+}
+
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod iso16757 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod commands {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️evaluate/🦀️.rs"]
+            pub mod evaluate;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️selected-check/🦀️.rs"]
+            pub mod selected_check;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️set-snapshot/🦀️.rs"]
+            pub mod set_snapshot;
+        }
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📥️inputs/🦀️.rs"]
+                    pub mod inputs;
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs"]
+                    pub mod results;
+                }
+            }
+        }
+
+        #[path = "."]
+        pub mod panels {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📚️catalogue/🦀️.rs"]
+            pub mod catalogue;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs"]
+            pub mod document;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"]
+            pub mod inspection;
+        }
+    }
+}
+
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod iso16757 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod windows {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📊️report/🦀️.rs"]
+                    pub mod report;
+                }
+            }
+        }
+    }
+}

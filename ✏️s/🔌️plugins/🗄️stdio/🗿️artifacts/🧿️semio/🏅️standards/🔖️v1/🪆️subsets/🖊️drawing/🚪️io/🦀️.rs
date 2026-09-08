@@ -4,11 +4,17 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
+    #[cfg(feature = "conversion-drawing")]
     use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::dxf::v_r12::any::SemioDrawingToDxf;
+    #[cfg(feature = "conversion-drawing")]
     use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::pdf::v1_7::any::SemioDrawingToPdf;
+    #[cfg(feature = "conversion-drawing")]
     use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
+    #[cfg(feature = "conversion-drawing")]
     use crate::standards::v1::subsets::drawing::io::import::deserializers::artifacts::dxf::v_r12::any::SemioDrawingFromDxf;
+    #[cfg(feature = "conversion-drawing")]
     use crate::standards::v1::subsets::drawing::io::import::deserializers::artifacts::pdf::v1_7::any::SemioDrawingFromPdf;
+    #[cfg(feature = "conversion-drawing")]
     use crate::standards::v1::subsets::drawing::io::import::deserializers::artifacts::svg::v1_1::any::SemioDrawingFromSvg;
     use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
     use crate::standards::v1::subsets::drawing::schema::SemioDrawingAnalyzer;
@@ -120,8 +126,10 @@ pub mod derived_composition {
     /// real entity↔path translation (exact circles, sampled-flattened curves on export); pdf is an
     /// honestly text-only bridge (this codec's own snapshot never exposes decoded content-stream
     /// vector ops) — see each pair's own leaf doc comment for the full rationale.
+    #[cfg(feature = "conversion-drawing")]
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-drawing")]
     fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES
             .get_or_init(|| {
@@ -148,6 +156,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-drawing")]
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -162,7 +171,7 @@ pub mod derived_composition {
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-drawing"))]
     mod tests {
         use super::*;
         use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};

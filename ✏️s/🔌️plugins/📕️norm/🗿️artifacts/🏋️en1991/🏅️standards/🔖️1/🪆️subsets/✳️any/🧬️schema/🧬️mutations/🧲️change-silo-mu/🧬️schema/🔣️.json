@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1991/1/any/mutation/change-silo-mu.json",
+  "$id": "https://semio.tech/schema/s/norm/en1991/1/any/mutation/change-silo-mu/schema.json",
   "title": "ChangeSiloMu",
   "type": "object",
   "additionalProperties": false,

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🐛issues` per Wave C.
 
 use super::DeleteIssue;
-use crate::artifacts::program::diff::ProgramIssuesDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramIssuesDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteIssue, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

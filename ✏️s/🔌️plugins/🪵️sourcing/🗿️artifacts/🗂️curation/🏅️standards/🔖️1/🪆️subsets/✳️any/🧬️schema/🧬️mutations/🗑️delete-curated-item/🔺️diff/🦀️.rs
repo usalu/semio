@@ -1,7 +1,7 @@
 //! 🔺 Sparse diff builder for `DeleteCuratedItem` — a real removal (never a whole-snapshot
 //! capture). Error `target-missing` when absent.
-use crate::artifacts::curation::diff::{CurationCuratedDelta, CurationDiff};
-use crate::artifacts::curation::CurationSnapshot;
+use crate::diff::{CurationCuratedDelta, CurationDiff};
+use crate::CurationSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteCuratedItem, base: &CurationSnapshot) -> protocol::MutationOutcome<CurationDiff> {

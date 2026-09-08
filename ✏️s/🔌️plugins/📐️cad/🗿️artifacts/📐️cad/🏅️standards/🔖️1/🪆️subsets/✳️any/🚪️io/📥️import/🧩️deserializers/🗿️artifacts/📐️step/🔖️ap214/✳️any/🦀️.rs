@@ -5,7 +5,7 @@
 //! positions as the CAD document's own opaque `ArtifactPack` bytes (fabricated, and had zero
 //! callers — `CadComposer` only ever calls `deserialize_text` below) — deleted outright, matching
 //! the mirror export leaf.
-use crate::artifacts::cad::CadSnapshot;
+use crate::CadSnapshot;
 
 //#region Deserialize
 pub fn register() {}

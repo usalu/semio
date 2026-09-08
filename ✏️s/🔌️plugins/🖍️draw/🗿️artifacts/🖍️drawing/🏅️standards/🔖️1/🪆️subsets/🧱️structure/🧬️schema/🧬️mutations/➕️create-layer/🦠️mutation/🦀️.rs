@@ -1,8 +1,8 @@
 //! 🌱 Drawing mutation — `CreateLayer`: brings a new id-keyed layer into existence at an address
 //! (root when `parent_id` is `None`, `index` FINAL-state — appends when `None`).
-use crate::artifacts::drawing::diff::DrawingDiff;
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::{DrawingLayerNode, DrawingSnapshot};
+use crate::diff::DrawingDiff;
+use crate::mutations::DrawingMutation;
+use crate::{DrawingLayerNode, DrawingSnapshot};
 
 //#region 🔖️Mutation
 /// 🌱 `create-layer` payload — full initial payload plus optional (parent, index) address.
@@ -38,10 +38,10 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for CreateLayer {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> String {
-        format!("Create layer \"{}\"", crate::artifacts::drawing::schema::layer_id(&self.layer))
+        format!("Create layer \"{}\"", crate::schema::layer_id(&self.layer))
     }
     fn target(&self) -> Vec<String> {
-        vec![crate::artifacts::drawing::schema::layer_id(&self.layer).to_string()]
+        vec![crate::schema::layer_id(&self.layer).to_string()]
     }
 }
 //#endregion 🔖️Mutation

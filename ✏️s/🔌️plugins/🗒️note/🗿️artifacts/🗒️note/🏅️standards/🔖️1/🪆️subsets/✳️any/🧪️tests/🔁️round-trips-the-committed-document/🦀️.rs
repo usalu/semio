@@ -18,10 +18,10 @@ mod subject {
     use super::EXAMPLE_ASSET;
     use semio_repo_test_host::{parse_json, Context, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_plugin_note::artifacts::note::standards::v1::subsets::any::io::snapshot::text::{parse_note_dsl, print_note_dsl};
-    use semio_s_plugin_note::artifacts::note::standards::v1::subsets::any::schema::mutations::encode_note_snapshot_json;
+    use semio_s_artifact_note_note::standards::v1::subsets::any::io::snapshot::text::{parse_note_dsl, print_note_dsl};
+    use semio_s_artifact_note_note::standards::v1::subsets::any::schema::mutations::encode_note_snapshot_json;
 
-    fn projection(snapshot: &semio_s_plugin_note::artifacts::note::NoteSnapshot) -> Result<semio_repo_test_host::Json, String> {
+    fn projection(snapshot: &semio_s_artifact_note_note::NoteSnapshot) -> Result<semio_repo_test_host::Json, String> {
         parse_json(&encode_note_snapshot_json(snapshot))
     }
 

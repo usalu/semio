@@ -1,7 +1,7 @@
 //! 🧬️ Wires diff schema — sparse field delta over the artifact.
 
 use dsl::DslValue;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the wires artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -12,11 +12,11 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.reasoning.wires")]
 pub struct WiresDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::wires::schema::WiresArtifact>>,
+    pub artifact: Option<Box<crate::schema::WiresArtifact>>,
     #[state(artifact)]
     pub wires_fixture: Option<DslValue>,
     #[state(artifact)]
-    pub content: Option<crate::artifacts::wires::WiresContentChild>,
+    pub content: Option<crate::WiresContentChild>,
     #[state(artifact)]
     pub camera: Option<DslValue>,
     #[state(artifact)]

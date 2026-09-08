@@ -1,8 +1,8 @@
 //! 🗣️ GIS 2D play app command — the host-pushed locale switch (undeclared in the manifest, never in
 //! the command palette; host/test infra dispatches it directly).
 
-use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::op::GisMapMutation;
+use crate::GisMapSnapshot;
 use crate::editor::gis2d::config::{mutations as config_mutations, Gis2dConfig, Gis2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]

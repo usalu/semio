@@ -30,10 +30,8 @@ pub struct FlowParam {
 //#endregion 🔖️Param
 
 //#region 🔖️Node
-/// 🔁️ Owned by the `flow` subset. DISTINCT from the OS kernel's own
-/// `semio_framework::WorkflowNode` (a different crate, `semio-framework`, not
-/// `semio-s-plugin-stdio`) — same name, zero collision risk, do not conflate the two (see
-/// w1b-type-ownership.md).
+/// 🔁️ A node owned by the Flow subset.
+/// The workflow artifact owns its separate `semio_framework_artifact_workflow_workflow::WorkflowNode`.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct FlowNode {

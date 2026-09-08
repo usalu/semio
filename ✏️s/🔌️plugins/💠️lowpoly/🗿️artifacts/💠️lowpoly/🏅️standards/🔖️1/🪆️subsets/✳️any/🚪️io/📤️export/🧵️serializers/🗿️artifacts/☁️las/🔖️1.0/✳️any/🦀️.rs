@@ -6,7 +6,7 @@
 //! positions, which would have to come from resolved mesh vertex geometry, unavailable at the
 //! `&LowpolySnapshot -> …` layer (see the stl leaf's doc comment for why). Left as an HONEST stub
 //! pending that architecture work -- see this ticket's `📝️io-implementation-result.md` handoff.
-use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
+use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_las::LasSnapshot;
 
 pub fn register() {}

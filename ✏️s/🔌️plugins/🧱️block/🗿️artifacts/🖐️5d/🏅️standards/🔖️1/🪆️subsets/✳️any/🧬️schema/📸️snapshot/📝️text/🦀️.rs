@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::block5d::Block5dSnapshot;
+use crate::Block5dSnapshot;
 
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block5d` DSL —
 /// the `PartKind` slice of `s/plugin/puzzle/app/5d/example/🧩️concrete-forest.puzzle5d`.
@@ -28,7 +28,7 @@ pub fn print_dsl(document: &Block5dSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
+    use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
     use crate::{BlockCamera2d, BlockCamera3d, BlockKindIdentity, BlockRepresentation};
 
     pub fn hexagonal_cut_concrete_forest_left() -> Block5dSnapshot {

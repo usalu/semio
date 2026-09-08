@@ -5,14 +5,14 @@
 //! store::ArtifactChild<SemioImageSnapshot>>` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`:
 //! the persisted document field holds only a composed-child HANDLE; this mutation's own payload still
 //! carries the real bytes, minted into a handle + working-scene cache entry at apply time via
-//! `crate::artifacts::raster::mint_raster_asset_child`) is itself an id-keyed root collection per
+//! `crate::mint_raster_asset_child`) is itself an id-keyed root collection per
 //! `📓️derivation-rules.md` rule 2, and `add`/`remove` is its taxonomy-correct verb pair (`add`:
 //! "Attach a set-like member … inverse: remove").
 
 pub mod mutation {
-use crate::artifacts::raster::diff::RasterDiff;
-use crate::artifacts::raster::mutations::RasterMutation;
-use crate::artifacts::raster::{RasterImageAsset, RasterSnapshot};
+use crate::diff::RasterDiff;
+use crate::mutations::RasterMutation;
+use crate::{RasterImageAsset, RasterSnapshot};
 
 //#region 🔖️AddLayerAsset
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]

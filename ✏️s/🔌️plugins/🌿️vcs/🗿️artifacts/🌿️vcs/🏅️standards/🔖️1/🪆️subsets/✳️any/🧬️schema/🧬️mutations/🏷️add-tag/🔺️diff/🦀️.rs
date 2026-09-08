@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `AddTag` — no-op (empty diff) when BASE already has the tag.
-use crate::artifacts::vcs::diff::VcsTagsDelta;
-use crate::artifacts::vcs::{VcsDiff, VcsSnapshot};
+use crate::diff::VcsTagsDelta;
+use crate::{VcsDiff, VcsSnapshot};
 
 //#region 🔖️Diff
 /// 🔺️ Warning `no-op` when BASE already has the tag.

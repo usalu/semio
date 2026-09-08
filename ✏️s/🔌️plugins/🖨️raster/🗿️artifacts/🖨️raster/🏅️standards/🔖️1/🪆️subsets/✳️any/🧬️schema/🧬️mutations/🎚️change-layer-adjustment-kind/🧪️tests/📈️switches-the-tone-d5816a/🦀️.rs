@@ -8,9 +8,9 @@
 //! `Adjustment` arm of the diff builder's four-way match; the sibling `Pixel` layer in the same
 //! document is the one that would have taken the "is not an adjustment layer" error branch.
 
-use crate::artifacts::raster::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
-use crate::artifacts::raster::schema::find_layer;
-use crate::artifacts::raster::{RasterDiff, RasterLayerNode, RasterSnapshot};
+use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::schema::find_layer;
+use crate::{RasterDiff, RasterLayerNode, RasterSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

@@ -1,7 +1,7 @@
 //! Puzzle5d mutation — `ChangePart2dIcon`: changes a part's 2D-projection icon.
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::Puzzle5dDiff;
+use crate::mutations::Puzzle5dMutation;
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
 /// `change-part2d-icon` payload.

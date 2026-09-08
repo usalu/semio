@@ -9,8 +9,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use crate::artifacts::en1995::schema::mutations::En1995Mutation;
-use crate::artifacts::en1995::schema::mutations::{
+pub use crate::document_schema::mutations::En1995Mutation;
+use crate::document_schema::mutations::{
     change_a_ef_mm2, change_a_mm2, change_a_vert_m_s2, change_b_mm, change_f_c_0_k, change_f_ed_kn, change_f_m_k, change_f_v_k, change_fire_duration_min, change_h_mm, change_load_duration, change_m_crit_knm, change_m_ed_knm, change_n_cycles_bridge,
     change_n_ed_kn, change_section_depth_mm, change_service_class, change_v_ed_kn, change_w_mm3, set_snapshot,
 };

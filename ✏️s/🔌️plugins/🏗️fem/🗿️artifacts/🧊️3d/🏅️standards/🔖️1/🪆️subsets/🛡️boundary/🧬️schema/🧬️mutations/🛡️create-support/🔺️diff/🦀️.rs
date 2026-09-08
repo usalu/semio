@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateSupport`.
 use super::CreateSupport;
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dSupportsDelta};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::diff::{Fem3dDiff, Fem3dSupportsDelta};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateSupport, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

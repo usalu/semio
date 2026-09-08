@@ -1,5 +1,5 @@
 //! program <- xlsx
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramSnapshot;
 use semio_s_artifact_stdio_xlsx::{XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 
 pub fn register() {}

@@ -1,9 +1,9 @@
 //! 🔺️ `change-layer-adjustment-kind` sparse diff — writes only `adjustment_kind`;
 //! `RasterDiff::default()` when the addressed layer isn't an `Adjustment` (or doesn't exist).
 
-use crate::artifacts::raster::diff::{diff_patch_layer, RasterDiff};
-use crate::artifacts::raster::schema::find_layer;
-use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
+use crate::diff::{diff_patch_layer, RasterDiff};
+use crate::schema::find_layer;
+use crate::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeLayerAdjustmentKind, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {

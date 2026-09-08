@@ -1,7 +1,7 @@
 //! 🔺️ S Home launcher artifact — operation diff laws (constitutional: diff).
 
-use crate::artifacts::home::schema::SHomeArtifact;
-use crate::artifacts::home::SHomeSnapshot;
+use crate::schema::SHomeArtifact;
+use crate::SHomeSnapshot;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::home::schema::diff::*;
+use crate::schema::diff::*;
 
 //#region 🔖️Apply
 impl SHomeDiff {

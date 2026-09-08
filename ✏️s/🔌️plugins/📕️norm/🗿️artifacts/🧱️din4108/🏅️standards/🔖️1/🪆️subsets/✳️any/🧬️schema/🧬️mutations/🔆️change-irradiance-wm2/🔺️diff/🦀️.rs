@@ -1,7 +1,7 @@
 //! 🔺️ `change-irradiance-w-m2` — sparse diff construction.
 
 use super::ChangeIrradianceWM2;
-use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
+use crate::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeIrradianceWM2, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {

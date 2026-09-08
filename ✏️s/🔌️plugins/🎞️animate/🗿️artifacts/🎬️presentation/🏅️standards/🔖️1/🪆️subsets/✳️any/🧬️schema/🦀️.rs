@@ -1,6 +1,6 @@
 //! 🧬️ Presentation artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::presentation::{AnimationChild, PresentationChild, PRESENTATION_DOCUMENT_SCHEMA};
+use crate::{AnimationChild, PresentationChild, PRESENTATION_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -31,8 +31,8 @@ impl Default for PresentationArtifact {
     fn default() -> Self {
         Self {
             schema: PRESENTATION_DOCUMENT_SCHEMA.into(),
-            presentation: crate::artifacts::presentation::presentation_child_handle_and_cache(&crate::artifacts::presentation::default_figure_tile_source(), &[]),
-            animation: crate::artifacts::presentation::animation_child_handle(),
+            presentation: crate::presentation_child_handle_and_cache(&crate::default_figure_tile_source(), &[]),
+            animation: crate::animation_child_handle(),
             selected_ids: Vec::new(),
             engagement_input: String::new(),
             locale: "en-US".into(),
@@ -42,17 +42,17 @@ impl Default for PresentationArtifact {
 
 impl PresentationArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::presentation::PresentationSnapshot {
-        crate::artifacts::presentation::PresentationSnapshot { schema: self.schema.clone(), presentation: self.presentation.clone(), animation: self.animation.clone() }
+    pub fn to_snapshot(&self) -> crate::PresentationSnapshot {
+        crate::PresentationSnapshot { schema: self.schema.clone(), presentation: self.presentation.clone(), animation: self.animation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::presentation::PresentationSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::PresentationSnapshot) -> Self {
         Self { schema: snapshot.schema, presentation: snapshot.presentation, animation: snapshot.animation, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::presentation::PresentationSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::PresentationSnapshot) {
         self.schema = snapshot.schema;
         self.presentation = snapshot.presentation;
         self.animation = snapshot.animation;
@@ -104,7 +104,7 @@ pub fn presentation_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
 /// by `ArtifactInferrer` (orphan-rule violation, see `🚪️io/💡️inferences/🦀️.rs`'s own
 /// `PresentationInferrer` marker) — kept only as the documented replacement anchor, mirroring
 /// `🎬️sequence`'s identical shape.
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::artifacts::presentation::PresentationSnapshot, crate::artifacts::presentation::PresentationMutation>;
+pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::PresentationSnapshot, crate::PresentationMutation>;
 //#endregion 🏗️Construction
 
 //#region 🔖️Error
@@ -165,8 +165,8 @@ impl From<vcs::VcsError> for PresentationError {
 
 //#region 🔖️DocumentHelpers
 /// 📄️ Empty presentation deck — the wasm VCS bridge's default projection for a fresh envelope.
-pub fn empty_presentation_snapshot() -> crate::artifacts::presentation::PresentationSnapshot {
-    crate::artifacts::presentation::presentation_snapshot_with_tiles(&crate::artifacts::presentation::default_figure_tile_source(), &[])
+pub fn empty_presentation_snapshot() -> crate::PresentationSnapshot {
+    crate::presentation_snapshot_with_tiles(&crate::default_figure_tile_source(), &[])
 }
 
 //#region 🎞️TilePlay
@@ -181,19 +181,19 @@ pub const NORMALIZED_RECT_MIN_FRACTION: f64 = 0.02;
 pub struct SplitFigureGridSpec<'a> {
     pub rows: u32,
     pub columns: u32,
-    pub frame: &'a crate::artifacts::presentation::FigureTileFrame,
+    pub frame: &'a crate::FigureTileFrame,
     pub gap: f64,
     pub key_prefix: &'a str,
 }
 
 pub struct SplitGridCell {
     pub key: String,
-    pub crop: crate::artifacts::presentation::FigureTileFrame,
+    pub crop: crate::FigureTileFrame,
 }
 
 #[derive(Clone, Copy)]
 pub struct FigureTileGridSeedSpec<'a> {
-    pub source: &'a crate::artifacts::presentation::FigureTileSource,
+    pub source: &'a crate::FigureTileSource,
     pub rows: u32,
     pub columns: u32,
     pub gap: f64,
@@ -204,12 +204,12 @@ pub fn clamp_normalized_fraction(value: f64) -> f64 {
     value.clamp(0.0, 1.0)
 }
 
-pub fn clamp_tile_crop(crop: &crate::artifacts::presentation::FigureTileFrame) -> crate::artifacts::presentation::FigureTileFrame {
+pub fn clamp_tile_crop(crop: &crate::FigureTileFrame) -> crate::FigureTileFrame {
     let width = crop.width.max(NORMALIZED_RECT_MIN_FRACTION);
     let height = crop.height.max(NORMALIZED_RECT_MIN_FRACTION);
     let x = clamp_normalized_fraction(crop.x.min(1.0 - width));
     let y = clamp_normalized_fraction(crop.y.min(1.0 - height));
-    crate::artifacts::presentation::FigureTileFrame { x, y, width, height }
+    crate::FigureTileFrame { x, y, width, height }
 }
 
 pub fn parse_grid_engagement(text: &str) -> Option<(u32, u32)> {
@@ -242,7 +242,7 @@ pub fn split_figure_grid(spec: SplitFigureGridSpec<'_>) -> Vec<SplitGridCell> {
         for column in 0..columns {
             cells.push(SplitGridCell {
                 key: format!("{}-r{row}-c{column}", spec.key_prefix),
-                crop: crate::artifacts::presentation::FigureTileFrame { x: frame.x + column as f64 * crop_width, y: frame.y + row as f64 * crop_height, width: crop_width, height: crop_height },
+                crop: crate::FigureTileFrame { x: frame.x + column as f64 * crop_width, y: frame.y + row as f64 * crop_height, width: crop_width, height: crop_height },
             });
         }
     }
@@ -250,15 +250,15 @@ pub fn split_figure_grid(spec: SplitFigureGridSpec<'_>) -> Vec<SplitGridCell> {
     cells
 }
 
-pub fn populate_tile_drafts_from_grid(spec: FigureTileGridSeedSpec<'_>) -> Vec<crate::artifacts::presentation::FigureTileDraft> {
+pub fn populate_tile_drafts_from_grid(spec: FigureTileGridSeedSpec<'_>) -> Vec<crate::FigureTileDraft> {
     split_figure_grid(SplitFigureGridSpec { rows: spec.rows, columns: spec.columns, frame: &spec.source.frame, gap: spec.gap, key_prefix: spec.key_prefix })
         .into_iter()
-        .map(|cell| crate::artifacts::presentation::FigureTileDraft { id: cell.key.clone(), name: cell.key, crop: cell.crop })
+        .map(|cell| crate::FigureTileDraft { id: cell.key.clone(), name: cell.key, crop: cell.crop })
         .collect()
 }
 
-pub fn build_tile_morph_prompt(source: &crate::artifacts::presentation::FigureTileSource, drafts: &[crate::artifacts::presentation::FigureTileDraft]) -> String {
-    fn format_frame(frame: &crate::artifacts::presentation::FigureTileFrame) -> String {
+pub fn build_tile_morph_prompt(source: &crate::FigureTileSource, drafts: &[crate::FigureTileDraft]) -> String {
+    fn format_frame(frame: &crate::FigureTileFrame) -> String {
         format!("{{ x: {:.6}, y: {:.6}, width: {:.6}, height: {:.6} }}", frame.x, frame.y, frame.width, frame.height)
     }
     let kind = if source.kind.is_empty() { "figure" } else { source.kind.as_str() };
@@ -305,7 +305,7 @@ mod tests {
 
     #[test]
     fn grid_seed_produces_tiles() {
-        let source = crate::artifacts::presentation::default_figure_tile_source();
+        let source = crate::default_figure_tile_source();
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
         assert_eq!(tiles.len(), 15);
         assert_eq!(tiles[0].id, "tile-r0-c0");
@@ -319,8 +319,8 @@ mod tests {
 
     #[test]
     fn morph_prompt_lists_tiles() {
-        let source = crate::artifacts::presentation::default_figure_tile_source();
-        let tiles = vec![crate::artifacts::presentation::FigureTileDraft { id: "t1".into(), name: "t1".into(), crop: crate::artifacts::presentation::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } }];
+        let source = crate::default_figure_tile_source();
+        let tiles = vec![crate::FigureTileDraft { id: "t1".into(), name: "t1".into(), crop: crate::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } }];
         let prompt = build_tile_morph_prompt(&source, &tiles);
         assert!(prompt.contains("t1"));
         assert!(prompt.contains("Source media"));

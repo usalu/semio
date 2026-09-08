@@ -1,6 +1,6 @@
 //! 📤️ Deterministic, resumable Layout export jobs.
 
-use crate::artifacts::layout::{Frame, GridSettings, LayoutBounds, LayoutSnapshot, Page, PageOverride};
+use crate::{Frame, GridSettings, LayoutBounds, LayoutSnapshot, Page, PageOverride};
 use crate::editor::layout::LayoutPlayApp;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework::action_bus::RetainedToolWireInput;
@@ -2052,11 +2052,11 @@ impl TypedJsonCursor {
 
 enum OwnerPage<'a> {
     Page(&'a Page),
-    Parent(&'a crate::artifacts::layout::ParentPage),
+    Parent(&'a crate::ParentPage),
 }
 
 impl<'a> OwnerPage<'a> {
-    fn layers(&self) -> &'a [crate::artifacts::layout::Layer] {
+    fn layers(&self) -> &'a [crate::Layer] {
         match self {
             Self::Page(value) => &value.layers,
             Self::Parent(value) => &value.layers,
@@ -2642,7 +2642,7 @@ impl ToolJobFactory for LayoutMediaExportJobFactory {
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutMediaExportJobFactory {
     type Owner = EditorApp<LayoutPlayApp>;
     const TOOL_IDS: &'static [&'static str] = &[LAYOUT_MEDIA_EXPORT_TOOL_ID];
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: LAYOUT_MEDIA_EXPORT_TOOL_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
 }
 
@@ -2744,7 +2744,7 @@ impl ToolJobFactory for LayoutExportJobFactory {
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutExportJobFactory {
     type Owner = EditorApp<LayoutPlayApp>;
     const TOOL_IDS: &'static [&'static str] = LAYOUT_EXPORT_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "exportPng", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "exportSvg", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -4056,7 +4056,7 @@ fn valid_bounds(bounds: &LayoutBounds) -> bool {
     bounds.x.is_finite() && bounds.y.is_finite() && bounds.width.is_finite() && bounds.height.is_finite() && bounds.rotation.is_finite()
 }
 
-fn valid_rect(rect: &crate::artifacts::layout::LayoutRect) -> bool {
+fn valid_rect(rect: &crate::LayoutRect) -> bool {
     rect.x.is_finite() && rect.y.is_finite() && rect.width.is_finite() && rect.height.is_finite()
 }
 
@@ -4336,36 +4336,36 @@ fn headless_batch_export(kind: LayoutExportKind, snapshot: &LayoutSnapshot, page
 }
 
 #[cfg(test)]
-pub fn export_document_svg_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<String, crate::artifacts::layout::io::LayoutError> {
+pub fn export_document_svg_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<String, crate::io::LayoutError> {
     if !doc.pages.iter().any(|page| page.id == page_id) {
-        return Err(crate::artifacts::layout::io::LayoutError::PageNotFound(page_id.into()));
+        return Err(crate::io::LayoutError::PageNotFound(page_id.into()));
     }
-    headless_batch_export(LayoutExportKind::Svg, doc, Some(page_id), None).map(|commit| commit.data).map_err(crate::artifacts::layout::io::LayoutError::Svg)
+    headless_batch_export(LayoutExportKind::Svg, doc, Some(page_id), None).map(|commit| commit.data).map_err(crate::io::LayoutError::Svg)
 }
 
 #[cfg(test)]
-pub fn export_document_pdf_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, crate::artifacts::layout::io::LayoutError> {
+pub fn export_document_pdf_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, crate::io::LayoutError> {
     if !doc.pages.iter().any(|page| page.id == page_id) {
-        return Err(crate::artifacts::layout::io::LayoutError::PageNotFound(page_id.into()));
+        return Err(crate::io::LayoutError::PageNotFound(page_id.into()));
     }
-    let commit = headless_batch_export(LayoutExportKind::Pdf, doc, Some(page_id), None).map_err(crate::artifacts::layout::io::LayoutError::Svg)?;
-    decode_base64(&commit.data).map_err(crate::artifacts::layout::io::LayoutError::Svg)
+    let commit = headless_batch_export(LayoutExportKind::Pdf, doc, Some(page_id), None).map_err(crate::io::LayoutError::Svg)?;
+    decode_base64(&commit.data).map_err(crate::io::LayoutError::Svg)
 }
 
 #[cfg(test)]
-pub fn export_document_png_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, crate::artifacts::layout::io::LayoutError> {
+pub fn export_document_png_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, crate::io::LayoutError> {
     if !doc.pages.iter().any(|page| page.id == page_id) {
-        return Err(crate::artifacts::layout::io::LayoutError::PageNotFound(page_id.into()));
+        return Err(crate::io::LayoutError::PageNotFound(page_id.into()));
     }
-    let commit = headless_batch_export(LayoutExportKind::Png, doc, Some(page_id), None).map_err(crate::artifacts::layout::io::LayoutError::Svg)?;
-    decode_base64(&commit.data).map_err(crate::artifacts::layout::io::LayoutError::Svg)
+    let commit = headless_batch_export(LayoutExportKind::Png, doc, Some(page_id), None).map_err(crate::io::LayoutError::Svg)?;
+    decode_base64(&commit.data).map_err(crate::io::LayoutError::Svg)
 }
 
 #[cfg(test)]
-pub fn export_package_zip_headless_batch(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, crate::artifacts::layout::io::LayoutError> {
+pub fn export_package_zip_headless_batch(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, crate::io::LayoutError> {
     let snapshot: LayoutSnapshot = dsl::os_pack::json::from_json_str(doc_json)?;
-    let commit = headless_batch_export(LayoutExportKind::Package, &snapshot, None, Some(preflight_json)).map_err(crate::artifacts::layout::io::LayoutError::Svg)?;
-    decode_base64(&commit.data).map_err(crate::artifacts::layout::io::LayoutError::Svg)
+    let commit = headless_batch_export(LayoutExportKind::Package, &snapshot, None, Some(preflight_json)).map_err(crate::io::LayoutError::Svg)?;
+    decode_base64(&commit.data).map_err(crate::io::LayoutError::Svg)
 }
 //#endregion 🧪️TestOracle
 
@@ -4418,7 +4418,7 @@ mod tests {
     }
 
     fn request(kind: LayoutExportKind) -> LayoutExportRequest {
-        let snapshot = crate::artifacts::layout::schema::default_document();
+        let snapshot = crate::schema::default_document();
         let page_id = (!matches!(kind, LayoutExportKind::Package)).then(|| snapshot.pages[0].id.clone());
         LayoutExportRequest { kind, page_id, snapshot: Arc::new(snapshot), preflight_json: None, parent_document_id: "layout-test-document".into(), canonical_base_revision_hex: "09".repeat(32) }
     }
@@ -4611,7 +4611,7 @@ mod tests {
         let style = snapshot.paragraph_styles[0].clone();
         snapshot.paragraph_styles.resize(MAX_LAYOUT_EXPORT_STYLES, style);
         let character =
-            snapshot.character_styles.first().cloned().unwrap_or(crate::artifacts::layout::CharacterStyle { id: "character.test".into(), name: None, font_family: None, font_size: None, font_weight: None, italic: None, color: None, tracking: None });
+            snapshot.character_styles.first().cloned().unwrap_or(crate::CharacterStyle { id: "character.test".into(), name: None, font_family: None, font_size: None, font_weight: None, italic: None, color: None, tracking: None });
         snapshot.character_styles.resize(MAX_LAYOUT_EXPORT_STYLES, character);
         snapshot.data_fields_json = Some(format!("{}[]", " ".repeat(MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES - 2)));
         assert!(run_layout_export_headless_batch(operation(), max).is_ok());
@@ -4631,21 +4631,21 @@ mod tests {
     fn every_top_level_collection_rejects_its_max_plus_one() {
         let mut parent_pages = request(LayoutExportKind::Svg);
         Arc::make_mut(&mut parent_pages.snapshot).parent_pages = (0..=MAX_LAYOUT_EXPORT_PARENT_PAGES)
-            .map(|index| crate::artifacts::layout::ParentPage { id: format!("parent-{index}"), name: "Parent".into(), width: 100.0, height: 100.0, layer_ids: Vec::new(), layers: Vec::new(), frames: Vec::new() })
+            .map(|index| crate::ParentPage { id: format!("parent-{index}"), name: "Parent".into(), width: 100.0, height: 100.0, layer_ids: Vec::new(), layers: Vec::new(), frames: Vec::new() })
             .collect();
         assert!(run_layout_export_headless_batch(operation(), parent_pages).expect_err("parent max + 1").contains("document-envelope"));
 
         let mut spreads = request(LayoutExportKind::Svg);
-        Arc::make_mut(&mut spreads.snapshot).spreads = (0..=MAX_LAYOUT_EXPORT_SPREADS).map(|index| crate::artifacts::layout::Spread { id: format!("spread-{index}"), name: "Spread".into(), page_ids: Vec::new() }).collect();
+        Arc::make_mut(&mut spreads.snapshot).spreads = (0..=MAX_LAYOUT_EXPORT_SPREADS).map(|index| crate::Spread { id: format!("spread-{index}"), name: "Spread".into(), page_ids: Vec::new() }).collect();
         assert!(run_layout_export_headless_batch(operation(), spreads).expect_err("spread max + 1").contains("document-envelope"));
 
         let mut stories = request(LayoutExportKind::Svg);
-        Arc::make_mut(&mut stories.snapshot).stories = (0..=MAX_LAYOUT_EXPORT_STORIES).map(|index| crate::artifacts::layout::TextStory { id: format!("story-{index}"), content: String::new(), style_runs: Vec::new() }).collect();
+        Arc::make_mut(&mut stories.snapshot).stories = (0..=MAX_LAYOUT_EXPORT_STORIES).map(|index| crate::TextStory { id: format!("story-{index}"), content: String::new(), style_runs: Vec::new() }).collect();
         assert!(run_layout_export_headless_batch(operation(), stories).expect_err("story max + 1").contains("document-envelope"));
 
         let mut links = request(LayoutExportKind::Svg);
         Arc::make_mut(&mut links.snapshot).links = (0..=MAX_LAYOUT_EXPORT_LINKS)
-            .map(|index| crate::artifacts::layout::ImageLink { id: format!("link-{index}"), path: "image.png".into(), hash: String::new(), width: 1, height: 1, dpi: 72, color_profile: None, state: None, proxy_data_url: None })
+            .map(|index| crate::ImageLink { id: format!("link-{index}"), path: "image.png".into(), hash: String::new(), width: 1, height: 1, dpi: 72, color_profile: None, state: None, proxy_data_url: None })
             .collect();
         assert!(run_layout_export_headless_batch(operation(), links).expect_err("link max + 1").contains("document-envelope"));
 
@@ -4653,7 +4653,7 @@ mod tests {
             let mut styles = request(LayoutExportKind::Svg);
             let snapshot = Arc::make_mut(&mut styles.snapshot);
             if character_styles {
-                let seed = crate::artifacts::layout::CharacterStyle { id: "character.seed".into(), name: None, font_family: None, font_size: None, font_weight: None, italic: None, color: None, tracking: None };
+                let seed = crate::CharacterStyle { id: "character.seed".into(), name: None, font_family: None, font_size: None, font_weight: None, italic: None, color: None, tracking: None };
                 snapshot.character_styles.resize(MAX_LAYOUT_EXPORT_STYLES + 1, seed);
             } else {
                 let seed = snapshot.paragraph_styles[0].clone();
@@ -4669,7 +4669,7 @@ mod tests {
         let snapshot = Arc::make_mut(&mut max.snapshot);
         let frame = snapshot.pages[0].frames[0].clone();
         let layer = snapshot.pages[0].layers[0].clone();
-        let guide = crate::artifacts::layout::LayoutRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
+        let guide = crate::LayoutRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
         let page = &mut snapshot.pages[0];
         page.frames.resize(MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE, frame);
         page.overrides.resize(MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE, PageOverride { object_id: "frame-1".into(), bounds: None, visible: None, locked: None });
@@ -4690,7 +4690,7 @@ mod tests {
         assert!(run_layout_export_headless_batch(operation(), frames).expect_err("frame max + 1").contains("page-envelope"));
 
         let mut guides = request(LayoutExportKind::Svg);
-        Arc::make_mut(&mut guides.snapshot).pages[0].guides.resize(MAX_LAYOUT_EXPORT_GUIDES_PER_PAGE + 1, crate::artifacts::layout::LayoutRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 });
+        Arc::make_mut(&mut guides.snapshot).pages[0].guides.resize(MAX_LAYOUT_EXPORT_GUIDES_PER_PAGE + 1, crate::LayoutRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 });
         assert!(run_layout_export_headless_batch(operation(), guides).expect_err("guide max + 1").contains("page-envelope"));
 
         let mut spread_ids = request(LayoutExportKind::Svg);
@@ -4750,9 +4750,9 @@ mod tests {
 
     #[test]
     fn typed_document_json_matches_serde_and_every_write_is_credit_bounded() {
-        let mut snapshot = crate::artifacts::layout::schema::default_document();
+        let mut snapshot = crate::schema::default_document();
         snapshot.name = "\u{1f642}\n".repeat(MAX_LAYOUT_EXPORT_STRING_BYTES / 5);
-        snapshot.background_drawing = Some(crate::artifacts::layout::LayoutDrawingChild {
+        snapshot.background_drawing = Some(crate::LayoutDrawingChild {
             handle: store::ArtifactChild::new("drawing-child".into(), store::os_io::ArtifactRef::parse_uri("document!s.stdio.semio@v1/drawing").expect("child reference")),
             content: Default::default(),
         });
@@ -4815,7 +4815,7 @@ mod tests {
 
     #[test]
     fn supplied_preflight_array_is_preserved_byte_for_byte_in_package_entry() {
-        let snapshot = crate::artifacts::layout::schema::default_document();
+        let snapshot = crate::schema::default_document();
         let supplied = r#"[{"kind":"custom","severity":"warning"}]"#;
         let json = dsl::os_pack::to_json_string(&snapshot);
         let package = export_package_zip_headless_batch(&json, supplied).expect("package");

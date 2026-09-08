@@ -9,7 +9,7 @@ import { parseTree, type Node as JsonNode, type ParseError } from "jsonc-parser"
 import { createValidFileMatcher } from "next/dist/server/lib/find-page-file.js";
 import { createTaxonomyPathMatcher, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, leadingEmojiIdentity, loadCatalogTaxonomy, mutationDomainOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, pathEmojiStatuteFindings, reservedDocumentationBasename, semanticDirectoryKindId, semanticManifestFilenameForCollection, semanticProjectionCatalogProblems, subsetDirectoryNameForId, subsetIdForDirectoryName, validateTaxonomy } from "../../🔍️discovery/🟦️.ts";
 import { inventoryTaxonomySources } from "../../🧹️normalization/🟦️.ts";
-import { jsonDocumentDuplicateKeys, mutationPayloadSchemaProblems, mutationPayloadSchemaDocumentProblems, semanticExactOwnedFileCatalog } from "../../🔍️discovery/🟦️.ts";
+import { jsonDocumentDuplicateKeys, mutationPayloadSchemaProblems, mutationPayloadSchemaDocumentProblems, mutationPayloadSchemaRelativePath, semanticExactOwnedFileCatalog } from "../../🔍️discovery/🟦️.ts";
 import { mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems } from "../../🔍️discovery/🟦️.ts";
 import { mutationCatalogProblems } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 
@@ -256,11 +256,12 @@ test("TSV mutation payload schemas resolve with camel-case language-neutral cont
     { directory: "🔚set-trailing-newline", positive: { trailingNewline: false }, negative: { trailingNewline: "false" } },
   ];
   const ajv = new Ajv({ strict: false });
+  const payloadRelative = mutationPayloadSchemaRelativePath(loadCatalogTaxonomy());
   ajv.addSchema(JSON.parse(readFileSync(join(dirname(mutations), "📸️snapshot/🔣️.json"), "utf8")));
   for (const row of cases) {
     const owner = join(mutations, row.directory);
     const descriptor = JSON.parse(readFileSync(join(owner, "🔣️.json"), "utf8"));
-    expect(descriptor.payloadSchema, row.directory).toBe("🧬️.schema.json");
+    expect(descriptor.payloadSchema, row.directory).toBe(payloadRelative);
     const schemaPath = join(owner, descriptor.payloadSchema);
     expect(existsSync(schemaPath), row.directory).toBe(true);
     const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
@@ -273,7 +274,7 @@ test("TSV mutation payload schemas resolve with camel-case language-neutral cont
   const oracle = JSON.parse(readFileSync(join(dirname(dirname(mutations)), "🔮️oracle/🔣️.json"), "utf8"));
   const declared = oracle.mutationManifests.flatMap((manifest: any) => manifest.mutations).filter((mutation: any) => cases.some((row) => row.directory.endsWith(mutation.id)));
   expect(declared.map((mutation: any) => mutation.id).sort()).toEqual(["insert-row", "remove-row", "set-cell", "set-line-ending", "set-snapshot", "set-trailing-newline"]);
-  expect(declared.every((mutation: any) => mutation.payloadSchema === "🧬️.schema.json")).toBe(true);
+  expect(declared.every((mutation: any) => mutation.payloadSchema === payloadRelative)).toBe(true);
 });
 
 test("payload schema authority rejects duplicate decoded JSON members", () => {

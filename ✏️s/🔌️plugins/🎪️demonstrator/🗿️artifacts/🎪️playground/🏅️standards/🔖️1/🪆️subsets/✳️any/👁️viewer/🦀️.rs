@@ -5,10 +5,10 @@
 //! or draft mutation. MUST NOT import anything from the sibling authoring module (`policyViewerPurityBreaches`
 //! forbids it outright, including the substring in comments).
 
-use crate::artifacts::playground::standards::v1::subsets::any::schema::empty_playground_snapshot;
-use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
-use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
-use crate::artifacts::playground::{PLAYGROUND_DIALECT, PLAYGROUND_DOCUMENT_SCHEMA};
+use crate::standards::v1::subsets::any::schema::empty_playground_snapshot;
+use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+use crate::{PLAYGROUND_DIALECT, PLAYGROUND_DOCUMENT_SCHEMA};
 use crate::viewer::playground::modes::view;
 use crate::viewer::playground::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;

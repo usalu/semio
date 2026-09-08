@@ -2,9 +2,9 @@
 //! when already at that url.
 
 use super::ChangeAssetUrl;
-use crate::artifacts::shooting::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
-use crate::artifacts::shooting::ShootingAssetPatch;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::{ShootingAssetPatchEntry, ShootingAssetsDelta, ShootingDiff};
+use crate::ShootingAssetPatch;
+use crate::ShootingSnapshot;
 
 pub fn diff(payload: &ChangeAssetUrl, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let Some(existing) = base.assets.iter().find(|asset| asset.id == payload.id) else {

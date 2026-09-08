@@ -1,18 +1,18 @@
 //! 🧬️ 🧬️ Generation3d play app commands command — `add-generation`.
 
-use crate::artifacts::generation3d::op::{generation_mutation_to_generation3d, Generation3dMutation};
-use crate::artifacts::generation3d::schema::evaluate_generation_preview;
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::op::{generation_mutation_to_generation3d, Generation3dMutation};
+use crate::schema::evaluate_generation_preview;
+use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use flow::forms_bridge::flow_fixture_to_form_spec;
-use flow::playbook::{apply_generation_mutation, generation_operations, selected_generation};
-use flow::FlowEvalSession;
+use semio_framework_os_flow::forms_bridge::flow_fixture_to_form_spec;
+use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, generation_operations, selected_generation};
+use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shared
 /// 🧬️ Emits generation operations for the generate-mode document-mutating commands — reuses
-/// `flow::playbook::generation_operations`'s id-generation/values-seeding logic via a synthetic JSON args
+/// `semio_framework_artifact_playbook_playbook::generation_operations`'s id-generation/values-seeding logic via a synthetic JSON args
 /// value built from the typed command fields.
 fn handle_generation(action: &str, args: Option<&dsl::DslValue>, projection: &Generation3dSnapshot, cfg: &Generation3dConfig) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     let spec = flow_fixture_to_form_spec(&projection.fixture);

@@ -12,8 +12,8 @@
 //! All twelve triads are mounted directly as `mutations`-sibling modules in `🦀️.rs`, each with
 //! its own unique emoji-prefixed directory — no inline `#[path = "."]` self-wiring.
 
-use crate::artifacts::raster::diff::RasterDiff;
-use crate::artifacts::raster::RasterSnapshot;
+use crate::diff::RasterDiff;
+use crate::RasterSnapshot;
 
 //#region 🔖️Leaves
 use super::add_layer_asset;
@@ -73,8 +73,8 @@ pub type RasterStore = store::ArtifactStore<RasterSnapshot, RasterMutation>;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::raster::schema::{empty_raster_snapshot, layer_name, layer_visible};
-    use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+    use crate::schema::{empty_raster_snapshot, layer_name, layer_visible};
+    use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
     use protocol::Mutation;
     
     use semio_framework_os_kernel as vcs;
@@ -86,7 +86,7 @@ mod tests {
 
     /// 🖼️ Real, decodable 1x1 RGBA PNGs (not arbitrary placeholder bytes) — `add-layer-asset` now
     /// routes through the real `s.stdio.semio/v1/image` png codec bridge
-    /// (`crate::artifacts::raster::mint_raster_asset_child`), so `AddLayerAsset`'s inverse can only
+    /// (`crate::mint_raster_asset_child`), so `AddLayerAsset`'s inverse can only
     /// recover a faithful prior asset from the working-scene cache if the payload actually decodes.
     const SEED_ASSET_PNG: &[u8] = &[
         137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 224, 18, 145, 251, 15, 0, 1, 164, 1, 60, 76, 213, 28, 167, 0, 0, 0, 0, 73, 69,
@@ -151,7 +151,7 @@ mod tests {
             params: RasterOwnedMap::new(),
         });
         let seed_asset = RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() };
-        base.assets.insert("asset-1".into(), crate::artifacts::raster::mint_raster_asset_child("asset-1", &seed_asset)).expect("bounded fixture operation succeeds");
+        base.assets.insert("asset-1".into(), crate::mint_raster_asset_child("asset-1", &seed_asset)).expect("bounded fixture operation succeeds");
         for mutation in every_mutation() {
             round_trip(&base, &mutation);
         }
@@ -184,7 +184,7 @@ mod tests {
         let moved = round_trip(&snapshot, &RasterMutation::ReorderLayers(reorder_layers::ReorderLayers { layer_id: "l1".into(), parent_id: Some("g1".into()), index: 0 }));
         let RasterLayerNode::Group { children, .. } = &moved.layers[0] else { panic!("expected group") };
         assert_eq!(children.len(), 1);
-        assert_eq!(crate::artifacts::raster::schema::layer_node_id(&children[0]), "l1");
+        assert_eq!(crate::schema::layer_node_id(&children[0]), "l1");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -208,7 +208,7 @@ mod tests {
     //#region 🔖️OpText
     fn representative_raster_document() -> RasterSnapshot {
         let mut assets = RasterOwnedMap::new();
-        assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() })).expect("bounded fixture operation succeeds");
+        assets.insert("asset-1".into(), crate::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() })).expect("bounded fixture operation succeeds");
         let mut params = RasterOwnedMap::new();
         params.insert("brightness".into(), dsl::DslValue::float(0.06)).expect("bounded fixture operation succeeds");
         params.insert("label".into(), dsl::DslValue::String("Warm \"Curve\"".to_string())).expect("bounded fixture operation succeeds");

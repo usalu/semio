@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-view-box.json",
+  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-view-box/schema.json",
   "title": "SetViewBoxPayload",
   "type": "object",
   "additionalProperties": false,
@@ -11,12 +11,45 @@
     "path": {
       "type": "array",
       "items": {
-        "type": [
-          "object",
-          "integer"
-        ]
+        "type": "integer",
+        "minimum": 0
       }
     },
-    "viewBox": {}
+    "viewBox": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ViewBox"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "ViewBox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minX",
+        "minY",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "minX": {
+          "type": "number"
+        },
+        "minY": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      }
+    }
   }
 }

@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::en1991::En1991Snapshot;
-use schema::ArtifactSchema;
+use crate::En1991Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::En1991Outline;
@@ -44,7 +44,7 @@ impl protocol::InferenceSpec<En1991Snapshot> for En1991Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::en1991::standards::v1::subsets::any::schema::En1991Builder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1991Builder {
     type Snapshot = En1991Snapshot;
     type Inference = En1991Inference;
 }
@@ -53,10 +53,10 @@ impl ArtifactInferrer for crate::artifacts::en1991::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1991.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1991_artifact_schema_descriptor`'s registration.
-pub fn en1991_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn en1991_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1991.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -87,8 +87,8 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::en1990::standards::v1::subsets::any::schema::{NaDe, NaEn, NationalAnnexes};
-use crate::artifacts::en1991::standards::v1::subsets::any::schema::{part_1_1, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_7, part_2, part_3, part_4};
+use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::{NaDe, NaEn, NationalAnnexes};
+use crate::standards::v1::subsets::any::schema::{part_1_1, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_7, part_2, part_3, part_4};
 /// 📋️ Full EN 1991 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1991Snapshot -> CheckReport` projection; everything it composes

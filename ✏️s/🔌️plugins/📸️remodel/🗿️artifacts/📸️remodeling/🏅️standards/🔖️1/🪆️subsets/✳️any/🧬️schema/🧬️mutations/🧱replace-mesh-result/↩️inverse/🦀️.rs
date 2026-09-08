@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ReplaceMeshResult` — the OLD `RemodelingMesh` from BASE, boxed.
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::mutations::RemodelingMutation;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::ReplaceMeshResult, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {

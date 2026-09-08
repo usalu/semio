@@ -4,6 +4,9 @@ import { dirname, join, resolve, relative } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { testGraphCoalescing } from "./🕸️daemon/📜️script.ts";
+import { testBrowserDistribution } from "./🌐️browser/📜️script.ts";
+import { testContinuousServices } from "./🖥️services/📜️script.ts";
+import { testServiceReadiness } from "./🖥️services/🌐️readiness/📜️script.ts";
 
 /** 🧪️ Verifies native source and command ownership against compiler and bundler input oracles. */
 export async function testCommandInputs(workspace: string, output: string): Promise<void> {
@@ -11,10 +14,13 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   testNxDaemonDiagnostics(workspace, output);
   testNxDaemonRetention(workspace, output);
   await testGraphCoalescing(workspace);
+  await testContinuousServices(workspace, output);
   testWorkspaceRoots(workspace, output);
   await testRuntimeComponents(workspace);
   await testDemonstratorRuntime(workspace);
   await testBrowserModuleRelocation(workspace);
+  await testBrowserDistribution(workspace, output);
+  await testServiceReadiness(workspace, output);
   await testBunDependencies(workspace, output);
   await testNativePreparation(workspace, output);
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures");
@@ -62,7 +68,9 @@ export async function testBrowserModuleRelocation(workspace: string): Promise<vo
   const require = createRequire(import.meta.url), directory = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🕸️imports");
   const { rewritePreview2ShimImportSource } = await import(pathToFileURL(join(directory, "🟦️.ts")).href);
   const fixture = JSON.parse(readFileSync(join(directory, "🧫️cases.json"), "utf8"));
-  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(directory, "🧬️schema.json"), "utf8")), fixture));
+  const schema = JSON.parse(readFileSync(join(directory, "../../../🌐️browser-bundle/🧬️schema/🔣️.json"), "utf8")), validator = new (require("ajv").default)();
+  validator.addSchema(schema);
+  assert.ok(validator.validate({ $ref: schema.$id + "#/$defs/Preview2ShimImportRewriteV1" }, fixture));
   const lexer = await import("es-module-lexer");
   await lexer.init;
   for (const row of fixture.cases) {
@@ -84,7 +92,9 @@ export async function testBrowserModuleRelocation(workspace: string): Promise<vo
 export async function testDemonstratorRuntime(workspace: string): Promise<void> {
   const require = createRequire(import.meta.url), directory = join(workspace, "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime");
   const catalog = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8")), fixture = JSON.parse(readFileSync(join(directory, "🧫️cases.json"), "utf8"));
-  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(directory, "🧬️schema.json"), "utf8")), catalog));
+  const schema = JSON.parse(readFileSync(join(directory, "🧬️schema/🔣️.json"), "utf8")), validator = new (require("ajv").default)();
+  validator.addSchema(schema);
+  assert.ok(validator.validate(schema.$id, catalog));
   const runtime = await import(pathToFileURL(join(directory, "🟦️.ts")).href);
   const bundle = await require("esbuild").build({ entryPoints: [join(directory, "🟦️.ts")], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
   const inputs = Object.keys(bundle.metafile.inputs);
@@ -99,14 +109,46 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   assert.deepEqual(layout.pluginModuleDirNames, [...fixture.supportDirectories, ...names(fixture.pluginIds)]);
   assert.deepEqual(layout.extensionModuleDirNames, names(fixture.extensionIds));
   const pipeline = JSON.parse(readFileSync(join(directory, "🧫️pipeline.json"), "utf8"));
-  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(directory, "🧬️pipeline.schema.json"), "utf8")), pipeline));
+  assert.ok(validator.validate({ $ref: schema.$id + "#/$defs/DemonstratorPipelineContract" }, pipeline));
   assert.deepEqual(runtime.DEMONSTRATOR_RUNTIME_TARGETS.map((row: any) => row.variant).sort(), pipeline.variants);
   const project = JSON.parse(readFileSync(join(directory, "../../📋️project.json"), "utf8"));
+  assert.deepEqual(project.targets.build.dependsOn, [`prepare-${pipeline.site.profile}`]);
+  assert.deepEqual(project.targets.build.outputs, [`{projectRoot}/${pipeline.site.output}`]);
+  assert.equal(project.targets.build.options.command, `bun ./${pipeline.site.command} build`);
+  assert.deepEqual(project.targets["activate-dev"]?.dependsOn, ["prepare-dev", pipeline.development.activationTarget]);
+  for (const name of ["serve", "dev"]) {
+    assert.equal(project.targets[name]?.continuous, true);
+    assert.equal(project.targets[name]?.cache, false);
+    assert.deepEqual(project.targets[name]?.dependsOn, ["activate-dev"]);
+    assert.equal(project.targets[name]?.options.command, `bun ./${pipeline.command} serve`);
+  }
+  assert.deepEqual(project.targets["prepare-e2e"]?.dependsOn, ["activate-dev", pipeline.e2e.browserTarget]);
+  assert.deepEqual(project.targets["serve-e2e"]?.dependsOn, ["prepare-e2e"]);
+  assert.equal(project.targets["serve-e2e"]?.continuous, true);
+  assert.equal(project.targets["serve-e2e"]?.metadata.semio.continuousSharing, false);
+  assert.deepEqual(project.targets["test-e2e"]?.dependsOn, ["serve-e2e"]);
+  assert.equal(project.targets["test-e2e"]?.cache, false);
+  assert.equal(project.targets["test-e2e"]?.options.command, `bun ./${pipeline.e2e.testCommand} test`);
+  const testCommand = readFileSync(join(directory, "../..", pipeline.e2e.testCommand), "utf8");
+  for (const forbidden of pipeline.forbiddenOrchestration) assert.equal(testCommand.includes(forbidden), false, `E2E hides ${forbidden}`);
+  const workspaceProject = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8"));
+  assert.ok(!workspaceProject.targets["deps-browsers"].dependsOn?.includes("deps-javascript"), "Browser preparation must not replace dependencies used by running Nx consumers");
+  const siteCommand = readFileSync(join(directory, "../..", pipeline.site.command), "utf8");
+  for (const forbidden of [...pipeline.forbiddenCommandImports, ...pipeline.forbiddenOrchestration]) assert.equal(siteCommand.includes(forbidden), false, `Site build hides ${forbidden}`);
   for (const profile of pipeline.profiles) {
     const preparation = project.targets[`prepare-${profile}`];
     assert.ok(preparation, `Missing Demonstrator ${profile} preparation`);
     assert.equal(preparation.cache, false);
     assert.deepEqual(preparation.dependsOn, pipeline.variants.map((variant: string) => `${pipeline.preparationProject}:prepare-${variant}-react-${profile}`));
+  }
+  const { demonstratorRuntimeAssetSources } = await import(pathToFileURL(join(directory, "📦️assets/🟦️.ts")).href);
+  for (const profile of pipeline.profiles) {
+    const sources = demonstratorRuntimeAssetSources(workspace, profile);
+    assert.equal(sources.length, fixture.pluginIds.length + fixture.extensionIds.length + 3);
+    assert.equal(new Set(sources.map((row: any) => row.root)).size, sources.length);
+    assert.equal(sources.filter((row: any) => row.shimDirectory !== undefined).length, fixture.extensionIds.length);
+    for (const row of sources) assert.ok(row.owner === "infinite:fonts" || row.owner.includes(`:${profile}`), row.owner);
+    assert.equal(sources.some((row: any) => row.root.includes("/runtime/") || row.root.includes("🏪️store")), false);
   }
   const command = readFileSync(join(directory, "../..", pipeline.command), "utf8");
   for (const forbidden of [...pipeline.forbiddenCommandImports, ...pipeline.forbiddenOrchestration]) assert.equal(command.includes(forbidden), false, `Demonstrator hides ${forbidden}`);

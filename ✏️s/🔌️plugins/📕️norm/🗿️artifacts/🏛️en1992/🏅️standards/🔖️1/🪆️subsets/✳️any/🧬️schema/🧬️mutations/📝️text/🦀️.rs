@@ -7,10 +7,10 @@
 //! `Serialize`/`Deserialize`, so a second handcrafted grammar per enum would just duplicate that
 //! losslessly.
 
-pub use crate::artifacts::en1992::schema::mutations::En1992Mutation;
+pub use crate::document_schema::mutations::En1992Mutation;
 
-use crate::artifacts::en1992::schema::mutations::change_annex::ChangeAnnex;
-use crate::artifacts::en1992::schema::mutations::{
+use crate::document_schema::mutations::change_annex::ChangeAnnex;
+use crate::document_schema::mutations::{
     change_a_c_mm2::ChangeACMm2, change_a_s_mm2::ChangeASMm2, change_anchor_a_s_mm2::ChangeAnchorASMm2, change_anchor_c1_mm::ChangeAnchorC1Mm, change_anchor_cracked::ChangeAnchorCracked,
     change_anchor_d_mm::ChangeAnchorDMm, change_anchor_f_uk_mpa::ChangeAnchorFUkMpa, change_anchor_f_yk_mpa::ChangeAnchorFYkMpa, change_anchor_h_ef_mm::ChangeAnchorHEfMm,
     change_anchor_n_ed_kn::ChangeAnchorNEdKn, change_anchor_v_ed_kn::ChangeAnchorVEdKn, change_b_mm::ChangeBMm, change_bridge_delta_sigma_s_mpa::ChangeBridgeDeltaSigmaSMpa,
@@ -374,11 +374,11 @@ pub(crate) fn demo_mutation_cases() -> Vec<En1992Mutation> {
         En1992Mutation::ChangeUseFem(ChangeUseFem { new_use_fem: true }),
         En1992Mutation::ChangeSpanM(ChangeSpanM { new_span_m: 7.5 }),
         En1992Mutation::ChangeUdlKnM(ChangeUdlKnM { new_udl_kn_m: 24.0 }),
-        En1992Mutation::ChangeFireRating(ChangeFireRating { new_fire_rating: crate::artifacts::en1992::part_1_2::FireRating::R90 }),
+        En1992Mutation::ChangeFireRating(ChangeFireRating { new_fire_rating: crate::part_1_2::FireRating::R90 }),
         En1992Mutation::ChangeProvidedAxisDistanceMm(ChangeProvidedAxisDistanceMm { new_provided_axis_distance_mm: 40.0 }),
         En1992Mutation::ChangeBridgeSigmaCMpa(ChangeBridgeSigmaCMpa { new_bridge_sigma_c_mpa: 14.0 }),
         En1992Mutation::ChangeBridgeDeltaSigmaSMpa(ChangeBridgeDeltaSigmaSMpa { new_bridge_delta_sigma_s_mpa: 120.0 }),
-        En1992Mutation::ChangeTightnessClass(ChangeTightnessClass { new_tightness_class: crate::artifacts::en1992::part_3::TightnessClass::Tc2 }),
+        En1992Mutation::ChangeTightnessClass(ChangeTightnessClass { new_tightness_class: crate::part_3::TightnessClass::Tc2 }),
         En1992Mutation::ChangeHdOverH(ChangeHdOverH { new_hd_over_h: 12.0 }),
         En1992Mutation::ChangeLiquidSigmaSMpa(ChangeLiquidSigmaSMpa { new_liquid_sigma_s_mpa: 220.0 }),
         En1992Mutation::ChangeLiquidRhoPEff(ChangeLiquidRhoPEff { new_liquid_rho_p_eff: 0.012 }),

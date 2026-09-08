@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RemoveLoad` — clones the target case, drops the load, patches it.
 use super::RemoveLoad;
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dLoadCasesDelta, Fem3dLoadCasesPatchEntry};
-use crate::artifacts::fem3d::{load_id, Fem3dSnapshot};
+use crate::diff::{Fem3dDiff, Fem3dLoadCasesDelta, Fem3dLoadCasesPatchEntry};
+use crate::{load_id, Fem3dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &RemoveLoad, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

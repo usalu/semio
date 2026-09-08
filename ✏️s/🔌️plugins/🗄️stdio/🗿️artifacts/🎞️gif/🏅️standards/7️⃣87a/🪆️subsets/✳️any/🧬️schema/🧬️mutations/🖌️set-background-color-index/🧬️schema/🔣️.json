@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-background-color-index.json",
+  "$id": "https://semio.tech/schema/s/stdio/gif/87a/any/mutation/set-background-color-index/schema.json",
   "title": "SetBackgroundColorIndex",
   "type": "object",
   "additionalProperties": false,

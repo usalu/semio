@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `👥stakeholders` per Wave C.
 
 use super::DeleteStakeholder;
-use crate::artifacts::program::diff::ProgramStakeholdersDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramStakeholdersDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteStakeholder, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

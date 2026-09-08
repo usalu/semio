@@ -13,7 +13,7 @@
 //! `.spk` binary container mislabelled as `s.stdio.csv` text. It now writes real RFC 4180 text
 //! through stdio's own `encode_csv`.
 
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::Fem2dSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

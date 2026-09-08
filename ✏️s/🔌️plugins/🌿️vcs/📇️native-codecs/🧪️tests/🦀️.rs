@@ -34,7 +34,7 @@ async fn vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_
         assert_eq!(codec.schema, identity.schema);
         assert_eq!(codec.extension, identity.extension);
         assert_eq!(codec.pack_schema_hash, identity.pack_schema_hash);
-        let declared = store::ArtifactCodec::of::<semio_s_plugin_vcs::artifacts::vcs::VcsSnapshot, semio_s_plugin_vcs::artifacts::vcs::VcsDemoMutation>(identity.schema);
+        let declared = store::ArtifactCodec::of::<semio_s_artifact_vcs_vcs::VcsSnapshot, semio_s_artifact_vcs_vcs::VcsDemoMutation>(identity.schema);
         assert_eq!(codec.schema, declared.schema);
         assert_eq!(codec.extension, declared.extension);
         assert_eq!(codec.pack_schema_hash, declared.pack_schema_hash);
@@ -42,9 +42,9 @@ async fn vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_
         assert!(std::ptr::fn_addr_eq(codec.print_mirror, declared.print_mirror));
         assert!(std::ptr::fn_addr_eq(codec.edit_text_from_envelope, declared.edit_text_from_envelope));
         assert!(std::ptr::fn_addr_eq(codec.apply_ops_binary, declared.apply_ops_binary));
-        let dialect: semio_framework::ArtifactDialect = semio_s_plugin_vcs::artifacts::vcs::VCS_DIALECT.into();
+        let dialect: semio_framework::ArtifactDialect = semio_s_artifact_vcs_vcs::VCS_DIALECT.into();
         let files = genesis(document_id, &dialect).await.expect("package-owned VCS genesis");
-        let parsed = store::parse_document_pack::<semio_s_plugin_vcs::artifacts::vcs::VcsSnapshot, semio_s_plugin_vcs::artifacts::vcs::VcsDemoMutation>(&files.pack, &files.spr).await.unwrap();
+        let parsed = store::parse_document_pack::<semio_s_artifact_vcs_vcs::VcsSnapshot, semio_s_artifact_vcs_vcs::VcsDemoMutation>(&files.pack, &files.spr).await.unwrap();
         let envelope = parsed.envelope.into_owners();
         assert_eq!(envelope.id, document_id);
         assert_eq!(envelope.dialect.as_ref(), Some(&dialect));

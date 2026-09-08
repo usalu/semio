@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { dirname, resolve, relative, sep } from "node:path";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { spawn } from "node:child_process";
@@ -97,6 +97,46 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
   const packageRouter = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
   const segments = process.argv.slice(2);
   await packageRouter.run(segments.length ? segments : ["test"]);
+}
+
+/** 🟦️ Builds and resolves a declaration-only TypeScript artifact package from its taxonomy source. */
+export async function runArtifactTypeScriptPackageMain(packageRoot: string, packageName: string): Promise<void> {
+  const source = resolve(packageRoot, "../../🟦️.ts"), output = resolve(packageRoot, "dist");
+  const typeScript = (entry: string, args: string[]): void => {
+    const result = Bun.spawnSync([process.execPath, "x", "tsc", entry, ...args, "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", "--skipLibCheck", "--target", "ES2022"], { cwd: getWorkspaceRoot(), stdout: "inherit", stderr: "inherit", timeout: 120_000 });
+    if (result.exitCode !== 0) throw new Error(`TypeScript compiler failed (${result.exitCode})`);
+  };
+  const build = async (): Promise<void> => {
+    rmSync(output, { recursive: true, force: true });
+    mkdirSync(output, { recursive: true });
+    const result = await Bun.build({ entrypoints: [source], outdir: output, naming: "🟦️.js", target: "bun", format: "esm", minify: false });
+    if (!result.success) throw new AggregateError(result.logs, `Failed to build ${packageName}`);
+    typeScript(source, ["--declaration", "--emitDeclarationOnly", "--outDir", output]);
+    console.log(`[artifact-typescript] built ${packageName} outputs=${result.outputs.length + 1}`);
+  };
+  class BuildScript extends BundleScript { async run(): Promise<void> { await build(); } }
+  class CheckScript extends BundleScript {
+    async run(): Promise<void> {
+      const result = await Bun.build({ entrypoints: [source], write: false, target: "bun", format: "esm" });
+      if (!result.success) throw new AggregateError(result.logs, `Failed to check ${packageName}`);
+      typeScript(source, ["--noEmit"]);
+      console.log(`[artifact-typescript] checked ${packageName}`);
+    }
+  }
+  class TestScript extends BundleScript {
+    async run(): Promise<void> {
+      await build();
+      const probe = join(output, "🧪️consumer.ts");
+      writeFileSync(probe, `import * as artifact from ${JSON.stringify(packageName)};\nvoid artifact;\n`);
+      try { typeScript(probe, ["--noEmit"]); } finally { rmSync(probe, { force: true }); }
+      const artifact = await import(packageName);
+      assert.equal(typeof artifact, "object", `${packageName} did not resolve as an ES module`);
+      console.log(`[artifact-typescript] tested ${packageName} exports=${Object.keys(artifact).length}`);
+    }
+  }
+  const router = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
+  const segments = process.argv.slice(2);
+  await router.run(segments.length ? segments : ["test"]);
 }
 
 class NativeScript extends BundleScript {

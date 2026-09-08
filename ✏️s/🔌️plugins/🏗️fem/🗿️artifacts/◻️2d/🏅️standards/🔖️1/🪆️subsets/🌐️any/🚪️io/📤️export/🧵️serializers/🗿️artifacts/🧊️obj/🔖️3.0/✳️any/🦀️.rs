@@ -12,7 +12,7 @@
 //! EMPTY `.obj`. There is therefore no inverse: `s.stdio.obj@3.0/*` → `s.fem.fem2d@1/*` is a
 //! registered refusal in this subset's `🚪️io/🦀️.rs` `geometry_import` module.
 
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::Fem2dSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{ArtifactSerializer, StandardId, SubsetId};

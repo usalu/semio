@@ -10,7 +10,7 @@
 //! same rationale the sibling `🧭topology` states for itself — so no `InferredField`/incremental
 //! caching is needed here either.
 
-use crate::artifacts::jack::{port_node_id, Edge, JackSnapshot, Node, PropertyValue};
+use crate::{port_node_id, Edge, JackSnapshot, Node, PropertyValue};
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️FlatPosition
@@ -33,7 +33,7 @@ pub struct JackFlatPosition {
 /// both the remaining-node seed pick and each seed's BFS walk are always drawn from `BTreeMap`/
 /// `BTreeSet` id order, never from `edges`'/`nodes`' own fixture order.
 pub fn compute_flat_position(snapshot: &JackSnapshot) -> JackFlatPosition {
-    let scene = crate::artifacts::jack::jack_working_scene(snapshot);
+    let scene = crate::jack_working_scene(snapshot);
     if scene.nodes.is_empty() {
         return JackFlatPosition::default();
     }
@@ -102,7 +102,7 @@ fn extend_from_seed(edges: &BTreeMap<String, &Edge>, flat: &mut BTreeMap<String,
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::jack::{Camera, Manifest, Port, PortDirection, PropertyBag};
+    use crate::{Camera, Manifest, Port, PortDirection, PropertyBag};
 
     //#region 🧸️Fixtures
     fn mini_fixture() -> JackSnapshot {

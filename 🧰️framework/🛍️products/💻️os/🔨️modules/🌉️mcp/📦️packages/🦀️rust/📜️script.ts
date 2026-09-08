@@ -246,7 +246,13 @@ class InferenceDiscoveryOracleScript extends BundleScript {
     }
     const descriptor = JSON.parse(readFileSync(join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "🔣️.json"), "utf8"));
     const contributions = descriptor.contributions;
-    const declared = [...(contributions.inferenceServices ?? []), ...(contributions.artifactContributions ?? []).flatMap((row: { inferences?: unknown[] }) => row.inferences ?? [])];
+    // 🔗️ A descriptor omits `dependsOn` when a service declares none; `ContributedInferenceMetadata`
+    // decodes that absence to an empty `Vec`, which is what the MCP tool then answers with. Defaulting
+    // it here reads the SAME roster the Rust law compares against, instead of two shapes of "none".
+    const declared = [...(contributions.inferenceServices ?? []), ...(contributions.artifactContributions ?? []).flatMap((row: { inferences?: unknown[] }) => row.inferences ?? [])].map((row: Record<string, unknown>) => ({
+      ...row,
+      dependsOn: row.dependsOn ?? [],
+    }));
     const actual = { declared };
     if (!validate(actual)) throw new Error(`committed GIS descriptor discovery drift: ${JSON.stringify(validate.errors)}`);
     deepStrictEqual(actual, fixture.expected);
@@ -504,8 +510,11 @@ function renderType(node: SchemaNode | boolean, indent: string): string {
       const required = new Set((node.required as string[] | undefined) ?? []);
       const inner = `${indent}  `;
       const fields = Object.entries(properties).map(([name, member]) => `${inner}readonly ${JSON.stringify(name)}${required.has(name) ? "" : "?"}: ${renderType(member, inner)};`);
-      const rest = node.additionalProperties === false ? "" : `\n${inner}readonly [key: string]: JsonValue;`;
-      return `{\n${fields.join("\n")}${rest}\n${indent}}`;
+      // 📐️ No `[key: string]: JsonValue` catch-all even where the schema permits extra properties:
+      // TypeScript requires every optional member to be assignable to the index type, which a
+      // `T | undefined` never is, and the committed `🔣️.json` — not this type — is the authority on
+      // what else a document may carry.
+      return `{\n${fields.join("\n")}\n${indent}}`;
     }
     default:
       return "JsonValue";

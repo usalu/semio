@@ -1,0 +1,12 @@
+{
+  "definition_version": 1,
+  "id": "s.norm.en1995",
+  "artifact": "en1995",
+  "directory": "🪵️en1995",
+  "rust_package": "semio-s-artifact-norm-en1995",
+  "nx_project": "@semio-tech/norm-en1995-rs",
+  "dependencies": [
+    "semio-s-artifact-norm-en1990",
+    "semio-s-artifact-norm-en1994"
+  ]
+}

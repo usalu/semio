@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::artifacts::layout::{LayoutCamera, LayoutDropPreviewState};
+use crate::{LayoutCamera, LayoutDropPreviewState};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 

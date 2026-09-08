@@ -7,10 +7,10 @@
 //! `bytes` argument entirely and return `Ok(Block5dSnapshot::default())` — silent, total data loss on
 //! every import.
 
-use crate::artifacts::block5d::io::export::serializers::artifacts::zip::v2_0::any::{ZIP_DSL_ENTRY, ZIP_JSON_ENTRY};
-use crate::artifacts::block5d::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
-use crate::artifacts::block5d::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
-use crate::artifacts::block5d::Block5dSnapshot;
+use crate::io::export::serializers::artifacts::zip::v2_0::any::{ZIP_DSL_ENTRY, ZIP_JSON_ENTRY};
+use crate::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
+use crate::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
+use crate::Block5dSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

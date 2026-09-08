@@ -1,6 +1,6 @@
 //! 🚪️ equation <- json. The exact carrier reconstructs composed children with a local owner.
 
-use crate::artifacts::equation::{equation_snapshot_from_fixture, EquationFixture, EquationSnapshot};
+use crate::{equation_snapshot_from_fixture, EquationFixture, EquationSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

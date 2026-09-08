@@ -1,8 +1,8 @@
 //! 🏗️ Energy model mutation — `CreateConstruction`: Adds one layered construction, outside-to-inside layer order. Every layer must already name a material the document defines, so a construction is never born dangling.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

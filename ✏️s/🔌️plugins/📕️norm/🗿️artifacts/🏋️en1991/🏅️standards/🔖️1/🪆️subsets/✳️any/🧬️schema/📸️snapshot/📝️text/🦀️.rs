@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::en1991::En1991Snapshot;
+use crate::En1991Snapshot;
 
 /// 🏬️ The retail-hydrocarbon-fire example fixture, handcrafted in `en1991`'s DSL
 /// (`store::ArtifactDsl`): a retail unit (imposed category D) evaluated under the EN annex with a
@@ -29,7 +29,7 @@ pub fn print_dsl(document: &En1991Snapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::en1991::part_1_2::FireCurve;
+    use crate::part_1_2::FireCurve;
     use crate::document::{AnnexChoice, ImposedCategory};
 
     #[semio_framework_async_macros::async_test]

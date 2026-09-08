@@ -8,15 +8,15 @@
 //! Exact inverse of the export leaf: the lowpoly DSL text is read back out of the single
 //! `unknown_statements` entry the export leaf wrote (real `engine::decode_obj`, never a second
 //! bespoke grammar) and handed to lowpoly's own `parse_dsl`.
-use crate::artifacts::lowpoly::schema::snapshot::text::parse_dsl;
-use crate::artifacts::lowpoly::schema::snapshot::{dec_str, LowpolySnapshot};
+use crate::schema::snapshot::text::parse_dsl;
+use crate::schema::snapshot::{dec_str, LowpolySnapshot};
 use semio_s_artifact_stdio_obj::engine::decode_obj;
 use semio_s_artifact_stdio_obj::ObjSnapshot;
 
 pub fn register() {}
 
 pub fn deserialize(from: &ObjSnapshot) -> Result<LowpolySnapshot, store::TextError> {
-    let prefix = crate::artifacts::lowpoly::io::export::serializers::artifacts::obj::v3_0::any::LOWPOLY_DSL_COMMENT_PREFIX;
+    let prefix = crate::io::export::serializers::artifacts::obj::v3_0::any::LOWPOLY_DSL_COMMENT_PREFIX;
     let hex = from
         .unknown_statements
         .iter()

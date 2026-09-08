@@ -1,5 +1,5 @@
 //! Deserialize flow via stdio.json.
-use crate::artifacts::flow::FlowSnapshot;
+use crate::FlowSnapshot;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}

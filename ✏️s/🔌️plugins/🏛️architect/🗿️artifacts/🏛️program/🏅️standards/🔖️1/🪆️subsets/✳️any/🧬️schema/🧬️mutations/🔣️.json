@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/mutation.json",
+  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutations.json",
   "title": "ProgramMutation",
   "description": "One real per-mutation record per SEMANTIC-MUTATIONS-OVERHAUL — 266 semantic kinds, matching the Rust dispatch enum 1:1 (Wave C rewrite; supersedes the pre-migration whole-snapshot-shaped generic schema).",
   "oneOf": [

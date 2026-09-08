@@ -1,8 +1,8 @@
 //! 🕒 Direct SSpace mutation — `TouchArtifact` stamps an id-keyed row's `updatedAtMs`/`updatedBy` (the
 //! auto-checkpoint hook per contract §C5 dispatches this after every checkpoint).
-use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDiff;
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Mutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]

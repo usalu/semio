@@ -8,8 +8,8 @@
 //! payload decomposes into one `change-<field>` mutation per persistent field via
 //! `En1994Mutation::from_snapshot`, bundled into a single atomic edit.
 
-use crate::artifacts::en1994::op::En1994Mutation;
-use crate::artifacts::en1994::En1994Snapshot;
+use crate::op::En1994Mutation;
+use crate::En1994Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -33,7 +33,7 @@ pub fn handle(payload: &ReplaceSnapshot, _doc: &ArtifactView<'_, En1994Snapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::en1994::op::En1994Mutation;
+    use crate::op::En1994Mutation;
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]

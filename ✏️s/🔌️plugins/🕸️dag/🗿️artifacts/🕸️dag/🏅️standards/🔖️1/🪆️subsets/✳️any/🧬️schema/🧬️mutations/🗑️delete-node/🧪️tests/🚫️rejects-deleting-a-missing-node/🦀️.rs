@@ -9,8 +9,8 @@
 //! empty scene (`🔖️WorkingScene`). That is precisely the state this case pins: the cascade-aware
 //! delete must refuse, not quietly succeed against a vacuous graph.
 
-use crate::artifacts::dag::mutations::{apply_dag_mutation, inverse_dag_mutation, DagMutation};
-use crate::artifacts::dag::{dag_working_scene, DagDiff, DagSnapshot};
+use crate::mutations::{apply_dag_mutation, inverse_dag_mutation, DagMutation};
+use crate::{dag_working_scene, DagDiff, DagSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

@@ -193,8 +193,8 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_dag::artifacts::dag::standards::v1::subsets::any::schema::mutations::{apply_dag_mutation_reporting, decode_dag_mutation_json, inverse_dag_mutation_steps, seed_dag_working_scene_with, DagMutation};
-    use semio_s_plugin_dag::artifacts::dag::standards::v1::subsets::any::schema::snapshot::{dag_scene_summary, decode_dag_snapshot_json, encode_dag_snapshot_json, parse_dag_dsl, print_dag_dsl, DagSnapshot};
+    use semio_s_artifact_dag_dag::standards::v1::subsets::any::schema::mutations::{apply_dag_mutation_reporting, decode_dag_mutation_json, inverse_dag_mutation_steps, seed_dag_working_scene_with, DagMutation};
+    use semio_s_artifact_dag_dag::standards::v1::subsets::any::schema::snapshot::{dag_scene_summary, decode_dag_snapshot_json, encode_dag_snapshot_json, parse_dag_dsl, print_dag_dsl, DagSnapshot};
 
     //#region 🔖️FixtureDecode
     fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<DagSnapshot, String> {

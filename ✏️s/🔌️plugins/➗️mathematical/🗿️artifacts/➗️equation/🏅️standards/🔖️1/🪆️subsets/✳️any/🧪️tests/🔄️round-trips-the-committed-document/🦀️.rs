@@ -17,7 +17,7 @@ mod subject {
     use super::DSL_ASSET;
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_plugin_mathematical::artifacts::equation::standards::v1::subsets::any::schema::snapshot::equation_identity_report_json;
+    use semio_s_artifact_mathematical_equation::standards::v1::subsets::any::schema::snapshot::equation_identity_report_json;
 
     fn member<'a>(report: &'a Json, key: &str) -> Result<&'a Json, String> {
         report.get(key).ok_or_else(|| format!("the report carries no {key:?} member"))

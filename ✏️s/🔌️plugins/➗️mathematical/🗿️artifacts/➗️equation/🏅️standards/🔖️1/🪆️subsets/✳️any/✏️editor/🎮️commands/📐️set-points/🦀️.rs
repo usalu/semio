@@ -1,8 +1,8 @@
 //! 📐️ 📐️ Equation play app commands command — `set-points`.
 
-use crate::artifacts::equation::op::EquationMutation;
-use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
-use crate::artifacts::equation::{EquationGeometry, EquationSnapshot};
+use crate::op::EquationMutation;
+use crate::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
+use crate::{EquationGeometry, EquationSnapshot};
 use crate::editor::equation::config::{EquationConfig, EquationConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
@@ -22,7 +22,7 @@ pub fn handle(payload: &SetPoints, _doc: &ArtifactView<'_, EquationSnapshot>, _c
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::equation::{EquationGeometry, EquationPoint};
+    use crate::{EquationGeometry, EquationPoint};
     use crate::editor::equation::testkit::{dispatch, math_app};
     use crate::editor::equation::EquationCommand;
 
@@ -31,7 +31,7 @@ mod tests {
         let mut app = math_app().await;
         let geometry = EquationGeometry { points: vec![EquationPoint { x: 1.0, y: 2.0 }] };
         dispatch(&mut app, EquationCommand::SetPoints(SetPoints { geometry: geometry.clone() })).await;
-        assert_eq!(crate::artifacts::equation::equation_geometry(&app.snapshot().expect("projection")), geometry);
+        assert_eq!(crate::equation_geometry(&app.snapshot().expect("projection")), geometry);
     }
 }
 //#endregion 🧪️Tests

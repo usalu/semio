@@ -1,5 +1,5 @@
 //! rewriting -> json
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::write_json_pretty;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 

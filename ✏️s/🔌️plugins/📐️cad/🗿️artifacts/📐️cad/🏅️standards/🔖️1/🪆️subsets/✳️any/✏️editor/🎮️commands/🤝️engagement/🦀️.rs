@@ -1,8 +1,8 @@
 //! 🤝️ CAD play app commands — the engagement REPL: input, submit, keyed transitions, abort, and the two world-pointer events that drive a live construction interaction.
 
-use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadPaneId;
-use crate::artifacts::cad::CadSnapshot;
+use crate::op::CadMutation;
+use crate::CadPaneId;
+use crate::CadSnapshot;
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::engine::interaction::apply_event;
 use crate::editor::cad::CadDispatchCtx;

@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ConnectSteps`.
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::{diff_replace_content, sequence_working_scene, SequenceEdge, SequenceSnapshot};
+use crate::diff::SequenceDiff;
+use crate::{diff_replace_content, sequence_working_scene, SequenceEdge, SequenceSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ConnectSteps, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {

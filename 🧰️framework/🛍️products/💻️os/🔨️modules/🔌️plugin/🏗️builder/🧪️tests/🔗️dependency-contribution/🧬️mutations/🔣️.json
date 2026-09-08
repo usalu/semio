@@ -1,10 +1,10 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.dev/schema/plugin/builder/dependency-contribution/mutations",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/plugin/builder/tests/dependency-contribution/mutations.json",
   "type": "object",
   "allOf": [
     {
-      "$ref": "https://semio.dev/schema/plugin/builder/dependency-contribution/add-value#/$defs/payload"
+      "$ref": "./➕️add-value/🧬️schema/🔣️.json#/$defs/payload"
     },
     {
       "properties": {
@@ -17,6 +17,10 @@
       ]
     }
   ],
-  "unevaluatedProperties": false
+  "propertyNames": {
+    "enum": [
+      "delta",
+      "operation"
+    ]
+  }
 }
-

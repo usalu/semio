@@ -1,8 +1,8 @@
 //! 🫁️ Energy model mutation — `CreateIdealLoadsSystem`: Creates the ideal-loads air system that serves one zone. Both capacity limits are optional — `present` false is the autosized reading, and then the value has to be zero.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

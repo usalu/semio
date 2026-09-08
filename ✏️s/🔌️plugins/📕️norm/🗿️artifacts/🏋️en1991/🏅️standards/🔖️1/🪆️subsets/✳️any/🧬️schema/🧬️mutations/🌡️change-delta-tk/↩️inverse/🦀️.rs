@@ -1,7 +1,7 @@
 //! ↩️ `change-delta-tk` — undo restores BASE's thermal delta.
 
 use super::ChangeDeltaTK;
-use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
+use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeDeltaTK, base: &En1991Snapshot) -> Vec<En1991Mutation> {

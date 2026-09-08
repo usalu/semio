@@ -1,7 +1,7 @@
 //! 🧬️ Curation snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::curation::{CuratedItem, ObjectKindExtra};
-use schema::ArtifactSchema;
+use crate::{CuratedItem, ObjectKindExtra};
+use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Snapshot
@@ -9,7 +9,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 /// together replace the former inline `stock: Vec<ObjectKind>` field: `catalog` composes stdio's
 /// `s.stdio.semio.kit` subset as an owned child (the shared `id`/`name`/`category` type-registry
 /// vocabulary), `stock_extra` carries the sourcing-owned overflow (`typologyPath`/`availability`/
-/// `geometry`) that subset can't represent — see `crate::artifacts::curation::stock_of` for the
+/// `geometry`) that subset can't represent — see `crate::stock_of` for the
 /// reassembly accessor every reader funnels through.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -33,7 +33,7 @@ impl Default for CurationSnapshot {
     /// arbitrary), so this is hand-written rather than derived — mints the same empty-stock handle
     /// `catalog_child_handle(&[])` would, matching an explicitly-built empty document.
     fn default() -> Self {
-        Self { catalog: crate::artifacts::curation::catalog_child_handle(&[]), stock_extra: Vec::new(), curated: Vec::new() }
+        Self { catalog: crate::catalog_child_handle(&[]), stock_extra: Vec::new(), curated: Vec::new() }
     }
 }
 //#region 🔖️HandcraftedArtifactCodecs

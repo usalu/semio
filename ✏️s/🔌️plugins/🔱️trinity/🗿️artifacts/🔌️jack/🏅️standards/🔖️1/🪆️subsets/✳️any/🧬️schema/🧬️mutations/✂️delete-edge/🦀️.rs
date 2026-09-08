@@ -1,7 +1,7 @@
 //! ✂️ TrinityGraph mutation — `DeleteEdge`: removes an id-keyed edge.
-use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::mutations::TrinityGraphMutation;
-use crate::artifacts::jack::JackSnapshot;
+use crate::diff::JackDiff;
+use crate::mutations::TrinityGraphMutation;
+use crate::JackSnapshot;
 
 //#region 🔖️Mutation
 /// ✂️ `delete-edge` payload.

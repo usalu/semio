@@ -23,9 +23,9 @@ pub struct RemodelingExample {
 /// 📚️ Every committed example of this subset, in picker order. **Append-only** — see this module's doc.
 pub const REMODELING_EXAMPLES: &[RemodelingExample] = &[
     RemodelingExample {
-        id: crate::artifacts::remodeling::examples::demo::ID,
-        text: crate::artifacts::remodeling::examples::demo::PRIMARY_TEXT,
-        icon: crate::artifacts::remodeling::examples::demo::ICON,
+        id: crate::examples::demo::ID,
+        text: crate::examples::demo::PRIMARY_TEXT,
+        icon: crate::examples::demo::ICON,
         label_en: "Demo",
         label_de: "Demo",
     },
@@ -37,9 +37,9 @@ pub const REMODELING_EXAMPLES: &[RemodelingExample] = &[
         label_de: "Demo-Sitzung",
     },
     RemodelingExample {
-        id: crate::artifacts::remodeling::examples::synthetic_orbit::ID,
-        text: crate::artifacts::remodeling::examples::synthetic_orbit::PRIMARY_TEXT,
-        icon: crate::artifacts::remodeling::examples::synthetic_orbit::ICON,
+        id: crate::examples::synthetic_orbit::ID,
+        text: crate::examples::synthetic_orbit::PRIMARY_TEXT,
+        icon: crate::examples::synthetic_orbit::ICON,
         label_en: "Synthetic Orbit",
         label_de: "Synthetischer Orbit",
     },
@@ -76,10 +76,10 @@ pub fn example_sources() -> Vec<ExampleSource> {
 
 /// 🚀️ The boot document: the registered boot example's text parsed as a scene, or the artifact's own
 /// default scene when that text is absent or no longer parses.
-pub fn boot_snapshot() -> crate::artifacts::remodeling::RemodelingSnapshot {
+pub fn boot_snapshot() -> crate::RemodelingSnapshot {
     example_text(REMODELING_EXAMPLE_BOOT_ID)
-        .and_then(|text| crate::artifacts::remodeling::snapshot::text::parse_dsl(text).ok())
-        .unwrap_or_else(crate::artifacts::remodeling::default_remodeling_scene)
+        .and_then(|text| crate::snapshot::text::parse_dsl(text).ok())
+        .unwrap_or_else(crate::default_remodeling_scene)
 }
 //#endregion 🔖️Registry
 
@@ -106,7 +106,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn the_boot_document_parses_the_demo_example() {
-        assert_eq!(boot_snapshot(), crate::artifacts::remodeling::snapshot::text::parse_dsl(example_text(REMODELING_EXAMPLE_BOOT_ID).expect("boot example text")).expect("boot example parses"));
+        assert_eq!(boot_snapshot(), crate::snapshot::text::parse_dsl(example_text(REMODELING_EXAMPLE_BOOT_ID).expect("boot example text")).expect("boot example parses"));
     }
 }
 //#endregion 🧪️Tests

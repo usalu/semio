@@ -3,8 +3,8 @@
 //! same uniform per-field JSON strategy as the text codec, so every one of the 74 fields' 5 Rust
 //! types (`f64`/`u32`/`u8`/`String`/`AnnexChoice`) shares one write/read helper pair.
 
-pub use crate::artifacts::en1993::schema::mutations::En1993Mutation;
-use crate::artifacts::en1993::schema::mutations::{
+pub use crate::document_schema::mutations::En1993Mutation;
+use crate::document_schema::mutations::{
     change_annex::ChangeAnnex, update_bolt_inputs::UpdateBoltInputs, update_bridge_inputs::UpdateBridgeInputs, update_cold_formed_inputs::UpdateColdFormedInputs,
     update_crane_inputs::UpdateCraneInputs, update_fatigue_inputs::UpdateFatigueInputs, update_fire_inputs::UpdateFireInputs, update_hss_inputs::UpdateHssInputs,
     update_member_properties::UpdateMemberProperties, update_pile_inputs::UpdatePileInputs, update_plated_inputs::UpdatePlatedInputs, update_silo_shell_inputs::UpdateSiloShellInputs,

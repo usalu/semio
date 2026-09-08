@@ -8,7 +8,7 @@
 //! ShellHost's example picker: `project_artifact_declarations` copies this slice onto the EDITOR
 //! surface's `App`, which the old `PluginBuilder::.editor::<E>(AppDefinition)` call had no field for.
 
-use crate::artifacts::remodeling::standards::v1::subsets::any::{io, schema};
+use crate::standards::v1::subsets::any::{io, schema};
 use crate::editor::remodeling as editor;
 use crate::viewer::remodeling as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
@@ -28,7 +28,7 @@ fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInfere
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
 pub fn subset() -> SubsetDeclaration<crate::RemodelApps> {
     SubsetDeclaration {
-        dialect: crate::artifacts::remodeling::REMODELING_DIALECT,
+        dialect: crate::REMODELING_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::remodeling_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
         viewer: viewer_surface::<viewer::RemodelingViewer, crate::RemodelApps>(viewer::create_remodeling_viewer()),

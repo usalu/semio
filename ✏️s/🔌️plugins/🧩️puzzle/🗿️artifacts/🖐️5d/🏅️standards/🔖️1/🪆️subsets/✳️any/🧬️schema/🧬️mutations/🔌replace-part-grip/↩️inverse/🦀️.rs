@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ReplacePartGrip` — restores the BASE grip payload. Missing target ⇒ `Vec::new()`.
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::mutations::Puzzle5dMutation;
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::ReplacePartGrip, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
@@ -10,6 +10,6 @@ pub fn inverse(payload: &super::ReplacePartGrip, base: &Puzzle5dSnapshot) -> Vec
     let Some(grip) = part.grips.iter().find(|grip| grip.id == payload.grip_id) else {
         return Vec::new();
     };
-    vec![crate::artifacts::puzzle5d::mutations::replace_part_grip::replace_part_grip(payload.part_id.clone(), payload.grip_id.clone(), grip.clone())]
+    vec![crate::mutations::replace_part_grip::replace_part_grip(payload.part_id.clone(), payload.grip_id.clone(), grip.clone())]
 }
 //#endregion 🔖️Inverse

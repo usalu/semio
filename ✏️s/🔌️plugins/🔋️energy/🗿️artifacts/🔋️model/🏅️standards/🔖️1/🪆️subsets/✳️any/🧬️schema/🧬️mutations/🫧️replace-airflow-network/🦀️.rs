@@ -1,8 +1,8 @@
 //! 🫧️ Energy model mutation — `ReplaceAirflowNetwork`: Swaps the document-root airflow-network singleton whole. `present` false detaches it, so one kind covers both attach and detach. `zone_ids[i]` pairs with `node_ids[i]`: the payload carries the two halves of `AirflowNetworkDefinition::zone_node_ids` as parallel lists because its tuple element type has no `dsl::DslField` (see the ticket ledger's follow-up note).
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

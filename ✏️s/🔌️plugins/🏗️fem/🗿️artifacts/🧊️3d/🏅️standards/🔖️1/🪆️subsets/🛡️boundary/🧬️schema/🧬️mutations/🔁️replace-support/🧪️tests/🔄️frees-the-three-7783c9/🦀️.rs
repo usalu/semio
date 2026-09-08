@@ -7,9 +7,9 @@
 //!
 //! Rx/Ry/Rz are dropped from the DOF list, turning the fixed base into a spherical hinge — the list is swapped, never merged.
 
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -35,7 +35,7 @@ fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "replace-support/frees-the-three-7783c9: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.supports.len(), 2, "replace-support/frees-the-three-7783c9: a replacement must not change the support count");
     assert_eq!(snapshot.supports[0].fixed.len(), 3, "replace-support/frees-the-three-7783c9: the three rotational restraints must be gone");
-    assert!(!snapshot.supports[0].fixed.contains(&crate::artifacts::fem3d::FemDof::Rz), "replace-support/frees-the-three-7783c9: Rz in particular must no longer be restrained");
+    assert!(!snapshot.supports[0].fixed.contains(&crate::FemDof::Rz), "replace-support/frees-the-three-7783c9: Rz in particular must no longer be restrained");
 }
 
 /// ↩️ The inverse is a `replace-support` carrying the six-DOF clamp recovered from `base`.
@@ -84,7 +84,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "replace-support/frees-the-three-7783c9: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "replace-support/frees-the-three-7783c9: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "replace-support/frees-the-three-7783c9: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "replace-support/frees-the-three-7783c9: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "replace-support/frees-the-three-7783c9: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("replace-support/frees-the-three-7783c9: unknown outcome status {other:?}"),
@@ -106,7 +106,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-support/frees-the-three-7783c9: committed diff JSON is not canonical");
@@ -115,7 +115,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `supports.patched` entry on `before` must hinge the base without moving the pin.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-support/frees-the-three-7783c9: committed diff did not carry before to after");
 }

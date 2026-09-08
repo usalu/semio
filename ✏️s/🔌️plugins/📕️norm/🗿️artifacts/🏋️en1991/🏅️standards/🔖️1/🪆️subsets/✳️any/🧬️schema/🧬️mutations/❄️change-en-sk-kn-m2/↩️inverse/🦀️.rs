@@ -1,7 +1,7 @@
 //! ↩️ `change-en-sk-kn-m2` — undo restores BASE's characteristic snow load.
 
 use super::ChangeEnSKKnM2;
-use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
+use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeEnSKKnM2, base: &En1991Snapshot) -> Vec<En1991Mutation> {

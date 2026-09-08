@@ -1,8 +1,8 @@
 //! 🔗 Puzzle3d mutation — `ConnectVortices`: creates an attraction between two full vortex ids
 //! (`object_id:vortex_id`), full initial connection-parameterization payload included.
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::Puzzle3dDiff;
+use crate::mutations::Puzzle3dMutation;
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
 /// 🔗 `connect-vortices` payload — attraction `id`, both endpoint full vortex ids, and the full

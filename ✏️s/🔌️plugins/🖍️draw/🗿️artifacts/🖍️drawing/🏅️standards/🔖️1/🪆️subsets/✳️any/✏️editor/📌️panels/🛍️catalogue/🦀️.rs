@@ -1,7 +1,7 @@
 //! 🛍️ Drawing play app panel — the layer-kind catalogue (constitutional: was `ui`'s `Panels` region,
 //! catalogue half).
 
-use crate::artifacts::drawing::{DrawingSnapshot, DRAWING_BOOLEAN_OPERATIONS};
+use crate::{DrawingSnapshot, DRAWING_BOOLEAN_OPERATIONS};
 use crate::editor::drawing::{drawing_play_action, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::drawing::terminology::DrawingPlayLabels;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};

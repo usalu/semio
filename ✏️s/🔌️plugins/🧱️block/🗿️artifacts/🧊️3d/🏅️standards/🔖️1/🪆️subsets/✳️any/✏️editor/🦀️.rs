@@ -5,12 +5,12 @@
 //! (+ its `☑️options/*`) in `🎭️modes/✏️edit/🪟️windows/🌐️world`, panel trees in `📌️panels/*`, labels in
 //! `🗣️terminology`, view state in `🎚️config`, world-scene compute needing both document+config in
 //! `🌍️world` (editor-only compute facet, no taxonomy slot — see that file's own doc), pure document-side
-//! compute in `crate::artifacts::block3d::schema`/`crate::artifacts::block3d::schema::inferences`, and
+//! compute in `crate::schema`/`crate::schema::inferences`, and
 //! this surface's own typed media I/O surface (below — constitutional: general, an artifact must never
 //! depend on a surface, so it lives here rather than under `🗿️artifacts`).
 
-use crate::artifacts::block3d::op::Block3dMutation;
-use crate::artifacts::block3d::{artifact_kind, Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
+use crate::op::Block3dMutation;
+use crate::{artifact_kind, Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
 use crate::editor::block3d::commands::patch_object_kind;
 use crate::editor::block3d::commands::set_camera;
 use crate::editor::block3d::commands::{add_representation, patch_representation, remove_representation};
@@ -753,7 +753,7 @@ impl ArtifactEditor for Block3dPlayApp {
     /// the `World3d` window renders `representations[].mesh_url`, so an empty boot document painted an
     /// empty scene until a client dispatched `setActiveExample`. See `dsl::block3d_boot_snapshot`.
     fn initial_snapshot() -> Block3dSnapshot {
-        crate::artifacts::block3d::dsl::block3d_boot_snapshot()
+        crate::dsl::block3d_boot_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -901,7 +901,7 @@ impl ArtifactEditor for Block3dPlayApp {
             let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let fragment = crate::artifacts::block3d::schema::inferences::puzzle3d_catalog_fragment(doc.snapshot, &[]);
+        let fragment = crate::schema::inferences::puzzle3d_catalog_fragment(doc.snapshot, &[]);
         Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
@@ -1328,7 +1328,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_through_the_wrapper() {
         let mut app: Block3dApp = new_app().await;
-        let kinds = |app: &mut Block3dApp| crate::artifacts::block3d::vortex_kinds_of(&app.snapshot().expect("snapshot")).len();
+        let kinds = |app: &mut Block3dApp| crate::vortex_kinds_of(&app.snapshot().expect("snapshot")).len();
         let before = kinds(&mut app);
         testkit::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {})).await;
         assert_eq!(kinds(&mut app), before + 1);
@@ -1371,7 +1371,7 @@ mod tests {
         testkit::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
         testkit::dispatch(&mut app, Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] })).await;
         let projection = app.snapshot().expect("snapshot");
-        assert!(!crate::artifacts::block3d::vortex_kinds_of(&projection).is_empty());
+        assert!(!crate::vortex_kinds_of(&projection).is_empty());
         assert_eq!(projection.vortices.len(), 2);
     }
 

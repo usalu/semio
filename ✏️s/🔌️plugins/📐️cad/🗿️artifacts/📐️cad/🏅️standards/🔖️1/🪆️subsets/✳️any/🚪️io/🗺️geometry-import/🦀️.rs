@@ -606,7 +606,7 @@ pub(crate) fn model_element_from_cad_object(object: &CadObject) -> SemioModelEle
 }
 
 /// 🌉️ WRITE direction: a pane's full object list → a `SemioModelSnapshot` ready to become a
-/// composed child's content (see `store::ArtifactChild`/`crate::artifacts::cad::cad_model_child_handle`).
+/// composed child's content (see `store::ArtifactChild`/`crate::cad_model_child_handle`).
 pub(crate) fn semio_model_snapshot_from_objects(objects: &[CadObject]) -> SemioModelSnapshot {
     SemioModelSnapshot { schema: STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(), spatial: Vec::new(), elements: objects.iter().map(model_element_from_cad_object).collect(), relations: Vec::new() }
 }
@@ -650,7 +650,7 @@ pub(crate) fn cad_object_from_model_element(element: &SemioModelElement) -> CadO
 }
 
 /// 🌉️ READ direction: every element in a resolved `SemioModelSnapshot` child → this pane's
-/// `CadObject` list — what `crate::artifacts::cad::cad_working_scene_from_models` calls per pane.
+/// `CadObject` list — what `crate::cad_working_scene_from_models` calls per pane.
 pub(crate) fn objects_from_model_snapshot(model: &SemioModelSnapshot) -> Vec<CadObject> {
     model.elements.iter().map(cad_object_from_model_element).collect()
 }

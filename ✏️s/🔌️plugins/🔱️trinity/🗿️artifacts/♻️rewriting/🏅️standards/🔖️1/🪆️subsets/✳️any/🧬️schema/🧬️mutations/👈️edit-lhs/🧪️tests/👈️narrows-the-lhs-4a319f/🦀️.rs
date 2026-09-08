@@ -15,10 +15,10 @@
 //! annotation on its snapshot field, but on the mutation lane the two behave identically: a
 //! whole-body string replacement with a single `mutation.no-op` guard and no addressable target.
 
-use crate::artifacts::rewriting::diff::RewritingDiff;
-use crate::artifacts::rewriting::mutations::RewriteRuleMutation;
-use crate::artifacts::rewriting::RewritingSnapshot;
-use crate::artifacts::rewriting::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
+use crate::diff::RewritingDiff;
+use crate::mutations::RewriteRuleMutation;
+use crate::RewritingSnapshot;
+use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

@@ -7,7 +7,7 @@
 //! content — absorbs the former app-struct `RefCell` (`MathPlayRuntime::camera`, the node-graph viewport)
 //! plus the locale the UI used to read off the deleted `ViewModel`.
 
-use crate::artifacts::equation::EquationCamera;
+use crate::EquationCamera;
 #[cfg(test)]
 use protocol::Mutation;
 // 🌱️ Additive `ToValue`/`FromValue` — required by `Mutation<P>`/`MutationDiff<P>`'s trait bound

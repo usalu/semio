@@ -1,8 +1,8 @@
 //! 🔺️ Remodeling artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::remodeling::schema::diff::RemodelingDiff;
-use crate::artifacts::remodeling::schema::RemodelingArtifact;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::schema::diff::RemodelingDiff;
+use crate::schema::RemodelingArtifact;
+use crate::RemodelingSnapshot;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -153,8 +153,8 @@ impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::remodeling::schema::diff::RemodelingGcpList;
-    use crate::artifacts::remodeling::default_remodeling_scene;
+    use crate::schema::diff::RemodelingGcpList;
+    use crate::default_remodeling_scene;
 
     #[semio_framework_async_macros::async_test]
     async fn empty_diff_is_identity_and_absorb_is_fieldwise_last_writer() {

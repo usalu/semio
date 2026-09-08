@@ -16,8 +16,8 @@
 //! lane's agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed for the TRIADS — unlike
 //! the wave-2 precedent in sibling facets that could not touch glue).
 
-use crate::artifacts::en1996::diff::En1996Diff;
-use crate::artifacts::en1996::En1996Snapshot;
+use crate::diff::En1996Diff;
+use crate::En1996Snapshot;
 
 //#region 🔖️Leaves
 use super::change_annex;
@@ -164,14 +164,14 @@ mod tests {
             En1996Mutation::ChangeFKMpa(change_f_k_mpa::ChangeFKMpa { new_f_k_mpa: 6.5 }),
             En1996Mutation::ChangeFVkMpa(change_f_vk_mpa::ChangeFVkMpa { new_f_vk_mpa: 0.18 }),
             En1996Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
-            En1996Mutation::ChangeMasonryClass(change_masonry_class::ChangeMasonryClass { new_masonry_class: crate::artifacts::en1996::MasonryClass::Class4 }),
+            En1996Mutation::ChangeMasonryClass(change_masonry_class::ChangeMasonryClass { new_masonry_class: crate::MasonryClass::Class4 }),
             En1996Mutation::ChangeDesignSituation(change_design_situation::ChangeDesignSituation { new_design_situation: crate::document::DesignSituation::Seismic }),
             En1996Mutation::ChangeMu(change_mu::ChangeMu { new_mu: 0.35 }),
             En1996Mutation::ChangeWallThicknessMm(change_wall_thickness_mm::ChangeWallThicknessMm { new_wall_thickness_mm: 300.0 }),
             En1996Mutation::ChangeFireResistanceMin(change_fire_resistance_min::ChangeFireResistanceMin { new_fire_resistance_min: 90 }),
             En1996Mutation::ChangeUnit(change_unit::ChangeUnit { new_unit: "calcium_silicate".to_string() }),
-            En1996Mutation::ChangeExposure(change_exposure::ChangeExposure { new_exposure: crate::artifacts::en1996::part_2::ExposureClass::Mx3 }),
-            En1996Mutation::ChangeMortar(change_mortar::ChangeMortar { new_mortar: crate::artifacts::en1996::part_2::MortarClass::M10 }),
+            En1996Mutation::ChangeExposure(change_exposure::ChangeExposure { new_exposure: crate::part_2::ExposureClass::Mx3 }),
+            En1996Mutation::ChangeMortar(change_mortar::ChangeMortar { new_mortar: crate::part_2::MortarClass::M10 }),
             En1996Mutation::ChangeBedJointThicknessMm(change_bed_joint_thickness_mm::ChangeBedJointThicknessMm { new_bed_joint_thickness_mm: 15.0 }),
             En1996Mutation::ChangeStoreys(change_storeys::ChangeStoreys { new_storeys: 4 }),
             En1996Mutation::ChangeHEfMm(change_h_ef_mm::ChangeHEfMm { new_h_ef_mm: 2800.0 }),

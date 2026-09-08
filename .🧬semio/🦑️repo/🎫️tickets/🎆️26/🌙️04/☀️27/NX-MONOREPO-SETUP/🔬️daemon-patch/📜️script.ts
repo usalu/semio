@@ -26,4 +26,6 @@ tests.testNxDaemonTaskEnvironment(root);
 tests.testNxDaemonRetention(root, root);
 const { testGraphCoalescing } = await import(join(process.cwd(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🕸️daemon/📜️script.ts"));
 await testGraphCoalescing(root);
+const { testContinuousServices } = await import(join(process.cwd(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🖥️services/📜️script.ts"));
+await testContinuousServices(root, root);
 console.log(`[DEBUG] Fresh patched Nx fixture: ${root}`);

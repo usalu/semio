@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff for `ReplaceSynapse`, built directly from `(payload, base)`.
 use super::ReplaceSynapse;
-use crate::artifacts::generation2d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::generation2d::mutations::synapse_index;
-use crate::artifacts::generation2d::{Generation2dDiff, Generation2dSnapshot};
+use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::mutations::synapse_index;
+use crate::{Generation2dDiff, Generation2dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceSynapse, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

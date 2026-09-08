@@ -7,14 +7,14 @@
 //! ⚠️ Why this tree pins a REJECTION branch rather than a real removal: `RasterSnapshot.assets`
 //! values are composed `s.stdio.semio.image` CHILD handles whose `child_id` is minted as
 //! `format!("raster-asset-{hash:016x}")` from a `std::collections::hash_map::DefaultHasher` digest
-//! (`crate::artifacts::raster::mint_raster_asset_child`). An APPLIED removal's inverse is
+//! (`crate::mint_raster_asset_child`). An APPLIED removal's inverse is
 //! `add-layer-asset`, whose diff-apply RE-MINTS that handle — so a hand-authored `➡️after` that
 //! round-tripped through the inverse would require forging a value from `std`'s deliberately
 //! unspecified default hasher. The `mutation.target-missing` branch below is reached without ever
 //! touching the minting path, and is the same branch this verb really emits in production.
 
-use crate::artifacts::raster::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
-use crate::artifacts::raster::{RasterDiff, RasterSnapshot};
+use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::{RasterDiff, RasterSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

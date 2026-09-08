@@ -1,6 +1,6 @@
 //! 🧬️ Remodeling artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::remodeling::{
+use crate::{
     CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, ReconstructionStage, RemodelingAssetChild, RemodelingDurableArtifactStore, RemodelingSnapshot, VideoCodec,
 };
 use schema::ArtifactSchema;
@@ -250,9 +250,9 @@ pub fn remodeling_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::remodeling::schema::diff::RemodelingDiff;
-    use crate::artifacts::remodeling::schema::mutations::RemodelingMutation;
-    use crate::artifacts::remodeling::schema::snapshot::RemodelingSnapshot;
+    use crate::schema::diff::RemodelingDiff;
+    use crate::schema::mutations::RemodelingMutation;
+    use crate::schema::snapshot::RemodelingSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -304,7 +304,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::remodeling::RemodelingSnapshot;
+    use crate::RemodelingSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

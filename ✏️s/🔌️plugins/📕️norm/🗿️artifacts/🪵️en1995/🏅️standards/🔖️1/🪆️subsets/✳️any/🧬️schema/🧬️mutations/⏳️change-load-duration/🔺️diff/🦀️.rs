@@ -1,8 +1,8 @@
 //! 🔺️ `change-load-duration` sparse diff construction — writes only `En1995Diff.load_duration` from the payload.
 
-use crate::artifacts::en1995::diff::En1995Diff;
-use crate::artifacts::en1995::mutations::change_load_duration::ChangeLoadDuration;
-use crate::artifacts::en1995::En1995Snapshot;
+use crate::diff::En1995Diff;
+use crate::mutations::change_load_duration::ChangeLoadDuration;
+use crate::En1995Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeLoadDuration, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {

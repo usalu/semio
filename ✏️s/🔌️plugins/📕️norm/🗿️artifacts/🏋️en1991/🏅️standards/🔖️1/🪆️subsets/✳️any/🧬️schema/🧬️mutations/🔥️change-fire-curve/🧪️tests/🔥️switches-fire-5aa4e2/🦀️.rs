@@ -5,7 +5,7 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::en1991::{En1991Diff, En1991Mutation, En1991Snapshot};
+use crate::{En1991Diff, En1991Mutation, En1991Snapshot};
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -30,7 +30,7 @@ async fn applies_to_committed_after() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = outcome.diff().apply(&base).expect("change-fire-curve/switches-fire-curve-to-hydrocarbon: mutation applies to its committed before-snapshot");
-    assert_eq!(produced.fire_curve, crate::artifacts::en1991::part_1_2::FireCurve::Hydrocarbon, "change-fire-curve/switches-fire-curve-to-hydrocarbon: `fire_curve` must read FireCurve::Hydrocarbon after the mutation");
+    assert_eq!(produced.fire_curve, crate::part_1_2::FireCurve::Hydrocarbon, "change-fire-curve/switches-fire-curve-to-hydrocarbon: `fire_curve` must read FireCurve::Hydrocarbon after the mutation");
     assert_eq!(produced.fire_resistance_min, base.fire_resistance_min, "change-fire-curve/switches-fire-curve-to-hydrocarbon: `fire_resistance_min` is not addressed by this mutation and must survive untouched");
     assert_eq!(produced, expected_after(), "change-fire-curve/switches-fire-curve-to-hydrocarbon: applied state differs from the committed after-snapshot");
 }
@@ -80,7 +80,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
-    assert_eq!(outcome.diff().fire_curve, Some(crate::artifacts::en1991::part_1_2::FireCurve::Hydrocarbon), "change-fire-curve/switches-fire-curve-to-hydrocarbon: the diff must carry `fire_curve` = FireCurve::Hydrocarbon");
+    assert_eq!(outcome.diff().fire_curve, Some(crate::part_1_2::FireCurve::Hydrocarbon), "change-fire-curve/switches-fire-curve-to-hydrocarbon: the diff must carry `fire_curve` = FireCurve::Hydrocarbon");
     assert!(outcome.diff().fire_resistance_min.is_none(), "change-fire-curve/switches-fire-curve-to-hydrocarbon: the diff must leave `fire_resistance_min` unset");
     let produced = serde_json::to_value(outcome.diff()).expect("change-fire-curve/switches-fire-curve-to-hydrocarbon: produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("change-fire-curve/switches-fire-curve-to-hydrocarbon: committed diff decodes");
@@ -91,7 +91,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: En1991Diff = serde_json::from_str(DIFF).expect("change-fire-curve/switches-fire-curve-to-hydrocarbon: committed diff decodes");
-    assert_eq!(decoded.fire_curve, Some(crate::artifacts::en1991::part_1_2::FireCurve::Hydrocarbon), "change-fire-curve/switches-fire-curve-to-hydrocarbon: the committed diff must name `fire_curve` = FireCurve::Hydrocarbon");
+    assert_eq!(decoded.fire_curve, Some(crate::part_1_2::FireCurve::Hydrocarbon), "change-fire-curve/switches-fire-curve-to-hydrocarbon: the committed diff must name `fire_curve` = FireCurve::Hydrocarbon");
     let reencoded = serde_json::to_value(&decoded).expect("change-fire-curve/switches-fire-curve-to-hydrocarbon: diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("change-fire-curve/switches-fire-curve-to-hydrocarbon: committed diff reparses");
     assert_eq!(reencoded, original, "change-fire-curve/switches-fire-curve-to-hydrocarbon: committed diff JSON is not canonical");
@@ -103,6 +103,6 @@ async fn committed_diff_applies_to_after() {
     let base = before();
     let decoded: En1991Diff = serde_json::from_str(DIFF).expect("change-fire-curve/switches-fire-curve-to-hydrocarbon: committed diff decodes");
     let produced = decoded.apply(&base).expect("change-fire-curve/switches-fire-curve-to-hydrocarbon: committed diff applies to the before-snapshot");
-    assert_eq!(produced.fire_curve, crate::artifacts::en1991::part_1_2::FireCurve::Hydrocarbon, "change-fire-curve/switches-fire-curve-to-hydrocarbon: the committed diff must set `fire_curve` to FireCurve::Hydrocarbon");
+    assert_eq!(produced.fire_curve, crate::part_1_2::FireCurve::Hydrocarbon, "change-fire-curve/switches-fire-curve-to-hydrocarbon: the committed diff must set `fire_curve` to FireCurve::Hydrocarbon");
     assert_eq!(produced, expected_after(), "change-fire-curve/switches-fire-curve-to-hydrocarbon: committed diff did not carry before to after");
 }

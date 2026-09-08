@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/library/caching/schema.json",
+  "title": "NxCachePolicy",
+  "$defs": {
+    "NxCoordinatorFixture": {
+      "type": "object", "additionalProperties": false, "required": ["cases"],
+      "properties": { "cases": { "type": "array", "minItems": 4, "items": {
+        "type": "object", "additionalProperties": false, "required": ["name", "platform", "stdout", "environment", "expectedExit"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "platform": { "enum": ["win32", "linux", "darwin"] },
+          "stdout": { "type": "string" },
+          "environment": { "type": "object", "additionalProperties": false, "properties": { "NX_WORKSPACE_DATA_DIRECTORY": { "type": "string", "minLength": 1 } } },
+          "expectedExit": { "type": "integer" }, "throws": { "type": "boolean" }
+        }
+      } } }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "uncached",
+    "continuous",
+    "generatedDirectories",
+    "toolchains"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "uncached": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "continuous": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "generatedDirectories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "toolchains": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "files",
+          "environment",
+          "commands"
+        ],
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "environment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "commands": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "targetDefaults": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object"
+      }
+    }
+  }
+}

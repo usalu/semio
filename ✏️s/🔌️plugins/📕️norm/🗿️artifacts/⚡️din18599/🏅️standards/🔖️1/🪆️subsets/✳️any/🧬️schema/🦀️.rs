@@ -1,7 +1,7 @@
 //! 🧬️ Din18599 artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::din18599::{Din18599ClimateChild, MonthlyClimate, UseClass};
-use schema::ArtifactSchema;
+use crate::{Din18599ClimateChild, MonthlyClimate, UseClass};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full Din18599 artifact state across the artifact and presence lanes. `climate` mirrors
@@ -50,8 +50,8 @@ pub struct Din18599Artifact {
 //#region 🔖️Conversions
 impl Din18599Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::din18599::Din18599Snapshot {
-        crate::artifacts::din18599::Din18599Snapshot {
+    pub fn to_snapshot(&self) -> crate::Din18599Snapshot {
+        crate::Din18599Snapshot {
             use_class: self.use_class,
             heated_area_m2: self.heated_area_m2,
             occupants: self.occupants,
@@ -69,7 +69,7 @@ impl Din18599Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::din18599::Din18599Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::Din18599Snapshot) -> Self {
         Self {
             use_class: snapshot.use_class,
             heated_area_m2: snapshot.heated_area_m2,
@@ -88,7 +88,7 @@ impl Din18599Artifact {
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::din18599::Din18599Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::Din18599Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -99,31 +99,31 @@ impl Din18599Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.din18599` — twenty handcrafted schema leaves.
-pub fn din18599_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn din18599_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.din18599",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -135,7 +135,7 @@ pub fn din18599_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::din18599::{Din18599Diff, Din18599Mutation, Din18599Snapshot};
+    use crate::{Din18599Diff, Din18599Mutation, Din18599Snapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -187,7 +187,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::din18599::Din18599Snapshot;
+    use crate::Din18599Snapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -248,17 +248,17 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️ComplianceHelpers
-use crate::artifacts::din16798::standards::v1::subsets::any::schema::part_3::residential_ventilation_rate;
+use semio_s_artifact_norm_din16798::standards::v1::subsets::any::schema::part_3::residential_ventilation_rate;
 /// 📐️ Pure DIN V 18599 compliance helpers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — relocated verbatim from the deleted `⚙️engine`. `part_1` through `part_12` operate on
 /// `BalancingInputs` (a type alias for `Din18599Snapshot` defined at the artifact root — see
-/// `crate::artifacts::din18599::BalancingInputs`), but remain per-metric pure helpers, not the
+/// `crate::BalancingInputs`), but remain per-metric pure helpers, not the
 /// whole-document composition; `balance_annual`/`evaluate` (the actual snapshot-level conformance
 /// law) live in `💡️inferences`. Depends on `din4108` and `din16798`'s relocated schema helpers for
 /// the reference-building envelope/ventilation calculations.
-use crate::artifacts::din18599::BalancingInputs;
-use crate::artifacts::din4108::standards::v1::subsets::any::schema::part_2::{total_resistance, u_value_from_resistance, Layer};
-use crate::artifacts::din4108::standards::v1::subsets::any::schema::{R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};
+use crate::BalancingInputs;
+use semio_s_artifact_norm_din4108::standards::v1::subsets::any::schema::part_2::{total_resistance, u_value_from_resistance, Layer};
+use semio_s_artifact_norm_din4108::standards::v1::subsets::any::schema::{R_SE_WALL_M2K_W, R_SI_WALL_M2K_W};
 use crate::document::{AnnexChoice, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity};
 
 // #region 🔖️Shared
@@ -293,7 +293,7 @@ fn cooling_degree_hours(climate: &MonthlyClimate, theta_int_cool: f64) -> f64 {
 // 📌️ Deviation from the original monolith: this was `impl BalancingInputs { pub fn
 // reference_residential(..) }` — an inherent method. It needs `din4108_engine`/`din16798_engine`,
 // which `din18599` (rs) must not depend on (rs sits below engine in every constitutional crate),
-// so it moved here as a free function. See `crate::artifacts::din18599::Din18599Snapshot`'s `Default` impl for the
+// so it moved here as a free function. See `crate::Din18599Snapshot`'s `Default` impl for the
 // precomputed numeric result of `reference_residential(ClimateZoneDe::Zone2, 100.0)`.
 pub fn reference_residential(zone: ClimateZoneDe, area_m2: f64) -> BalancingInputs {
     let occupants = ((area_m2 / 30.0).ceil() as u32).max(1);
@@ -324,7 +324,7 @@ pub fn from_building(wall_layers: &[Layer], floor_area_m2: f64, occupants: u32, 
         occupants,
         h_t,
         h_v,
-        climate: crate::artifacts::din18599::din18599_climate_child_from_data(&MonthlyClimate::german_reference(climate)),
+        climate: crate::din18599_climate_child_from_data(&MonthlyClimate::german_reference(climate)),
         internal_gains_w_m2: 3.5,
         solar_gains_kwh: solar,
         system_losses_kwh: 8.0 * floor_area_m2,
@@ -340,12 +340,12 @@ pub fn reference_wall_layers() -> Vec<Layer> {
 }
 
 fn transmission_losses_kwh(inputs: &BalancingInputs) -> f64 {
-    let dh = heating_degree_hours(&crate::artifacts::din18599::din18599_climate(inputs), 19.0);
+    let dh = heating_degree_hours(&crate::din18599_climate(inputs), 19.0);
     inputs.h_t * dh / 1000.0
 }
 
 fn ventilation_losses_kwh(inputs: &BalancingInputs) -> f64 {
-    let dh = heating_degree_hours(&crate::artifacts::din18599::din18599_climate(inputs), 19.0);
+    let dh = heating_degree_hours(&crate::din18599_climate(inputs), 19.0);
     inputs.h_v * dh / 1000.0
 }
 
@@ -370,7 +370,7 @@ fn net_heating_demand_kwh(inputs: &BalancingInputs) -> f64 {
 }
 
 fn cooling_demand_kwh(inputs: &BalancingInputs) -> f64 {
-    let cdh = cooling_degree_hours(&crate::artifacts::din18599::din18599_climate(inputs), 26.0);
+    let cdh = cooling_degree_hours(&crate::din18599_climate(inputs), 26.0);
     let gain_factor = 0.35;
     (inputs.h_t + inputs.h_v) * cdh * gain_factor / 1000.0
 }
@@ -844,7 +844,7 @@ mod compliance_helpers_tests {
     #[semio_framework_async_macros::async_test]
     async fn part_8_cooling_demand_numeric_worked_example() {
         let inputs = reference_100m2_inputs();
-        let cdh = part_8::cooling_degree_hours(&crate::artifacts::din18599::din18599_climate(&inputs));
+        let cdh = part_8::cooling_degree_hours(&crate::din18599_climate(&inputs));
         let expected_q_c = (inputs.h_t + inputs.h_v) * cdh * 0.35 / 1000.0;
         let q_c = part_8::cooling_demand_kwh(&inputs);
         assert!((q_c - expected_q_c).abs() < 1e-6, "q_c = {q_c}, expected {expected_q_c}");

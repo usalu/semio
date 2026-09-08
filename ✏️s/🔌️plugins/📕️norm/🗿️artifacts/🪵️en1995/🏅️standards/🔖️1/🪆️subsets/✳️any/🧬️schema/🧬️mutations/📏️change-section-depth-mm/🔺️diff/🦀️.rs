@@ -1,8 +1,8 @@
 //! 🔺️ `change-section-depth-mm` sparse diff construction — writes only `En1995Diff.section_depth_mm` from the payload.
 
-use crate::artifacts::en1995::diff::En1995Diff;
-use crate::artifacts::en1995::mutations::change_section_depth_mm::ChangeSectionDepthMm;
-use crate::artifacts::en1995::En1995Snapshot;
+use crate::diff::En1995Diff;
+use crate::mutations::change_section_depth_mm::ChangeSectionDepthMm;
+use crate::En1995Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSectionDepthMm, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {

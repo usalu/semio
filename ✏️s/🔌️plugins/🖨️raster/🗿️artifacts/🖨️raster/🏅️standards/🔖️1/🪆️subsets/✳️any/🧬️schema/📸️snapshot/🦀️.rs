@@ -17,7 +17,7 @@
 //! nested/non-bare child slot the derive can't see): the type/mutation/persistence layer is fully
 //! real, only the derive-generated SCHEMA INTROSPECTION table is incomplete for this one field.
 
-use crate::artifacts::raster::{RasterAssetChild, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use crate::{RasterAssetChild, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 
 //#region 🔖️Snapshot

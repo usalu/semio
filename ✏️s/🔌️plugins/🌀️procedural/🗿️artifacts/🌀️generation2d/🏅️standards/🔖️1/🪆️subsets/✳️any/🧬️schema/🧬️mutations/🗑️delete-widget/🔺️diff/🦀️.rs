@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `DeleteWidget` — a real id-keyed removal from the fixture's widget
 //! collection helper (never a whole-snapshot capture).
 
-use crate::artifacts::generation2d::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::generation2d::{widget_id, Generation2dSnapshot};
+use crate::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
+use crate::{widget_id, Generation2dSnapshot};
 
 pub fn diff(payload: &super::DeleteWidget, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
     if !base.fixture.widgets.iter().any(|widget| widget_id(widget) == payload.id) {

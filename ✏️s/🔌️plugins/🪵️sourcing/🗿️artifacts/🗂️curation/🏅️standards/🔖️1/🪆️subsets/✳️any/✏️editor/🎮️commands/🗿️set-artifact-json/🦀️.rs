@@ -1,9 +1,9 @@
 //! 📄️ 📄️ Sourcing curation app commands command — `set-artifact-json`.
 
-use crate::artifacts::curation::op::SourcingMutation;
-use crate::artifacts::curation::schema::snapshot::decode_curation_snapshot_json;
-use crate::artifacts::curation::schema::sourcing_json_envelope_is_bounded;
-use crate::artifacts::curation::CurationSnapshot;
+use crate::op::SourcingMutation;
+use crate::schema::snapshot::decode_curation_snapshot_json;
+use crate::schema::sourcing_json_envelope_is_bounded;
+use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
 use crate::editor::sourcing::reset_document_effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -30,7 +30,7 @@ pub fn handle(payload: &SetArtifactJson, _doc: &ArtifactView<'_, CurationSnapsho
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::curation::schema::{empty_document, SourcingModule};
+    use crate::schema::{empty_document, SourcingModule};
     use crate::editor::sourcing::commands::{set_active_example, stock_from_catalogue};
     use crate::editor::sourcing::testkit::new_app;
     use crate::editor::sourcing::SourcingCurationCommand;
@@ -40,7 +40,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn pre_deserialization_envelope_accepts_exact_limits_and_rejects_plus_one() {
-        use crate::artifacts::curation::schema::{SOURCING_JSON_MAX_BYTES, SOURCING_JSON_MAX_DEPTH, SOURCING_JSON_MAX_ITEMS, SOURCING_JSON_MAX_STRING_BYTES};
+        use crate::schema::{SOURCING_JSON_MAX_BYTES, SOURCING_JSON_MAX_DEPTH, SOURCING_JSON_MAX_ITEMS, SOURCING_JSON_MAX_STRING_BYTES};
 
         let raw_max = format!("{{}}{}", " ".repeat(SOURCING_JSON_MAX_BYTES - 2));
         assert!(sourcing_json_envelope_is_bounded(&raw_max));
@@ -133,7 +133,7 @@ mod tests {
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = stock_from_catalogue::handle(&stock_from_catalogue::StockFromCatalogue {}, &doc, &cfg).expect("handle");
         let loaded = load_document_pack(&emit);
-        let expected: usize = crate::artifacts::curation::schema::sourcing_modules("[]").iter().map(|module| module.demo_kinds().len()).sum();
+        let expected: usize = crate::schema::sourcing_modules("[]").iter().map(|module| module.demo_kinds().len()).sum();
         assert_eq!(loaded.stock_extra.len(), expected);
 
         let doc2 = ArtifactView::new(&loaded, &history);

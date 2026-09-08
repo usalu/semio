@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🗺️set-adjacency` per Wave C.
 
 use super::ConnectAdjacency;
-use crate::artifacts::program::diff::{ProgramAdjacenciesDelta, ProgramAdjacenciesPatchEntry};
-use crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramAdjacenciesDelta, ProgramAdjacenciesPatchEntry};
+use crate::standards::v1::subsets::any::schema::normalize_pair;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 use protocol::Patchable;
 
 /// 🔌️ Error `mutation.target-missing` if either endpoint element is absent (empty diff); Warning

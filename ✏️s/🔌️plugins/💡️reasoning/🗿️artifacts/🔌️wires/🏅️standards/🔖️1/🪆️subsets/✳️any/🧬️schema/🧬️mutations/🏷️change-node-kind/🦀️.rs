@@ -1,8 +1,8 @@
 //! 🏷️ Wires mutation — `ChangeNodeKind`: sets one board node's `nodeKind` scalar field.
 
-use crate::artifacts::wires::diff::WiresDiff;
-use crate::artifacts::wires::mutations::WiresMutation;
-use crate::artifacts::wires::WiresSnapshot;
+use crate::diff::WiresDiff;
+use crate::mutations::WiresMutation;
+use crate::WiresSnapshot;
 
 //#region 🔖️Mutation
 /// 🏷️ `change-node-kind` payload.

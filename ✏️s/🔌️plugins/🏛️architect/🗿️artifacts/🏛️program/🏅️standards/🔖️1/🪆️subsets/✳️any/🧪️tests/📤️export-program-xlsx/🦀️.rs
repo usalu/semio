@@ -15,8 +15,8 @@ fn oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::PROGRAM;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_architect::artifacts::program::io::export::serializers::artifacts::xlsx::v_ecma_376::any as export;
-    use semio_s_plugin_architect::artifacts::program::standards::v1::subsets::any::schema::mutations::decode_program_snapshot_json;
+    use semio_s_artifact_architect_program::io::export::serializers::artifacts::xlsx::v_ecma_376::any as export;
+    use semio_s_artifact_architect_program::standards::v1::subsets::any::schema::mutations::decode_program_snapshot_json;
 
     fn block_on<F: std::future::Future>(future: F) -> F::Output {
         let mut future = std::pin::pin!(future);

@@ -7,8 +7,8 @@
 //! `document`/flow's `content` fields exactly (not `Option<Option<…>>` — that shape is for a slot
 //! whose PRESENCE itself can change, e.g. lowpoly's `mesh`, which does not apply here).
 
-use crate::artifacts::playbook::{PlaybookDocumentChild, PlaybookFlowChild};
-use schema::ArtifactSchema;
+use crate::{PlaybookDocumentChild, PlaybookFlowChild};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the playbook artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -16,7 +16,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.playbook.playbook")]
 pub struct PlaybookDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::playbook::schema::PlaybookArtifact>>,
+    pub artifact: Option<Box<crate::schema::PlaybookArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]
@@ -50,7 +50,7 @@ pub struct PlaybookStringList {
 //#region 🔖️ValueCodec
 /// 🔀️ Hand-written, not derived: `document`/`flow` are `store::ArtifactChild<S>` composed-artifact
 /// handles bridged through `to_dsl_value`/`from_dsl_value` (see the sibling `🧬️schema/🦀️component.rs`
-/// impl for [`crate::artifacts::playbook::schema::PlaybookArtifact`] — same trap, same fix). This is
+/// impl for [`crate::schema::PlaybookArtifact`] — same trap, same fix). This is
 /// [`crate::mutation::MutationDiff::Diff`]'s own wire shape, so it must implement `ToValue`/
 /// `FromValue`, not just the domain types it composes.
 impl ::semio_framework_os_kernel::ToValue for PlaybookDiff {

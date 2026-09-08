@@ -1,8 +1,8 @@
 //! 🕟️ Energy model mutation — `ChangeDailyScheduleLimits`: Sets the optional clamp a daily profile's lookups are bounded by. Lower and upper are one inseparable pair — a half-stated pair is refused — and stating neither clears the clamp entirely.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

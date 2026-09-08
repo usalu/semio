@@ -1,7 +1,7 @@
 //! 📋️ Imperative play app — the main window: a table of the document's top-level steps plus, once `run`
 //! has been dispatched, the resulting scope.
 
-use crate::artifacts::procedure::{ProcedureSnapshot, Step};
+use crate::{ProcedureSnapshot, Step};
 use crate::editor::procedure::terminology::ImperativeLabels;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
@@ -63,7 +63,7 @@ fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
 }
 
 pub fn render(document: &ProcedureSnapshot, run_output_json: &str, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let path = crate::artifacts::procedure::procedure_working_scene(document).path;
+    let path = crate::procedure_working_scene(document).path;
     let mut rows = table_rows(&path.steps);
     if !run_output_json.is_empty() {
         rows.extend(run_output_rows(run_output_json, rows.len()));

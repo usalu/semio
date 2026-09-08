@@ -12,7 +12,7 @@
 //! `ViewModel` at all, so locale-aware label resolution reads it off here (see
 //! `crate::editor::sourcing::terminology::sourcing_curation_labels`).
 
-use crate::artifacts::curation::{Filters, TableSort};
+use crate::{Filters, TableSort};
 use protocol::Mutation;
 
 //#region 🔖️Config
@@ -243,7 +243,7 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::curation::SortDirection;
+    use crate::SortDirection;
 
     #[semio_framework_async_macros::async_test]
     async fn sourcing_curation_config_default_matches_the_prior_document_defaults() {

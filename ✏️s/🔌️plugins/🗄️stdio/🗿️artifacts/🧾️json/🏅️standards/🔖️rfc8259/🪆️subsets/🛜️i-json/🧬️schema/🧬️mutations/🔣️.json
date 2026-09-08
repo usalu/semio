@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutations.json",
-  "title": "JsonIJsonRoot",
+  "title": "JsonIJsonMutation",
   "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
@@ -12,10 +12,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "insertArrayElement"
             }
           }
@@ -30,10 +30,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "removeArrayElement"
             }
           }
@@ -48,10 +48,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "removeMember"
             }
           }
@@ -66,10 +66,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "renameMember"
             }
           }
@@ -84,10 +84,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setSafeNumber"
             }
           }
@@ -102,10 +102,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setSnapshot"
             }
           }
@@ -120,10 +120,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setString"
             }
           }
@@ -138,10 +138,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "setTopLevel"
             }
           }
@@ -156,10 +156,10 @@
         {
           "type": "object",
           "required": [
-            "kind"
+            "mutation"
           ],
           "properties": {
-            "kind": {
+            "mutation": {
               "const": "upsertMember"
             }
           }

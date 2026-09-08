@@ -7,8 +7,8 @@
 //! window shows every register at once — a genuinely useful, config-free read-only equivalent, not a
 //! narrower stand-in for the one it mirrors.
 
-use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::status_summary;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::status_summary;
+use crate::ProgramSnapshot;
 use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -68,7 +68,7 @@ pub fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyRe
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::{empty_plugin, sample_plugin};
+    use crate::{empty_plugin, sample_plugin};
 
     #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_table_surface_and_body_key() {

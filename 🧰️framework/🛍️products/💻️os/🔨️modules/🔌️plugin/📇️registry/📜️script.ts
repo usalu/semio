@@ -2893,12 +2893,24 @@ async function previewNativeCatalogSelectionV1(
   return Object.freeze(staged);
 }
 
+type SchemaValidator = ((value: unknown) => boolean) & { readonly errors?: unknown };
+
+/** 🧬️ Compiles one named export of the registry schema module against the repository draft-07 dialect. */
+async function registrySchemaValidator(exportId: string): Promise<SchemaValidator> {
+  const { default: Ajv } = await import("ajv");
+  const document = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(document);
+  const validate = ajv.getSchema(`${document.$id}#/$defs/${exportId}`);
+  if (!validate) throw new Error(`registry schema: unknown export ${exportId}`);
+  return validate as SchemaValidator;
+}
+
 /** 🧫️ Independent AJV/Kahn closure oracle over neutral data; never reads a live factory or production descriptor. */
 async function nativeCatalogSelectionOracleV1(): Promise<void> {
   const fixtureRoot = join(import.meta.dir, "🧫️fixtures/📦️native-catalog-selection");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  const validate = await registrySchemaValidator("NativeCatalogSelectionV1");
   if (!validate(fixture)) throw new Error(`native catalog selection fixture denied: ${JSON.stringify(validate.errors)}`);
   const neutral = (candidate: any, profileId: string, mutation: string): { code: string; receiptCount: number; calls: string[] } => {
     const denied = (calls: string[] = []) => ({ code: "denied", receiptCount: 0, calls });
@@ -2989,8 +3001,7 @@ class RustTaxonomyMountsCheckScript extends BundleScript {
   async run(): Promise<void> {
     const fixtureRoot = join(import.meta.dir, "🧫️fixtures/🕸️rust-taxonomy-mounts");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: Record<string, string>; expectedCodes: string[]; expectedUnmounted: string[]; rustcSuccess: boolean }[] };
-    const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+    const validate = await registrySchemaValidator("RustTaxonomyMountsV1");
     if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
     const outputRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
     if (!outputRoot || !isAbsolute(outputRoot)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must be the ticket generated directory");
@@ -3055,8 +3066,7 @@ class PluginRootOwnershipCheckScript extends BundleScript {
   async run(): Promise<void> {
     const fixtureRoot = join(import.meta.dir, "🧫️fixtures/🌳️plugin-root-ownership");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: string[]; expected: string[] }[] };
-    const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+    const validate = await registrySchemaValidator("PluginRootOwnershipV1");
     if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
     const outputRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
     if (!outputRoot || !isAbsolute(outputRoot)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must be the ticket generated directory");

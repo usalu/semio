@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `ResizeVortex`.
 
-use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexTemplate};
-use crate::artifacts::block3d::diff::{Block3dDiff, Block3dVorticesDelta, Block3dVorticesPatch, Block3dVorticesPatchEntry};
+use crate::{Block3dSnapshot, Block3dVortexTemplate};
+use crate::diff::{Block3dDiff, Block3dVorticesDelta, Block3dVorticesPatch, Block3dVorticesPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ResizeVortex, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

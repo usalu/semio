@@ -1,8 +1,8 @@
 //! 🧷️ Block2d mutation — `ChangeHandleHandleKind`: a rim-handle's `handleKind` catalog reference (rebind).
 
-use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::diff::Block2dDiff;
-use crate::artifacts::block2d::mutations::Block2dMutation;
+use crate::Block2dSnapshot;
+use crate::diff::Block2dDiff;
+use crate::mutations::Block2dMutation;
 
 //#region 🔖️Mutation
 /// 🧷️ `change-handle-handle-kind` payload.

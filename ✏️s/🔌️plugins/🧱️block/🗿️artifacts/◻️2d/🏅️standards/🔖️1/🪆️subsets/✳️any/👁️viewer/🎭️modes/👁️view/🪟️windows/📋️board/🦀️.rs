@@ -2,7 +2,7 @@
 //! window kind, mirroring the editor's single `📋️board` window). Never calls into the sibling
 //! editor module — built directly from the shared artifact-level `Block2dSnapshot`.
 
-use crate::artifacts::block2d::Block2dSnapshot;
+use crate::Block2dSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{column, text, Buildable, HasChildren, Label};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, PluginAssemblyError, SurfaceKind, UiAssemblyResult, UiFixedList, WindowKindDefinition, WindowOptions};
 
@@ -81,8 +81,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_lists_real_handle_kind_and_handle_geometry() {
-        use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate};
-        let mut document = crate::artifacts::block2d::schema::empty_block2d_snapshot();
+        use crate::{Block2dHandleKind, Block2dHandleTemplate};
+        let mut document = crate::schema::empty_block2d_snapshot();
         document.handle_kinds.push(Block2dHandleKind { id: "k1".into(), name: "k1".into(), label: "Cable".into(), color: "#ff0000".into(), default_wire_kind: "cable.link".into() });
         document.handles.push(Block2dHandleTemplate { id: "h1".into(), handle_kind: "k1".into(), angle: std::f64::consts::PI, radius: 0.5 });
         let json = serde_json::to_string(&render(&document).expect("board render")).expect("render json");

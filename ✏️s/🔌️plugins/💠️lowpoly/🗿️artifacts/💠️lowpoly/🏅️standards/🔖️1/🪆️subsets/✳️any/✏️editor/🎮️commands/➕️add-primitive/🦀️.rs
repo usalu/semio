@@ -2,8 +2,8 @@
 //! command in its group, so (per TEMPLATE.md §5.7's `module_inception` rule) the payload lives directly
 //! at this file's top level rather than in a same-named inner `pub mod`.
 
-use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolySnapshot;
+use crate::op::LowpolyMutation;
+use crate::LowpolySnapshot;
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::editor::lowpoly::view::{build_doc, primitive_kind};
@@ -37,7 +37,7 @@ pub fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, c
     // framework-owned `InteractionState` now, only ever mutated by the framework's own injected
     // `interactionSelect` handling, never by an app command's `Emit::config_mutations`.
     Ok(Emit {
-        artifact_mutations: vec![LowpolyMutation::CreateObject(crate::artifacts::lowpoly::mutations::create_object::CreateObject { index, object: new_object })],
+        artifact_mutations: vec![LowpolyMutation::CreateObject(crate::mutations::create_object::CreateObject { index, object: new_object })],
         config_mutations: vec![LowpolyConfigMutation::SetActiveObject { object_id: new_id }],
         ..Default::default()
     })

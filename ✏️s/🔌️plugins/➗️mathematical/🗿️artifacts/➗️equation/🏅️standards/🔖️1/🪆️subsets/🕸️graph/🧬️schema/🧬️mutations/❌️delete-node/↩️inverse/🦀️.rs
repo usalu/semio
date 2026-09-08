@@ -1,12 +1,12 @@
 //! ↩️ `delete-node` — undo re-creates the node and re-`connect`s every edge it severed, both
 //! captured from BASE state (pre-deletion); missing id ⇒ `Vec::new()`.
 
-use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::{connect_nodes, create_node};
-use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
+use crate::standards::v1::subsets::graph::schema::mutations::{connect_nodes, create_node};
+use crate::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DeleteNode, base: &EquationSnapshot) -> Vec<EquationMutation> {
-    let graph = crate::artifacts::equation::equation_graph(base);
+    let graph = crate::equation_graph(base);
     let Some(node) = graph.nodes.iter().find(|node| node.id == payload.id) else {
         return Vec::new();
     };

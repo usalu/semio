@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff construction for `change-imported-features`.
 use super::ChangeImportedFeatures;
-use crate::artifacts::gisterrain::diff::GisTerrainDiff;
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::diff::GisTerrainDiff;
+use crate::GisTerrainSnapshot;
 
 //#region 🔹Diff
 /// 🔺️ Builds the sparse `imported_features_json` field delta directly from the payload — real
@@ -11,6 +11,6 @@ pub fn diff(payload: &ChangeImportedFeatures, base: &GisTerrainSnapshot) -> prot
     if base.imported_features_json == payload.new_imported_features_json {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Imported features are already identical to the requested replacement.");
     }
-    protocol::MutationOutcome::new(crate::artifacts::gisterrain::diff::diff_imported_features_json(payload.new_imported_features_json.clone()))
+    protocol::MutationOutcome::new(crate::diff::diff_imported_features_json(payload.new_imported_features_json.clone()))
 }
 //#endregion 🔹Diff

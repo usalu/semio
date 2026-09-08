@@ -9,8 +9,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use crate::artifacts::en1998::schema::mutations::En1998Mutation;
-use crate::artifacts::en1998::schema::mutations::{
+pub use crate::document_schema::mutations::En1998Mutation;
+use crate::document_schema::mutations::{
     change_annex, change_bearing_d_ed_mm, change_bearing_d_rd_mm, change_bridge_v_rd_kn, change_drift_mm, change_en_a_gr, change_en_ground_type, change_en_spectrum_type, change_foundation_area_m2, change_foundation_h_ed_kn,
     change_foundation_h_rd_kn, change_foundation_p_rd_kpa, change_ground_type, change_height_m, change_importance_class, change_k_foundation, change_k_soil, change_mass_t, change_multiple_resisting_systems, change_period_ratio,
     change_retrofit_e_d_kn, change_retrofit_gamma_el, change_retrofit_knowledge_level, change_retrofit_limit_state, change_retrofit_r_k_kn, change_seismic_zone, change_silo_height_m, change_silo_n_rd_kn, change_silo_q_nominal, change_silo_radius_m,

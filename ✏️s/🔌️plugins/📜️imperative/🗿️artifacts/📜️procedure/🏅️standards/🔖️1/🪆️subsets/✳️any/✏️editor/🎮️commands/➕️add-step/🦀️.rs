@@ -1,7 +1,7 @@
 //! 🔧️ 🔧️ Imperative play app commands command — `add-step`.
 
-use crate::artifacts::procedure::mutations::{create_step, ProcedureMutation};
-use crate::artifacts::procedure::{Dictionary, ProcedureSnapshot, PathRef, Step};
+use crate::mutations::{create_step, ProcedureMutation};
+use crate::{Dictionary, ProcedureSnapshot, PathRef, Step};
 use crate::editor::procedure::config::{ImperativeConfig, ImperativeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use std::collections::BTreeMap;
@@ -20,7 +20,7 @@ fn next_step_id(document: &ProcedureSnapshot) -> String {
             acc.max(own).max(nested)
         })
     }
-    let path = crate::artifacts::procedure::procedure_working_scene(document).path;
+    let path = crate::procedure_working_scene(document).path;
     format!("step-{}", max_suffix(&path.steps) + 1)
 }
 

@@ -1,7 +1,7 @@
 //! 📄️ Note play app panel — the document tree: every block, with quick-add rows.
 
-use crate::artifacts::note::schema::{block_icon, block_kind, block_name, block_tree_row_id, block_visible};
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
+use crate::schema::{block_icon, block_kind, block_name, block_tree_row_id, block_visible};
+use crate::{NoteBlockNode, NoteSnapshot};
 use crate::editor::note::terminology::NotePlayLabels;
 use crate::editor::note::{ui_label, NOTE_INTERACTION_BLOCKS, NOTE_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{
@@ -108,8 +108,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn renders_document_tree() {
         let mut app = note_app().await;
-        let document = crate::artifacts::note::schema::semio_example_snapshot();
-        let envelope = store::create_document_envelope::<crate::artifacts::note::NoteSnapshot, crate::artifacts::note::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None);
+        let document = crate::schema::semio_example_snapshot();
+        let envelope = store::create_document_envelope::<crate::NoteSnapshot, crate::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None);
         let files = store::print_document_pack(&envelope).await.expect("print semio example document pack");
         app.load_document_pack(&files).await.expect("load semio example");
         let json = render_body(&mut app, BODY_DOCUMENT).await;

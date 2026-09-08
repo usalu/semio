@@ -4,8 +4,8 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::{LayoutSnapshot, LAYOUT_DIALECT, LAYOUT_DOCUMENT_SCHEMA};
+use crate::mutations::LayoutMutation;
+use crate::{LayoutSnapshot, LAYOUT_DIALECT, LAYOUT_DOCUMENT_SCHEMA};
 use crate::viewer::layout::modes::view;
 use crate::viewer::layout::modes::view::windows::preview;
 use semio_framework::Dialect;
@@ -52,7 +52,7 @@ impl ArtifactViewer for LayoutViewer {
     const DOCUMENT_SCHEMA: &'static str = LAYOUT_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> LayoutSnapshot {
-        crate::artifacts::layout::schema::default_document()
+        crate::schema::default_document()
     }
 
     /// 👁️ Structurally read-only: the sole `LayoutViewCommand::Noop` variant never carries a config

@@ -4,8 +4,8 @@
 //! These live at app level (not in the artifact engine) because they produce framework UI types and
 //! app-addressed `ActionDescriptor`s — an artifact must never depend on an app.
 
-use crate::artifacts::program::registers::AdjacencyKind;
-use crate::artifacts::program::{EntityId, ProgramSnapshot};
+use crate::registers::AdjacencyKind;
+use crate::{EntityId, ProgramSnapshot};
 use dsl::DslValue as Value;
 
 //#region 🔖️Labels
@@ -40,7 +40,7 @@ pub fn entity_name_from_json(value: &Value) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
+    use crate::sample_plugin;
 
     #[semio_framework_async_macros::async_test]
     async fn element_label_falls_back_to_the_raw_id() {

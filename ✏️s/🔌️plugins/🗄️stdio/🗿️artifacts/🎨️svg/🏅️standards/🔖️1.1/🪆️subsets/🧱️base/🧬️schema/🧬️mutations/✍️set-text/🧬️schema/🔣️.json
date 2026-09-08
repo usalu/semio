@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-text.json",
+  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-text/schema.json",
   "title": "SetTextPayload",
   "type": "object",
   "additionalProperties": false,
@@ -12,10 +12,8 @@
     "path": {
       "type": "array",
       "items": {
-        "type": [
-          "object",
-          "integer"
-        ]
+        "type": "integer",
+        "minimum": 0
       }
     },
     "text": {

@@ -10,7 +10,7 @@
 //! `Puzzle5dPlaySnapshot` newtype (a `serde_json::Value` wrapper the play app's command layer
 //! mutates); that distinction is this artifact's own pre-existing quirk, not introduced here.
 
-use crate::artifacts::puzzle5d::{Puzzle5dMutation, Puzzle5dSnapshot, PUZZLE5D_DIALECT, PUZZLE_5D_SCHEMA};
+use crate::{Puzzle5dMutation, Puzzle5dSnapshot, PUZZLE5D_DIALECT, PUZZLE_5D_SCHEMA};
 use crate::viewer::puzzle5d::modes::view;
 use crate::viewer::puzzle5d::modes::view::windows::world3d;
 use semio_framework_plugin::app::Dialect;

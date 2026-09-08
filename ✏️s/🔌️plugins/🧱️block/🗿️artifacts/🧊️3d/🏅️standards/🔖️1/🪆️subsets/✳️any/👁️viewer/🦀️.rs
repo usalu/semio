@@ -4,7 +4,7 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::block3d::{Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
+use crate::{Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
 use crate::viewer::block3d::modes::view;
 use crate::viewer::block3d::modes::view::windows::world;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
@@ -41,7 +41,7 @@ pub struct Block3dViewer;
 
 impl ArtifactViewer for Block3dViewer {
     type Snapshot = Block3dSnapshot;
-    type Mutation = crate::artifacts::block3d::op::Block3dMutation;
+    type Mutation = crate::op::Block3dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -57,7 +57,7 @@ impl ArtifactViewer for Block3dViewer {
     /// a viewer has no `setActiveExample` action at all (its sole command is `Noop`), so an empty boot
     /// document made this surface permanently blank. See `dsl::block3d_boot_snapshot`.
     fn initial_snapshot() -> Block3dSnapshot {
-        crate::artifacts::block3d::dsl::block3d_boot_snapshot()
+        crate::dsl::block3d_boot_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Block3dViewCommand::Noop` variant never carries a config

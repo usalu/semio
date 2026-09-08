@@ -1,9 +1,9 @@
 //! 🚀️ Remodeling reconstruction as a generation-tagged, bounded continuation.
 
-use crate::artifacts::remodeling::mutations::{commit_reconstruction, create_asset, replace_job, CommitReconstruction, ReconstructionAssetCommit};
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::schema::next_remodeling_id;
-use crate::artifacts::remodeling::{
+use crate::mutations::{commit_reconstruction, create_asset, replace_job, CommitReconstruction, ReconstructionAssetCommit};
+use crate::op::RemodelingMutation;
+use crate::schema::next_remodeling_id;
+use crate::{
     CameraPosePreview, CameraTrajectory, FrameRef, GeoProducts, ImageAsset, MeshSource, PackedF32, QcReportSnapshot, ReconstructionJob, ReconstructionStage, RemodelingMesh, RemodelingSnapshot, SparseCloud, WatertightReportSnapshot,
 };
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
@@ -114,7 +114,7 @@ impl ContentPreparation {
     }
 
     fn handle(&self) -> String {
-        crate::artifacts::remodeling::remodeling_asset_content_handle(&self.content_id(), &self.staging_id, self.chunk_count)
+        crate::remodeling_asset_content_handle(&self.content_id(), &self.staging_id, self.chunk_count)
     }
 }
 
@@ -142,7 +142,7 @@ impl RasterAssetPreparation {
             RasterPngProgress::Chunk(bytes) => {
                 let Some(index) = self.encoder.chunk_count().checked_sub(1) else { return RasterAssetProgress::Failed };
                 RasterAssetProgress::Mutation(create_asset(
-                    crate::artifacts::remodeling::remodeling_asset_stage_key(&self.staging_id, crate::artifacts::remodeling::RemodelingAssetContentKind::Raster, index),
+                    crate::remodeling_asset_stage_key(&self.staging_id, crate::RemodelingAssetContentKind::Raster, index),
                     ImageAsset { mime: "application/vnd.semio.asset-chunk".into(), data: base64_codec::base64_standard_encode(bytes), width: 0, height: 0 },
                 ))
             }
@@ -154,7 +154,7 @@ impl RasterAssetPreparation {
     fn commit_asset(&self, content_id: &str) -> ReconstructionAssetCommit {
         ReconstructionAssetCommit {
             id: self.asset_id.clone(),
-            asset: ImageAsset { mime: "image/png".into(), data: crate::artifacts::remodeling::remodeling_asset_content_handle(content_id, &self.staging_id, self.encoder.chunk_count()), width: self.encoder.width(), height: self.encoder.height() },
+            asset: ImageAsset { mime: "image/png".into(), data: crate::remodeling_asset_content_handle(content_id, &self.staging_id, self.encoder.chunk_count()), width: self.encoder.width(), height: self.encoder.height() },
         }
     }
 }
@@ -279,7 +279,7 @@ struct FrameIngestion {
 }
 
 fn frame_ingestion(scene: &RemodelingSnapshot, frame: &FrameRef) -> Option<FrameIngestion> {
-    let source = crate::artifacts::remodeling::remodeling_asset_chunk_source(scene, &frame.asset_id)?;
+    let source = crate::remodeling_asset_chunk_source(scene, &frame.asset_id)?;
     let compressed = CompressedChunkRope::from_leaves(source.leaves, MAX_STILL_INPUT_BYTES).ok()?;
     Some(FrameIngestion { _asset_identity: source.identity, mime: source.mime, frame_index: frame.index, timestamp_ms: frame.timestamp_ms, compressed, decoder: None, decoded_image: None, sharpness_cursor: 0, sharpness_sum: 0.0 })
 }
@@ -391,16 +391,16 @@ fn complete_session(generation: u64) {
 
 fn discard_terminal_staging(terminal: &TerminalPreparation) {
     if let Some(staging_id) = terminal.mesh.as_ref().map(|mesh| mesh.staging_id.as_str()) {
-        crate::artifacts::remodeling::discard_staged_remodeling_mesh(staging_id);
+        crate::discard_staged_remodeling_mesh(staging_id);
     }
     if let Some(staging_id) = terminal.raster_asset.as_ref().map(|asset| asset.staging_id.as_str()) {
-        crate::artifacts::remodeling::discard_staged_remodeling_asset(staging_id);
+        crate::discard_staged_remodeling_asset(staging_id);
     }
     for staging_id in &terminal.completed_asset_staging_ids {
-        crate::artifacts::remodeling::discard_staged_remodeling_asset(staging_id);
+        crate::discard_staged_remodeling_asset(staging_id);
     }
     if terminal.sparse_content.chunk_count > 0 {
-        crate::artifacts::remodeling::discard_staged_remodeling_asset(&terminal.sparse_content.staging_id);
+        crate::discard_staged_remodeling_asset(&terminal.sparse_content.staging_id);
     }
 }
 
@@ -739,7 +739,7 @@ fn advance_terminal(generation: u64, mut session: ReconstructionSession) -> Resu
             if !bytes.is_empty() {
                 let index = terminal.sparse_content.record(&bytes)?;
                 step_mutation = Some(create_asset(
-                    crate::artifacts::remodeling::remodeling_asset_stage_key(&terminal.sparse_content.staging_id, crate::artifacts::remodeling::RemodelingAssetContentKind::Sparse, index),
+                    crate::remodeling_asset_stage_key(&terminal.sparse_content.staging_id, crate::RemodelingAssetContentKind::Sparse, index),
                     ImageAsset { mime: "application/vnd.semio.asset-chunk".into(), data: base64_codec::base64_standard_encode(bytes), width: 0, height: 0 },
                 ));
             }
@@ -805,12 +805,12 @@ fn advance_terminal(generation: u64, mut session: ReconstructionSession) -> Resu
                 if let Some(chunk) = preparation.next_chunk()? {
                     let index = preparation.chunk_count.checked_sub(1).ok_or_else(|| Fault::from("mesh chunk index underflow"))?;
                     step_mutation = Some(create_asset(
-                        crate::artifacts::remodeling::remodeling_mesh_stage_asset_key(&preparation.staging_id, index),
+                        crate::remodeling_mesh_stage_asset_key(&preparation.staging_id, index),
                         ImageAsset { mime: "application/vnd.semio.mesh-chunk".into(), data: base64_codec::base64_standard_encode(chunk), width: 0, height: 0 },
                     ));
                 } else {
                     let content_id = preparation.content_id();
-                    let handle = crate::artifacts::remodeling::staged_remodeling_mesh_handle(&content_id, &preparation.staging_id);
+                    let handle = crate::staged_remodeling_mesh_handle(&content_id, &preparation.staging_id);
                     terminal.mesh_result = Some(Box::new(RemodelingMesh { mesh: handle, source: MeshSource::Reconstructed, texture_asset_id: None, watertight: terminal.watertight.take() }));
                     terminal.phase = TerminalPhase::Geo;
                 }
@@ -1060,7 +1060,7 @@ mod tests {
 
     fn forget_all_remodeling_process_state() {
         *sessions().lock().expect("remodeling reconstruction sessions lock") = ReconstructionSessions::default();
-        crate::artifacts::remodeling::forget_all_remodeling_content_for_test();
+        crate::forget_all_remodeling_content_for_test();
     }
 
     async fn dispatch_public_action(app: &mut RemodelingApp, action: &str, args: Option<serde_json::Value>) -> InvocationResult {
@@ -1099,7 +1099,7 @@ mod tests {
 
     fn assert_durable_chunk_ceiling(mutation: &RemodelingMutation) {
         let RemodelingMutation::CreateAsset(payload) = mutation else { return };
-        let chunked = crate::artifacts::remodeling::remodeling_asset_stage_parts(&payload.key).is_some() || crate::artifacts::remodeling::remodeling_mesh_stage_asset_parts(&payload.key).is_some();
+        let chunked = crate::remodeling_asset_stage_parts(&payload.key).is_some() || crate::remodeling_mesh_stage_asset_parts(&payload.key).is_some();
         if chunked {
             let bytes = base64_codec::base64_standard_decode(&payload.asset.data).expect("typed durable chunk base64");
             assert!(bytes.len() <= MESH_CHUNK_BYTES, "every shared durable asset/mesh row is at most 4 KiB raw");
@@ -1112,7 +1112,7 @@ mod tests {
             .iter()
             .flat_map(|stream| &stream.frames)
             .map(|frame| {
-                let asset = crate::artifacts::remodeling::remodeling_asset(snapshot, &frame.asset_id).expect("durable input asset");
+                let asset = crate::remodeling_asset(snapshot, &frame.asset_id).expect("durable input asset");
                 (frame.asset_id.clone(), asset)
             })
             .collect()
@@ -1223,7 +1223,7 @@ mod tests {
             }
 
             let terminal_handle = terminal.results.mesh.mesh.clone();
-            let terminal_mesh = crate::artifacts::remodeling::resolve_bounded_remodeling_mesh(&terminal.durable_artifacts, &terminal_handle).expect("terminal bounded mesh");
+            let terminal_mesh = crate::resolve_bounded_remodeling_mesh(&terminal.durable_artifacts, &terminal_handle).expect("terminal bounded mesh");
             let terminal_sparse = terminal.results.sparse.as_ref().map(|sparse| sparse.points.to_f32_vec_from(&terminal.durable_artifacts)).unwrap_or_default();
             assert!(!terminal_sparse.is_empty(), "terminal sparse content is committed through the compact event");
             assert!(!terminal.durable_artifacts.is_empty());
@@ -1236,7 +1236,7 @@ mod tests {
             }
             let terminal_inputs = durable_input_assets(&terminal);
             assert_eq!(terminal_inputs.len(), 4);
-            let (_, _, terminal_chunk_count) = crate::artifacts::remodeling::replayable_remodeling_mesh_handle_parts(&terminal_handle).expect("terminal durable mesh handle");
+            let (_, _, terminal_chunk_count) = crate::replayable_remodeling_mesh_handle_parts(&terminal_handle).expect("terminal durable mesh handle");
             assert!(terminal_chunk_count > 0);
 
             let files = app.document_text().await.expect("public typed Remodeling op log");
@@ -1248,7 +1248,7 @@ mod tests {
             }
 
             forget_all_remodeling_process_state();
-            assert_eq!(crate::artifacts::remodeling::resolve_bounded_remodeling_mesh(&terminal.durable_artifacts, &terminal_handle), Some(terminal_mesh.clone()));
+            assert_eq!(crate::resolve_bounded_remodeling_mesh(&terminal.durable_artifacts, &terminal_handle), Some(terminal_mesh.clone()));
             assert_eq!(terminal.results.sparse.as_ref().expect("terminal sparse handle").points.to_f32_vec_from(&terminal.durable_artifacts), terminal_sparse);
             let mut replayed = app_with_registry().await;
             for row in &rows {
@@ -1258,7 +1258,7 @@ mod tests {
             assert_eq!(replayed_snapshot.results.mesh.mesh, terminal_handle);
             assert_eq!(replayed_snapshot.results.sparse.as_ref().expect("replayed sparse").points.to_f32_vec_from(&replayed_snapshot.durable_artifacts), terminal_sparse);
             assert_eq!(durable_input_assets(&replayed_snapshot), terminal_inputs);
-            assert_eq!(crate::artifacts::remodeling::resolve_bounded_remodeling_mesh(&replayed_snapshot.durable_artifacts, &replayed_snapshot.results.mesh.mesh), Some(terminal_mesh.clone()));
+            assert_eq!(crate::resolve_bounded_remodeling_mesh(&replayed_snapshot.durable_artifacts, &replayed_snapshot.results.mesh.mesh), Some(terminal_mesh.clone()));
 
             replayed.handle_action("commitCheckpoint", None, &meta("local")).await.expect("checkpoint replayed terminal document");
             let checkpoint = replayed.document_pack().await.expect("checkpointed terminal pack");
@@ -1269,7 +1269,7 @@ mod tests {
             assert_eq!(restored_snapshot.results.mesh.mesh, terminal_handle);
             assert_eq!(restored_snapshot.results.sparse.as_ref().expect("restored sparse").points.to_f32_vec_from(&restored_snapshot.durable_artifacts), terminal_sparse);
             assert_eq!(durable_input_assets(&restored_snapshot), terminal_inputs);
-            assert_eq!(crate::artifacts::remodeling::resolve_bounded_remodeling_mesh(&restored_snapshot.durable_artifacts, &restored_snapshot.results.mesh.mesh), Some(terminal_mesh));
+            assert_eq!(crate::resolve_bounded_remodeling_mesh(&restored_snapshot.durable_artifacts, &restored_snapshot.results.mesh.mesh), Some(terminal_mesh));
         }
     }
 
@@ -1309,19 +1309,19 @@ mod tests {
         forget_all_remodeling_process_state();
         let asset_max = vec![0x5a; MESH_CHUNK_BYTES];
         let asset_over = vec![0x5a; MESH_CHUNK_BYTES + 1];
-        assert!(crate::artifacts::remodeling::stage_remodeling_asset_chunk("asset-max", crate::artifacts::remodeling::RemodelingAssetContentKind::Raster, 0, &base64_codec::base64_standard_encode(&asset_max)).is_ok());
-        assert!(crate::artifacts::remodeling::stage_remodeling_asset_chunk("asset-over", crate::artifacts::remodeling::RemodelingAssetContentKind::Raster, 0, &base64_codec::base64_standard_encode(&asset_over)).is_err());
-        assert!(crate::artifacts::remodeling::stage_remodeling_asset_chunk("asset-malformed", crate::artifacts::remodeling::RemodelingAssetContentKind::Sparse, 0, "%%%").is_err());
-        assert!(crate::artifacts::remodeling::stage_remodeling_asset_chunk("asset-index-overflow", crate::artifacts::remodeling::RemodelingAssetContentKind::Sparse, u64::MAX, &base64_codec::base64_standard_encode([1])).is_err());
+        assert!(crate::stage_remodeling_asset_chunk("asset-max", crate::RemodelingAssetContentKind::Raster, 0, &base64_codec::base64_standard_encode(&asset_max)).is_ok());
+        assert!(crate::stage_remodeling_asset_chunk("asset-over", crate::RemodelingAssetContentKind::Raster, 0, &base64_codec::base64_standard_encode(&asset_over)).is_err());
+        assert!(crate::stage_remodeling_asset_chunk("asset-malformed", crate::RemodelingAssetContentKind::Sparse, 0, "%%%").is_err());
+        assert!(crate::stage_remodeling_asset_chunk("asset-index-overflow", crate::RemodelingAssetContentKind::Sparse, u64::MAX, &base64_codec::base64_standard_encode([1])).is_err());
 
         let mut mesh_max = vec![11];
         mesh_max.resize(MESH_CHUNK_BYTES, 1);
         let mut mesh_over = mesh_max.clone();
         mesh_over.push(1);
-        assert!(crate::artifacts::remodeling::stage_remodeling_mesh_chunk("mesh-max", 0, &base64_codec::base64_standard_encode(&mesh_max)).is_ok());
-        assert!(crate::artifacts::remodeling::stage_remodeling_mesh_chunk("mesh-over", 0, &base64_codec::base64_standard_encode(&mesh_over)).is_err());
-        assert!(crate::artifacts::remodeling::stage_remodeling_mesh_chunk("mesh-malformed", 0, "%%%").is_err());
-        assert!(crate::artifacts::remodeling::stage_remodeling_mesh_chunk("mesh-index-overflow", u64::MAX, &base64_codec::base64_standard_encode([10, 1])).is_err());
+        assert!(crate::stage_remodeling_mesh_chunk("mesh-max", 0, &base64_codec::base64_standard_encode(&mesh_max)).is_ok());
+        assert!(crate::stage_remodeling_mesh_chunk("mesh-over", 0, &base64_codec::base64_standard_encode(&mesh_over)).is_err());
+        assert!(crate::stage_remodeling_mesh_chunk("mesh-malformed", 0, "%%%").is_err());
+        assert!(crate::stage_remodeling_mesh_chunk("mesh-index-overflow", u64::MAX, &base64_codec::base64_standard_encode([10, 1])).is_err());
         forget_all_remodeling_process_state();
     }
 
@@ -1330,21 +1330,21 @@ mod tests {
         forget_all_remodeling_process_state();
         let full = base64_codec::base64_standard_encode(vec![1; MESH_CHUNK_BYTES]);
         let tail = base64_codec::base64_standard_encode(vec![1; 2_048]);
-        assert!(crate::artifacts::remodeling::stage_remodeling_asset_chunk("sparse-overflow", crate::artifacts::remodeling::RemodelingAssetContentKind::Sparse, 0, &full).is_ok());
-        assert!(crate::artifacts::remodeling::stage_remodeling_asset_chunk("sparse-overflow", crate::artifacts::remodeling::RemodelingAssetContentKind::Sparse, 1, &tail).is_ok());
-        assert!(crate::artifacts::remodeling::stage_remodeling_asset_chunk("sparse-overflow", crate::artifacts::remodeling::RemodelingAssetContentKind::Sparse, 2, &base64_codec::base64_standard_encode([1])).is_err());
-        assert_eq!(crate::artifacts::remodeling::staged_remodeling_asset_chunk_count("sparse-overflow"), 0);
+        assert!(crate::stage_remodeling_asset_chunk("sparse-overflow", crate::RemodelingAssetContentKind::Sparse, 0, &full).is_ok());
+        assert!(crate::stage_remodeling_asset_chunk("sparse-overflow", crate::RemodelingAssetContentKind::Sparse, 1, &tail).is_ok());
+        assert!(crate::stage_remodeling_asset_chunk("sparse-overflow", crate::RemodelingAssetContentKind::Sparse, 2, &base64_codec::base64_standard_encode([1])).is_err());
+        assert_eq!(crate::staged_remodeling_asset_chunk_count("sparse-overflow"), 0);
 
-        assert!(crate::artifacts::remodeling::stage_remodeling_asset_chunk("kind-mismatch", crate::artifacts::remodeling::RemodelingAssetContentKind::Sparse, 0, &tail).is_ok());
-        assert_eq!(crate::artifacts::remodeling::stage_remodeling_asset_chunk("kind-mismatch", crate::artifacts::remodeling::RemodelingAssetContentKind::Raster, 1, &tail), Err(crate::artifacts::remodeling::RemodelingStagingFault::Invalid));
-        assert_eq!(crate::artifacts::remodeling::staged_remodeling_asset_chunk_count("kind-mismatch"), 0);
+        assert!(crate::stage_remodeling_asset_chunk("kind-mismatch", crate::RemodelingAssetContentKind::Sparse, 0, &tail).is_ok());
+        assert_eq!(crate::stage_remodeling_asset_chunk("kind-mismatch", crate::RemodelingAssetContentKind::Raster, 1, &tail), Err(crate::RemodelingStagingFault::Invalid));
+        assert_eq!(crate::staged_remodeling_asset_chunk_count("kind-mismatch"), 0);
 
         let indices = base64_codec::base64_standard_encode([3, 0, 0, 0, 0]);
         let positions = base64_codec::base64_standard_encode([0, 0, 0, 0, 0]);
-        assert!(crate::artifacts::remodeling::stage_remodeling_mesh_chunk("field-order", 0, &indices).is_ok());
-        assert!(crate::artifacts::remodeling::stage_remodeling_mesh_chunk("field-order", 1, &positions).is_err());
-        assert_eq!(crate::artifacts::remodeling::staged_remodeling_mesh_chunk_count("field-order"), 0);
-        assert_eq!(crate::artifacts::remodeling::stage_remodeling_mesh_chunk("component-count", 0, &base64_codec::base64_standard_encode([0, 1])), Err(crate::artifacts::remodeling::RemodelingStagingFault::Invalid));
+        assert!(crate::stage_remodeling_mesh_chunk("field-order", 0, &indices).is_ok());
+        assert!(crate::stage_remodeling_mesh_chunk("field-order", 1, &positions).is_err());
+        assert_eq!(crate::staged_remodeling_mesh_chunk_count("field-order"), 0);
+        assert_eq!(crate::stage_remodeling_mesh_chunk("component-count", 0, &base64_codec::base64_standard_encode([0, 1])), Err(crate::RemodelingStagingFault::Invalid));
 
         for (staging_id, field) in [("vertex-513", 0u8), ("triangle-513", 3u8)] {
             let mut values = Vec::with_capacity(513 * 3 * 4);
@@ -1354,14 +1354,14 @@ mod tests {
             for (index, chunk) in values.chunks(MESH_CHUNK_BYTES - 4).enumerate() {
                 let mut framed = vec![field];
                 framed.extend_from_slice(chunk);
-                let result = crate::artifacts::remodeling::stage_remodeling_mesh_chunk(staging_id, index as u64, &base64_codec::base64_standard_encode(framed));
+                let result = crate::stage_remodeling_mesh_chunk(staging_id, index as u64, &base64_codec::base64_standard_encode(framed));
                 if index == 1 {
                     assert!(result.is_err(), "513th semantic element is rejected before retention");
                 } else {
                     assert!(result.is_ok());
                 }
             }
-            assert_eq!(crate::artifacts::remodeling::staged_remodeling_mesh_chunk_count(staging_id), 0);
+            assert_eq!(crate::staged_remodeling_mesh_chunk_count(staging_id), 0);
         }
         forget_all_remodeling_process_state();
     }
@@ -1371,9 +1371,9 @@ mod tests {
         forget_all_remodeling_process_state();
         let one = base64_codec::base64_standard_encode([1]);
         for index in 0..32 {
-            assert!(crate::artifacts::remodeling::stage_remodeling_asset_chunk(&format!("busy-{index}"), crate::artifacts::remodeling::RemodelingAssetContentKind::Sparse, 0, &one).is_ok());
+            assert!(crate::stage_remodeling_asset_chunk(&format!("busy-{index}"), crate::RemodelingAssetContentKind::Sparse, 0, &one).is_ok());
         }
-        assert_eq!(crate::artifacts::remodeling::stage_remodeling_asset_chunk("busy-overflow", crate::artifacts::remodeling::RemodelingAssetContentKind::Sparse, 0, &one), Err(crate::artifacts::remodeling::RemodelingStagingFault::Busy));
+        assert_eq!(crate::stage_remodeling_asset_chunk("busy-overflow", crate::RemodelingAssetContentKind::Sparse, 0, &one), Err(crate::RemodelingStagingFault::Busy));
 
         let mut content_digest = ContentPreparation::new("digest-overflow".into());
         content_digest.digest_len = u64::MAX;
@@ -1398,7 +1398,7 @@ mod tests {
         old.terminal = Some(terminal_preparation(41, &old.artifact_authority));
         store_session(41, old);
         store_session(42, test_session("live", RequestedStage::DenseStereo));
-        let mut scene = crate::artifacts::remodeling::default_remodeling_scene();
+        let mut scene = crate::default_remodeling_scene();
         scene.job.id = "live".into();
         let history = semio_framework_plugin::HistoryView::empty();
         let view = ArtifactView::new(&scene, &history);
@@ -1422,19 +1422,19 @@ mod tests {
             let index = preparation.chunk_count.checked_sub(1).expect("emitted mesh chunk has a checked index");
             let encoded = base64_codec::base64_standard_encode(chunk);
             let started = std::time::Instant::now();
-            assert!(std::thread::spawn(move || crate::artifacts::remodeling::stage_remodeling_mesh_chunk("cross-thread-stage", index, &encoded)).join().expect("worker stage").is_ok());
+            assert!(std::thread::spawn(move || crate::stage_remodeling_mesh_chunk("cross-thread-stage", index, &encoded)).join().expect("worker stage").is_ok());
             assert!(started.elapsed() < std::time::Duration::from_millis(8), "full worker-hop mesh stage exceeded 8 ms");
         }
         let content_id = preparation.content_id();
         let chunk_count = preparation.chunk_count;
         let started = std::time::Instant::now();
-        let durable = crate::artifacts::remodeling::durable_staged_remodeling_mesh("cross-thread-stage").expect("bounded staged mesh materializes");
-        let mut durable_store = crate::artifacts::remodeling::RemodelingDurableArtifactStore::default();
+        let durable = crate::durable_staged_remodeling_mesh("cross-thread-stage").expect("bounded staged mesh materializes");
+        let mut durable_store = crate::RemodelingDurableArtifactStore::default();
         durable_store.insert(content_id.clone(), durable);
-        let handle = crate::artifacts::remodeling::replayable_remodeling_mesh_handle(&content_id, "cross-thread-stage", chunk_count);
-        crate::artifacts::remodeling::discard_staged_remodeling_mesh("cross-thread-stage");
+        let handle = crate::replayable_remodeling_mesh_handle(&content_id, "cross-thread-stage", chunk_count);
+        crate::discard_staged_remodeling_mesh("cross-thread-stage");
         assert!(started.elapsed() < std::time::Duration::from_millis(8), "compact snapshot-owned mesh publication exceeded 8 ms");
-        let resolved = std::thread::spawn(move || crate::artifacts::remodeling::resolve_bounded_remodeling_mesh(&durable_store, &handle)).join().expect("worker resolve").expect("durable mesh");
+        let resolved = std::thread::spawn(move || crate::resolve_bounded_remodeling_mesh(&durable_store, &handle)).join().expect("worker resolve").expect("durable mesh");
         assert_eq!(resolved, expected);
     }
 
@@ -1442,9 +1442,9 @@ mod tests {
     async fn cancellation_and_stale_delivery_are_isolated_between_documents() {
         let generation_a = 8_100_001;
         let generation_b = 8_100_002;
-        let mut scene_a = crate::artifacts::remodeling::default_remodeling_scene();
+        let mut scene_a = crate::default_remodeling_scene();
         scene_a.job.id = "document-a-job".into();
-        let mut scene_b = crate::artifacts::remodeling::default_remodeling_scene();
+        let mut scene_b = crate::default_remodeling_scene();
         scene_b.job.id = "document-b-job".into();
         let session_a = test_session(&scene_a.job.id, RequestedStage::Full);
         let session_b = test_session(&scene_b.job.id, RequestedStage::DenseStereo);
@@ -1470,25 +1470,25 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn user_cancel_drops_generation_and_private_mesh_staging() {
-        let mut scene = crate::artifacts::remodeling::default_remodeling_scene();
+        let mut scene = crate::default_remodeling_scene();
         scene.job.id = "cancel-job".into();
         let mut session = test_session("cancel-job", RequestedStage::Full);
         let mut terminal = terminal_preparation(92, "document=test:app=test:operation=cancel:92");
         terminal.mesh = Some(MeshPreparation::new(semio_framework::MeshData::default(), "cancel-stage".into()));
         session.terminal = Some(terminal);
-        crate::artifacts::remodeling::stage_remodeling_mesh_chunk("cancel-stage", 0, &base64_codec::base64_standard_encode([10, 1])).expect("cancel fixture staged");
+        crate::stage_remodeling_mesh_chunk("cancel-stage", 0, &base64_codec::base64_standard_encode([10, 1])).expect("cancel fixture staged");
         store_session(92, session);
 
         let emit = cancel_current_reconstruction(&scene);
         assert!(take_session(92).is_none());
-        assert_eq!(crate::artifacts::remodeling::staged_remodeling_mesh_chunk_count("cancel-stage"), 0);
+        assert_eq!(crate::staged_remodeling_mesh_chunk_count("cancel-stage"), 0);
         assert!(emit.effects.is_empty());
         assert_eq!(emit.artifact_mutations.len(), 1);
     }
 
     #[test]
     fn cancellation_during_compressed_streaming_drops_the_rope_without_decode_or_publication() {
-        let mut scene = crate::artifacts::remodeling::default_remodeling_scene();
+        let mut scene = crate::default_remodeling_scene();
         scene.job.id = "stream-cancel-job".into();
         let leaf = std::sync::Arc::<[u8]>::from([0x89, b'P', b'N', b'G']);
         let mut compressed = CompressedChunkRope::default();

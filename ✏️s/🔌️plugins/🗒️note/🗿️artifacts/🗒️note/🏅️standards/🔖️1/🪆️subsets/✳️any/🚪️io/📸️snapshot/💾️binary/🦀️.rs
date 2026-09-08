@@ -1,6 +1,6 @@
 //! 📦️ Note artifact — binary document surface + laws (constitutional: pack).
 
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteSnapshot;
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -23,12 +23,12 @@ pub fn decode(bytes: &[u8]) -> Result<NoteSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+    use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
     use std::collections::BTreeMap;
 
     #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {
-        let document = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
+        let document = crate::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);
@@ -54,7 +54,7 @@ mod tests {
             linked_artifact: None,
             blocks: vec![
                 NoteBlockNode::Text {
-                    content: crate::artifacts::note::note_text_child_record("text-1", &[NoteTextParagraph { runs: vec![NoteTextRun { text: "plain".into(), bold: None, italic: None, underline: None, link: None }] }]),
+                    content: crate::note_text_child_record("text-1", &[NoteTextParagraph { runs: vec![NoteTextRun { text: "plain".into(), bold: None, italic: None, underline: None, link: None }] }]),
                     id: "text-1".into(),
                     name: "Text".into(),
                     x: 0.0,
@@ -93,14 +93,14 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::note::standards::v1::subsets::any::io::mutations::text::NoteMutation;
+        use crate::standards::v1::subsets::any::io::mutations::text::NoteMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
-        let initial = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
+        let initial = crate::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
         let envelope = create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note-command-envelope-demo", initial, None);
         let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::note::schema::mutations::change_grid_visible(Some(false))], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::schema::mutations::change_grid_visible(Some(false))], description: None }).await.expect("apply");
         let edit: &Edit<NoteMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }
@@ -122,7 +122,7 @@ mod semio_protocol_conformance {
 
     #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_pack() {
-        let document = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse fixture");
+        let document = crate::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse fixture");
         let bytes = encode(&document);
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes pack bytes");

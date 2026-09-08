@@ -1,6 +1,6 @@
 //! 📊️ Trinity Jack app — Results window (jack-query table/graph render).
 
-use crate::artifacts::jack::PropertyValue;
+use crate::PropertyValue;
 use crate::ast::{QueryResult, QueryResultKind};
 use crate::editor::jack::config::JackConfig;
 use semio_framework_plugin::{scene_surface, BuiltNode, NodeGraphScene, TableScene, UiAssemblyResult};

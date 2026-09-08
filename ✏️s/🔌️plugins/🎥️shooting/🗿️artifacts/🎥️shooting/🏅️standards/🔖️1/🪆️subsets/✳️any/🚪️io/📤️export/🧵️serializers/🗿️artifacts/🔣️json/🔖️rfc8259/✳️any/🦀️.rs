@@ -8,7 +8,7 @@
 //! through `dsl::os_pack::json::from_dsl_value` (`DslValue` -> first-party `pack::JsonValue`) then
 //! stdio's own `From<pack::JsonValue> for JsonValue` bridge, and stdio's own real
 //! `write_json_pretty` — no `serde_json` anywhere in this leaf.
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::ShootingSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::{write_json_pretty, JsonSnapshot};
 use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 

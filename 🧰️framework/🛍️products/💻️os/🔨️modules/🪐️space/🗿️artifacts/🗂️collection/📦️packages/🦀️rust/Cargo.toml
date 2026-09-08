@@ -1,0 +1,22 @@
+[package]
+name = "semio-framework-artifact-space-collection"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Persisted OS collection artifact"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }

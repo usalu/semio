@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/wav/riff-pcm/any/mutation/set-data.json",
+  "$id": "https://semio.tech/schema/s/stdio/wav/riff-pcm/any/mutation/set-data/schema.json",
   "title": "SetData",
   "type": "object",
   "additionalProperties": false,

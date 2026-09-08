@@ -1,7 +1,7 @@
 //! ↩️ `change-exchange-process` — undo restores BASE's exchange process.
 
 use super::mutation::ChangeExchangeProcess;
-use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
+use crate::{Iso16757Mutation, Iso16757Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeExchangeProcess, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {

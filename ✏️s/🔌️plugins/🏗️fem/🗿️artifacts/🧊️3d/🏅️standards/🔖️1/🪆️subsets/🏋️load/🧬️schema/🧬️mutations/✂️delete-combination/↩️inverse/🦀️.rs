@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteCombination` — recreates the captured combination from `base`.
 use super::DeleteCombination;
-use crate::artifacts::fem3d::mutations::{create_combination, Fem3dMutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::{create_combination, Fem3dMutation};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteCombination, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

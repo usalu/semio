@@ -1,8 +1,8 @@
 //! 📄️ 📄️ Sourcing curation app commands command — `stock-from-catalogue`.
 
-use crate::artifacts::curation::op::SourcingMutation;
-use crate::artifacts::curation::schema::available_modules;
-use crate::artifacts::curation::CurationSnapshot;
+use crate::op::SourcingMutation;
+use crate::schema::available_modules;
+use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
 use crate::editor::sourcing::reset_document_effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -18,7 +18,7 @@ pub struct StockFromCatalogue {}
 /// other whole-document-replace command in this file) goes through `reset_document_effect`
 /// rather than a targeted mutation: there is no `create-object-kind` mutation to emit one-by-one.
 pub fn handle(_payload: &StockFromCatalogue, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation>, Fault> {
-    let mut stock = crate::artifacts::curation::stock_of(doc.snapshot);
+    let mut stock = crate::stock_of(doc.snapshot);
     let existing: HashSet<String> = stock.iter().map(|kind| kind.id.clone()).collect();
     for module in available_modules(&cfg.snapshot.contributions_json) {
         for kind in module.kinds {
@@ -27,6 +27,6 @@ pub fn handle(_payload: &StockFromCatalogue, doc: &ArtifactView<'_, CurationSnap
             }
         }
     }
-    let document = crate::artifacts::curation::curation_snapshot_from_stock(stock, doc.snapshot.curated.clone());
+    let document = crate::curation_snapshot_from_stock(&stock, doc.snapshot.curated.clone());
     Ok(Emit { effects: vec![reset_document_effect(&document)], ..Default::default() })
 }

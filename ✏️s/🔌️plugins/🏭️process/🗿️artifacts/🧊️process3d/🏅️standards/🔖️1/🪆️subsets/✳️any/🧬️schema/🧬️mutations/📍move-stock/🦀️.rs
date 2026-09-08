@@ -3,13 +3,13 @@
 //! directory name stays `🧱set-stock`; see the migration report's `sharedFileRequests` for the
 //! rename once a later pass can touch `🦀️.rs`).
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{Pose, Process3dSnapshot};
+use crate::diff::Process3dDiff;
+use crate::mutations::Process3dMutation;
+use crate::{Pose, Process3dSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️MoveStock
-/// 🧱 Absolute spatial reposition of the document's single [`crate::artifacts::process3d::Stock`]
+/// 🧱 Absolute spatial reposition of the document's single [`crate::Stock`]
 /// workpiece — the `stock` field's `pose` sub-value, addressed implicitly (the document has exactly
 /// one stock, so `target()` is empty per `MutationKind::target`'s whole-artifact-scope default).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]

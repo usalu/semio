@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/db/compact/component.json",
+  "title": "OS Database Compaction Contracts",
+  "$defs": {
+    "CommittedEffectsV1": {
+      "title": "Compaction Committed Effects V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "floorHeadSeq", "segments", "expected", "actor"],
+      "properties": {
+        "schema": { "const": "semio.db.compaction.committed-effects/v1" },
+        "floorHeadSeq": { "type": "integer", "minimum": 0 },
+        "segments": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["index", "state", "transactions"],
+            "properties": {
+              "index": { "type": "integer", "minimum": 0 },
+              "state": { "enum": ["active", "sealed"] },
+              "transactions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["id", "outcome", "records"],
+                  "properties": {
+                    "id": { "type": "integer", "minimum": 1 },
+                    "outcome": { "enum": ["commit", "abort"] },
+                    "records": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": ["kind", "headSeq"],
+                            "properties": {
+                              "kind": { "enum": ["frontier", "snapshot"] },
+                              "headSeq": { "type": "integer", "minimum": 0 }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": ["kind", "payload"],
+                            "properties": {
+                              "kind": { "const": "payload" },
+                              "payload": { "enum": ["aborted", "committed"] }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["deletedSegments", "deletedPayloads", "remainingSegments", "retainedPayloads"],
+          "properties": {
+            "deletedSegments": { "type": "integer", "minimum": 0 },
+            "deletedPayloads": { "type": "integer", "minimum": 0 },
+            "remainingSegments": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+            "retainedPayloads": { "type": "array", "items": { "enum": ["aborted", "committed"] } }
+          }
+        },
+        "actor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["priority", "writerAuthority", "activeSegmentAuthority", "leaseBefore", "indexBudgetContinuation", "payloadReclamation", "queuedSubmitDuring", "queuedSubmitAfter"],
+          "properties": {
+            "priority": { "enum": ["command", "maintenance"] },
+            "writerAuthority": { "enum": ["retained-artifact-wal"] },
+            "activeSegmentAuthority": { "enum": ["artifact-wal"] },
+            "leaseBefore": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["snapshot-floor", "wal-horizon", "wal-delete"] } },
+            "indexBudgetContinuation": { "enum": ["same-owned-future-cooperative-yield"] },
+            "payloadReclamation": { "enum": ["deferred-global-reference-authority"] },
+            "queuedSubmitDuring": { "enum": ["pending", "accepted", "rejected"] },
+            "queuedSubmitAfter": { "enum": ["pending", "accepted", "rejected"] }
+          }
+        }
+      }
+    }
+  }
+}

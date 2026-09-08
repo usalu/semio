@@ -2,8 +2,8 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::presentation::op::PresentationMutation;
-use crate::artifacts::presentation::{default_presentation_snapshot, PresentationSnapshot};
+use crate::op::PresentationMutation;
+use crate::{default_presentation_snapshot, PresentationSnapshot};
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
 use crate::editor::animate::{interaction_select_effect, PresentationDispatchCtx};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

@@ -1,9 +1,9 @@
 //! 🖊️ 🖊️ Note play app command command — `ink-apply-events`.
 
-use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::schema::mutations::{change_block_ink_width, change_block_locked, change_block_visible, create_asset, create_block, delete_block, edit_block_ink_stroke, move_block, rename_block, replace_asset_payload, resize_block};
-use crate::artifacts::note::schema::{block_bounds, block_id, block_locked, block_name, block_visible, find_block, insert_block, remove_block_from_tree, update_block_in_tree};
-use crate::artifacts::note::{NoteBlockNode, NoteCamera, NoteImageAsset, NoteSnapshot};
+use crate::op::NoteMutation;
+use crate::schema::mutations::{change_block_ink_width, change_block_locked, change_block_visible, create_asset, create_block, delete_block, edit_block_ink_stroke, move_block, rename_block, replace_asset_payload, resize_block};
+use crate::schema::{block_bounds, block_id, block_locked, block_name, block_visible, find_block, insert_block, remove_block_from_tree, update_block_in_tree};
+use crate::{NoteBlockNode, NoteCamera, NoteImageAsset, NoteSnapshot};
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -178,7 +178,7 @@ pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _c
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::note::schema::{block_id, create_block_by_kind};
+    use crate::schema::{block_id, create_block_by_kind};
     use crate::editor::note::testkit::{dispatch, note_app};
     use crate::editor::note::NoteCommand;
     use semio_framework_plugin::PluginApp;
@@ -187,7 +187,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn gesture_begin_live_commit_produces_single_undo_step() {
         let mut app = note_app().await;
-        let mut ids = crate::artifacts::note::schema::NoteIdOwner::new("ink-test", 0);
+        let mut ids = crate::schema::NoteIdOwner::new("ink-test", 0);
         let block = create_block_by_kind(&mut ids, "text", 10.0, 10.0);
         let new_id = block_id(&block).to_string();
 

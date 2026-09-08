@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/note/note/1/block/mutation/drag-blocks.json",
+  "$id": "https://semio.tech/schema/s/note/note/1/block/mutation/drag-blocks/schema.json",
   "title": "DragBlocks",
   "type": "object",
   "additionalProperties": false,

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DisconnectSlots` — removes the id from `edges`.
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::diff::AssemblyDiff;
+use crate::schema::snapshot::AssemblySnapshot;
 
 pub fn diff(payload: &super::DisconnectSlots, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     if !base.edges.iter().any(|edge| edge.id == payload.id) {

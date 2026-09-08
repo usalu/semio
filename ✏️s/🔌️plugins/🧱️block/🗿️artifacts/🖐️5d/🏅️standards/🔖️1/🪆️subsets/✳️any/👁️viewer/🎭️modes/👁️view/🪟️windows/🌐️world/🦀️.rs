@@ -5,7 +5,7 @@
 //! selection, no gumball, no engagement: a viewer has no utilities that edit and emits no mutations
 //! by construction (`ViewEmit`).
 
-use crate::artifacts::block5d::Block5dSnapshot;
+use crate::Block5dSnapshot;
 // 🚧️ SDK GAP: the seven framework `WindowKit`s (contract §2.6, `MeshWindowKit` included) live in the
 // `//#region 🔖️WindowKits` region nested inside `pub mod app { … }` but are NOT in the crate-root
 // curated `pub use app::{ … };` re-export list (unlike `ArtifactViewer`/`Viewer`/`ViewEmit`, whose
@@ -61,7 +61,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::artifacts::block5d::schema::empty_block5d_snapshot();
+        let document = crate::schema::empty_block5d_snapshot();
         let _node = render(&document);
     }
 }

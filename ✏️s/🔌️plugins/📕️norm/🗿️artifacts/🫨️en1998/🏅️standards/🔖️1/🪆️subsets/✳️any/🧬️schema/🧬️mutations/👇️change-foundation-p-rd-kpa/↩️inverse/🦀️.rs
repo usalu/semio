@@ -1,9 +1,9 @@
 //! ↩️ `change-foundation-p-rd-kpa` inverse — restores the pre-change `foundation_p_rd_kpa` from BASE state; `change` is its own
 //! inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::en1998::mutations::change_foundation_p_rd_kpa::ChangeFoundationPRdKpa;
-use crate::artifacts::en1998::mutations::En1998Mutation;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::mutations::change_foundation_p_rd_kpa::ChangeFoundationPRdKpa;
+use crate::mutations::En1998Mutation;
+use crate::En1998Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeFoundationPRdKpa, base: &En1998Snapshot) -> Vec<En1998Mutation> {

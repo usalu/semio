@@ -1,0 +1,11 @@
+{
+  "definition_version": 1,
+  "id": "s.norm.en1991",
+  "artifact": "en1991",
+  "directory": "🏋️en1991",
+  "rust_package": "semio-s-artifact-norm-en1991",
+  "nx_project": "@semio-tech/norm-en1991-rs",
+  "dependencies": [
+    "semio-s-artifact-norm-en1990"
+  ]
+}

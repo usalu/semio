@@ -4,7 +4,7 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::ShootingSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
@@ -53,7 +53,7 @@ impl protocol::InferenceSpec<ShootingSnapshot> for ShootingInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::shooting::standards::v1::subsets::any::schema::ShootingBuilderFacets {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::ShootingBuilderFacets {
     type Snapshot = ShootingSnapshot;
     type Inference = ShootingInference;
 }
@@ -80,7 +80,7 @@ pub fn shooting_artifact_inference_descriptor() -> schema::ArtifactInferenceDesc
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::shooting::{ShootingCamera, ShootingSavedCamera, ShootingShot};
+    use crate::{ShootingCamera, ShootingSavedCamera, ShootingShot};
     use protocol::Inference;
 
     //#region 🧸️Fixtures

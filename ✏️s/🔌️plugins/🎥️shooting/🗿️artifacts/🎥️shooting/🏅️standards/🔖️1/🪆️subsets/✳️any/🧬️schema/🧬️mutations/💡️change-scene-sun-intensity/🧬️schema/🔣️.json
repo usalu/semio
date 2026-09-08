@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/mutation/change-scene-sun-intensity.json",
+  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/mutation/change-scene-sun-intensity/schema.json",
   "title": "ChangeSceneSunIntensity",
   "type": "object",
   "additionalProperties": false,

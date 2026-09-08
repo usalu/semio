@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/delete-node.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/delete-node/schema.json",
   "title": "DeleteNode",
   "type": "object",
   "additionalProperties": false,
@@ -9,7 +9,11 @@
   ],
   "properties": {
     "id": {
-      "title": "GraphNodeId",
+      "$ref": "#/$defs/GraphNodeId"
+    }
+  },
+  "$defs": {
+    "GraphNodeId": {
       "type": "object",
       "additionalProperties": false,
       "required": [

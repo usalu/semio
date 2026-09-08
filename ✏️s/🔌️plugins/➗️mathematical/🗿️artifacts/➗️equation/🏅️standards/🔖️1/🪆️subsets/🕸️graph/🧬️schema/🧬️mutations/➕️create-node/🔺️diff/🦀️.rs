@@ -1,6 +1,6 @@
 //! 🔺️ `create-node` — sparse diff construction.
 
-use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationNode, EquationSnapshot};
+use crate::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationNode, EquationSnapshot};
 
 //#region 🔖️Diff
 /// 🔺️ A duplicate `id` is Fatal `duplicate-id` — an id-keyed entity that already exists cannot be

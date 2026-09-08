@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/set-file-description.json",
+  "$id": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/set-file-description/schema.json",
   "title": "SetFileDescription",
   "type": "object",
   "additionalProperties": false,
@@ -20,7 +20,6 @@
     "StepFileDescription": {
       "type": "object",
       "additionalProperties": false,
-      "required": [],
       "properties": {
         "description": {
           "type": "array",

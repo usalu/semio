@@ -1,6 +1,6 @@
 //! 🏗️ Playbook play app — the builder window: the drag/drop Blockly-like form authoring surface.
 
-use crate::artifacts::playbook::{PlaybookSnapshot, PLAYBOOK_BUILTIN_KINDS};
+use crate::{PlaybookSnapshot, PLAYBOOK_BUILTIN_KINDS};
 use crate::editor::playbook::config::PlaybookConfig;
 use semio_framework::parse_contributions;
 use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};

@@ -3,8 +3,8 @@
 //! bare "delete", since `create-shape-model` may have OVERWRITTEN an existing handle.
 
 use super::CreateShapeModel;
-use crate::artifacts::cad::mutations::{delete_shape_model, CadMutation};
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::{delete_shape_model, CadMutation};
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &CreateShapeModel, base: &CadSnapshot) -> Vec<CadMutation> {

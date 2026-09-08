@@ -31,7 +31,7 @@ pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️dream.spr.semi
 pub const GOLDEN_POSES_JSON: &str = include_str!("🖼️assets/🔣️.json");
 
 fn document_json() -> String {
-    let projection = crate::artifacts::puzzle5d::dsl::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
+    let projection = crate::dsl::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
     dsl::json::to_json_string(&projection)
 }
 

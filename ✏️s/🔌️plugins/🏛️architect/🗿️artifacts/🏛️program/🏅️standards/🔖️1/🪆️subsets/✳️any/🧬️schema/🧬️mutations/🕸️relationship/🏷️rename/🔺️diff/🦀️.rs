@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔗relationships` per Wave C.
 
 use super::RenameRelationship;
-use crate::artifacts::program::diff::{ProgramRelationshipsDelta, ProgramRelationshipsPatchEntry};
-use crate::artifacts::program::registers::RelationshipPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramRelationshipsDelta, ProgramRelationshipsPatchEntry};
+use crate::registers::RelationshipPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameRelationship, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -130,8 +130,8 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_vcs::artifacts::vcs::standards::v1::subsets::any::schema::mutations::{apply_vcs_mutation_reporting, decode_vcs_mutation_json, inverse_vcs_mutation_steps, VcsDemoMutation};
-    use semio_s_plugin_vcs::artifacts::vcs::standards::v1::subsets::any::schema::snapshot::{decode_vcs_snapshot_json, encode_vcs_snapshot_json, parse_vcs_dsl, print_vcs_dsl, VcsSnapshot};
+    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::schema::mutations::{apply_vcs_mutation_reporting, decode_vcs_mutation_json, inverse_vcs_mutation_steps, VcsDemoMutation};
+    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::schema::snapshot::{decode_vcs_snapshot_json, encode_vcs_snapshot_json, parse_vcs_dsl, print_vcs_dsl, VcsSnapshot};
 
     //#region 🔖️FixtureDecode
     /// 🧫️ Decodes the SAME committed fixture text `../🦀️.rs::fixture_text` embeds, through

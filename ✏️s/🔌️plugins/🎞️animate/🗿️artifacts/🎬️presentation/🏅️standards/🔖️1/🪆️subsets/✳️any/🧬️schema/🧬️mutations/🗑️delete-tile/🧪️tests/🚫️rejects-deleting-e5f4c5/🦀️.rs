@@ -13,8 +13,8 @@
 //! panics), which is exactly the state in which the singular delete's target guard fires. Note the
 //! asymmetry with the plural `delete-tiles`, whose guard only rejects when EVERY id is missing.
 
-use crate::artifacts::presentation::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
-use crate::artifacts::presentation::{PresentationDiff, PresentationSnapshot};
+use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
+use crate::{PresentationDiff, PresentationSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

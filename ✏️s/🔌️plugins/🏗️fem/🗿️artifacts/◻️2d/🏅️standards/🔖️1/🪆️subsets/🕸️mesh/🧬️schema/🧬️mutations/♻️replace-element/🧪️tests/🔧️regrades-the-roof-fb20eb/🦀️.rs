@@ -12,9 +12,9 @@
 //!
 //! 🔧️ Upgrading the roof beam from IPE 240 to IPE 270 is a whole-entity patch in place — the element keeps its id and its position in the collection.
 
-use crate::artifacts::fem2d::mutations::Fem2dMutation;
-use crate::artifacts::fem2d::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::mutations::Fem2dMutation;
+use crate::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -41,7 +41,7 @@ fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "replace-element/regrades-the-roof-fb20eb: applied state differs from committed after-snapshot");
     assert_ne!(snapshot, base, "replace-element/regrades-the-roof-fb20eb: the forward mutation left the model untouched, so nothing was proved");
     assert_eq!(snapshot.elements.len(), 7, "replace-element/regrades-the-roof-fb20eb: the elements collection must end up 7 records long");
-    assert_eq!(crate::artifacts::fem2d::element_id(&snapshot.elements[5]), "b2", "replace-element/regrades-the-roof-fb20eb: a patch replaces the record in place and never re-orders the collection");
+    assert_eq!(crate::element_id(&snapshot.elements[5]), "b2", "replace-element/regrades-the-roof-fb20eb: a patch replaces the record in place and never re-orders the collection");
 }
 
 /// ↩️ Applying the computed inverse after the forward step lands back on `before`.
@@ -126,7 +126,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-element/regrades-the-roof-fb20eb: committed diff JSON is not canonical");
@@ -135,7 +135,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed delta on `before` must reproduce the committed `after`.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-element/regrades-the-roof-fb20eb: committed diff did not carry before to after");
 }

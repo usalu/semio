@@ -1,7 +1,7 @@
 //! 🔺️ `change-deck-type` — sparse diff construction.
 
 use super::ChangeDeckType;
-use crate::artifacts::en1994::{En1994Diff, En1994Snapshot};
+use crate::{En1994Diff, En1994Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeDeckType, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {

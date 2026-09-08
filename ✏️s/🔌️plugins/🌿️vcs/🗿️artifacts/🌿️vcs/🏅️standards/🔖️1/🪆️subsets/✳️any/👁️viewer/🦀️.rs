@@ -4,7 +4,7 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::vcs::{VcsSnapshot, VCS_DIALECT, VCS_DOCUMENT_SCHEMA};
+use crate::{VcsSnapshot, VCS_DIALECT, VCS_DOCUMENT_SCHEMA};
 use crate::viewer::vcs::modes::view;
 use crate::viewer::vcs::modes::view::windows::history;
 use semio_framework_plugin::{ArtifactView, ComponentTree, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult};
@@ -45,7 +45,7 @@ impl ArtifactViewer for VcsViewer {
     // 👁️ Decode-only per contract §2.2 — the store's op log must still decode every historical
     // mutation even though a viewer never constructs or dispatches one itself. Same artifact-level
     // type the editor uses, imported from the shared `🗿️artifacts/🌿️vcs` root, never from `editor`.
-    type Mutation = crate::artifacts::vcs::VcsDemoMutation;
+    type Mutation = crate::VcsDemoMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -58,7 +58,7 @@ impl ArtifactViewer for VcsViewer {
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> VcsSnapshot {
-        crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot()
+        crate::standards::v1::subsets::any::schema::empty_vcs_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `VcsViewCommand::Noop` variant never carries a config

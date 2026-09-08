@@ -1,7 +1,7 @@
 //! 🌐️ Block 3D play app — the world window: the object kind's 3D representation viewport (block3d's
 //! only window kind).
 
-use crate::artifacts::block3d::Block3dSnapshot;
+use crate::Block3dSnapshot;
 use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::editor::block3d::modes::edit::windows::world::options::{arrangement, brush, quick_representation, representations, spacing};
 use crate::editor::block3d::terminology::Block3dLabels;

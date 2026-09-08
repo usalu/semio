@@ -1,5 +1,5 @@
 //! puzzle2d -> pdf
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::Puzzle2dSnapshot;
 
 pub fn register() {}
 

@@ -1,11 +1,11 @@
 //! 🗂️ Sourcing curation semantic mutation aggregate.
 
-use crate::artifacts::curation::{CurationDiff, CurationSnapshot};
+use crate::{CurationDiff, CurationSnapshot};
 
 pub use super::change_curated_item_count::{change_curated_item_count, ChangeCuratedItemCount};
 pub use super::create_curated_item::{create_curated_item, CreateCuratedItem};
 pub use super::delete_curated_item::{delete_curated_item, DeleteCuratedItem};
-pub use crate::artifacts::curation::schema::operations::*;
+pub use crate::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Closed curated-selection mutation vocabulary backed by direct semantic owners.

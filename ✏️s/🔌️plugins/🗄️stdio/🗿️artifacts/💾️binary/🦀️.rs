@@ -9,6 +9,9 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
+use semio_framework_plugin::io::FormatDescriptor;
+use semio_framework_plugin::{ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
+
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
 #[cfg(feature = "component-app-assembly")]
@@ -40,11 +43,11 @@ pub const BINARY_ARTIFACT_SCHEMA_ID: &str = "s.stdio.binary";
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<ArtifactDefinition, PluginAssemblyError> {
     semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn formats() -> Result<Vec<FormatDescriptor>, ArtifactDefinitionError> {
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
@@ -66,7 +69,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, PluginAssemblyError> {
     semio_s_artifact_stdio_contract::definition_only_assembly("binary", definition()?)
 }
 
@@ -80,7 +83,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 /// (see `📓️w2-p-report.md` `## openQuestions`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 #[cfg(feature = "component-app-assembly")]
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::BinaryApps> {
+pub fn artifact() -> declarations::ArtifactDeclaration<BinaryApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.binary").expect("canonical stdio.binary kind"), localization: &[], standards: vec![standards::v_raw::standard()] }

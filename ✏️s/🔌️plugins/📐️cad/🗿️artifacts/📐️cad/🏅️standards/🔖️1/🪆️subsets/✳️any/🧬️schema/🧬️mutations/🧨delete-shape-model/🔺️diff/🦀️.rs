@@ -2,8 +2,8 @@
 //! `(payload, base)` (idempotent even when `base.shape_model` is already `None`).
 
 use super::DeleteShapeModel;
-use crate::artifacts::cad::diff::CadDiff;
-use crate::artifacts::cad::CadSnapshot;
+use crate::diff::CadDiff;
+use crate::CadSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(_payload: &DeleteShapeModel, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {

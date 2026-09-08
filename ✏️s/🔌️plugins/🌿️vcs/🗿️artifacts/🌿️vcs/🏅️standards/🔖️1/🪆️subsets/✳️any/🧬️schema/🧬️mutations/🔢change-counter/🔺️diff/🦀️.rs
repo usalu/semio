@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ChangeCounter`.
-use crate::artifacts::vcs::{VcsDiff, VcsSnapshot};
+use crate::{VcsDiff, VcsSnapshot};
 
 //#region 🔖️Diff
 /// 🔺️ Warning `no-op` when `new_counter` already equals `base.counter`.

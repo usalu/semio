@@ -1,12 +1,12 @@
 //! 🧬️ GIS map artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::gismap::dsl::REUSE_MAP_EXAMPLE_TEXT;
-use crate::artifacts::gismap::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, replace_position_data, replace_region_data, replace_route_data};
-use crate::artifacts::gismap::op::GisMapMutation;
-use crate::artifacts::gismap::{gis_map_snapshot_with_derived_children, GisMapImageChild, GisMapSnapshot, MapFeature};
+use crate::dsl::REUSE_MAP_EXAMPLE_TEXT;
+use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, replace_position_data, replace_region_data, replace_route_data};
+use crate::op::GisMapMutation;
+use crate::{gis_map_snapshot_with_derived_children, GisMapImageChild, GisMapSnapshot, MapFeature};
 use schema::ArtifactSchema;
 use semio_framework_plugin::{io_dispatch, resolve_ready, ArtifactSerializer, ErasedComposeSource, IoDirection, IoKey, IoPayload};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::semio_framework_geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use semio_s_artifact_stdio_svg::SvgSnapshot;
@@ -27,7 +27,7 @@ pub struct GisMapArtifact {
     #[state(artifact)]
     pub regions: Vec<MapFeature>,
     /// 🕸️ Mirrors `GisMapSnapshot.image` — see that field's own doc comment and
-    /// `crate::artifacts::gismap::🦀️.rs`'s `🔖️Composition` region. Carried verbatim (never
+    /// `crate::🦀️.rs`'s `🔖️Composition` region. Carried verbatim (never
     /// derived) since, unlike `drawing`/`value`, nothing in this plugin can rebuild it from
     /// `positions`/`routes`/`regions` — dropping it silently on `from_snapshot`/`to_snapshot` would
     /// be a real, undocumented data loss the moment a future basemap-capture path populates it.
@@ -131,7 +131,7 @@ pub fn gismap_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔹Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::gismap::{GisMapDiff, GisMapMutation, GisMapSnapshot};
+    use crate::{GisMapDiff, GisMapMutation, GisMapSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -183,7 +183,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::gismap::GisMapSnapshot;
+    use crate::GisMapSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -294,7 +294,7 @@ pub fn gis_map_descriptor_json(document: &GisMapSnapshot) -> String {
 }
 
 /// 🗺️ The default map document, seeded from the bundled reuse example (see
-/// `crate::artifacts::gismap::GisMapSnapshot`'s derive-generated `.gismap` DSL).
+/// `crate::GisMapSnapshot`'s derive-generated `.gismap` DSL).
 pub fn default_document() -> GisMapSnapshot {
     <GisMapSnapshot as store::ArtifactDsl>::parse_dsl(REUSE_MAP_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_map_snapshot())
 }

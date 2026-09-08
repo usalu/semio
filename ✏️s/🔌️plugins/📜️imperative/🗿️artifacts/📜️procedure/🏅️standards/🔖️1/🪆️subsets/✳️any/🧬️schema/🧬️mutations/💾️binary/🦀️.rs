@@ -18,7 +18,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 /// 📨️ Decodes one text mutation or returns its unclaimed wire record.
 type ProcedureMutationDecoder = fn(ProcedureMutationDsl) -> Result<ProcedureMutation, ProcedureMutationDsl>;
 
-use crate::artifacts::procedure::mutations::ProcedureMutation;
+use crate::mutations::ProcedureMutation;
 use protocol::OpBinary;
 
 pub const BINARY_TAG_REGISTRY: &[(&str, u8)] =
@@ -123,8 +123,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<ProcedureMutation, protocol::ProtocolEr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::procedure::mutations::{create_step, delete_step, edit_step_params, reorder_steps};
-    use crate::artifacts::procedure::{ProcedureSnapshot, PathRef};
+    use crate::mutations::{create_step, delete_step, edit_step_params, reorder_steps};
+    use crate::{ProcedureSnapshot, PathRef};
 
     #[test]
     fn direct_wire_records_preserve_keyword_fields_and_tag_order() {
@@ -149,10 +149,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_text_round_trip_with_applied_operation() {
-        use crate::artifacts::procedure::{Dictionary, Step};
+        use crate::{Dictionary, Step};
         use std::collections::BTreeMap;
 
-        let document = crate::artifacts::procedure::schema::default_snapshot();
+        let document = crate::schema::default_snapshot();
         let envelope = store::create_document_envelope::<ProcedureSnapshot, ProcedureMutation>("procedure.document/v1", "test", document, None);
         let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         let step = Step { id: "step-x".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
@@ -170,7 +170,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_create_step_with_owner_and_slot() {
-        use crate::artifacts::procedure::{Dictionary, Step};
+        use crate::{Dictionary, Step};
         use std::collections::BTreeMap;
         let step = Step { id: "step-nested".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
         let operation = create_step(PathRef { owner: Some("step-if".into()), slot: Some("then".into()) }, step);
@@ -191,7 +191,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trips_edit_step_params() {
-        use crate::artifacts::procedure::Dictionary;
+        use crate::Dictionary;
         use neural_engine::{Atom, Value};
         let operation = edit_step_params(PathRef::default(), "step-2".into(), Dictionary::new().insert("message", Value::Atom(Atom::String("hi".into()))));
         let printed = <ProcedureMutation as protocol::OpText>::print_op(&operation);

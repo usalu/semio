@@ -15,9 +15,9 @@
 //! collection's identity invariant. The seeded scene holds exactly the step the committed payload
 //! asks to create.
 
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
-use crate::artifacts::sequence::{SequenceSnapshot, SequenceWorkingScene};
+use crate::diff::SequenceDiff;
+use crate::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
+use crate::{SequenceSnapshot, SequenceWorkingScene};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

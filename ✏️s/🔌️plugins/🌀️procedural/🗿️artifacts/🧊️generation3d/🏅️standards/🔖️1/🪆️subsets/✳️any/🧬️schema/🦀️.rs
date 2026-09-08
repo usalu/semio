@@ -1,19 +1,22 @@
 //! 🧬️ Generation3d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::generation3d::dsl::{
+use crate::dsl::{
     GENERATION3D_EXAMPLE_BOX_FILLET_TEXT, GENERATION3D_EXAMPLE_BOX_SHELL_TEXT, GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT, GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT, GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT, GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT,
     GENERATION3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT,
 };
-use crate::artifacts::generation3d::snapshot::schema::Generation3dSnapshot;
-use flow::playbook::GenerationPlayRoot;
-use crate::artifacts::generation3d::widget_id;
-use flow::dag::DagFixture;
-use flow::forms_bridge::apply_generation_values_to_fixture;
-use flow::playbook::selected_generation;
-use flow::playbook::GenerationPlayState;
-use flow::CameraJson;
-use flow::FlowFixture;
-use flow::{flow_host_with_session, FlowEvalSession, FlowHost, Widget};
+use crate::snapshot::schema::Generation3dSnapshot;
+use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
+use crate::widget_id;
+use semio_framework_artifact_infinite_dag::DagFixture;
+#[cfg(feature = "component-app-assembly")]
+use semio_framework_os_flow::forms_bridge::apply_generation_values_to_fixture;
+use semio_framework_artifact_playbook_playbook::selected_generation;
+use semio_framework_artifact_playbook_playbook::GenerationPlayState;
+use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
+use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
+#[cfg(feature = "component-app-assembly")]
+use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
+use semio_framework_artifact_flow_semio_framework_os_flow::{Widget};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactDsl;
@@ -154,7 +157,7 @@ pub fn generation3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::generation3d::{Generation3dDiff, Generation3dMutation, Generation3dSnapshot};
+    use crate::{Generation3dDiff, Generation3dMutation, Generation3dSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -206,7 +209,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::generation3d::Generation3dSnapshot;
+    use crate::Generation3dSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -327,10 +330,10 @@ pub fn example_document_json(example_id: &str) -> String {
     dsl::json::to_json_string(&example_snapshot(example_id).unwrap_or_default())
 }
 
-/// 🌉️ Bridges a `FormGeneration.values` map (`flow::playbook::PlaybookValues`, see `FormGeneration`
+/// 🌉️ Bridges a `FormGeneration.values` map (`semio_framework_artifact_playbook_playbook::PlaybookValues`, see `FormGeneration`
 /// in `📖️playbook/🦀️.rs`) into the `pack::json::Object` that `forms_bridge::apply_generation_values_to_fixture`
 /// actually takes.
-fn generation_values_to_pack_object(values: &flow::playbook::PlaybookValues) -> dsl::json::Object {
+fn generation_values_to_pack_object(values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> dsl::json::Object {
     match dsl::json::from_dsl_value(&dsl::DslValue::object(values.clone())) {
         dsl::json::Value::Object(object) => object,
         _ => dsl::json::Object::new(),
@@ -346,50 +349,54 @@ pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlay
     }
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
     let mut host = FlowHost::from_fixture(fixture.clone());
-    host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
+    host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
     host
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn host_from_fixture_with_session(fixture: &FlowFixture, session: &FlowEvalSession) -> FlowHost {
     flow_host_with_session(fixture, session)
 }
 
 /// 🔀️ Rebuilds the fixture the flow host would normalize `before` to, then diffs `target` against
 /// that baseline.
-pub fn commit_fixture(before: &FlowFixture, target: &FlowFixture) -> Vec<crate::artifacts::generation3d::op::Generation3dMutation> {
+#[cfg(feature = "component-app-assembly")]
+pub fn commit_fixture(before: &FlowFixture, target: &FlowFixture) -> Vec<crate::op::Generation3dMutation> {
     let baseline = host_from_fixture(before).fixture;
-    crate::artifacts::generation3d::op::generation3d_fixture_operations(&baseline, target)
+    crate::op::generation3d_fixture_operations(&baseline, target)
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<ui_wgpu::wgpu::NodeGraphNodeRecord>, Vec<ui_wgpu::wgpu::NodeGraphEdgeRecord>) {
-    let nodes: Vec<ui_wgpu::wgpu::NodeGraphNodeRecord> = fixture
+#[cfg(feature = "component-app-assembly")]
+pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord>, Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord>) {
+    let nodes: Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord> = fixture
         .nodes
         .iter()
-        .map(|node| ui_wgpu::wgpu::NodeGraphNodeRecord {
+        .map(|node| semio_framework_ui::wgpu::NodeGraphNodeRecord {
             id: node.id.clone(),
             label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
             x: node.x,
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| ui_wgpu::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
-            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| ui_wgpu::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), ..Default::default() }).collect(),
             ..Default::default()
         })
         .collect();
-    let edges: Vec<ui_wgpu::wgpu::NodeGraphEdgeRecord> = fixture
+    let edges: Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord> = fixture
         .edges
         .iter()
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            ui_wgpu::wgpu::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
+            semio_framework_ui::wgpu::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
         })
         .collect();
     (nodes, edges)
@@ -403,12 +410,13 @@ pub fn widget_id_from_instance_id(instance_id: &str) -> &str {
     base.split('@').next().unwrap_or(base)
 }
 
-pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &flow::playbook::PlaybookValues) -> String {
+#[cfg(feature = "component-app-assembly")]
+pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
     let fixture_json = dsl::json::to_json_string(fixture);
     let patched = apply_generation_values_to_fixture(&fixture_json, &generation_values_to_pack_object(values));
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
     let mut host = FlowHost::from_fixture(patched_fixture);
-    host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
+    host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
     host.evaluate().unwrap_or_default()
 }
 //#endregion 🔖️DocumentHelpers
@@ -432,6 +440,7 @@ pub fn gumball_widget_json(host: &FlowHost, widget_id_str: &str) -> Option<dsl::
     host.fixture.widgets.iter().find(|widget| widget_id(widget) == widget_id_str).map(dsl::ToValue::to_value)
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn gumball_widget_offset(host: &FlowHost, widget_id_str: &str) -> [f64; 3] {
     let offset = gumball_widget_json(host, widget_id_str).and_then(|widget_json| widget_json.get("params").and_then(|params| params.get("offset")).cloned());
     [
@@ -441,10 +450,12 @@ pub fn gumball_widget_offset(host: &FlowHost, widget_id_str: &str) -> [f64; 3] {
     ]
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn gumball_widget_number_param(host: &FlowHost, widget_id_str: &str, key: &str, default: f64) -> f64 {
     gumball_widget_json(host, widget_id_str).and_then(|widget_json| widget_json.get("params").and_then(|params| params.get(key)).and_then(|entry| entry.get("value")).and_then(dsl::DslValue::as_f64)).unwrap_or(default)
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn gumball_translate_params_json(offset: [f64; 3]) -> String {
     dsl::json::to_json_string(&dsl::DslValue::object([(
         "offset".to_string(),
@@ -457,6 +468,7 @@ pub fn gumball_translate_params_json(offset: [f64; 3]) -> String {
     )]))
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn gumball_rotate_params_json(axis: [f64; 3], angle: f64) -> String {
     dsl::json::to_json_string(&dsl::DslValue::object([
         (
@@ -475,6 +487,7 @@ pub fn gumball_rotate_params_json(axis: [f64; 3], angle: f64) -> String {
     ]))
 }
 
+#[cfg(feature = "component-app-assembly")]
 pub fn gumball_scale_params_json(factor: f64) -> String {
     dsl::json::to_json_string(&dsl::DslValue::object([
         (
@@ -496,6 +509,7 @@ pub fn gumball_scale_params_json(factor: f64) -> String {
 /// 🔀️ Finds (or splices in) the transform neuron that persists `selected_id`'s gumball drag for
 /// `operation` into the flow graph, rewiring downstream consumers so the transformed geometry is what
 /// actually evaluates and exports.
+#[cfg(feature = "component-app-assembly")]
 pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &str) -> Result<String, String> {
     let own_suffix = format!("__gumball_{operation}");
     if selected_id.ends_with(&own_suffix) && host.fixture.widgets.iter().any(|widget| widget_id(widget) == selected_id) {

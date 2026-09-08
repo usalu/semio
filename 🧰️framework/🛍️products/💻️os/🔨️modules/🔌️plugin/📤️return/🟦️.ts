@@ -150,9 +150,9 @@ if (import.meta.vitest) {
   it("PluginReturnWit matches the shared fixed result vectors and exact enum subset", async () => {
     const api = await import("./🟦️.ts");
     const { default: fixture } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🧫️fixture/🔣️.json");
-    const { default: schema } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🧬️schema.json");
-    const { default: lifetimeSchema } = await import("../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧬️schema.json");
-    const { default: pageSchema } = await import("../../../../../🔨️modules/🎭️actor/📃️page/🧬️schema.json");
+    const { default: schema } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json");
+    const { default: lifetimeSchema } = await import("../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧬️schema/🔣️.json");
+    const { default: pageSchema } = await import("../../../../../🔨️modules/🎭️actor/📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("semio.actor.retained-return.v1#/definitions/result")!;
     const { decodeActorReturnResult } = await import("../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");

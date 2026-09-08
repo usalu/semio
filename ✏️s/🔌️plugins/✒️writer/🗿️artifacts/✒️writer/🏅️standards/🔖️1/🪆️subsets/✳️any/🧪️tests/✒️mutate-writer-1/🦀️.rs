@@ -60,12 +60,12 @@ const EXAMPLE_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/�
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_plugin_writer::artifacts::writer::attach_writer_document_text;
-    use semio_s_plugin_writer::artifacts::writer::standards::v1::subsets::any::io::snapshot::text::{parse_writer_dsl, print_writer_dsl};
-    use semio_s_plugin_writer::artifacts::writer::standards::v1::subsets::any::schema::mutations::{
+    use semio_s_artifact_writer_writer::attach_writer_document_text;
+    use semio_s_artifact_writer_writer::standards::v1::subsets::any::io::snapshot::text::{parse_writer_dsl, print_writer_dsl};
+    use semio_s_artifact_writer_writer::standards::v1::subsets::any::schema::mutations::{
         apply_writer_mutation_outcome, decode_writer_mutation_json, decode_writer_snapshot_json, encode_writer_snapshot_json, inverse_writer_mutation_steps, WriterMutation,
     };
-    use semio_s_plugin_writer::artifacts::writer::WriterSnapshot;
+    use semio_s_artifact_writer_writer::WriterSnapshot;
 
     //#region 🔖️VectorReading
     /// 🧫️ The `(kind, vector)` pair the scenario's doc string carries. The vector directory is data

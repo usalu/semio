@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteArtifact` — re-creating the exact row it removed, looked up from BASE.
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DeleteArtifact, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {

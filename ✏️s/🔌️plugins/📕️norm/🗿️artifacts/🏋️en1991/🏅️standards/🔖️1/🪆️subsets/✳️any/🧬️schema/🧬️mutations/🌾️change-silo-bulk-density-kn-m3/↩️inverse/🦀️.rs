@@ -1,7 +1,7 @@
 //! ↩️ `change-silo-bulk-density-kn-m3` — undo restores BASE's silo bulk density.
 
 use super::ChangeSiloBulkDensityKnM3;
-use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
+use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeSiloBulkDensityKnM3, base: &En1991Snapshot) -> Vec<En1991Mutation> {

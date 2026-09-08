@@ -26,8 +26,8 @@
 //! the fresh leaves was reassigned a unique one within this facet, as part of this ticket's
 //! directory + glue trueing pass. See this facet's migration report for the emoji table.
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::diff::Process3dDiff;
+use crate::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️MutationLeaves
@@ -83,7 +83,7 @@ pub enum Process3dMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
+    use crate::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
     use change_cursor::ChangeCursor;
     use change_machine_icon::ChangeMachineIcon;
     use change_step_enabled::ChangeStepEnabled;

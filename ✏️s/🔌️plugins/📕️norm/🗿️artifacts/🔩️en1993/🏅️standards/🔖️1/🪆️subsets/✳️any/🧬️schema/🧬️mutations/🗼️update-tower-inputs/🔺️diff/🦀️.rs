@@ -1,7 +1,7 @@
 //! 🔺️ `update-tower-inputs` — sparse diff construction.
 
 use super::UpdateTowerInputs;
-use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
+use crate::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &UpdateTowerInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {

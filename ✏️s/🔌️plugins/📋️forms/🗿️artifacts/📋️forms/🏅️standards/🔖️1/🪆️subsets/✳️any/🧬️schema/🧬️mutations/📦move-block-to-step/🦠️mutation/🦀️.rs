@@ -4,7 +4,7 @@
 //! (`↔️move-block`, wired by `🦀️.rs`) predates the semantic rename; the Rust module is still
 //! `move_block`, the type/variant/kind are `move-block-to-step`.
 
-use crate::artifacts::forms::{FormMutation, FormsDiff, FormsSnapshot};
+use crate::{FormMutation, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🚚️MoveBlockToStep

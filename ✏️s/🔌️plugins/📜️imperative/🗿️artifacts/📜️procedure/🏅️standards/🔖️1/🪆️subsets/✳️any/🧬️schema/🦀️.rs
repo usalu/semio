@@ -1,7 +1,7 @@
 //! 🧬️ Imperative artifact schema — every field with its state class.
 
-use crate::artifacts::procedure::{ProcedureFlowChild, ProcedureTextChild};
-use schema::ArtifactSchema;
+use crate::{ProcedureFlowChild, ProcedureTextChild};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full imperative artifact state across the artifact, presence, config and transient lanes.
@@ -38,24 +38,24 @@ fn default_contributions_json() -> String {
 
 impl Default for ProcedureArtifact {
     fn default() -> Self {
-        let empty = crate::artifacts::procedure::schema::snapshot::ProcedureSnapshot::default();
+        let empty = crate::schema::snapshot::ProcedureSnapshot::default();
         Self { schema: empty.schema, flow: empty.flow, text: empty.text, selected_step_ids: Vec::new(), locale: "en-US".into(), contributions_json: default_contributions_json(), run_output_json: String::new() }
     }
 }
 
 impl ProcedureArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::procedure::ProcedureSnapshot {
-        crate::artifacts::procedure::ProcedureSnapshot { schema: self.schema.clone(), flow: self.flow.clone(), text: self.text.clone() }
+    pub fn to_snapshot(&self) -> crate::ProcedureSnapshot {
+        crate::ProcedureSnapshot { schema: self.schema.clone(), flow: self.flow.clone(), text: self.text.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::procedure::ProcedureSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::ProcedureSnapshot) -> Self {
         Self { schema: snapshot.schema, flow: snapshot.flow, text: snapshot.text, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::procedure::ProcedureSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::ProcedureSnapshot) {
         self.schema = snapshot.schema;
         self.flow = snapshot.flow;
         self.text = snapshot.text;
@@ -65,31 +65,31 @@ impl ProcedureArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.imperative.procedure` — twenty handcrafted schema leaves.
-pub fn procedure_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn procedure_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.imperative.procedure",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -101,9 +101,9 @@ pub fn procedure_artifact_schema_descriptor() -> schema::ArtifactSchemaDescripto
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::procedure::schema::diff::ProcedureDiff;
-    use crate::artifacts::procedure::schema::mutations::ProcedureMutation;
-    use crate::artifacts::procedure::schema::snapshot::ProcedureSnapshot;
+    use crate::schema::diff::ProcedureDiff;
+    use crate::schema::mutations::ProcedureMutation;
+    use crate::schema::snapshot::ProcedureSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -155,7 +155,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::procedure::ProcedureSnapshot;
+    use crate::ProcedureSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -225,8 +225,8 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `ProcedureWorkingScene`'s doc comment) — building the canonical default directly here, then
 /// printing it to regenerate the fixture text (see `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`),
 /// is the honest source of truth, matching `writer`'s/`flow`'s own fixture-builder precedent.
-fn default_path() -> crate::artifacts::procedure::Path {
-    use crate::artifacts::procedure::{Dictionary, Path, Step};
+fn default_path() -> crate::Path {
+    use crate::{Dictionary, Path, Step};
     use neural_engine::{Atom, Value};
     Path {
         steps: vec![
@@ -239,7 +239,7 @@ fn default_path() -> crate::artifacts::procedure::Path {
 /// 📄️ The default `imperative` document — {@link default_path}'s two steps, empty seed. Relocated
 /// from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — pure
 /// over document types, no app-runtime parameter, so it belongs beside the schema it builds.
-pub fn default_snapshot() -> crate::artifacts::procedure::ProcedureSnapshot {
-    crate::artifacts::procedure::procedure_snapshot_with_content("procedure.document", &default_path(), &std::collections::BTreeMap::new())
+pub fn default_snapshot() -> crate::ProcedureSnapshot {
+    crate::procedure_snapshot_with_content("procedure.document", &default_path(), &std::collections::BTreeMap::new())
 }
 //#endregion 🔖️DocumentHelpers

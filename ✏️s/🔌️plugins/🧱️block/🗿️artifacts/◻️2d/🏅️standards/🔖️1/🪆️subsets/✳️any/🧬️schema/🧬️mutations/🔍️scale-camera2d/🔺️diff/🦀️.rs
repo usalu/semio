@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `ScaleCamera2d`.
 
 use crate::BlockCamera2d;
-use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::diff::Block2dDiff;
+use crate::Block2dSnapshot;
+use crate::diff::Block2dDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ScaleCamera2d, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

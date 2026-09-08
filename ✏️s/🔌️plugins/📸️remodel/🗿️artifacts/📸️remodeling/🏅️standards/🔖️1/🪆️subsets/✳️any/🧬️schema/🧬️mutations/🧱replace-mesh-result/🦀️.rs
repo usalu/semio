@@ -2,9 +2,9 @@
 //! placeholder/imported) mesh. Boxed: `RemodelingMesh` is far larger than any sibling payload, and
 //! `clippy::large_enum_variant` flags the resulting size disparity across `RemodelingMutation` otherwise.
 
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::{RemodelingMesh, RemodelingSnapshot};
+use crate::diff::RemodelingDiff;
+use crate::mutations::RemodelingMutation;
+use crate::{RemodelingMesh, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation

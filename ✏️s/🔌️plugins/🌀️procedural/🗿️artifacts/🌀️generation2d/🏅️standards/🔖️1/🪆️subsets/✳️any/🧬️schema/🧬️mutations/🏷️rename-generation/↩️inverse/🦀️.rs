@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `RenameGeneration`, reconstructed from BASE.
 use super::RenameGeneration;
-use crate::artifacts::generation2d::mutations::rename_generation;
-use crate::artifacts::generation2d::mutations::Generation2dMutation;
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::mutations::rename_generation;
+use crate::mutations::Generation2dMutation;
+use crate::Generation2dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &RenameGeneration, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {

@@ -1,8 +1,8 @@
 //! 📌️ Energy model mutation — `CreateSetpointManager`: Creates one loop setpoint manager. `SetpointManagerKind` is a tagged union with no `dsl::DslField`, so the variant travels as its wire name beside the four outdoor-air-reset limits, and every other variant has to carry them as zero.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

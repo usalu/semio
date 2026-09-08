@@ -1,10 +1,10 @@
 //! 🧬️ Writer artifact schema — every field with its state class.
 
-use crate::artifacts::writer::{document_child_handle_with_text, WriterDocumentChild, WriterEditorSelection, WriterEditorSettings, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
+use crate::{document_child_handle_with_text, WriterDocumentChild, WriterEditorSelection, WriterEditorSettings, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use trinity::lexer::{lex_spanned, SpannedToken, Token};
+use semio_s_artifact_trinity_jack::lexer::{lex_spanned, SpannedToken, Token};
 
 //#region 🔖️Artifact
 /// 🧬️ Full writer artifact across the artifact, presence and config lanes.
@@ -69,7 +69,7 @@ impl WriterArtifact {
             schema: WRITER_DOCUMENT_SCHEMA.into(),
             id: String::new(),
             language_id: "plaintext".into(),
-            uri: crate::artifacts::writer::default_uri(),
+            uri: crate::default_uri(),
             document: document_child_handle_with_text("", "", "plaintext"),
             editor_selection: None,
             editor_settings: WriterEditorSettings::default(),
@@ -180,7 +180,7 @@ impl dsl::DslIdiom for JackWriterIdiom {
     type Ast = String;
 
     fn parse(text: &str) -> Result<Self::Ast, dsl::TextError> {
-        trinity::core::format(text).map_err(|e| dsl::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+        semio_s_artifact_trinity_jack::core::format(text).map_err(|e| dsl::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
 
     fn print(ast: &Self::Ast) -> String {
@@ -188,12 +188,12 @@ impl dsl::DslIdiom for JackWriterIdiom {
     }
 
     fn classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
-        trinity::core::semantic_tokens(text).into_iter().map(|t| (token_class_from_name(&t.class), byte_span_to_text_span(text, t.start, t.end))).collect()
+        semio_s_artifact_trinity_jack::core::semantic_tokens(text).into_iter().map(|t| (token_class_from_name(&t.class), byte_span_to_text_span(text, t.start, t.end))).collect()
     }
 
     fn complete(text: &str, offset: usize) -> Vec<dsl::CompletionItem> {
-        let graph = trinity::core::example_graph();
-        trinity::core::complete(&graph, text, offset).into_iter().map(|item| dsl::CompletionItem { label: item.label, detail: item.detail }).collect()
+        let graph = semio_s_artifact_trinity_jack::core::example_graph();
+        semio_s_artifact_trinity_jack::core::complete(&graph, text, offset).into_iter().map(|item| dsl::CompletionItem { label: item.label, detail: item.detail }).collect()
     }
 }
 
@@ -240,7 +240,7 @@ impl dsl::DslIdiom for WireWriterIdiom {
 /// @emoji 🎨️ Classifies `text` through the language registry (`idiom` / `LanguageSpec` hooks).
 pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
     if language_id == "jack" {
-        return trinity::core::semantic_tokens(text).into_iter().map(|t| GrammarToken { class: t.class, start: t.start, end: t.end }).collect();
+        return semio_s_artifact_trinity_jack::core::semantic_tokens(text).into_iter().map(|t| GrammarToken { class: t.class, start: t.start, end: t.end }).collect();
     }
     if language_id == "wire" {
         let limits = dsl::Limits::default();
@@ -298,7 +298,7 @@ pub fn wire_completions_json(text: &str, cursor: usize) -> Option<String> {
 /// 🪞️ Canonical jack format when possible, else a whitespace-only normalization for other languages.
 pub fn format_writer_text(text: &str, language_id: &str) -> String {
     if language_id == "jack" {
-        if let Ok(formatted) = trinity::core::format(text) {
+        if let Ok(formatted) = semio_s_artifact_trinity_jack::core::format(text) {
             return formatted;
         }
     }
@@ -342,13 +342,13 @@ pub fn jack_ast_tree_icon(kind: &str) -> Option<&'static str> {
 
 /// 🌉️ Adapts trinity::core's shared [`trinity::core::SpannedNode`] tree into writer's own [`JackAstNode`]
 /// (adds the stable tree-item `id` the outline panel needs; `kind`/`label`/spans pass through unchanged).
-fn jack_ast_from_spanned(node: &trinity::core::SpannedNode) -> JackAstNode {
+fn jack_ast_from_spanned(node: &semio_s_artifact_trinity_jack::core::SpannedNode) -> JackAstNode {
     JackAstNode { id: format!("jack-ast-{}-{}-{}", node.kind, node.start, node.end), kind: node.kind.clone(), label: node.label.clone(), start: node.start, end: node.end, children: node.children.iter().map(jack_ast_from_spanned).collect() }
 }
 
 /// 🌳️ Parse jack source into a span-tracked AST for hierarchy panels, via the shared `trinity::core` parser.
 pub fn parse_jack_ast(text: &str) -> JackAstNode {
-    jack_ast_from_spanned(&trinity::core::parse_spanned(text))
+    jack_ast_from_spanned(&semio_s_artifact_trinity_jack::core::parse_spanned(text))
 }
 
 /// 🎯️ Deepest AST node containing a byte offset.

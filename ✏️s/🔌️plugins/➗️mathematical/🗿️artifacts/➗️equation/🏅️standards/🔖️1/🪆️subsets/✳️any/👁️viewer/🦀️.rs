@@ -9,7 +9,7 @@
 //! viewer needs no persisted per-session state to render (no camera, no locale): the Geometry
 //! window's table has nothing view-dependent to remember between renders.
 
-use crate::artifacts::equation::{EquationSnapshot, EQUATION_DIALECT, MATH_DOCUMENT_SCHEMA};
+use crate::{EquationSnapshot, EQUATION_DIALECT, MATH_DOCUMENT_SCHEMA};
 use crate::viewer::equation::modes::view;
 use crate::viewer::equation::modes::view::windows::geometry;
 use semio_framework_plugin::app::InteractionView;
@@ -42,7 +42,7 @@ pub struct EquationViewer;
 
 impl ArtifactViewer for EquationViewer {
     type Snapshot = EquationSnapshot;
-    type Mutation = crate::artifacts::equation::op::EquationMutation;
+    type Mutation = crate::op::EquationMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

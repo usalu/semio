@@ -7,8 +7,8 @@
 //! `🎮️commands/*` payload
 //! modules by `semio_framework_plugin::app_commands!`.
 
-use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::op::WriterMutation;
+use crate::WriterSnapshot;
 use protocol::{Mutation, MutationDiff, OpBinary};
 use store::ArtifactEnvelopeMutationFieldTarget;
 
@@ -398,10 +398,10 @@ impl WriterMutationDecodeAuthority {
         }
         let payload = self.payload.take().ok_or_else(|| self.diagnostic("writer-envelope.missing-mutation-payload", 0))?;
         *self.value = Some(match kind {
-            WriterMutationKind::RenameWriter => WriterMutation::RenameWriter(crate::artifacts::writer::schema::mutations::RenameWriter { new_id: payload }),
-            WriterMutationKind::ChangeUri => WriterMutation::ChangeUri(crate::artifacts::writer::schema::mutations::ChangeUri { new_uri: payload }),
-            WriterMutationKind::ChangeLanguage => WriterMutation::ChangeLanguage(crate::artifacts::writer::schema::mutations::ChangeLanguage { new_language_id: payload }),
-            WriterMutationKind::EditText => WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: payload }),
+            WriterMutationKind::RenameWriter => WriterMutation::RenameWriter(crate::schema::mutations::RenameWriter { new_id: payload }),
+            WriterMutationKind::ChangeUri => WriterMutation::ChangeUri(crate::schema::mutations::ChangeUri { new_uri: payload }),
+            WriterMutationKind::ChangeLanguage => WriterMutation::ChangeLanguage(crate::schema::mutations::ChangeLanguage { new_language_id: payload }),
+            WriterMutationKind::EditText => WriterMutation::EditText(crate::schema::mutations::EditText { text: payload }),
         });
         Ok(())
     }
@@ -1286,7 +1286,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot
                     self.fail(b"writer-store.initializer-envelope-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
-                if envelope.schema != crate::artifacts::writer::WRITER_DOCUMENT_SCHEMA || envelope.id.is_empty() || envelope.id.len() > WRITER_ENVELOPE_FIELD_BYTES {
+                if envelope.schema != crate::WRITER_DOCUMENT_SCHEMA || envelope.id.is_empty() || envelope.id.len() > WRITER_ENVELOPE_FIELD_BYTES {
                     self.fail(b"writer-store.initializer-envelope-invalid");
                 } else {
                     self.phase = WriterStoreInitializationPhase::ValidateEditPair { left: 0, right: 1 };
@@ -1641,11 +1641,11 @@ pub fn writer_document_store_initialization_job(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::writer::{schema, WriterSnapshot};
+    use crate::{schema, WriterSnapshot};
 
     #[semio_framework_async_macros::async_test]
     async fn writer_snapshot_and_mutation_owners_retire_one_exact_field_per_grant() {
-        let snapshot = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "deep", "plaintext", "writer://deep", "body");
+        let snapshot = crate::writer_snapshot_with_text("writer.document", "deep", "plaintext", "writer://deep", "body");
         let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterSnapshotRetirementFactory, snapshot);
         assert_eq!(retirement.close_step(0, usize::MAX).expect("zero grant is truthful"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         let mut steps = 0;
@@ -1760,7 +1760,7 @@ mod tests {
     }
 
     fn empty_writer_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> WriterStoreInitializationAuthority {
-        let envelope = store::create_document_envelope(crate::artifacts::writer::WRITER_DOCUMENT_SCHEMA, "writer-retained-load", schema::empty_writer_snapshot(), None);
+        let envelope = store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer-retained-load", schema::empty_writer_snapshot(), None);
         WriterStoreInitializationAuthority::new(envelope, operation, generation)
     }
 
@@ -1839,7 +1839,7 @@ mod tests {
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
     fn jack_snapshot() -> WriterSnapshot {
-        crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
+        crate::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
     /// 🧬️ Reaches `jack_snapshot()` from `empty_writer_snapshot()` via the semantic vocabulary —
@@ -1850,7 +1850,7 @@ mod tests {
     /// `ChangeLanguage` have already landed — otherwise its handle would target the wrong owner id.
     fn jack_mutations() -> Vec<WriterMutation> {
         let jack = jack_snapshot();
-        let text = crate::artifacts::writer::writer_text(&jack);
+        let text = crate::writer_text(&jack);
         vec![
             WriterMutation::RenameWriter(schema::mutations::RenameWriter { new_id: jack.id }),
             WriterMutation::ChangeLanguage(schema::mutations::ChangeLanguage { new_language_id: jack.language_id }),
@@ -1899,7 +1899,7 @@ mod semio_protocol_conformance {
 
     #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_spr() {
-        let operation = WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: "hello".into() });
+        let operation = WriterMutation::EditText(crate::schema::mutations::EditText { text: "hello".into() });
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");

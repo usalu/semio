@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::DrawingSnapshot;
 use store::PackError;
 
 //#region 🔖️HandcraftedArtifactPack
@@ -47,9 +47,9 @@ pub fn decode(bytes: &[u8]) -> Result<DrawingSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::drawing::dsl;
-    use crate::artifacts::drawing::schema::{create_drawing_boolean_layer, create_drawing_image_layer, create_drawing_path_layer, create_drawing_shape_layer_rect, create_drawing_trace_layer, default_drawing_document, default_layer_base, layer_id};
-    use crate::artifacts::drawing::{DrawingArtboard, DrawingCircle, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingLayerNode, DrawingLine, DrawingPolygon, DrawingShapeBody, DrawingTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA};
+    use crate::document_dsl as dsl;
+    use crate::schema::{create_drawing_boolean_layer, create_drawing_image_layer, create_drawing_path_layer, create_drawing_shape_layer_rect, create_drawing_trace_layer, default_drawing_document, default_layer_base, layer_id};
+    use crate::{DrawingArtboard, DrawingCircle, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingLayerNode, DrawingLine, DrawingPolygon, DrawingShapeBody, DrawingTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA};
 
     fn representative_drawing_document() -> DrawingSnapshot {
         let mut assets = std::collections::BTreeMap::new();
@@ -138,7 +138,7 @@ mod tests {
     /// existing pack round-trip laws.
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::drawing::op::DrawingMutation;
+        use crate::op::DrawingMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let initial = default_drawing_document("doc-text-test", None);
@@ -146,8 +146,8 @@ mod tests {
         let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         let layer = create_drawing_shape_layer_rect("Added Rect");
         let layer_id_value = layer_id(&layer).to_string();
-        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::drawing::mutations::create_layer(None, None, layer)], description: Some("add rect".into()) }).await.expect("apply add layer");
-        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::artifacts::drawing::mutations::set_layer_opacity(layer_id_value, 0.5)], description: Some("set opacity".into()) }).await.expect("apply set opacity");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::create_layer(None, None, layer)], description: Some("add rect".into()) }).await.expect("apply add layer");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::set_layer_opacity(layer_id_value, 0.5)], description: Some("set opacity".into()) }).await.expect("apply set opacity");
         let edit: &Edit<DrawingMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<DrawingSnapshot, DrawingMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone())).await;
     }

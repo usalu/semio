@@ -1,7 +1,7 @@
 //! 🔺️ Sequence artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::sequence::schema::SequenceArtifact;
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::schema::SequenceArtifact;
+use crate::SequenceSnapshot;
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::sequence::schema::diff::*;
+use crate::schema::diff::*;
 
 //#region 🔖️Apply
 impl SequenceDiff {
@@ -86,14 +86,14 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::sequence::{default_snapshot, SequenceStep, StepParams};
+    use crate::{default_snapshot, SequenceStep, StepParams};
     use protocol::Mutation;
 
     #[semio_framework_async_macros::async_test]
     async fn create_step_diff_applies_onto_the_base_snapshot() {
         let base = default_snapshot();
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
-        let operation = crate::artifacts::sequence::mutations::create_step(step);
+        let operation = crate::mutations::create_step(step);
         let diff: SequenceDiff = operation.diff(&base).into_parts().0;
         assert!(diff.content.is_some(), "CreateStep must produce a content diff: {diff:?}");
         assert_eq!(diff.apply(&base).expect("valid mutation diff").to_fixture().steps.len(), base.to_fixture().steps.len() + 1);

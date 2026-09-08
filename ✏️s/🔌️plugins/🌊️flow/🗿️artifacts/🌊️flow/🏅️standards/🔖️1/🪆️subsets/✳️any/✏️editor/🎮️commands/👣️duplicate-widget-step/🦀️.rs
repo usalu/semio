@@ -1,6 +1,6 @@
 //! ⏱️ Hidden dispatch surface for one bounded duplicate-widget continuation step.
 
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::commands::duplicate_widget;
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use flow::FlowEvalSession;

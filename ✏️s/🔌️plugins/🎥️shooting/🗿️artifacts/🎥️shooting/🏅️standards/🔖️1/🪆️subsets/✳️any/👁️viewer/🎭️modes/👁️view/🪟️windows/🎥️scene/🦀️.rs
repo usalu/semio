@@ -1,5 +1,5 @@
 //! 🎥️ Shooting viewer — the Scene window: a read-only world-3d render of the icon-studio scene, built
-//! from the same artifact-level `crate::artifacts::shooting::schema` pure snapshot helpers the editor's
+//! from the same artifact-level `crate::schema` pure snapshot helpers the editor's
 //! own Scene window (`✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene`) uses — this file itself imports
 //! nothing from the sibling editor surface (`policyViewerPurityBreaches` forbids it outright). No
 //! camera drag, no gumball, no shot-format chrome: a viewer has no utilities that edit and emits no
@@ -7,8 +7,8 @@
 //! persisted per-session camera (`Config = NoConfig`), an intentional first-pass simplification, not a
 //! bug (mirrors the cad pilot's identical viewer-window simplification).
 
-use crate::artifacts::shooting::schema::{active_shot, is_transparent_shooting_background};
-use crate::artifacts::shooting::{shooting_asset_scale, ShootingAsset, ShootingCamera, ShootingShot, ShootingSnapshot};
+use crate::schema::{active_shot, is_transparent_shooting_background};
+use crate::{shooting_asset_scale, ShootingAsset, ShootingCamera, ShootingShot, ShootingSnapshot};
 use semio_framework_plugin::{
     world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions, World3dScene, WorldSunConfig,
 };
@@ -172,7 +172,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
-        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
+        let snapshot = crate::schema::default_snapshot();
         let node = render(&snapshot).expect("viewer scene");
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("3D surface") };
         let scene: World3dScene = semio_framework_ui_scene::decode(props).expect("packed scene");

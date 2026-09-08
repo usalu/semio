@@ -1,9 +1,9 @@
 //! 🗑️ `delete-link` — removes an {@link ImageLink} by id; inverse recreates it via `create-link`.
 
 
-use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
-use crate::artifacts::layout::mutations::{LayoutMutation, create_link};
-use crate::artifacts::layout::schema::diff::LayoutLinksDelta;
+use crate::{LayoutDiff, LayoutSnapshot};
+use crate::mutations::{LayoutMutation, create_link};
+use crate::schema::diff::LayoutLinksDelta;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

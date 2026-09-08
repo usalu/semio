@@ -1,5 +1,5 @@
 {
-  "$schema": "../🧬️schema/📸️artifact-command-checkpoint.schema.json",
+  "$schema": "../🧬️schema/🔣️.json",
   "format": "ARC1",
   "version": 3,
   "maximumBytes": 512,

@@ -3,7 +3,7 @@
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM.
 
 pub fn standard() -> semio_framework_plugin::app::declarations::StandardDeclaration<crate::FormsApps> {
-    use crate::artifacts::forms::standards::v1::subsets;
+    use crate::standards::v1::subsets;
     use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
     use semio_framework_plugin::StandardId;
 

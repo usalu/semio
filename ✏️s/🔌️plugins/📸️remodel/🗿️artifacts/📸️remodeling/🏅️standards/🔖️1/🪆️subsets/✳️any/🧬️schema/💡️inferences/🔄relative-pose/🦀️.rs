@@ -11,7 +11,7 @@
 //! ephemeral SFM/BA working state, which this codebase deliberately never persists — see
 //! `MotionTrackSummary`'s own docstring on why raw tracks/observations stay plugin-runtime scratch).
 
-use crate::artifacts::remodeling::{CameraPosePreview, RemodelingSnapshot};
+use crate::{CameraPosePreview, RemodelingSnapshot};
 use crate::lie::{Se3, So3};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
@@ -34,7 +34,7 @@ fn se3_from_preview(pose: &CameraPosePreview) -> Se3 {
 }
 
 fn trajectory_poses(snapshot: &RemodelingSnapshot) -> &[CameraPosePreview] {
-    snapshot.results.trajectory.as_ref().map(|trajectory| trajectory.poses.as_slice()).unwrap_or(&[])
+    snapshot.results.trajectory.as_ref().map_or(&[], |trajectory| trajectory.poses.as_slice())
 }
 //#endregion 🔖️PoseDelta
 
@@ -98,7 +98,7 @@ impl store::InferredField<RemodelingSnapshot> for RemodelingRelativeCameraPose {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::remodeling::CameraTrajectory;
+    use crate::CameraTrajectory;
     use store::InferredField;
 
     fn two_pose_snapshot() -> RemodelingSnapshot {

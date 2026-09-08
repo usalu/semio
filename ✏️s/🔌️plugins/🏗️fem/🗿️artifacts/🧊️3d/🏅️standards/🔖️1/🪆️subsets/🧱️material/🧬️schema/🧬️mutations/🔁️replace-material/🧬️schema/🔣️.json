@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/fem/3d/1/material/mutation/replace-material.json",
+  "$id": "https://semio.tech/schema/s/fem/3d/1/material/mutation/replace-material/schema.json",
   "title": "ReplaceMaterial",
   "type": "object",
   "additionalProperties": false,

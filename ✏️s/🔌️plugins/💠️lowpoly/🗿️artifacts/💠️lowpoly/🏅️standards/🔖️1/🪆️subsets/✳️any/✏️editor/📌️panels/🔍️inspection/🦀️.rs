@@ -1,7 +1,7 @@
 //! 🔍️ Lowpoly play app panel — the active object's inspector (name, smooth shading, selection summary,
 //! transform utility, staged utility-param sliders).
 
-use crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA;
+use crate::LOWPOLY_DOCUMENT_SCHEMA;
 use crate::editor::lowpoly::{lowpoly_action, ui_label, ui_value_map, ui_value_text};
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{active_object, utility_params_value, LowpolyView};

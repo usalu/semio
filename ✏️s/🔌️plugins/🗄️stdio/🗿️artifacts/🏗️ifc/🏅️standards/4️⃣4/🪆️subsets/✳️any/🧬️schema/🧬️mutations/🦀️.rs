@@ -618,13 +618,7 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[test]
     fn codec_retention_law() {
-        let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/🏗️ifc/📚️examples/🎬️demo/🖼️assets/🏗️example.ifc"));
-        let text = match text {
-            Ok(t) => t,
-            // Fixture path is relative to this crate's manifest dir under the workspace layout;
-            // fall back to a synthetic document so this law still exercises decode->encode->decode.
-            Err(_) => store::ArtifactDsl::print_dsl(&base_snapshot()),
-        };
+        let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🧪️example/🏗️.ifc")).expect("read committed IFC fixture");
         let decoded = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse fixture");
         let reencoded = store::ArtifactDsl::print_dsl(&decoded);
         let redecoded = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&reencoded).expect("re-decode fixture");

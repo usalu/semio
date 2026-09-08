@@ -1,6 +1,6 @@
 //! 📥️ DIN EN 16798 play app — the inputs window: the raw compliance document, rendered as JSON.
 
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::Din16798Snapshot;
 use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants

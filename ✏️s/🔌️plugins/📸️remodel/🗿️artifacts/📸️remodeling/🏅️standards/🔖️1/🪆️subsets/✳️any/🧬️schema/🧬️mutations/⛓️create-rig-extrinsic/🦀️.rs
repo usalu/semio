@@ -1,9 +1,9 @@
 //! ⛓️ Remodeling mutation — `CreateRigExtrinsic`: brings a new camera-id-keyed rig pose into existence.
 //! No app call site writes to `calibration.rig` today; schema-complete but unexercised.
 
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::{RemodelingSnapshot, RigExtrinsic};
+use crate::diff::RemodelingDiff;
+use crate::mutations::RemodelingMutation;
+use crate::{RemodelingSnapshot, RigExtrinsic};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 

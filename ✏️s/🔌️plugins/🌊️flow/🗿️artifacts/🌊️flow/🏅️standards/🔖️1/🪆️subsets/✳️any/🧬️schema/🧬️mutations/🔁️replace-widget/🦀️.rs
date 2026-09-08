@@ -1,10 +1,10 @@
 //! 🔁️ Whole-value swap of a widget's payload — flow widgets are heterogeneous enum variants, so a
-//! granular per-field patch buys nothing (matches `flow::Widget`'s own `Patchable` impl).
+//! granular per-field patch buys nothing (matches `semio_framework_artifact_flow_flow::Widget`'s own `Patchable` impl).
 
-use crate::artifacts::flow::FlowSnapshot;
-use crate::artifacts::flow::schema::diff::text::FlowDiff;
-use crate::artifacts::flow::schema::mutations::FlowMutation;
-use flow::Widget;
+use crate::FlowSnapshot;
+use crate::schema::diff::text::FlowDiff;
+use crate::schema::mutations::FlowMutation;
+use semio_framework_artifact_flow_flow::Widget;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔁️ReplaceWidget

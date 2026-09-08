@@ -9,8 +9,8 @@
 //! There is deliberately NO whole-document replace in this enum: `📓️derivation-rules.md` rule 6
 //! routes file-open / import / load-example through `store::ArtifactStore::reset`, outside history.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️LinkRoles
@@ -1477,8 +1477,8 @@ pub fn wire_probes() -> Vec<EnergyModelMutation> {
 #[cfg(test)]
 pub mod fixtures {
     use super::EnergyModelMutation;
-    use crate::artifacts::model::diff::EnergyModelDiff;
-    use crate::artifacts::model::EnergyModelSnapshot;
+    use crate::diff::EnergyModelDiff;
+    use crate::EnergyModelSnapshot;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
     use semio_framework_os_kernel::ToValue;
 
@@ -1501,7 +1501,7 @@ pub mod fixtures {
 
     /// 📸️ The persisted snapshot a typed model lives in, both composed child handles minted.
     pub fn snapshot(model: crate::model::Model) -> EnergyModelSnapshot {
-        crate::artifacts::model::energy_snapshot_with_state(crate::artifacts::model::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None)
+        crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None)
     }
 
     /// 🔗️ A head-pinned forward link to another artifact.

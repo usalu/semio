@@ -1,7 +1,7 @@
 //! 🔧️ CAD artifact — OpText/OpBinary codecs + grammar for serializing `CadMutation`.
 //! Mutation apply/inverse live in `🧬️mutations`; this facet only handcrafts the op wire forms.
 
-pub use crate::artifacts::cad::mutations::{CadMutation, CadNodePatch, CadReferencePatch};
+pub use crate::mutations::{CadMutation, CadNodePatch, CadReferencePatch};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -44,7 +44,7 @@ impl protocol::OpBinary for CadMutation {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::cad::mutations::tests::every_mutation;
+    use crate::mutations::tests::every_mutation;
 
     /// ⚖️ The pinned pre-migration byte fixture retired with the generic `Patch*`/`Set*` variants
     /// it exercised (SEMANTIC-MUTATIONS-OVERHAUL, 26/08/12): the wire format legitimately changed —

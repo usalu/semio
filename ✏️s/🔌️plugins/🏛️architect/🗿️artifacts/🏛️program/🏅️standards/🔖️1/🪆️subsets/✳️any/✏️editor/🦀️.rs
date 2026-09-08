@@ -7,8 +7,8 @@
 //! pure derived reads over the document live in the artifact's own `🧬️schema` / `🧬️schema/💡️inferences`
 //! (see `//#region 🔧️Behavior` below for the app-scoped, `&mut`-taking counterpart).
 
-use crate::artifacts::program::op::ProgramMutation;
-use crate::artifacts::program::{sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
+use crate::op::ProgramMutation;
+use crate::{sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 use crate::editor::architect::catalog::{analysis_kind_picker_options, parse_entity_id, parse_entity_id_from_args, parse_register_id, report_kind_picker_options, REGISTER_IDS};
 use crate::editor::architect::commands::adjacency::{set_adjacency_field, set_adjacency_filter, set_adjacency_kind};
 use crate::editor::architect::commands::analysis::{run_analysis, run_report, run_validation};
@@ -152,15 +152,15 @@ pub fn reset_document_effect(document: &ProgramSnapshot) -> semio_framework_plug
 /// invent a new state machine: every item below is a plain function/struct, unchanged in shape from
 /// its former engine-topic file, just relocated.
 pub mod behavior {
-    use crate::artifacts::program::kernel::{EntityHeader, EntityId, PluginError, TextField, TraceKind, TraceLink};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::registers::{
+    use crate::kernel::{EntityHeader, EntityId, PluginError, TextField, TraceKind, TraceLink};
+    use crate::op::ProgramMutation;
+    use crate::registers::{
         Activity, Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, Equipment, Function, FunctionKind, Process, ProgramElement, ProgramElementKind, Relationship, RelationshipKind, ReportKind, ReportRecord, Requirement,
         RequirementKind, Risk, RiskLevel, Stakeholder, TemplateRecord, UserCategory, UserProfile, ValidationStatus,
     };
-    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::{build_report, run_analysis, RegisterCsvRow};
-    use crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair;
-    use crate::artifacts::program::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::inferences::{build_report, run_analysis, RegisterCsvRow};
+    use crate::standards::v1::subsets::any::schema::normalize_pair;
+    use crate::ProgramSnapshot;
     use semio_s_artifact_stdio_csv as stdio_csv;
     use semio_s_artifact_stdio_tsv as stdio_tsv;
     use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_engine;
@@ -171,7 +171,7 @@ pub mod behavior {
     /// 🔀 Absolute path to the `🧬️mutations` facet's per-register leaves, kept as one alias so the
     /// semantic-mutations-overhaul rename (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL`)
     /// only needs updating here if `🦀️.rs`'s directory wiring ever changes.
-    use crate::artifacts::program::schema::mutations as leaves;
+    use crate::schema::mutations as leaves;
 
     //#region ↔️AdjacencyMutations
     /// ➕️ Upserts an adjacency row with normalized endpoints; replaces same pair if present.
@@ -224,9 +224,9 @@ pub mod behavior {
                         department: None,
                         contact_email: None,
                         contact_phone: None,
-                        influence: crate::artifacts::program::registers::InfluenceLevel::Medium,
-                        interest: crate::artifacts::program::registers::InfluenceLevel::Medium,
-                        engagement: crate::artifacts::program::registers::EngagementLevel::Neutral,
+                        influence: crate::registers::InfluenceLevel::Medium,
+                        interest: crate::registers::InfluenceLevel::Medium,
+                        engagement: crate::registers::EngagementLevel::Neutral,
                         expectations: template.checklists.clone(),
                         concerns: Vec::new(),
                         requirement_ids: Vec::new(),
@@ -286,7 +286,7 @@ pub mod behavior {
                         frequency: None,
                         duration: None,
                         intensity: None,
-                        participants: crate::artifacts::program::kernel::QuantitySpec::default(),
+                        participants: crate::kernel::QuantitySpec::default(),
                         equipment_ids: Vec::new(),
                         space_requirements: Vec::new(),
                         environmental_needs: Vec::new(),
@@ -315,11 +315,11 @@ pub mod behavior {
                         code: "FN".into(),
                         kind: FunctionKind::Primary,
                         purpose: TextField::plain(template.standards.join(", ")),
-                        criticality: crate::artifacts::program::kernel::Priority::Preferred,
+                        criticality: crate::kernel::Priority::Preferred,
                         performance_targets: Vec::new(),
                         service_level: None,
                         operating_hours: None,
-                        staffing: crate::artifacts::program::kernel::QuantitySpec::default(),
+                        staffing: crate::kernel::QuantitySpec::default(),
                         equipment_ids: Vec::new(),
                         resource_ids: Vec::new(),
                         activity_ids: Vec::new(),
@@ -345,10 +345,10 @@ pub mod behavior {
                         kind: ProgramElementKind::Room,
                         parent_id: None,
                         level: None,
-                        area: crate::artifacts::program::kernel::QuantitySpec::default(),
-                        volume: crate::artifacts::program::kernel::QuantitySpec::default(),
-                        height: crate::artifacts::program::kernel::QuantitySpec::default(),
-                        occupancy: crate::artifacts::program::kernel::QuantitySpec::default(),
+                        area: crate::kernel::QuantitySpec::default(),
+                        volume: crate::kernel::QuantitySpec::default(),
+                        height: crate::kernel::QuantitySpec::default(),
+                        occupancy: crate::kernel::QuantitySpec::default(),
                         function_ids: Vec::new(),
                         activity_ids: Vec::new(),
                         user_profile_ids: Vec::new(),
@@ -461,7 +461,7 @@ pub mod behavior {
                         category: template.sector.clone().unwrap_or_else(|| "general".into()),
                         manufacturer: None,
                         model: None,
-                        quantity: crate::artifacts::program::kernel::QuantitySpec::default(),
+                        quantity: crate::kernel::QuantitySpec::default(),
                         dimensions: None,
                         weight_kg: None,
                         power_kw: None,
@@ -526,7 +526,7 @@ pub mod behavior {
 
     //#region 📄️ReportRecord
     /// 📝️ Builds a report and appends a `ReportRecord` to the program.
-    pub fn build_report_and_record(program: &mut ProgramSnapshot, kind: ReportKind) -> crate::artifacts::program::standards::v1::subsets::any::schema::inferences::ProgramReport {
+    pub fn build_report_and_record(program: &mut ProgramSnapshot, kind: ReportKind) -> crate::standards::v1::subsets::any::schema::inferences::ProgramReport {
         let report = build_report(program, kind);
         let record = ReportRecord {
             header: EntityHeader::new(EntityId::new_serial("report", "report"), report.title.clone()),
@@ -556,7 +556,7 @@ pub mod behavior {
 
     //#region 🔬️AnalysisRecord
     /// 📝️ Runs analysis and appends an `AnalysisRecord` to the program.
-    pub fn run_analysis_and_record(program: &mut ProgramSnapshot, kind: AnalysisKind) -> crate::artifacts::program::standards::v1::subsets::any::schema::inferences::AnalysisResult {
+    pub fn run_analysis_and_record(program: &mut ProgramSnapshot, kind: AnalysisKind) -> crate::standards::v1::subsets::any::schema::inferences::AnalysisResult {
         let result = run_analysis(program, kind);
         let record = AnalysisRecord {
             header: EntityHeader::new(EntityId::new_serial("analysis", "analysis"), result.title.clone()),
@@ -714,10 +714,10 @@ pub mod behavior {
             kind: ProgramElementKind::Room,
             parent_id: None,
             level: None,
-            area: crate::artifacts::program::kernel::QuantitySpec::default(),
-            volume: crate::artifacts::program::kernel::QuantitySpec::default(),
-            height: crate::artifacts::program::kernel::QuantitySpec::default(),
-            occupancy: crate::artifacts::program::kernel::QuantitySpec::default(),
+            area: crate::kernel::QuantitySpec::default(),
+            volume: crate::kernel::QuantitySpec::default(),
+            height: crate::kernel::QuantitySpec::default(),
+            occupancy: crate::kernel::QuantitySpec::default(),
             function_ids: Vec::new(),
             activity_ids: Vec::new(),
             user_profile_ids: Vec::new(),
@@ -750,9 +750,9 @@ pub mod behavior {
             department: None,
             contact_email: None,
             contact_phone: None,
-            influence: crate::artifacts::program::registers::InfluenceLevel::Medium,
-            interest: crate::artifacts::program::registers::InfluenceLevel::Medium,
-            engagement: crate::artifacts::program::registers::EngagementLevel::Neutral,
+            influence: crate::registers::InfluenceLevel::Medium,
+            interest: crate::registers::InfluenceLevel::Medium,
+            engagement: crate::registers::EngagementLevel::Neutral,
             expectations: Vec::new(),
             concerns: Vec::new(),
             requirement_ids: Vec::new(),
@@ -820,7 +820,7 @@ pub mod behavior {
             rationale: None,
             constraints: Vec::new(),
             conditions: Vec::new(),
-            relationship_priority: crate::artifacts::program::kernel::Priority::Preferred,
+            relationship_priority: crate::kernel::Priority::Preferred,
             valid_from: None,
             valid_until: None,
             evidence: Vec::new(),
@@ -982,12 +982,12 @@ pub mod behavior {
     //#region 🧪️BehaviorTests
     mod tests {
         use super::*;
-        use crate::artifacts::program::sample_plugin;
-        use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::{export_registers_csv, export_registers_tsv};
+        use crate::sample_plugin;
+        use crate::standards::v1::subsets::any::schema::inferences::{export_registers_csv, export_registers_tsv};
 
         #[semio_framework_async_macros::async_test]
         async fn apply_template_returns_plugin_operations() {
-            let mut program = crate::artifacts::program::empty_plugin();
+            let mut program = crate::empty_plugin();
             let template = TemplateRecord {
                 header: EntityHeader::new(EntityId::new_serial("template", "Clinic Starter"), "Clinic Starter"),
                 template_type: "sector".into(),
@@ -1019,7 +1019,7 @@ pub mod behavior {
 
         #[semio_framework_async_macros::async_test]
         async fn template_ops_replay_on_empty_plugin() {
-            let mut source = crate::artifacts::program::empty_plugin();
+            let mut source = crate::empty_plugin();
             let template = TemplateRecord {
                 header: EntityHeader::new(EntityId::new_serial("template", "Replay"), "Replay"),
                 template_type: "sector".into(),
@@ -1043,7 +1043,7 @@ pub mod behavior {
                 source_organization: None,
             };
             let operations = apply_template(&mut source, &template);
-            let mut target = crate::artifacts::program::empty_plugin();
+            let mut target = crate::empty_plugin();
             for operation in &operations {
                 use protocol::{Mutation, MutationDiff};
                 target = operation.diff(&target).diff().apply(&target).expect("template operation applies");
@@ -1071,7 +1071,7 @@ pub mod behavior {
         async fn csv_round_trip_preserves_element_names() {
             let program = sample_plugin();
             let csv = export_registers_csv(&program).expect("csv export");
-            let mut reloaded = crate::artifacts::program::empty_plugin();
+            let mut reloaded = crate::empty_plugin();
             import_registers_csv(&mut reloaded, &csv, MergeStrategy::Upsert).expect("csv import");
             assert_eq!(reloaded.elements.len(), program.elements.len());
         }
@@ -1088,7 +1088,7 @@ pub mod behavior {
         #[semio_framework_async_macros::async_test]
         async fn duplicate_import_is_rejected() {
             let csv = "register,id,name,status,priority,tags,source\nelements,e1,A,Draft,Preferred,,\nelements,e1,B,Draft,Preferred,,\n";
-            let mut program = crate::artifacts::program::empty_plugin();
+            let mut program = crate::empty_plugin();
             assert!(import_registers_csv(&mut program, csv, MergeStrategy::Upsert).is_err());
         }
 
@@ -1096,7 +1096,7 @@ pub mod behavior {
         async fn tsv_round_trip_preserves_element_names() {
             let program = sample_plugin();
             let tsv = export_registers_tsv(&program).expect("tsv export");
-            let mut reloaded = crate::artifacts::program::empty_plugin();
+            let mut reloaded = crate::empty_plugin();
             import_registers_tsv(&mut reloaded, &tsv, MergeStrategy::Upsert).expect("tsv import");
             assert_eq!(reloaded.elements.len(), program.elements.len());
         }
@@ -1184,10 +1184,10 @@ impl ArtifactEditor for ArchitectPlayApp {
 
     type Command = ArchitectCommand;
 
-    const DIALECT: Dialect = crate::artifacts::program::ARCHITECT_DIALECT;
+    const DIALECT: Dialect = crate::ARCHITECT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::architect::config::schema::app_schema_descriptor())
     }
 
@@ -1289,7 +1289,7 @@ impl ArtifactEditor for ArchitectPlayApp {
 
 //#region 🔖️Manifest
 pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::program::ARCHITECT_DIALECT)
+    Editor::builder(crate::ARCHITECT_DIALECT)
             .document(["semio", "architect"])
             .icon_id("architect")
             .mode_def(edit_mode::definition())
@@ -1493,8 +1493,8 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::registers::{AdjacencyKind, AnalysisKind};
-    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::export_registers_csv;
+    use crate::registers::{AdjacencyKind, AnalysisKind};
+    use crate::standards::v1::subsets::any::schema::inferences::export_registers_csv;
     use crate::editor::architect::catalog::{analysis_kind_from_str, register_entities};
     use crate::editor::architect::testkit;
     use semio_framework_plugin::PluginApp;

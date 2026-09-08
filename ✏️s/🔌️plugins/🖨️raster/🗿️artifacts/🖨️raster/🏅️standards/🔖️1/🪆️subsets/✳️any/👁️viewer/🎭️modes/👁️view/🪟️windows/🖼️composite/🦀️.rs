@@ -5,7 +5,7 @@
 //! that edit and emits no mutations by construction (`ViewEmit`). Uses the frozen `ImageWindowKit`
 //! (contract §2.6) as raster's right base — this artifact IS a pixel image.
 
-use crate::artifacts::raster::RasterSnapshot;
+use crate::RasterSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, UiAssemblyResult};
 
@@ -47,10 +47,10 @@ pub fn composited_image_view(document: &RasterSnapshot) -> ImageView {
 /// editor's own `raster_composite_media` fidelity exactly (same three-step bridge), just returning the
 /// framework's `ImageView` view-model instead of a `Media` payload.
 fn composite_document_to_png(document: &RasterSnapshot) -> Option<ImageView> {
-    let (svg, width, height) = crate::artifacts::raster::io::raster_document_json_to_svg(document).ok()?;
+    let (svg, width, height) = crate::io::raster_document_json_to_svg(document).ok()?;
     let rendered_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).ok()?;
     let raw_bytes = base64_codec::base64_standard_decode(rendered_base64.as_bytes()).ok()?;
-    let canonical = crate::artifacts::raster::io::canonicalize_png_bytes(&raw_bytes).ok()?;
+    let canonical = crate::io::canonicalize_png_bytes(&raw_bytes).ok()?;
     let base64_string = base64_codec::base64_standard_encode(canonical);
     Some(ImageView { width, height, mime: "image/png".into(), base64: base64_string })
 }
@@ -70,7 +70,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::artifacts::raster::schema::empty_raster_document();
+        let document = crate::schema::empty_raster_document();
         let _node = render(&document).expect("bounded fixture");
     }
 }

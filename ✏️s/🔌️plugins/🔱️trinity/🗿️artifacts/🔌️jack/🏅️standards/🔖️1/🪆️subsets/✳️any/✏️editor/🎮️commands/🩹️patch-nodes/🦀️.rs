@@ -1,8 +1,8 @@
 //! 🗺️ 🗺️ Trinity Jack app command — `patch-nodes`.
 
-use crate::artifacts::jack::mutations::rename_node;
-use crate::artifacts::jack::op::TrinityGraphMutation;
-use crate::artifacts::jack::JackSnapshot;
+use crate::mutations::rename_node;
+use crate::op::TrinityGraphMutation;
+use crate::JackSnapshot;
 use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::Emit;
 

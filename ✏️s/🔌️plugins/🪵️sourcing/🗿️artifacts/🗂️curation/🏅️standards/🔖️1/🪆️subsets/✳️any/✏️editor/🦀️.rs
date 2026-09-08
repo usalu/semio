@@ -6,8 +6,8 @@
 //! compute in the artifact's `🧬️schema`. This file is a routing table: `handle` → `SourcingCurationCommand::
 //! dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::artifacts::curation::op::SourcingMutation;
-use crate::artifacts::curation::{CurationSnapshot, CuratedItem, ObjectKindExtra, SOURCING_CURATION_SCHEMA};
+use crate::op::SourcingMutation;
+use crate::{CurationSnapshot, CuratedItem, ObjectKindExtra, SOURCING_CURATION_SCHEMA};
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
 use crate::editor::sourcing::modes::edit;
 use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview};
@@ -31,7 +31,7 @@ use store::EngineHandles;
 /// plus the extra `catalog:out` output port: this app's `stock` (its `"catalogue.kinds"`-shaped rows)
 /// mapped into the SAME `kit.catalog` JSON shape `block_3d::puzzle3d_catalog_fragment` produces, so
 /// `s/plugin/puzzle`'s `kit:in` importer can consume either producer identically without knowing which
-/// one it came from (see `crate::artifacts::curation::schema::inferences::sourcing_catalog_fragment`).
+/// one it came from (see `crate::schema::inferences::sourcing_catalog_fragment`).
 pub fn sourcing_curation_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
         document_schema: SOURCING_CURATION_SCHEMA.into(),
@@ -838,7 +838,7 @@ impl ArtifactEditor for SourcingCurationApp {
         Some(std::sync::Arc::new(SourcingCurationConfigPreparationFactory))
     }
 
-    const DIALECT: Dialect = crate::artifacts::curation::SOURCING_DIALECT;
+    const DIALECT: Dialect = crate::SOURCING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -898,19 +898,19 @@ impl ArtifactEditor for SourcingCurationApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::sourcing::config::schema::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> CurationSnapshot {
-        crate::artifacts::curation::schema::default_document()
+        crate::schema::default_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(sourcing_curation_io())
     }
 
-    /// 🎞️ `catalog:out` (see `crate::artifacts::curation::schema::inferences::sourcing_catalog_fragment`)
+    /// 🎞️ `catalog:out` (see `crate::schema::inferences::sourcing_catalog_fragment`)
     /// plus the inherited `document:out` default (the pack of `doc.snapshot`, replicated inline —
     /// overriding `export_media` shadows the trait's provided body for every port on this app, not just
     /// the new one).
@@ -918,7 +918,7 @@ impl ArtifactEditor for SourcingCurationApp {
         match port {
             "catalog:out" => Ok(Media {
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-                payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: dsl::json::to_json_string(&crate::artifacts::curation::schema::inferences::sourcing_catalog_fragment(doc.snapshot)) },
+                payload: MediaPayload::Structured { schema: "kit.catalog".into(), json: dsl::json::to_json_string(&crate::schema::inferences::sourcing_catalog_fragment(doc.snapshot)) },
             }),
             "document:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
@@ -1036,7 +1036,7 @@ fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefin
 /// `📚️examples` facet, just no longer wired into the manifest's `examples` list. See
 /// `📓️w2-cad-report.md`'s "SDK gaps found" #4 for the same gap hit by the pilot packet.
 pub fn create_sourcing_curation_app() -> AppDefinition {
-    Editor::builder(crate::artifacts::curation::SOURCING_DIALECT)
+    Editor::builder(crate::SOURCING_DIALECT)
             .command({
                 let mut definition = CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) };
                 definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
@@ -1044,7 +1044,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             })
             .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
             .document(["semio", "sourcing", "curation"])
-            .artifact_kind(crate::artifacts::curation::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             .artifact_kind(ArtifactKindSpec {
                 id: "catalogue.kinds".into(),
                 name: "Kind Catalogue".into(),
@@ -1244,7 +1244,7 @@ mod tests {
     //#region 🧪️RetainedConfigOracle
     #[semio_framework_async_macros::async_test]
     async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners() {
-        let oracle: Vec<crate::artifacts::curation::ObjectKind> = dsl::json::from_json_str(include_str!("../📚️examples/🎬️demo/📦️expected-stock.json")).unwrap();
+        let oracle: Vec<crate::ObjectKind> = dsl::json::from_json_str(include_str!("../📚️examples/🎬️demo/📦️expected-stock.json")).unwrap();
         for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
             let mut app = new_app().await;
             app.bind_instance_id(7).await;
@@ -1274,7 +1274,7 @@ mod tests {
             }
             assert!(terminal);
             let document = document.expect("retained example document effect");
-            let stock = crate::artifacts::curation::stock_of(&document);
+            let stock = crate::stock_of(&document);
             if example_id == DEMO_STOCK_EXAMPLE_ID { assert_eq!(stock, oracle); } else { assert!(stock.is_empty()); }
             for _ in 0..100_000 {
                 if app.close_terminal_is_empty() { break; }

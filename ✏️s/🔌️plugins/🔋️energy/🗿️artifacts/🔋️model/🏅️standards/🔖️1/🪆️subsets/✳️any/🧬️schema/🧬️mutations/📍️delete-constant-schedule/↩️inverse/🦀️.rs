@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `DeleteConstantSchedule` — always computed from BASE, never by inverting the delta.
 
-use crate::artifacts::model::mutations as vocabulary;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::mutations as vocabulary;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.

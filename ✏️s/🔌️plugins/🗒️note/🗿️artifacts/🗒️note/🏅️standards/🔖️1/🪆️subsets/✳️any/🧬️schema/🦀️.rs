@@ -1,6 +1,6 @@
 //! 🧬️ Note artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -64,14 +64,14 @@ pub struct NoteArtifact {
 //#region 🔖️Conversions
 impl Default for NoteArtifact {
     fn default() -> Self {
-        Self::from_snapshot(crate::artifacts::note::NoteSnapshot::default())
+        Self::from_snapshot(crate::NoteSnapshot::default())
     }
 }
 
 impl NoteArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::note::NoteSnapshot {
-        crate::artifacts::note::NoteSnapshot {
+    pub fn to_snapshot(&self) -> crate::NoteSnapshot {
+        crate::NoteSnapshot {
             schema: self.schema.clone(),
             id: self.id.clone(),
             title: self.title.clone(),
@@ -90,7 +90,7 @@ impl NoteArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::note::NoteSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::NoteSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             id: snapshot.id,
@@ -138,7 +138,7 @@ impl NoteArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::note::NoteSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::NoteSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.title = snapshot.title;
@@ -197,7 +197,7 @@ pub fn note_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#region 🔖️DocumentHelpers
 /// 📄️ The `semio` example document, handcrafted in the `.note` DSL — {@link semio_example_snapshot}/
 /// {@link semio_example_json} are the only ways it should be consumed.
-const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT;
+const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT;
 
 /// 🆔️ Durable identifier cursor owned by one exact app operation or importer child.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
@@ -213,7 +213,7 @@ impl NoteIdOwner {
         Self { scope: scope.into(), next_serial }
     }
 
-    pub fn for_document_child(document: &crate::artifacts::note::NoteSnapshot, child: &str) -> Self {
+    pub fn for_document_child(document: &crate::NoteSnapshot, child: &str) -> Self {
         Self::new(format!("{}-{child}", document.id), document.blocks.len() as u64)
     }
 
@@ -237,8 +237,8 @@ pub fn create_note_id(owner: &mut NoteIdOwner, prefix: &str) -> String {
 /// 📄️ The `semio` example, parsed once from {@link SEMIO_NOTE_EXAMPLE_TEXT} — the source of truth for
 /// every "semio" example call site (`setActiveExample`, tests). Falls back to the empty document if the
 /// fixture ever fails to parse, matching the old JSON fixture's failure behavior.
-pub fn semio_example_snapshot() -> crate::artifacts::note::NoteSnapshot {
-    <crate::artifacts::note::NoteSnapshot as store::ArtifactDsl>::parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).unwrap_or_else(|_| empty_note_snapshot())
+pub fn semio_example_snapshot() -> crate::NoteSnapshot {
+    <crate::NoteSnapshot as store::ArtifactDsl>::parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).unwrap_or_else(|_| empty_note_snapshot())
 }
 
 /// 📄️ JSON re-serialization of {@link semio_example_snapshot}, for the framework-generic call sites that
@@ -248,8 +248,8 @@ pub fn semio_example_json() -> String {
     dsl::os_pack::to_json_string(&semio_example_snapshot())
 }
 
-pub fn empty_note_snapshot() -> crate::artifacts::note::NoteSnapshot {
-    crate::artifacts::note::NoteSnapshot {
+pub fn empty_note_snapshot() -> crate::NoteSnapshot {
+    crate::NoteSnapshot {
         schema: NOTE_DOCUMENT_SCHEMA.into(),
         id: "empty".into(),
         title: None,
@@ -395,7 +395,7 @@ pub fn create_block_by_kind(owner: &mut NoteIdOwner, kind: &str, x: f64, y: f64)
         _ => {
             let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: String::new(), bold: None, italic: None, underline: None, link: None }] }];
             NoteBlockNode::Text {
-                content: crate::artifacts::note::note_text_child_record(&id, &paragraphs),
+                content: crate::note_text_child_record(&id, &paragraphs),
                 id,
                 name: "Text".into(),
                 x,
@@ -434,7 +434,7 @@ pub fn reid_block_tree(owner: &mut NoteIdOwner, block: &mut NoteBlockNode, renam
     // distinct block ids sharing one content-addressed child slot would violate the "a child slot is
     // owned by exactly one parent" invariant composition assumes. Copy the source record's durable
     // paragraphs before the id changes, then remint them under the new id assigned below.
-    let recovered_paragraphs = if let NoteBlockNode::Text { content, .. } = &*block { Some(crate::artifacts::note::note_block_text(content)) } else { None };
+    let recovered_paragraphs = if let NoteBlockNode::Text { content, .. } = &*block { Some(crate::note_block_text(content)) } else { None };
     match block {
         NoteBlockNode::Text { id, name, .. } | NoteBlockNode::Image { id, name, .. } | NoteBlockNode::Table { id, name, .. } | NoteBlockNode::Math { id, name, .. } | NoteBlockNode::Ink { id, name, .. } | NoteBlockNode::Group { id, name, .. } => {
             *id = create_note_id(owner, &kind);
@@ -444,7 +444,7 @@ pub fn reid_block_tree(owner: &mut NoteIdOwner, block: &mut NoteBlockNode, renam
         }
     }
     if let (NoteBlockNode::Text { id, content, .. }, Some(paragraphs)) = (&mut *block, recovered_paragraphs) {
-        *content = crate::artifacts::note::note_text_child_record(id, &paragraphs);
+        *content = crate::note_text_child_record(id, &paragraphs);
     }
     if let NoteBlockNode::Group { children, .. } = block {
         for child in children.iter_mut() {
@@ -547,7 +547,7 @@ pub fn block_bounds(block: &NoteBlockNode) -> (f64, f64, f64, f64) {
     }
 }
 
-pub fn patch_block_field(document: &crate::artifacts::note::NoteSnapshot, block_id: &str, field: &str, value: &Value) -> crate::artifacts::note::NoteSnapshot {
+pub fn patch_block_field(document: &crate::NoteSnapshot, block_id: &str, field: &str, value: &Value) -> crate::NoteSnapshot {
     let Some(block) = find_block(&document.blocks, block_id).cloned() else {
         return document.clone();
     };
@@ -642,7 +642,7 @@ pub fn patch_block_field(document: &crate::artifacts::note::NoteSnapshot, block_
                 let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: text.into(), bold: None, italic: None, underline: None, link: None }] }];
                 let mut updated = block;
                 if let NoteBlockNode::Text { id, content, .. } = &mut updated {
-                    *content = crate::artifacts::note::note_text_child_record(id, &paragraphs);
+                    *content = crate::note_text_child_record(id, &paragraphs);
                 }
                 update_block_in_tree(&mut next.blocks, block_id, updated);
             }
@@ -734,7 +734,7 @@ pub fn patch_block_field(document: &crate::artifacts::note::NoteSnapshot, block_
 /// differed from this in swallowing a failed `apply` into a diagnostics `Vec` instead of erroring)
 /// is retired in favor of the SDK's generic replacement (ticket
 /// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, `📓️recipe-subset.md` §4d/step 6).
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::artifacts::note::NoteSnapshot, crate::artifacts::note::NoteMutation>;
+pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::NoteSnapshot, crate::NoteMutation>;
 //#endregion 🏗️Construction
 
 //#region 🧪️Tests

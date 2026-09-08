@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteLoadCase` — recreates the captured load case from `base`.
 use super::DeleteLoadCase;
-use crate::artifacts::fem3d::mutations::{create_load_case, Fem3dMutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::{create_load_case, Fem3dMutation};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteLoadCase, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

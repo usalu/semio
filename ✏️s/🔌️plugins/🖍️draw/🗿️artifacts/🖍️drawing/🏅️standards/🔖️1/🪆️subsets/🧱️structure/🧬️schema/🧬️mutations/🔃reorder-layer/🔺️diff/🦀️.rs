@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ReorderLayer` — a real handcrafted remove+insert at the new
 //! address, never apply-then-capture.
-use crate::artifacts::drawing::diff::{diff_reorder_layer, DrawingDiff};
-use crate::artifacts::drawing::schema::{find_drawing_layer, find_drawing_layer_location};
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::diff::{diff_reorder_layer, DrawingDiff};
+use crate::schema::{find_drawing_layer, find_drawing_layer_location};
+use crate::DrawingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ReorderLayer, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {

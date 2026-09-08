@@ -8,9 +8,9 @@
 //! arm of the diff builder's five-way match — and a deliberately NON-square target, so a builder
 //! that silently swapped the two extents could not pass.
 
-use crate::artifacts::raster::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
-use crate::artifacts::raster::schema::find_layer;
-use crate::artifacts::raster::{RasterDiff, RasterLayerNode, RasterSnapshot};
+use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::schema::find_layer;
+use crate::{RasterDiff, RasterLayerNode, RasterSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

@@ -7,8 +7,8 @@
 //! pure helpers over the document schema (no app/AppIo/wasm_bindgen dependency) belong beside the
 //! rest of the artifact's schema, not behind an engine facade.
 
-use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::next_id;
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::next_id;
+use crate::{Puzzle5dFastener, Puzzle5dPart, Puzzle5dSnapshot};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️GripRefs
@@ -137,7 +137,7 @@ pub fn find_replaceable_kinds(projection: &Puzzle5dSnapshot, part_id: &str) -> V
     let Some(part) = projection.parts.iter().find(|part| part.id == part_id) else {
         return Vec::new();
     };
-    let Some(catalogs) = crate::artifacts::puzzle5d::kind_catalogs_of(&projection.kind_catalogs, &projection.kind_catalogs_extra) else {
+    let Some(catalogs) = crate::kind_catalogs_of(&projection.kind_catalogs, &projection.kind_catalogs_extra) else {
         return Vec::new();
     };
     let grip_kinds: HashSet<&str> = part.grips.iter().filter_map(|grip| grip.grip_kind.as_deref()).collect();
@@ -165,7 +165,7 @@ pub fn find_replaceable_kinds(projection: &Puzzle5dSnapshot, part_id: &str) -> V
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle5d::{Puzzle5dCatalogPartKind, Puzzle5dCompatSpecificity, Puzzle5dGrip, Puzzle5dGripTemplate, Puzzle5dKindCatalogs, Puzzle5dKindCompatibility, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
+    use crate::{Puzzle5dCatalogPartKind, Puzzle5dCompatSpecificity, Puzzle5dGrip, Puzzle5dGripTemplate, Puzzle5dKindCatalogs, Puzzle5dKindCompatibility, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor};
 
     fn part_at(id: &str, x: f64, y: f64) -> Puzzle5dPart {
         Puzzle5dPart {
@@ -249,7 +249,7 @@ mod tests {
         let mut projection = three_part_projection();
         projection.parts[0].part_kind = Some("kind-a".into());
         projection.kind_compatibility.push(Puzzle5dKindCompatibility { source: "k".into(), target: "k2".into(), bidirectional: false, important: false, specificity: Puzzle5dCompatSpecificity::General });
-        let (kind_catalogs, kind_catalogs_extra) = crate::artifacts::puzzle5d::split_and_seed_kind_catalogs(Some(Puzzle5dKindCatalogs {
+        let (kind_catalogs, kind_catalogs_extra) = crate::split_and_seed_kind_catalogs(Some(Puzzle5dKindCatalogs {
             parts: vec![
                 Puzzle5dCatalogPartKind { id: "kind-a".into(), name: "A".into(), label: "A".into(), grips: vec![], ..Default::default() },
                 Puzzle5dCatalogPartKind { id: "kind-b".into(), name: "B".into(), label: "B".into(), grips: vec![Puzzle5dGripTemplate { grip_kind: Some("k2".into()), ..Default::default() }], ..Default::default() },

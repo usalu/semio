@@ -1,7 +1,7 @@
 //! 💡️ Scene-window option — the sun intensity slider.
 //! Its command handler lives in `🎮️commands/☀️scene::set_sun_intensity`.
 
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::ShootingSnapshot;
 use crate::editor::shooting::terminology::ShootingLabels;
 use semio_framework_plugin::WindowMeasure;
 
@@ -33,7 +33,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn sun_intensity_measure_matches_the_fixture_default() {
-        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
+        let snapshot = crate::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {
             WindowMeasure::Slider { value, .. } => assert_eq!(value, 2.4),

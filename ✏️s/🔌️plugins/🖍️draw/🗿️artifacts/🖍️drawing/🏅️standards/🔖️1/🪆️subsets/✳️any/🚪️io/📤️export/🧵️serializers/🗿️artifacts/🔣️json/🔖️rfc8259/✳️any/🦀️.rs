@@ -3,7 +3,7 @@
 //! `JsonSnapshot.value` is stdio's own lexeme-preserving `JsonValue` model. `IoFidelity::Exact`.
 //! Goes through `dsl::ToValue`/`dsl::json::from_dsl_value` — no `serde_json` anywhere in this file.
 
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::DrawingSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

@@ -1,8 +1,8 @@
 //! 📍 Puzzle2d mutation — `MoveNode`: absolute reposition of a node's anchor point.
 
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::Puzzle2dDiff;
+use crate::mutations::Puzzle2dMutation;
+use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// 📍 `move-node` payload — absolute FINAL-state position.

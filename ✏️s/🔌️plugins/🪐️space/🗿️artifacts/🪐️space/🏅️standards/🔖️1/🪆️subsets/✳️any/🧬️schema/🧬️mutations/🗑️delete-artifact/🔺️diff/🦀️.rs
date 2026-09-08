@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `DeleteArtifact` — a real filtered removal.
-use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDiff;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteArtifact, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {

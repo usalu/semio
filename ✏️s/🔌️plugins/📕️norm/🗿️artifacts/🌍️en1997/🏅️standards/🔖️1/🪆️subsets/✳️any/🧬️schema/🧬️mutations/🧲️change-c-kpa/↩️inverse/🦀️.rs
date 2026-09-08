@@ -1,9 +1,9 @@
 //! ↩️ `change-c-kpa` inverse — restores the pre-change `c_kpa` from BASE state; `change` is its own
 //! inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::en1997::mutations::change_c_kpa::ChangeCKpa;
-use crate::artifacts::en1997::mutations::En1997Mutation;
-use crate::artifacts::en1997::En1997Snapshot;
+use crate::mutations::change_c_kpa::ChangeCKpa;
+use crate::mutations::En1997Mutation;
+use crate::En1997Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeCKpa, base: &En1997Snapshot) -> Vec<En1997Mutation> {

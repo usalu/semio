@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/rename-document.json",
+  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/rename-document/schema.json",
   "title": "RenameDocument",
   "type": "object",
   "additionalProperties": false,

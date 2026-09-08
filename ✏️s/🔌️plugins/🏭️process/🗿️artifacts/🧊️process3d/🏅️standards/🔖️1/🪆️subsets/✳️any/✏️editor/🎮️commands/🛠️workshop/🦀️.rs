@@ -1,11 +1,11 @@
 //! 🛠️ Process 3d play app commands — workshop machine lifecycle (add / remove / update).
 
-use crate::artifacts::process3d::mutations::change_machine_icon::ChangeMachineIcon;
-use crate::artifacts::process3d::mutations::create_machine::CreateMachine;
-use crate::artifacts::process3d::mutations::delete_machine::DeleteMachine;
-use crate::artifacts::process3d::mutations::rename_machine::RenameMachine;
-use crate::artifacts::process3d::mutations::replace_machine_capabilities::ReplaceMachineCapabilities;
-use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot, WorkshopMachine};
+use crate::mutations::change_machine_icon::ChangeMachineIcon;
+use crate::mutations::create_machine::CreateMachine;
+use crate::mutations::delete_machine::DeleteMachine;
+use crate::mutations::rename_machine::RenameMachine;
+use crate::mutations::replace_machine_capabilities::ReplaceMachineCapabilities;
+use crate::{op::Process3dMutation, Process3dSnapshot, WorkshopMachine};
 use crate::editor::process3d::catalog_machine;
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

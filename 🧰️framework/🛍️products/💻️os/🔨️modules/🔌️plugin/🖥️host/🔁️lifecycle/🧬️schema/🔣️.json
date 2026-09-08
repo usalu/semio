@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/host/lifecycle/component.json",
+  "title": "Semio OS Plugin Host Lifecycle",
+  "$defs": {
+    "ReactorTurnLifecycleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "code", "maximumFaultBytes", "cases"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "code": { "$ref": "#/$defs/ReactorFaultCode" },
+        "maximumFaultBytes": { "type": "integer", "minimum": 1, "maximum": 16777216 },
+        "cases": {
+          "type": "array",
+          "minItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "code", "retryable", "events", "eligible"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "code": { "$ref": "#/$defs/ReactorFaultCode" },
+              "retryable": { "type": "boolean" },
+              "events": { "type": "array", "items": { "$ref": "#/$defs/ReactorLifecycleEvent" } },
+              "eligible": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "ReactorFaultCode": { "type": "string", "minLength": 1, "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)*$" },
+    "ReactorLifecycleEvent": { "enum": ["open", "close", "ack", "wake", "page"] }
+  }
+}

@@ -1,7 +1,7 @@
 //! 🔢️ Sourcing curation app — the grid window: every filtered stock object laid out on a 3D grid.
 
-use crate::artifacts::curation::schema::{filtered_stock, grid_placement, grid_scale, instance_json, kind_mesh_json};
-use crate::artifacts::curation::CurationSnapshot;
+use crate::schema::{filtered_stock, grid_placement, grid_scale, instance_json, kind_mesh_json};
+use crate::CurationSnapshot;
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{world3d_default_camera, world3d_selection_json, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
@@ -64,14 +64,14 @@ pub fn render(document: &CurationSnapshot, cfg: &SourcingCurationConfig) -> UiAs
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::curation::Filters;
+    use crate::Filters;
     use crate::editor::sourcing::testkit::{new_app, render as render_body};
 
     /// 🎬️ Asserts through the packed scene, not the node JSON — see the preview window's sibling test
     /// for why `serde_json::to_string(&node)` can no longer carry any id.
     #[semio_framework_async_macros::async_test]
     async fn grid_instance_count_matches_filtered_stock_and_normalizes_scale() {
-        let document = crate::artifacts::curation::schema::default_document();
+        let document = crate::schema::default_document();
         let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
         let node = render(&document, &cfg).expect("bounded grid");
         let semio_framework_plugin::Component::Surface(props) = node.component else { panic!("grid must build a World3d surface") };

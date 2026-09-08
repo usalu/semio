@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutation/set-compression-params.json",
+  "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/mutation/set-compression-params/schema.json",
   "title": "SetCompressionParams",
   "type": "object",
   "additionalProperties": false,

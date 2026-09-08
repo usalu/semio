@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DuplicateStep` — a real copy-from-BASE insert (never a
 //! whole-snapshot capture). Missing source ⇒ empty diff.
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::{diff_replace_content, sequence_working_scene, SequenceSnapshot, SequenceStep};
+use crate::diff::SequenceDiff;
+use crate::{diff_replace_content, sequence_working_scene, SequenceSnapshot, SequenceStep};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DuplicateStep, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {

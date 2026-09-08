@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeReferenceHidden` — recovers the pre-mutation `hidden` from `base`.
 use super::ChangeReferenceHidden;
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangeReferenceHidden, base: &CadSnapshot) -> Vec<CadMutation> {

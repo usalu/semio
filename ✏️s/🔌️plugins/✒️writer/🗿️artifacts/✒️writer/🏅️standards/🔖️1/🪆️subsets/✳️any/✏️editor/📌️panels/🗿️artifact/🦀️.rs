@@ -1,8 +1,8 @@
 //! 📄️ Writer play app panel — the document AST outline tree (nested Content/Outline sub-tabs sharing
 //! one render).
 
-use crate::artifacts::writer::schema::{parse_jack_ast, JackAstNode};
-use crate::artifacts::writer::{writer_text, WriterSnapshot};
+use crate::schema::{parse_jack_ast, JackAstNode};
+use crate::{writer_text, WriterSnapshot};
 use crate::editor::writer::config::WriterConfig;
 use crate::editor::writer::terminology::WriterPlayLabels;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren};
@@ -85,7 +85,7 @@ mod tests {
     async fn renders_document_tree_for_jack() {
         use semio_framework_plugin::PluginApp;
         let mut app = new_app().await;
-        let node = app.render(WRITER_PLAY_BODY_ARTIFACT, Some(&crate::artifacts::writer::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).await.expect("render");
+        let node = app.render(WRITER_PLAY_BODY_ARTIFACT, Some(&crate::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).await.expect("render");
         let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("render JSON");
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("Query"));

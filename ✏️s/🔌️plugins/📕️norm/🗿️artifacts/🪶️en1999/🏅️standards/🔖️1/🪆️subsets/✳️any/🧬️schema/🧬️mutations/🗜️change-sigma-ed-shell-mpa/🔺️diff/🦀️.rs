@@ -1,8 +1,8 @@
 //! 🔺️ `change-sigma-ed-shell-mpa` sparse diff construction — writes only `En1999Diff.sigma_ed_shell_mpa` from the payload.
 
-use crate::artifacts::en1999::diff::En1999Diff;
-use crate::artifacts::en1999::mutations::change_sigma_ed_shell_mpa::ChangeSigmaEdShellMpa;
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::diff::En1999Diff;
+use crate::mutations::change_sigma_ed_shell_mpa::ChangeSigmaEdShellMpa;
+use crate::En1999Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSigmaEdShellMpa, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {

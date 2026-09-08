@@ -1,7 +1,7 @@
 //! ❓️ ❓️ Forms play app commands command — `remove-question`.
 
-use crate::artifacts::forms::schema::locate_question;
-use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
+use crate::schema::locate_question;
+use crate::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -23,7 +23,7 @@ pub fn handle(payload: &RemoveQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _
         return Ok(Emit::default());
     };
     Ok(Emit {
-        artifact_mutations: vec![FormMutation::DeleteBlock(crate::artifacts::forms::mutations::delete_block::mutation::DeleteBlock { step_id: location.step_id, id: payload.question_id.clone() })],
+        artifact_mutations: vec![FormMutation::DeleteBlock(crate::mutations::delete_block::mutation::DeleteBlock { step_id: location.step_id, id: payload.question_id.clone() })],
         config_mutations: reset_try_config_mutations(),
         ..Default::default()
     })

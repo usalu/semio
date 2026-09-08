@@ -1,10 +1,10 @@
 //! 🔺️ Sparse diff builder for `ConnectNodes` — delegates to the schema diff facet's own
 //! `fixtures_after_add_edge` (a real targeted board+wires-fixture rebuild).
 
-use crate::artifacts::wires::diff::{diff_wires_and_board, fixtures_after_add_edge, WiresDiff};
-use crate::artifacts::wires::schema::entity_id;
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::{find_board_edge, find_board_node};
-use crate::artifacts::wires::WiresSnapshot;
+use crate::diff::{diff_wires_and_board, fixtures_after_add_edge, WiresDiff};
+use crate::schema::entity_id;
+use crate::standards::v1::subsets::any::schema::inferences::{find_board_edge, find_board_node};
+use crate::WiresSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ConnectNodes, base: &WiresSnapshot) -> protocol::MutationOutcome<WiresDiff> {
@@ -21,6 +21,6 @@ pub fn diff(payload: &super::ConnectNodes, base: &WiresSnapshot) -> protocol::Mu
         }
     }
     let (wires, board) = fixtures_after_add_edge(base, &payload.edge, &payload.relationship);
-    protocol::MutationOutcome::new(diff_wires_and_board(wires, board))
+    protocol::MutationOutcome::new(diff_wires_and_board(wires, &board))
 }
 //#endregion 🔖️Diff

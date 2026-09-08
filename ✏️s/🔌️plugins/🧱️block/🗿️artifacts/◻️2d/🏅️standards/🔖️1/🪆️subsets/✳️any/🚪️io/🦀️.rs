@@ -31,8 +31,8 @@
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::block2d::standards::v1::subsets::any::schema::Block2dAnalyzer;
-    use crate::artifacts::block2d::Block2dSnapshot;
+    use crate::standards::v1::subsets::any::schema::Block2dAnalyzer;
+    use crate::Block2dSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.block.block2d", standard: StandardId("1"), subset: SubsetId("*") };
@@ -76,9 +76,9 @@ pub use derived_composition::*;
 /// literal `vec![document, op, diff, pack, spr]` order, the same role→slot mapping `🗒️note`'s
 /// `io()` uses.
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::artifacts::block2d::io::export::serializers::artifacts as export;
-    use crate::artifacts::block2d::io::import::deserializers::artifacts as import;
-    use crate::artifacts::block2d::{Block2dMutation, Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D_SCHEMA};
+    use crate::io::export::serializers::artifacts as export;
+    use crate::io::import::deserializers::artifacts as import;
+    use crate::{Block2dMutation, Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D_SCHEMA};
     use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
@@ -107,7 +107,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             .as_slice()
     }
 
-    let langs = crate::artifacts::block2d::pilot_languages();
+    let langs = crate::pilot_languages();
     IoDeclaration {
         native: NativeCodecs {
             snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },
@@ -124,19 +124,19 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::block2d::io::export::serializers::artifacts::json::v_rfc8259::any::json_text;
-    use crate::artifacts::block2d::io::export::serializers::artifacts::obj::v3_0::any::Block2dIntoObj;
-    use crate::artifacts::block2d::io::export::serializers::artifacts::png::v1_2::any::Block2dIntoPng;
-    use crate::artifacts::block2d::io::export::serializers::artifacts::stl::v_ascii::any::Block2dIntoStl;
-    use crate::artifacts::block2d::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
-    use crate::artifacts::block2d::io::export::serializers::artifacts::zip::v2_0::any::Block2dIntoZip;
-    use crate::artifacts::block2d::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
-    use crate::artifacts::block2d::io::import::deserializers::artifacts::obj::v3_0::any::ObjIntoBlock2d;
-    use crate::artifacts::block2d::io::import::deserializers::artifacts::png::v1_2::any::PngIntoBlock2d;
-    use crate::artifacts::block2d::io::import::deserializers::artifacts::stl::v_ascii::any::StlIntoBlock2d;
-    use crate::artifacts::block2d::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
-    use crate::artifacts::block2d::io::import::deserializers::artifacts::zip::v2_0::any::{from_zip_bytes, ZIP_MAGIC};
-    use crate::artifacts::block2d::Block2dSnapshot;
+    use crate::io::export::serializers::artifacts::json::v_rfc8259::any::json_text;
+    use crate::io::export::serializers::artifacts::obj::v3_0::any::Block2dIntoObj;
+    use crate::io::export::serializers::artifacts::png::v1_2::any::Block2dIntoPng;
+    use crate::io::export::serializers::artifacts::stl::v_ascii::any::Block2dIntoStl;
+    use crate::io::export::serializers::artifacts::txt::v_utf_8::any::dsl_text;
+    use crate::io::export::serializers::artifacts::zip::v2_0::any::Block2dIntoZip;
+    use crate::io::import::deserializers::artifacts::json::v_rfc8259::any::from_json_text;
+    use crate::io::import::deserializers::artifacts::obj::v3_0::any::ObjIntoBlock2d;
+    use crate::io::import::deserializers::artifacts::png::v1_2::any::PngIntoBlock2d;
+    use crate::io::import::deserializers::artifacts::stl::v_ascii::any::StlIntoBlock2d;
+    use crate::io::import::deserializers::artifacts::txt::v_utf_8::any::from_dsl_text;
+    use crate::io::import::deserializers::artifacts::zip::v2_0::any::{from_zip_bytes, ZIP_MAGIC};
+    use crate::Block2dSnapshot;
     use semio_framework::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
 

@@ -1,6 +1,6 @@
 //! 🧬️ Fem3d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::fem3d::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use crate::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -68,8 +68,8 @@ impl Default for Fem3dArtifact {
 
 impl Fem3dArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::fem3d::Fem3dSnapshot {
-        crate::artifacts::fem3d::Fem3dSnapshot {
+    pub fn to_snapshot(&self) -> crate::Fem3dSnapshot {
+        crate::Fem3dSnapshot {
             nodes: self.nodes.clone(),
             elements: self.elements.clone(),
             materials: self.materials.clone(),
@@ -83,7 +83,7 @@ impl Fem3dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI/preview fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::fem3d::Fem3dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::Fem3dSnapshot) -> Self {
         Self {
             nodes: snapshot.nodes,
             elements: snapshot.elements,
@@ -99,7 +99,7 @@ impl Fem3dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::fem3d::Fem3dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::Fem3dSnapshot) {
         self.nodes = snapshot.nodes;
         self.elements = snapshot.elements;
         self.materials = snapshot.materials;
@@ -151,7 +151,7 @@ pub fn fem3d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::fem3d::{Fem3dDiff, Fem3dMutation, Fem3dSnapshot};
+    use crate::{Fem3dDiff, Fem3dMutation, Fem3dSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -203,14 +203,14 @@ pub use derived_construction::*;
 
 //#region 🌱️DerivedEmpty
 /// 🌱️ An empty `Fem3dSnapshot` — the app's genesis document and every test fixture's blank baseline.
-pub fn empty_fem3d_snapshot() -> crate::artifacts::fem3d::Fem3dSnapshot {
-    crate::artifacts::fem3d::Fem3dSnapshot::default()
+pub fn empty_fem3d_snapshot() -> crate::Fem3dSnapshot {
+    crate::Fem3dSnapshot::default()
 }
 //#endregion 🌱️DerivedEmpty
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::fem3d::Fem3dSnapshot;
+    use crate::Fem3dSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

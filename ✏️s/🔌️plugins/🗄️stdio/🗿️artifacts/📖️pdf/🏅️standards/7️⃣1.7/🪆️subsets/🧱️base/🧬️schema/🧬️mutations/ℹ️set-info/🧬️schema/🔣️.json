@@ -1,19 +1,87 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-info.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-info/schema.json",
   "title": "SetInfo",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "info"
   ],
   "properties": {
-    "mutation": {
-      "const": "setInfo"
-    },
     "info": {
-      "type": "object"
+      "$ref": "#/$defs/PdfInfo"
+    },
+    "mutation": {
+      "const": "setInfo",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "PdfInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "author": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "subject": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "keywords": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "creator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "producer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     }
   }
 }

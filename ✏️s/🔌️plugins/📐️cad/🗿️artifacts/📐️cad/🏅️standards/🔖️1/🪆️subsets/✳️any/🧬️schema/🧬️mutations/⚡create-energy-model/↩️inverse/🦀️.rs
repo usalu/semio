@@ -3,8 +3,8 @@
 //! bare "delete", since `create-energy-model` may have OVERWRITTEN an existing handle.
 
 use super::CreateEnergyModel;
-use crate::artifacts::cad::mutations::{delete_energy_model, CadMutation};
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::{delete_energy_model, CadMutation};
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &CreateEnergyModel, base: &CadSnapshot) -> Vec<CadMutation> {

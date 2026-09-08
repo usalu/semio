@@ -1,8 +1,8 @@
 //! 🔺️ `change-fire-duration-min` sparse diff construction — writes only `En1995Diff.fire_duration_min` from the payload.
 
-use crate::artifacts::en1995::diff::En1995Diff;
-use crate::artifacts::en1995::mutations::change_fire_duration_min::ChangeFireDurationMin;
-use crate::artifacts::en1995::En1995Snapshot;
+use crate::diff::En1995Diff;
+use crate::mutations::change_fire_duration_min::ChangeFireDurationMin;
+use crate::En1995Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeFireDurationMin, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {

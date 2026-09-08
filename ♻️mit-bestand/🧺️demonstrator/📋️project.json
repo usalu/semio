@@ -42,10 +42,12 @@
     },
     "dev": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "dependsOn": [
+        "activate-dev"
+      ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
-        "command": "bun ./📜️script.ts dev",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve",
         "env": {
           "MIT_BESTAND_DEMONSTRATOR_PORT": "6029",
           "NODE_OPTIONS": "",
@@ -54,17 +56,26 @@
           "NX_TUI": "false",
           "VSCODE_INSPECTOR_OPTIONS": ""
         },
-        "forwardAllArgs": true
-      }
+        "forwardAllArgs": false
+      },
+      "cache": false,
+      "continuous": true,
+      "outputs": []
     },
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "dependsOn": [
+        "prepare-release"
+      ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
-        "command": "bun ./📜️script.ts build",
-        "forwardAllArgs": true
-      }
+        "command": "bun ./🔨️modules/📦️site/📜️script.ts build",
+        "forwardAllArgs": false
+      },
+      "cache": false,
+      "outputs": [
+        "{projectRoot}/dist/site"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -73,6 +84,80 @@
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
+      }
+    },
+    "activate-dev": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "prepare-dev",
+        "@semio-tech/framework-os-dev:activate-generator-react-dev"
+      ],
+      "options": {
+        "cwd": "♻️mit-bestand/🧺️demonstrator",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts activate",
+        "forwardAllArgs": false
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "♻️mit-bestand/🧺️demonstrator",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve",
+        "forwardAllArgs": false
+      },
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
+      "dependsOn": [
+        "activate-dev"
+      ]
+    },
+    "prepare-e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "activate-dev",
+        "workspace:deps-browsers"
+      ],
+      "options": {
+        "cwd": "♻️mit-bestand/🧺️demonstrator",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare-test",
+        "forwardAllArgs": false
+      }
+    },
+    "serve-e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "prepare-e2e"
+      ],
+      "options": {
+        "cwd": "♻️mit-bestand/🧺️demonstrator",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve-test",
+        "forwardAllArgs": false
+      },
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "continuousSharing": false
+        }
+      }
+    },
+    "test-e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "serve-e2e"
+      ],
+      "options": {
+        "cwd": "♻️mit-bestand/🧺️demonstrator",
+        "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test",
+        "forwardAllArgs": false
       }
     }
   }

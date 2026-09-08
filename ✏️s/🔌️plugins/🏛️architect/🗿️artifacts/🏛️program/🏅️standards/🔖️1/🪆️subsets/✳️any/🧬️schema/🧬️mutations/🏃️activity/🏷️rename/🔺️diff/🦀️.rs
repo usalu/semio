@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🏃activities` per Wave C.
 
 use super::RenameActivity;
-use crate::artifacts::program::diff::{ProgramActivitiesDelta, ProgramActivitiesPatchEntry};
-use crate::artifacts::program::registers::ActivityPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramActivitiesDelta, ProgramActivitiesPatchEntry};
+use crate::registers::ActivityPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameActivity, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

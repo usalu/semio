@@ -1,13 +1,13 @@
 //! 🧬️ VCS artifact schema — every field of the artifact with its state class.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️DocumentHelpers
 /// 🌱️ The artifact's empty/default snapshot — used as `VcsPlayApp::initial_snapshot()` and by every
 /// test fixture that needs a base document (was: `⚙️engine::empty_vcs_snapshot()`, dissolved per ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-pub fn empty_vcs_snapshot() -> crate::artifacts::vcs::VcsSnapshot {
-    crate::artifacts::vcs::VcsSnapshot::default()
+pub fn empty_vcs_snapshot() -> crate::VcsSnapshot {
+    crate::VcsSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -43,23 +43,23 @@ pub struct VcsArtifact {
 //#region 🔖️Conversions
 impl Default for VcsArtifact {
     fn default() -> Self {
-        Self { schema: crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA.into(), title: "VCS Demo".into(), counter: 0, notes: String::new(), status: "new".into(), tags: Vec::new(), selected_checkpoint_ids: Vec::new(), locale: "en-US".into() }
+        Self { schema: crate::VCS_DOCUMENT_SCHEMA.into(), title: "VCS Demo".into(), counter: 0, notes: String::new(), status: "new".into(), tags: Vec::new(), selected_checkpoint_ids: Vec::new(), locale: "en-US".into() }
     }
 }
 
 impl VcsArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::vcs::VcsSnapshot {
-        crate::artifacts::vcs::VcsSnapshot { schema: self.schema.clone(), title: self.title.clone(), counter: self.counter, notes: self.notes.clone(), status: self.status.clone(), tags: self.tags.clone() }
+    pub fn to_snapshot(&self) -> crate::VcsSnapshot {
+        crate::VcsSnapshot { schema: self.schema.clone(), title: self.title.clone(), counter: self.counter, notes: self.notes.clone(), status: self.status.clone(), tags: self.tags.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::vcs::VcsSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::VcsSnapshot) -> Self {
         Self { schema: snapshot.schema, title: snapshot.title, counter: snapshot.counter, notes: snapshot.notes, status: snapshot.status, tags: snapshot.tags, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::vcs::VcsSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::VcsSnapshot) {
         self.schema = snapshot.schema;
         self.title = snapshot.title;
         self.counter = snapshot.counter;
@@ -72,31 +72,31 @@ impl VcsArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.vcs.vcs` — twenty handcrafted schema leaves.
-pub fn vcs_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn vcs_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.vcs.vcs",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -112,7 +112,7 @@ pub fn vcs_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 /// (`derived_construction`/`derived_analysis`/`derived_composition`, all confirmed dead —
 /// zero repo-wide references outside this plugin) with the ordinary `Mutation`/`MutationDiff`
 /// algebra this subset needs; all io now goes exclusively through `io::io()` (design.md rule 3).
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::artifacts::vcs::VcsSnapshot, crate::artifacts::vcs::VcsDemoMutation>;
+pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::VcsSnapshot, crate::VcsDemoMutation>;
 //#endregion 🏗️Construction
 
 //#region 🧪️Tests
@@ -123,7 +123,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_matches_schema() {
         let snapshot = empty_vcs_snapshot();
-        assert_eq!(snapshot.schema, crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA);
+        assert_eq!(snapshot.schema, crate::VCS_DOCUMENT_SCHEMA);
         assert_eq!(snapshot.status, "new");
     }
 }

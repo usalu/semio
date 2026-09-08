@@ -1,7 +1,7 @@
 //! ↩️ `scale-object` — undo restores the base-state scale; missing id ⇒ `Vec::new()`.
 
 use super::ScaleObject;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ScaleObject, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

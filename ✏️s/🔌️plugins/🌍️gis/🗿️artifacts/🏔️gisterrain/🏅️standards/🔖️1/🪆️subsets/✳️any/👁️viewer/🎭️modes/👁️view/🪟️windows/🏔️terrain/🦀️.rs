@@ -1,14 +1,14 @@
 //! 🏔️ GIS terrain viewer — the Terrain window: a read-only World3d render of the DEM patch, built
-//! from the same `crate::artifacts::gisterrain::schema::{parse_descriptor, build_terrain_scene_json}`
+//! from the same `crate::schema::{parse_descriptor, build_terrain_scene_json}`
 //! pure snapshot→scene helpers the editor's own Terrain window uses — this file itself imports
 //! nothing from the sibling editor surface (`policyViewerPurityBreaches` forbids it outright). No
 //! exaggeration control, no selection, no camera persistence: a viewer has no utilities that edit and
 //! emits no mutations by construction (`ViewEmit`).
 
-use crate::artifacts::gisterrain::schema::{build_terrain_scene_json, TerrainDescriptorJson};
-use crate::artifacts::gisterrain::standards::v1::subsets::any::schema::inferences::parse_descriptor;
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
-use framework_surface::terrain::projection;
+use crate::schema::{build_terrain_scene_json, TerrainDescriptorJson};
+use crate::standards::v1::subsets::any::schema::inferences::parse_descriptor;
+use crate::GisTerrainSnapshot;
+use semio_framework_surface::terrain::projection;
 use semio_framework_plugin::{scene_surface, World3dScene, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use serde_json::{json, Value};
@@ -93,7 +93,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::artifacts::gisterrain::schema::default_terrain_document();
+        let document = crate::schema::default_terrain_document();
         let _node = render(&document);
     }
 }

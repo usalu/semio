@@ -1,7 +1,7 @@
 //! 🚪️ IO s.norm.en1990 (1/✳️any) — universal semio DSL/pack import+export for the native `s.norm.en1990`
 //! dialect. Registration flows through 🎹️composer::register (called once from ⚙️engine::register).
 
-use crate::artifacts::en1990::En1990Snapshot;
+use crate::En1990Snapshot;
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["s.norm.en1990"]
@@ -13,12 +13,12 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 /// 📖️ Parses `.en1990` DSL bytes into a snapshot.
 pub fn en1990_from_dsl_bytes(bytes: &[u8]) -> Result<En1990Snapshot, store::TextError> {
     let text = std::str::from_utf8(bytes).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))?;
-    crate::artifacts::en1990::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text)
+    crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text)
 }
 
 /// 🖨️ Prints a snapshot to `.en1990` DSL bytes.
 pub fn en1990_to_dsl_bytes(snapshot: &En1990Snapshot) -> Vec<u8> {
-    crate::artifacts::en1990::standards::v1::subsets::any::schema::snapshot::text::print_dsl(snapshot).into_bytes()
+    crate::standards::v1::subsets::any::schema::snapshot::text::print_dsl(snapshot).into_bytes()
 }
 
 /// 📦️ Decodes a semio pack into a snapshot.
@@ -33,8 +33,8 @@ pub fn en1990_to_pack(snapshot: &En1990Snapshot) -> Vec<u8> {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::en1990::standards::v1::subsets::any::schema::En1990Analyzer;
-    use crate::artifacts::en1990::En1990Snapshot;
+    use crate::standards::v1::subsets::any::schema::En1990Analyzer;
+    use crate::En1990Snapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.en1990", standard: StandardId("1"), subset: SubsetId("*") };
@@ -73,7 +73,7 @@ pub use derived_composition::*;
 /// 🚪️ Composer registry (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated
 /// verbatim from the deleted `⚙️engine`; io is exactly where composer dispatch belongs.
 pub mod io_registry {
-    use crate::artifacts::en1990::standards::v1::subsets::any::schema::En1990Composer as En1990AnyComposer;
+    use crate::standards::v1::subsets::any::schema::En1990Composer as En1990AnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -88,10 +88,10 @@ pub mod io_registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::en1990::standards::v1::subsets::any::schema::inferences::En1990Inference;
-    use crate::artifacts::en1990::standards::v1::subsets::any::schema::mutations::change_resistance::ChangeResistance;
-    use crate::artifacts::en1990::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT};
-    use crate::artifacts::en1990::{En1990Mutation, En1990Snapshot};
+    use crate::standards::v1::subsets::any::schema::inferences::En1990Inference;
+    use crate::standards::v1::subsets::any::schema::mutations::change_resistance::ChangeResistance;
+    use crate::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT};
+    use crate::{En1990Mutation, En1990Snapshot};
     use protocol::Inference;
     
     use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetRoundtripSpec};

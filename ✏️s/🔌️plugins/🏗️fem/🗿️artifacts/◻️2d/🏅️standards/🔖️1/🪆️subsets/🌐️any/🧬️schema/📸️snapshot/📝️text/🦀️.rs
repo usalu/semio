@@ -1,6 +1,6 @@
 //! 📜️ FEM 2D artifact — textual document grammar surface + laws (constitutional: dsl).
 
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::Fem2dSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -27,7 +27,7 @@ pub fn print_dsl(document: &Fem2dSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::fem2d::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+    use crate::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 
     // #region 🔖️Fixtures
     fn simply_supported_beam_doc() -> Fem2dSnapshot {

@@ -2,8 +2,8 @@
 //! out-of-range BASE index ⇒ `Vec::new()`.
 
 use super::RemoveLayer;
-use crate::artifacts::din4108::mutations::insert_layer;
-use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
+use crate::mutations::insert_layer;
+use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &RemoveLayer, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {

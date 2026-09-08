@@ -1,8 +1,8 @@
 //! 🗣️ GIS 3D play app command — the host-pushed locale switch (undeclared in the manifest, never in
 //! the command palette; host/test infra dispatches it directly).
 
-use crate::artifacts::gisterrain::op::GisTerrainMutation;
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::op::GisTerrainMutation;
+use crate::GisTerrainSnapshot;
 use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation, SetLocale as SetLocaleMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]

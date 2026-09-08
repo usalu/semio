@@ -2,8 +2,8 @@
 //! previously absent (this mutation upserts, so a fresh sheet's undo is `remove`, not `change`).
 
 use super::ChangeEditionProfile;
-use crate::artifacts::vdi3805::mutations::remove_edition_profile;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::mutations::remove_edition_profile;
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangeEditionProfile, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

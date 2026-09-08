@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/mutation/set-metadata-entry.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/image/mutation/set-metadata-entry/schema.json",
   "title": "SetMetadataEntry",
   "type": "object",
   "additionalProperties": false,

@@ -1,16 +1,24 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/remove-node-property.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/remove-node-property/schema.json",
   "title": "RemoveNodeProperty",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "index",
-    "nodeId"
+    "node_id",
+    "index"
   ],
   "properties": {
-    "nodeId": {
-      "title": "GraphNodeId",
+    "node_id": {
+      "$ref": "#/$defs/GraphNodeId"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "$defs": {
+    "GraphNodeId": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -21,10 +29,6 @@
           "type": "string"
         }
       }
-    },
-    "index": {
-      "type": "integer",
-      "minimum": 0
     }
   }
 }

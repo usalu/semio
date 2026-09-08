@@ -1,8 +1,8 @@
 //! ⚗️ Energy model mutation — `CreatePlantLoop`: Creates one plant loop. ⚠️ `equipment_ids` is the ONE reference this group cannot check: `Model` carries no chiller/boiler/pump collection at all (vocabulary §5.4), so the ids are opaque here — the list is only held to being ascending, free of duplicates and free of the unset id zero. When a plant-equipment collection lands, add a `g3_chk_reference` over it; the hole is recorded in this ticket's `📓️w7-g3-hvac.md` rather than papered over.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

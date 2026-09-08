@@ -4,8 +4,8 @@
 //! severing another record's data: the document never carries a dangling reference and the delete
 //! never destroys what it does not own, which is also what makes `create-stream` its exact inverse.
 //! Missing target ⇒ Error.
-use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingMediaStreamList};
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::{RemodelingDiff, RemodelingMediaStreamList};
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteStream, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

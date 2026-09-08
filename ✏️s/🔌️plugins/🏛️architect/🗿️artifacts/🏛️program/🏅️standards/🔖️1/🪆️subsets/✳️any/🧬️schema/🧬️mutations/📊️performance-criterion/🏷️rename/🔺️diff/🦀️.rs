@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📊performance` per Wave C.
 
 use super::RenamePerformanceCriterion;
-use crate::artifacts::program::diff::{ProgramPerformanceDelta, ProgramPerformancePatchEntry};
-use crate::artifacts::program::registers::PerformanceCriterionPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramPerformanceDelta, ProgramPerformancePatchEntry};
+use crate::registers::PerformanceCriterionPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenamePerformanceCriterion, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

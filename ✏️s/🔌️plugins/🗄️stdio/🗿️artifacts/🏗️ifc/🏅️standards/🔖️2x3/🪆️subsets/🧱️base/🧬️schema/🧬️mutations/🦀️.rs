@@ -301,7 +301,7 @@ mod tests {
     // 🚫️async: E1 pure fixture reader (OnceLock initializer, consumed inside a sync closure) — see R9
     fn exact_fixture_bytes() -> &'static [u8] {
         static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
-        BYTES.get_or_init(|| std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/wellness-center-sama.ifc")).expect("read temp/wellness-center-sama.ifc"))
+        BYTES.get_or_init(|| std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../temp/wellness-center-sama.ifc")).expect("read temp/wellness-center-sama.ifc"))
     }
 
     // 🚫️async: E1 pure fixture reader (OnceLock initializer, consumed inside a sync closure) — see R9

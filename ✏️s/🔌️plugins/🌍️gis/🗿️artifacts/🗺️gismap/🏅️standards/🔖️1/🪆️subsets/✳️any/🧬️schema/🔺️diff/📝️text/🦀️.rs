@@ -1,12 +1,12 @@
-use crate::artifacts::gismap::schema::diff::*;
+use crate::schema::diff::*;
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::gismap::schema::GisMapArtifact;
-use crate::artifacts::gismap::{GisMapSnapshot, MapFeature};
+use crate::schema::GisMapArtifact;
+use crate::{GisMapSnapshot, MapFeature};
 use protocol::{MutationDiff, Patchable};
 
 //#region 🔹Apply
@@ -160,7 +160,7 @@ impl MutationDiff<GisMapSnapshot> for GisMapDiff {
             }
             // 🕸️ Keep `drawing`/`value` a pure function of `(positions, routes, regions)` — mirrors
             // `apply_gis_map_mutation`'s identical re-derivation (see `GisMapSnapshot`'s doc comment).
-            next = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(next);
+            next = crate::gis_map_snapshot_with_derived_children(next);
             next
         })
     }
@@ -216,7 +216,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn a_whole_artifact_diff_wins_over_every_collection_diff() {
         let base = GisMapSnapshot { positions: vec![feature("p1")], ..Default::default() };
-        let replacement = crate::artifacts::gismap::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() });
+        let replacement = crate::gis_map_snapshot_with_derived_children(GisMapSnapshot { routes: vec![feature("r1")], ..Default::default() });
         let mut diff = GisMapDiff { positions: Some(GisMapFeaturesDelta { removed: vec!["p1".into()], ..Default::default() }), ..Default::default() };
         diff.absorb(diff_set_snapshot(&replacement));
         assert_eq!(diff.apply(&base).expect("valid mutation diff"), replacement);

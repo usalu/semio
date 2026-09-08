@@ -2,8 +2,8 @@
 
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 
-use crate::artifacts::home::op::SHomeMutation;
-use crate::artifacts::home::SHomeSnapshot;
+use crate::op::SHomeMutation;
+use crate::SHomeSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
 

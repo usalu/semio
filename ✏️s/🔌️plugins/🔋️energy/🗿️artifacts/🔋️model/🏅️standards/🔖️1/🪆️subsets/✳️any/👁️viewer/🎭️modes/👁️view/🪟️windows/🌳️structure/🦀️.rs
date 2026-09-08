@@ -1,10 +1,10 @@
 //! 🌳️ Energy model viewer — `structure` window: a real, READ-ONLY overview tree of the working
 //! `crate::model::Model` behind the artifact's composed `structure` child, built from the framework
 //! `TreeWindowKit` (contract §2.6). Independent render from the sibling mutation-capable surface — the
-//! same `crate::artifacts::model::energy_model` read, no edit affordances (`window_kind()`, the
+//! same `crate::energy_model` read, no edit affordances (`window_kind()`, the
 //! read-only variant, not the editable one).
 
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::EnergyModelSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 
@@ -24,7 +24,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `EnergyModelSnapshot -> UiNode` read: `name`/`version` plus one leaf per collection on
 /// `crate::model::Model`, each labeled with its live element count — a real overview, no mutation.
 pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let model = crate::artifacts::model::energy_model(document);
+    let model = crate::energy_model(document);
     fn leaf(id: &str, label: String) -> TreeNodeView {
         TreeNodeView { id: id.into(), label, children: Vec::new() }
     }

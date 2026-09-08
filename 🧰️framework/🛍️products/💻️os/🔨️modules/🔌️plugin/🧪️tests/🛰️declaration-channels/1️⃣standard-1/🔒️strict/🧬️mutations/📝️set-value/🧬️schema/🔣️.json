@@ -1,7 +1,8 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.dev/schema/plugin/declarations/std1-strict/set-value",
-  "title": "Std1Strict SetValue payload",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/plugin/tests/declaration-channels/standard-1/strict/mutation/set-value/schema.json",
+  "title": "SetValue",
+  "description": "Std1Strict SetValue payload",
   "type": "object",
   "properties": {
     "value": {
@@ -13,4 +14,3 @@
   ],
   "additionalProperties": false
 }
-

@@ -7,69 +7,67 @@ mod tests {
     //#region 🔖️AppTypes
     // One `use` per registered app kind — aliased where the app's own type is plainly named
     // `Document` (every norm sub-app) to avoid a name collision in this one aggregating module.
-    use block::artifacts::block2d::Block2dSnapshot as Block2dDefinition;
-    use block::artifacts::block3d::Block3dSnapshot as Block3dDefinition;
-    use block::artifacts::block5d::Block5dSnapshot as Block5dDefinition;
-    use cad_document::artifacts::cad::CadSnapshot;
-    use dag_app::artifacts::dag::DagSnapshot;
-    use draw::artifacts::draw::DrawSnapshot as DrawDocument;
-    use fem::artifacts::fem2d::Fem2dSnapshot as Fem2dDocument;
-    use fem::artifacts::fem3d::Fem3dSnapshot as Fem3dDocument;
-    use flow_app::FlowFixture;
-    use norm::artifacts::din16798::Din16798Snapshot as Din16798Document;
-    use norm::artifacts::din18599::Din18599Snapshot as Din18599Document;
-    use norm::artifacts::din4108::Din4108Snapshot as Din4108Document;
-    use norm::artifacts::en1990::En1990Snapshot as En1990Document;
-    use norm::artifacts::en1991::En1991Snapshot as En1991Document;
-    use norm::artifacts::en1992::En1992Snapshot as En1992Document;
-    use norm::artifacts::en1993::En1993Snapshot as En1993Document;
-    use norm::artifacts::en1994::En1994Snapshot as En1994Document;
-    use norm::artifacts::en1995::En1995Snapshot as En1995Document;
-    use norm::artifacts::en1996::En1996Snapshot as En1996Document;
-    use norm::artifacts::en1997::En1997Snapshot as En1997Document;
-    use norm::artifacts::en1998::En1998Snapshot as En1998Document;
-    use norm::artifacts::en1999::En1999Snapshot as En1999Document;
+    use semio_s_artifact_block_2d::Block2dSnapshot as Block2dDefinition;
+    use semio_s_artifact_block_3d::Block3dSnapshot as Block3dDefinition;
+    use semio_s_artifact_block_5d::Block5dSnapshot as Block5dDefinition;
+    use semio_s_artifact_cad_cad::CadSnapshot;
+    use semio_s_artifact_dag_dag::DagSnapshot;
+    use semio_s_artifact_draw_drawing::DrawingSnapshot;
+    use semio_s_artifact_fem_2d::Fem2dSnapshot as Fem2dDocument;
+    use semio_s_artifact_fem_3d::Fem3dSnapshot as Fem3dDocument;
+    use semio_framework_artifact_flow_flow::FlowFixture;
+    use semio_s_artifact_norm_din16798::Din16798Snapshot as Din16798Document;
+    use semio_s_artifact_norm_din18599::Din18599Snapshot as Din18599Document;
+    use semio_s_artifact_norm_din4108::Din4108Snapshot as Din4108Document;
+    use semio_s_artifact_norm_en1990::En1990Snapshot as En1990Document;
+    use semio_s_artifact_norm_en1991::En1991Snapshot as En1991Document;
+    use semio_s_artifact_norm_en1992::En1992Snapshot as En1992Document;
+    use semio_s_artifact_norm_en1993::En1993Snapshot as En1993Document;
+    use semio_s_artifact_norm_en1994::En1994Snapshot as En1994Document;
+    use semio_s_artifact_norm_en1995::En1995Snapshot as En1995Document;
+    use semio_s_artifact_norm_en1996::En1996Snapshot as En1996Document;
+    use semio_s_artifact_norm_en1997::En1997Snapshot as En1997Document;
+    use semio_s_artifact_norm_en1998::En1998Snapshot as En1998Document;
+    use semio_s_artifact_norm_en1999::En1999Snapshot as En1999Document;
     // 🌱️ 26/08/05/FORMS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION: the old `forms` app facade
     // crate is gone (merged into `semio-s-plugin-forms`); `FormSpec` was always a bare `pub use` alias of
     // `playbook::PlaybookSpec` (forms never overrode `#[dsl(extension = ...)]`) so this repoints straight
     // at the real owner of the type — no `lib.rs` ripple beyond this import line (see TEMPLATE.md §8.2).
-    use gis::artifacts::gismap::GisMapSnapshot as GisMapDocument;
-    use gis::artifacts::gisterrain::GisTerrainSnapshot as Gis3dTerrainDocument;
-    use home::artifacts::home::SHomeSnapshot as SHomeDocument;
-    use imperative::artifacts::procedure::ProcedureSnapshot as ImperativeDocument;
-    use layout::artifacts::layout::LayoutSnapshot as LayoutDocument;
-    use lowpoly::artifacts::lowpoly::LowpolySnapshot;
-    use mathematical::artifacts::equation::EquationSnapshot;
-    use norm::artifacts::iso16757::Iso16757Snapshot as Iso16757Document;
-    use norm::artifacts::vdi3805::Vdi3805Snapshot as Vdi3805Document;
-    use note_app::artifacts::note::NoteSnapshot as NoteDocument;
+    use semio_s_artifact_gis_gismap::GisMapSnapshot as GisMapDocument;
+    use semio_s_artifact_gis_gisterrain::GisTerrainSnapshot as Gis3dTerrainDocument;
+    use semio_s_artifact_space_home::SHomeSnapshot as SHomeDocument;
+    use semio_s_artifact_imperative_procedure::ProcedureSnapshot as ImperativeDocument;
+    use semio_s_artifact_layout_layout::LayoutSnapshot as LayoutDocument;
+    use semio_s_artifact_lowpoly_lowpoly::LowpolySnapshot;
+    use semio_s_artifact_mathematical_equation::EquationSnapshot;
+    use semio_s_artifact_norm_iso16757::Iso16757Snapshot as Iso16757Document;
+    use semio_s_artifact_norm_vdi3805::Vdi3805Snapshot as Vdi3805Document;
+    use semio_s_artifact_note_note::NoteSnapshot as NoteDocument;
     // 📖️ `playbook::PlaybookSpec` is the FRAMEWORK kernel's playbook domain type, mounted inside
     // `flow_app` (`🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust`'s glue re-exports
     // `../../../📖️playbook/🦀️.rs` as `flow_app::playbook`) — not a standalone `playbook` crate.
-    use flow_app::playbook::PlaybookSpec as FormSpec;
-    use flow_app::playbook::PlaybookSpec;
-    use presentation::artifacts::presentation::PresentationSnapshot as PresentationDeck;
-    use procedural::artifacts::generation2d::Generation2dSnapshot as Generation2dDocument;
-    use procedural::artifacts::generation3d::Generation3dSnapshot as Generation3dDocument;
-    use process_3d::artifacts::process3d::Process3dSnapshot as Process3dDocument;
-    use puzzle::artifacts::puzzle2d::Puzzle2dSnapshot;
-    use puzzle::artifacts::puzzle3d::Puzzle3dSnapshot;
-    use puzzle::artifacts::puzzle5d::Puzzle5dSnapshot;
-    use raster::artifacts::raster::RasterSnapshot;
-    use reasoning_mindmap_plugin::artifacts::wires::WiresSnapshot as MindmapWiresDocument;
-    use remodel::artifacts::remodel::RemodelSnapshot;
+    use semio_framework_artifact_playbook_playbook::PlaybookSpec as FormSpec;
+    use semio_framework_artifact_playbook_playbook::PlaybookSpec;
+    use semio_s_artifact_animate_presentation::PresentationSnapshot as PresentationDeck;
+    use semio_s_artifact_procedural_generation2d::Generation2dSnapshot as Generation2dDocument;
+    use semio_s_artifact_procedural_generation3d::Generation3dSnapshot as Generation3dDocument;
+    use semio_s_artifact_process_process3d::Process3dSnapshot as Process3dDocument;
+    use semio_s_artifact_puzzle_2d::Puzzle2dSnapshot;
+    use semio_s_artifact_puzzle_3d::Puzzle3dSnapshot;
+    use semio_s_artifact_puzzle_5d::Puzzle5dSnapshot;
+    use semio_s_artifact_raster_raster::RasterSnapshot;
+    use semio_s_artifact_reasoning_wires::WiresSnapshot as MindmapWiresDocument;
+    use semio_s_artifact_remodel_remodeling::RemodelingSnapshot;
     use semio_framework_os::WorkflowSnapshot;
-    use sequence::artifacts::sequence::SequenceFixture;
-    use shooting::artifacts::shooting::ShootingSnapshot as ShootingFixture;
-    use sourcing::artifacts::curation::CurationSnapshot as CurationDocument;
-    // 🪐️ `semio_framework_os::space` (framework OS product, NOT the `space` plugin `home` is
-    // aliased to above) — `SpaceSnapshot`/`CollectionSnapshot` live at
-    // `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🦀️.rs`, mounted by that crate's glue.
-    use semio_framework_os::space::{CollectionSnapshot, SpaceSnapshot};
-    use trinity::artifacts::jack::JackSnapshot as GraphFixture;
-    use trinity::artifacts::rewriting::RewritingSnapshot as RewriteRuleModel;
-    use vcs_app::artifacts::vcs::VcsSnapshot;
-    use writer::artifacts::writer::WriterSnapshot;
+    use semio_s_artifact_sequence_sequence::SequenceFixture;
+    use semio_s_artifact_shooting_shooting::ShootingSnapshot as ShootingFixture;
+    use semio_s_artifact_sourcing_curation::CurationSnapshot as CurationDocument;
+    use semio_framework_artifact_space_collection::CollectionSnapshot;
+    use semio_framework_artifact_space_space::SpaceSnapshot;
+    use semio_s_artifact_trinity_jack::JackSnapshot as GraphFixture;
+    use semio_s_artifact_trinity_rewriting::RewritingSnapshot as RewriteRuleModel;
+    use semio_s_artifact_vcs_vcs::VcsSnapshot;
+    use semio_s_artifact_writer_writer::WriterSnapshot;
     //#endregion 🔖️AppTypes
 
     //#region 🔖️Registry
@@ -113,11 +111,11 @@ mod tests {
             ("din18599", <Din18599Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Din18599Document>),
             ("playbook", <PlaybookSpec as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<PlaybookSpec>),
             ("imperative", <ImperativeDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<ImperativeDocument>),
-            ("remodel", <RemodelSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<RemodelSnapshot>),
+            ("remodel", <RemodelingSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<RemodelingSnapshot>),
             ("rewrite", <RewriteRuleModel as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<RewriteRuleModel>),
             ("trinity_ram", <GraphFixture as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<GraphFixture>),
             ("dag_app", <DagSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<DagSnapshot>),
-            ("draw", <DrawDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<DrawDocument>),
+            ("draw", <DrawingSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<DrawingSnapshot>),
             ("raster", <RasterSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<RasterSnapshot>),
             ("note_app", <NoteDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<NoteDocument>),
             ("puzzle_2d", <Puzzle2dSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle2dSnapshot>),

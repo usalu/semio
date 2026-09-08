@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -20,17 +20,17 @@ pub struct DagConfig {
 /// (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) hands it to `register_document_app` for
 /// registration, mirroring the same construction the framework's closed catalog previously hardcoded
 /// for `s.dag.dag`.
-pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
-    ::schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> ::framework_schema::AppSchemaDescriptor {
+    ::framework_schema::AppSchemaDescriptor {
         id: "s.dag.dag",
-        config: ::schema::FacetLeaves {
+        config: ::framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        presence: ::schema::FacetLeaves {
+        presence: ::framework_schema::FacetLeaves {
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),

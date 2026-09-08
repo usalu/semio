@@ -1,6 +1,6 @@
 //! ↩️ Undo mutation for `replace-widget`: replace back with the widget's prior `base` value.
-use crate::artifacts::flow::schema::mutations::FlowMutation;
-use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
+use crate::schema::mutations::FlowMutation;
+use crate::{flow_working_scene, FlowSnapshot};
 use protocol::Identified;
 
 use super::ReplaceWidget;

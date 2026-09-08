@@ -7,7 +7,7 @@
 //! `store::ArtifactChild<SemioMeshSnapshot>` handle instead of an opaque `mesh_json: String`
 //! (`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`).
 
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

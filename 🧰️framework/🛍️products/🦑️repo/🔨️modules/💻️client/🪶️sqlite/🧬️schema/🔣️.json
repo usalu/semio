@@ -1,0 +1,254 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/client/sqlite/schema.json",
+  "title": "RepoClientSqlitePersistence",
+  "description": "Documents persisted by the repo client's SQLite checkpoint export. The native implementation of this contract is the sibling 🗄️.sql; every table there has exactly one <Table>Row export here. The exported entity set is the one the client materializes in ExportResult (technologies, bundles, folders, files, sections, definitions) rooted in one repo checkpoint.",
+  "$defs": {
+    "RepoRow": {
+      "$comment": "Row of the repo table in 🗄️.sql.",
+      "x-semio-persistence": "local-only",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "summary",
+        "checkpoint"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "checkpoint": {
+          "$comment": "Identifier of the working-tree checkpoint this export was taken from.",
+          "type": "string"
+        }
+      }
+    },
+    "FolderRow": {
+      "$comment": "Row of the folder table in 🗄️.sql.",
+      "x-semio-persistence": "local-only",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "parent_folder_id",
+        "kind",
+        "name",
+        "summary"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "parent_folder_id": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "kind": {
+          "$comment": "0 🗃️organizational, 1 🛅️required — the FolderKind vocabulary of the client.",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "TechnologyRow": {
+      "$comment": "Row of the technology table in 🗄️.sql.",
+      "x-semio-persistence": "local-only",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "folder_id",
+        "kind",
+        "name",
+        "summary"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "folder_id": {
+          "type": "integer"
+        },
+        "kind": {
+          "$comment": "TechnologyKind vocabulary of the client: 👤️user, 🧰️infrastructure, 🔬️research, 🌱️mono.",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "BundleRow": {
+      "$comment": "Row of the bundle table in 🗄️.sql.",
+      "x-semio-persistence": "local-only",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "technology_id",
+        "folder_id",
+        "kind",
+        "name",
+        "summary"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "technology_id": {
+          "type": "integer"
+        },
+        "folder_id": {
+          "type": "integer"
+        },
+        "kind": {
+          "$comment": "BundleKind vocabulary of the client: 📚️library, 🛂️schema, ⌨️binary, 🖱️ui, 📔️example, 🌐️site, 🏪️assets, 🪆️repo.",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "FileRow": {
+      "$comment": "Row of the file table in 🗄️.sql.",
+      "x-semio-persistence": "local-only",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "parent_folder_id",
+        "kind",
+        "name",
+        "summary"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "parent_folder_id": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "kind": {
+          "$comment": "FileKind vocabulary of the client: 💻️code, 🥼️lab, 📜️script, 📃️docs, ⚙️config, 💾️resource, 📋️template, ⚖️license.",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "SectionRow": {
+      "$comment": "Row of the section table in 🗄️.sql.",
+      "x-semio-persistence": "local-only",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "file_id",
+        "name",
+        "summary"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "file_id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "DefinitionRow": {
+      "$comment": "Row of the definition table in 🗄️.sql.",
+      "x-semio-persistence": "local-only",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "section_id",
+        "kind",
+        "name",
+        "summary",
+        "code"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "section_id": {
+          "type": "integer"
+        },
+        "kind": {
+          "$comment": "DefinitionKind vocabulary of the client: 🛠️implementation, ✂️interface, 🪨️constant, 🧪️test.",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

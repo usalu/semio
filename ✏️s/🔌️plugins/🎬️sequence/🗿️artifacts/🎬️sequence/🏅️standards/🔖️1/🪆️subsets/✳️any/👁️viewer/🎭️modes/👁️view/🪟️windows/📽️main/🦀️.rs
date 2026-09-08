@@ -7,7 +7,7 @@
 //! window, this never runs the layered-layout/ghost/selection machinery `SequenceHost` (an editor-only
 //! type) provides, since a viewer never needs to lay anything out interactively.
 
-use crate::artifacts::sequence::{SequenceSnapshot, SequenceStep};
+use crate::{SequenceSnapshot, SequenceStep};
 use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -87,7 +87,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_read_only_scene_for_the_default_document() {
-        let document = neural_engine::ColdOwner::new(crate::artifacts::sequence::default_snapshot());
+        let document = neural_engine::ColdOwner::new(crate::default_snapshot());
         let node = render(&document).expect("viewer graph");
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("semantic graph") };
         let scene: NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed viewer scene");

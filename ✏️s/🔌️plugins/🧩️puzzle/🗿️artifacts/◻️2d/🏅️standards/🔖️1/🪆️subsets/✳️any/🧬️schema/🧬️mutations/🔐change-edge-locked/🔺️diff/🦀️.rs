@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeEdgeLocked` — patches the one addressed edge in place.
-use crate::artifacts::puzzle2d::diff::{Puzzle2dDiff, Puzzle2dEdgePatch, Puzzle2dEdgePatchEntry, Puzzle2dEdgesDelta};
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::{Puzzle2dDiff, Puzzle2dEdgePatch, Puzzle2dEdgePatchEntry, Puzzle2dEdgesDelta};
+use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeEdgeLocked, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {

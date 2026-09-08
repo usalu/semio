@@ -22,7 +22,7 @@
 //! new `io_mechanism` registry (ticket status.md wave W2, not this plugin's boundary) — a real,
 //! documented cross-plugin limitation, not an oversight (see `## openQuestions`).
 
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+use crate::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use semio_framework_plugin::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
@@ -42,8 +42,8 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 pub fn note_document_bounds(document: &NoteSnapshot) -> (u32, u32) {
     let mut max_x = 1024.0_f64;
     let mut max_y = 1024.0_f64;
-    for block in crate::artifacts::note::schema::flatten_blocks(&document.blocks) {
-        if !crate::artifacts::note::schema::block_visible(block) {
+    for block in crate::schema::flatten_blocks(&document.blocks) {
+        if !crate::schema::block_visible(block) {
             continue;
         }
         let (x, y, width, height) = match block {
@@ -140,7 +140,7 @@ fn draw_node_from_note_block(block: &NoteBlockNode, document: &NoteSnapshot, sty
     let transform = note_block_transform(block);
     let inner = match block {
         NoteBlockNode::Text { content, font_size, .. } => {
-            let paragraphs = crate::artifacts::note::note_block_text(content);
+            let paragraphs = crate::note_block_text(content);
             let text = paragraphs.iter().map(|paragraph| paragraph.runs.iter().map(|run| run.text.as_str()).collect::<Vec<_>>().join("")).collect::<Vec<_>>().join("\n");
             DrawNode::Text { value: text, at: SemioPoint2 { x: 0.0, y: *font_size }, style: None }
         }
@@ -176,7 +176,7 @@ pub fn note_document_to_drawing_snapshot(document: &NoteSnapshot) -> SemioDrawin
     let (width, height) = note_document_bounds(document);
     let mut styles = Vec::new();
     let children: Vec<DrawNode> =
-        crate::artifacts::note::schema::flatten_blocks(&document.blocks).into_iter().filter(|block| crate::artifacts::note::schema::block_visible(block)).filter_map(|block| draw_node_from_note_block(block, document, &mut styles)).collect();
+        crate::schema::flatten_blocks(&document.blocks).into_iter().filter(|block| crate::schema::block_visible(block)).filter_map(|block| draw_node_from_note_block(block, document, &mut styles)).collect();
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: DrawCanvas { width: width as f64, height: height as f64, background: None },
@@ -240,7 +240,7 @@ pub fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), St
 /// `text_block_from_dwg` below are real domain mappers over already-typed `DwgGeometry` fields
 /// (not hand-rolled DWG byte manipulation — `semio_framework::dwg_from_bytes` does the actual
 /// byte-level parse), kept as the honest, lossless choice until that bridge exists.
-fn ink_block_from_points(ids: &mut crate::artifacts::note::schema::NoteIdOwner, points: &[[f64; 2]]) -> NoteBlockNode {
+fn ink_block_from_points(ids: &mut crate::schema::NoteIdOwner, points: &[[f64; 2]]) -> NoteBlockNode {
     let mut min_x = f64::INFINITY;
     let mut min_y = f64::INFINITY;
     let mut max_x = f64::NEG_INFINITY;
@@ -253,7 +253,7 @@ fn ink_block_from_points(ids: &mut crate::artifacts::note::schema::NoteIdOwner, 
     }
     let local_points = points.iter().map(|point| [point[0] - min_x, point[1] - min_y]).collect();
     NoteBlockNode::Ink {
-        id: crate::artifacts::note::schema::create_note_id(ids, "dwg-ink"),
+        id: crate::schema::create_note_id(ids, "dwg-ink"),
         name: "Imported Stroke".into(),
         x: min_x,
         y: min_y,
@@ -268,12 +268,12 @@ fn ink_block_from_points(ids: &mut crate::artifacts::note::schema::NoteIdOwner, 
     }
 }
 
-fn text_block_from_dwg(ids: &mut crate::artifacts::note::schema::NoteIdOwner, at: &[f64; 3], height: f64, rotation: f64, content: &str) -> NoteBlockNode {
+fn text_block_from_dwg(ids: &mut crate::schema::NoteIdOwner, at: &[f64; 3], height: f64, rotation: f64, content: &str) -> NoteBlockNode {
     let font_size = if height > 0.0 { height } else { 12.0 };
-    let id = crate::artifacts::note::schema::create_note_id(ids, "dwg-text");
+    let id = crate::schema::create_note_id(ids, "dwg-text");
     let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: content.to_string(), bold: None, italic: None, underline: None, link: None }] }];
     NoteBlockNode::Text {
-        content: crate::artifacts::note::note_text_child_record(&id, &paragraphs),
+        content: crate::note_text_child_record(&id, &paragraphs),
         id,
         name: "Imported Text".into(),
         x: at[0],
@@ -290,9 +290,9 @@ fn text_block_from_dwg(ids: &mut crate::artifacts::note::schema::NoteIdOwner, at
 }
 
 pub fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
-    let mut ids = crate::artifacts::note::schema::NoteIdOwner::new(format!("dwg-import:{}", drawing.entities.len()), 0);
-    let mut document = crate::artifacts::note::schema::empty_note_snapshot();
-    document.id = crate::artifacts::note::schema::create_note_id(&mut ids, "dwg-import");
+    let mut ids = crate::schema::NoteIdOwner::new(format!("dwg-import:{}", drawing.entities.len()), 0);
+    let mut document = crate::schema::empty_note_snapshot();
+    document.id = crate::schema::create_note_id(&mut ids, "dwg-import");
     document.title = Some("Imported Drawing".into());
     for entity in &drawing.entities {
         match &entity.geometry {
@@ -322,7 +322,7 @@ pub fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String
 #[cfg(test)]
 mod media_tests {
     use super::*;
-    use crate::artifacts::note::{NoteImageAsset, NoteTableCell};
+    use crate::{NoteImageAsset, NoteTableCell};
     use semio_s_artifact_stdio_dwg::{DwgColor, DwgEntity, DwgLayer};
 
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
@@ -339,7 +339,7 @@ mod media_tests {
         };
         let value = note_document_json_from_dwg(&drawing).unwrap();
         let document: NoteSnapshot = dsl::os_pack::from_json_str(&value.to_string()).unwrap();
-        assert_eq!(document.schema, crate::artifacts::note::NOTE_DOCUMENT_SCHEMA);
+        assert_eq!(document.schema, crate::NOTE_DOCUMENT_SCHEMA);
         assert_eq!(document.blocks.len(), 2);
         let ink_count = document.blocks.iter().filter(|block| matches!(block, NoteBlockNode::Ink { .. })).count();
         let text_count = document.blocks.iter().filter(|block| matches!(block, NoteBlockNode::Text { .. })).count();
@@ -351,7 +351,7 @@ mod media_tests {
             panic!("expected ink block");
         }
         if let Some(NoteBlockNode::Text { content, .. }) = document.blocks.iter().find(|block| matches!(block, NoteBlockNode::Text { .. })) {
-            let paragraphs = crate::artifacts::note::note_block_text(content);
+            let paragraphs = crate::note_block_text(content);
             assert_eq!(paragraphs[0].runs[0].text, "semio");
         } else {
             panic!("expected text block");
@@ -364,7 +364,7 @@ mod media_tests {
         let drawing = DwgDrawing::default();
         let value = note_document_json_from_dwg(&drawing).unwrap();
         let document: NoteSnapshot = dsl::os_pack::from_json_str(&value.to_string()).unwrap();
-        assert_eq!(document.schema, crate::artifacts::note::NOTE_DOCUMENT_SCHEMA);
+        assert_eq!(document.schema, crate::NOTE_DOCUMENT_SCHEMA);
         assert!(document.blocks.is_empty());
     }
 
@@ -375,9 +375,9 @@ mod media_tests {
     /// `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     #[semio_framework_async_macros::async_test]
     async fn document_to_svg_dispatches_through_semio_drawing_bridge() {
-        let mut document = crate::artifacts::note::schema::empty_note_snapshot();
+        let mut document = crate::schema::empty_note_snapshot();
         document.blocks.push(NoteBlockNode::Text {
-            content: crate::artifacts::note::note_text_child_record("t1", &[NoteTextParagraph { runs: vec![NoteTextRun { text: "hello semio".into(), bold: None, italic: None, underline: None, link: None }] }]),
+            content: crate::note_text_child_record("t1", &[NoteTextParagraph { runs: vec![NoteTextRun { text: "hello semio".into(), bold: None, italic: None, underline: None, link: None }] }]),
             id: "t1".into(),
             name: "Text".into(),
             x: 10.0,
@@ -435,7 +435,7 @@ mod media_tests {
     /// from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     #[semio_framework_async_macros::async_test]
     async fn document_to_svg_embeds_image_asset_bytes_as_data_uri() {
-        let mut document = crate::artifacts::note::schema::empty_note_snapshot();
+        let mut document = crate::schema::empty_note_snapshot();
         document.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,AAECAw==".into(), width: Some(4.0), height: Some(4.0) });
         document.blocks.push(NoteBlockNode::Image { id: "im1".into(), name: "Image".into(), x: 0.0, y: 0.0, width: 4.0, height: 4.0, rotation: 0.0, visible: true, locked: false, image_key: "asset-1".into() });
 
@@ -446,10 +446,10 @@ mod media_tests {
     /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     #[semio_framework_async_macros::async_test]
     async fn note_document_to_drawing_snapshot_flattens_visible_blocks_into_one_layer() {
-        let mut document = crate::artifacts::note::schema::empty_note_snapshot();
-        let mut ids = crate::artifacts::note::schema::NoteIdOwner::new("io-test", 0);
-        document.blocks.push(crate::artifacts::note::schema::create_block_by_kind(&mut ids, "text", 5.0, 6.0));
-        let mut hidden = crate::artifacts::note::schema::create_block_by_kind(&mut ids, "text", 0.0, 0.0);
+        let mut document = crate::schema::empty_note_snapshot();
+        let mut ids = crate::schema::NoteIdOwner::new("io-test", 0);
+        document.blocks.push(crate::schema::create_block_by_kind(&mut ids, "text", 5.0, 6.0));
+        let mut hidden = crate::schema::create_block_by_kind(&mut ids, "text", 0.0, 0.0);
         if let NoteBlockNode::Text { visible, .. } = &mut hidden {
             *visible = false;
         }
@@ -465,10 +465,10 @@ mod media_tests {
 
 //#region 🔖️IoDeclaration
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::artifacts::note::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::artifacts::note::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use crate::artifacts::note::standards::v1::subsets::any::io::{diff, mutations, snapshot};
-    use crate::artifacts::note::{NoteMutation, NoteSnapshot, NOTE_DIALECT, NOTE_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::standards::v1::subsets::any::io::{diff, mutations, snapshot};
+    use crate::{NoteMutation, NoteSnapshot, NOTE_DIALECT, NOTE_DOCUMENT_SCHEMA};
     use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
@@ -586,12 +586,12 @@ mod pdf_page_contract {
             let pdf: PdfSnapshot = dsl::os_pack::from_json_str(&serde_json::json!({"schema": semio_s_artifact_stdio_pdf::STDIO_PDF_DOCUMENT_SCHEMA, "pages": row["pages"]}).to_string()).expect("owned PDF snapshot");
             let bytes = encode_pdf(&pdf).expect("PDF 1.4 writer");
             assert!(bytes.starts_with(b"%PDF-1.4"));
-            let note = crate::artifacts::note::io::import::deserializers::artifacts::pdf::v1_4::base::PdfIntoNote::deserialize(&ForeignPayload::Binary(bytes)).await.expect("PDF import").value;
+            let note = crate::io::import::deserializers::artifacts::pdf::v1_4::base::PdfIntoNote::deserialize(&ForeignPayload::Binary(bytes)).await.expect("PDF import").value;
             let NoteBlockNode::Text { width, height, content, .. } = &note.blocks[0] else { panic!("PDF page text block") };
-            let text: String = crate::artifacts::note::note_block_text(content).iter().flat_map(|paragraph| paragraph.runs.iter().map(|run| run.text.as_str())).collect();
+            let text: String = crate::note_block_text(content).iter().flat_map(|paragraph| paragraph.runs.iter().map(|run| run.text.as_str())).collect();
             let imported = serde_json::json!({"width": width, "height": height, "text": text});
             assert_eq!(imported, row["expectedImport"]);
-            let exported = crate::artifacts::note::io::export::serializers::artifacts::pdf::v1_4::base::NoteIntoPdf::serialize(&note).await.expect("PDF export").value;
+            let exported = crate::io::export::serializers::artifacts::pdf::v1_4::base::NoteIntoPdf::serialize(&note).await.expect("PDF export").value;
             let ForeignPayload::Binary(bytes) = exported else { panic!("binary PDF export") };
             assert!(bytes.starts_with(b"%PDF-1.4"));
             let pdf = decode_pdf(&bytes).expect("exported PDF decode");

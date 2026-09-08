@@ -1,7 +1,7 @@
 //! 🔧️ 🔧️ Imperative play app commands command — `add-step-at`.
 
-use crate::artifacts::procedure::mutations::{create_step, ProcedureMutation};
-use crate::artifacts::procedure::{Dictionary, ProcedureSnapshot, PathRef, Step};
+use crate::mutations::{create_step, ProcedureMutation};
+use crate::{Dictionary, ProcedureSnapshot, PathRef, Step};
 use crate::editor::procedure::config::{ImperativeConfig, ImperativeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use std::collections::BTreeMap;
@@ -20,7 +20,7 @@ fn next_step_id(document: &ProcedureSnapshot) -> String {
             acc.max(own).max(nested)
         })
     }
-    let path = crate::artifacts::procedure::procedure_working_scene(document).path;
+    let path = crate::procedure_working_scene(document).path;
     format!("step-{}", max_suffix(&path.steps) + 1)
 }
 
@@ -29,7 +29,7 @@ fn next_step_id(document: &ProcedureSnapshot) -> String {
 /// `owner` names a real top-level step, avoiding an unresolvable or unknown reference that would
 /// otherwise address nothing.
 fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ProcedureSnapshot) -> PathRef {
-    let path = crate::artifacts::procedure::procedure_working_scene(document).path;
+    let path = crate::procedure_working_scene(document).path;
     match (owner, slot) {
         (Some(owner), Some(slot)) if path.steps.iter().any(|step| step.id == owner) => PathRef { owner: Some(owner.to_string()), slot: Some(slot.to_string()) },
         _ => PathRef::default(),

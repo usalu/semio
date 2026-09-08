@@ -1,8 +1,8 @@
 //! 🎛️ Trinity Rewriting app — Parameters window (editable form over the RHS's declared parameters).
 
-use crate::artifacts::jack::PropertyValue;
-use crate::artifacts::rewriting::schema::{ParameterKind, Rhs};
-use crate::artifacts::rewriting::RewritingSnapshot;
+use semio_s_artifact_trinity_jack::PropertyValue;
+use crate::schema::{ParameterKind, Rhs};
+use crate::RewritingSnapshot;
 use crate::editor::rewriting::terminology::TrinityRewritingLabels;
 use semio_framework_plugin::Label;
 use semio_framework_ui_contract::{Buildable, HasBase, HasChildren, InputKind, Trigger};
@@ -11,7 +11,7 @@ trait ParameterKindLabel {
     fn kind_label(&self) -> String;
 }
 
-impl ParameterKindLabel for crate::artifacts::rewriting::schema::ParameterSpec {
+impl ParameterKindLabel for crate::schema::ParameterSpec {
     fn kind_label(&self) -> String {
         match self.kind {
             ParameterKind::String => "string".into(),

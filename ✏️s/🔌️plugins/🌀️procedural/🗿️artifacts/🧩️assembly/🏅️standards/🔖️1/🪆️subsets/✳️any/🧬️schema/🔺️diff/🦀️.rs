@@ -3,7 +3,7 @@
 //! directly from `(payload, base)`. `absorb` is structural (map-merge over ids), never re-derived
 //! from applied snapshot values.
 
-use crate::artifacts::assembly::schema::snapshot::{AssemblyModuleWeight, AssemblyRule, AssemblySlot, AssemblySlotEdge, AssemblySnapshot};
+use crate::schema::snapshot::{AssemblyModuleWeight, AssemblyRule, AssemblySlot, AssemblySlotEdge, AssemblySnapshot};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;

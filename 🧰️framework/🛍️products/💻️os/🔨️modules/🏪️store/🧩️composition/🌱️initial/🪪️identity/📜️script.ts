@@ -1,7 +1,7 @@
 /** 🌱️ Neutral stable-child coordinates; identity derivation grants no creation authority. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { blake3Hex } from "../../../../🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts";
 
 type Coordinate = { values: string[]; ordinal: number };
@@ -10,7 +10,10 @@ type Coordinate = { values: string[]; ordinal: number };
 export function testInitialChildIdentityFixture(): void {
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
   const fixture = read("./🧪️fixtures/🔣️.json");
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(read("./🧬️schema/🔣️.json"));
+  const contract = read("./🧬️schema/🔣️.json");
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(contract);
+  const validate = ajv.getSchema(`${contract.$id}#/$defs/InitialChildIdentityCoordinate`)!;
   assert.equal(fixture.domain, "semio.initial-child.v1");
   assert.equal(fixture.prefix, "initial-child-");
   assert.equal(fixture.hash, "blake3-256");
@@ -60,7 +63,7 @@ export function testInitialChildIdentityFixture(): void {
     assert.deepEqual(encode(coordinate), encode(structuredClone(coordinate)));
   }
   const base = fixture.cases[0];
-  const sameDocument = new Ajv2020({ strict: true }).compile({ const: base.values[1] });
+  const sameDocument = new Ajv({ strict: true }).compile({ const: base.values[1] });
   for (const row of fixture.scopeAgreementCases) {
     assert.equal(row.scopeDocumentId === base.values[1], row.accepted);
     assert.equal(sameDocument(row.scopeDocumentId), row.accepted);

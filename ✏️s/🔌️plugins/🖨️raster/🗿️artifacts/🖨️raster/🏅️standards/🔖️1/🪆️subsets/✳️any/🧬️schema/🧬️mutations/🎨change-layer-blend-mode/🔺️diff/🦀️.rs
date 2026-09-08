@@ -1,8 +1,8 @@
 //! 🔺️ `change-layer-blend-mode` sparse diff — writes only the layer's `blend_mode` field.
 
-use crate::artifacts::raster::diff::{diff_patch_layer, RasterDiff};
-use crate::artifacts::raster::schema::find_layer;
-use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
+use crate::diff::{diff_patch_layer, RasterDiff};
+use crate::schema::find_layer;
+use crate::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeLayerBlendMode, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {

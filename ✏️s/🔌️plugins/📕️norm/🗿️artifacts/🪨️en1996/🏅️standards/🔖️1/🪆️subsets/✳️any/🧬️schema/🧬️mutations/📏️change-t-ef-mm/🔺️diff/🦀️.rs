@@ -1,8 +1,8 @@
 //! 🔺️ `change-t-ef-mm` sparse diff construction — writes only `En1996Diff.t_ef_mm` from the payload.
 
-use crate::artifacts::en1996::diff::En1996Diff;
-use crate::artifacts::en1996::mutations::change_t_ef_mm::ChangeTEfMm;
-use crate::artifacts::en1996::En1996Snapshot;
+use crate::diff::En1996Diff;
+use crate::mutations::change_t_ef_mm::ChangeTEfMm;
+use crate::En1996Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeTEfMm, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {

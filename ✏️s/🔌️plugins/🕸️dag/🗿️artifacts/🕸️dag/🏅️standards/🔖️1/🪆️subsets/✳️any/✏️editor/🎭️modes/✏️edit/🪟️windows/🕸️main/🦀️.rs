@@ -1,9 +1,9 @@
 //! 🕸️ DAG play app — the main window: the live node-graph canvas (dag's primary editing surface).
 
-use crate::artifacts::dag::schema::document_to_workflow;
-use crate::artifacts::dag::DagSnapshot;
+use crate::schema::document_to_workflow;
+use crate::DagSnapshot;
 use crate::editor::dag::terminology::DagPlayLabels;
-use infinite_board_port_directed_dag::DagCamera;
+use semio_framework_artifact_infinite_dag::DagCamera;
 use semio_framework_plugin::{scene_surface, BuiltNode, UiAssemblyResult, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

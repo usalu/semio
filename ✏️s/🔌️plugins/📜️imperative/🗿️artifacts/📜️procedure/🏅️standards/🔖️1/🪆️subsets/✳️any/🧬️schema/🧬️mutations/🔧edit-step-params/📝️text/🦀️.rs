@@ -1,9 +1,9 @@
 //! 🔧 Text wire record and conversions owned by the direct `edit-step-params` leaf.
 
-use crate::artifacts::procedure::dsl::{dictionary_to_value_dsl_map, value_dsl_map_to_dictionary, ValueDsl};
-use crate::artifacts::procedure::schema::mutations::binary::ProcedureMutationDsl;
-use crate::artifacts::procedure::schema::mutations::ProcedureMutation;
-use crate::artifacts::procedure::PathRef;
+use crate::document_dsl::{dictionary_to_value_dsl_map, value_dsl_map_to_dictionary, ValueDsl};
+use crate::schema::mutations::binary::ProcedureMutationDsl;
+use crate::schema::mutations::ProcedureMutation;
+use crate::PathRef;
 use std::collections::BTreeMap;
 
 pub const TEXT_OPCODE: &str = "edit-step-params";

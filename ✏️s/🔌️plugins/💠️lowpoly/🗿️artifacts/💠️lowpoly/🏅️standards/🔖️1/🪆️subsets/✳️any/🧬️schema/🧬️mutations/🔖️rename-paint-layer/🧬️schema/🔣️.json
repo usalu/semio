@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/1/any/mutation/rename-paint-layer.json",
+  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/1/any/mutation/rename-paint-layer/schema.json",
   "title": "RenamePaintLayer",
   "type": "object",
   "additionalProperties": false,

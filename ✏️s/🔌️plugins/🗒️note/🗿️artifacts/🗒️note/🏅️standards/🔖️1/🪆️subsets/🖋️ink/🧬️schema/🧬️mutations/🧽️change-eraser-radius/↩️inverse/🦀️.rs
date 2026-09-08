@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeEraserRadius`.
 use super::ChangeEraserRadius;
-use crate::artifacts::note::schema::mutations::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::schema::mutations::NoteMutation;
+use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeEraserRadius, base: &NoteSnapshot) -> Vec<NoteMutation> {

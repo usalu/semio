@@ -148,7 +148,7 @@ if (import.meta.vitest) {
   it("ActorReturnResponseFraming uses canonical vectors with no payload copies or backing escape", async () => {
     const api = await import("./🟦️.ts");
     const { default: schema } = await import("./🌿️framing/🧬️schema/🔣️.json"); const { default: framing } = await import("./🌿️framing/🧪️fixture/🔣️.json");
-    const { default: fixture } = await import("./🧪️fixture/🔣️.json"); const returned = returnedSchema;
+    const { default: fixture } = await import("./🧪️fixture/🔣️.json"); const { default: returned } = await import("../🧫️fixture/🔣️.json");
     const { default: returnedSchema } = await import("../🧬️schema/🔣️.json"); const { default: lifetime } = await import("../../🚪️lifetime/🧬️schema/🔣️.json"); const { default: page } = await import("../../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const uint = await oracle();
     const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returnedSchema).addSchema(schema);
@@ -182,7 +182,7 @@ if (import.meta.vitest) {
   });
   it("ActorReturnResponseFraming keeps malformed bodies and incomplete authority failed", async () => {
     const api = await import("./🟦️.ts"); const { default: fixture } = await import("./🧪️fixture/🔣️.json");
-    const returned = returnedSchema;
+    const { default: returned } = await import("../🧫️fixture/🔣️.json");
     const reject = (bytes: readonly number[]) => {
       const parser = new api.ActorReturnResponseFraming();
       expect(() => { for (const byte of bytes) parser.push(byte); parser.finish(); }).toThrow();
@@ -360,35 +360,35 @@ if (import.meta.vitest) {
   it("ActorReturnResponse declaration matches strict schemas and independent envelope encoding", async () => {
     const { default: schema } = await import("./🧬️schema/🔣️.json");
     const { default: fixture } = await import("./🧪️fixture/🔣️.json");
-    const { default: fixtureSchema } = await import("./🧬️schema/🔣️.json");
+    const fixtureSchema = schema;
     const { default: lifetime } = await import("../../🚪️lifetime/🧬️schema/🔣️.json");
     const { default: page } = await import("../../📃️page/🧬️schema/🔣️.json");
-    const returned = returnedSchema;
+    const { default: returned } = await import("../🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
-    const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returnedSchema).addSchema(schema);
-    expect(ajv.addSchema(fixtureSchema).getSchema(`${fixtureSchema.$id}#/$defs/ResponseFixture`)!(fixture)).toBe(true);
+    const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(schema);
+    expect(ajv.getSchema(`${schema.$id}#/$defs/ResponseFixture`)!(fixture)).toBe(true);
     const uint = await oracle();
     for (const row of fixture.vectors) {
       const value = row.value;
       const body = value.kind === "result" ? Buffer.from(row.resultHex, "hex") : Buffer.of(fixture.faultTags[value.fault as keyof typeof fixture.faultTags]);
       const encoded = Buffer.concat([Buffer.from(fixture.magicHex, "hex"), Buffer.of(fixture.tags[value.kind as keyof typeof fixture.tags]), uint(BigInt(value.activationGeneration)), uint(value.transportRequestSequence), body]);
       expect(encoded.toString("hex")).toBe(row.hex);
-      expect(ajv.validate(schema, value)).toBe(true);
+      expect(ajv.getSchema(`${schema.$id}#/$defs/Response`)!(value)).toBe(true);
     }
     expect(fixture.vectors[1]!.value.transportRequestSequence).not.toBe(fixture.vectors[1]!.value.result!.control!.receipt!.identity.origin.requestSequence);
-    for (const value of [0, -1, 9007199254740992, 1.5]) expect(ajv.validate(schema, { ...fixture.vectors[0]!.value, transportRequestSequence: value })).toBe(false);
+    for (const value of [0, -1, 9007199254740992, 1.5]) expect(ajv.getSchema(`${schema.$id}#/$defs/Response`)!({ ...fixture.vectors[0]!.value, transportRequestSequence: value })).toBe(false);
   });
   it("ActorReturnResponseCredit declaration validates exact one-reply and retained-fault transitions", async () => {
     const { default: schema } = await import("./🎟️credit/🧬️schema/🔣️.json");
     const { default: fixture } = await import("./🎟️credit/🧪️fixture/🔣️.json");
-    const { default: fixtureSchema } = await import("./🎟️credit/🧬️schema/🔣️.json");
-    const response = fixtureSchema;
+    const fixtureSchema = schema;
+    const { default: response } = await import("./🧬️schema/🔣️.json");
     const { default: lifetime } = await import("../../🚪️lifetime/🧬️schema/🔣️.json");
     const { default: page } = await import("../../📃️page/🧬️schema/🔣️.json");
-    const returned = returnedSchema;
+    const { default: returned } = await import("../🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
-    const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returnedSchema).addSchema(fixtureSchema).addSchema(schema);
-    const validate = ajv.getSchema(`${fixtureSchema.$id}#/$defs/ResponseFixture`)!; expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(response).addSchema(schema);
+    const validate = ajv.getSchema(`${schema.$id}#/$defs/CreditFixture`)!; expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     for (const row of fixture.receiverCases) {
       let state = fixture.receiverInitial;
       for (const action of row.actions) {
@@ -467,7 +467,7 @@ if (import.meta.vitest) {
   it("ActorReturnResponse maximum page is exact and decoder rejects non-owning backings", async () => {
     const api = await import("./🟦️.ts");
     const { default: fixture } = await import("./🧪️fixture/🔣️.json");
-    const returned = returnedSchema;
+    const { default: returned } = await import("../🧫️fixture/🔣️.json");
     const { createActorBytePage } = await import("../../📃️page/🟦️.ts");
     const row = returned.pageResultVectors[fixture.maximumPage.sharedPageVector]!;
     const bytes = Uint8Array.from({ length: row.pageLength }, (_, index) => (index * 37 + 11) % 256);

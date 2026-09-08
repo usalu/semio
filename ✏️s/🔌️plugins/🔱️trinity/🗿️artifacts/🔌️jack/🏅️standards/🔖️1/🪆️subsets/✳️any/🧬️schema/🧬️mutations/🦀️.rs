@@ -2,8 +2,8 @@
 //!
 //! Every variant wraps the payload owned by its direct `<mutation>/🦀️.rs` leaf.
 
-use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::JackSnapshot;
+use crate::diff::JackDiff;
+use crate::JackSnapshot;
 
 pub use super::change_data_property::{change_data_property, ChangeDataProperty};
 pub use super::create_edge::{create_edge, CreateEdge};

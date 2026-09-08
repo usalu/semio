@@ -12,8 +12,8 @@
 //! `ProgramContributionEntry`, so per the DocumentHelpers placement rule they stay here rather than in the
 //! artifact's `🧬️schema`.
 
-use crate::artifacts::forms::op::FormMutation;
-use crate::artifacts::forms::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
+use crate::op::FormMutation;
+use crate::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
 use crate::editor::forms::commands::{
     add_question, add_question_option, add_step, add_vector_field, drop_question_kind, export_fixture, move_question, move_step, next_step, patch_question_options, patch_questions, patch_step, patch_vector_field, previous_step, remove_question,
     remove_question_option, remove_step, remove_vector_field, reset_try, set_active_example, set_contributions, set_locale, set_spec_json, set_try_value, set_try_value_step, set_try_values, submit, update_form,
@@ -138,7 +138,7 @@ pub const FORMS_INTERACTION_GRANULARITY_SECTION: &str = "section";
 fn forms_fields_topology(spec: &FormsSnapshot) -> DomainTopology {
     let mut ordered = Vec::new();
     for step in forms_steps(spec) {
-        let step_id = crate::artifacts::forms::schema::forms_play_step_tree_id(&step.id);
+        let step_id = crate::schema::forms_play_step_tree_id(&step.id);
         ordered.push(TopologyNode { id: step_id.clone(), granularity: FORMS_INTERACTION_GRANULARITY_SECTION.into(), parent: None });
         for question in step.blocks {
             ordered.push(TopologyNode { id: question.id, granularity: FORMS_INTERACTION_GRANULARITY_FIELD.into(), parent: Some(step_id.clone()) });
@@ -166,7 +166,7 @@ pub fn try_values_map(config: &FormsConfig) -> Object {
 }
 
 pub fn effective_try_values(spec: &FormsSnapshot, config: &FormsConfig) -> Object {
-    crate::artifacts::forms::schema::initial_try_values(spec, &try_values_map(config))
+    crate::schema::initial_try_values(spec, &try_values_map(config))
 }
 
 /// 🌱️ Building block for every `handle()` arm that must both clear the Try wizard's answers and reset its
@@ -232,7 +232,7 @@ fn find_question_kind_contribution<'a>(contributions: &'a [ProgramContributionEn
 }
 
 fn extension_params_value(question: &FormQuestion, values: &Object) -> Value {
-    values.get(&question.id).cloned().or_else(|| question.params.as_ref().map(crate::artifacts::forms::schema::dsl_to_value)).unwrap_or_else(|| Value::Object(Object::new()))
+    values.get(&question.id).cloned().or_else(|| question.params.as_ref().map(crate::schema::dsl_to_value)).unwrap_or_else(|| Value::Object(Object::new()))
 }
 
 fn extension_render_payload(question: &FormQuestion, params: &Value, surface: &str, interactive: bool) -> String {
@@ -361,7 +361,7 @@ semio_framework_plugin::app_commands! {
 /// 🔌️ Forms' typed media I/O surface (`AppDefinition.io`) — the implicit `document:in`/`document:out`
 /// pair (keyed by the `forms.form` document schema) plus the WORKFLOWS-END-TO-END-TYPED-PORTS
 /// `dictionary:out` port: the form's currently-configured default field values (see
-/// `crate::artifacts::forms::schema::initial_try_values`), re-exported as a `form.dictionary` JSON
+/// `crate::schema::initial_try_values`), re-exported as a `form.dictionary` JSON
 /// object keyed by question id — the layout app's `fields:in` counterpart. Relocated from the deleted
 /// artifact `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this is the app's
 /// own IO surface, not artifact behaviour.
@@ -740,7 +740,7 @@ impl ArtifactEditor for FormsPlayApp {
 
     type Command = FormsCommand;
 
-    const DIALECT: Dialect = crate::artifacts::forms::FORMS_DIALECT;
+    const DIALECT: Dialect = crate::FORMS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -821,12 +821,12 @@ impl ArtifactEditor for FormsPlayApp {
         }
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::forms::config::schema::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> FormsSnapshot {
-        crate::artifacts::forms::schema::building_component_spec()
+        crate::schema::building_component_spec()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -876,7 +876,7 @@ impl ArtifactEditor for FormsPlayApp {
                 })
             }
             "dictionary:out" => {
-                let values = crate::artifacts::forms::schema::initial_try_values(doc.snapshot, &Object::new());
+                let values = crate::schema::initial_try_values(doc.snapshot, &Object::new());
                 let json = dsl::os_pack::json::to_string(&Value::Object(values));
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "form.dictionary".into(), json } })
             }
@@ -913,7 +913,7 @@ impl ArtifactEditor for FormsPlayApp {
 /// The subset's own `📚️examples/🎬️demo` facet is the likely intended replacement mechanism; flagged
 /// for the coordinator, not fixed locally.
 pub fn create_forms_app() -> AppDefinition {
-    Editor::builder(crate::artifacts::forms::FORMS_DIALECT)
+    Editor::builder(crate::FORMS_DIALECT)
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setLocale", LocalizedLabel::native("Set Locale", "Gebietsschema festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("value", LocalizedLabel::native("Locale", "Gebietsschema"))]) })
             .document(["semio", "forms"])
@@ -1119,7 +1119,7 @@ pub(crate) mod testkit {
     pub fn building_component_question() -> FormQuestion {
         let mut question = add_question::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
         question.fixture_slug = Some("hexagonal-mushroom-column".into());
-        question.params = Some(crate::artifacts::forms::schema::value_to_dsl(&dsl::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
+        question.params = Some(crate::schema::value_to_dsl(&dsl::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
         question
     }
 }
@@ -1129,7 +1129,7 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::forms::forms_steps;
+    use crate::forms_steps;
     use crate::editor::forms::testkit::{building_component_contributions, building_component_question, forms_app, forms_app_with_registry};
     use semio_framework_plugin::testkit::meta;
 
@@ -1279,7 +1279,7 @@ mod tests {
     /// links — a step has no parent, every question's parent is its owning step's row id.
     #[semio_framework_async_macros::async_test]
     async fn interaction_topology_walks_step_nesting_into_parent_links() {
-        let document = crate::artifacts::forms::schema::building_component_spec();
+        let document = crate::schema::building_component_spec();
         let config = FormsConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
@@ -1296,7 +1296,7 @@ mod tests {
     /// only the field-granularity nodes are absent.
     #[semio_framework_async_macros::async_test]
     async fn interaction_topology_has_a_section_node_and_no_field_nodes_for_a_document_with_no_questions() {
-        let document = crate::artifacts::forms::schema::empty_forms_snapshot();
+        let document = crate::schema::empty_forms_snapshot();
         let config = FormsConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
@@ -1316,15 +1316,15 @@ mod tests {
         assert!(steps_before > 0, "seeded fixture has at least one step to receive the question");
         app.dispatch_typed(FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }), &meta("local")).await.expect("add question");
         let spec = app.snapshot().expect("projection");
-        assert!(crate::artifacts::forms::schema::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "text"), "kind default materialized from the registry");
+        assert!(crate::schema::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "text"), "kind default materialized from the registry");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn initial_document_seeds_building_component_fixture() {
         let app = forms_app().await;
         let spec = app.snapshot().expect("projection");
-        assert!(!crate::artifacts::forms::schema::flatten_questions(&spec).is_empty());
-        assert!(crate::artifacts::forms::schema::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "buildingComponent"));
+        assert!(!crate::schema::flatten_questions(&spec).is_empty());
+        assert!(crate::schema::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "buildingComponent"));
     }
 
     #[semio_framework_async_macros::async_test]

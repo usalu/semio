@@ -1,6 +1,6 @@
 //! 📥️ EN 1998 play app — the inputs window: the raw compliance document, rendered as JSON.
 
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::En1998Snapshot;
 use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants

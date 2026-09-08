@@ -1,19 +1,19 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/ua/mutation/set-lang.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/ua/mutation/set-lang/schema.json",
   "title": "SetLang",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "lang"
   ],
   "properties": {
-    "mutation": {
-      "const": "setLang"
-    },
     "lang": {
       "type": "string"
+    },
+    "mutation": {
+      "const": "setLang",
+      "description": "Aggregate discriminator spliced in by PdfUaMutation; absent when the payload stands alone."
     }
   }
 }

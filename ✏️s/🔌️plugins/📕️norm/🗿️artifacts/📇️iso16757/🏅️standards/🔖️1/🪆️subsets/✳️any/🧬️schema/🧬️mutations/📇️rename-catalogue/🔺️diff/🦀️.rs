@@ -1,7 +1,7 @@
 //! 🔺️ `rename-catalogue` — sparse diff construction.
 
 use super::mutation::RenameCatalogue;
-use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
+use crate::{Iso16757Diff, Iso16757Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &RenameCatalogue, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {

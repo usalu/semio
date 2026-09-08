@@ -2,8 +2,8 @@
 //! necessarily its original position — `add` has no index arg); out-of-range BASE index ⇒
 //! `Vec::new()`.
 
-use crate::artifacts::iso16757::mutations::add_selection_constraint;
-use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
+use crate::mutations::add_selection_constraint;
+use crate::{Iso16757Mutation, Iso16757Snapshot};
 
 use super::mutation::RemoveSelectionConstraint;
 

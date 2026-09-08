@@ -4,7 +4,7 @@
 //! `entryCount` over whatever repeated sub-entries it actually carries (0 when the snapshot has
 //! no collection-typed top-level field).
 
-use crate::artifacts::vdi3805::Vdi3805Snapshot;
+use crate::Vdi3805Snapshot;
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &["manufacturer_file", "catalog", "edition_profile", "correction_as_of", "strict_mode", "index", "geometry", "curves", "limits"];

@@ -1,10 +1,10 @@
 //! 🔺️ Sparse diff builder for `DeleteEdge` — a real removal.
-use crate::artifacts::jack::diff::{diff_replace_content, JackDiff};
-use crate::artifacts::jack::JackSnapshot;
+use crate::diff::{diff_replace_content, JackDiff};
+use crate::JackSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteEdge, base: &JackSnapshot) -> protocol::MutationOutcome<JackDiff> {
-    let mut scene = crate::artifacts::jack::jack_working_scene(base);
+    let mut scene = crate::jack_working_scene(base);
     if !scene.edges.iter().any(|edge| edge.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Edge \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }

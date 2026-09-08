@@ -7,10 +7,10 @@
 //! framework's `NoConfig`/`NoPresence`/`NoTransient` — a single-field metadata document needs no
 //! persisted per-session view state.
 
-use crate::artifacts::playground::standards::v1::subsets::any::schema::empty_playground_snapshot;
-use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
-use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
-use crate::artifacts::playground::{PLAYGROUND_DIALECT, PLAYGROUND_DOCUMENT_SCHEMA};
+use crate::standards::v1::subsets::any::schema::empty_playground_snapshot;
+use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+use crate::{PLAYGROUND_DIALECT, PLAYGROUND_DOCUMENT_SCHEMA};
 use crate::editor::playground::commands::change_schema;
 use crate::editor::playground::modes::edit;
 use crate::editor::playground::modes::edit::windows::main;
@@ -491,7 +491,7 @@ mod tests {
         let cfg = ConfigView { snapshot: &config };
         let command = PlaygroundCommand::ChangeSchema(change_schema::ChangeSchema { new_schema: "playground.custom".into() });
         let emit = command.dispatch(&doc, &cfg).expect("dispatch");
-        assert_eq!(emit.artifact_mutations, vec![PlaygroundMutation::ChangeSchema(crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema { new_schema: "playground.custom".into() })]);
+        assert_eq!(emit.artifact_mutations, vec![PlaygroundMutation::ChangeSchema(crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema { new_schema: "playground.custom".into() })]);
     }
 
     #[semio_framework_async_macros::async_test]

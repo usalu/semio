@@ -129,14 +129,16 @@ class ConfigMutationSourceScript extends BundleScript {
     const fixture = JSON.parse(readFileSync(join(configRoot, "🧪️tests", "🔣️.json"), "utf8"));
     const aggregate = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "🔣️.json"), "utf8"));
     const ajv = new Ajv({ allErrors: true, strict: true });
-    const fixtureSchema = JSON.parse(readFileSync(join(configRoot, "🧪️tests", "🧬️.schema.json"), "utf8"));
-    const validateFixture = ajv.compile(fixtureSchema);
+    ajv.addVocabulary(["x-semio-mutationKinds"]);
+    const module = JSON.parse(readFileSync(join(this.root, "..", "..", "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
+    ajv.addSchema(module);
+    const validateFixture = ajv.compile({ $ref: `${module.$id}#/$defs/NormConfigMutationCases` });
     if (!validateFixture(fixture)) throw new Error(`config fixture schema failed: ${JSON.stringify(validateFixture.errors)}`);
     const payloadRef = aggregate.oneOf[0].$ref;
     if (decodeURI(payloadRef) !== "./☑️change-selected-check-index/🧬️schema/🔣️.json") throw new Error("config aggregate schema does not reference its owned payload");
-    ajv.addSchema(schema, payloadRef);
-    const validate = ajv.compile(schema);
-    const validateMutation = ajv.compile(aggregate);
+    ajv.addSchema(schema);
+    const validate = ajv.getSchema(schema.$id)!;
+    const validateMutation = ajv.compile({ ...aggregate, oneOf: [{ $ref: schema.$id }] });
     for (const test of fixture.cases) {
       if (!validate(test.payload) || !validateMutation(test.payload)) throw new Error(`config fixture ${test.id} failed AJV: ${JSON.stringify(validate.errors ?? validateMutation.errors)}`);
       if ((test.payload.index ?? null) !== test.after || (test.before === test.after) !== test.warning) throw new Error(`config fixture ${test.id} has inconsistent results`);
@@ -175,11 +177,13 @@ type SurfaceFixture = { contractId: "semio.norm.surface-render/v1"; rows: Surfac
 class SurfaceRenderSourceScript extends BundleScript {
   run(): void {
     const testRoot = join(this.root, "..", "..", "🖥️app-surface", "🧪️tests");
-    const schema = JSON.parse(readFileSync(join(testRoot, "🧬️.schema.json"), "utf8"));
+    const module = JSON.parse(readFileSync(join(this.root, "..", "..", "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
     const fixture = JSON.parse(readFileSync(join(testRoot, "🔣️.json"), "utf8")) as SurfaceFixture;
     const pluginRoot = readFileSync(join(this.root, "..", "..", "🦀️.rs"), "utf8");
     if (!pluginRoot.includes('.package_id("semio:norm")')) throw new Error("norm plugin does not declare its exact component package identity");
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
+    const ajv = new Ajv({ allErrors: true, strict: true });
+    ajv.addSchema(module);
+    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/NormSurfaceRenderCases` });
     const manifest = Bun.TOML.parse(readFileSync(join(this.root, "Cargo.toml"), "utf8")) as { package: { metadata: { semio: { playground: { variant: string }[] } } } };
     const variants = new Set(manifest.package.metadata.semio.playground.map((entry) => entry.variant));
     const artifactRoot = join(this.root, "..", "..", "🗿️artifacts");

@@ -9,8 +9,8 @@
 //! `PlySnapshot.comments`' doc comment), so the bytes really are valid PLY text
 //! (`engine::encode_ply`/`decode_ply`, never a second bespoke grammar) that also carries the full
 //! lowpoly document losslessly.
-use crate::artifacts::lowpoly::schema::snapshot::text::print_dsl;
-use crate::artifacts::lowpoly::schema::snapshot::{enc_str, LowpolySnapshot};
+use crate::schema::snapshot::text::print_dsl;
+use crate::schema::snapshot::{enc_str, LowpolySnapshot};
 use semio_s_artifact_stdio_ply::engine::encode_ply;
 use semio_s_artifact_stdio_ply::PlySnapshot;
 

@@ -1,6 +1,6 @@
 //! 📄️ Sequence play app panel — the document tree: steps (with control-flow slot nesting) and edges.
 
-use crate::artifacts::sequence::{SequenceFixture, SequenceStep};
+use crate::{SequenceFixture, SequenceStep};
 use crate::editor::sequence::{sequence_action, ui_label, ui_node_list, ui_value_map, ui_value_text};
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::{control_slots, is_control_kind, SEQUENCE_INTERACTION_STEPS};

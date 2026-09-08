@@ -1,6 +1,6 @@
 //! 📦️ EN 1992 design of concrete structures — binary document surface + laws (constitutional: pack).
 
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::En1992Snapshot;
 use store::PackError;
 
 //#region 📡️SemioProtocol

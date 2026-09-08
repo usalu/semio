@@ -1,8 +1,8 @@
 //! 🌪️ Energy model mutation — `CreateMechanicalVentilation`: Adds one mechanical ventilation specification to a zone: the design supply flow, its schedule and the fan work the supply air arrives with.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

@@ -1,8 +1,8 @@
 //! 🗑️ DAG mutation — `DeleteNode`: removes an id-keyed node (captures cascade — any edge touching
 //! this node is severed too, re-`connect-nodes`ed by the inverse).
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::diff::DagDiff;
+use crate::mutations::DagMutation;
+use crate::DagSnapshot;
 
 //#region 🔖️Mutation
 /// 🗑️ `delete-node` payload.

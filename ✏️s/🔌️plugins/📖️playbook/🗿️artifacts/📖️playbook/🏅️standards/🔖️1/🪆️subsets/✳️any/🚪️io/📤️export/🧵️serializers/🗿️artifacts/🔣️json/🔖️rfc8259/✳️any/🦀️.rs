@@ -7,7 +7,7 @@
 //! `write_json_pretty` for `serialize_bytes` (the previous `serde_json::to_vec_pretty(&value)`
 //! would have serialized the internally-tagged `JsonValue` shape verbatim, not real JSON text — a
 //! latent bug this fix also corrects).
-use crate::artifacts::playbook::PlaybookSnapshot;
+use crate::PlaybookSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::{write_json_pretty, JsonSnapshot};
 use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 pub fn register() {}

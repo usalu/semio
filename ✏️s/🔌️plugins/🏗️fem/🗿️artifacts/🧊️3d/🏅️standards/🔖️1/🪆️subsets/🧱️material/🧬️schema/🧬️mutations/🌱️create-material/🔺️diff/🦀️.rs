@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateMaterial`.
 use super::CreateMaterial;
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dMaterialsDelta};
-use crate::artifacts::fem3d::mutations::{invariant, material_breach};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::diff::{Fem3dDiff, Fem3dMaterialsDelta};
+use crate::mutations::{invariant, material_breach};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateMaterial, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

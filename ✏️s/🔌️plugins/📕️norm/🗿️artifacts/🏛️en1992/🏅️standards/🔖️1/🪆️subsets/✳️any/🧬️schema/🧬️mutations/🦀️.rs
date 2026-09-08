@@ -16,8 +16,8 @@
 //! this file: the per-mutation fixture cases self-wire from here, because `🦀️.rs` is shared
 //! across all fifteen norm artifacts and is under concurrent edit.
 
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::En1992Snapshot;
 
 //#region 🔖️Mutations
 use super::change_a_c_mm2;
@@ -220,11 +220,11 @@ mod tests {
             En1992Mutation::ChangeUseFem(change_use_fem::ChangeUseFem { new_use_fem: true }),
             En1992Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: 7.5 }),
             En1992Mutation::ChangeUdlKnM(change_udl_kn_m::ChangeUdlKnM { new_udl_kn_m: 24.0 }),
-            En1992Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: crate::artifacts::en1992::part_1_2::FireRating::R90 }),
+            En1992Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: crate::part_1_2::FireRating::R90 }),
             En1992Mutation::ChangeProvidedAxisDistanceMm(change_provided_axis_distance_mm::ChangeProvidedAxisDistanceMm { new_provided_axis_distance_mm: 40.0 }),
             En1992Mutation::ChangeBridgeSigmaCMpa(change_bridge_sigma_c_mpa::ChangeBridgeSigmaCMpa { new_bridge_sigma_c_mpa: 14.0 }),
             En1992Mutation::ChangeBridgeDeltaSigmaSMpa(change_bridge_delta_sigma_s_mpa::ChangeBridgeDeltaSigmaSMpa { new_bridge_delta_sigma_s_mpa: 120.0 }),
-            En1992Mutation::ChangeTightnessClass(change_tightness_class::ChangeTightnessClass { new_tightness_class: crate::artifacts::en1992::part_3::TightnessClass::Tc2 }),
+            En1992Mutation::ChangeTightnessClass(change_tightness_class::ChangeTightnessClass { new_tightness_class: crate::part_3::TightnessClass::Tc2 }),
             En1992Mutation::ChangeHdOverH(change_hd_over_h::ChangeHdOverH { new_hd_over_h: 12.0 }),
             En1992Mutation::ChangeLiquidSigmaSMpa(change_liquid_sigma_s_mpa::ChangeLiquidSigmaSMpa { new_liquid_sigma_s_mpa: 220.0 }),
             En1992Mutation::ChangeLiquidRhoPEff(change_liquid_rho_p_eff::ChangeLiquidRhoPEff { new_liquid_rho_p_eff: 0.012 }),
@@ -282,7 +282,7 @@ mod tests {
         let mutation = En1992Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
-        let d2 = En1992Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: crate::artifacts::en1992::part_1_2::FireRating::R90 }).diff(&base).diff().clone();
+        let d2 = En1992Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: crate::part_1_2::FireRating::R90 }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     #[semio_framework_async_macros::async_test]

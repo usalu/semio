@@ -5,9 +5,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::drawing::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
-use crate::artifacts::drawing::schema::{find_drawing_layer, layer_base};
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::mutations::{apply_drawing_mutation, inverse_drawing_mutation, DrawingMutation};
+use crate::schema::{find_drawing_layer, layer_base};
+use crate::DrawingSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -105,7 +105,7 @@ async fn produces_committed_diff() {
     let delta = outcome.diff().layers.clone().expect("replace-layer-stroke pins a layers delta");
     let patch = &delta.patched[0].patch;
     let blob = patch.stroke_json.as_deref().expect("the stroke lane is populated");
-    let stroke: Option<crate::artifacts::drawing::StrokeStyle> = serde_json::from_str(blob).expect("the stroke blob is itself valid JSON");
+    let stroke: Option<crate::StrokeStyle> = serde_json::from_str(blob).expect("the stroke blob is itself valid JSON");
     let stroke = stroke.expect("this case installs a stroke rather than clearing one");
     assert_eq!(stroke.dash, Some(vec![4.0, 2.0]), "the optional dash pattern survives inside the blob");
     assert!(patch.fill_json.is_none(), "a stroke swap must leave the fill lane empty");
@@ -115,7 +115,7 @@ async fn produces_committed_diff() {
 /// re-encodes byte-for-byte, so the file is a faithful `DrawingDiff`, not prose that merely resembles one.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::drawing::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-layer-stroke/adds-a-dashed-stroke: committed diff JSON is not canonical");
@@ -125,7 +125,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::drawing::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::drawing::DrawingDiff as protocol::MutationDiff<DrawingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::DrawingDiff as protocol::MutationDiff<DrawingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-layer-stroke/adds-a-dashed-stroke: committed diff did not carry before to after");
 }

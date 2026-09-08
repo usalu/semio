@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/mutation/set-has-header.json",
+  "$id": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/mutation/set-has-header/schema.json",
   "title": "SetHasHeader",
   "type": "object",
   "additionalProperties": false,

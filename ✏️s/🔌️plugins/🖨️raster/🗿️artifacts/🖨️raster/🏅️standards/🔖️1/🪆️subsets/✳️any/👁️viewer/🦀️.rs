@@ -4,7 +4,7 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::raster::{RasterSnapshot, RASTER_DIALECT, RASTER_DOCUMENT_SCHEMA};
+use crate::{RasterSnapshot, RASTER_DIALECT, RASTER_DOCUMENT_SCHEMA};
 use crate::viewer::raster::modes::view;
 use crate::viewer::raster::modes::view::windows::{composite, navigator};
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -37,7 +37,7 @@ pub struct RasterViewer;
 
 impl ArtifactViewer for RasterViewer {
     type Snapshot = RasterSnapshot;
-    type Mutation = crate::artifacts::raster::op::RasterMutation;
+    type Mutation = crate::op::RasterMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -51,9 +51,9 @@ impl ArtifactViewer for RasterViewer {
 
     /// 📄️ Boots on the bundled `📚️examples/🎬️demo` Semio-logo carrier so the composite and navigator
     /// render real layers instead of a blank canvas — the same artifact-side `default_raster_document`
-    /// the editor boots on (no editor import: this is `crate::artifacts::raster::schema`).
+    /// the editor boots on (no editor import: this is `crate::schema`).
     fn initial_snapshot() -> RasterSnapshot {
-        crate::artifacts::raster::schema::default_raster_document()
+        crate::schema::default_raster_document()
     }
 
     /// 👁️ Structurally read-only: the sole `RasterViewCommand::Noop` variant never carries a config

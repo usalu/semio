@@ -1,8 +1,8 @@
 //! 🌦️ Energy model mutation — `BindWeatherFile`: Attaches the `weather` link slot to an `🌦️epw` stdio artifact addressed by its `ArtifactRef` URI. The link is pinned to the target's head; the model never embeds weather bytes.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

@@ -1,8 +1,8 @@
 //! 🔗 Puzzle5d mutation — `ConnectGrips`: creates a fastener between two full grip ids
 //! (`part_id:grip_id`), full initial connection-parameterization payload included.
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::Puzzle5dDiff;
+use crate::mutations::Puzzle5dMutation;
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
 /// 🔗 `connect-grips` payload — fastener `id`, both endpoint full grip ids, and the full initial

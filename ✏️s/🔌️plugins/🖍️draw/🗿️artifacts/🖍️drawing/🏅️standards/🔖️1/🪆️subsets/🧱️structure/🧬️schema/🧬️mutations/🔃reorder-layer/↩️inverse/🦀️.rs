@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `ReorderLayer` — the OLD `(parent_id, index)` address captured from BASE. Missing
 //! target ⇒ `Vec::new()`.
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::schema::find_drawing_layer_location;
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::mutations::DrawingMutation;
+use crate::schema::find_drawing_layer_location;
+use crate::DrawingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::ReorderLayer, base: &DrawingSnapshot) -> Vec<DrawingMutation> {

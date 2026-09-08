@@ -1,11 +1,11 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.dev/schema/plugin/declarations/std1-any/mutations",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/plugin/tests/declaration-channels/standard-1/any/mutations.json",
   "title": "Std1Any direct mutations",
   "type": "object",
   "properties": {
     "SetValue": {
-      "$ref": "https://semio.dev/schema/plugin/declarations/std1-any/set-value"
+      "$ref": "./📝️set-value/🧬️schema/🔣️.json"
     }
   },
   "required": [
@@ -13,4 +13,3 @@
   ],
   "additionalProperties": false
 }
-

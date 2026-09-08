@@ -1,14 +1,14 @@
 //! 🔺️ En1998 artifact — sparse field diff runtime.
 
-use crate::artifacts::en1998::schema::diff::*;
+use crate::document_schema::diff::*;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::en1998::schema::En1998Artifact;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::document_schema::En1998Artifact;
+use crate::En1998Snapshot;
 use protocol::MutationDiff;
 
 //#region 🔖️Apply
@@ -407,13 +407,13 @@ pub fn diff_set_snapshot(snapshot: &En1998Snapshot) -> En1998Diff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::en1998::mutations::En1998Mutation;
+    use crate::mutations::En1998Mutation;
     use protocol::{Mutation as _, MutationDiff};
 
     #[semio_framework_async_macros::async_test]
     async fn change_mutation_diff_updates_only_its_field() {
         let base = En1998Snapshot::default();
-        let mutation = En1998Mutation::ChangeSeismicZone(crate::artifacts::en1998::mutations::change_seismic_zone::ChangeSeismicZone { new_seismic_zone: 3 });
+        let mutation = En1998Mutation::ChangeSeismicZone(crate::mutations::change_seismic_zone::ChangeSeismicZone { new_seismic_zone: 3 });
         let outcome = mutation.diff(&base);
         let mut expected = base.clone();
         expected.seismic_zone = 3;

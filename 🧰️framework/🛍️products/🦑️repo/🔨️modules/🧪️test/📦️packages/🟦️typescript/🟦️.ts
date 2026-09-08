@@ -9,7 +9,9 @@
 //#region 🔌️Adapters
 import { createHash } from "node:crypto";
 import { constants, cpSync, existsSync, linkSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { opendir, readFile as readFileAsync } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import ts from "typescript";
 import { type BreachRecord, TEST_LEVELS, type TestLevel, findRepoRoot, getRepoMetaDir, runProbe, testLevelBudgetMs } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { type Taxonomy, leadingEmojiIdentity, loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath, pathEmojiStatuteFindings } from "../../../📚️library/🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
@@ -89,6 +91,13 @@ export type TestTaxonomy = MutationCatalogAuthority & Readonly<{
   testCaseSlugPattern: string;
   testAdapterFileKinds: Readonly<Record<string, string>>;
   testImplementationIds: Readonly<Record<string, string>>;
+  testImplementationFileKindIds: readonly string[];
+  testLegacyDirectoryNames: readonly string[];
+  testLegacyFilenamePatterns: readonly Readonly<{ id: string; pattern: string }>[];
+  testDeliveryScopeDirectoryNames: readonly string[];
+  testJavaScriptFrameworkModules: readonly string[];
+  testAssertionModules: readonly string[];
+  testSelfTestDeclarationPattern: string;
   testOutputCacheDirName: string;
   testOutputMarkerFileKindId: string;
   testOutputMarkerKind: string;
@@ -116,7 +125,7 @@ let taxonomyCache: { root: string; value: TestTaxonomy } | null = null;
 export function testTaxonomy(repoRoot: string): TestTaxonomy {
   if (taxonomyCache && taxonomyCache.root === repoRoot) return taxonomyCache.value;
   const parsed = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
-  const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionDirName", "testContributionDirectoryOverrides", "testContributionFileKindId", "testProbeDirName", "testGeneratorDirName", "testBridgeDirName", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
+  const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testImplementationFileKindIds", "testLegacyDirectoryNames", "testLegacyFilenamePatterns", "testDeliveryScopeDirectoryNames", "testJavaScriptFrameworkModules", "testAssertionModules", "testSelfTestDeclarationPattern", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionDirName", "testContributionDirectoryOverrides", "testContributionFileKindId", "testProbeDirName", "testGeneratorDirName", "testBridgeDirName", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
   required.push("mutationDomainOwners", "mutationCatalogSourceOwners", "pathEmojiPolicy");
   const missing = required.filter((key) => parsed[key] === undefined);
   if (missing.length > 0) throw new Error(`🔣️taxonomy.json is missing the test contract keys: ${missing.join(", ")}`);
@@ -1401,7 +1410,7 @@ export function readResults(absPath: string): { results: TestResult[]; problems:
 
 //#region 🧾️Contract
 /** 🧾️ Breach families this domain owns. Every finding carries one of these `kind` values. */
-export const TESTING_BREACH_KINDS = ["testing/taxonomy", "testing/contract", "testing/fixture", "testing/oracle", "testing/dependency", "testing/discovery"] as const;
+export const TESTING_BREACH_KINDS = ["testing/taxonomy", "testing/contract", "testing/fixture", "testing/oracle", "testing/dependency", "testing/discovery", "testing/layout"] as const;
 export type TestingBreachKind = (typeof TESTING_BREACH_KINDS)[number];
 
 function breach(kind: TestingBreachKind, id: string, scope: string, summary: string, reason: string, solution: string, priority: BreachRecord["priority"] = "high"): BreachRecord {
@@ -1713,40 +1722,278 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
 }
 
 
-/** 🗺️ One legacy, still-unmanaged executable test file found outside the canonical owner-root tree. */
-export type UnmanagedTest = Readonly<{ path: string; area: string; framework: string }>;
+export const TEST_LAYOUT_FINDING_CODES = ["legacy-test-directory", "legacy-test-filename", "test-implementation-depth", "test-implementation-filename", "test-case-name", "test-owner-delivery-scope", "inline-test-body", "inline-self-test-declaration", "invalid-test-module-wiring"] as const;
+export type TestLayoutFindingCode = (typeof TEST_LAYOUT_FINDING_CODES)[number];
+export type TestLayoutFinding = Readonly<{ code: TestLayoutFindingCode; path: string; line: number | null; detail: string }>;
+export type TestLayoutSource = Readonly<{ path: string; source: string }>;
+export type TestLayoutProgress = Readonly<{ phase: "discover" | "inspect"; completed: number; total: number }>;
+export type TestLayoutScanOptions = Readonly<{ signal?: AbortSignal; progress?: (progress: TestLayoutProgress) => void; concurrency?: number }>;
 
-const UNMANAGED_TEST_PATTERNS: readonly (readonly [RegExp, string])[] = [
-  [/\.test\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/, "vitest/bun"],
-  [/\.spec\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/, "vitest/playwright"],
-  [/_test\.go$/, "go test"],
-  [/^test_.+\.py$/, "pytest"],
-  [/Tests?\.cs$/, "xunit"],
-];
+type TestSourceSignal = Readonly<{ code: "inline-test-body" | "inline-self-test-declaration" | "invalid-test-module-wiring"; line: number; detail: string }>;
+type TestPathAssessment = Readonly<{ canonical: boolean; finding: TestLayoutFinding | null }>;
 
-/**
- * 🗺️ Surveys every executable test that still lives outside the canonical owner-root tree. These are
- * not failures — they are the migration backlog, reported as one ratcheted count rather than
- * thousands of findings, so an owner can be declared migrated only when its own entry reaches zero.
- * Files inside a canonical case directory are excluded: those are adapters, not legacy tests.
- */
-export function surveyUnmanagedTests(repoRoot: string): UnmanagedTest[] {
-  const taxonomy = testTaxonomy(repoRoot);
-  const canonical = new Set(discoverTestCases(repoRoot).map((entry) => entry.caseDir));
-  const found: UnmanagedTest[] = [];
-  walkDirectories(repoRoot, (abs, rel) => {
-    if (isExcludedTestPath(repoRoot, rel)) return "skip";
-    if (canonical.has(rel)) return "skip";
-    if (basename(abs) === taxonomy.testFixturesDirName) return "skip";
-    for (const entry of readdirSync(abs, { withFileTypes: true })) {
-      if (!entry.isFile()) continue;
-      const match = UNMANAGED_TEST_PATTERNS.find(([pattern]) => pattern.test(entry.name));
-      if (match === undefined) continue;
-      found.push({ path: `${rel}/${entry.name}`, area: rel.split("/")[0] ?? ".", framework: match[1] });
+/** 🧪️ All canonical implementation filenames, including every executable extension chain of each declared file kind. */
+export function testImplementationFilenames(taxonomy: TestTaxonomy): readonly string[] {
+  return [...new Set(taxonomy.testImplementationFileKindIds.flatMap((kindId) => {
+    const kind = taxonomy.fileKinds[kindId];
+    if (!kind) return [];
+    return kind.extensionChains.filter((extension) => extension !== ".d.ts").map((extension) => `${kind.emoji}${extension}`);
+  }))].sort();
+}
+
+/** 🧭️ Identifies source extensions without treating their legacy basename as authority. */
+function testSourceExtension(name: string, taxonomy: TestTaxonomy): string | null {
+  const chains = taxonomy.testImplementationFileKindIds.flatMap((kindId) => taxonomy.fileKinds[kindId]?.extensionChains ?? []).filter((extension) => extension !== ".d.ts").sort((a, b) => b.length - a.length);
+  return chains.find((extension) => name.endsWith(extension)) ?? null;
+}
+
+/** 📐️ Measures one source path against `<semantic owner>/🧪️tests/<case>/<implementation>`. */
+export function assessTestImplementationPath(path: string, taxonomy: TestTaxonomy): TestPathAssessment {
+  const segments = path.split("/");
+  const tests = segments.flatMap((segment, index) => segment === taxonomy.testsDirName ? [index] : []);
+  if (tests.length === 0) return { canonical: false, finding: null };
+  const index = tests.at(-1)!;
+  if (tests.length !== 1 || index !== segments.length - 3) return { canonical: false, finding: { code: "test-implementation-depth", path, line: null, detail: `Executable test sources must be direct children of ${taxonomy.testsDirName}/<test-name>.` } };
+  const owner = segments.slice(0, index);
+  const delivery = owner.find((segment) => taxonomy.testDeliveryScopeDirectoryNames.includes(segment));
+  if (delivery) return { canonical: false, finding: { code: "test-owner-delivery-scope", path, line: null, detail: `The test owner is below delivery scope ${delivery}; move the case to its nearest language-neutral semantic owner.` } };
+  const identity = leadingEmojiIdentity(segments[index + 1]!);
+  if (!identity.first || !new RegExp(taxonomy.testCaseSlugPattern, "u").test(identity.rest) || pathEmojiStatuteFindings([{ path: segments[index + 1]!, nodeKind: "directory" }], taxonomy.pathEmojiPolicy.genericEmojiIdentities).length > 0) return { canonical: false, finding: { code: "test-case-name", path, line: null, detail: "The test case directory must use one canonical emoji followed by a kebab-case name." } };
+  if (!testImplementationFilenames(taxonomy).includes(segments.at(-1)!)) return { canonical: false, finding: { code: "test-implementation-filename", path, line: null, detail: `The implementation filename must be one of ${testImplementationFilenames(taxonomy).join(", ")}.` } };
+  return { canonical: true, finding: null };
+}
+
+/** 🎭️ Masks C-family comments and literals while preserving offsets, newlines, and literal delimiters. */
+function maskCStyleSource(source: string, rust: boolean): string {
+  const out = [...source];
+  const blank = (index: number): void => { if (out[index] !== "\n" && out[index] !== "\r") out[index] = " "; };
+  let index = 0;
+  while (index < source.length) {
+    if (source.startsWith("//", index)) {
+      while (index < source.length && source[index] !== "\n") blank(index++);
+      continue;
     }
-    return "enter";
+    if (source.startsWith("/*", index)) {
+      let depth = 1;
+      blank(index++); blank(index++);
+      while (index < source.length && depth > 0) {
+        if (source.startsWith("/*", index) && rust) { depth++; blank(index++); blank(index++); }
+        else if (source.startsWith("*/", index)) { depth--; blank(index++); blank(index++); }
+        else blank(index++);
+      }
+      continue;
+    }
+    const raw = rust ? /^(?:br|rb|r)(#*)"/u.exec(source.slice(index)) : null;
+    if (raw) {
+      const opening = raw[0], hashes = raw[1] ?? "", closing = `"${hashes}`;
+      index += opening.length;
+      const end = source.indexOf(closing, index);
+      const limit = end < 0 ? source.length : end;
+      while (index < limit) blank(index++);
+      index = end < 0 ? source.length : end + closing.length;
+      continue;
+    }
+    const quote = source[index];
+    if (quote === '"' || !rust && (quote === "'" || quote === "`")) {
+      index++;
+      while (index < source.length) {
+        if (source[index] === "\\") { blank(index++); if (index < source.length) blank(index++); continue; }
+        if (source[index] === quote) { index++; break; }
+        blank(index++);
+      }
+      continue;
+    }
+    index++;
+  }
+  return out.join("");
+}
+
+/** 🦀️ Finds executable Rust bodies and validates external test-module wiring. */
+function canonicalTestImport(path: string, declared: string, taxonomy: TestTaxonomy, availablePaths: ReadonlySet<string>): boolean {
+  const root = "/repo", target = resolve(dirname(resolve(root, path)), declared.split("\\").join("/"));
+  if (target !== root && !target.startsWith(`${root}/`)) return false;
+  const relativeTarget = relative(root, target).split(sep).join("/");
+  return assessTestImplementationPath(relativeTarget, taxonomy).canonical && availablePaths.has(relativeTarget);
+}
+
+/** 🦀️ Finds executable Rust bodies and validates external test-module wiring. */
+function rustTestSignals(path: string, source: string, taxonomy: TestTaxonomy, availablePaths: ReadonlySet<string>): TestSourceSignal[] {
+  const masked = maskCStyleSource(source, true), found: TestSourceSignal[] = [];
+  const line = (offset: number): number => source.slice(0, offset).split("\n").length;
+  const addMatches = (pattern: RegExp, code: TestSourceSignal["code"], detail: string): void => {
+    for (const match of masked.matchAll(pattern)) found.push({ code, line: line(match.index!), detail });
+  };
+  addMatches(/#\s*\[\s*(?:(?:tokio|async_std)::test|wasm_bindgen_test|test)(?:\s*\([^\]]*\))?\s*\]/gu, "inline-test-body", "Rust test attribute is outside a canonical test implementation.");
+  addMatches(/\bfn\s+[A-Za-z0-9_]*self_tests?\s*\(/giu, "inline-self-test-declaration", "Rust self-test declaration is outside a canonical test implementation.");
+  const modulePattern = /((?:#\s*\[[^\]\n]+\]\s*)+)(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*([;{])/gu;
+  for (const match of masked.matchAll(modulePattern)) {
+    const attributes = match[1]!, name = match[2]!, boundary = match[3]!;
+    if (!/cfg\s*\([^)]*\btest\b[^)]*\)/u.test(attributes) && name !== "tests") continue;
+    if (boundary === "{") {
+      found.push({ code: "inline-test-body", line: line(match.index!), detail: "Inline Rust test modules must move to a canonical test implementation." });
+      continue;
+    }
+    const original = source.slice(match.index!, match.index! + match[0].length), declared = /path\s*=\s*"([^"]+)"/u.exec(original)?.[1];
+    if (!declared || !canonicalTestImport(path, declared, taxonomy, availablePaths)) found.push({ code: "invalid-test-module-wiring", line: line(match.index!), detail: "External Rust test modules must use #[path] to an existing canonical test implementation." });
+  }
+  const includePattern = /((?:#\s*\[[^\]\n]+\]\s*)*)include!\s*\(\s*"[^"]+"\s*\)\s*;/gu;
+  for (const match of masked.matchAll(includePattern)) {
+    const original = source.slice(match.index!, match.index! + match[0].length), declared = /include!\s*\(\s*"([^"]+)"/u.exec(original)?.[1];
+    const testWiring = /cfg\s*\([^)]*\btest\b[^)]*\)/u.test(match[1]!) || declared?.includes(taxonomy.testsDirName) === true;
+    if (testWiring && (!/cfg\s*\([^)]*\btest\b[^)]*\)/u.test(match[1]!) || !declared || !canonicalTestImport(path, declared, taxonomy, availablePaths))) found.push({ code: "invalid-test-module-wiring", line: line(match.index!), detail: "Rust test includes must be gated by #[cfg(test)] and target an existing canonical test implementation." });
+  }
+  return found;
+}
+
+/** 🟦️ Finds JavaScript-family test imports, inline bodies, and assertion-bearing self-test declarations through the TypeScript parser. */
+function javascriptTestSignals(path: string, source: string, taxonomy: TestTaxonomy, availablePaths: ReadonlySet<string>): TestSourceSignal[] {
+  const kind = path.endsWith(".tsx") || path.endsWith(".jsx") ? ts.ScriptKind.TSX : path.endsWith(".js") || path.endsWith(".mjs") || path.endsWith(".cjs") ? ts.ScriptKind.JS : ts.ScriptKind.TS;
+  const root = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, kind), frameworks = new Set(taxonomy.testJavaScriptFrameworkModules), assertions = new Set(taxonomy.testAssertionModules);
+  const assertionBindings = new Set<string>(), frameworkImports: ts.Node[] = [], importMeta: ts.Node[] = [], testCalls: ts.CallExpression[] = [], dynamicImports: string[] = [], declarations: { node: ts.Node; name: string; body: ts.Node }[] = [];
+  const moduleName = (node: ts.Expression): string | null => ts.isStringLiteralLike(node) ? node.text : null;
+  for (const statement of root.statements) {
+    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteralLike(statement.moduleSpecifier)) continue;
+    const specifier = statement.moduleSpecifier.text;
+    if (frameworks.has(specifier)) frameworkImports.push(statement);
+    if (!assertions.has(specifier) || !statement.importClause) continue;
+    if (statement.importClause.name) assertionBindings.add(statement.importClause.name.text);
+    const bindings = statement.importClause.namedBindings;
+    if (bindings && ts.isNamespaceImport(bindings)) assertionBindings.add(bindings.name.text);
+    if (bindings && ts.isNamedImports(bindings)) for (const element of bindings.elements) assertionBindings.add(element.name.text);
+  }
+  const visit = (node: ts.Node): void => {
+    if (ts.isPropertyAccessExpression(node) && node.name.text === "vitest" && ts.isMetaProperty(node.expression) && node.expression.keywordToken === ts.SyntaxKind.ImportKeyword) importMeta.push(node);
+    if (ts.isCallExpression(node)) {
+      const expression = node.expression;
+      if (expression.kind === ts.SyntaxKind.ImportKeyword && node.arguments[0]) {
+        const specifier = moduleName(node.arguments[0]!);
+        if (specifier) dynamicImports.push(specifier);
+      }
+      if (ts.isIdentifier(expression) && ["describe", "it", "test", "suite", "expect"].includes(expression.text)) testCalls.push(node);
+    }
+    if (ts.isFunctionDeclaration(node) && node.name && node.body) declarations.push({ node, name: node.name.text, body: node.body });
+    if (ts.isMethodDeclaration(node) && node.name && ts.isIdentifier(node.name) && node.body) declarations.push({ node, name: node.name.text, body: node.body });
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))) declarations.push({ node, name: node.name.text, body: node.initializer.body });
+    ts.forEachChild(node, visit);
+  };
+  visit(root);
+  const line = (node: ts.Node): number => root.getLineAndCharacterOfPosition(node.getStart(root)).line + 1;
+  const canonicalImport = dynamicImports.some((specifier) => {
+    if (!specifier.startsWith(".")) return false;
+    return canonicalTestImport(path, specifier, taxonomy, availablePaths);
   });
-  return found.sort((a, b) => a.path.localeCompare(b.path));
+  const found: TestSourceSignal[] = [];
+  for (const node of frameworkImports) found.push({ code: "inline-test-body", line: line(node), detail: "Test-framework import is outside a canonical test implementation." });
+  if (importMeta.length > 0 && (testCalls.length > 0 || !canonicalImport)) found.push({ code: "inline-test-body", line: line(importMeta[0]!), detail: canonicalImport ? "import.meta.vitest wiring still contains inline test calls." : "import.meta.vitest wiring must dynamically import a canonical test implementation." });
+  const selfPattern = new RegExp(taxonomy.testSelfTestDeclarationPattern, "u");
+  for (const declaration of declarations) {
+    let assertion = false;
+    const inspect = (node: ts.Node): void => {
+      if (ts.isCallExpression(node) && (ts.isIdentifier(node.expression) && assertionBindings.has(node.expression.text) || ts.isPropertyAccessExpression(node.expression) && ts.isIdentifier(node.expression.expression) && assertionBindings.has(node.expression.expression.text))) assertion = true;
+      ts.forEachChild(node, inspect);
+    };
+    inspect(declaration.body);
+    if (/SelfTests?$/u.test(declaration.name) || selfPattern.test(declaration.name) && assertion) found.push({ code: "inline-self-test-declaration", line: line(declaration.node), detail: `Self-test declaration ${declaration.name} is outside a canonical test implementation.` });
+  }
+  if (frameworkImports.length === 0 && importMeta.length === 0 && testCalls.some((call) => ts.isIdentifier(call.expression) && ["describe", "it", "test", "suite"].includes(call.expression.text)) && testCalls.some((call) => ts.isIdentifier(call.expression) && call.expression.text === "expect")) found.push({ code: "inline-test-body", line: line(testCalls[0]!), detail: "Global test declarations are outside a canonical test implementation." });
+  return found;
+}
+
+/** 🐍️ Masks Python comments and strings while preserving offsets and newlines. */
+function maskPythonSource(source: string): string {
+  const out = [...source];
+  const blank = (index: number): void => { if (out[index] !== "\n" && out[index] !== "\r") out[index] = " "; };
+  let index = 0;
+  while (index < source.length) {
+    if (source[index] === "#") { while (index < source.length && source[index] !== "\n") blank(index++); continue; }
+    const prefix = /^(?:[rubfRUBF]{0,2})("""|'''|"|')/u.exec(source.slice(index));
+    if (!prefix) { index++; continue; }
+    const quote = prefix[1]!, opening = prefix[0];
+    index += opening.length;
+    while (index < source.length) {
+      if (source.startsWith(quote, index)) { index += quote.length; break; }
+      if (quote.length === 1 && source[index] === "\\") { blank(index++); if (index < source.length) blank(index++); continue; }
+      blank(index++);
+    }
+  }
+  return out.join("");
+}
+
+/** 🔎️ Finds executable declarations for non-JavaScript languages after literal masking. */
+function conventionalTestSignals(path: string, source: string, extension: string, taxonomy: TestTaxonomy, availablePaths: ReadonlySet<string>): TestSourceSignal[] {
+  if (extension === ".rs") return rustTestSignals(path, source, taxonomy, availablePaths);
+  const masked = extension === ".py" ? maskPythonSource(source) : maskCStyleSource(source, false), patterns: readonly (readonly [RegExp, string])[] = extension === ".go" ? [[/^\s*func\s+(?:Test|Benchmark|Fuzz)[A-Z0-9_]\w*\s*\(/gmu, "Go test declaration"]] : extension === ".py" ? [[/^\s*(?:async\s+)?def\s+test_[A-Za-z0-9_]*\s*\(/gmu, "Python test declaration"], [/^\s*class\s+\w+\s*\([^\n)]*(?:unittest\.)?TestCase[^\n)]*\)\s*:/gmu, "Python TestCase declaration"]] : extension === ".cs" ? [[/^\s*\[(?:Fact|Theory|Test|TestCase)(?:\([^\]]*\))?\]/gmu, ".NET test attribute"]] : [];
+  const found: TestSourceSignal[] = [];
+  for (const [pattern, detail] of patterns) for (const match of masked.matchAll(pattern)) found.push({ code: "inline-test-body", line: source.slice(0, match.index!).split("\n").length, detail: `${detail} is outside a canonical test implementation.` });
+  return found;
+}
+
+/** 🧫️ Applies the complete path and source contract to an in-memory, language-neutral file set. */
+export function inspectTestLayoutSources(taxonomy: TestTaxonomy, sources: readonly TestLayoutSource[]): TestLayoutFinding[] {
+  const legacyPatterns = taxonomy.testLegacyFilenamePatterns.map((entry) => ({ id: entry.id, pattern: new RegExp(entry.pattern, "u") })), findings: TestLayoutFinding[] = [];
+  const availablePaths = new Set(sources.map((entry) => entry.path.split("\\").join("/")));
+  for (const entry of sources) {
+    const path = entry.path.split("\\").join("/"), segments = path.split("/"), name = segments.at(-1)!, extension = testSourceExtension(name, taxonomy);
+    if (!extension) continue;
+    const legacyDirectory = segments.slice(0, -1).find((segment) => taxonomy.testLegacyDirectoryNames.includes(segment));
+    if (legacyDirectory) findings.push({ code: "legacy-test-directory", path, line: null, detail: `Legacy test directory ${legacyDirectory} is forbidden; use ${taxonomy.testsDirName}/<test-name>/<implementation>.` });
+    const legacyFilename = legacyPatterns.find((entry) => entry.pattern.test(name));
+    if (legacyFilename) findings.push({ code: "legacy-test-filename", path, line: null, detail: `Legacy test filename pattern ${legacyFilename.id} is forbidden.` });
+    const assessment = assessTestImplementationPath(path, taxonomy), inFixture = segments.includes(taxonomy.testFixturesDirName);
+    if (assessment.finding && !inFixture) findings.push(assessment.finding);
+    if (assessment.canonical) continue;
+    const signals = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs"].includes(extension) ? javascriptTestSignals(path, entry.source, taxonomy, availablePaths) : conventionalTestSignals(path, entry.source, extension, taxonomy, availablePaths);
+    for (const signal of signals) findings.push({ ...signal, path });
+  }
+  const unique = new Map(findings.map((finding) => [`${finding.code}\0${finding.path}\0${finding.line ?? ""}`, finding]));
+  return [...unique.values()].sort((a, b) => a.path.localeCompare(b.path) || a.code.localeCompare(b.code) || (a.line ?? 0) - (b.line ?? 0));
+}
+
+/** 🚶️ Discovers authored source files asynchronously without following symlinks or entering excluded/output trees. */
+async function discoverTestLayoutSources(repoRoot: string, taxonomy: TestTaxonomy, options: TestLayoutScanOptions): Promise<string[]> {
+  const stack = [repoRoot], files: string[] = [];
+  while (stack.length > 0) {
+    options.signal?.throwIfAborted();
+    const directory = stack.pop()!, relDirectory = relative(repoRoot, directory).split(sep).join("/");
+    if (relDirectory && isExcludedTestPath(repoRoot, relDirectory)) continue;
+    let entries;
+    try { entries = await opendir(directory); } catch { continue; }
+    const children = [];
+    for await (const entry of entries) children.push(entry);
+    children.sort((a, b) => a.name.localeCompare(b.name));
+    for (const entry of children) {
+      if (entry.isSymbolicLink()) continue;
+      const path = join(directory, entry.name), rel = relative(repoRoot, path).split(sep).join("/");
+      if (entry.isDirectory()) {
+        if (!SKIP_DIR_NAMES.has(entry.name) && !isExcludedTestPath(repoRoot, rel)) stack.push(path);
+      } else if (entry.isFile() && testSourceExtension(entry.name, taxonomy)) files.push(rel);
+    }
+    options.progress?.({ phase: "discover", completed: files.length, total: 0 });
+  }
+  return files.sort();
+}
+
+/** ⚡️ Scans the repository with bounded async reads, cancellation, deterministic progress, and sorted findings. */
+export async function scanTestLayout(repoRoot: string, options: TestLayoutScanOptions = {}): Promise<TestLayoutFinding[]> {
+  const taxonomy = testTaxonomy(repoRoot), files = await discoverTestLayoutSources(repoRoot, taxonomy, options), sources = new Array<TestLayoutSource>(files.length);
+  let cursor = 0, completed = 0;
+  const concurrency = Math.max(1, Math.min(options.concurrency ?? 16, 64, files.length || 1));
+  await Promise.all(Array.from({ length: concurrency }, async () => {
+    while (true) {
+      options.signal?.throwIfAborted();
+      const index = cursor++;
+      if (index >= files.length) return;
+      const path = files[index]!;
+      sources[index] = { path, source: await readFileAsync(join(repoRoot, path), "utf8") };
+      options.progress?.({ phase: "inspect", completed: ++completed, total: files.length });
+    }
+  }));
+  return inspectTestLayoutSources(taxonomy, sources);
+}
+
+/** 🚨️ Converts exact layout findings into the repository test contract's breach vocabulary. */
+export async function testLayoutBreaches(repoRoot: string, options: TestLayoutScanOptions = {}): Promise<BreachRecord[]> {
+  return (await scanTestLayout(repoRoot, options)).map((finding) => breach("testing/layout", finding.code, finding.path, `${finding.detail}${finding.line === null ? "" : ` (line ${finding.line})`}`, "Every executable test has one language-neutral owner and one canonical implementation leaf.", `Move it to <parent>/${testTaxonomy(repoRoot).testsDirName}/<test-name>/<implementation> and remove inline or legacy test declarations.`));
 }
 
 /**
@@ -1824,26 +2071,9 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
 }
 
 
-/**
- * 🔒️ The repo-wide shrink-only migration ratchet. It carries AREA counts only — never a list of
- * owners — so deleting an implementation area simply surveys as zero and passes, and no framework
- * file goes stale when one disappears.
- */
-export type MigrationBaseline = Readonly<{ schemaVersion: number; unmanagedTests: { total: number; byArea: Record<string, number> } }>;
-
-/** 🔒️ Repo-relative path of the ratchet, beside the dependency baseline: repository state, not module state. */
-export const MIGRATION_BASELINE_REL_PATH = "🚚️migration.json";
-
 /** 🔒️ Ordered migration ladder every owner walks; an owner advances only on machine-readable evidence. */
 export const MIGRATION_STATUSES = ["discovered", "surveyed", "contract-ready", "oracle-green", "subject-green", "parity-green", "coverage-green", "dependency-clean", "legacy-removed", "ci-enforced", "complete"] as const;
 export type MigrationStatus = (typeof MIGRATION_STATUSES)[number];
-
-/** 🔒️ Loads the committed repo-wide ratchet. */
-export function loadMigrationBaseline(repoRoot: string): MigrationBaseline {
-  const path = join(repoRoot, MIGRATION_BASELINE_REL_PATH);
-  if (!existsSync(path)) return { schemaVersion: 1, unmanagedTests: { total: 0, byArea: {} } };
-  return JSON.parse(readFileSync(path, "utf8")) as MigrationBaseline;
-}
 
 /**
  * 🔒️ Every owner's declared migration status, collected from the owners themselves. The framework
@@ -1942,13 +2172,6 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
   breaches.push(...mutationFixtureBreaches(registry));
   breaches.push(...isolationBreaches(registry));
 
-  const baseline = loadMigrationBaseline(repoRoot);
-  const byArea = surveyUnmanagedTests(repoRoot).reduce((map, entry) => map.set(entry.area, (map.get(entry.area) ?? 0) + 1), new Map<string, number>());
-  for (const [area, count] of [...byArea].sort((a, b) => b[1] - a[1])) {
-    const allowed = baseline.unmanagedTests.byArea[area] ?? 0;
-    if (count <= allowed) continue;
-    breaches.push(breach("testing/discovery", "unmanaged-tests", area, `${count} executable test file(s) outside the canonical owner-root test tree, baseline allows ${allowed}`, "New tests belong in 🧪️tests/<case>/component.feature under their language-neutral owner. The legacy backlog is shrink-only.", `Move the behaviour into a case with one adapter per claimed implementation and delete the legacy test in the same change, or lower the baseline in 📇️registry/🚚️migration.json only when the count actually dropped.`));
-  }
   return breaches;
 }
 //#endregion 🧾️Contract
@@ -3694,15 +3917,40 @@ export function scaffoldOwnerDescriptors(repoRoot: string, ownerRel: string): Le
  */
 export const SCHEMA_MODULE_DIR_NAME = "🧬️schema";
 
-/** 🚫️ The per-contract directory the contract abolishes — a contract is never its own scope. */
-export const SCHEMA_CONTRACTS_DIR_NAME = "🧬️contracts";
+/**
+ * 🧬️ The one JSON Schema dialect this repository speaks, as the taxonomy states it.
+ *
+ * Restating the dialect string here would make this file a second authority on it: the day the
+ * taxonomy moves the tree to another draft, a constant compiled into the harness keeps reporting
+ * the old one as correct.
+ */
+export function schemaJsonDialect(repoRoot: string): string {
+  const declared = rawTaxonomy(repoRoot).schemaJsonDialect;
+  if (typeof declared !== "string" || declared.length === 0) throw new Error(`${TAXONOMY_REL_PATH} declares no \`schemaJsonDialect\``);
+  return declared;
+}
 
-/** 🧬️ The one JSON Schema dialect this repository speaks. */
-export const SCHEMA_JSON_DIALECT = "http://json-schema.org/draft-07/schema#";
-
-/** 🧬️ Filenames that stop existing once every contract lives in its owner's `🧬️schema/` module. */
-export function isForbiddenSchemaFilename(name: string): boolean {
-  return name.endsWith(".schema.json") || name === "🧬️schema.json";
+/**
+ * 🚫️ The placements the contract abolishes, as the taxonomy writes them.
+ *
+ * `schemaExportResolution.forbiddenPlacementPatterns` is the only list; the harness never restates a
+ * retired filename (`*.schema.json`, `🧬️schema.json`) or a retired directory (`🧬️contracts/`).
+ * `placementExceptions` maps a repository-relative path to the reason it survives.
+ */
+export function forbiddenSchemaPlacements(repoRoot: string): { directories: readonly string[]; files: readonly string[]; exceptions: ReadonlyMap<string, string> } {
+  const declared = rawTaxonomy(repoRoot).schemaExportResolution as { forbiddenPlacementPatterns?: unknown; placementExceptions?: unknown } | undefined;
+  const patterns = Array.isArray(declared?.forbiddenPlacementPatterns) ? (declared.forbiddenPlacementPatterns as readonly unknown[]).filter((entry): entry is string => typeof entry === "string") : [];
+  // 🧭️A pattern the list also carries in `<pattern>/**` form names a forbidden DIRECTORY — the
+  // descendant form is how the taxonomy says "and everything under it". Every other pattern names a
+  // forbidden FILE. The split is read off the declaration; no directory or filename is named here.
+  const set = new Set(patterns);
+  const directories = patterns.filter((pattern) => set.has(`${pattern}/**`));
+  const descendants = new Set(directories.map((pattern) => `${pattern}/**`));
+  const files = patterns.filter((pattern) => !set.has(`${pattern}/**`) && !descendants.has(pattern));
+  const rawExceptions = declared?.placementExceptions;
+  const exceptions = new Map<string, string>();
+  if (rawExceptions !== null && typeof rawExceptions === "object" && !Array.isArray(rawExceptions)) for (const [path, reason] of Object.entries(rawExceptions as Record<string, unknown>)) exceptions.set(path, typeof reason === "string" ? reason : "");
+  return { directories, files, exceptions };
 }
 
 /** 🔠️ Every diagnostic this layer can emit. A distinct code per distinguishable failure, by design. */
@@ -3741,10 +3989,21 @@ function schemaDiagnostic(code: SchemaDiagnosticCode, detail: string, where: Par
 }
 
 /** 🔣️ The `schema://` scheme and the catalog it resolves through, as the taxonomy declares them. */
-export type SchemaExportResolution = Readonly<{ scheme: string; catalogPath: string }>;
+export type SchemaExportResolution = Readonly<{ uriScheme: string; catalogPath: string; uriPattern: string | null }>;
 
-/** 📚️ One scope's row in the derived catalog. `formats` values are repository-relative file paths. */
-export type SchemaCatalogScope = Readonly<{ path: string; formats: Readonly<Record<string, string>>; exports: readonly string[]; dependsOn: readonly string[]; hashes: Readonly<Record<string, string>> }>;
+/** 📚️ One scope's row in the derived catalog. `path` is the module directory; `formats` values are relative to it. */
+export type SchemaCatalogScope = Readonly<{ path: string; formats: Readonly<Record<string, string>>; exports: Readonly<Record<string, SchemaCatalogExport>>; dependsOn: readonly string[]; hashes?: Readonly<Record<string, string>> }>;
+
+/**
+ * 📚️ One export's row: the module-relative file that CARRIES it, and the facet that file belongs to.
+ *
+ * A scope's `formats` names the module root only, and 1 006 of the repository's exports are declared
+ * in a facet child (`🔺️diff/`, `📸️snapshot/`, `💡️inferences/`, `🧬️mutations/`). Without a per-export
+ * file, `schema://<scope>/<Export>` resolves to a document that does not declare the export — and the
+ * only way to find the right one would be to search the four children, which is the nearest-parent
+ * habit this layer exists to remove.
+ */
+export type SchemaCatalogExport = Readonly<{ file: string; facet: string }>;
 
 /** 📚️ The derived catalog: the single place `(scope id, export id, format id)` is answered from. */
 export type SchemaCatalog = Readonly<{ scopes: Readonly<Record<string, SchemaCatalogScope>> }>;
@@ -3782,11 +4041,11 @@ export function schemaExportResolution(repoRoot: string): { resolution: SchemaEx
   if (declared === undefined || declared === null || typeof declared !== "object" || Array.isArray(declared)) {
     return { resolution: null, diagnostics: [schemaDiagnostic("schema-export-resolution-undeclared", `${TAXONOMY_REL_PATH} declares no \`schemaExportResolution\`; the \`schema://\` scheme has no catalog to resolve through`, { path: TAXONOMY_REL_PATH })] };
   }
-  const { scheme, catalogPath } = declared as { scheme?: unknown; catalogPath?: unknown };
-  if (scheme !== "schema://" || typeof catalogPath !== "string" || catalogPath.length === 0) {
-    return { resolution: null, diagnostics: [schemaDiagnostic("schema-export-resolution-undeclared", `${TAXONOMY_REL_PATH} \`schemaExportResolution\` must declare \`scheme\` "schema://" and a non-empty repository-relative \`catalogPath\``, { path: TAXONOMY_REL_PATH })] };
+  const { uriScheme, catalogPath, uriPattern } = declared as { uriScheme?: unknown; catalogPath?: unknown; uriPattern?: unknown };
+  if (uriScheme !== "schema" || typeof catalogPath !== "string" || catalogPath.length === 0) {
+    return { resolution: null, diagnostics: [schemaDiagnostic("schema-export-resolution-undeclared", `${TAXONOMY_REL_PATH} \`schemaExportResolution\` must declare \`uriScheme\` "schema" and a non-empty repository-relative \`catalogPath\``, { path: TAXONOMY_REL_PATH })] };
   }
-  return { resolution: { scheme, catalogPath }, diagnostics: [] };
+  return { resolution: { uriScheme, catalogPath, uriPattern: typeof uriPattern === "string" ? uriPattern : null }, diagnostics: [] };
 }
 
 /** 🔣️ The normative format of the `🧬️data` facet — the one a bare `schema://` URI resolves to. */
@@ -3795,14 +4054,6 @@ export function normativeSchemaFormat(repoRoot: string): string {
   const normative = kinds?.["🧬️data"]?.normativeFormat;
   if (typeof normative !== "string" || normative.length === 0) throw new Error(`${TAXONOMY_REL_PATH} declares no normative format for the 🧬️data schema facet`);
   return normative;
-}
-
-/** 🔣️ The canonical filename one schema format is written under inside a `🧬️schema/` module. */
-export function schemaFormatFilename(repoRoot: string, format: string): string | null {
-  const formats = rawTaxonomy(repoRoot).schemaFormats as Record<string, { fileKindId?: string }> | undefined;
-  const kindId = formats?.[format]?.fileKindId;
-  if (typeof kindId !== "string") return null;
-  return testFilenameForKind(testTaxonomy(repoRoot), kindId);
 }
 
 /**
@@ -3843,32 +4094,47 @@ function loadSchemaCatalog(repoRoot: string): { catalog: SchemaCatalog | null; d
   }
   const found: SchemaDiagnostic[] = [];
   const byPath = new Map<string, string>();
+  // 🪞️A scope id declared twice in the catalog TEXT collapses on parse, so the raw bytes are counted
+  // ONCE, here: two owners claiming one id is an ambiguity nothing downstream could otherwise see.
+  const declarations = new Map<string, number>();
+  for (const match of text.matchAll(/"([^"\\]+)"\s*:\s*\{/gu)) declarations.set(match[1]!, (declarations.get(match[1]!) ?? 0) + 1);
   for (const [id, row] of Object.entries(scopes as Record<string, unknown>)) {
     const scope = row as Partial<SchemaCatalogScope>;
-    if (typeof scope.path !== "string" || typeof scope.formats !== "object" || scope.formats === null || !Array.isArray(scope.exports) || !Array.isArray(scope.dependsOn)) {
-      found.push(schemaDiagnostic("schema-catalog-malformed", `catalog scope ${JSON.stringify(id)} must carry \`path\`, \`formats\`, \`exports\` and \`dependsOn\``, { scope: id, path: resolution.catalogPath }));
+    if (typeof scope.path !== "string" || typeof scope.formats !== "object" || scope.formats === null || typeof scope.exports !== "object" || scope.exports === null || Array.isArray(scope.exports) || !Array.isArray(scope.dependsOn)) {
+      found.push(schemaDiagnostic("schema-catalog-malformed", `catalog scope ${JSON.stringify(id)} must carry \`path\`, \`formats\`, an \`exports\` object of ExportId → { file, facet } and \`dependsOn\``, { scope: id, path: resolution.catalogPath }));
       continue;
     }
-    // 🪞️A scope id declared twice in the catalog TEXT collapses on parse, so it is counted in the raw
-    // bytes: two owners claiming one id is an ambiguity nothing downstream could otherwise see.
-    const declarations = text.split(`${JSON.stringify(id)}:`).length - 1 + (text.split(`${JSON.stringify(id)} :`).length - 1);
-    if (declarations > 1) found.push(schemaDiagnostic("schema-scope-ambiguous", `the catalog declares the scope id ${JSON.stringify(id)} ${declarations} times`, { scope: id, path: resolution.catalogPath }));
+    for (const [exported, row] of Object.entries(scope.exports)) {
+      const file = (row as Partial<SchemaCatalogExport> | null)?.file;
+      const facet = (row as Partial<SchemaCatalogExport> | null)?.facet;
+      if (typeof file !== "string" || file.length === 0 || file.startsWith("/") || file.includes("..") || typeof facet !== "string" || facet.length === 0) found.push(schemaDiagnostic("schema-catalog-malformed", `scope ${JSON.stringify(id)} export ${JSON.stringify(exported)} must name a \`file\` relative to ${scope.path} and the \`facet\` that carries it`, { scope: id, export: exported, path: resolution.catalogPath }));
+    }
+    const count = declarations.get(id) ?? 1;
+    if (count > 1) found.push(schemaDiagnostic("schema-scope-ambiguous", `the catalog declares the scope id ${JSON.stringify(id)} ${count} times`, { scope: id, path: resolution.catalogPath }));
     const priorId = byPath.get(scope.path);
     if (priorId !== undefined) found.push(schemaDiagnostic("schema-scope-ambiguous", `scope ids ${JSON.stringify(priorId)} and ${JSON.stringify(id)} both own ${scope.path}`, { scope: id, path: scope.path }));
     else byPath.set(scope.path, id);
     for (const [format, file] of Object.entries(scope.formats)) {
-      if (typeof file !== "string" || !file.startsWith(`${scope.path}/`)) found.push(schemaDiagnostic("schema-catalog-malformed", `scope ${JSON.stringify(id)} format ${format} must name a repository-relative file under ${scope.path}/`, { scope: id, format, path: resolution.catalogPath }));
+      if (typeof file !== "string" || file.length === 0 || file.startsWith("/") || file.includes("..")) found.push(schemaDiagnostic("schema-catalog-malformed", `scope ${JSON.stringify(id)} format ${format} must name a file relative to ${scope.path}`, { scope: id, format, path: resolution.catalogPath }));
     }
   }
   return { catalog: { scopes: scopes as Record<string, SchemaCatalogScope> }, diagnostics: found };
 }
 
-const SCHEMA_URI_RE = /^schema:\/\/([a-z0-9]+(?:[.-][a-z0-9]+)*)\/([A-Z][A-Za-z0-9]*)$/;
+const SCHEMA_URI_RE = /^schema:\/\/([a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)*)\/([A-Z][A-Za-z0-9]*)$/u;
 
-/** 🔗️ Splits a `schema://<scope id>/<ExportId>` URI, or refuses it. Nothing else is a schema URI. */
-export function parseSchemaUri(uri: string): { scope: string; export: string } | null {
-  const match = uri.match(SCHEMA_URI_RE);
-  return match === null ? null : { scope: match[1]!, export: match[2]! };
+/**
+ * 🔗️ Splits a `schema://<scope id>/<ExportId>` URI, or refuses it. Nothing else is a schema URI.
+ *
+ * The taxonomy owns the grammar (`schemaExportResolution.uriPattern`), so a repository that tightens
+ * or widens the id shape does it in one place; the constant here is what an unconfigured tree gets.
+ */
+export function parseSchemaUri(uri: string, pattern: string | null = null): { scope: string; export: string } | null {
+  const match = uri.match(pattern === null ? SCHEMA_URI_RE : new RegExp(pattern, "u"));
+  if (match === null) return null;
+  const scope = match.groups?.scope ?? match[1];
+  const exported = match.groups?.export ?? match[2];
+  return scope === undefined || exported === undefined ? null : { scope, export: exported };
 }
 
 /**
@@ -3878,40 +4144,60 @@ export function parseSchemaUri(uri: string): { scope: string; export: string } |
  * missing file — because "it did not resolve" is not actionable and every one of those five is.
  */
 export function resolveSchemaExport(repoRoot: string, uri: string, format?: string): { resolved: ResolvedSchemaExport | null; diagnostics: readonly SchemaDiagnostic[] } {
-  const parsed = parseSchemaUri(uri);
+  const { resolution, diagnostics: undeclared } = schemaExportResolution(repoRoot);
+  const parsed = parseSchemaUri(uri, resolution?.uriPattern ?? null);
   if (parsed === null) return { resolved: null, diagnostics: [schemaDiagnostic("schema-uri-malformed", `${JSON.stringify(uri)} is not a schema://<scope id>/<ExportId> reference`, { path: null })] };
+  if (resolution === null) return { resolved: null, diagnostics: undeclared };
   const { catalog, diagnostics } = readSchemaCatalog(repoRoot);
   if (catalog === null) return { resolved: null, diagnostics };
   const scope = catalog.scopes[parsed.scope];
   if (scope === undefined) return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-scope-unknown", `the catalog declares no scope ${JSON.stringify(parsed.scope)}`, { scope: parsed.scope, export: parsed.export })] };
-  if (!scope.exports.includes(parsed.export)) return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-export-unknown", `scope ${JSON.stringify(parsed.scope)} exports ${scope.exports.length === 0 ? "nothing" : scope.exports.join(", ")} — not ${JSON.stringify(parsed.export)}`, { scope: parsed.scope, export: parsed.export })] };
+  const exported = scope.exports[parsed.export];
+  if (exported === undefined) {
+    const names = Object.keys(scope.exports);
+    return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-export-unknown", `scope ${JSON.stringify(parsed.scope)} exports ${names.length === 0 ? "nothing" : names.join(", ")} — not ${JSON.stringify(parsed.export)}`, { scope: parsed.scope, export: parsed.export })] };
+  }
   const chosen = format ?? normativeSchemaFormat(repoRoot);
-  const file = scope.formats[chosen];
-  if (typeof file !== "string") return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-format-unavailable", `scope ${JSON.stringify(parsed.scope)} declares no ${chosen} implementation`, { scope: parsed.scope, export: parsed.export, format: chosen })] };
+  const relative = scope.formats[chosen];
+  if (typeof relative !== "string") return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-format-unavailable", `scope ${JSON.stringify(parsed.scope)} declares no ${chosen} implementation`, { scope: parsed.scope, export: parsed.export, format: chosen })] };
+  const file = schemaExportFile(scope, exported, chosen, normativeSchemaFormat(repoRoot));
   if (!existsSync(join(repoRoot, file))) return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-file-missing", `the catalog names ${file} for ${chosen}, and that file does not exist`, { scope: parsed.scope, export: parsed.export, format: chosen, path: file })] };
   // 🧫️A contract may never be answered out of a fixture or test tree. Resolution reaching one means
   // the catalog itself was built over an ineligible owner, and every consumer of it is reading an
   // example as if it were the contract.
-  if (isFixtureOwnedPath(file)) return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-fixture-local-schema-fallback", `${file} lies under a fixture or test directory, so it cannot answer ${uri}`, { scope: parsed.scope, export: parsed.export, format: chosen, path: file })] };
+  if (isFixtureOwnedPath(repoRoot, file)) return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-fixture-local-schema-fallback", `${file} lies under a fixture or test directory, so it cannot answer ${uri}`, { scope: parsed.scope, export: parsed.export, format: chosen, path: file })] };
   return { resolved: { uri, scope: parsed.scope, export: parsed.export, format: chosen, path: file, digest: fileDigest(join(repoRoot, file)) }, diagnostics };
 }
 
-/** 🧫️ Whether a repository-relative path lives inside a test or fixture collection. */
-export function isFixtureOwnedPath(rel: string): boolean {
+/**
+ * 🧫️ Whether a repository-relative path lives inside a test or fixture COLLECTION.
+ *
+ * The patterns are the taxonomy's (`schemaScopeOwnerLevels.fixtureOwnerPathPatterns`), so what counts as
+ * a collection is declared once. The one thing decided here is the `🔨️modules/<m>` carve-out: a module
+ * member is a module whatever emoji its name starts with, and without it the repository test platform —
+ * `🔨️modules/🧪️test`, which owns the test-protocol contract every host reads — would be classified as a
+ * collection of its own examples.
+ */
+export function isFixtureOwnedPath(repoRoot: string, rel: string): boolean {
+  // 🧭️Only the SELF patterns (`**/🧪️*`) name a collection ROOT; the `/**` siblings name its descendants
+  // and are redundant here, because every ancestor of the path is tested. Keeping them would make
+  // `🔨️modules/🧪️test/🧬️schema` a collection by virtue of an ancestor the carve-out had just excused.
+  const patterns = ((schemaScopeOwnerLevels(repoRoot) as { fixtureOwnerPathPatterns?: readonly string[] } | null)?.fixtureOwnerPathPatterns ?? []).filter((pattern) => !pattern.endsWith("/**"));
   const segments = rel.split("/");
-  return segments.some((name, index) => isTestOrFixtureSegment(name) && !isModuleMemberSegment(segments, index));
-}
-
-function isTestOrFixtureSegment(name: string): boolean {
-  return name.startsWith("🧪️") || name.startsWith("🧫️");
+  for (let index = 0; index < segments.length; index += 1) {
+    if (isModuleMemberSegment(segments, index)) continue;
+    const prefix = segments.slice(0, index + 1).join("/");
+    if (patterns.some((pattern) => matchesTaxonomyPathPattern(pattern, prefix))) return true;
+  }
+  return false;
 }
 
 /**
  * 🔨️ Whether the segment at `index` is a `🔨️modules/<m>` member.
  *
- * The repository test platform IS a product module named `🧪️test`, and it owns a real schema module.
- * Reading the leading emoji alone would make the platform that enforces this contract the contract's
- * largest violator, so the MODULE POSITION decides, not the emoji.
+ * This decides COLLECTION membership only — "does this path lie inside a test or fixture collection" —
+ * never ownership, which `schemaScopeEligibility` reads from the taxonomy. A `🔨️modules/<m>` member is
+ * a module whatever emoji its name starts with; `🧪️tests/` and `🧫️fixtures/` under it are collections.
  */
 function isModuleMemberSegment(segments: readonly string[], index: number): boolean {
   return index > 0 && segments[index - 1] === "🔨️modules";
@@ -3920,40 +4206,51 @@ function isModuleMemberSegment(segments: readonly string[], index: number): bool
 /** 🏛️ One eligibility verdict for a candidate scope owner directory. */
 export type SchemaScopeEligibility = Readonly<{ path: string; eligible: boolean; level: string | null; reason: string }>;
 
-const SCHEMA_SCOPE_LEVELS: readonly (readonly [string, RegExp])[] = [
-  ["plugin-root", /^✏️s\/🔌️plugins\/[^/]+$/u],
-  ["artifact-subset", /\/🏅️standards\/[^/]+\/🪆️subsets\/[^/]+$/u],
-  ["surface", /\/(?:🎚️config|👥️presence|🫧️transient)$/u],
-  ["mutation-leaf", /\/🧬️schema\/🧬️mutations\/[^/]+$/u],
-  ["framework-module", /^🧰️framework\/🔨️modules\/[^/]+(?:\/.+)?$/u],
-  ["product-module", /^🧰️framework\/🛍️products\/[^/]+\/🔨️modules\/[^/]+(?:\/.+)?$/u],
-  ["hub-area", /^🌎️hub\/[^/]+$/u],
-];
+/** 🏛️ The declared owner levels and exclusions, exactly as the taxonomy states them. */
+export type SchemaScopeOwnerLevels = Readonly<{ facetDirName: string; levels: Readonly<Record<string, { pathPatterns: readonly string[]; reason: string }>>; excludedOwnerPathPatterns: readonly string[] }>;
 
-const SCHEMA_INELIGIBLE_SEGMENTS: readonly (readonly [string, string])[] = [
-  ["🧱️elements", "a `🧱️elements` member is a UI element, and a UI element consumes contracts rather than owning them"],
-  ["🎯️targets", "a `🎯️targets` member is a build target of an owner, not an owner"],
-  ["📦️packages", "a `📦️packages` member is a publication of an owner's contract, not its authority"],
-  [SCHEMA_CONTRACTS_DIR_NAME, "a per-contract directory makes every contract its own scope, which is the arrangement this contract abolishes"],
-];
+export function schemaScopeOwnerLevels(repoRoot: string): SchemaScopeOwnerLevels | null {
+  const declared = rawTaxonomy(repoRoot).schemaScopeOwnerLevels as SchemaScopeOwnerLevels | undefined;
+  if (declared === undefined || typeof declared.levels !== "object" || !Array.isArray(declared.excludedOwnerPathPatterns)) return null;
+  return declared;
+}
+
+/**
+ * 🔎️ Matches one repository-relative path against a taxonomy path pattern.
+ *
+ * `**` spans any number of segments, `*` spans exactly one and never a separator. It is written here
+ * rather than taken from a glob library because a runtime dependency on one is forbidden — and
+ * because a pattern language nobody can read is a policy nobody can audit.
+ */
+export function matchesTaxonomyPathPattern(pattern: string, path: string): boolean {
+  const escaped = pattern.replace(/[.+^${}()|[\]\\]/gu, "\\$&");
+  const expression = escaped
+    .split("**/")
+    .join("\u0000")
+    .replace(/\*\*/gu, "\u0001")
+    .replace(/\*/gu, "[^/]*")
+    .split("\u0000")
+    .join("(?:.*/)?")
+    .split("\u0001")
+    .join(".*");
+  return new RegExp(`^${expression}$`, "u").test(path);
+}
 
 /**
  * 🏛️ Whether a directory may own a `🧬️schema/` module.
  *
- * Eligibility is POSITIONAL. It is decided by where a directory sits in the taxonomy, never by what a
- * file inside it happens to be called, so an owner cannot acquire authority by having a schema put
- * next to it.
+ * Eligibility is POSITIONAL and it is DECLARED: the levels and the exclusions come from
+ * `schemaScopeOwnerLevels` in the taxonomy, never from a table restated here. A second table would be
+ * a second opinion, and the whole point of this layer is that there is exactly one.
  */
-export function schemaScopeEligibility(ownerPath: string): SchemaScopeEligibility {
+export function schemaScopeEligibility(repoRoot: string, ownerPath: string): SchemaScopeEligibility {
   const path = ownerPath.replace(/\/+$/u, "");
-  const segments = path.split("/");
-  for (const [segment, why] of SCHEMA_INELIGIBLE_SEGMENTS) {
-    if (segments.includes(segment)) return { path, eligible: false, level: null, reason: `${segment}: ${why}` };
-  }
-  const fixtureAt = segments.findIndex((name, index) => isTestOrFixtureSegment(name) && !isModuleMemberSegment(segments, index));
-  if (fixtureAt >= 0) return { path, eligible: false, level: null, reason: `${segments[fixtureAt]}: a test or fixture collection holds examples, and an example never defines the contract it is an example of` };
-  for (const [level, pattern] of SCHEMA_SCOPE_LEVELS) {
-    if (pattern.test(path)) return { path, eligible: true, level, reason: `${level}: a declared scope owner level` };
+  const declared = schemaScopeOwnerLevels(repoRoot);
+  if (declared === null) return { path, eligible: false, level: null, reason: `${TAXONOMY_REL_PATH} declares no schemaScopeOwnerLevels` };
+  const excluded = declared.excludedOwnerPathPatterns.find((pattern) => matchesTaxonomyPathPattern(pattern, path));
+  if (excluded !== undefined) return { path, eligible: false, level: null, reason: `excluded by ${excluded}: a directory matching it holds examples, publications or presentation, never authority` };
+  for (const [level, spec] of Object.entries(declared.levels)) {
+    if (spec.pathPatterns.some((pattern) => matchesTaxonomyPathPattern(pattern, path))) return { path, eligible: true, level, reason: `${level}: ${spec.reason}` };
   }
   return { path, eligible: false, level: null, reason: "no declared scope owner level matches this path" };
 }
@@ -3968,9 +4265,9 @@ export function isJsonSchemaDefinition(document: unknown): boolean {
   return typeof dialect === "string" && /^https?:\/\/json-schema\.org\//u.test(dialect);
 }
 
-/** 🧬️ Whether a schema definition declares the one dialect this repository speaks. */
-export function isDraft07Definition(document: unknown): boolean {
-  return isJsonSchemaDefinition(document) && (document as { $schema: string }).$schema === SCHEMA_JSON_DIALECT;
+/** 🧬️ Whether a schema definition declares the one dialect the taxonomy names. */
+export function isDeclaredDialectDefinition(repoRoot: string, document: unknown): boolean {
+  return isJsonSchemaDefinition(document) && (document as { $schema: string }).$schema === schemaJsonDialect(repoRoot);
 }
 
 function readJson(abs: string): unknown | undefined {
@@ -4039,32 +4336,40 @@ export function schemaTreeFiles(repoRoot: string, under = ""): string[] {
  */
 export function schemaPlacementDiagnostics(repoRoot: string, files: readonly string[] = schemaTreeFiles(repoRoot), inert: ReadonlySet<string> = inertSchemaDataPaths(repoRoot, files)): SchemaDiagnostic[] {
   const found: SchemaDiagnostic[] = [];
-  const seenContractDirs = new Set<string>();
+  const seenForbiddenDirs = new Set<string>();
+  const { directories, files: forbiddenFiles, exceptions } = forbiddenSchemaPlacements(repoRoot);
+  const dialect = schemaJsonDialect(repoRoot);
   for (const rel of files) {
+    if (exceptions.has(rel)) continue;
     const segments = rel.split("/");
     const name = segments[segments.length - 1]!;
     const dirSegments = segments.slice(0, -1);
-    const contractsAt = dirSegments.indexOf(SCHEMA_CONTRACTS_DIR_NAME);
-    if (contractsAt >= 0) {
-      const dir = dirSegments.slice(0, contractsAt + 1).join("/");
-      if (!seenContractDirs.has(dir)) {
-        seenContractDirs.add(dir);
-        found.push(schemaDiagnostic("schema-contracts-directory-forbidden", `${dir} is a per-contract directory; the contract belongs in the owning scope's ${SCHEMA_MODULE_DIR_NAME}/ module as a named export`, { path: dir }));
-      }
+    // 🧭️The outermost forbidden ANCESTOR directory is the defect; naming the deeper one would report
+    // the same violation at the wrong level.
+    const forbiddenDir = dirSegments.reduce<string | null>((carry, _segment, index) => {
+      if (carry !== null) return carry;
+      const prefix = dirSegments.slice(0, index + 1).join("/");
+      return directories.some((pattern) => matchesTaxonomyPathPattern(pattern, prefix)) ? prefix : null;
+    }, null);
+    if (forbiddenDir !== null && !seenForbiddenDirs.has(forbiddenDir) && !exceptions.has(forbiddenDir)) {
+      seenForbiddenDirs.add(forbiddenDir);
+      found.push(schemaDiagnostic("schema-contracts-directory-forbidden", `${forbiddenDir} is a per-contract directory; the contract belongs in the owning scope's ${SCHEMA_MODULE_DIR_NAME}/ module as a named export`, { path: forbiddenDir }));
     }
     if (!name.endsWith(".json") || inert.has(rel)) continue;
-    if (isForbiddenSchemaFilename(name)) {
-      found.push(schemaDiagnostic("schema-placement-forbidden-filename", `${rel} uses a retired schema filename; a schema module writes JSON Schema as ${SCHEMA_MODULE_DIR_NAME}/🔣️.json`, { path: rel }));
+    if (forbiddenFiles.some((pattern) => matchesTaxonomyPathPattern(pattern, rel))) {
+      found.push(schemaDiagnostic("schema-placement-forbidden-filename", `${rel} uses a retired schema placement; a schema module writes JSON Schema as ${SCHEMA_MODULE_DIR_NAME}/🔣️.json`, { path: rel }));
       continue;
     }
     const document = readSchemaDefinition(join(repoRoot, rel));
     if (document === undefined) continue;
     const moduleDir = schemaModuleDirOf(dirSegments);
     if (moduleDir === null) {
-      found.push(schemaDiagnostic("schema-placement-outside-module", `${rel} defines a schema outside any ${SCHEMA_MODULE_DIR_NAME}/ module`, { path: rel }));
+      // 🧬️Inside a forbidden directory the directory finding already says the whole thing must go;
+      // repeating it once per file inside would report one defect as many.
+      if (forbiddenDir === null) found.push(schemaDiagnostic("schema-placement-outside-module", `${rel} defines a schema outside any ${SCHEMA_MODULE_DIR_NAME}/ module`, { path: rel }));
       continue;
     }
-    if (!isDraft07Definition(document)) found.push(schemaDiagnostic("schema-dialect-not-draft-07", `${rel} declares ${JSON.stringify((document as { $schema: string }).$schema)}; this repository speaks ${SCHEMA_JSON_DIALECT}`, { path: rel }));
+    if (!isDeclaredDialectDefinition(repoRoot, document)) found.push(schemaDiagnostic("schema-dialect-not-draft-07", `${rel} declares ${JSON.stringify((document as { $schema: string }).$schema)}; this repository speaks ${dialect}`, { path: rel }));
   }
   return found;
 }
@@ -4088,7 +4393,7 @@ export function schemaOwnerEligibilityDiagnostics(repoRoot: string, files: reado
   for (const owner of [...owners].sort()) {
     // 🧬️A mutation leaf's own `🧬️schema/` sits INSIDE its owner's `🧬️schema/🧬️mutations/` — the leaf
     // is the declared authority for its payload, so the leaf path is what is judged, not its ancestor.
-    const verdict = schemaScopeEligibility(owner);
+    const verdict = schemaScopeEligibility(repoRoot, owner);
     if (!verdict.eligible) found.push(schemaDiagnostic("schema-owner-ineligible", `${owner} carries a ${SCHEMA_MODULE_DIR_NAME}/ module and is not an eligible scope owner — ${verdict.reason}`, { path: owner }));
   }
   return found;
@@ -4098,7 +4403,7 @@ export function schemaOwnerEligibilityDiagnostics(repoRoot: string, files: reado
 export function schemaFixtureIsolationDiagnostics(repoRoot: string, files: readonly string[] = schemaTreeFiles(repoRoot), inert: ReadonlySet<string> = inertSchemaDataPaths(repoRoot, files)): SchemaDiagnostic[] {
   const found: SchemaDiagnostic[] = [];
   for (const rel of files) {
-    if (!rel.endsWith(".json") || !isFixtureOwnedPath(rel) || inert.has(rel)) continue;
+    if (!rel.endsWith(".json") || !isFixtureOwnedPath(repoRoot, rel) || inert.has(rel)) continue;
     if (readSchemaDefinition(join(repoRoot, rel)) === undefined) continue;
     found.push(schemaDiagnostic("schema-fixture-defines-schema", `${rel} defines a schema inside a fixture or test collection; move the contract into the owning scope and bind the example to it with a schema:// target`, { path: rel }));
   }
@@ -4115,7 +4420,7 @@ function inertSchemaDataPaths(repoRoot: string, files: readonly string[]): Set<s
   const declared = new Set<string>();
   const caseFile = testFilenameForKind(testTaxonomy(repoRoot), testTaxonomy(repoRoot).testContributionFileKindId);
   for (const rel of files) {
-    if (!rel.endsWith(`/${caseFile}`) || !isFixtureOwnedPath(rel)) continue;
+    if (!rel.endsWith(`/${caseFile}`) || !isFixtureOwnedPath(repoRoot, rel)) continue;
     const document = readJson(join(repoRoot, rel));
     const names = (document as { inertSchemaData?: unknown } | undefined)?.inertSchemaData;
     if (!Array.isArray(names)) continue;
@@ -4123,6 +4428,43 @@ function inertSchemaDataPaths(repoRoot: string, files: readonly string[]): Set<s
     for (const name of names) if (typeof name === "string") declared.add(`${dir}/${name}`);
   }
   return declared;
+}
+
+/**
+ * 🎯️ The schema of one named export inside a module document.
+ *
+ * A module either lists its exports under `$defs`, or IS a single export and says so with the root
+ * keyword the taxonomy declares (`schemaExportResolution.rootExportKeyword`, today `title`). Both are
+ * declarations; neither is a guess, and 1 691 of the 460 catalogued scopes use the second form.
+ */
+export function moduleExportSchema(repoRoot: string, document: unknown, exportId: string): unknown | undefined {
+  if (document === null || typeof document !== "object" || Array.isArray(document)) return undefined;
+  const defs = ((document as { $defs?: unknown }).$defs ?? {}) as Record<string, unknown>;
+  if (Object.hasOwn(defs, exportId)) return defs[exportId];
+  const keyword = (rawTaxonomy(repoRoot).schemaExportResolution as { rootExportKeyword?: unknown } | undefined)?.rootExportKeyword;
+  if (typeof keyword !== "string") return undefined;
+  return (document as Record<string, unknown>)[keyword] === exportId ? document : undefined;
+}
+
+/** 📚️ The repository-relative file one scope keeps a format in, or null when it declares none. */
+export function schemaScopeFile(scope: SchemaCatalogScope, format: string): string | null {
+  const relative = scope.formats[format];
+  return typeof relative === "string" && relative.length > 0 ? `${scope.path}/${relative}` : null;
+}
+
+/**
+ * 🎯️ The repository-relative file one EXPORT of a scope is written in, for one format.
+ *
+ * The catalog names the export's normative file outright. Every other format is its sibling in the
+ * same facet directory — the facet is what decides which document carries the export, and a format is
+ * only the filename inside it. Nothing is searched for: both halves are declared.
+ */
+export function schemaExportFile(scope: SchemaCatalogScope, exported: SchemaCatalogExport, format: string, normativeFormat: string): string {
+  if (format === normativeFormat) return `${scope.path}/${exported.file}`;
+  const relative = scope.formats[format]!;
+  const facetDir = exported.file.includes("/") ? exported.file.slice(0, exported.file.lastIndexOf("/")) : "";
+  const filename = relative.includes("/") ? relative.slice(relative.lastIndexOf("/") + 1) : relative;
+  return facetDir === "" ? `${scope.path}/${filename}` : `${scope.path}/${facetDir}/${filename}`;
 }
 
 /**
@@ -4134,20 +4476,31 @@ function inertSchemaDataPaths(repoRoot: string, files: readonly string[]): Set<s
  */
 export function schemaExportCompletenessDiagnostics(repoRoot: string, scopeId: string, scope: SchemaCatalogScope): SchemaDiagnostic[] {
   const found: SchemaDiagnostic[] = [];
-  const jsonFile = scope.formats["🔣️jsonschema"];
-  if (typeof jsonFile !== "string") return [schemaDiagnostic("schema-format-unavailable", `scope ${JSON.stringify(scopeId)} declares no 🔣️jsonschema implementation, so its exports have no normative definition`, { scope: scopeId })];
+  const jsonFile = schemaScopeFile(scope, "🔣️jsonschema");
+  if (jsonFile === null) return [schemaDiagnostic("schema-format-unavailable", `scope ${JSON.stringify(scopeId)} declares no 🔣️jsonschema implementation, so its exports have no normative definition`, { scope: scopeId })];
   const document = readJson(join(repoRoot, jsonFile));
   if (document === undefined) return [schemaDiagnostic("schema-catalog-malformed", `${jsonFile} is not readable JSON`, { scope: scopeId, path: jsonFile })];
   if (typeof (document as { $id?: unknown }).$id !== "string") found.push(schemaDiagnostic("schema-module-id-missing", `${jsonFile} declares no $id, so nothing can $ref it across scopes`, { scope: scopeId, path: jsonFile }));
-  if (!isDraft07Definition(document)) found.push(schemaDiagnostic("schema-dialect-not-draft-07", `${jsonFile} does not declare ${SCHEMA_JSON_DIALECT}`, { scope: scopeId, path: jsonFile }));
-  const defs = ((document as { $defs?: unknown }).$defs ?? {}) as Record<string, unknown>;
-  for (const exported of scope.exports) {
-    if (!Object.hasOwn(defs, exported)) found.push(schemaDiagnostic("schema-export-unknown", `the catalog lists export ${JSON.stringify(exported)} that ${jsonFile} does not declare in $defs`, { scope: scopeId, export: exported, path: jsonFile }));
+  if (!isDeclaredDialectDefinition(repoRoot, document)) found.push(schemaDiagnostic("schema-dialect-not-draft-07", `${jsonFile} does not declare ${schemaJsonDialect(repoRoot)}`, { scope: scopeId, path: jsonFile }));
+  const normative = normativeSchemaFormat(repoRoot);
+  const declared = new Map<string, unknown>();
+  for (const [exported, row] of Object.entries(scope.exports)) {
+    // 📚️The export's OWN file answers, not the module root: a facet child carries its own `$defs`.
+    const exportFile = schemaExportFile(scope, row, normative, normative);
+    const carrier = exportFile === jsonFile ? document : readJson(join(repoRoot, exportFile));
+    if (carrier === undefined) {
+      found.push(schemaDiagnostic("schema-file-missing", `the catalog names ${exportFile} for export ${JSON.stringify(exported)}, and that file is not readable JSON`, { scope: scopeId, export: exported, path: exportFile }));
+      continue;
+    }
+    const definition = moduleExportSchema(repoRoot, carrier, exported);
+    if (definition === undefined) found.push(schemaDiagnostic("schema-export-unknown", `the catalog names ${exportFile} for export ${JSON.stringify(exported)}, and that document declares it neither in $defs nor as its root export`, { scope: scopeId, export: exported, path: exportFile }));
+    else declared.set(exported, definition);
   }
-  for (const exported of Object.keys(defs)) {
-    if (!/^[A-Z][A-Za-z0-9]*$/u.test(exported) || !scope.exports.includes(exported)) continue;
-    for (const [format, file] of Object.entries(scope.formats)) {
-      if (format === "🔣️jsonschema") continue;
+  for (const [exported, row] of Object.entries(scope.exports)) {
+    if (!/^[A-Z][A-Za-z0-9]*$/u.test(exported) || !declared.has(exported)) continue;
+    for (const format of Object.keys(scope.formats)) {
+      if (format === normative) continue;
+      const file = schemaExportFile(scope, row, format, normative);
       const abs = join(repoRoot, file);
       if (!existsSync(abs)) {
         found.push(schemaDiagnostic("schema-file-missing", `the catalog names ${file} for ${format}, and that file does not exist`, { scope: scopeId, format, path: file }));
@@ -4191,16 +4544,16 @@ export function schemaResolutionDiagnostics(repoRoot: string): SchemaDiagnostic[
   const found: SchemaDiagnostic[] = [...diagnostics];
   const scopeOfId = new Map<string, string>();
   for (const [id, scope] of Object.entries(catalog.scopes)) {
-    const file = scope.formats["🔣️jsonschema"];
-    if (typeof file !== "string") continue;
+    const file = schemaScopeFile(scope, "🔣️jsonschema");
+    if (file === null) continue;
     const document = readJson(join(repoRoot, file));
     const declaredId = (document as { $id?: unknown } | undefined)?.$id;
     if (typeof declaredId === "string") scopeOfId.set(declaredId, id);
   }
   for (const [id, scope] of Object.entries(catalog.scopes)) {
     found.push(...schemaExportCompletenessDiagnostics(repoRoot, id, scope));
-    const file = scope.formats["🔣️jsonschema"];
-    if (typeof file !== "string") continue;
+    const file = schemaScopeFile(scope, "🔣️jsonschema");
+    if (file === null) continue;
     const document = readJson(join(repoRoot, file));
     if (document === undefined) continue;
     const defs = ((document as { $defs?: unknown }).$defs ?? {}) as Record<string, unknown>;
@@ -4221,7 +4574,7 @@ export function schemaResolutionDiagnostics(repoRoot: string): SchemaDiagnostic[
         continue;
       }
       if (targetScope === id) continue;
-      if (!catalog.scopes[targetScope]!.exports.includes(remote[2]!)) {
+      if (!Object.hasOwn(catalog.scopes[targetScope]!.exports, remote[2]!)) {
         found.push(schemaDiagnostic("schema-export-unknown", `${file} references ${remote[2]!} from scope ${targetScope}, which does not export it`, { scope: id, export: remote[2]!, path: file }));
         continue;
       }
@@ -4514,10 +4867,9 @@ export function runSchemaFixture(repoRoot: string, fixture: SchemaBoundFixture, 
   stages.push(stage("parse", "passed", null, "the subject decoded"));
 
   const module = readJson(join(repoRoot, resolved.path));
-  const defs = ((module as { $defs?: unknown } | undefined)?.$defs ?? {}) as Record<string, unknown>;
-  const exportSchema = defs[resolved.export];
+  const exportSchema = moduleExportSchema(repoRoot, module, resolved.export);
   if (exportSchema === undefined) {
-    stages.push(stage("structural-validation", "failed", "schema-export-unknown", `${resolved.path} declares no $defs.${resolved.export}`));
+    stages.push(stage("structural-validation", "failed", "schema-export-unknown", `${resolved.path} declares ${resolved.export} neither in $defs nor as its root export`));
     return finish();
   }
   const errors = validateAgainstJsonSchema(exportSchema, subject, module);
@@ -4605,7 +4957,7 @@ export function resolvePayloadSchema(repoRoot: string, ownerRel: string, leafDir
   if (!existsSync(join(repoRoot, rel))) return { leaf: leafRel, kind, declared, path: rel, schema: null, refused: [`the declared payload schema ${rel} does not exist`] };
   const document = readJson(join(repoRoot, rel));
   if (document === undefined) return { leaf: leafRel, kind, declared, path: rel, schema: null, refused: [`${rel} is not readable JSON`] };
-  if (!isDraft07Definition(document)) return { leaf: leafRel, kind, declared, path: rel, schema: null, refused: [`${rel} does not declare ${SCHEMA_JSON_DIALECT}`] };
+  if (!isDeclaredDialectDefinition(repoRoot, document)) return { leaf: leafRel, kind, declared, path: rel, schema: null, refused: [`${rel} does not declare ${schemaJsonDialect(repoRoot)}`] };
   return { leaf: leafRel, kind, declared, path: rel, schema: document as Record<string, unknown>, refused: [] };
 }
 

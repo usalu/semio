@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `EditLhs`.
-use crate::artifacts::rewriting::diff::RewritingDiff;
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::diff::RewritingDiff;
+use crate::RewritingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::EditLhs, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {

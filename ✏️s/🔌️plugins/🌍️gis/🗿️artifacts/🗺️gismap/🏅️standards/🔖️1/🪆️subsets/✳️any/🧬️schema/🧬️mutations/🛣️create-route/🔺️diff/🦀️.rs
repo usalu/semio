@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff construction for `create-route`.
 use super::CreateRoute;
-use crate::artifacts::gismap::diff::{GisMapDiff, GisMapFeaturesDelta};
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::diff::{GisMapDiff, GisMapFeaturesDelta};
+use crate::GisMapSnapshot;
 
 //#region 🔹Diff
 /// 🔺️ Builds the sparse `routes` delta directly from the payload — a single `added` entry — real

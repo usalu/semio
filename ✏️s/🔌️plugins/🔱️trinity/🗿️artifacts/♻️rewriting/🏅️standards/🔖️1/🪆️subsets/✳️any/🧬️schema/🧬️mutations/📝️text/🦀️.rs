@@ -1,9 +1,9 @@
 //! ⚡️ RewriteRule mutation text codec, registry, and external operation bridge.
 
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 
-pub use crate::artifacts::rewriting::schema::mutations::RewriteRuleMutation;
-pub use crate::artifacts::rewriting::schema::operations::{apply_rewrite_rule_mutation, create_rewrite_rule_envelope, dispatch_rewrite_rule_mutations, inverse_rewrite_rule_mutation, rewriting_snapshot_mutations, RewriteRuleEnvelope, RewriteRuleStore};
+pub use crate::schema::mutations::RewriteRuleMutation;
+pub use crate::schema::operations::{apply_rewrite_rule_mutation, create_rewrite_rule_envelope, dispatch_rewrite_rule_mutations, inverse_rewrite_rule_mutation, rewriting_snapshot_mutations, RewriteRuleEnvelope, RewriteRuleStore};
 
 //#region 🧾️DerivedRegistry
 /// 🧾️ Direct-owner text opcodes in aggregate declaration order.

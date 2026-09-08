@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/flow/flow/vcs/mutation/replace-flow-fixture/schema.json",
+  "title": "ReplaceFlowFixture",
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "properties": {
+        "fixture": {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/fixture"
+        }
+      },
+      "required": [
+        "fixture"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/payload"
+    }
+  ],
+  "propertyNames": {
+    "enum": [
+      "fixture"
+    ]
+  }
+}

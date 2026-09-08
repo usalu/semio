@@ -3,7 +3,7 @@
 //! losslessly inside `md`'s own document text — every field survives round trip, so
 //! `IoFidelity::Canonical` (not `Exact`: the wire bytes are `md`'s, not `wires`'s own).
 
-use crate::artifacts::wires::WiresSnapshot;
+use crate::WiresSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ConnectKindCompatibility` — patches the whole `kindCompatibility` list.
-use crate::artifacts::puzzle5d::diff::{Puzzle5dDiff, Puzzle5dKindCompatibilityList};
-use crate::artifacts::puzzle5d::{Puzzle5dKindCompatibility, Puzzle5dSnapshot};
+use crate::diff::{Puzzle5dDiff, Puzzle5dKindCompatibilityList};
+use crate::{Puzzle5dKindCompatibility, Puzzle5dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ConnectKindCompatibility, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

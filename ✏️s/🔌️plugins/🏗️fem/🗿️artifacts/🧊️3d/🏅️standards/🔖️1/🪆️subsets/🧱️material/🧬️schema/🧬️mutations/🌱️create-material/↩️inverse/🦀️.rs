@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `CreateMaterial` — always a `delete-material` of the created id.
 use super::CreateMaterial;
-use crate::artifacts::fem3d::mutations::{delete_material, Fem3dMutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::{delete_material, Fem3dMutation};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &CreateMaterial, _base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

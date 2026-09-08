@@ -1,7 +1,7 @@
 //! 🧬️ EnergyModel snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::model::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️Snapshot
@@ -350,8 +350,8 @@ mod round_trip_tests {
             zones: vec![crate::model::Zone { id: crate::model::EntityId(1), name: "Zone1".into(), volume_m3: 100.0, multiplier: 1, conditioned: true, part_of_total_floor_area: true }],
             ..crate::model::Model::default()
         };
-        let structure = crate::artifacts::model::energy_structure_from_model(&model);
-        let restored = crate::artifacts::model::energy_model_from_structure(&structure);
+        let structure = crate::energy_structure_from_model(&model);
+        let restored = crate::energy_model_from_structure(&structure);
         assert_eq!(restored, model);
     }
 }

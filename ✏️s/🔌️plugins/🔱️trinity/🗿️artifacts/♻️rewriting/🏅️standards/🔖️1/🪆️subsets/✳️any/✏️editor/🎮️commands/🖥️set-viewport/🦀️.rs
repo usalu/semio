@@ -1,7 +1,7 @@
 //! 👁️ 👁️ Trinity Rewriting app command — `set-viewport`.
 
-use crate::artifacts::jack::Camera;
-use crate::artifacts::rewriting::op::RewriteRuleMutation;
+use semio_s_artifact_trinity_jack::Camera;
+use crate::op::RewriteRuleMutation;
 use crate::editor::rewriting::config::RewritingConfigMutation;
 use semio_framework_plugin::Emit;
 

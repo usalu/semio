@@ -186,7 +186,7 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
 
 #[semio_framework_async_macros::async_test]
 async fn persisted_dwg_facets_have_no_parallel_entity_projection() {
-    let artifact_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema");
+    let artifact_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema");
     {
         let facet = std::fs::read_to_string(artifact_root.join("🟦️.ts")).unwrap_or_else(|error| panic!("missing schema facet: {error}"));
         assert!(!facet.contains("DwgLogicalEntity"), "a schema facet retains DwgLogicalEntity");

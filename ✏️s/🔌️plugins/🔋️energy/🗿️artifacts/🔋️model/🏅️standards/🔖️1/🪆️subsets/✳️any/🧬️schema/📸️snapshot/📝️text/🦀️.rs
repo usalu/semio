@@ -1,6 +1,6 @@
 //! 📜️ EnergyModel artifact — textual document grammar surface + laws.
 
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::EnergyModelSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

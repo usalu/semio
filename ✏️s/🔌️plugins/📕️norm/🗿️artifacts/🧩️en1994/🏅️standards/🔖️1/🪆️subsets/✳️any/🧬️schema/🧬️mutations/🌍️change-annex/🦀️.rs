@@ -1,7 +1,7 @@
 //! 🗺️ `change-annex` — sets the En 1994 national annex choice (EN vs. DE-NA) scalar.
 
 
-use crate::artifacts::en1994::{En1994Mutation, En1994Snapshot};
+use crate::{En1994Mutation, En1994Snapshot};
 use crate::document::AnnexChoice;
 
 //#region 🔖️Payload

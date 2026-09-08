@@ -13,8 +13,8 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::iso16757::standards::v1::subsets::any::schema::Iso16757Analyzer;
-    use crate::artifacts::iso16757::Iso16757Snapshot;
+    use crate::standards::v1::subsets::any::schema::Iso16757Analyzer;
+    use crate::Iso16757Snapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.iso16757", standard: StandardId("1"), subset: SubsetId("*") };
@@ -57,15 +57,15 @@ use crate::document::NormError;
 pub mod io {
     use super::*;
 
-    pub fn catalogue_to_json(catalogue: &crate::artifacts::iso16757::part_1::Catalogue) -> Result<String, NormError> {
+    pub fn catalogue_to_json(catalogue: &crate::part_1::Catalogue) -> Result<String, NormError> {
         Ok(pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(catalogue))))
     }
 
-    pub fn catalogue_from_json(json: &str) -> Result<crate::artifacts::iso16757::part_1::Catalogue, NormError> {
+    pub fn catalogue_from_json(json: &str) -> Result<crate::part_1::Catalogue, NormError> {
         pack::json::from_json_str(json).map_err(|e| NormError::InvalidValue { field: "catalogue".into(), reason: e.to_string() })
     }
 
-    pub fn dictionary_to_json(dictionary: &crate::artifacts::iso16757::part_4::Dictionary) -> Result<String, NormError> {
+    pub fn dictionary_to_json(dictionary: &crate::part_4::Dictionary) -> Result<String, NormError> {
         Ok(pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(dictionary))))
     }
 }
@@ -76,7 +76,7 @@ pub mod io {
 /// 🚪️ Composer registry — relocated verbatim from the deleted `⚙️engine`; io is exactly where
 /// composer dispatch belongs.
 pub mod io_registry {
-    use crate::artifacts::iso16757::standards::v1::subsets::any::schema::Iso16757Composer as Iso16757AnyComposer;
+    use crate::standards::v1::subsets::any::schema::Iso16757Composer as Iso16757AnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -92,7 +92,7 @@ pub mod io_registry {
 #[cfg(test)]
 mod json_serializers_tests {
     use super::*;
-    use crate::artifacts::iso16757::Iso16757Snapshot;
+    use crate::Iso16757Snapshot;
 
     #[semio_framework_async_macros::async_test]
     async fn catalogue_json_round_trip() {

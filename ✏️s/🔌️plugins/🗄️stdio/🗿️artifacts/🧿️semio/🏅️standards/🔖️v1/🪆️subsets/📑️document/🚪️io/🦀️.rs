@@ -4,13 +4,21 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
+    #[cfg(feature = "conversion-document")]
     use super::super::export::serializers::artifacts::docx::v_ecma_376::any::SemioDocumentToDocx;
+    #[cfg(feature = "conversion-document")]
     use super::super::export::serializers::artifacts::md::v_commonmark::any::SemioDocumentToMd;
+    #[cfg(feature = "conversion-document")]
     use super::super::export::serializers::artifacts::pdf::v1_7::any::SemioDocumentToPdf;
+    #[cfg(feature = "conversion-document")]
     use super::super::export::serializers::artifacts::txt::v_utf_8::any::SemioDocumentToTxt;
+    #[cfg(feature = "conversion-document")]
     use super::super::import::deserializers::artifacts::docx::v_ecma_376::any::SemioDocumentFromDocx;
+    #[cfg(feature = "conversion-document")]
     use super::super::import::deserializers::artifacts::md::v_commonmark::any::SemioDocumentFromMd;
+    #[cfg(feature = "conversion-document")]
     use super::super::import::deserializers::artifacts::pdf::v1_7::any::SemioDocumentFromPdf;
+    #[cfg(feature = "conversion-document")]
     use super::super::import::deserializers::artifacts::txt::v_utf_8::any::SemioDocumentFromTxt;
     use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
     use crate::standards::v1::subsets::document::schema::SemioDocumentAnalyzer;
@@ -150,8 +158,10 @@ pub mod derived_composition {
     /// derives all 4 `IoKey`s per pair (semio-Import/Export-format, format-Import/Export-semio) from
     /// these 2 rows, per `io_compose_via`'s own doc comment / `register_composer_entries`'s
     /// reads-derives-both-directions behavior.
+    #[cfg(feature = "conversion-document")]
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-document")]
     fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES.get_or_init(|| {
             vec![
@@ -179,6 +189,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-document")]
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -193,7 +204,7 @@ pub mod derived_composition {
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-document"))]
     mod tests {
         use super::*;
         use crate::standards::v1::subsets::document::schema::snapshot::{DocImage, DocStyle};

@@ -1,8 +1,8 @@
 //! 🔺️ `change-mass-t` sparse diff construction — writes only `En1998Diff.mass_t` from the payload.
 
-use crate::artifacts::en1998::diff::En1998Diff;
-use crate::artifacts::en1998::mutations::change_mass_t::ChangeMassT;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::diff::En1998Diff;
+use crate::mutations::change_mass_t::ChangeMassT;
+use crate::En1998Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeMassT, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {

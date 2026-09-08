@@ -1,9 +1,9 @@
 //! ⚙️ Imperative mutation bridges, shared path operations, laws, and behavior tests.
 
-use crate::artifacts::procedure::mutations::ProcedureMutation;
+use crate::mutations::ProcedureMutation;
 #[cfg(test)]
-use crate::artifacts::procedure::mutations::{create_step, delete_step, edit_step_params, register_procedure_mutation_descriptors, reorder_steps};
-use crate::artifacts::procedure::{ProcedureSnapshot, Path, PathRef, Step};
+use crate::mutations::{create_step, delete_step, edit_step_params, register_procedure_mutation_descriptors, reorder_steps};
+use crate::{ProcedureSnapshot, Path, PathRef, Step};
 
 //#region 🌉️ExternalCodecBridge
 /// 📥️ Decodes this facet's internally-tagged (`{"mutation": "createStep", …}`, camelCase payload
@@ -26,7 +26,7 @@ pub fn decode_procedure_mutation_json(text: &str) -> Result<ProcedureMutation, S
 /// can be constructed, so the program travels as JSON and is decoded here.
 pub fn seed_procedure_flow_json(snapshot: &mut ProcedureSnapshot, program_json: &str) -> Result<(), String> {
     let path: Path = dsl::os_pack::json::from_json_str(program_json).map_err(|error| error.to_string())?;
-    crate::artifacts::procedure::materialize_procedure_flow(&mut snapshot.flow, &path);
+    crate::materialize_procedure_flow(&mut snapshot.flow, &path);
     Ok(())
 }
 
@@ -62,7 +62,7 @@ pub fn procedure_program_summary(snapshot: &ProcedureSnapshot) -> String {
             .collect::<Vec<_>>()
             .join(" ")
     }
-    render(&crate::artifacts::procedure::procedure_working_scene(snapshot).path)
+    render(&crate::procedure_working_scene(snapshot).path)
 }
 //#endregion 🌉️ExternalCodecBridge
 
@@ -72,7 +72,7 @@ pub fn procedure_program_summary(snapshot: &ProcedureSnapshot) -> String {
 /// empty. Owned `Vec` (not a borrow) since the working scene is a cache lookup, not a live borrow of
 /// `snapshot` itself. Shared by every direct leaf's `🔺️diff`/`↩️inverse` facet so base-state lookups agree.
 pub fn resolve_steps(snapshot: &ProcedureSnapshot, path_ref: &PathRef) -> Vec<Step> {
-    let path = crate::artifacts::procedure::procedure_working_scene(snapshot).path;
+    let path = crate::procedure_working_scene(snapshot).path;
     resolve_steps_in_path(&path, path_ref)
 }
 
@@ -89,7 +89,7 @@ fn resolve_steps_in_path(path: &Path, path_ref: &PathRef) -> Vec<Step> {
 /// mutation-side counterpart of `resolve_steps`, used by every direct leaf's `🔺️diff` facet to edit a
 /// full copy of the current path before re-minting a whole `flow` handle (composed children are
 /// opaque; a diff never edits a sub-slice, only mints a whole replacement — see
-/// `crate::artifacts::procedure::diff_replace_flow`).
+/// `crate::diff_replace_flow`).
 pub fn resolve_path_mut<'a>(path: &'a mut Path, path_ref: &PathRef) -> Option<&'a mut Vec<Step>> {
     if path_ref.owner.is_none() && path_ref.slot.is_none() {
         return Some(&mut path.steps);
@@ -115,8 +115,8 @@ pub fn prune_empty_slot(path: &mut Path, path_ref: &PathRef) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::procedure::schema::default_snapshot;
-    use crate::artifacts::procedure::Dictionary;
+    use crate::schema::default_snapshot;
+    use crate::Dictionary;
     use neural_engine::{Atom, Value};
     use protocol::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;

@@ -1,16 +1,15 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
-export const brep_invoke: (a: number, b: number, c: number, d: number) => [number, number];
-export const dispose: (a: number, b: number) => void;
-export const tessellate: (a: number, b: number, c: number) => [number, number];
 export const flow_bridge_allocate: (a: number) => number;
 export const flow_bridge_begin_close: () => void;
 export const flow_bridge_poll: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
 export const flow_bridge_release: (a: number, b: number) => void;
 export const flow_bridge_send: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
 export const flow_bridge_terminal_is_empty: () => number;
-export const semio_plugin_bundle_installer_link_shim: () => void;
+export const brep_invoke: (a: number, b: number, c: number, d: number) => [number, number];
+export const dispose: (a: number, b: number) => void;
+export const tessellate: (a: number, b: number, c: number) => [number, number];
 export const __wbg_dagsession_free: (a: number, b: number) => void;
 export const dagsession_attachCanvas: (a: number, b: any, c: number, d: number, e: number) => any;
 export const dagsession_drawLodLabel: (a: number) => [number, number];

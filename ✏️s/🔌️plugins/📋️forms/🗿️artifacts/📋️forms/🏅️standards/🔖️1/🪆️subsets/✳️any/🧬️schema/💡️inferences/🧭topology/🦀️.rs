@@ -6,7 +6,7 @@
 //! genuinely reports whether the referenced conditions ever form a cycle, rather than assuming one
 //! never occurs.
 
-use crate::artifacts::forms::{FormExpr, FormStep};
+use crate::{FormExpr, FormStep};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
 
 //#region 🔖️Topology
@@ -135,7 +135,7 @@ fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> FormsTo
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::forms::FormQuestion;
+    use crate::FormQuestion;
 
     fn block(id: &str, condition: Option<FormExpr>) -> FormQuestion {
         FormQuestion {

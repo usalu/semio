@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-solar-thermal-system.json",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-solar-thermal-system/schema.json",
   "title": "CreateSolarThermalSystem",
   "type": "object",
   "additionalProperties": false,

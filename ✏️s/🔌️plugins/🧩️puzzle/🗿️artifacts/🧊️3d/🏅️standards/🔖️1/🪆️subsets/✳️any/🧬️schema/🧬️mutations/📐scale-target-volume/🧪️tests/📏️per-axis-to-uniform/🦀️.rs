@@ -8,9 +8,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::mutations::{apply_puzzle3d_mutation, inverse_puzzle3d_mutation};
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::mutations::Puzzle3dMutation;
+use crate::mutations::{apply_puzzle3d_mutation, inverse_puzzle3d_mutation};
+use crate::Puzzle3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -36,7 +36,7 @@ fn applies_to_committed_after() {
     apply_puzzle3d_mutation(&mut snapshot, &mutation()).expect("scale-target-volume applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "scale-target-volume/per-axis-to-uniform: applied state differs from committed after-snapshot");
     let volume = snapshot.target_volumes.iter().find(|volume| volume.id == "volume-1").expect("volume-1 survives its scaling");
-    assert_eq!(volume.scale, Some(crate::artifacts::puzzle3d::Puzzle3dScale::Uniform(0.5)), "scale-target-volume/per-axis-to-uniform: volume-1 did not take the scalar scale");
+    assert_eq!(volume.scale, Some(crate::Puzzle3dScale::Uniform(0.5)), "scale-target-volume/per-axis-to-uniform: volume-1 did not take the scalar scale");
     assert_eq!(volume.orientation, before().target_volumes[0].orientation, "scale-target-volume/per-axis-to-uniform: scaling must not reorient the box");
 }
 
@@ -104,7 +104,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed `scale-target-volume` diff is itself canonical and decodes to `Puzzle3dDiff`.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::puzzle3d::diff::Puzzle3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Puzzle3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "scale-target-volume/per-axis-to-uniform: committed diff JSON is not canonical");
@@ -114,7 +114,7 @@ fn committed_diff_is_canonical() {
 /// the diff is a complete description of the change, not a summary of it.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::puzzle3d::diff::Puzzle3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::puzzle3d::diff::Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Puzzle3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "scale-target-volume/per-axis-to-uniform: committed diff did not carry before to after");
 }

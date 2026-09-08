@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `UpdateLayerTraceParams`.
-use crate::artifacts::drawing::diff::{diff_set_trace_params, DrawingDiff};
-use crate::artifacts::drawing::schema::find_drawing_layer;
-use crate::artifacts::drawing::{DrawingLayerNode, DrawingSnapshot};
+use crate::diff::{diff_set_trace_params, DrawingDiff};
+use crate::schema::find_drawing_layer;
+use crate::{DrawingLayerNode, DrawingSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::UpdateLayerTraceParams, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/cv20/mutation/set-view-definition.json",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/cv20/mutation/set-view-definition/schema.json",
   "title": "SetViewDefinition",
   "type": "object",
   "additionalProperties": false,

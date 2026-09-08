@@ -1,7 +1,7 @@
 //! 🧮️ Drawing play app — view state (constitutional: was `engine`'s `Config` struct + `op`'s
 //! `ConfigOperation`, split out per the taxonomy recipe: view state lives at app level, not artifact).
 
-use crate::artifacts::drawing::DrawingCamera;
+use crate::DrawingCamera;
 use protocol::Mutation;
 
 //#region 🔖️Config

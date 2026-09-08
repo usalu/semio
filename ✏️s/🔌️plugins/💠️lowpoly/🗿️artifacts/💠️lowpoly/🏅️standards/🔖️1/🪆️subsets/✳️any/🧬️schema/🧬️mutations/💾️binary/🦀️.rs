@@ -11,7 +11,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::lowpoly::schema::mutations::text::LowpolyMutation;
+use crate::schema::mutations::text::LowpolyMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `LowpolyMutation` to its binary command form.
@@ -28,9 +28,9 @@ pub fn decode_op(bytes: &[u8]) -> Result<LowpolyMutation, protocol::ProtocolErro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::mutations::rename_object;
-    use crate::artifacts::lowpoly::schema::default_snapshot;
-    use crate::artifacts::lowpoly::LOWPOLY_DOCUMENT_SCHEMA;
+    use crate::mutations::rename_object;
+    use crate::schema::default_snapshot;
+    use crate::LOWPOLY_DOCUMENT_SCHEMA;
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
@@ -46,7 +46,7 @@ mod tests {
     async fn document_text_round_trip_after_applying_an_operation() {
         let projection = default_snapshot();
         let object_id = projection.objects[0].id.clone();
-        let envelope = store::create_document_envelope::<crate::artifacts::lowpoly::LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);
+        let envelope = store::create_document_envelope::<crate::LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);
         let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         let operation = LowpolyMutation::RenameObject(rename_object::RenameObject { id: object_id, new_name: "Renamed Layer".into() });
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: None }).await.expect("apply");

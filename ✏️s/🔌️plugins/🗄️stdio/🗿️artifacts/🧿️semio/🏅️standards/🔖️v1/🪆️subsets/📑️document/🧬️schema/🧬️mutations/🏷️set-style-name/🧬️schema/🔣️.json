@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutation/set-style-name.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutation/set-style-name/schema.json",
   "title": "SetStyleName",
   "type": "object",
   "additionalProperties": false,
@@ -15,9 +15,9 @@
     "name": {
       "type": "string"
     },
-    "kind": {
+    "mutation": {
       "const": "setStyleName",
-      "description": "Aggregate discriminator spliced in by DocPathSegment; absent when the payload stands alone."
+      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     }
   }
 }

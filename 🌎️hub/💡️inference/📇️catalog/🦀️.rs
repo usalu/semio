@@ -158,7 +158,7 @@ fn valid_digest(value: &str) -> bool {
 
 fn validate_gis_map_binding_projection(projection: &GisMapFrozenBindingProjectionV1, native: ArtifactInferenceService) -> Result<(), InferenceErrorV1> {
     let metadata = native.metadata();
-    let expected = semio_s_plugin_gis::artifacts::gismap::gis_map_inference_service();
+    let expected = semio_s_artifact_gis_gismap::gis_map_inference_service();
     if !valid_digest(&projection.catalog_generation_id)
         || [&projection.package.component_sha256, &projection.package.component_blake3, &projection.package.descriptor_byte_sha256, &projection.artifact.pack_schema_hash].iter().any(|value| !valid_digest(value))
         || projection.package.plugin_id != "gis"
@@ -286,7 +286,7 @@ fn verified_gis_map_binding_with_service(catalog: Arc<VerifiedTrustedCatalog>, n
 
 /// 🧊️ Freezes the verified profile's GIS Map editor choice and literal native inference executable before readiness publication.
 pub fn verified_gis_map_binding(catalog: Arc<VerifiedTrustedCatalog>) -> Result<Option<Arc<VerifiedGisMapArtifactBindingV1>>, InferenceErrorV1> {
-    verified_gis_map_binding_with_service(catalog, semio_s_plugin_gis::artifacts::gismap::gis_map_inference_service())
+    verified_gis_map_binding_with_service(catalog, semio_s_artifact_gis_gismap::gis_map_inference_service())
 }
 
 struct PackageProjection<'a> {
@@ -403,7 +403,7 @@ mod tests {
     fn gis_map_verified_binding_freezes_catalog_selection_and_native_executable() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).unwrap();
         let projection: GisMapFrozenBindingProjectionV1 = serde_json::from_value(fixture["binding"].clone()).unwrap();
-        let native = semio_s_plugin_gis::artifacts::gismap::gis_map_inference_service();
+        let native = semio_s_artifact_gis_gismap::gis_map_inference_service();
         assert_eq!(validate_gis_map_binding_projection(&projection, native), Ok(()));
         assert_eq!(gis_map_binding_digest(&projection).unwrap(), fixture["expectedDigest"]);
         for hostile in fixture["hostile"].as_array().unwrap() {

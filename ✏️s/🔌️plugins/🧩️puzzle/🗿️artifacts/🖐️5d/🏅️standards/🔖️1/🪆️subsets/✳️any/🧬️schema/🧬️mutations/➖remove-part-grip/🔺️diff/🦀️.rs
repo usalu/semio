@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RemovePartGrip` — patches the owner part's `grips` list and severs
 //! any fastener referencing the removed grip (full id `part_id:grip_id`).
-use crate::artifacts::puzzle5d::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta, Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dPartsDelta};
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta, Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dPartsDelta};
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemovePartGrip, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

@@ -1,11 +1,53 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-declaration.json",
+  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/base/mutation/set-declaration/schema.json",
   "title": "SetDeclarationPayload",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
-    "declaration": {}
+    "declaration": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/XmlDeclaration"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "XmlDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "encoding": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "standalone": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
   }
 }

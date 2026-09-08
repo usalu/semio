@@ -2,8 +2,8 @@
 //! missing object/index ⇒ `Vec::new()`.
 
 use super::RemovePaintLayer;
-use crate::artifacts::lowpoly::mutations::insert_paint_layer;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::mutations::insert_paint_layer;
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &RemovePaintLayer, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

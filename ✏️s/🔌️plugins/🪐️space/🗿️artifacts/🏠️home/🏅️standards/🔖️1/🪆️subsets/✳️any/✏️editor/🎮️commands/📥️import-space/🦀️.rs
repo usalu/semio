@@ -1,8 +1,8 @@
 //! 🏙️ 🏙️ S Home launcher app command — `import-space`.
 
-use crate::artifacts::home::mutations::change_catalog_generation;
-use crate::artifacts::home::op::SHomeMutation;
-use crate::artifacts::home::SHomeSnapshot;
+use crate::mutations::change_catalog_generation;
+use crate::op::SHomeMutation;
+use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 

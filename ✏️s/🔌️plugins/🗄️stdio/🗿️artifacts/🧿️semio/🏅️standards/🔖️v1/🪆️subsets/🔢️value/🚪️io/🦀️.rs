@@ -122,6 +122,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-value")]
         register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -136,7 +137,7 @@ pub mod derived_composition {
     //#endregion 🔖️Register
 
     //#region 🧪️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-value"))]
     mod tests {
 
         //#region 🔖️ConformanceLaws
@@ -261,6 +262,7 @@ pub mod derived_composition {
     /// 🌉️ W4 real semio↔format bridge entries. Each `deserializer_entry_of`/`serializer_entry_of`
     /// pair registers BOTH `IoKey` directions per `register_composer_entries`'s own doc comment.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-value")]
     fn io_bridge_entries() -> &'static [ComposerEntry] {
         static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         ENTRIES

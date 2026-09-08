@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `RenameNote`.
 use super::RenameNote;
-use crate::artifacts::note::schema::mutations::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::schema::mutations::NoteMutation;
+use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &RenameNote, base: &NoteSnapshot) -> Vec<NoteMutation> {

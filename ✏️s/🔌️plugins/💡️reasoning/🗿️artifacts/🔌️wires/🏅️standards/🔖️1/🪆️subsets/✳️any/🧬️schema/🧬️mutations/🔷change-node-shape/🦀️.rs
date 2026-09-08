@@ -1,9 +1,9 @@
 //! 🔷 Wires mutation — `ChangeNodeShape`: sets one board node's `shape` scalar field
 //! (`"circle"`/`"rectangle"`, per `NodeDsl`'s doc).
 
-use crate::artifacts::wires::diff::WiresDiff;
-use crate::artifacts::wires::mutations::WiresMutation;
-use crate::artifacts::wires::WiresSnapshot;
+use crate::diff::WiresDiff;
+use crate::mutations::WiresMutation;
+use crate::WiresSnapshot;
 
 //#region 🔖️Mutation
 /// 🔷 `change-node-shape` payload.

@@ -1,6 +1,6 @@
 //! 🧬️ 🧬️ Generate-mode commands command — `rename-generation`.
 
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::seed_host_catalogue;
 use crate::editor::flow::FLOW_PLAY_APP_ID;

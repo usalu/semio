@@ -1,5 +1,5 @@
 //! rewriting <- docx
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 use semio_s_artifact_stdio_docx::{DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
 
 pub fn register() {}

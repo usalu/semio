@@ -268,14 +268,13 @@ if (import.meta.vitest) {
     const { default: wire } = await import("./🔌️wire/🔣️.json");
     const { default: schema } = await import("./🧬️schema/🔣️.json");
     const { default: fixture } = await import("./🧫️fixture/🔣️.json");
-    const { default: fixtureSchema } = await import("./🧬️schema/🔣️.json");
     const { default: pageSchema } = await import("../../../🎭️actor/📃️page/🧬️schema/🔣️.json");
     const { default: lifetimeSchema } = await import("../../../🎭️actor/🚪️lifetime/🧬️schema/🔣️.json");
     const { default: patchSchema } = await import("../../../🎭️actor/🚪️lifetime/🩹️patch/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(pageSchema).addSchema(lifetimeSchema).addSchema(patchSchema);
-    expect(ajv.compile(schema)(wire)).toBe(true);
-    expect(ajv.addSchema(fixtureSchema).getSchema(`${fixtureSchema.$id}#/$defs/ContentFixture`)!(fixture)).toBe(true);
+    expect(ajv.addSchema(schema).getSchema(`${schema.$id}#/$defs/Content`)!(wire)).toBe(true);
+    expect(ajv.getSchema(`${schema.$id}#/$defs/ContentFixture`)!(fixture)).toBe(true);
     const { frame } = await oracle();
     const chunks = fixture.recordVectors.map(row => {
       const body = Buffer.from(row.bodyHex, "hex");

@@ -1,7 +1,7 @@
 //! 🔺️ `change-delta-tk` — sparse diff construction.
 
 use super::ChangeDeltaTK;
-use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
+use crate::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeDeltaTK, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {

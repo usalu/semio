@@ -1,8 +1,8 @@
 //! 🧬️ ProgramSnapshot snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::program::kernel::*;
-use crate::artifacts::program::registers::*;
-use schema::ArtifactSchema;
+use crate::kernel::*;
+use crate::registers::*;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted architect program snapshot (persistent fields of the artifact).
@@ -211,11 +211,11 @@ pub struct ProgramSnapshot {
     #[dsl(block)]
     #[child(kind = "s.stdio.semio.table")]
     #[state(artifact)]
-    pub knowledge: crate::artifacts::program::ProgramKnowledgeChild,
+    pub knowledge: crate::ProgramKnowledgeChild,
     #[dsl(block)]
     #[child(kind = "s.stdio.semio.table")]
     #[state(artifact)]
-    pub benchmarks: crate::artifacts::program::ProgramBenchmarksChild,
+    pub benchmarks: crate::ProgramBenchmarksChild,
     #[dsl(table)]
     #[state(artifact)]
     pub traces: Vec<TraceLink>,
@@ -226,7 +226,7 @@ pub struct ProgramSnapshot {
 
 impl Default for ProgramSnapshot {
     fn default() -> Self {
-        crate::artifacts::program::empty_plugin()
+        crate::empty_plugin()
     }
 }
 

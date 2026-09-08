@@ -2,7 +2,7 @@
 //! `delete` verb. Physical dir name (`➖remove-block`, wired by `🦀️.rs`) predates the semantic
 //! rename; the Rust module is still `remove_block`, the type/variant/kind are `delete-block`.
 
-use crate::artifacts::forms::{FormMutation, FormsDiff, FormsSnapshot};
+use crate::{FormMutation, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region ✂️DeleteBlock

@@ -1,5 +1,5 @@
 //! rewriting <- md
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 use semio_s_artifact_stdio_md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks;
 use semio_s_artifact_stdio_md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 

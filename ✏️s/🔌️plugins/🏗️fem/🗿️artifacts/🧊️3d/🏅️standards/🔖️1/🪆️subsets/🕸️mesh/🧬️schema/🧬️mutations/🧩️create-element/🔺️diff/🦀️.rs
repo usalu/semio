@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateElement`.
 use super::CreateElement;
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dElementsDelta};
-use crate::artifacts::fem3d::mutations::resolve_element;
-use crate::artifacts::fem3d::{element_id, Fem3dSnapshot};
+use crate::diff::{Fem3dDiff, Fem3dElementsDelta};
+use crate::mutations::resolve_element;
+use crate::{element_id, Fem3dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateElement, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

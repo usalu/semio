@@ -9,7 +9,7 @@
 /// 🔌️ Layout's typed media I/O surface (`AppDefinition.io`) — the implicit `document:in`/`document:out`
 /// pair (keyed by the `2d.layout` artifact kind `create_layout_app` already declares) plus the two
 /// WORKFLOWS-END-TO-END-TYPED-PORTS ports: `fields:in` (a `form.dictionary` this layout binds as a new
-/// named data source — see `crate::artifacts::layout::LayoutSnapshot::data_fields_json`) and `layout:out`
+/// named data source — see `crate::LayoutSnapshot::data_fields_json`) and `layout:out`
 /// (the current layout re-exported as `2d.layout` vector/SVG for a downstream consumer).
 pub fn layout_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {

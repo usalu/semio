@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `ChangeLanguage`.
 use super::ChangeLanguage;
-use crate::artifacts::writer::WriterDiff;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::WriterDiff;
+use crate::WriterSnapshot;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse `language_id`-only delta, built directly from the payload — real handcrafted

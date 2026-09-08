@@ -6,7 +6,7 @@
 use std::hint::black_box;
 use std::time::Instant;
 
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle, Vec3};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle, Vec3};
 
 const SAMPLES: usize = 3;
 

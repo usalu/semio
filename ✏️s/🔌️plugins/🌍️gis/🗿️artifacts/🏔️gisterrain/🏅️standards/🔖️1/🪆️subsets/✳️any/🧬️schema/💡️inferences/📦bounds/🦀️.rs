@@ -5,7 +5,7 @@
 //! internals that aren't `pub`). Simple whole-snapshot scalar: no `InferredField` caching, the
 //! overlay is small and re-decoding is O(positions).
 
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::GisTerrainSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 📦Bounds

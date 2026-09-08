@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/flow/flow/vcs/mutation/move-synapse/schema.json",
+  "title": "MoveSynapse",
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "toIndex": {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/index"
+        }
+      },
+      "required": [
+        "id",
+        "toIndex"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/payload"
+    }
+  ],
+  "propertyNames": {
+    "enum": [
+      "id",
+      "toIndex"
+    ]
+  }
+}

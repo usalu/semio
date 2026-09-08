@@ -5,6 +5,9 @@ edition.workspace = true
 rust-version.workspace = true
 description = "Shared package-neutral contract for independently compiled norm artifacts"
 
+[package.metadata.semio]
+role = "s-module"
+
 [lints]
 workspace = true
 

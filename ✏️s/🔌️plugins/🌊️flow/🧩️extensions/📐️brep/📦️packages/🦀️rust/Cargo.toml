@@ -26,7 +26,7 @@ component-guest = ["dep:semio-framework-plugin", "dep:semio-framework"]
 
 [dependencies]
 semio-framework-3d = { path = "../../../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-brep"] }
 flow_extension_sdk = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
 neural_engine = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }

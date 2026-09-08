@@ -1,122 +1,17 @@
 #!/usr/bin/env bun
-/** 🧭️ `@semio-tech/mit-bestand-demonstrator` task router: `bun ./📜️script.ts <dev|build> [args…]`. */
+/** 🧭️ `@semio-tech/mit-bestand-demonstrator` task router: `bun ./📜️script.ts <test> [args…]`. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runViteBunxDev, runVitest, spawnDaemon, waitForHttpUrl, withViteConfigLoader } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { buildEngineWasm, buildPlugins, ensurePluginRegistry } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts";
-import { DEMONSTRATOR_RUNTIME_PANES, DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeBuildVariants } from "./🔨️modules/🧩️runtime/🟦️.ts";
-
-const demonstratorRoot = import.meta.dir;
-
-//#region 🎪️DemonstratorPluginBuild
-/** 🆕 Builds current plugin inputs unless the caller explicitly requests staged artifacts. */
-function demonstratorShouldBuildPlugins(skipPluginBuild: string | undefined): boolean {
-  return skipPluginBuild !== "1";
-}
-
-/** @emoji 🎯️ Builds only the primary crate behind a runtime variant; its contributed extensions are
- * already included by the demonstrator crate's own consumer closure. */
-async function buildRuntimePlugin(variant: string): Promise<void> {
-  const pluginId = DEMONSTRATOR_RUNTIME_TARGETS.find(row => row.variant === variant)?.pluginId;
-  if (!pluginId) throw new Error(`Unknown demonstrator runtime variant: ${variant}`);
-  const previousPluginOnly = process.env.SEMIO_PLUGIN_ONLY;
-  process.env.SEMIO_PLUGIN_ONLY = pluginId;
-  try {
-    await buildPlugins(variant);
-  } finally {
-    if (previousPluginOnly === undefined) delete process.env.SEMIO_PLUGIN_ONLY;
-    else process.env.SEMIO_PLUGIN_ONLY = previousPluginOnly;
-  }
-}
-
-/** @emoji 🎪️ Builds every pane's runtime plugin crate + declared engines into the shared
- * `🧧framework/os/dev` `🔌️plugin-modules/` dir this page's own `⚙️vite.config.ts` static-serves from.
- *
- * Five panes share the demonstrator crate. Generator deliberately boots the procedural crate, so it
- * must be built separately rather than consuming whichever procedural artifact happens to be staged.
- * The primary variant is restored after both builds so registry session generation stays deterministic.
- * Engines still need a per-pane pass: only some panes declare one (e.g. only `verfolgen` needs
- * tiled-map), and each variant's own registry row carries its own `engines` list independently even
- * though they now share a `pluginId`. */
-async function buildDemonstratorPlugins(): Promise<void> {
-  const primaryVariant = DEMONSTRATOR_RUNTIME_PANES[0]?.variant;
-  const buildCurrentPlugins = demonstratorShouldBuildPlugins(process.env.SKIP_PLUGIN_BUILD);
-  if (primaryVariant) {
-    if (buildCurrentPlugins) await buildPlugins(primaryVariant);
-    else await ensurePluginRegistry(primaryVariant);
-  }
-  if (buildCurrentPlugins) {
-    for (const variant of demonstratorRuntimeBuildVariants(primaryVariant ?? "generator")) await buildRuntimePlugin(variant);
-  }
-  if (primaryVariant) await ensurePluginRegistry(primaryVariant);
-  for (const pane of DEMONSTRATOR_RUNTIME_PANES) {
-    await buildEngineWasm(pane.variant, "react", join(demonstratorRoot, "package.json"));
-  }
-}
-//#endregion 🎪️DemonstratorPluginBuild
-
-class DevScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    await buildDemonstratorPlugins();
-    runViteBunxDev(this.root, ["--config", "⚙️vite.config.ts", ...segments], {
-      portEnv: "MIT_BESTAND_DEMONSTRATOR_PORT",
-      defaultPort: "6029",
-      fixedPort: true,
-    });
-  }
-}
-
-class BuildScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    process.env.SEMIO_BUILD_MODE = "ship";
-    await buildDemonstratorPlugins();
-    if (runCmdStatus("bun", withViteConfigLoader(["run", "vite", "build", "--config", "⚙️vite.config.ts", ...segments]), { cwd: this.root, env: process.env }) !== 0) {
-      throw new Error("demonstrator landing build failed");
-    }
-    console.log(`[build] demonstrator built at ${join(demonstratorRoot, "dist")}`);
-  }
-}
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { demonstratorRuntimeBuildVariants } from "./🔨️modules/🧩️runtime/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    if (rest[0] === "e2e") {
-      await this.runAcceptancePlaywright();
-      return;
-    }
     await runVitest(this.root, rest, "⚡️vitest.config.ts");
-  }
-
-  /** 🎪️ Demonstrator-local analog of root `📜️script.ts`'s `runStorybookPlaywright()` — the demonstrator is
-   * a live Vite dev server (not a prebuilt static bundle like Storybook), so this spawns `DevScript`'s own
-   * `dev` command as a daemon instead of a static file server. `runViteBunxDev`'s `fixedPort: true` reuse
-   * path (see `DevScript.run`) means this harmlessly no-ops the spawn (and the later `kill()`) if a
-   * developer already has the demonstrator running on this port — it never tears down someone else's
-   * session. */
-  private async runAcceptancePlaywright(): Promise<void> {
-    const port = process.env.MIT_BESTAND_DEMONSTRATOR_PORT ?? "6029";
-    const baseUrl = `http://127.0.0.1:${port}/`;
-    const server = spawnDaemon("bun", [join(this.root, "📜️script.ts"), "dev"], {
-      cwd: this.root,
-      env: { ...process.env, MIT_BESTAND_DEMONSTRATOR_PORT: port },
-    });
-    try {
-      await waitForHttpUrl(baseUrl, 180_000);
-      runCmd("bunx", ["playwright", "test", "--config", join(this.root, "🎭️playwright.config.ts")], {
-        cwd: this.repoRoot,
-        env: {
-          ...process.env,
-          PLAYWRIGHT_BASE_URL: baseUrl,
-          PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? `${this.repoRoot}/node_modules/.cache/ms-playwright`,
-          MIT_BESTAND_DEMONSTRATOR_PORT: port,
-        },
-      });
-    } finally {
-      server.kill();
-    }
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 
 if (import.meta.main) await runBundleScriptMain(router, import.meta.url);
 
@@ -125,12 +20,6 @@ if (import.meta.vitest) {
 
   //#region 🧪️DemonstratorPluginBuildTests
   describe("demonstratorRuntimeBuildVariants", () => {
-    it("requires fresh plugin builds unless explicitly skipped", () => {
-      expect(demonstratorShouldBuildPlugins(undefined)).toBe(true);
-      expect(demonstratorShouldBuildPlugins("0")).toBe(true);
-      expect(demonstratorShouldBuildPlugins("1")).toBe(false);
-    });
-
     it("builds one additional artifact for six pane runtime variants", () => {
       expect(demonstratorRuntimeBuildVariants("generator")).toEqual(["generation3d"]);
     });

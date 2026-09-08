@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::En1999Snapshot;
 
 /// 🗄️ The aluminium-roof-purlin example fixture, handcrafted in `en1999`'s DSL (`store::ArtifactDsl`):
 /// a welded AW-6082-T6 aluminium roof purlin under the EN annex, exercising the higher-strength alloy's

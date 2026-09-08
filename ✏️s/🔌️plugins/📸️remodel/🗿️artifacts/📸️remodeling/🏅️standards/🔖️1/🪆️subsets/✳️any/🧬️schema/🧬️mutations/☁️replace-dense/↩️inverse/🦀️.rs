@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ReplaceDense` — the OLD `ReconstructionResults.dense` from BASE.
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::mutations::RemodelingMutation;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::ReplaceDense, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {

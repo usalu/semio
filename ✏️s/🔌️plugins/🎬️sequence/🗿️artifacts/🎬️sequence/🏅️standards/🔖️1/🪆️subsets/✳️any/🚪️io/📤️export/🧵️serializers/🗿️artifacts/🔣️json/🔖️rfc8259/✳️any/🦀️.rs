@@ -1,7 +1,7 @@
 //! 🚪️ sequence -> json. The exact carrier is `{schema, steps, edges}` and requires the composed
 //! child scene to be materialized before serialization.
 
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::SequenceSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

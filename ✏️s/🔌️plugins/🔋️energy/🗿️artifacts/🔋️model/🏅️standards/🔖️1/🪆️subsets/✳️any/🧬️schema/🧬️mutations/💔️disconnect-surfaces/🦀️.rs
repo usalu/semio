@@ -1,8 +1,8 @@
 //! 💔️ Energy model mutation — `DisconnectSurfaces`: Removes the adjacency relationship between two surfaces, addressed by the unordered pair. Refused when the two are not adjacent, so an undo chain can never invent a disconnect that had no partner.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

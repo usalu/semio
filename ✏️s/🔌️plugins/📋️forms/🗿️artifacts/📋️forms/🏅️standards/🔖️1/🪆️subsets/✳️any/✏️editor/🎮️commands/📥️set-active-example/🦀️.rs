@@ -1,8 +1,8 @@
 //! 📥️ 📥️ Forms play app commands command — `set-active-example`.
 
-use crate::artifacts::forms::dsl as forms_dsl;
-use crate::artifacts::forms::schema::{default_example_spec, empty_forms_snapshot, onboarding_example_spec};
-use crate::artifacts::forms::{forms_steps, op::FormMutation, FormsSnapshot};
+use crate::document_dsl as forms_dsl;
+use crate::schema::{default_example_spec, empty_forms_snapshot, onboarding_example_spec};
+use crate::{forms_steps, op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -18,7 +18,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `DeleteStep`/`ChangeFormTitle`, reading through `forms_steps` now that `FormsSnapshot` no longer
 /// carries a bare `steps` field) so it still records a true inverse.
 fn replace_spec_operations(current: &FormsSnapshot, next: &FormsSnapshot) -> Vec<FormMutation> {
-    use crate::artifacts::forms::mutations::{change_form_title, create_step, delete_step};
+    use crate::mutations::{change_form_title, create_step, delete_step};
     let mut operations: Vec<FormMutation> = forms_steps(current).iter().map(|step| FormMutation::DeleteStep(delete_step::mutation::DeleteStep { id: step.id.clone() })).collect();
     if next.title != current.title {
         operations.push(FormMutation::ChangeFormTitle(change_form_title::mutation::ChangeFormTitle { new_title: next.title.clone() }));

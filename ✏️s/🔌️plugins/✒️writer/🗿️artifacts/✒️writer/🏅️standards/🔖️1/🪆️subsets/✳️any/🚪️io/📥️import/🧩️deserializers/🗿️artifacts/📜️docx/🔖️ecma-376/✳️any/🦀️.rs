@@ -4,7 +4,7 @@
 //! document (non-`Paragraph` blocks, e.g. tables, are honestly skipped rather than fabricating
 //! text).
 
-use crate::artifacts::writer::{writer_snapshot_with_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
+use crate::{writer_snapshot_with_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
@@ -53,6 +53,6 @@ mod tests {
         let docx = build_minimal_docx(DocxDocument { body, styles: Vec::new() });
         let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&docx);
         let outcome = DocxIntoWriter::deserialize(&IoPayload::Binary(bytes)).await.expect("deserialize");
-        assert_eq!(crate::artifacts::writer::writer_text(&outcome.value), "line one\nline two");
+        assert_eq!(crate::writer_text(&outcome.value), "line one\nline two");
     }
 }

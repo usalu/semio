@@ -17,7 +17,7 @@
 //! INTROSPECTION table is incomplete for this one field (matches `🖨️raster`'s/`💠️lowpoly`'s own
 //! already-accepted gap for the identical shape).
 
-use crate::artifacts::remodeling::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelingAssetChild, RemodelingDurableArtifactStore, REMODELING_DOCUMENT_SCHEMA};
+use crate::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelingAssetChild, RemodelingDurableArtifactStore, REMODELING_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;

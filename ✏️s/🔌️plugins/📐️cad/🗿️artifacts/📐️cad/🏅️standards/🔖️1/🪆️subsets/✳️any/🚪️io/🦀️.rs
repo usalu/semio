@@ -6,16 +6,16 @@ pub fn import_stdio_kinds() -> &'static [&'static str] {
 pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.gltf", "stdio.ifc", "stdio.json", "stdio.obj", "stdio.png", "stdio.step", "stdio.stl"]
 }
-pub fn cad_to_wire(from: &crate::artifacts::cad::CadSnapshot) -> Vec<u8> {
+pub fn cad_to_wire(from: &crate::CadSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(from)
 }
-pub fn cad_from_wire(bytes: &[u8]) -> Result<crate::artifacts::cad::CadSnapshot, store::PackError> {
-    <crate::artifacts::cad::CadSnapshot as store::ArtifactPack>::decode_pack(bytes)
+pub fn cad_from_wire(bytes: &[u8]) -> Result<crate::CadSnapshot, store::PackError> {
+    <crate::CadSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::CadAnalyzer;
-    use crate::artifacts::cad::CadSnapshot;
+    use crate::standards::v1::subsets::any::schema::CadAnalyzer;
+    use crate::CadSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.cad.cad", standard: StandardId("1"), subset: SubsetId("*") };
@@ -56,7 +56,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -67,7 +67,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::gltf::v2_0::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::io::import::deserializers::artifacts::gltf::v2_0::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -78,7 +78,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::ifc::v4::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::io::import::deserializers::artifacts::ifc::v4::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -89,7 +89,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -100,7 +100,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -111,7 +111,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::png::v1_2::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::io::import::deserializers::artifacts::png::v1_2::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -122,7 +122,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::step::v_ap214::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::io::import::deserializers::artifacts::step::v_ap214::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -133,7 +133,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::artifacts::cad::io::import::deserializers::artifacts::stl::v_ascii::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::io::import::deserializers::artifacts::stl::v_ascii::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -153,8 +153,8 @@ pub use derived_composition::*;
 // (`🗿️artifacts/📐️cad/🦀️.rs`)'s own shadowing `io_registry` wrapper module and
 // `declaration()`'s `.composers(...)` call were repointed here.
 pub mod io_registry {
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::CadBuilder as CadAnyBuilder;
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::CadComposer as CadAnyComposer;
+    use crate::standards::v1::subsets::any::schema::CadBuilder as CadAnyBuilder;
+    use crate::standards::v1::subsets::any::schema::CadComposer as CadAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
     use std::sync::OnceLock;
 
@@ -174,7 +174,7 @@ pub mod io_registry {
     const CAD_DIALECT: Dialect = Dialect { artifact_kind: "s.cad.cad", standard: StandardId("1"), subset: SubsetId("*") };
     const CAD_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::cad::CadSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::CadSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == CAD_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => CadAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -190,7 +190,7 @@ pub mod io_registry {
                 IoPayload::Text(t) => t.clone(),
                 IoPayload::Binary(b) => String::from_utf8_lossy(b).into_owned(),
             };
-            return crate::artifacts::cad::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
+            return crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
         }
         Err(ComposeError { message: "CadComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
@@ -199,7 +199,7 @@ pub mod io_registry {
     fn compose_export_ifc(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::ifc::v4::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let text = crate::standards::v1::subsets::any::io::export::serializers::artifacts::ifc::v4::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_IFC_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -207,7 +207,7 @@ pub mod io_registry {
     fn compose_export_step(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::step::v_ap214::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let text = crate::standards::v1::subsets::any::io::export::serializers::artifacts::step::v_ap214::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_STEP_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -215,7 +215,7 @@ pub mod io_registry {
     fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let text = crate::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -223,7 +223,7 @@ pub mod io_registry {
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let text = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -231,7 +231,7 @@ pub mod io_registry {
     fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let text = crate::standards::v1::subsets::any::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -239,7 +239,7 @@ pub mod io_registry {
     fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::stl::v_ascii::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let text = crate::standards::v1::subsets::any::io::export::serializers::artifacts::stl::v_ascii::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_STL_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -247,7 +247,7 @@ pub mod io_registry {
     fn compose_export_gltf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::gltf::v2_0::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let text = crate::standards::v1::subsets::any::io::export::serializers::artifacts::gltf::v2_0::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_GLTF_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -255,7 +255,7 @@ pub mod io_registry {
     fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::artifacts::cad::standards::v1::subsets::any::io::export::serializers::artifacts::obj::v3_0::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let text = crate::standards::v1::subsets::any::io::export::serializers::artifacts::obj::v3_0::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_OBJ_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -488,24 +488,24 @@ pub fn cad_file_text_from_payload(payload: &DslValue) -> Option<String> {
 /// never re-duplicated here). Composing the returned element into a pane's `SemioModelSnapshot`
 /// child is the caller's job (a `create`/`change` mutation dispatched against that CHILD document).
 pub fn import_step_object(text: &str) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
-    let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
+    let mut kernel = crate::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = kernel.import_step(text).ok()?.into_iter().next()?;
-    Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-step"), handle))
+    Some(model_element_from_solid_handle(crate::standards::v1::subsets::any::schema::inferences::next_cad_id("object-step"), handle))
 }
 
 /// @emoji 🧊️ Imports an OBJ payload into the shared kernel as a new `SemioModelElement` — see
 /// `import_step_object`'s doc comment for the returned shape's rationale.
 pub fn import_obj_object(text: &str) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
-    let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
+    let mut kernel = crate::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = kernel.import_obj(text, 0.01).ok()?;
-    Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-obj"), handle))
+    Some(model_element_from_solid_handle(crate::standards::v1::subsets::any::schema::inferences::next_cad_id("object-obj"), handle))
 }
 
 /// @emoji 🧊️ Imports an STL payload into the shared kernel as a new `SemioModelElement`.
 pub fn import_stl_object(bytes: &[u8]) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
-    let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
+    let mut kernel = crate::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle = kernel.import_stl(bytes, 0.01).ok()?;
-    Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-stl"), handle))
+    Some(model_element_from_solid_handle(crate::standards::v1::subsets::any::schema::inferences::next_cad_id("object-stl"), handle))
 }
 
 /// @emoji 🧊️ Imports a GLB payload by decoding it to a tessellated mesh (via the shared
@@ -513,9 +513,9 @@ pub fn import_stl_object(bytes: &[u8]) -> Option<semio_s_artifact_stdio_semio::s
 /// DWG-derived import path since GLB carries no exact B-Rep to preserve.
 pub fn import_glb_object(bytes: &[u8]) -> Option<semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mesh = semio_framework_plugin::GlbImporter.import(bytes).ok()?;
-    let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
+    let mut kernel = crate::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
     let handle_id = mesh_to_obj_text_for_import(&mesh).and_then(|text| kernel.import_obj(&text, 0.01).ok())?;
-    Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-glb"), handle_id))
+    Some(model_element_from_solid_handle(crate::standards::v1::subsets::any::schema::inferences::next_cad_id("object-glb"), handle_id))
 }
 
 /// 🌉️ Builds a `SemioModelElement` from a live kernel solid handle — id, identity placement, and a
@@ -574,7 +574,7 @@ pub fn import_cad_object_by_extension(name: &str, payload: &DslValue) -> Option<
 //#region 🌉️GeometryBridges
 // 🐛️ Relocated from the deleted `⚙️engine/🦀️.rs` -- foreign-format(bytes/struct)-to-
 // cad-document conversions are deserialization (rule 5). Kept reachable at THIS exact path
-// (`crate::artifacts::cad::io::{cad_document_from_dwg, cad_document_from_mesh,
+// (`crate::io::{cad_document_from_dwg, cad_document_from_mesh,
 // cad_mesh_from_document}`) because two OTHER plugins import them at the artifact-level (not
 // through an app-internal engine): 🎪️demonstrator/🎪️panes/📐️koordinator and 💠️lowpoly's schema.
 pub fn unwrap_spatial_load_payload(raw: &DslValue) -> Option<DslValue> {
@@ -597,13 +597,13 @@ pub fn unwrap_spatial_load_payload(raw: &DslValue) -> Option<DslValue> {
 /// wraps zero or more `{id|modelDefinitionId, model}` entries in `models[]`; a bare `spatial.model`
 /// payload IS one implicit entry. Each entry that resolves to a known `CadPaneId` and carries real
 /// objects gets its own real `SemioModelSnapshot` minted (`geometry_import::semio_model_snapshot_from_objects`)
-/// and composed as that pane's `CadModelChild` (`crate::artifacts::cad::cad_model_child_handle`) —
+/// and composed as that pane's `CadModelChild` (`crate::cad_model_child_handle`) —
 /// panes with no objects, or an id this document doesn't recognize, are left `None` rather than
 /// fabricating an empty child. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
-pub fn scene_from_spatial_payload(payload: &DslValue) -> Option<crate::artifacts::cad::CadSnapshot> {
-    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::{objects_from_fixture_model, parse_geometry, semio_model_snapshot_from_objects};
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, default_document, CAD_MODEL_DEFINITION_SHAPE};
-    use crate::artifacts::cad::{cad_model_child_handle, cad_pane_from_model_definition_id, CadPaneId};
+pub fn scene_from_spatial_payload(payload: &DslValue) -> Option<crate::CadSnapshot> {
+    use crate::standards::v1::subsets::any::io::geometry_import::{objects_from_fixture_model, parse_geometry, semio_model_snapshot_from_objects};
+    use crate::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, default_document, CAD_MODEL_DEFINITION_SHAPE};
+    use crate::{cad_model_child_handle, cad_pane_from_model_definition_id, CadPaneId};
     let schema = payload.get("schema").and_then(|value| value.as_str());
     if schema != Some("spatial.modelspace") && schema != Some("spatial.model") {
         return None;
@@ -648,8 +648,8 @@ pub fn scene_from_spatial_payload(payload: &DslValue) -> Option<crate::artifacts
 }
 
 pub fn cad_mesh_from_document(doc: &DslValue) -> Result<semio_framework_plugin::MeshData, String> {
-    let scene: crate::artifacts::cad::CadSnapshot = protocol::FromValue::from_value(doc.clone()).map_err(|err: protocol::ValueError| err.to_string())?;
-    Ok(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::export_mesh_from_scene(&scene))
+    let scene: crate::CadSnapshot = protocol::FromValue::from_value(doc.clone()).map_err(|err: protocol::ValueError| err.to_string())?;
+    Ok(crate::standards::v1::subsets::any::schema::inferences::export_mesh_from_scene(&scene))
 }
 
 /// 🌉 One `CadObject` per non-empty DWG layer — filters `drawing` down to that layer's entities and
@@ -658,9 +658,9 @@ pub fn cad_mesh_from_document(doc: &DslValue) -> Result<semio_framework_plugin::
 /// — the identical OBJ-text bridge every other native-geometry import path in this file already
 /// uses. A layer with no entities (or none that triangulate) contributes no object — never a
 /// fabricated placeholder.
-pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -> crate::artifacts::cad::CadWorkingScene {
-    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::cad_object_from_mesh;
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, next_cad_id};
+pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -> crate::CadWorkingScene {
+    use crate::standards::v1::subsets::any::io::geometry_import::cad_object_from_mesh;
+    use crate::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, next_cad_id};
     let mut kernel = cad_brep_kernel();
     let objects = drawing
         .layers
@@ -679,7 +679,7 @@ pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawi
             Some(cad_object_from_mesh(&mut kernel, next_cad_id("object"), layer.name.clone(), "spatial.shape.imported", &mesh))
         })
         .collect();
-    crate::artifacts::cad::CadWorkingScene { objects, ..Default::default() }
+    crate::CadWorkingScene { objects, ..Default::default() }
 }
 
 /// 🌉 Real per-layer DWG import: every non-empty layer becomes a real `CadObject`
@@ -691,9 +691,9 @@ pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawi
 /// child, matching `scene_from_spatial_payload`'s "no fabricated child" rule. Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
 pub fn cad_document_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -> Result<DslValue, String> {
-    use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects;
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
-    use crate::artifacts::cad::{cad_model_child_handle, CadPaneId};
+    use crate::standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects;
+    use crate::standards::v1::subsets::any::schema::inferences::default_document;
+    use crate::{cad_model_child_handle, CadPaneId};
     let working = cad_working_scene_from_dwg(drawing);
     let mut document = default_document();
     if !working.objects.is_empty() {
@@ -714,7 +714,7 @@ pub fn cad_document_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -
 // type out of this plugin's write scope. Bridged once, at this exact boundary, from a `DslValue`
 // built the normal way via `protocol::json::from_dsl_value`.
 pub fn cad_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<protocol::json::Value, String> {
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
+    use crate::standards::v1::subsets::any::schema::inferences::default_document;
     Ok(protocol::json::from_dsl_value(&protocol::ToValue::to_value(&default_document())))
 }
 //#endregion 🌉️GeometryBridges
@@ -853,7 +853,7 @@ mod tests {
 #[cfg(test)]
 mod dwg_import_tests {
     use super::*;
-    use crate::artifacts::cad::CadSnapshot;
+    use crate::CadSnapshot;
     #[semio_framework_async_macros::async_test]
     async fn cad_document_from_dwg_creates_one_object_per_layer_with_geometry() {
         let mut drawing = semio_s_artifact_stdio_dwg::DwgDrawing::default();

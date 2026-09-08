@@ -4,7 +4,7 @@
 //! (the master it's based on) both precede the page in the topo order. Topologically sorted with
 //! Kahn's algorithm so `cycleFree` genuinely reports whether those refs ever form a cycle.
 
-use crate::artifacts::layout::{Page, ParentPage, Spread};
+use crate::{Page, ParentPage, Spread};
 use std::collections::{BTreeMap, BTreeSet, HashMap, VecDeque};
 use semio_framework_value_derive::{FromValue, ToValue};
 

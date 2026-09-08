@@ -12,9 +12,9 @@
 //! The seeded step carries the committed payload's own params, verbatim; `StepParams` is
 //! `#[serde(transparent)]` over an ordered dictionary, so the committed JSON is a bare object.
 
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
-use crate::artifacts::sequence::{SequenceSnapshot, SequenceStep, SequenceWorkingScene};
+use crate::diff::SequenceDiff;
+use crate::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
+use crate::{SequenceSnapshot, SequenceStep, SequenceWorkingScene};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

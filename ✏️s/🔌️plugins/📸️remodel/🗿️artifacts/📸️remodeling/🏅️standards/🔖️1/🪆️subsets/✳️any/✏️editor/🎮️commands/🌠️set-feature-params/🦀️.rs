@@ -1,8 +1,8 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-feature-params`.
 
-use crate::artifacts::remodeling::mutations::update_feature_params;
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::{FeatureDetector, FeatureParams, RemodelingSnapshot};
+use crate::mutations::update_feature_params;
+use crate::op::RemodelingMutation;
+use crate::{FeatureDetector, FeatureParams, RemodelingSnapshot};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

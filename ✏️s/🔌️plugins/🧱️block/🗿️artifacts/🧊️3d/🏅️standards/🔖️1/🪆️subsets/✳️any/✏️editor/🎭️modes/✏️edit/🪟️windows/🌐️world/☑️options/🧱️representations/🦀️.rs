@@ -1,6 +1,6 @@
 //! 🧱️ Block 3D play app — world window option: per-representation visibility toggles.
 
-use crate::artifacts::block3d::Block3dSnapshot;
+use crate::Block3dSnapshot;
 use crate::editor::block3d::config::{block3d_window_view, Block3dConfig};
 use crate::editor::block3d::terminology::Block3dLabels;
 use semio_framework_plugin::WindowMeasure;

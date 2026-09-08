@@ -2,7 +2,7 @@
 //! always has a `title` field, even when `None`).
 
 use super::mutation::ChangeFormTitle;
-use crate::artifacts::forms::{FormMutation, FormsSnapshot};
+use crate::{FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse_change_form_title(_payload: &ChangeFormTitle, base: &FormsSnapshot) -> Vec<FormMutation> {

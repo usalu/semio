@@ -2,8 +2,8 @@
 //! missing (root-scoped `change-<artifact>-<field>` shrink-only allowlist); Warning `no-op` when the
 //! cursor is already at that value.
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::diff::Process3dDiff;
+use crate::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeCursor, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {

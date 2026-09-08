@@ -1,9 +1,9 @@
 //! 🌍️ Process 3d play app commands — 3D viewport interactions: click-to-place, push/pull face drag,
 //! and face picking.
 
-use crate::artifacts::process3d::schema::inferences::capability_for_measure_kind;
-use crate::artifacts::process3d::schema::{insert_step_mutations, next_step_id};
-use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid};
+use crate::schema::inferences::capability_for_measure_kind;
+use crate::schema::{insert_step_mutations, next_step_id};
+use crate::{op::Process3dMutation, MeasureKind, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid};
 use crate::editor::process3d::axis_angle_from_up_to;
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::set_active_utility_effect;
@@ -68,7 +68,7 @@ pub mod world_pointer_down {
         };
         let (machine, capability) = capability_for_measure_kind(&fixture.workshop, measure_kind);
         let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
-        let step = ProcessStep { id: next_step_id(), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: crate::artifacts::process3d::schema::inferences::measure_for_capability(&capability, Some(payload.position)) };
+        let step = ProcessStep { id: next_step_id(), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: crate::schema::inferences::measure_for_capability(&capability, Some(payload.position)) };
         Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), effects: vec![set_active_utility_effect("select")], ..Default::default() })
     }
 }

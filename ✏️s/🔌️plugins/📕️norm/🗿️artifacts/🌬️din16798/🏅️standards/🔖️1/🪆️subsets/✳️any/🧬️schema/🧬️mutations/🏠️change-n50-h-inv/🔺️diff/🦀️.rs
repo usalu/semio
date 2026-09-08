@@ -1,8 +1,8 @@
 //! 🔺️ `change-n50-h-inv` sparse diff construction — writes only `Din16798Diff.n50_h_inv` from the payload.
 
-use crate::artifacts::din16798::diff::Din16798Diff;
-use crate::artifacts::din16798::mutations::change_n50_h_inv::ChangeN50HInv;
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::diff::Din16798Diff;
+use crate::mutations::change_n50_h_inv::ChangeN50HInv;
+use crate::Din16798Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeN50HInv, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {

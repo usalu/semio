@@ -7,7 +7,7 @@
 //! plane (`z = 0`) as sphere/box instances — the same 2-in-3 placeholder-geometry compromise the
 //! editor's own board host makes for its canvas, not a new simplification introduced here.
 
-use crate::artifacts::puzzle2d::{Puzzle2dNode, Puzzle2dSnapshot};
+use crate::{Puzzle2dNode, Puzzle2dSnapshot};
 use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants

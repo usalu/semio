@@ -1,8 +1,8 @@
 //! 🧰️ CAD play app commands — the window-scoped Dislocate utility: activation and its per-pane handle options.
 
-use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadPaneId;
-use crate::artifacts::cad::CadSnapshot;
+use crate::op::CadMutation;
+use crate::CadPaneId;
+use crate::CadSnapshot;
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{cad_pane_id_from_suffix, cad_window_id_for_pane, preview_transition_snapshot_of, runtime_of, snapshot_of};

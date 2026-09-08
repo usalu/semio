@@ -14,7 +14,7 @@ use crate::wfc_engine::constraints_card::CardinalityConstraint;
 use crate::wfc_engine::constraints_conn::{ConnectivityConstraint, ReachabilityConstraint};
 use crate::wfc_engine::domain::DomainStore;
 use crate::wfc_engine::error::ConstraintError;
-use crate::wfc_engine::flow::FlowConstraint;
+use crate::wfc_engine::semio_framework_os_flow::FlowConstraint;
 use crate::wfc_engine::ids::{NodeId, PatternId, RegionId};
 use crate::wfc_engine::model::CompiledModel;
 use crate::wfc_engine::weights::WeightTable;

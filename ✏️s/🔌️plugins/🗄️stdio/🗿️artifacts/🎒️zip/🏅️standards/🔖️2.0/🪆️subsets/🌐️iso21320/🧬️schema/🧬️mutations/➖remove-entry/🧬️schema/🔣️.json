@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/zip/2.0/iso21320/mutation/remove-entry.json",
+  "$id": "https://semio.tech/schema/s/stdio/zip/2.0/iso21320/mutation/remove-entry/schema.json",
   "title": "RemoveEntry",
   "type": "object",
   "additionalProperties": false,
@@ -10,6 +10,10 @@
   "properties": {
     "name": {
       "type": "string"
+    },
+    "mutation": {
+      "const": "removeEntry",
+      "description": "Aggregate discriminator spliced in by ZipIso21320Mutation; absent when the payload stands alone."
     }
   }
 }

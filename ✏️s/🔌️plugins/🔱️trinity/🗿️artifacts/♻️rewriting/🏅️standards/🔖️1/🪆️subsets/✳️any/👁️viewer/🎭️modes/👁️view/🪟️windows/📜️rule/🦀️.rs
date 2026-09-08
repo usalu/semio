@@ -4,7 +4,7 @@
 //! the same artifact-level fields the editor's own windows read — this file itself imports nothing
 //! from the sibling editor surface (`policyViewerPurityBreaches` forbids it outright).
 
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 use semio_framework_plugin::WindowKindDefinition;
 // 🚧️ SDK GAP: `TextWindowKit`/`TextView`/`WindowKit` (contract §2.6) are not yet in
 // `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️.rs`) — the

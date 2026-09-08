@@ -2,7 +2,7 @@
 //! via `serde_json`, then wire-encoded through `JsonSnapshot`'s own `ArtifactDsl` (json is the
 //! universal bridge dialect every domain artifact in this repo exports to).
 
-use crate::artifacts::writer::WriterSnapshot;
+use crate::WriterSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
@@ -30,9 +30,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_into_json_round_trips_through_json_into_writer() {
-        let original = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello");
+        let original = crate::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello");
         let outcome = WriterIntoJson::serialize(&original).await.expect("serialize");
-        let back = crate::artifacts::writer::io::import::deserializers::artifacts::json::v_rfc8259::any::JsonIntoWriter::deserialize(&outcome.value).await.expect("deserialize");
+        let back = crate::io::import::deserializers::artifacts::json::v_rfc8259::any::JsonIntoWriter::deserialize(&outcome.value).await.expect("deserialize");
         assert_eq!(back.value, original);
     }
 }

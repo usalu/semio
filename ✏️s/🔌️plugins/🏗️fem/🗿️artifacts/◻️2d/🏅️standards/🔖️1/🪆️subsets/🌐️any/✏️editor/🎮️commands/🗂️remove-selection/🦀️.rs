@@ -1,8 +1,8 @@
 //! 🗂️ 🗂️ Fem2d play app commands command — `remove-selection`.
 
-use crate::artifacts::fem2d::mutations::{delete_combination, delete_element, delete_load_case, delete_material, delete_node, delete_region, delete_section, delete_support};
-use crate::artifacts::fem2d::op::Fem2dMutation;
-use crate::artifacts::fem2d::{element_id, Fem2dSnapshot};
+use crate::mutations::{delete_combination, delete_element, delete_load_case, delete_material, delete_node, delete_region, delete_section, delete_support};
+use crate::op::Fem2dMutation;
+use crate::{element_id, Fem2dSnapshot};
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

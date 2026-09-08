@@ -81,7 +81,7 @@ pub(crate) fn scene_surface<T: ui_wgpu::wgpu::SceneDoc>(id: impl Into<String>, k
 pub(crate) fn generation_tree(
     controller_id: &'static str,
     surface_prefix: &str,
-    generation: &flow::playbook::GenerationPlayState,
+    generation: &semio_framework_artifact_playbook_playbook::GenerationPlayState,
     locale: Locale,
     terminology: Terminology,
 ) -> UiAssemblyResult<BuiltNode> {
@@ -160,8 +160,8 @@ fn generation_control_args(generation_id: &str, question_id: &str, field_index: 
 
 /// 📝 Renders generation questions as semantic controls with typed change bindings.
 pub(crate) fn generation_form(
-    spec: &flow::playbook::PlaybookSpec,
-    values: &flow::playbook::PlaybookValues,
+    spec: &semio_framework_artifact_playbook_playbook::PlaybookSpec,
+    values: &semio_framework_artifact_playbook_playbook::PlaybookValues,
     controller_id: &'static str,
     action: &str,
     generation_id: &str,
@@ -175,10 +175,10 @@ pub(crate) fn generation_form(
             has_children = true;
         }
         for question in &step.blocks {
-            if !flow::playbook::is_block_visible(question, values) {
+            if !semio_framework_artifact_playbook_playbook::is_block_visible(question, values) {
                 continue;
             }
-            let value = values.get(&question.id).cloned().unwrap_or_else(|| flow::playbook::default_value_for_block(question));
+            let value = values.get(&question.id).cloned().unwrap_or_else(|| semio_framework_artifact_playbook_playbook::default_value_for_block(question));
             let field_id = format!("generate.form.{}", question.id);
             let args = || generation_control_args(generation_id, &question.id, None);
             let control = match question.kind.as_str() {

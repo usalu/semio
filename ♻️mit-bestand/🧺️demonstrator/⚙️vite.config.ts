@@ -5,8 +5,11 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin } from "../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin, semioPluginHotSwapVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins.ts";
-import { defaultExtensionInstallRoot, semioExtensionStoreVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts";
+import { semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins.ts";
+import { semioExtensionStoreVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts";
+import { browserArtifactVitePlugin } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📦️distribution/⚡️vite/🟦️.ts";
+import { demonstratorRuntimeAssetSources } from "./🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
+import { readDemonstratorActivation } from "./🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
 import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeModuleLayout } from "./🔨️modules/🧩️runtime/🟦️.ts";
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
@@ -21,8 +24,6 @@ const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = [
 ];
 
 const repoRoot = path.resolve(playDir, "../..");
-const pluginModulesDir = path.join(playDir, "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules");
-const installedExtensionsDir = defaultExtensionInstallRoot(repoRoot);
 
 //#region 🔖️DemonstratorUnionAssets
 /** @emoji 🎪️ Registry rows for exactly this demonstrator's six panes — the union this page needs to
@@ -33,7 +34,12 @@ const resolvedPlaygroundAssets = DEMONSTRATOR_RUNTIME_TARGETS.flatMap((target) =
 const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout([...new Set(DEMONSTRATOR_RUNTIME_TARGETS.map((target) => target.pluginId))]);
 //#endregion 🔖️DemonstratorUnionAssets
 
-export default defineConfig({
+export default defineConfig(({ command }) => {
+  const profile = command === "build" ? "release" : "dev";
+  const development = command === "serve" ? readDemonstratorActivation(repoRoot) : undefined;
+  const pluginModulesDir = path.join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
+  const installedExtensionsDir = development?.extensionsDirectory ?? pluginModulesDir;
+  return {
   root: playDir,
   cacheDir: path.join(repoRoot, "node_modules/.vite-mit-bestand-demonstrator"),
   publicDir: path.join(playDir, "public"),
@@ -78,22 +84,14 @@ export default defineConfig({
     playgroundFlowWasmDevStubPlugin(repoRoot),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
-    semioPluginHotSwapVitePlugin(),
-    semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot }),
+    development && semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory }),
+    command === "serve" && semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot }),
     ...semioAssetsVitePlugin(repoRoot),
-    // 🔌️ Same reasoning as `os/dev`'s vite config: the bundler `resolve.alias` above only covers static
-    // imports — plugins are also fetched at runtime via absolute-URL `import()`, which a production build
-    // never bundles, so each union plugin dir needs its own static-dir copy into `dist/`.
-    ...pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
-    // 🗄️ Catch-all behind the per-union entries above: modules outside this demonstrator's closure are
-    // still fetched at runtime (stdio has no app descriptor but IS loaded), and without this they fall
-    // through to the SPA fallback and fail the same way.
-    staticDirVitePlugin(repoRoot, { kind: "static-dir", route: MODULE_PLUGIN_ROUTE, root: path.relative(repoRoot, pluginModulesDir) }),
-    // 🧩️ The whole install root, not the computed closure: the generated runtime session lists EVERY
-    // installed extension's `moduleUrl`, so serving only the transitive subset leaves the rest to the
-    // SPA fallback, which answers descriptor fetches with HTML (`plugin.descriptor-invalid … returned
-    // HTML`) and fails the shell boot. `os/dev`'s own config serves this route whole for the same reason.
-    staticDirVitePlugin(repoRoot, { kind: "static-dir", route: MODULE_EXTENSION_ROUTE, root: path.relative(repoRoot, installedExtensionsDir) }),
+    ...(command === "build" ? [browserArtifactVitePlugin(demonstratorRuntimeAssetSources(repoRoot, "release"))] : [
+      ...pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
+      ...staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/🪞️vendor`, root: path.relative(repoRoot, demonstratorRuntimeAssetSources(repoRoot, "dev").find(row => row.owner === "infinite:fonts")!.root) }),
+      ...extensionModuleDirNames.flatMap(name => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_EXTENSION_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(installedExtensionsDir, name)) })),
+    ]),
     staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${DEMONSTRATOR_ASSETS_DIR}`, root: DEMONSTRATOR_ASSETS_DIR }),
     ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)),
     react(),
@@ -105,4 +103,5 @@ export default defineConfig({
     exclude: ["playwright", "playwright-core", "chromium-bidi", "fsevents", ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE],
   },
   build: semioViteProductionBuild(),
+  };
 });

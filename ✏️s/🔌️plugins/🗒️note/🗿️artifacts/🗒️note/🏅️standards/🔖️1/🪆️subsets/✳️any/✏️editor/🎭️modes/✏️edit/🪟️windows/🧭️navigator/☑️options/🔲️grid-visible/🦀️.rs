@@ -1,7 +1,7 @@
 //! 🔲️ Navigator-window option — the grid-visible toggle.
 //! Its command handler lives in `🎮️commands/🔲️grid::set_grid_visible`.
 
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteSnapshot;
 use crate::editor::note::terminology::NotePlayLabels;
 use semio_framework_plugin::WindowMeasure;
 

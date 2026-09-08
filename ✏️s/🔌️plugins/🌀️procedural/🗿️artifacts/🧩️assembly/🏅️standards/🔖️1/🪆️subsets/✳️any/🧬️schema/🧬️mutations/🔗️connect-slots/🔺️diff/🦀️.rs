@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ConnectSlots` — a real id-keyed upsert into `edges`.
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::diff::AssemblyDiff;
+use crate::schema::snapshot::AssemblySnapshot;
 
 pub fn diff(payload: &super::ConnectSlots, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     let edge = &payload.edge;

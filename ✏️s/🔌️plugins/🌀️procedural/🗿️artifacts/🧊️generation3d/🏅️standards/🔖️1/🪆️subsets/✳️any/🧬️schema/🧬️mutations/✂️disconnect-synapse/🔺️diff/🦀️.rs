@@ -1,10 +1,10 @@
 //! 🔺️ `disconnect-synapse` sparse diff construction.
 
-use crate::artifacts::generation3d::diff::Generation3dDiff;
-use crate::artifacts::generation3d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::generation3d::mutations::disconnect_synapse::DisconnectSynapse;
-use crate::artifacts::generation3d::mutations::synapse_index;
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::diff::Generation3dDiff;
+use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::mutations::disconnect_synapse::DisconnectSynapse;
+use crate::mutations::synapse_index;
+use crate::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta severing one synapse edge by id.
 pub fn diff(payload: &DisconnectSynapse, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {

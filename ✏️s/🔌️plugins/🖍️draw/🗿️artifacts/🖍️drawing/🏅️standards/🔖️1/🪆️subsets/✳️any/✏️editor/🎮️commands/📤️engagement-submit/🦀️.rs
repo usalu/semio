@@ -1,7 +1,7 @@
 //! 👁️ 👁️ Drawing play app commands command — `engagement-submit`.
 
-use crate::artifacts::drawing::op::DrawingMutation;
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::op::DrawingMutation;
+use crate::DrawingSnapshot;
 use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
 use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -25,5 +25,5 @@ pub fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, DrawingSnapsho
     if value.is_empty() || session.interaction.ids.len() != 1 {
         return Ok(Emit::default());
     }
-    Ok(Emit::mutations(vec![crate::artifacts::drawing::mutations::rename_layer(session.interaction.ids[0].clone(), value.into())]))
+    Ok(Emit::mutations(vec![crate::mutations::rename_layer(session.interaction.ids[0].clone(), value.into())]))
 }

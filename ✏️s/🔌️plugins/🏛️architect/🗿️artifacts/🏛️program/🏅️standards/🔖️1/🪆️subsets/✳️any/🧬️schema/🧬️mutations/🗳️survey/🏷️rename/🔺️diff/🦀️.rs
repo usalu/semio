@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🗳️surveys` per Wave C.
 
 use super::RenameSurvey;
-use crate::artifacts::program::diff::{ProgramSurveysDelta, ProgramSurveysPatchEntry};
-use crate::artifacts::program::registers::SurveyPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramSurveysDelta, ProgramSurveysPatchEntry};
+use crate::registers::SurveyPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameSurvey, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -1,0 +1,360 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/infinite/dag/vcs/mutations.json",
+  "type": "object",
+  "oneOf": [
+    {
+      "allOf": [
+        {
+          "$ref": "➕️create-node/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "createNode"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "index",
+          "node",
+          "operation"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "🗑️delete-node/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "deleteNode"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "operation"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "✏️rename-node/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "renameNode"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "newId",
+          "operation"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "🔤️change-node-name/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "changeNodeName"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "newName",
+          "operation"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "↔️move-node/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "moveNode"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "operation",
+          "x",
+          "y"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "📐️resize-node/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "resizeNode"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "height",
+          "id",
+          "operation",
+          "width"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "🖼️change-node-icon/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "changeNodeIcon"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "newIcon",
+          "operation"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "🔡️change-node-abbreviation/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "changeNodeAbbreviation"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "newAbbreviation",
+          "operation"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "🧮️change-node-operator-kind/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "changeNodeOperatorKind"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "newOperatorKind",
+          "operation"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "🔁️replace-node-kind/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "replaceNodeKind"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "newKind",
+          "operation"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "🗃️replace-node-properties/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "replaceNodeProperties"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "newProperties",
+          "operation"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "🔀️reorder-nodes/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "reorderNodes"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "operation",
+          "order"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "🔗️connect-nodes/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "connectNodes"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "index",
+          "operation",
+          "properties",
+          "routeStyle",
+          "source",
+          "target"
+        ]
+      }
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "✂️disconnect-nodes/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "const": "disconnectNodes"
+            }
+          }
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "id",
+          "operation"
+        ]
+      }
+    }
+  ]
+}

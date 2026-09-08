@@ -1,7 +1,7 @@
 //! 🧊️ `create-geometry` — brings a new id-keyed parametric geometry definition into existence.
 
 
-use crate::artifacts::vdi3805::{ParametricGeometry, Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{ParametricGeometry, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

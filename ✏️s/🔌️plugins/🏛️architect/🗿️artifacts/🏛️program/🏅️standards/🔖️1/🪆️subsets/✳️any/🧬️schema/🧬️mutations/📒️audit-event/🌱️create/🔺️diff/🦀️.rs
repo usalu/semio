@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📒audit-events` per Wave C.
 
 use super::CreateAuditEvent;
-use crate::artifacts::program::diff::ProgramAuditEventsDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramAuditEventsDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
 pub fn diff(payload: &CreateAuditEvent, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

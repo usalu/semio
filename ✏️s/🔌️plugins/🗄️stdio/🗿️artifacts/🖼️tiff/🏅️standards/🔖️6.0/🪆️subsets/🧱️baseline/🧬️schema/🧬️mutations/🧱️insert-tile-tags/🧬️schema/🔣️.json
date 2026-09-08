@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/insert-tile-tags.json",
+  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/insert-tile-tags/schema.json",
   "title": "InsertTileTags",
   "type": "object",
   "additionalProperties": false,

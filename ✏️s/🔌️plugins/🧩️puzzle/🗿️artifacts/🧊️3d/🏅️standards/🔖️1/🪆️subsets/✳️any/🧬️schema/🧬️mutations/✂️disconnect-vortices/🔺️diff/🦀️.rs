@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `DisconnectVortices` — a real removal, never a whole-snapshot capture.
-use crate::artifacts::puzzle3d::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff};
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff};
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::DisconnectVortices, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

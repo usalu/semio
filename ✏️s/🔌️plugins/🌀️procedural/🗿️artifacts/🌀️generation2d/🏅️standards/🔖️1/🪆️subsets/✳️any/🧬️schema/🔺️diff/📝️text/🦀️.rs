@@ -1,10 +1,10 @@
 //! 🔺️ Generation2d artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::generation2d::schema::diff::*;
-use crate::artifacts::generation2d::schema::Generation2dArtifact;
-use crate::artifacts::generation2d::{widget_id, Generation2dSnapshot};
-use flow::playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};
-use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use crate::schema::diff::*;
+use crate::schema::Generation2dArtifact;
+use crate::{widget_id, Generation2dSnapshot};
+use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, GenerationMutation, GenerationPlayState};
+use semio_framework_artifact_flow_semio_framework_os_flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use protocol::MutationDiff;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 📖️SemioGrammar
@@ -62,7 +62,7 @@ pub(crate) fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &Synaps
     }
 }
 
-fn apply_layout_diff(layout: &mut flow::OrderedMap<WidgetLayout>, diff: &LayoutDiff) {
+fn apply_layout_diff(layout: &mut semio_framework_artifact_flow_semio_framework_os_flow::OrderedMap<WidgetLayout>, diff: &LayoutDiff) {
     for id in &diff.removed {
         layout.remove(id);
     }
@@ -192,7 +192,7 @@ pub fn diff_generation_from_ops(base: &Generation2dSnapshot, ops: Vec<Generation
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::generation2d::schema::empty_generation2d_snapshot;
+    use crate::schema::empty_generation2d_snapshot;
 
     #[test]
     fn diff_absorb_prefers_incoming_fixture_and_scalars() {

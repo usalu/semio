@@ -2,8 +2,8 @@
 //! `catalog.products` (see `mutations::catalog_index_entry_for`).
 
 use super::CreateProduct;
-use crate::artifacts::vdi3805::mutations::catalog_index_entry_for;
-use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
+use crate::mutations::catalog_index_entry_for;
+use crate::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
 /// 🔺️ A duplicate article number is `mutation.duplicate-id`; an out-of-range explicit index

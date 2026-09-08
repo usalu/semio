@@ -1,8 +1,8 @@
 //! 🔺️ Layout artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::layout::schema::diff::{LayoutDiff, LayoutLinkPatchEntry, LayoutLinksDelta, LayoutPagePatchEntry, LayoutPagesDelta, LayoutStoriesDelta, LayoutStoryPatchEntry};
-use crate::artifacts::layout::schema::LayoutArtifact;
-use crate::artifacts::layout::{ImageLink, LayoutSnapshot, Page, TextStory};
+use crate::schema::diff::{LayoutDiff, LayoutLinkPatchEntry, LayoutLinksDelta, LayoutPagePatchEntry, LayoutPagesDelta, LayoutStoriesDelta, LayoutStoryPatchEntry};
+use crate::schema::LayoutArtifact;
+use crate::{ImageLink, LayoutSnapshot, Page, TextStory};
 use protocol::{Identified, MutationDiff, Patchable};
 
 //#region 📖️SemioGrammar
@@ -291,9 +291,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_data_fields_diff_applies_onto_the_base_snapshot() {
         let base = LayoutSnapshot {
-            schema: crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA.into(),
+            schema: crate::LAYOUT_DOCUMENT_SCHEMA.into(),
             name: "t".into(),
-            grid: crate::artifacts::layout::GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
+            grid: crate::GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
             paragraph_styles: Vec::new(),
             character_styles: Vec::new(),
             stories: Vec::new(),
@@ -306,7 +306,7 @@ mod tests {
             background_drawing: None,
             referenced_model: None,
         };
-        let operation = crate::artifacts::layout::mutations::LayoutMutation::ChangeDataFields(crate::artifacts::layout::mutations::change_data_fields::ChangeDataFields { new_json: Some("{}".into()) });
+        let operation = crate::mutations::LayoutMutation::ChangeDataFields(crate::mutations::change_data_fields::ChangeDataFields { new_json: Some("{}".into()) });
         let diff: LayoutDiff = operation.diff(&base).into_parts().0;
         let applied = diff.apply(&base).expect("valid mutation diff");
         assert_eq!(applied.data_fields_json.as_deref(), Some("{}"));
@@ -316,9 +316,9 @@ mod tests {
     async fn absorb_replaces_with_whole_artifact_diff() {
         let mut diff = LayoutDiff::default();
         let snap = LayoutSnapshot {
-            schema: crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA.into(),
+            schema: crate::LAYOUT_DOCUMENT_SCHEMA.into(),
             name: "x".into(),
-            grid: crate::artifacts::layout::GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
+            grid: crate::GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
             paragraph_styles: Vec::new(),
             character_styles: Vec::new(),
             stories: Vec::new(),

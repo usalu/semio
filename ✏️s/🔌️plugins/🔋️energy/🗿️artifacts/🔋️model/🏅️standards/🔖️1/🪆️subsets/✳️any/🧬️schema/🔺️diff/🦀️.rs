@@ -1,7 +1,7 @@
 //! 🧬️ EnergyModel diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::model::{EnergyStructureChild, EnergyZonesChild};
-use schema::ArtifactSchema;
+use crate::{EnergyStructureChild, EnergyZonesChild};
+use framework_schema::ArtifactSchema;
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️LinkSlotDelta
@@ -28,7 +28,7 @@ pub enum EnergyLinkSlotDelta {
 #[artifact_schema(id = "s.energy.model")]
 pub struct EnergyModelDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::model::schema::EnergyModelArtifact>>,
+    pub artifact: Option<Box<crate::schema::EnergyModelArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

@@ -18,7 +18,7 @@ use crate::wfc_engine::propagate::PropQueue;
 use crate::wfc_engine::sample::{self, ValueSampler};
 use crate::wfc_engine::topology::Topology;
 use crate::wfc_engine::trail::Trail;
-use geometry::random::Rng;
+use semio_framework_geometry::random::Rng;
 
 // #region 🔖️Config
 /// 🌳️ Whether a failed attempt restarts from scratch or resumes chronological backtracking.
@@ -108,7 +108,7 @@ impl CancelToken {
     }
 }
 
-/// 🌳️ Everything [`crate::wfc_engine::solver_graph::GraphSolver`] (and later grid solvers) needs to configure
+/// 🌳️ Everything [`crate::wfc_engine::solver_semio_framework_graph::GraphSolver`] (and later grid solvers) needs to configure
 /// one solve.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct SearchConfig {

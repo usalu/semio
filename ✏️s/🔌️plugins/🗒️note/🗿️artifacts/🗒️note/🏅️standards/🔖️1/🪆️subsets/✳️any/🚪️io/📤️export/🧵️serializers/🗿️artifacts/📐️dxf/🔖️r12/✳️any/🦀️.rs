@@ -4,8 +4,8 @@
 //! `IoFidelity::Lossy`. DXF R12's ASCII text form is DXF's own native encoding, so the payload is
 //! `Text`, never a raw-bytes wrapper.
 
-use crate::artifacts::note::schema::flatten_blocks;
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
+use crate::schema::flatten_blocks;
+use crate::{NoteBlockNode, NoteSnapshot};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

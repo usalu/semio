@@ -3,9 +3,9 @@
 //! that layer's actual asset bytes and its own transform) and composes it to SVG text through
 //! stdio's registered `s.stdio.semio/v1/drawing` → `s.stdio.svg` serializer. The bytes are a bare
 //! `<svg>…</svg>` XML document — never `print_dsl` output.
-use crate::artifacts::raster::RasterSnapshot;
+use crate::RasterSnapshot;
 pub fn register() {}
 pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> {
-    let (svg, _width, _height) = crate::artifacts::raster::io::raster_document_json_to_svg(snapshot)?;
+    let (svg, _width, _height) = crate::io::raster_document_json_to_svg(snapshot)?;
     Ok(svg.into_bytes())
 }

@@ -1,8 +1,8 @@
 //! ↩ Inverse constructor for `ScaleAssets` — reconstructed from BASE state.
 
 use super::ScaleAssets;
-use crate::artifacts::shooting::mutations::ShootingMutation;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 
 pub fn inverse(payload: &ScaleAssets, _base: &ShootingSnapshot) -> Vec<ShootingMutation> {
     fn reciprocal(value: f64) -> f64 {

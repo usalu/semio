@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `UpdateRigExtrinsic` — the OLD full record looked up from BASE.
 //! Missing target ⇒ `Vec::new()`.
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::mutations::RemodelingMutation;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::UpdateRigExtrinsic, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {

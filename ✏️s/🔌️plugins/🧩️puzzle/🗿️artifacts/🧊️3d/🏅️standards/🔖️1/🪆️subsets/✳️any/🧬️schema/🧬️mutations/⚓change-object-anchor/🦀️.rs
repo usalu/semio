@@ -1,7 +1,7 @@
 //! Puzzle3d mutation — `ChangeObjectAnchor`: changes whether a root object keeps its stored plane or resets to default XY.
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::Puzzle3dDiff;
+use crate::mutations::Puzzle3dMutation;
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
 /// `change-object-anchor` payload.
@@ -13,7 +13,7 @@ use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 #[dsl(keyword = "change-object-anchor")]
 pub struct ChangeObjectAnchor {
     pub id: String,
-    pub new_anchor: crate::artifacts::puzzle3d::Puzzle3dObjectAnchor,
+    pub new_anchor: crate::Puzzle3dObjectAnchor,
 }
 
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ChangeObjectAnchor {
@@ -35,6 +35,6 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ChangeObject
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_object_anchor(id: String, new_anchor: crate::artifacts::puzzle3d::Puzzle3dObjectAnchor) -> Puzzle3dMutation {
+pub fn change_object_anchor(id: String, new_anchor: crate::Puzzle3dObjectAnchor) -> Puzzle3dMutation {
     Puzzle3dMutation::ChangeObjectAnchor(ChangeObjectAnchor { id, new_anchor })
 }

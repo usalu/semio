@@ -14,8 +14,8 @@
 //! therefore holds the source step with the block in it — the two lookups that must succeed before
 //! the third can be the one that rejects.
 
-use crate::artifacts::playbook::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
-use crate::artifacts::playbook::{attach_playbook_steps, PlaybookBlock, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
+use crate::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
+use crate::{attach_playbook_steps, PlaybookBlock, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

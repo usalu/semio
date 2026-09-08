@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `UpdateGeoParams` — the field is always present, so there is no
 //! missing-target case. Non-finite/non-positive distances, an out-of-range origin, or a zero ortho
 //! resolution ⇒ Fatal `mutation.invariant`; identical params ⇒ Warning `mutation.no-op`.
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::RemodelingDiff;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdateGeoParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

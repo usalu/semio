@@ -1,8 +1,8 @@
 //! 🗑️ Drawing mutation — `DeleteLayer`: removes an id-keyed layer (captures its full subtree +
 //! location for undo).
-use crate::artifacts::drawing::diff::DrawingDiff;
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::diff::DrawingDiff;
+use crate::mutations::DrawingMutation;
+use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🗑️ `delete-layer` payload.

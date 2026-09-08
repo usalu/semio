@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/workflow/workflow/mutation/change-parameter/schema.json",
+  "title": "ChangeParameter",
+  "type": "object",
+  "properties": {
+    "parameter_id": {
+      "type": "string"
+    },
+    "parameter": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "parameter_id",
+    "parameter"
+  ],
+  "additionalProperties": false
+}

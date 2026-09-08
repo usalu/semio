@@ -329,7 +329,7 @@ class DiskPruneScript extends BundleScript {
 export async function testCacheContracts(): Promise<void> {
   const { validate } = createRequire(import.meta.url)("jsonschema");
   const policy = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🔣️policy.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧬️policy.schema.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧬️schema/🔣️.json"), "utf8"));
   assert.equal(validate(policy, schema).valid, true);
   assert.ok(cacheInternals, "cache policy must be exposed for contract verification");
   for (const name of ["setup", "publish", "update", "deploy", "format", "clean-test", "bench"]) {
@@ -598,21 +598,25 @@ export async function testCacheContracts(): Promise<void> {
   const source = ts.createSourceFile("📜️script.ts", readFileSync(join(root, "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
   const coordinator = source.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "NxScript");
   const coordinatorCode = ts.transpileModule(coordinator.getText(source).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-  for (const vector of JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/🛑️cancellation.json"), "utf8")).cases) {
+  const coordinatorFixture = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/🛑️cancellation.json"), "utf8"));
+  assert.equal(validate(coordinatorFixture, schema.$defs.NxCoordinatorFixture).valid, true);
+  for (const vector of coordinatorFixture.cases) {
     const killed: number[] = [], child = Object.assign(new EventEmitter(), { pid: 1234 });
-    const runtime = Object.assign(new EventEmitter(), { platform: vector.platform, exitCode: 0, kill: (pid: number, signal: number | string) => { if (!signal) throw new Error("No process"); killed.push(pid); } });
+    const runtime = Object.assign(new EventEmitter(), { env: vector.environment, platform: vector.platform, exitCode: 0, kill: (pid: number, signal: number | string) => { if (!signal) throw new Error("No process"); killed.push(pid); } });
+    let launchEnvironment: Record<string, string | undefined> = {};
     const Coordinator = new Function("Script", "process", "createRequire", "join", "resolveNxInvocation", "devToolingEnv", "orchestratorBudgetOpts", "spawnNxProcess", "stopNxProcessTree", coordinatorCode + "; return NxScript;")(
-      class { root = root; }, runtime, () => ({ resolve: (name: string) => name }), join, (args: string[]) => ({ args, env: {} }), (env: unknown) => env, () => ({}), () => child,
+      class { root = root; }, runtime, () => ({ resolve: (name: string) => name }), join, (args: string[]) => ({ args, env: {} }), (env: unknown) => env, () => ({}), (_command: string, _args: string[], options: { env: Record<string, string | undefined> }) => { launchEnvironment = options.env; return child; },
       (command: string) => { if (command === "taskkill") { killed.push(child.pid); return { status: 0 }; } if (vector.throws) throw new Error("Snapshot unavailable"); return { status: 0, stdout: vector.stdout }; });
     const done = new Coordinator().run(["run", "fixture:build"]);
     assert.doesNotThrow(() => runtime.emit("SIGTERM"), vector.name);
     child.emit("close", null);
     await done;
+    assert.equal(launchEnvironment.NX_WORKSPACE_DATA_DIRECTORY, vector.environment.NX_WORKSPACE_DATA_DIRECTORY ?? pathOracle.join(root, ".nx", "workspace-data"), vector.name);
     assert.equal(runtime.exitCode, vector.expectedExit, vector.name);
     assert.ok(killed.length > 0, `${vector.name}: owned launch process must still be stopped`);
     assert.equal(runtime.listenerCount("SIGTERM"), 0);
   }
-  console.log("[DEBUG] Nx cancellation stops owned launch processes after malformed or unavailable process snapshots PASS");
+  console.log("[DEBUG] Nx coordinator preserves explicit workspace data paths and stops owned launch processes after malformed or unavailable snapshots PASS");
   const invocation = source.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "resolveNxInvocation");
   const route = ts.transpileModule(invocation.getText(source).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
   const resolveInvocation = new Function("process", `${route}; return resolveNxInvocation;`)({ env: {} });
@@ -810,5 +814,176 @@ class TestScript extends BundleScript {
   async run(): Promise<void> { await testCacheContracts(); }
 }
 
-const router = new ScriptRouter(SCRIPT_ROOT).register("test", TestScript).register("audit", AuditScript).register("policy-check", PolicyScript).register("artifact-check", PolicyScript).register("graph-check", GraphScript).register("doctor", DoctorScript).register("disk-report", DiskScript).register("disk-prune", DiskPruneScript).register("cache-verify", CacheVerifyScript).register("toolchain", ToolchainScript).register("generator-inputs", GeneratorInputsScript);
+type ArtifactPackageRecord = {
+  root: string;
+  source: string;
+  rust: { cargoName: string; nxName: string; manifest: string };
+  typescript?: { name: string; nxName: string; manifest: string; entry: { types: string; import: string } };
+};
+
+/** 🧭️ Discovers artifact owners from taxonomy roots, independently of package naming. */
+function artifactPackageInventory(root: string): { schemaVersion: 1; packages: ArtifactPackageRecord[] } {
+  const owners: string[] = [];
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(join(root, directory), { withFileTypes: true })) {
+      if (!entry.isDirectory() || entry.isSymbolicLink() || entry.name === "node_modules" || entry.name === ".git" || entry.name === ".🧬semio" || POLICY.generatedDirectories.includes(entry.name)) continue;
+      const path = slash(join(directory, entry.name));
+      if (entry.name !== "🗿️artifacts") { walk(path); continue; }
+      for (const artifact of readdirSync(join(root, path), { withFileTypes: true })) {
+        const owner = slash(join(path, artifact.name));
+        if (artifact.isDirectory() && existsSync(join(root, owner, "🦀️.rs"))) owners.push(owner);
+      }
+    }
+  };
+  for (const base of ["✏️s", "🧰️framework"]) if (existsSync(join(root, base))) walk(base);
+  const projectFiles = owners.flatMap((owner) => [`${owner}/📦️packages/🦀️rust/Cargo.toml`, `${owner}/📦️packages/🦀️rust/📋️project.json`, `${owner}/📦️packages/🟦️typescript/📋️project.json`]).filter((path) => existsSync(join(root, path)));
+  const discovered = plugin.createNodesV2[1](["Cargo.toml", ...projectFiles], {}, { workspaceRoot: root }).flatMap(([, result]: any) => Object.values(result.projects)) as Project[];
+  const projects = new Map(discovered.map((project) => [slash(project.root), project]));
+  const packages = owners.map((owner): ArtifactPackageRecord => {
+    const source = `${owner}/🦀️.rs`;
+    const rustRoot = `${owner}/📦️packages/🦀️rust`;
+    const rustManifest = `${rustRoot}/Cargo.toml`;
+    assert.ok(existsSync(join(root, rustManifest)), `Artifact source has no Rust package declaration: ${source}`);
+    const cargo = createRequire(import.meta.url)("@iarna/toml").parse(readFileSync(join(root, rustManifest), "utf8"));
+    assert.equal(cargo.lib?.path, "../../🦀️.rs", `${rustManifest} must compile its taxonomy source directly`);
+    const rustProject = projects.get(rustRoot);
+    assert.ok(rustProject, `Nx omitted ${rustRoot}`);
+    assert.ok(rustProject.tags?.includes("role:artifact"), `${rustProject.name} must declare role:artifact`);
+    assert.ok(rustProject.namedInputs?.nativeSources?.includes(`{workspaceRoot}/${source}`), `${rustProject.name} does not hash its taxonomy source`);
+    assert.deepEqual(rustProject.targets?.build?.outputs, ["{projectRoot}/dist/build"], `${rustProject.name} has an invalid build output contract`);
+    const record: ArtifactPackageRecord = { root: owner, source, rust: { cargoName: cargo.package.name, nxName: rustProject.name, manifest: rustManifest } };
+    const typescriptSource = `${owner}/🟦️.ts`;
+    if (existsSync(join(root, typescriptSource))) {
+      const typescriptRoot = `${owner}/📦️packages/🟦️typescript`;
+      const manifest = `${typescriptRoot}/package.json`;
+      assert.ok(existsSync(join(root, manifest)), `TypeScript artifact source has no package declaration: ${typescriptSource}`);
+      const declaration = JSON.parse(readFileSync(join(root, manifest), "utf8"));
+      const project = projects.get(typescriptRoot);
+      assert.ok(project, `Nx omitted ${typescriptRoot}`);
+      assert.equal(project.name, declaration.name, `${manifest} and Nx names differ`);
+      assert.ok(project.namedInputs?.default?.some((input: unknown) => typeof input === "string" && input.startsWith(`{workspaceRoot}/${owner}/`)), `${project.name} does not hash its taxonomy owner`);
+      assert.deepEqual(project.targets?.build?.outputs, ["{projectRoot}/dist"], `${project.name} has an invalid build output contract`);
+      record.typescript = { name: declaration.name, nxName: project.name, manifest, entry: declaration.exports?.["."] };
+    }
+    return record;
+  }).sort((left, right) => left.root.localeCompare(right.root));
+  assert.ok(packages.length > 0, "Artifact taxonomy has no package roots");
+  assert.equal(new Set(packages.map((entry) => entry.root)).size, packages.length, "Artifact roots must be unique");
+  return { schemaVersion: 1, packages };
+}
+
+/** 🏃️ Captures a bounded subprocess while retaining progress and cancellation. */
+async function captureArtifactContract(command: string, args: string[], cwd: string, timeoutMs: number): Promise<string> {
+  const child = spawn(command, args, { cwd, env: process.env, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+  let stdout = "", stderr = "", stopped = "";
+  const terminate = (reason: string): void => {
+    stopped ||= reason;
+    if (!child.pid) return;
+    if (process.platform === "win32") child.kill("SIGTERM");
+    else try { process.kill(-child.pid, "SIGTERM"); } catch {}
+  };
+  child.stdout.on("data", (chunk) => { stdout += chunk; if (stdout.length > 64 * 1024 * 1024) terminate("output limit"); });
+  child.stderr.on("data", (chunk) => { stderr += chunk; if (stderr.length > 64 * 1024 * 1024) terminate("output limit"); });
+  const interrupt = (): void => terminate("SIGINT");
+  const stop = (): void => terminate("SIGTERM");
+  process.once("SIGINT", interrupt);
+  process.once("SIGTERM", stop);
+  const started = Date.now();
+  const progress = setInterval(() => console.log(`[artifact-package-contract] ${command} running elapsedMs=${Date.now() - started}`), 10_000);
+  const timeout = setTimeout(() => terminate(`timeout ${timeoutMs}ms`), timeoutMs);
+  try {
+    const status = await new Promise<number>((accept, reject) => { child.once("error", reject); child.once("close", (code) => accept(code ?? 1)); });
+    assert.equal(stopped, "", `${command} stopped: ${stopped}\n${stderr}`);
+    assert.equal(status, 0, stderr || `${command} exited with status ${status}`);
+    return stdout;
+  } finally {
+    clearInterval(progress);
+    clearTimeout(timeout);
+    process.off("SIGINT", interrupt);
+    process.off("SIGTERM", stop);
+  }
+}
+
+/** 🧬️ Validates every taxonomy artifact's language-neutral package boundary. */
+class ArtifactPackageContractScript extends BundleScript {
+  async run(): Promise<void> {
+    const fixtureRoot = join(SCRIPT_ROOT, "🧫️fixtures/artifact-packages");
+    const schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️schema.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+    for (const accepted of fixture.accepted) assert.ok(validate(accepted), JSON.stringify(validate.errors));
+    for (const rejected of fixture.rejected) assert.equal(validate(rejected.value), false, `Negative fixture accepted: ${rejected.id}`);
+    const contract = artifactPackageInventory(this.repoRoot);
+    assert.ok(validate(contract), JSON.stringify(validate.errors));
+    const cargoNames = new Set<string>(), nxNames = new Set<string>();
+    for (const entry of contract.packages) {
+      assert.ok(!cargoNames.has(entry.rust.cargoName), `Duplicate Cargo package ${entry.rust.cargoName}`);
+      assert.ok(!nxNames.has(entry.rust.nxName), `Duplicate Nx project ${entry.rust.nxName}`);
+      cargoNames.add(entry.rust.cargoName);
+      nxNames.add(entry.rust.nxName);
+      const packageRoot = join(this.repoRoot, dirname(entry.rust.manifest));
+      const implementations = sourceFiles(packageRoot).filter((path) => /(?:^|\/)(?!📜️script\.ts$).+\.(?:rs|ts|tsx)$/.test(path) && !path.startsWith("dist/"));
+      assert.deepEqual(implementations, [], `Rust package declarations contain implementation: ${implementations.join(", ")}`);
+      if (entry.typescript) {
+        assert.ok(!nxNames.has(entry.typescript.nxName), `Duplicate Nx project ${entry.typescript.nxName}`);
+        nxNames.add(entry.typescript.nxName);
+        const declaration = JSON.parse(readFileSync(join(this.repoRoot, entry.typescript.manifest), "utf8"));
+        assert.equal(declaration.type, "module");
+        assert.equal(declaration.private, true);
+        assert.equal(declaration.types, "./dist/🟦️.d.ts");
+        assert.deepEqual(declaration.exports?.["."], entry.typescript.entry);
+      }
+    }
+    const metadata = JSON.parse(await captureArtifactContract("cargo", ["metadata", "--locked", "--offline", "--format-version", "1"], this.repoRoot, 180_000));
+    const cargoPackages = new Map<string, any>(metadata.packages.map((entry: any) => [entry.id, entry]));
+    const byName = new Map<string, any>(metadata.packages.map((entry: any) => [entry.name, entry]));
+    const nodes = new Map<string, any>((metadata.resolve?.nodes ?? []).map((entry: any) => [entry.id, entry]));
+    for (const entry of contract.packages) {
+      const cargo = byName.get(entry.rust.cargoName);
+      assert.ok(cargo, `Cargo metadata omitted ${entry.rust.cargoName}`);
+      assert.equal(slash(relative(this.repoRoot, cargo.manifest_path)), entry.rust.manifest);
+      const visit = (id: string, requested: string[], defaults: boolean, route: string[], visited: Set<string>): void => {
+        const dependency = cargoPackages.get(id);
+        const enabled = new Set<string>(requested);
+        if (defaults && dependency?.features?.default) enabled.add("default");
+        const activated = new Set<string>();
+        const forwarded = new Map<string, Set<string>>();
+        const queue = [...enabled];
+        while (queue.length) {
+          const feature = queue.pop()!;
+          for (const value of dependency?.features?.[feature] ?? []) {
+            if (value.startsWith("dep:")) activated.add(value.slice(4));
+            else if (value.includes("/")) {
+              const [name, selected] = value.replace("?/", "/").split("/", 2);
+              if (!forwarded.has(name)) forwarded.set(name, new Set());
+              forwarded.get(name)!.add(selected);
+            } else if (!enabled.has(value)) { enabled.add(value); queue.push(value); }
+          }
+        }
+        const state = `${id}\0${[...enabled].sort().join(",")}\0${defaults}`;
+        if (visited.has(state)) return;
+        visited.add(state);
+        const role = dependency?.metadata?.semio?.role;
+        assert.ok(role !== "plugin" && role !== "extension", `${entry.rust.cargoName} reaches composition package ${[...route, dependency?.name].join(" -> ")}`);
+        for (const edge of nodes.get(id)?.deps ?? []) {
+          if (!edge.dep_kinds?.some((kind: any) => kind.kind === null)) continue;
+          const target = cargoPackages.get(edge.pkg);
+          const declarations = (dependency?.dependencies ?? []).filter((row: any) => row.kind === null && row.name === target?.name && (row.rename ?? row.name) === edge.name);
+          const active = declarations.filter((row: any) => !row.optional || activated.has(edge.name) || enabled.has(edge.name));
+          if (!active.length) continue;
+          const features = new Set<string>(forwarded.get(edge.name) ?? []);
+          for (const declaration of active) for (const feature of declaration.features ?? []) features.add(feature);
+          visit(edge.pkg, [...features], active.some((row: any) => row.uses_default_features), [...route, dependency?.name], visited);
+        }
+      };
+      visit(cargo.id, [], true, [], new Set());
+    }
+    const legacy = sourceFiles(this.repoRoot).filter((path) => path.endsWith(".rs") && /semio_s_plugin_[a-z0-9_]+::artifacts::/.test(readFileSync(join(this.repoRoot, path), "utf8")));
+    assert.deepEqual(legacy, [], `Rust consumers retain composition artifact namespaces: ${legacy.join(", ")}`);
+    console.log(`[artifact-package-contract] AJV=${fixture.accepted.length + 1}/${fixture.rejected.length} packages=${contract.packages.length} rust=${cargoNames.size} typescript=${contract.packages.filter((entry) => entry.typescript).length} dag=clean`);
+  }
+}
+
+const router = new ScriptRouter(SCRIPT_ROOT).register("test", TestScript).register("audit", AuditScript).register("policy-check", PolicyScript).register("artifact-check", PolicyScript).register("artifact-package-contract", ArtifactPackageContractScript).register("graph-check", GraphScript).register("doctor", DoctorScript).register("disk-report", DiskScript).register("disk-prune", DiskPruneScript).register("cache-verify", CacheVerifyScript).register("toolchain", ToolchainScript).register("generator-inputs", GeneratorInputsScript);
 if (import.meta.main) await runBundleScriptMain(router, import.meta.url);

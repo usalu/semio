@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔍search-filters` per Wave C.
 
 use super::CreateSearchFilter;
-use crate::artifacts::program::diff::ProgramSearchFiltersDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramSearchFiltersDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
 pub fn diff(payload: &CreateSearchFilter, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

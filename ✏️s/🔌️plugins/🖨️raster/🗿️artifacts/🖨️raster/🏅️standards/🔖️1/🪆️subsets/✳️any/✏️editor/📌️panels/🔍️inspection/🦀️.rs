@@ -1,6 +1,6 @@
 //! 🔍️ Raster play app panel — the selected-layer(s) inspector.
 
-use crate::artifacts::raster::RasterSnapshot as RasterDocument;
+use crate::RasterSnapshot as RasterDocument;
 use crate::editor::raster::config::RasterConfig;
 use crate::editor::raster::terminology::RasterPlayLabels;
 use crate::editor::raster::ui_label;

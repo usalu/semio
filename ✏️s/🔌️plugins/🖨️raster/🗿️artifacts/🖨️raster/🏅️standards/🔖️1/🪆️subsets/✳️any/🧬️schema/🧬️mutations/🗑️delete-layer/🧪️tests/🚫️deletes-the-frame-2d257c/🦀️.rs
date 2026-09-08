@@ -9,9 +9,9 @@
 //! is exactly what makes the committed diff load-bearing here — the end state alone could not tell
 //! a cascading removal apart from three separate ones.
 
-use crate::artifacts::raster::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
-use crate::artifacts::raster::schema::{find_layer, flatten_raster_layers, layer_node_id, locate_layer};
-use crate::artifacts::raster::{RasterDiff, RasterLayerNode, RasterSnapshot};
+use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::schema::{find_layer, flatten_raster_layers, layer_node_id, locate_layer};
+use crate::{RasterDiff, RasterLayerNode, RasterSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

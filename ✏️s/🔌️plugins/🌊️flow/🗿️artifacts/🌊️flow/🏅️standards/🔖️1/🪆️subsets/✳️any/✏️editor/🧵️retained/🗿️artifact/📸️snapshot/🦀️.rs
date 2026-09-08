@@ -1,7 +1,7 @@
 //! 🧪️ Real Flow document identity and lifecycle laws.
 
-use crate::artifacts::flow::{FlowSnapshot, FlowWorkingScene};
-use crate::artifacts::flow::retirement::{SnapshotRetirementFactory, SceneRetirementFactory};
+use crate::{FlowSnapshot, FlowWorkingScene};
+use crate::retirement::{SnapshotRetirementFactory, SceneRetirementFactory};
 use std::sync::Arc;
 
 //#region 🧪️LocalOwnerHandoff
@@ -46,8 +46,8 @@ mod tests {
                 }
                 match row["lane"].as_str().unwrap() {
                     "document" => {
-                        let content = crate::artifacts::flow::flow_content_child_handle_and_cache(vec![flow::Widget::InputNote { id: "note".into(), text }], vec![], Default::default());
-                        close_lane!(FlowSnapshot { schema: crate::artifacts::flow::FLOW_DOCUMENT_SCHEMA.into(), camera: Default::default(), content }, App::build_document_store_owners(), App::build_document_store_disposer());
+                        let content = crate::flow_content_child_handle_and_cache(vec![semio_framework_artifact_flow_flow::Widget::InputNote { id: "note".into(), text }], vec![], Default::default());
+                        close_lane!(FlowSnapshot { schema: crate::FLOW_DOCUMENT_SCHEMA.into(), camera: Default::default(), content }, App::build_document_store_owners(), App::build_document_store_disposer());
                     }
                     "config" => close_lane!(crate::editor::flow::config::FlowConfig { preview_off_node_ids: vec![text], ..Default::default() }, App::build_config_store_owners(), App::build_config_store_disposer()),
                     "draft" => {
@@ -67,9 +67,9 @@ mod tests {
         use semio_framework_plugin::{ArtifactApp, EditorApp, ViewerApp};
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/🪪️content-identity/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
-            let (widgets, synapses, layout) = crate::artifacts::flow::schema::mutations::decode_flow_scene_json(row["canonicalJson"].as_str().unwrap()).unwrap();
-            let content = crate::artifacts::flow::flow_content_child_handle(&widgets, &synapses, &layout);
-            let snapshot = Arc::new(FlowSnapshot { schema: crate::artifacts::flow::FLOW_DOCUMENT_SCHEMA.into(), camera: Default::default(), content });
+            let (widgets, synapses, layout) = crate::schema::mutations::decode_flow_scene_json(row["canonicalJson"].as_str().unwrap()).unwrap();
+            let content = crate::flow_content_child_handle(&widgets, &synapses, &layout);
+            let snapshot = Arc::new(FlowSnapshot { schema: crate::FLOW_DOCUMENT_SCHEMA.into(), camera: Default::default(), content });
             let expected_id = format!("{}{}", fixture["childIdPrefix"].as_str().unwrap(), row["expectedSha256"].as_str().unwrap());
             assert_eq!(snapshot.content.child_id, expected_id);
             assert_eq!(snapshot.content.target.artifact_id, expected_id);
@@ -99,9 +99,9 @@ mod tests {
 
     #[test]
     fn child_typed_handoff_preserves_mismatched_owner_then_retires_exact_scene() {
-        let root = Arc::new(FlowWorkingScene { widgets: vec![flow::Widget::InputNote { id: "note".into(), text: "🌊".repeat(4096) }], ..Default::default() });
+        let root = Arc::new(FlowWorkingScene { widgets: vec![semio_framework_artifact_flow_flow::Widget::InputNote { id: "note".into(), text: "🌊".repeat(4096) }], ..Default::default() });
         let weak = Arc::downgrade(&root);
-        let mut child = crate::artifacts::flow::flow_content_child_from_digest([0; 32], root);
+        let mut child = crate::flow_content_child_from_digest([0; 32], root);
         assert!(child.take_local_owner::<String>().is_err()); assert!(weak.upgrade().is_some());
         let scene = child.take_local_owner::<FlowWorkingScene>().unwrap().unwrap(); assert!(child.take_local_owner::<FlowWorkingScene>().unwrap().is_none());
         let mut retirement = store::SnapshotRetirementFactory::retire(&SceneRetirementFactory, scene);

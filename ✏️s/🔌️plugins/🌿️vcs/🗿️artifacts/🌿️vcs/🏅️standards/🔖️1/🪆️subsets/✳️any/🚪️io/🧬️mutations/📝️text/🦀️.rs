@@ -2,7 +2,7 @@
 //! `🧬️mutations/<slug>` triad leaves (derive-generated dispatch); this facet only handcrafts the
 //! op wire forms (derive no longer emits these traits).
 
-pub use crate::artifacts::vcs::schema::mutations::VcsDemoMutation;
+pub use crate::schema::mutations::VcsDemoMutation;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -47,7 +47,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn vcs_demo_mutation_op_text_round_trips() {
-        store::os_store::test_support::assert_op_line_round_trip(&crate::artifacts::vcs::mutations::change_counter(3));
+        store::os_store::test_support::assert_op_line_round_trip(&crate::mutations::change_counter(3));
     }
 }
 //#endregion 🧪️Tests

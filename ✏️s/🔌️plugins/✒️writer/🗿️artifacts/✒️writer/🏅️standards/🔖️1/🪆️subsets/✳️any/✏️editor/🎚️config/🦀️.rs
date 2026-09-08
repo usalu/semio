@@ -7,10 +7,10 @@
 //! `⚙️engine` crate's `WriterConfig` before this migration — they move here alongside it, since neither
 //! survives into the document either.
 
-use crate::artifacts::writer::WriterCamera;
+use crate::WriterCamera;
 use serde::{Deserialize, Serialize};
 
-pub use crate::artifacts::writer::{WriterEditorSelection, WriterEditorSettings};
+pub use crate::{WriterEditorSelection, WriterEditorSettings};
 /// 🧮️ B1: writer's real `ArtifactApp::Config` — absorbs every former `WriterPlayRuntime` app-struct
 /// field that is genuinely app-specific (editor selection, format/lint signals, revision, editor
 /// settings, engagement draft, and the session-only viewport camera — see `WriterCamera`'s doc

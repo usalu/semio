@@ -1,0 +1,566 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/browser-bundle/component.json",
+  "title": "Semio OS Plugin Browser Bundle",
+  "$defs": {
+    "ActorFactoryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "format", "artifact", "artifactLaws", "name", "component", "importInterfaces", "starts", "calls", "expected", "afterCloseB", "lifecycle", "laws"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/BrowserContractId" },
+        "format": { "$ref": "#/$defs/BrowserContractId" },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "codegenPolicy", "maximumBytes"],
+          "properties": {
+            "schema": { "$ref": "#/$defs/BrowserContractId" },
+            "codegenPolicy": { "$ref": "#/$defs/BrowserContractId" },
+            "maximumBytes": { "type": "integer", "minimum": 1, "maximum": 268435456 }
+          }
+        },
+        "artifactLaws": { "$ref": "#/$defs/BrowserLawList" },
+        "name": { "$ref": "#/$defs/BrowserActorName" },
+        "component": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "importInterfaces": { "type": "array", "maxItems": 16, "uniqueItems": true, "items": { "$ref": "#/$defs/WitInterfaceId" } },
+        "starts": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 4294967295 } },
+        "calls": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "type": "string", "minLength": 1, "maxLength": 64 } },
+        "expected": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "type": "integer", "minimum": 0, "maximum": 4294967295 } },
+        "afterCloseB": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "lifecycle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["open", "invoking", "closing", "closed"],
+          "properties": {
+            "open": { "$ref": "#/$defs/BrowserActorLifecycleState" },
+            "invoking": { "$ref": "#/$defs/BrowserActorLifecycleState" },
+            "closing": { "$ref": "#/$defs/BrowserActorLifecycleState" },
+            "closed": { "$ref": "#/$defs/BrowserActorLifecycleState" }
+          }
+        },
+        "laws": { "$ref": "#/$defs/BrowserLawList" }
+      }
+    },
+    "ActorImportV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "identity", "actors", "limits", "streamClose", "guestStreamDrop", "lateStreamFault", "failedStreamRetirement"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/BrowserContractId" },
+        "streamClose": { "$ref": "#/$defs/BrowserStreamOutcome" },
+        "guestStreamDrop": { "$ref": "#/$defs/BrowserStreamOutcome" },
+        "lateStreamFault": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "message"],
+          "properties": { "code": { "$ref": "#/$defs/BrowserFaultCode" }, "message": { "type": "string", "minLength": 1 } }
+        },
+        "failedStreamRetirement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "message", "cancelMessage"],
+          "properties": {
+            "code": { "$ref": "#/$defs/BrowserFaultCode" },
+            "message": { "type": "string", "minLength": 1 },
+            "cancelMessage": { "type": "string", "minLength": 1 }
+          }
+        },
+        "identity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["component", "canonicalInterface", "expectedImports", "jco", "emittedAsyncBindings", "unsupportedImport", "productionHostAsyncAbiQualified", "artifactPolicy"],
+          "properties": {
+            "artifactPolicy": { "$ref": "#/$defs/BrowserContractId" },
+            "component": { "$ref": "#/$defs/WitInterfaceId" },
+            "canonicalInterface": { "$ref": "#/$defs/WitInterfaceId" },
+            "expectedImports": {
+              "type": "array",
+              "minItems": 15,
+              "maxItems": 15,
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/WitInterfaceId" },
+              "contains": { "const": "semio:framework/host-async@1.0.0" }
+            },
+            "jco": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["asyncMode", "asyncImports"],
+              "properties": {
+                "asyncMode": { "enum": ["jspi", "asyncify", "sync"] },
+                "asyncImports": { "type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true, "items": { "$ref": "#/$defs/WitFunctionId" } }
+              }
+            },
+            "emittedAsyncBindings": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "uniqueItems": true,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["trampoline", "fnName"],
+                "properties": {
+                  "trampoline": { "type": "string", "pattern": "^[0-9]+$" },
+                  "fnName": { "type": "string", "minLength": 1, "maxLength": 256 }
+                }
+              }
+            },
+            "unsupportedImport": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "productionHostAsyncAbiQualified": { "type": "boolean" }
+          }
+        },
+        "actors": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["actorId", "link", "blob", "timer"],
+            "properties": {
+              "actorId": { "$ref": "#/$defs/BrowserActorName" },
+              "link": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["okRequest", "okValue", "errorRequest", "errorValue"],
+                "properties": {
+                  "okRequest": { "$ref": "#/$defs/BrowserPackBytes" },
+                  "okValue": { "$ref": "#/$defs/BrowserPackBytes" },
+                  "errorRequest": { "$ref": "#/$defs/BrowserPackBytes" },
+                  "errorValue": { "$ref": "#/$defs/BrowserPackBytes" }
+                }
+              },
+              "blob": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["okHash", "chunks", "errorHash", "errorValue"],
+                "properties": {
+                  "okHash": { "type": "string", "minLength": 1, "maxLength": 32 },
+                  "chunks": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "$ref": "#/$defs/BrowserPackBytes" } },
+                  "errorHash": { "type": "string", "minLength": 1, "maxLength": 32 },
+                  "errorValue": { "$ref": "#/$defs/BrowserPackBytes" }
+                }
+              },
+              "timer": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["delayMs"],
+                "properties": { "delayMs": { "type": "integer", "minimum": 4, "maximum": 32 } }
+              }
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["buildBudgetMs", "runtimeBudgetMs", "maximumOutputBytes", "actors"],
+          "properties": {
+            "buildBudgetMs": { "type": "integer", "minimum": 1000, "maximum": 3600000 },
+            "runtimeBudgetMs": { "type": "integer", "minimum": 1000, "maximum": 3600000 },
+            "maximumOutputBytes": { "type": "integer", "minimum": 1024, "maximum": 268435456 },
+            "actors": { "type": "integer", "minimum": 1, "maximum": 64 }
+          }
+        }
+      }
+    },
+    "BrowserActorLifecycleState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "activeInvocations"],
+      "properties": {
+        "phase": { "$ref": "#/$defs/BrowserLifecyclePhase" },
+        "activeInvocations": { "type": "integer", "minimum": 0, "maximum": 4096 }
+      }
+    },
+    "BrowserActorName": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$", "maxLength": 64 },
+    "BrowserArtifactDistributionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "owner", "files"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "owner": { "type": "string", "minLength": 1 },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "pattern": "^(?!.*(?:^|[\\\\/])(?:\\.{1,2}|\\.nx-artifact\\.json)(?:[\\\\/]|$))[^\\\\/:\\u0000-\\u001f\\u007f]+(?:[\\\\/][^\\\\/:\\u0000-\\u001f\\u007f]+)*$" }
+        }
+      }
+    },
+    "BrowserByte": { "type": "integer", "minimum": 0, "maximum": 255 },
+    "BrowserContractId": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*(?:[./]v[0-9]+(?:\\.[0-9]+)*)$" },
+    "BrowserFault": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "code", "severity", "message", "scope", "retryable"],
+      "properties": {
+        "origin": { "enum": ["edge", "renderer", "os", "module", "plugin", "app", "extension", "framework"] },
+        "code": { "$ref": "#/$defs/BrowserFaultCode" },
+        "severity": { "enum": ["info", "warning", "error", "fatal"] },
+        "message": { "type": "string", "minLength": 1 },
+        "scope": { "type": "object" },
+        "retryable": { "type": "boolean" }
+      }
+    },
+    "BrowserFaultCode": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)*$" },
+    "BrowserLawId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "BrowserLawList": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/BrowserLawId" } },
+    "BrowserLifecyclePhase": { "enum": ["open", "closing", "closed"] },
+    "BrowserLogicalPath": { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$" },
+    "BrowserPackBytes": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/BrowserByte" } },
+    "BrowserSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$", "not": { "const": "0000000000000000000000000000000000000000000000000000000000000000" } },
+    "BrowserSourceDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["logicalPath", "sha256", "byteLength"],
+      "properties": {
+        "logicalPath": { "$ref": "#/$defs/BrowserLogicalPath" },
+        "sha256": { "$ref": "#/$defs/BrowserSha256" },
+        "byteLength": { "type": "integer", "minimum": 1, "maximum": 67108864 }
+      }
+    },
+    "BrowserStreamOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "activeInvocations", "cancellations", "result", "locked"],
+      "properties": {
+        "phase": { "$ref": "#/$defs/BrowserLifecyclePhase" },
+        "activeInvocations": { "type": "integer", "minimum": 0, "maximum": 4096 },
+        "cancellations": { "type": "integer", "minimum": 0, "maximum": 4096 },
+        "result": { "enum": ["pending", "fulfilled", "rejected"] },
+        "locked": { "type": "boolean" }
+      }
+    },
+    "CodegenManifestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "runtime", "importInterfaces", "files"],
+      "properties": {
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$", "const": "1.27.0" },
+        "runtime": { "type": "string", "pattern": "^[a-z][a-z0-9-]*@[0-9]+\\.[0-9]+\\.[0-9]+$", "const": "bun@1.3.14" },
+        "importInterfaces": { "type": "array", "maxItems": 16, "uniqueItems": true, "items": { "type": "string", "pattern": "^(semio:framework/(pure|host-async)@1\\.0\\.0|wasi:(cli/(environment|exit|stdin|stdout|stderr|terminal-input|terminal-output|terminal-stdin|terminal-stdout|terminal-stderr)|clocks/monotonic-clock|io/(error|poll|streams))@0\\.2\\.0)$" } },
+        "files": { "type": "array", "minItems": 2, "maxItems": 65, "uniqueItems": true, "contains": { "const": "browser-actor.js" }, "items": { "type": "string", "pattern": "^browser-actor\\.(js|core[0-9]*\\.wasm)$" } }
+      }
+    },
+    "CodegenPolicyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "revision", "runtime", "compiler", "packages", "parser", "firstParty", "options"],
+      "properties": {
+        "schema": { "allOf": [{ "$ref": "#/$defs/BrowserContractId" }], "const": "semio.os.browser-codegen-policy.v1" },
+        "revision": { "type": "integer", "minimum": 1, "maximum": 65536, "const": 1 },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "version", "executable"],
+          "properties": {
+            "kind": { "enum": ["bun", "node", "deno"], "const": "bun" },
+            "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$", "const": "1.3.14" },
+            "executable": { "$ref": "#/$defs/CodegenDigest" }
+          }
+        },
+        "compiler": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["module", "inputs", "cores"],
+          "properties": {
+            "module": { "$ref": "#/$defs/CodegenDigest" },
+            "inputs": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/BrowserSourceDigest" } },
+            "cores": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/BrowserSourceDigest" } }
+          }
+        },
+        "packages": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "version", "lockSha256", "manifestSha256"],
+            "properties": {
+              "name": { "enum": ["@bytecodealliance/jco", "@bytecodealliance/jco-transpile", "@bytecodealliance/preview2-shim"] },
+              "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+              "lockSha256": { "$ref": "#/$defs/BrowserSha256" },
+              "manifestSha256": { "$ref": "#/$defs/BrowserSha256" }
+            }
+          }
+        },
+        "parser": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "version", "manifestSha256", "lockRowSha256", "entry"],
+          "properties": {
+            "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "const": "typescript" },
+            "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$", "const": "5.9.3" },
+            "manifestSha256": { "$ref": "#/$defs/BrowserSha256" },
+            "lockRowSha256": { "$ref": "#/$defs/BrowserSha256" },
+            "entry": { "$ref": "#/$defs/BrowserSourceDigest" }
+          }
+        },
+        "firstParty": { "type": "array", "minItems": 1, "maxItems": 16, "items": { "$ref": "#/$defs/BrowserSourceDigest" } },
+        "options": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["jco", "entrypoint", "target", "format", "name", "instantiation", "asyncMode", "nodejsCompat", "base64Cutoff", "importInterfaces", "asyncImports"],
+          "properties": {
+            "jco": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$", "const": "1.27.0" },
+            "entrypoint": { "type": "string", "minLength": 1, "maxLength": 256, "const": "@bytecodealliance/jco/component" },
+            "target": { "enum": ["browser", "node"], "const": "browser" },
+            "format": { "enum": ["esm", "cjs"], "const": "esm" },
+            "name": { "allOf": [{ "$ref": "#/$defs/BrowserActorName" }], "const": "browser-actor" },
+            "instantiation": { "enum": ["async", "sync"], "const": "async" },
+            "asyncMode": { "enum": ["jspi", "asyncify", "sync"], "const": "jspi" },
+            "nodejsCompat": { "type": "boolean", "const": false },
+            "base64Cutoff": { "type": "integer", "minimum": 0, "maximum": 1048576, "const": 0 },
+            "importInterfaces": { "type": "array", "maxItems": 16, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 256 } },
+            "asyncImports": { "type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 256 } }
+          }
+        }
+      }
+    },
+    "CodegenDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "byteLength"],
+      "properties": { "sha256": { "$ref": "#/$defs/BrowserSha256" }, "byteLength": { "type": "integer", "minimum": 1, "maximum": 8589934592 } }
+    },
+    "CompilerCapsuleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "source", "cores", "expected", "denied"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/BrowserContractId" },
+        "source": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "cores": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "hex"],
+            "properties": {
+              "name": { "type": "string", "pattern": "^[A-Za-z0-9._-]+\\.wasm$" },
+              "hex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" }
+            }
+          }
+        },
+        "expected": { "type": "integer", "minimum": 0, "maximum": 8 },
+        "denied": { "$ref": "#/$defs/BrowserLawList" }
+      }
+    },
+    "CompilerSourcesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "files", "expected", "inputs", "laws"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/BrowserContractId" },
+        "files": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 16,
+          "propertyNames": { "pattern": "^[A-Za-z0-9._-]+\\.js$" },
+          "additionalProperties": { "type": "string", "maxLength": 1024 }
+        },
+        "expected": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "inputs": { "type": "array", "minItems": 1, "maxItems": 16, "uniqueItems": true, "items": { "$ref": "#/$defs/BrowserLogicalPath" } },
+        "laws": { "$ref": "#/$defs/BrowserLawList" }
+      }
+    },
+    "ComponentFactoryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "component", "name", "calls", "expected", "forbidden", "factoryModes", "cancelledBeforeCompile", "cancelledDuringCompile"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/BrowserContractId" },
+        "component": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "name": { "$ref": "#/$defs/BrowserActorName" },
+        "calls": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "type": "string", "minLength": 1, "maxLength": 64 } },
+        "expected": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "type": "integer", "minimum": 0, "maximum": 4294967295 } },
+        "forbidden": { "$ref": "#/$defs/BrowserLawList" },
+        "factoryModes": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["generated", "explicit-async"] } },
+        "cancelledBeforeCompile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["compilations", "instances"],
+          "properties": {
+            "compilations": { "type": "integer", "minimum": 0, "maximum": 64 },
+            "instances": { "type": "integer", "minimum": 0, "maximum": 64 }
+          }
+        },
+        "cancelledDuringCompile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["compilations", "instances", "stagingZeroed"],
+          "properties": {
+            "compilations": { "type": "integer", "minimum": 0, "maximum": 64 },
+            "instances": { "type": "integer", "minimum": 0, "maximum": 64 },
+            "stagingZeroed": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "GeneratedActorHostActivationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["activations"],
+      "properties": {
+        "activations": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["actorId", "generation", "value"],
+            "properties": {
+              "actorId": { "type": "string", "minLength": 1 },
+              "generation": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+              "value": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "GeneratedComponentInstantiationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component", "calls", "expected"],
+      "properties": {
+        "component": { "type": "string", "minLength": 1 },
+        "calls": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["instance", "delta"],
+            "properties": {
+              "instance": { "type": "integer", "minimum": 0, "maximum": 1 },
+              "delta": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["moduleImportInstances", "instantiated", "results", "memory", "distinctMemories", "factoryHasNoModuleInstanceRoots", "automaticHasModuleInstanceRoots"],
+          "properties": {
+            "moduleImportInstances": { "type": "integer", "minimum": 0, "maximum": 64 },
+            "instantiated": { "type": "integer", "minimum": 0, "maximum": 64 },
+            "results": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 4294967295 } },
+            "memory": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 0, "maximum": 4294967295 } },
+            "distinctMemories": { "type": "boolean" },
+            "factoryHasNoModuleInstanceRoots": { "type": "boolean" },
+            "automaticHasModuleInstanceRoots": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "HostActivationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "actors", "limits", "responses", "stream", "closedFault", "lateStreamFault", "laws"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/BrowserContractId" },
+        "actors": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "generation"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "generation": { "type": "string", "pattern": "^[1-9][0-9]*$" }
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pendingEffects", "streams", "bufferedStreamBytes", "streamChunkBytes"],
+          "properties": {
+            "pendingEffects": { "type": "integer", "minimum": 1, "maximum": 65536 },
+            "streams": { "type": "integer", "minimum": 1, "maximum": 65536 },
+            "bufferedStreamBytes": { "type": "integer", "minimum": 1, "maximum": 268435456 },
+            "streamChunkBytes": { "type": "integer", "minimum": 1, "maximum": 16777216 }
+          }
+        },
+        "responses": { "type": "array", "minItems": 1, "maxItems": 16, "items": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/BrowserByte" } } },
+        "stream": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/BrowserByte" } },
+        "closedFault": { "$ref": "#/$defs/BrowserFault" },
+        "lateStreamFault": { "$ref": "#/$defs/BrowserFault" },
+        "laws": { "$ref": "#/$defs/BrowserLawList" }
+      }
+    },
+    "Preview2ShimImportRewriteV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cases"],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source", "prefix", "output"],
+            "properties": {
+              "source": { "type": "string" },
+              "prefix": { "type": "string", "minLength": 1 },
+              "output": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "WasiActivationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "limits", "output", "readyIndices", "emptyAmbient", "terminal", "laws"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/BrowserContractId" },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["resources", "waiters", "writeBytes", "outputBytes"],
+          "properties": {
+            "resources": { "type": "integer", "minimum": 1, "maximum": 65536 },
+            "waiters": { "type": "integer", "minimum": 1, "maximum": 65536 },
+            "writeBytes": { "type": "integer", "minimum": 1, "maximum": 16777216 },
+            "outputBytes": { "type": "integer", "minimum": 1, "maximum": 268435456 }
+          }
+        },
+        "output": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/BrowserByte" } },
+        "readyIndices": { "type": "array", "uniqueItems": true, "items": { "type": "integer", "minimum": 0, "maximum": 65535 } },
+        "emptyAmbient": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["environment", "arguments", "cwd", "terminal"],
+          "properties": {
+            "environment": { "type": "array", "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": [{ "type": "string" }, { "type": "string" }], "additionalItems": false } },
+            "arguments": { "type": "array", "items": { "type": "string" } },
+            "cwd": { "type": ["string", "null"] },
+            "terminal": { "type": ["string", "null"] }
+          }
+        },
+        "terminal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["phase", "resources", "waiters", "timers"],
+          "properties": {
+            "phase": { "$ref": "#/$defs/BrowserLifecyclePhase" },
+            "resources": { "type": "integer", "minimum": 0, "maximum": 65536 },
+            "waiters": { "type": "integer", "minimum": 0, "maximum": 65536 },
+            "timers": { "type": "integer", "minimum": 0, "maximum": 65536 }
+          }
+        },
+        "laws": { "$ref": "#/$defs/BrowserLawList" }
+      }
+    },
+    "WitFunctionId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*/[a-z][a-z0-9-]*(?:@[0-9]+\\.[0-9]+\\.[0-9]+)?#[A-Za-z0-9._\\[\\]-]+$" },
+    "WitInterfaceId": { "type": "string", "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*/[a-z][a-z0-9-]*@[0-9]+\\.[0-9]+\\.[0-9]+$" }
+  }
+}

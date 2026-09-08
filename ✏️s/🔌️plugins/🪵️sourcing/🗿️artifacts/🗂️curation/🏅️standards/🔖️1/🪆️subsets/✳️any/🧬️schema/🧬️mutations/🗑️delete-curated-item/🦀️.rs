@@ -1,7 +1,7 @@
 //! 🗑️ Direct `delete-curated-item` mutation owner: removes an id-keyed curated selection.
-use crate::artifacts::curation::diff::CurationDiff;
-use crate::artifacts::curation::mutations::SourcingMutation;
-use crate::artifacts::curation::CurationSnapshot;
+use crate::diff::CurationDiff;
+use crate::mutations::SourcingMutation;
+use crate::CurationSnapshot;
 
 //#region 🔖️Mutation
 /// 🗑️ `delete-curated-item` payload — addressed by `object_id` alone; the removed count is

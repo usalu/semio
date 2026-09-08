@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::VcsSnapshot;
 
 //#region 🔖️ArtifactDslCodec
 impl store::ArtifactDsl for VcsSnapshot {
@@ -58,7 +58,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn vcs_demo_projection_dsl_round_trips() {
-        store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot());
+        store::os_store::test_support::assert_dsl_round_trip(&crate::standards::v1::subsets::any::schema::empty_vcs_snapshot());
     }
 
     #[semio_framework_async_macros::async_test]

@@ -19,8 +19,8 @@
 //! seeded step takes its `id` and its `description` from the committed payload; its `title` is this
 //! case's own fixture value and is deliberately arbitrary — `change-step-description` never reads it.
 
-use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{materialize_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::{materialize_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

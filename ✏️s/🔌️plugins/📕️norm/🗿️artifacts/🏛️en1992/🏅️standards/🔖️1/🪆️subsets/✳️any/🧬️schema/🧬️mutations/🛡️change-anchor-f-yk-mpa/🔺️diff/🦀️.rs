@@ -1,8 +1,8 @@
 //! 🔺️ `change-anchor-f-yk-mpa` sparse diff construction — writes only `En1992Diff.anchor_f_yk_mpa` from the payload.
 
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::change_anchor_f_yk_mpa::ChangeAnchorFYkMpa;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::change_anchor_f_yk_mpa::ChangeAnchorFYkMpa;
+use crate::En1992Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeAnchorFYkMpa, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {

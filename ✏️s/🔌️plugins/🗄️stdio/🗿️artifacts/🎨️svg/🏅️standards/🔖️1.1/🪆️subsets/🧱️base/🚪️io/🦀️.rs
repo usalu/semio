@@ -78,7 +78,7 @@ mod tests {
     const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
 
     async fn exact_fixture_bytes() -> Vec<u8> {
-        std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/artifacts.svg")).expect("read temp/artifacts.svg")
+        std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../temp/artifacts.svg")).expect("read temp/artifacts.svg")
     }
 
     #[semio_framework_async_macros::async_test]

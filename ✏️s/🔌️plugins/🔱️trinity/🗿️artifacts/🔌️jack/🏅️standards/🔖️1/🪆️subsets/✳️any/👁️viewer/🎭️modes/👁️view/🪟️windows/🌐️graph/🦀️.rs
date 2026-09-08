@@ -5,7 +5,7 @@
 //! outright). No selection, no LOD toggle, no engagement: a viewer has no utilities that mutate
 //! and emits no mutations by construction (`ViewEmit`).
 
-use crate::artifacts::jack::{JackSnapshot, Node, PortDirection};
+use crate::{JackSnapshot, Node, PortDirection};
 use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_contract::SurfaceKind;
 
@@ -44,7 +44,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🩹 Read-only twin of the editor's `split_endpoint` — duplicated on purpose rather than imported
 /// through the sibling `✏️editor` module, which `policyViewerPurityBreaches` forbids outright.
 fn split_endpoint(endpoint: &str) -> (String, String) {
-    crate::artifacts::jack::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
+    crate::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
 }
 
 fn node_to_record(node: &Node) -> NodeGraphNodeRecord {
@@ -57,8 +57,8 @@ fn node_to_record(node: &Node) -> NodeGraphNodeRecord {
         y: node.y,
         width,
         height,
-        inputs: node.ports.iter().filter(|port| port.direction == PortDirection::In).map(|port| NodeGraphPortRecord { id: crate::artifacts::jack::port_key(&node.id, &port.id), label: Some(port.id.clone()), ..Default::default() }).collect(),
-        outputs: node.ports.iter().filter(|port| port.direction == PortDirection::Out).map(|port| NodeGraphPortRecord { id: crate::artifacts::jack::port_key(&node.id, &port.id), label: Some(port.id.clone()), ..Default::default() }).collect(),
+        inputs: node.ports.iter().filter(|port| port.direction == PortDirection::In).map(|port| NodeGraphPortRecord { id: crate::port_key(&node.id, &port.id), label: Some(port.id.clone()), ..Default::default() }).collect(),
+        outputs: node.ports.iter().filter(|port| port.direction == PortDirection::Out).map(|port| NodeGraphPortRecord { id: crate::port_key(&node.id, &port.id), label: Some(port.id.clone()), ..Default::default() }).collect(),
         ..Default::default()
     }
 }
@@ -97,7 +97,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::artifacts::jack::empty_trinity_graph_fixture();
+        let document = crate::empty_trinity_graph_fixture();
         let node = render(&document).expect("node graph surface");
         assert!(serde_json::to_string(&node).expect("serialize semantic UI test tree").contains("node-graph"));
     }

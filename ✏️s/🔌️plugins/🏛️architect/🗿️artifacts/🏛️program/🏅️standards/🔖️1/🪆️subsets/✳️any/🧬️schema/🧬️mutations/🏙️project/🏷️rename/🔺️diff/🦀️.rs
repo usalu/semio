@@ -2,8 +2,8 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📁update-project` per Wave C.
 
 use super::RenameProject;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ New `ProjectDefinition` with only `code` changed. Root-scoped singleton — always present, so
 /// Warning `mutation.no-op` (empty diff) covers the only degenerate case: the code is unchanged.

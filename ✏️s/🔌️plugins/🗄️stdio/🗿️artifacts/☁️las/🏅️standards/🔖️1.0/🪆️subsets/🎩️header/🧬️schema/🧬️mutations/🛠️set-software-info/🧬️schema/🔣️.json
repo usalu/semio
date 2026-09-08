@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-software-info.json",
+  "$id": "https://semio.tech/schema/s/stdio/las/1.0/header/mutation/set-software-info/schema.json",
   "title": "SetSoftwareInfo",
   "type": "object",
   "additionalProperties": false,

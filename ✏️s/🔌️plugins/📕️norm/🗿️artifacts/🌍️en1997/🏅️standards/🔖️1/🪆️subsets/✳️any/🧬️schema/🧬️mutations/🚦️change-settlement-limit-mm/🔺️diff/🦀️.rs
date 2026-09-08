@@ -1,8 +1,8 @@
 //! 🔺️ `change-settlement-limit-mm` sparse diff construction — writes only `En1997Diff.settlement_limit_mm` from the payload.
 
-use crate::artifacts::en1997::diff::En1997Diff;
-use crate::artifacts::en1997::mutations::change_settlement_limit_mm::ChangeSettlementLimitMm;
-use crate::artifacts::en1997::En1997Snapshot;
+use crate::diff::En1997Diff;
+use crate::mutations::change_settlement_limit_mm::ChangeSettlementLimitMm;
+use crate::En1997Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSettlementLimitMm, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {

@@ -1,7 +1,7 @@
 //! 🧵️ Mounted Fem2d revision job: fixed session arena, retained worker step and live visual lease.
 
 use crate::analyses::{AnalysisModel, AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction, FemJobGraph, FemJobStage, FemStagePlan};
-use crate::artifacts::fem2d::{Fem2dSnapshot, FemElement, FemLoad};
+use crate::{Fem2dSnapshot, FemElement, FemLoad};
 use crate::editor::fem2d::modes::edit::windows::model::{Fem2dLiveVisual, Fem2dMountedVisualLease, Fem2dVisualFreshness, Fem2dVisualJob, FemVisualState, RegionVisualQuality};
 use crate::mesh::{MeshJob, MeshOpts, PlanarDomain, TriMesh2};
 use crate::model::Element;
@@ -1874,15 +1874,15 @@ impl SnapshotAdmissionCursor {
     fn step_one(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, &'static [u8]> {
         if !self.owner_opened && !matches!(self.lane, 4 | 9 | 11) {
             let bytes = match self.lane {
-                0 => snapshot.nodes.capacity() * size_of::<crate::artifacts::fem2d::FemNode>(),
+                0 => snapshot.nodes.capacity() * size_of::<crate::FemNode>(),
                 1 => snapshot.elements.capacity() * size_of::<FemElement>(),
-                2 => snapshot.regions.capacity() * size_of::<crate::artifacts::fem2d::FemRegion>(),
+                2 => snapshot.regions.capacity() * size_of::<crate::FemRegion>(),
                 3 => 0,
-                5 => snapshot.materials.capacity() * size_of::<crate::artifacts::fem2d::FemMaterial>(),
-                6 => snapshot.sections.capacity() * size_of::<crate::artifacts::fem2d::FemSection>(),
-                7 => snapshot.supports.capacity() * size_of::<crate::artifacts::fem2d::FemSupport>(),
-                8 => snapshot.load_cases.capacity() * size_of::<crate::artifacts::fem2d::FemLoadCase>(),
-                10 => snapshot.combinations.capacity() * size_of::<crate::artifacts::fem2d::FemCombination>(),
+                5 => snapshot.materials.capacity() * size_of::<crate::FemMaterial>(),
+                6 => snapshot.sections.capacity() * size_of::<crate::FemSection>(),
+                7 => snapshot.supports.capacity() * size_of::<crate::FemSupport>(),
+                8 => snapshot.load_cases.capacity() * size_of::<crate::FemLoadCase>(),
+                10 => snapshot.combinations.capacity() * size_of::<crate::FemCombination>(),
                 _ => 0,
             };
             self.owner_opened = true;
@@ -1978,7 +1978,7 @@ impl SnapshotAdmissionCursor {
                     return Err(b"fem2d.session-support-capacity");
                 }
                 match snapshot.supports.get(self.outer) {
-                    Some(support) => Some(bounded_string_capacities(&[&support.id, &support.node_id])? + support.fixed.capacity() * size_of::<crate::artifacts::fem2d::FemDof>()),
+                    Some(support) => Some(bounded_string_capacities(&[&support.id, &support.node_id])? + support.fixed.capacity() * size_of::<crate::FemDof>()),
                     None => None,
                 }
             }
@@ -2025,7 +2025,7 @@ impl SnapshotAdmissionCursor {
                 };
                 if !self.owner_opened {
                     self.owner_opened = true;
-                    self.charge(1, combination.terms.capacity() * size_of::<crate::artifacts::fem2d::FemCombinationTerm>())?;
+                    self.charge(1, combination.terms.capacity() * size_of::<crate::FemCombinationTerm>())?;
                     return Ok(false);
                 }
                 if let Some(term) = combination.terms.get(self.inner) {

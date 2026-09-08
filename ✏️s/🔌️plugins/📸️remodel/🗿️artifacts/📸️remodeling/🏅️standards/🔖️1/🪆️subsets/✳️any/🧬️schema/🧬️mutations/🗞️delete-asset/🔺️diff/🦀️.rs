@@ -4,17 +4,17 @@
 //! follow, so the document never keeps a reference to a leaf that is gone. The accepted branch drops
 //! the durable leaf the handle owned together with the `assets` entry, which is what makes
 //! `create-asset` its exact inverse.
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::RemodelingDiff;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteAsset, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
-    if let Some((_, staging_id, _)) = crate::artifacts::remodeling::remodeling_asset_stage_parts(&payload.key) {
-        crate::artifacts::remodeling::discard_staged_remodeling_asset(staging_id);
+    if let Some((_, staging_id, _)) = crate::remodeling_asset_stage_parts(&payload.key) {
+        crate::discard_staged_remodeling_asset(staging_id);
         return protocol::MutationOutcome::new(RemodelingDiff::default());
     }
-    if let Some((staging_id, _)) = crate::artifacts::remodeling::remodeling_mesh_stage_asset_parts(&payload.key) {
-        crate::artifacts::remodeling::discard_staged_remodeling_mesh(staging_id);
+    if let Some((staging_id, _)) = crate::remodeling_mesh_stage_asset_parts(&payload.key) {
+        crate::discard_staged_remodeling_mesh(staging_id);
         return protocol::MutationOutcome::new(RemodelingDiff::default());
     }
     if !base.assets.contains_key(&payload.key) {

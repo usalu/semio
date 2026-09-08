@@ -7,9 +7,9 @@
 //!
 //! An `Area` load names a solid, not a region — and loads have no collection of their own, so the whole owning case is re-emitted as one patch.
 
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -35,7 +35,7 @@ fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "add-load/lays-an-area-pressure-over-769710: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.load_cases.len(), 1, "add-load/lays-an-area-pressure-over-769710: adding a load must not coin a new case");
     assert_eq!(snapshot.load_cases[0].loads.len(), 1, "add-load/lays-an-area-pressure-over-769710: the pressure must be the case's first and only load");
-    assert!(matches!(snapshot.load_cases[0].loads[0], crate::artifacts::fem3d::FemLoad::Area { .. }), "add-load/lays-an-area-pressure-over-769710: the load must keep its Area variant");
+    assert!(matches!(snapshot.load_cases[0].loads[0], crate::FemLoad::Area { .. }), "add-load/lays-an-area-pressure-over-769710: the load must keep its Area variant");
 }
 
 /// ↩️ The inverse is a `remove-load` of `p1` from `dead`, restoring the empty case.
@@ -84,7 +84,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "add-load/lays-an-area-pressure-over-769710: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "add-load/lays-an-area-pressure-over-769710: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "add-load/lays-an-area-pressure-over-769710: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "add-load/lays-an-area-pressure-over-769710: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "add-load/lays-an-area-pressure-over-769710: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("add-load/lays-an-area-pressure-over-769710: unknown outcome status {other:?}"),
@@ -106,7 +106,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "add-load/lays-an-area-pressure-over-769710: committed diff JSON is not canonical");
@@ -115,7 +115,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `loadCases.patched` entry on `before` must yield the loaded case.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "add-load/lays-an-area-pressure-over-769710: committed diff did not carry before to after");
 }

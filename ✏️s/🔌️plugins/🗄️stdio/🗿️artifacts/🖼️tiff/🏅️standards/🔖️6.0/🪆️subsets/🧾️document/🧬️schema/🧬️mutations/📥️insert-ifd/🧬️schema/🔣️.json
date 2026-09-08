@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/document/mutation/insert-ifd.json",
+  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/document/mutation/insert-ifd/schema.json",
   "title": "InsertIfdMutation",
   "type": "object",
   "additionalProperties": false,
@@ -18,48 +18,29 @@
     }
   },
   "$defs": {
-    "TiffByteOrder": {
-      "type": "string",
-      "enum": [
-        "littleEndian",
-        "bigEndian"
-      ]
-    },
-    "TiffFieldType": {
-      "type": "string",
-      "enum": [
-        "byte",
-        "ascii",
-        "short",
-        "long",
-        "rational",
-        "sByte",
-        "undefined",
-        "sShort",
-        "sLong",
-        "sRational",
-        "float",
-        "double"
-      ],
-      "description": "TIFF6 §2 Table 2 — the 12 real IFD entry field types."
-    },
-    "TiffValues": {
+    "TiffIfd": {
       "type": "object",
-      "description": "Adjacently-tagged (kind/value) typed union — `value`'s real shape depends on `kind` (number[] for most, string for ascii, [number,number][] for rational/sRational).",
-      "required": [
-        "kind",
-        "value"
-      ],
+      "additionalProperties": false,
       "properties": {
-        "kind": {
-          "$ref": "#/$defs/TiffFieldType"
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TiffTag"
+          }
         },
-        "value": {}
+        "pixels": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
       }
     },
     "TiffTag": {
       "type": "object",
-      "description": "One IFD entry — a weak value (whole-value replaced in diffs).",
+      "additionalProperties": false,
       "required": [
         "tag",
         "kind",
@@ -79,29 +60,295 @@
         }
       }
     },
-    "TiffIfd": {
-      "type": "object",
-      "description": "One Image File Directory — tag-id-keyed entries (TIFF requires ascending-tag-order) plus this directory's own raster as RAW STRIP BYTES. Empty for IFD 0, whose raster is the snapshot's own canonical RGBA `pixels`, and for a metadata-only directory.",
-      "required": [
-        "entries",
-        "pixels"
-      ],
-      "properties": {
-        "entries": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/TiffTag"
-          }
+    "TiffFieldType": {
+      "type": "string",
+      "enum": [
+        "byte",
+        "ascii",
+        "short",
+        "long",
+        "rational",
+        "sByte",
+        "undefined",
+        "sShort",
+        "sLong",
+        "sRational",
+        "float",
+        "double"
+      ]
+    },
+    "TiffValues": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "byte"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
         },
-        "pixels": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 255
-          }
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "ascii"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "short"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "long"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "rational"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  }
+                ],
+                "additionalItems": false,
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "sByte"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": -128,
+                "maximum": 127
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "undefined"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "sShort"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": -32768,
+                "maximum": 32767
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "sLong"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "sRational"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "integer",
+                    "minimum": -2147483648,
+                    "maximum": 2147483647
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": -2147483648,
+                    "maximum": 2147483647
+                  }
+                ],
+                "additionalItems": false,
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "float"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "double"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
         }
-      }
+      ]
     }
   }
 }

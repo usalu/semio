@@ -1,0 +1,606 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/lifetime/component.json",
+  "title": "Semio OS Plugin Lifetime",
+  "$defs": {
+    "AggregateAdmissionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "scope",
+        "registry",
+        "beforeDetach",
+        "descendants",
+        "terminal"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "nativeAggregateMounted",
+            "nativeLayoutMeasured",
+            "allocatorFailureExecuted",
+            "strictCallbackTimingProven"
+          ],
+          "properties": {
+            "nativeAggregateMounted": {
+              "type": "boolean"
+            },
+            "nativeLayoutMeasured": {
+              "type": "boolean"
+            },
+            "allocatorFailureExecuted": {
+              "type": "boolean"
+            },
+            "strictCallbackTimingProven": {
+              "type": "boolean"
+            }
+          }
+        },
+        "registry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "owner",
+            "logicalSlots",
+            "initializationGrantBytes",
+            "injectedLayouts",
+            "allocatorOvershoot"
+          ],
+          "properties": {
+            "owner": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9]*(?:::[A-Za-z][A-Za-z0-9]*)*$"
+            },
+            "logicalSlots": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "initializationGrantBytes": {
+              "$ref": "#/$defs/LifetimeBytes"
+            },
+            "injectedLayouts": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "slotBytes",
+                  "allocationGrantBytes",
+                  "allocationCalls",
+                  "requestedBytes",
+                  "initializationTurns"
+                ],
+                "properties": {
+                  "slotBytes": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "allocationGrantBytes": {
+                    "$ref": "#/$defs/LifetimeBytes"
+                  },
+                  "allocationCalls": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "requestedBytes": {
+                    "$ref": "#/$defs/LifetimeBytes"
+                  },
+                  "initializationTurns": {
+                    "$ref": "#/$defs/LifetimeBytes"
+                  }
+                }
+              }
+            },
+            "allocatorOvershoot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "requestedBytes",
+                "actualBytes",
+                "admittedBytes",
+                "retainedBytes",
+                "appConstructed"
+              ],
+              "properties": {
+                "requestedBytes": {
+                  "$ref": "#/$defs/LifetimeBytes"
+                },
+                "actualBytes": {
+                  "$ref": "#/$defs/LifetimeBytes"
+                },
+                "admittedBytes": {
+                  "$ref": "#/$defs/LifetimeBytes"
+                },
+                "retainedBytes": {
+                  "$ref": "#/$defs/LifetimeBytes"
+                },
+                "appConstructed": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "beforeDetach": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "required",
+            "cases"
+          ],
+          "properties": {
+            "required": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/DetachParticipant"
+              }
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 12,
+              "maxItems": 12,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "missing",
+                  "sameCapturedKey",
+                  "generationAvailable",
+                  "detach"
+                ],
+                "properties": {
+                  "missing": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "$ref": "#/$defs/DetachParticipant"
+                    }
+                  },
+                  "sameCapturedKey": {
+                    "type": "boolean"
+                  },
+                  "generationAvailable": {
+                    "type": "boolean"
+                  },
+                  "detach": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "descendants": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "resumeLogicalCapBytes",
+            "fields",
+            "logicalBytes",
+            "physicalCapacityBytes",
+            "retirementGrants",
+            "emptyReservedFieldStillOwnsBacking"
+          ],
+          "properties": {
+            "resumeLogicalCapBytes": {
+              "$ref": "#/$defs/LifetimeBytes"
+            },
+            "fields": {
+              "type": "array",
+              "minItems": 5,
+              "maxItems": 5,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "owner",
+                  "length",
+                  "capacity"
+                ],
+                "properties": {
+                  "owner": {
+                    "enum": [
+                      "PendingResume.meta.actor",
+                      "TaskResumeOutcome.Emit.artifact_ops",
+                      "TaskResumeOutcome.Emit.config_ops",
+                      "TaskResumeOutcome.Emit.draft_ops",
+                      "InstanceMetadata.app_id"
+                    ]
+                  },
+                  "length": {
+                    "$ref": "#/$defs/LifetimeBytes"
+                  },
+                  "capacity": {
+                    "$ref": "#/$defs/LifetimeBytes"
+                  }
+                }
+              }
+            },
+            "logicalBytes": {
+              "$ref": "#/$defs/LifetimeBytes"
+            },
+            "physicalCapacityBytes": {
+              "$ref": "#/$defs/LifetimeBytes"
+            },
+            "retirementGrants": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/LifetimeBytes"
+              }
+            },
+            "emptyReservedFieldStillOwnsBacking": {
+              "type": "boolean"
+            }
+          }
+        },
+        "terminal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ready",
+            "cases",
+            "lateVerdictKeepsReleasedShellWitness",
+            "faultDoesNotEraseStructuralOwner"
+          ],
+          "properties": {
+            "ready": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "appEmpty",
+                "pumpEmpty",
+                "descendantsEmpty",
+                "schedulingRevoked",
+                "queuedCallbacks",
+                "runningCallbacks",
+                "quarantineAlias",
+                "shellReleased",
+                "elapsedUs"
+              ],
+              "properties": {
+                "appEmpty": {
+                  "type": "boolean"
+                },
+                "pumpEmpty": {
+                  "type": "boolean"
+                },
+                "descendantsEmpty": {
+                  "type": "boolean"
+                },
+                "schedulingRevoked": {
+                  "type": "boolean"
+                },
+                "queuedCallbacks": {
+                  "$ref": "#/$defs/LifetimeBytes"
+                },
+                "runningCallbacks": {
+                  "$ref": "#/$defs/LifetimeBytes"
+                },
+                "quarantineAlias": {
+                  "type": "boolean"
+                },
+                "shellReleased": {
+                  "type": "boolean"
+                },
+                "elapsedUs": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 12,
+              "maxItems": 12,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "changes",
+                  "ackConsumed"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "changes": {
+                    "$ref": "#/$defs/TerminalFields"
+                  },
+                  "ackConsumed": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "lateVerdictKeepsReleasedShellWitness": {
+              "type": "boolean"
+            },
+            "faultDoesNotEraseStructuralOwner": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "CloseConstructionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "events",
+        "states",
+        "atWorkerShellExactLiveAllocation",
+        "constructionFailure",
+        "allocationGrantProven",
+        "descendantCloseProven"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "live",
+              "workerShell",
+              "quarantine"
+            ]
+          }
+        },
+        "states": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "liveOwner",
+              "workerShell",
+              "quarantineOwner"
+            ],
+            "properties": {
+              "liveOwner": {
+                "type": "boolean"
+              },
+              "workerShell": {
+                "type": "boolean"
+              },
+              "quarantineOwner": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "atWorkerShellExactLiveAllocation": {
+          "type": "boolean"
+        },
+        "constructionFailure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "liveOwner",
+            "generationUnchanged",
+            "sameAllocation",
+            "actualAllocatorFailureProven"
+          ],
+          "properties": {
+            "phase": {
+              "enum": [
+                "before-worker-allocation",
+                "after-worker-allocation",
+                "after-quarantine"
+              ]
+            },
+            "liveOwner": {
+              "type": "boolean"
+            },
+            "generationUnchanged": {
+              "type": "boolean"
+            },
+            "sameAllocation": {
+              "type": "boolean"
+            },
+            "actualAllocatorFailureProven": {
+              "type": "boolean"
+            }
+          }
+        },
+        "allocationGrantProven": {
+          "type": "boolean"
+        },
+        "descendantCloseProven": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DetachParticipant": {
+      "enum": [
+        "RuntimeCloseWorkerState",
+        "runtime.close_quarantine",
+        "REACTOR_CLOSES",
+        "PATCHES",
+        "PENDING_PATCHES",
+        "COMMAND_INGRESS",
+        "JOB_RENDER_BINDINGS",
+        "PRESENCE",
+        "return-source"
+      ]
+    },
+    "LifetimeBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "RuntimeFaultVectorsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ceilingUs",
+        "scopes",
+        "messageTemplate",
+        "vectors",
+        "classifications"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "semio.plugin.runtime-fault-vectors.v1"
+        },
+        "ceilingUs": {
+          "type": "integer",
+          "const": 8000
+        },
+        "scopes": {
+          "const": [
+            "live",
+            "close"
+          ]
+        },
+        "messageTemplate": {
+          "const": "runtime {scope} cleanup faulted for instance {instance}: {detail} [{variant}] (elapsed {elapsed}, ceiling {ceilingUs}us)"
+        },
+        "vectors": {
+          "type": "array",
+          "minItems": 19,
+          "maxItems": 19,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "variant",
+              "code",
+              "class",
+              "detail"
+            ],
+            "properties": {
+              "variant": {
+                "type": "string",
+                "pattern": "^[a-z][a-z-]*[a-z]$"
+              },
+              "code": {
+                "type": "string",
+                "pattern": "^plugin\\.internal\\.[a-z][a-z-]*[a-z]$"
+              },
+              "class": {
+                "enum": [
+                  "abi-mismatch",
+                  "interactive-ceiling",
+                  "clock",
+                  "plugin-internal"
+                ]
+              },
+              "detail": {
+                "type": "string",
+                "minLength": 8
+              }
+            }
+          }
+        },
+        "classifications": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "class"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "code": {
+                "type": "string",
+                "minLength": 1
+              },
+              "supervisor": {
+                "enum": [
+                  "running",
+                  "crashed",
+                  "quarantined"
+                ]
+              },
+              "class": {
+                "enum": [
+                  "abi-mismatch",
+                  "interactive-ceiling",
+                  "clock",
+                  "plugin-internal",
+                  "install-failed",
+                  "unknown"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "TerminalFields": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "appEmpty": {
+          "type": "boolean"
+        },
+        "pumpEmpty": {
+          "type": "boolean"
+        },
+        "descendantsEmpty": {
+          "type": "boolean"
+        },
+        "schedulingRevoked": {
+          "type": "boolean"
+        },
+        "queuedCallbacks": {
+          "$ref": "#/$defs/LifetimeBytes"
+        },
+        "runningCallbacks": {
+          "$ref": "#/$defs/LifetimeBytes"
+        },
+        "quarantineAlias": {
+          "type": "boolean"
+        },
+        "shellReleased": {
+          "type": "boolean"
+        },
+        "elapsedUs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

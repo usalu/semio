@@ -1,8 +1,8 @@
 //! ↩️ Inverse reconstruction for `delete-region` — reads the BASE item, never the diff.
 use super::DeleteRegion;
-use crate::artifacts::gismap::mutations::create_region::CreateRegion;
-use crate::artifacts::gismap::mutations::GisMapMutation;
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::mutations::create_region::CreateRegion;
+use crate::mutations::GisMapMutation;
+use crate::GisMapSnapshot;
 
 //#region 🔹Inverse
 /// ↩️ Undo re-creates the feature at its pre-deletion index, captured from `base` — missing target

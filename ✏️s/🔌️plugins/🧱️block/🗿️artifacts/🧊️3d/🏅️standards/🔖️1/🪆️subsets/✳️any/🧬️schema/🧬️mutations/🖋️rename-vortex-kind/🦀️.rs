@@ -1,8 +1,8 @@
 //! 🖋 Block3d mutation — `RenameVortexKind`: a vortex-kind catalog row's `name`.
 
-use crate::artifacts::block3d::Block3dSnapshot;
-use crate::artifacts::block3d::diff::Block3dDiff;
-use crate::artifacts::block3d::mutations::Block3dMutation;
+use crate::Block3dSnapshot;
+use crate::diff::Block3dDiff;
+use crate::mutations::Block3dMutation;
 
 //#region 🔖️Mutation
 /// 🖋 `rename-vortex-kind` payload.

@@ -58,20 +58,20 @@ pub fn process3d_labels(cfg: &crate::editor::process3d::config::Process3dConfig)
 
 /// 🎨️ The icon a process measure renders with, shared by the document panel's step tree and the
 /// catalogue's capability listing.
-pub fn process3d_measure_icon(measure: &crate::artifacts::process3d::ProcessMeasure) -> &'static str {
+pub fn process3d_measure_icon(measure: &crate::ProcessMeasure) -> &'static str {
     match measure {
-        crate::artifacts::process3d::ProcessMeasure::Cut { .. } => "scissors",
-        crate::artifacts::process3d::ProcessMeasure::Drill { .. } => "circle-dot",
-        crate::artifacts::process3d::ProcessMeasure::Attach { .. } => "plus",
+        crate::ProcessMeasure::Cut { .. } => "scissors",
+        crate::ProcessMeasure::Drill { .. } => "circle-dot",
+        crate::ProcessMeasure::Attach { .. } => "plus",
     }
 }
 
 /// 🗣️ The localized label a process measure's kind renders with, used by the inspector's step group title.
-pub fn process3d_measure_label(measure: &crate::artifacts::process3d::ProcessMeasure, labels: &Process3dLabels) -> semio_framework_plugin::LabelText {
+pub fn process3d_measure_label(measure: &crate::ProcessMeasure, labels: &Process3dLabels) -> semio_framework_plugin::LabelText {
     match measure {
-        crate::artifacts::process3d::ProcessMeasure::Cut { .. } => labels.cut,
-        crate::artifacts::process3d::ProcessMeasure::Drill { .. } => labels.drill,
-        crate::artifacts::process3d::ProcessMeasure::Attach { .. } => labels.attach,
+        crate::ProcessMeasure::Cut { .. } => labels.cut,
+        crate::ProcessMeasure::Drill { .. } => labels.drill,
+        crate::ProcessMeasure::Attach { .. } => labels.attach,
     }
 }
 //#endregion 🔖️Resolvers

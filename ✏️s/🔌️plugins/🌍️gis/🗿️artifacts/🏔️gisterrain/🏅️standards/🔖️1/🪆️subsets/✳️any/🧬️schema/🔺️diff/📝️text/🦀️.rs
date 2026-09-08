@@ -1,12 +1,12 @@
-use crate::artifacts::gisterrain::schema::diff::*;
+use crate::schema::diff::*;
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::gisterrain::schema::GisTerrainArtifact;
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::schema::GisTerrainArtifact;
+use crate::GisTerrainSnapshot;
 use protocol::MutationDiff;
 
 //#region 🔹Apply
@@ -50,7 +50,7 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
             }
             // 🕸️ Keep `mesh` a pure function of the two fields above — mirrors
             // `apply_gis_terrain_mutation`'s identical re-derivation (see `GisTerrainSnapshot.mesh`'s doc).
-            next = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(next);
+            next = crate::gis_terrain_snapshot_with_derived_mesh(next);
             next
         })
     }
@@ -112,7 +112,7 @@ mod tests {
         let replacement = GisTerrainSnapshot {
             exaggeration: replacement_exaggeration,
             imported_features_json: replacement_imported_features_json.clone(),
-            mesh: Some(crate::artifacts::gisterrain::gis_terrain_mesh_child_handle(&crate::artifacts::gisterrain::gis_terrain_mesh_content_key(replacement_exaggeration, &replacement_imported_features_json))),
+            mesh: Some(crate::gis_terrain_mesh_child_handle(&crate::gis_terrain_mesh_content_key(replacement_exaggeration, &replacement_imported_features_json))),
         };
         let mut diff = GisTerrainDiff { exaggeration: Some(2.0), ..Default::default() };
         diff.absorb(diff_set_snapshot(&replacement));

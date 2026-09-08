@@ -1,8 +1,8 @@
 //! 🔺️ `change-design-situation` sparse diff construction — writes only `En1996Diff.design_situation` from the payload.
 
-use crate::artifacts::en1996::diff::En1996Diff;
-use crate::artifacts::en1996::mutations::change_design_situation::ChangeDesignSituation;
-use crate::artifacts::en1996::En1996Snapshot;
+use crate::diff::En1996Diff;
+use crate::mutations::change_design_situation::ChangeDesignSituation;
+use crate::En1996Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeDesignSituation, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {

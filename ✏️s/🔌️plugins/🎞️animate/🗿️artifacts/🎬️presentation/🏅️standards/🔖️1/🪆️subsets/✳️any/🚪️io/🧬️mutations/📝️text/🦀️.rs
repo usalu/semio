@@ -4,7 +4,7 @@
 //! enum is needed — unlike the retired generic whole-collection `Tiles(...)` variant, every
 //! payload here is a plain struct declared in this crate, so `dsl::DslRecord` applies directly.
 
-pub use crate::artifacts::presentation::schema::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
+pub use crate::schema::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -48,9 +48,9 @@ impl protocol::OpBinary for PresentationMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::presentation::schema::mutations::{create_tile, delete_tile, delete_tiles, rename_tile, reorder_tiles, replace_source, replace_tiles, resize_source_frame, resize_tile_crop};
-    use crate::artifacts::presentation::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
-    use crate::artifacts::presentation::{default_figure_tile_source, default_presentation_snapshot, FigureTileDraft, FigureTileFrame, PresentationSnapshot};
+    use crate::schema::mutations::{create_tile, delete_tile, delete_tiles, rename_tile, reorder_tiles, replace_source, replace_tiles, resize_source_frame, resize_tile_crop};
+    use crate::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+    use crate::{default_figure_tile_source, default_presentation_snapshot, FigureTileDraft, FigureTileFrame, PresentationSnapshot};
     use store::os_store::test_support;
 
     async fn round_trip(deck: &PresentationSnapshot, operation: &PresentationMutation) -> PresentationSnapshot {
@@ -67,12 +67,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn replace_tiles_and_clear_round_trip() {
         let deck = default_presentation_snapshot();
-        let (source, _) = crate::artifacts::presentation::presentation_working_scene(&deck);
+        let (source, _) = crate::presentation_working_scene(&deck);
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
         let seeded = round_trip(&deck, &PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: tiles })).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&seeded).1.len(), 4);
+        assert_eq!(crate::presentation_working_scene(&seeded).1.len(), 4);
         let cleared = round_trip(&seeded, &PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: Vec::new() })).await;
-        assert!(crate::artifacts::presentation::presentation_working_scene(&cleared).1.is_empty());
+        assert!(crate::presentation_working_scene(&cleared).1.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -80,13 +80,13 @@ mod tests {
         let deck = default_presentation_snapshot();
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
         let added = round_trip(&deck, &PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile })).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&added).1.len(), 1);
+        assert_eq!(crate::presentation_working_scene(&added).1.len(), 1);
         let renamed = round_trip(&added, &PresentationMutation::RenameTile(rename_tile::RenameTile { id: "t1".into(), new_name: "Renamed".into() })).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&renamed).1[0].name, "Renamed");
+        assert_eq!(crate::presentation_working_scene(&renamed).1[0].name, "Renamed");
         let recropped = round_trip(&renamed, &PresentationMutation::ResizeTileCrop(resize_tile_crop::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } })).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&recropped).1[0].crop.width, 0.4);
+        assert_eq!(crate::presentation_working_scene(&recropped).1[0].crop.width, 0.4);
         let removed = round_trip(&recropped, &PresentationMutation::DeleteTile(delete_tile::DeleteTile { id: "t1".into() })).await;
-        assert!(crate::artifacts::presentation::presentation_working_scene(&removed).1.is_empty());
+        assert!(crate::presentation_working_scene(&removed).1.is_empty());
     }
 
     //#region 🔖️OpTextTests

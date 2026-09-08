@@ -2,7 +2,7 @@
 //! minimal-but-valid docx package: one paragraph per source line, via the docx artifact's own
 //! typed builder — not a fabricated/renamed text file inside a zip.
 
-use crate::artifacts::writer::{writer_text, WriterSnapshot};
+use crate::{writer_text, WriterSnapshot};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
@@ -32,7 +32,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_into_docx_round_trips_through_docx_into_writer() {
-        let snapshot = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello");
+        let snapshot = crate::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello");
         let outcome = WriterIntoDocx::serialize(&snapshot).await.expect("serialize");
         let IoPayload::Binary(bytes) = outcome.value else { panic!("expected binary payload") };
         let decoded = <DocxSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");

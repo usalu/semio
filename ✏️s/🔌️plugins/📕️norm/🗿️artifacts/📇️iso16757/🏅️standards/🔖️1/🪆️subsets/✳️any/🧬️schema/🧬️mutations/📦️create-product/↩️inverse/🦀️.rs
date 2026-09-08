@@ -1,8 +1,8 @@
 //! ↩️ `create-product` — undo is `delete-product`, unless `base` already had this id (then
 //! `create` was a no-op and there's nothing to undo).
 
-use crate::artifacts::iso16757::mutations::delete_product;
-use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
+use crate::mutations::delete_product;
+use crate::{Iso16757Mutation, Iso16757Snapshot};
 
 use super::mutation::CreateProduct;
 

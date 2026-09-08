@@ -13,9 +13,9 @@
 //! unseeded, so the scene has no edges and that guard fires on an id that is an edge id, not a step
 //! id — the distinction the diagnostic's own message spells out.
 
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::diff::SequenceDiff;
+use crate::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
+use crate::SequenceSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

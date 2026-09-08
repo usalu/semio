@@ -11,7 +11,6 @@ import { NumericIndex, type NumericIndexEdit, type NumericIndexRetirement } from
 import fixture from "./🧪️fixtures/🔢️numeric-index.json";
 import schema from "./🧬️schema/🔣️.json";
 import referenceFixture from "./🧪️fixtures/🔗️references.json";
-const referenceSchema = schema;
 
 function close<V>(owner: NumericIndexRetirement<V>, bytes: number, retired: V[]): void {
   for (let turns = 0; turns < 100_000; turns++) {

@@ -1,6 +1,6 @@
 //! 🕸️ Equation play app — the graph window: the editable node-graph canvas.
 
-use crate::artifacts::equation::{EquationCamera, EquationGraph};
+use crate::{EquationCamera, EquationGraph};
 use crate::editor::equation::workflow_json;
 use semio_framework_plugin::{LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 

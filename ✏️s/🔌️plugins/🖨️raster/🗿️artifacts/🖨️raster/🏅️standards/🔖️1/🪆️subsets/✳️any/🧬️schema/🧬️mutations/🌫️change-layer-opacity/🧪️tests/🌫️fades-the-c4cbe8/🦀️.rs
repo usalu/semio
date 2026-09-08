@@ -8,9 +8,9 @@
 //! round-trips through `f32` exactly and the canonical-JSON assertions below are not quietly
 //! testing a float-formatting accident.
 
-use crate::artifacts::raster::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
-use crate::artifacts::raster::schema::{find_layer, layer_opacity, layer_visible};
-use crate::artifacts::raster::{RasterDiff, RasterSnapshot};
+use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::schema::{find_layer, layer_opacity, layer_visible};
+use crate::{RasterDiff, RasterSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

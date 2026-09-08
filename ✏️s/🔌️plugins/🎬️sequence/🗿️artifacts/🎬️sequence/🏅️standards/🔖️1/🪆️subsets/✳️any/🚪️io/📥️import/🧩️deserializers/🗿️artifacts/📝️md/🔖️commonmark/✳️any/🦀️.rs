@@ -1,6 +1,6 @@
 //! 🚪️ sequence <- md. Reads the canonical JSON carrier fixture from its code block.
 
-use crate::artifacts::sequence::{SequenceFixture, SequenceSnapshot};
+use crate::{SequenceFixture, SequenceSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

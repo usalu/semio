@@ -1,6 +1,6 @@
 //! 🧮️ 🧵️ Flow play app commands command — `flow-eval-tick`.
 
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::host_from_snapshot;
 use flow::FlowEvalSession;

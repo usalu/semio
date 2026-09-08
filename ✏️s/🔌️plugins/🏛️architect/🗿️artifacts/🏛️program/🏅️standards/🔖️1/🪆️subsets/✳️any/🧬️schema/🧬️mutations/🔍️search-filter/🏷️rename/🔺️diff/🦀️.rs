@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔍search-filters` per Wave C.
 
 use super::RenameSearchFilter;
-use crate::artifacts::program::diff::{ProgramSearchFiltersDelta, ProgramSearchFiltersPatchEntry};
-use crate::artifacts::program::registers::SearchFilterPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramSearchFiltersDelta, ProgramSearchFiltersPatchEntry};
+use crate::registers::SearchFilterPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameSearchFilter, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

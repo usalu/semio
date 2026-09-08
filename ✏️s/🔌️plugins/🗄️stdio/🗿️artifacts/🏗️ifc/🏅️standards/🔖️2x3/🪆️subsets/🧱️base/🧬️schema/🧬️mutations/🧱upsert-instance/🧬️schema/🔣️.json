@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/base/mutation/upsert-instance.json",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/base/mutation/upsert-instance/schema.json",
   "title": "UpsertInstance",
   "type": "object",
   "additionalProperties": false,

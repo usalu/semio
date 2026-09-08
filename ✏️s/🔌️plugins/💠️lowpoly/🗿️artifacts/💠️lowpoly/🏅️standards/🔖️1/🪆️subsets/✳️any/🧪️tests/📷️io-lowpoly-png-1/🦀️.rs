@@ -7,9 +7,9 @@ use semio_repo_test_host::{Adapter, Context, Outcome};
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_plugin_lowpoly::artifacts::lowpoly::io::export::serializers::artifacts::png::v1_2::any as export;
-    use semio_s_plugin_lowpoly::artifacts::lowpoly::io::import::deserializers::artifacts::png::v1_2::any as import;
-    use semio_s_plugin_lowpoly::artifacts::lowpoly::LowpolySnapshot;
+    use semio_s_artifact_lowpoly_lowpoly::io::export::serializers::artifacts::png::v1_2::any as export;
+    use semio_s_artifact_lowpoly_lowpoly::io::import::deserializers::artifacts::png::v1_2::any as import;
+    use semio_s_artifact_lowpoly_lowpoly::LowpolySnapshot;
 
     /// 🧫️ Reads the fixture named by the scenario rather than duplicating its document in Rust.
     fn document(ctx: &Context) -> Result<LowpolySnapshot, String> {

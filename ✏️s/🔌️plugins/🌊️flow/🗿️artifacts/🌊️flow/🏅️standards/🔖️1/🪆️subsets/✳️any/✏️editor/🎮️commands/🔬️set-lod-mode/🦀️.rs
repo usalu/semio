@@ -1,8 +1,8 @@
 //! 🔭️ 🔭️ Flow play app commands command — `set-lod-mode`.
 
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
-use flow::{dag::DagDrawLod, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
+use flow::{semio_framework_artifact_infinite_dag::DagDrawLod, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

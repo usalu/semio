@@ -1,7 +1,7 @@
 //! 🔺️ `change-silo-height-m` — sparse diff construction.
 
 use super::ChangeSiloHeightM;
-use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
+use crate::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSiloHeightM, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {

@@ -4,15 +4,15 @@
 //! 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `new_solid` used to carry a
 //! literal `SolidSpec` (now deleted — duplicated `brep` content); it now carries the real, already-
 //! minted `store::ArtifactChild<SemioBrepSnapshot>` HANDLE the caller mints via
-//! `crate::artifacts::process3d::brep_child_handle` from real content (e.g.
+//! `crate::brep_child_handle` from real content (e.g.
 //! `brep_snapshot_for_working_solid`). This stays a REAL mutation (unlike the step-content triads)
 //! because it is a pure handle SWAP — no read of the child's prior content is needed to compute
 //! either the forward diff or the inverse (both only ever touch `stock_solid` on `base`/the payload,
 //! never the child's resolved content).
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::diff::Process3dDiff;
+use crate::mutations::Process3dMutation;
+use crate::Process3dSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 

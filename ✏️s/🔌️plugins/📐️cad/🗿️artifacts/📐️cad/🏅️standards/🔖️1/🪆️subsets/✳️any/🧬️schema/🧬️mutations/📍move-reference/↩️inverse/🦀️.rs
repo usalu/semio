@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `MoveReference` — recovers the pre-mutation `origin` from `base`.
 use super::MoveReference;
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &MoveReference, base: &CadSnapshot) -> Vec<CadMutation> {

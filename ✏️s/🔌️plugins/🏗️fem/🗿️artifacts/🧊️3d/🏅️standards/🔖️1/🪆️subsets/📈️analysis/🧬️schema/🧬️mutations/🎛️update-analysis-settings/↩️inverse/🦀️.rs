@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `UpdateAnalysisSettings` — recovers the pre-mutation settings from `base`.
 use super::UpdateAnalysisSettings;
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &UpdateAnalysisSettings, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

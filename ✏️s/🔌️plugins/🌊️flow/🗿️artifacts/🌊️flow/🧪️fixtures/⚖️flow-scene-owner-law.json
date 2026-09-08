@@ -1,5 +1,4 @@
 {
-  "$schema": "./🏠️flow-scene-owner.schema.json",
   "schemaVersion": 1,
   "ownedSlots": 1,
   "maximumCases": 5,

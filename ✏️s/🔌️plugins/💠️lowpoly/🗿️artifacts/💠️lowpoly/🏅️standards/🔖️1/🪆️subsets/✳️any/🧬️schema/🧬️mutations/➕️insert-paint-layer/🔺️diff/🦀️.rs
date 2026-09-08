@@ -3,8 +3,8 @@
 //! `clamped` when the requested index is out of range for the layer list.
 
 use super::InsertPaintLayer;
-use crate::artifacts::lowpoly::diff::diff_add_paint_layer;
-use crate::artifacts::lowpoly::{LowpolyDiff, LowpolySnapshot};
+use crate::diff::diff_add_paint_layer;
+use crate::{LowpolyDiff, LowpolySnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &InsertPaintLayer, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

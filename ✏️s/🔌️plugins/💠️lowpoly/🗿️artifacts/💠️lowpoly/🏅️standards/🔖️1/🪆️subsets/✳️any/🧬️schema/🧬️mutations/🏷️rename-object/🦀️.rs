@@ -1,6 +1,6 @@
 //! 🏷️ `rename-object` — changes an object's identity/display name.
 
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 

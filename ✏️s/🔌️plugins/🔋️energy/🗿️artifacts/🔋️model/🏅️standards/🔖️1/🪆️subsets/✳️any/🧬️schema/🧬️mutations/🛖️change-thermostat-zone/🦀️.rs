@@ -1,8 +1,8 @@
 //! 🛖️ Energy model mutation — `ChangeThermostatZone`: Moves one thermostat to another zone. A foreign key, not a nesting field — zones do not nest, so this is a plain reassignment under the general axis and not a `move-to-<container>`.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

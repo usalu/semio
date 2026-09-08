@@ -1,0 +1,38 @@
+{
+  "package": "semio-framework-artifact-playbook-playbook",
+  "document": {
+    "schema": "playbook.program",
+    "id": "package-fixture",
+    "version": "1",
+    "steps": [
+      {
+        "id": "first",
+        "title": "First",
+        "blocks": [
+          {
+            "id": "width",
+            "label": "Width",
+            "kind": "number",
+            "default": 12.5
+          }
+        ]
+      },
+      {
+        "id": "second",
+        "title": "Second",
+        "blocks": [
+          {
+            "id": "name",
+            "label": "Name",
+            "kind": "text",
+            "default": "Beam"
+          }
+        ]
+      }
+    ]
+  },
+  "expectedBlockOrder": [
+    "width",
+    "name"
+  ]
+}

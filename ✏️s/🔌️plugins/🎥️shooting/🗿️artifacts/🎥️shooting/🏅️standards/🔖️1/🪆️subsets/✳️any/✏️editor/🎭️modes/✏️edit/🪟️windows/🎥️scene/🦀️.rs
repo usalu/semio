@@ -1,7 +1,7 @@
 //! 🎥️ Shooting play app — the 3D scene window: the editable studio viewport (assets + lighting).
 
-use crate::artifacts::shooting::schema::is_transparent_shooting_background;
-use crate::artifacts::shooting::{shooting_asset_scale, ShootingAsset, ShootingShot, ShootingSnapshot};
+use crate::schema::is_transparent_shooting_background;
+use crate::{shooting_asset_scale, ShootingAsset, ShootingShot, ShootingSnapshot};
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::modes::edit::windows::scene::options;
 use crate::editor::shooting::terminology::ShootingLabels;
@@ -102,7 +102,7 @@ pub fn engagement(snapshot: &ShootingSnapshot, config: &ShootingConfig, labels: 
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn camera_json(camera: &crate::artifacts::shooting::ShootingCamera) -> String {
+fn camera_json(camera: &crate::ShootingCamera) -> String {
     let mut value = json!({
         "position": vec3(camera.position),
         "target": vec3(camera.target),
@@ -219,7 +219,7 @@ pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> semio_framew
         semio_framework_ui_contract::SurfaceKind::World3d,
         &World3dScene {
             environment_json: Some(shooting_environment_json(snapshot)),
-            frame_json: crate::artifacts::shooting::schema::active_shot(snapshot).map(shooting_frame_json),
+            frame_json: crate::schema::active_shot(snapshot).map(shooting_frame_json),
             fit_json: Some(shooting_fit_json(cfg)),
             ..world3d_scene(camera_json(&cfg.camera), world_meshes_json(snapshot), world_instances_json(snapshot), world_selection_json(snapshot, cfg), &WorldSunConfig::default())
         },

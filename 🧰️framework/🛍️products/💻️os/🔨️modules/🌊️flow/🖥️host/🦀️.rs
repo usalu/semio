@@ -7,7 +7,8 @@ use neural_engine as neural;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 
-use dag::{dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, EdgeRouteStyle};
+use dag::{fit_node_size, would_create_cycle, DagHost, DagLayoutOptions};
+use semio_framework_artifact_infinite_dag::{dag_fixture_execution_rows, dag_fixture_to_wire_literal, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, EdgeRouteStyle};
 use graph::dsl::{WireEdge, WireNode};
 use graph::manifest::{PropertyBag, PropertyValue};
 use neural::{
@@ -201,7 +202,7 @@ impl FlowHost {
         dedupe_fixture_widgets(&mut fixture);
         let mut host = Self {
             fixture,
-            dag: DagHost::from_fixture(DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
+            dag: DagHost::from_fixture(DagFixture { schema: "dag.fixture".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
             outputs: BTreeMap::new(),
             export_payloads: BTreeMap::new(),
             last_eval_json: String::new(),
@@ -1514,7 +1515,7 @@ impl FlowHost {
             .filter(|syn| !would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to))
             .map(|syn| DagFixtureEdge { id: syn.id.clone(), source: format!("{}@{}", syn.from, syn.from_port), target: format!("{}@{}", syn.to, syn.to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
             .collect();
-        DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
+        DagFixture { schema: "dag.fixture".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
     }
 
     fn screen_to_world_point(&self, sx: f64, sy: f64) -> canvas::Point {
@@ -2755,19 +2756,7 @@ fn dedupe_fixture_widgets(fixture: &mut FlowFixture) {
     fixture.widgets.retain(|widget| seen.insert(widget_id_for(widget).to_string()));
 }
 
-pub(crate) fn widget_id_for(widget: &Widget) -> &str {
-    match widget {
-        Widget::Neuron { id, .. }
-        | Widget::InputSlider { id, .. }
-        | Widget::InputNote { id, .. }
-        | Widget::InputImage { id, .. }
-        | Widget::Variable { id, .. }
-        | Widget::OutputPreview { id, .. }
-        | Widget::OutputAction { id, .. }
-        | Widget::OutputExport { id, .. }
-        | Widget::Cluster { id, .. } => id,
-    }
-}
+
 
 fn widget_has_output(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> bool {
     widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w, synapses, kind_infos).1.is_empty())
@@ -2804,7 +2793,8 @@ mod tests {
     use super::*;
     use canvas::camera::{world_to_screen, Camera, Viewport};
     use canvas::Point;
-    use dag::{computation_node_width, slider_widget_height, DagPreviewContent, HandleRole};
+    use dag::{computation_node_width, slider_widget_height, HandleRole};
+use semio_framework_artifact_infinite_dag::{DagPreviewContent};
     use graph::dsl::{WireEdge, WireNode};
     use graph::manifest::PropertyBag;
     use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo};
@@ -3825,7 +3815,7 @@ mod tests {
         };
         assert_eq!(dag_text, "some text");
         assert!(node.width >= 40.0);
-        assert_eq!(node.height, dag::DAG_CHANNEL_ROW_HEIGHT);
+        assert_eq!(node.height, semio_framework_artifact_infinite_dag::DAG_CHANNEL_ROW_HEIGHT);
     }
 
     #[test]
@@ -4007,9 +3997,9 @@ mod tests {
         host.set_ghost_widget(descriptor, 40.0, 40.0).unwrap();
         let ghost = host.dag.ghost_node().expect("ghost");
         assert_eq!(host.draw_lod_label(), "micro");
-        assert_eq!(dag::DagDrawLod::Micro.node_label(), dag::DagNodeLabel::Name);
-        assert!(dag::DagDrawLod::Micro.shows_port_labels());
-        assert!(dag::DagDrawLod::Micro.shows_handles());
+        assert_eq!(semio_framework_artifact_infinite_dag::DagDrawLod::Micro.node_label(), semio_framework_artifact_infinite_dag::DagNodeLabel::Name);
+        assert!(semio_framework_artifact_infinite_dag::DagDrawLod::Micro.shows_port_labels());
+        assert!(semio_framework_artifact_infinite_dag::DagDrawLod::Micro.shows_handles());
         let ghost_overlay_rows = host.dag.label_overlay_rows_for_node_spec(ghost, true);
         assert_eq!(ghost_overlay_rows.len(), 3);
         let overlay: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();

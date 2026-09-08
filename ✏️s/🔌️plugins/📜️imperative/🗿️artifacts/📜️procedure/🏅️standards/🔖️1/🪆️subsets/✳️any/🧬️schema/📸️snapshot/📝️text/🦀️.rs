@@ -26,7 +26,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::procedure::{Dictionary, ProcedureSnapshot, Path, Step};
+use crate::{Dictionary, ProcedureSnapshot, Path, Step};
 use neural_engine::{Atom, Value};
 use std::collections::BTreeMap;
 
@@ -158,7 +158,7 @@ pub fn print_dsl(document: &ProcedureSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::procedure::{Dictionary as DocDictionary, Step as DocStep};
+    use crate::{Dictionary as DocDictionary, Step as DocStep};
     use std::collections::BTreeMap as StdBTreeMap;
 
     fn step(id: &str, kind: &str) -> DocStep {
@@ -185,13 +185,13 @@ mod tests {
         owner.bodies.insert("then".to_string(), Path { steps: vec![inner] });
         let path = Path { steps: vec![owner] };
 
-        let flow_snapshot = crate::artifacts::procedure::flow_content_snapshot_from_path(&path);
-        let restored = crate::artifacts::procedure::path_from_flow_content_snapshot(&flow_snapshot);
+        let flow_snapshot = crate::flow_content_snapshot_from_path(&path);
+        let restored = crate::path_from_flow_content_snapshot(&flow_snapshot);
         assert_eq!(restored, path);
         assert_eq!(restored.steps[0].bodies.get("then").map(|body| body.steps.len()), Some(1));
 
         let seed = StdBTreeMap::from([("counter".into(), Value::Atom(Atom::Integer(1))), ("label".into(), Value::Atom(Atom::String("x".into())))]);
-        let document = crate::artifacts::procedure::procedure_snapshot_with_content("procedure.document", &path, &seed);
+        let document = crate::procedure_snapshot_with_content("procedure.document", &path, &seed);
         store::os_store::test_support::assert_dsl_round_trip(&document);
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
@@ -210,11 +210,11 @@ mod tests {
             ("f".into(), Value::Dictionary(DocDictionary::new())),
         ]);
 
-        let text_snapshot = crate::artifacts::procedure::text_content_snapshot_from_seed(&seed);
-        let restored = crate::artifacts::procedure::seed_from_text_content_snapshot(&text_snapshot);
+        let text_snapshot = crate::text_content_snapshot_from_seed(&seed);
+        let restored = crate::seed_from_text_content_snapshot(&text_snapshot);
         assert_eq!(restored, seed);
 
-        let document = crate::artifacts::procedure::procedure_snapshot_with_content("procedure.document", &Path::new(), &seed);
+        let document = crate::procedure_snapshot_with_content("procedure.document", &Path::new(), &seed);
         store::os_store::test_support::assert_dsl_round_trip(&document);
         store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }

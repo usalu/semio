@@ -8,7 +8,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::model::schema::mutations::text::EnergyModelMutation;
+use crate::schema::mutations::text::EnergyModelMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes an `EnergyModelMutation` to its binary state-patch form.
@@ -28,7 +28,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn every_kind_round_trips_through_this_codec() {
-        for operation in crate::artifacts::model::mutations::wire_probes() {
+        for operation in crate::mutations::wire_probes() {
             let bytes = encode_op(&operation).expect("encode");
             assert_eq!(decode_op(&bytes).expect("decode"), operation);
         }

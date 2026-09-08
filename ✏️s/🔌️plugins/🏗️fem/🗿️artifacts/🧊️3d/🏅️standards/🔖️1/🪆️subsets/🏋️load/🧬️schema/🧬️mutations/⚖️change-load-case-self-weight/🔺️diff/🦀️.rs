@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeLoadCaseSelfWeight`.
 use super::ChangeLoadCaseSelfWeight;
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dLoadCasesDelta, Fem3dLoadCasesPatchEntry};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::diff::{Fem3dDiff, Fem3dLoadCasesDelta, Fem3dLoadCasesPatchEntry};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeLoadCaseSelfWeight, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

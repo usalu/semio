@@ -1,6 +1,6 @@
 //! 🧬️ Fem2d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::fem2d::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+use crate::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -71,8 +71,8 @@ impl Default for Fem2dArtifact {
 
 impl Fem2dArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::fem2d::Fem2dSnapshot {
-        crate::artifacts::fem2d::Fem2dSnapshot {
+    pub fn to_snapshot(&self) -> crate::Fem2dSnapshot {
+        crate::Fem2dSnapshot {
             nodes: self.nodes.clone(),
             elements: self.elements.clone(),
             regions: self.regions.clone(),
@@ -86,7 +86,7 @@ impl Fem2dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI/preview fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::fem2d::Fem2dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::Fem2dSnapshot) -> Self {
         Self {
             nodes: snapshot.nodes,
             elements: snapshot.elements,
@@ -102,7 +102,7 @@ impl Fem2dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::fem2d::Fem2dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::Fem2dSnapshot) {
         self.nodes = snapshot.nodes;
         self.elements = snapshot.elements;
         self.regions = snapshot.regions;
@@ -154,7 +154,7 @@ pub fn fem2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::fem2d::{Fem2dDiff, Fem2dMutation, Fem2dSnapshot};
+    use crate::{Fem2dDiff, Fem2dMutation, Fem2dSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -206,16 +206,16 @@ pub use derived_construction::*;
 
 //#region 🌱️DerivedEmpty
 /// 🌱️ An empty `Fem2dSnapshot` — every test fixture's blank baseline and the fallback boot document.
-pub fn empty_fem2d_snapshot() -> crate::artifacts::fem2d::Fem2dSnapshot {
-    crate::artifacts::fem2d::Fem2dSnapshot::default()
+pub fn empty_fem2d_snapshot() -> crate::Fem2dSnapshot {
+    crate::Fem2dSnapshot::default()
 }
 
 /// 🌱️ The document every fresh fem2d surface boots on: the bundled `📚️examples/🎬️demo` DSL, so the
 /// editor and the viewer both paint a real structure at first frame instead of an empty canvas. A
 /// fixture that ever stops parsing degrades to `empty_fem2d_snapshot` rather than faulting the boot,
 /// and says so on the console.
-pub fn default_fem2d_snapshot() -> crate::artifacts::fem2d::Fem2dSnapshot {
-    match <crate::artifacts::fem2d::Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT) {
+pub fn default_fem2d_snapshot() -> crate::Fem2dSnapshot {
+    match <crate::Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::dsl::FEM2D_EXAMPLE_TEXT) {
         Ok(snapshot) => {
             eprintln!(
                 "[DEBUG] fem2d boot snapshot: loaded the bundled example — nodes={} elements={} regions={} materials={} sections={} supports={} loadCases={} combinations={}",
@@ -240,7 +240,7 @@ pub fn default_fem2d_snapshot() -> crate::artifacts::fem2d::Fem2dSnapshot {
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::fem2d::Fem2dSnapshot;
+    use crate::Fem2dSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

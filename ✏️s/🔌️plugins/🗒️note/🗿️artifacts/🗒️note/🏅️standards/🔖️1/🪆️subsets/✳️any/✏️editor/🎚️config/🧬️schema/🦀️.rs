@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::artifacts::note::NoteCamera;
+use crate::NoteCamera;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};

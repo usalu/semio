@@ -4,7 +4,7 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::sequence::{default_snapshot, SequenceSnapshot, SEQUENCE_DIALECT, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::{default_snapshot, SequenceSnapshot, SEQUENCE_DIALECT, SEQUENCE_DOCUMENT_SCHEMA};
 use crate::viewer::sequence::modes::view;
 use crate::viewer::sequence::modes::view::windows::main;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ComponentTree, UiAssemblyResult, ViewEmit, Viewer};
@@ -36,7 +36,7 @@ pub struct SequenceViewer;
 
 impl ArtifactViewer for SequenceViewer {
     type Snapshot = SequenceSnapshot;
-    type Mutation = crate::artifacts::sequence::mutations::SequenceMutation;
+    type Mutation = crate::mutations::SequenceMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

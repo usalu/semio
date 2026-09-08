@@ -1,6 +1,6 @@
 //! 🧬️ Block5d diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
+use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use schema::ArtifactSchema;
 
@@ -13,7 +13,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.block.block5d")]
 pub struct Block5dDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::block5d::schema::Block5dArtifact>>,
+    pub artifact: Option<Box<crate::schema::Block5dArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

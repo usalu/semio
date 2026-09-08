@@ -10,7 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::gisterrain::schema::GisTerrainArtifact>>,
+    pub artifact: Option<Box<crate::schema::GisTerrainArtifact>>,
     #[state(artifact)]
     pub exaggeration: Option<f64>,
     #[state(artifact)]

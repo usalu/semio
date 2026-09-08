@@ -5,9 +5,9 @@
 //! or draft mutation. MUST NOT import anything from the sibling editor module
 //! (`policyViewerPurityBreaches` forbids it outright).
 
-use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::schema::empty_note_snapshot;
-use crate::artifacts::note::{NoteSnapshot, NOTE_DIALECT, NOTE_DOCUMENT_SCHEMA};
+use crate::op::NoteMutation;
+use crate::schema::empty_note_snapshot;
+use crate::{NoteSnapshot, NOTE_DIALECT, NOTE_DOCUMENT_SCHEMA};
 use crate::viewer::note::modes::view;
 use crate::viewer::note::modes::view::windows::composite;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};

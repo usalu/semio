@@ -1,17 +1,28 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/add-node-port.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/add-node-port/schema.json",
   "title": "AddNodePort",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "node_id",
     "index",
-    "nodeId",
     "port"
   ],
   "properties": {
-    "nodeId": {
-      "title": "GraphNodeId",
+    "node_id": {
+      "$ref": "#/$defs/GraphNodeId"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "port": {
+      "$ref": "#/$defs/SemioGraphPort"
+    }
+  },
+  "$defs": {
+    "GraphNodeId": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -23,31 +34,29 @@
         }
       }
     },
-    "index": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "port": {
-      "title": "SemioGraphPort",
+    "SemioGraphPort": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "kind",
-        "name"
+        "name",
+        "kind"
       ],
       "properties": {
         "name": {
           "type": "string"
         },
         "kind": {
-          "type": "string",
-          "enum": [
-            "In",
-            "Out",
-            "InOut"
-          ]
+          "$ref": "#/$defs/SemioGraphPortKind"
         }
       }
+    },
+    "SemioGraphPortKind": {
+      "type": "string",
+      "enum": [
+        "in",
+        "out",
+        "inOut"
+      ]
     }
   }
 }

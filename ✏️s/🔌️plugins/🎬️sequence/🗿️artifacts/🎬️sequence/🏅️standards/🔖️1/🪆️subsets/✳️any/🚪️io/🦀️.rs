@@ -16,9 +16,9 @@
 
 //#region 🔖️IoDeclaration
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::artifacts::sequence::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::artifacts::sequence::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use crate::artifacts::sequence::{SequenceMutation, SequenceSnapshot, SEQUENCE_DIALECT, SEQUENCE_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::{SequenceMutation, SequenceSnapshot, SEQUENCE_DIALECT, SEQUENCE_DOCUMENT_SCHEMA};
     use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
@@ -56,8 +56,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 
 #[cfg(test)]
 mod carrier_contract {
-    use crate::artifacts::sequence::{SequenceFixture, SequenceSnapshot};
-    use crate::artifacts::sequence::standards::v1::subsets::any::io::{export::serializers::artifacts as export, import::deserializers::artifacts as import};
+    use crate::{SequenceFixture, SequenceSnapshot};
+    use crate::standards::v1::subsets::any::io::{export::serializers::artifacts as export, import::deserializers::artifacts as import};
     use semio_framework::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
     use semio_s_artifact_stdio_csv::CsvSnapshot;
@@ -91,10 +91,10 @@ use semio_s_artifact_stdio_md::{MdSnapshot, schema::snapshot::MdBlock};
                 assert!(record.fields[2].quoted);
                 assert_eq!(serde_json::from_str::<serde_json::Value>(&record.fields[2].value).expect("independent params oracle"), step["params"]);
             }
-            let inferred = <crate::artifacts::sequence::schema::inferences::SequenceInference as protocol::Inference<SequenceSnapshot>>::infer(&snapshot);
+            let inferred = <crate::schema::inferences::SequenceInference as protocol::Inference<SequenceSnapshot>>::infer(&snapshot);
             let inferred_json: serde_json::Value = serde_json::from_str(&pack::to_json_string(&inferred)).expect("independent inference oracle");
             assert_eq!(inferred_json["topology"], row["topology"]);
-            let decoded: crate::artifacts::sequence::schema::inferences::SequenceInference = pack::from_json_str(&inferred_json.to_string()).expect("inference value decoder");
+            let decoded: crate::schema::inferences::SequenceInference = pack::from_json_str(&inferred_json.to_string()).expect("inference value decoder");
             assert_eq!(decoded, inferred);
         }
     }

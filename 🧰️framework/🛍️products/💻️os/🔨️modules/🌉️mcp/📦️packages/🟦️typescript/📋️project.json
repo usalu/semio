@@ -2,7 +2,14 @@
   "name": "@semio-tech/framework-os-mcp",
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🦀️.rs", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧫️fixtures/🧱️binary-gate.json", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🦀️.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧫️fixtures/🧱️binary-gate.json",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "test": {

@@ -1,5 +1,5 @@
 //! process3d <- gltf
-use crate::artifacts::process3d::schema::snapshot::Process3dSnapshot;
+use crate::schema::snapshot::Process3dSnapshot;
 use semio_s_artifact_stdio_gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
 
 pub fn register() {}

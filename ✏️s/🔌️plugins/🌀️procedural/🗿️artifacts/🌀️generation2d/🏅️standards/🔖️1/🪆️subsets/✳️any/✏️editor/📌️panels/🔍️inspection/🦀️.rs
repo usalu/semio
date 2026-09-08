@@ -1,6 +1,6 @@
 //! 🔍️ Generation2d play app panel — the selection inspector.
 
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::Generation2dConfig;
 use crate::editor::generation2d::terminology::Generation2dLabels;
 use semio_framework_plugin::{tree_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};

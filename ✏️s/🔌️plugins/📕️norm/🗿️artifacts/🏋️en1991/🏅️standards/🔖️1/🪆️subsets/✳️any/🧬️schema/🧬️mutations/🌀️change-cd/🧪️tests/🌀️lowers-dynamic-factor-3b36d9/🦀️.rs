@@ -5,7 +5,7 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::en1991::{En1991Diff, En1991Mutation, En1991Snapshot};
+use crate::{En1991Diff, En1991Mutation, En1991Snapshot};
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

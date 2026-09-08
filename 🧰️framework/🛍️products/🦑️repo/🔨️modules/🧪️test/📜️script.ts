@@ -1301,7 +1301,12 @@ function payloadSchemaCommand(script: Script, registry: OracleRegistry, selector
         continue;
       }
       undeclared.push(row.leaf);
-      for (const why of row.refused) refusals.set(why.replace(/^the declared payload schema .* does not exist$/, "the declared payload schema file does not exist").replace(/^[^:]*🧬️schema[^:]*$/, "the leaf carries no 🧬️schema/🔣️.json"), (refusals.get(why) ?? 0) + 1);
+      // 🧾️Group by the KIND of refusal, not by the path it names, so the report says how many leaves
+      // have no descriptor at all versus how many name a contract file that is not there.
+      for (const why of row.refused) {
+        const kind = why.replace(/`[^`]*`/g, "…").replace(/\S*🧬️schema\S*/gu, "the declared path").replace(/\S+\/🔣️\.json/gu, "the declared path");
+        refusals.set(kind, (refusals.get(kind) ?? 0) + 1);
+      }
     }
   }
   console.log(`[manifest payload-schema] ${declared}/${leaves} leaves declare a payload contract at the taxonomy location (${((declared / Math.max(leaves, 1)) * 100).toFixed(1)}%)`);

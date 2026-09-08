@@ -1,20 +1,80 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-snapshot.json",
+  "$id": "https://semio.tech/schema/s/stdio/epw/energyplus/any/mutation/set-snapshot/schema.json",
   "title": "SetSnapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema",
-    "location",
-    "dataPeriods"
+    "snapshot"
   ],
   "properties": {
-    "schema": {
-      "type": "string"
+    "snapshot": {
+      "$ref": "#/$defs/EpwSnapshot"
     },
-    "location": {
+    "mutation": {
+      "const": "setSnapshot",
+      "description": "Aggregate discriminator spliced in by EpwMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "EpwSnapshot": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "location",
+        "dataPeriods"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/EpwLocation"
+        },
+        "designConditions": {
+          "type": "string"
+        },
+        "typicalExtremePeriods": {
+          "type": "string"
+        },
+        "groundTemperatures": {
+          "type": "string"
+        },
+        "holidaysDst": {
+          "type": "string"
+        },
+        "comments1": {
+          "type": "string"
+        },
+        "comments2": {
+          "type": "string"
+        },
+        "dataPeriods": {
+          "$ref": "#/$defs/EpwDataPeriods"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EpwRecord"
+          }
+        }
+      }
+    },
+    "EpwLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "city",
+        "stateProvince",
+        "country",
+        "source",
+        "wmo",
+        "latitude",
+        "longitude",
+        "timeZone",
+        "elevation"
+      ],
       "properties": {
         "city": {
           "type": "string"
@@ -43,64 +103,200 @@
         "elevation": {
           "type": "string"
         }
-      },
-      "required": [
-        "city",
-        "stateProvince",
-        "country",
-        "source",
-        "wmo",
-        "latitude",
-        "longitude",
-        "timeZone",
-        "elevation"
-      ],
-      "additionalProperties": false
+      }
     },
-    "dataPeriods": {
+    "EpwDataPeriods": {
       "type": "object",
-      "properties": {
-        "recordsPerHour": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "periods": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "startDayOfWeek": {
-                "type": "string"
-              },
-              "startDate": {
-                "type": "string"
-              },
-              "endDate": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "startDayOfWeek",
-              "startDate",
-              "endDate"
-            ],
-            "additionalProperties": false
-          }
-        }
-      },
+      "additionalProperties": false,
       "required": [
         "recordsPerHour",
         "periods"
       ],
-      "additionalProperties": false
+      "properties": {
+        "recordsPerHour": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "periods": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EpwDataPeriod"
+          }
+        }
+      }
     },
-    "mutation": {
-      "const": "setSnapshot",
-      "description": "Aggregate discriminator spliced in by EpwMutation; absent when the payload stands alone."
+    "EpwDataPeriod": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "startDayOfWeek",
+        "startDate",
+        "endDate"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "startDayOfWeek": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        }
+      }
+    },
+    "EpwRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "dataSourceUncertainty",
+        "dryBulbTemp",
+        "dewPointTemp",
+        "relativeHumidity",
+        "atmosphericPressure",
+        "extraterrestrialHorizontalRadiation",
+        "extraterrestrialDirectNormalRadiation",
+        "horizontalInfraredRadiation",
+        "globalHorizontalRadiation",
+        "directNormalRadiation",
+        "diffuseHorizontalRadiation",
+        "globalHorizontalIlluminance",
+        "directNormalIlluminance",
+        "diffuseHorizontalIlluminance",
+        "zenithLuminance",
+        "windDirection",
+        "windSpeed",
+        "totalSkyCover",
+        "opaqueSkyCover",
+        "visibility",
+        "ceilingHeight",
+        "presentWeatherObservation",
+        "presentWeatherCodes",
+        "precipitableWater",
+        "aerosolOpticalDepth",
+        "snowDepth",
+        "daysSinceLastSnowfall",
+        "albedo",
+        "liquidPrecipDepth",
+        "liquidPrecipQuantity"
+      ],
+      "properties": {
+        "year": {
+          "type": "string"
+        },
+        "month": {
+          "type": "string"
+        },
+        "day": {
+          "type": "string"
+        },
+        "hour": {
+          "type": "string"
+        },
+        "minute": {
+          "type": "string"
+        },
+        "dataSourceUncertainty": {
+          "type": "string"
+        },
+        "dryBulbTemp": {
+          "type": "string"
+        },
+        "dewPointTemp": {
+          "type": "string"
+        },
+        "relativeHumidity": {
+          "type": "string"
+        },
+        "atmosphericPressure": {
+          "type": "string"
+        },
+        "extraterrestrialHorizontalRadiation": {
+          "type": "string"
+        },
+        "extraterrestrialDirectNormalRadiation": {
+          "type": "string"
+        },
+        "horizontalInfraredRadiation": {
+          "type": "string"
+        },
+        "globalHorizontalRadiation": {
+          "type": "string"
+        },
+        "directNormalRadiation": {
+          "type": "string"
+        },
+        "diffuseHorizontalRadiation": {
+          "type": "string"
+        },
+        "globalHorizontalIlluminance": {
+          "type": "string"
+        },
+        "directNormalIlluminance": {
+          "type": "string"
+        },
+        "diffuseHorizontalIlluminance": {
+          "type": "string"
+        },
+        "zenithLuminance": {
+          "type": "string"
+        },
+        "windDirection": {
+          "type": "string"
+        },
+        "windSpeed": {
+          "type": "string"
+        },
+        "totalSkyCover": {
+          "type": "string"
+        },
+        "opaqueSkyCover": {
+          "type": "string"
+        },
+        "visibility": {
+          "type": "string"
+        },
+        "ceilingHeight": {
+          "type": "string"
+        },
+        "presentWeatherObservation": {
+          "type": "string"
+        },
+        "presentWeatherCodes": {
+          "type": "string"
+        },
+        "precipitableWater": {
+          "type": "string"
+        },
+        "aerosolOpticalDepth": {
+          "type": "string"
+        },
+        "snowDepth": {
+          "type": "string"
+        },
+        "daysSinceLastSnowfall": {
+          "type": "string"
+        },
+        "albedo": {
+          "type": "string"
+        },
+        "liquidPrecipDepth": {
+          "type": "string"
+        },
+        "liquidPrecipQuantity": {
+          "type": "string"
+        }
+      }
     }
   }
 }

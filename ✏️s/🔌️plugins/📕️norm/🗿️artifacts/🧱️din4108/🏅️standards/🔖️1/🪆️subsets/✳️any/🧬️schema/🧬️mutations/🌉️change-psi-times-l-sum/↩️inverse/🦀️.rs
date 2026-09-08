@@ -1,7 +1,7 @@
 //! ↩️ `change-psi-times-l-sum` — undo restores BASE's `psi_times_l_sum`.
 
 use super::ChangePsiTimesLSum;
-use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
+use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangePsiTimesLSum, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {

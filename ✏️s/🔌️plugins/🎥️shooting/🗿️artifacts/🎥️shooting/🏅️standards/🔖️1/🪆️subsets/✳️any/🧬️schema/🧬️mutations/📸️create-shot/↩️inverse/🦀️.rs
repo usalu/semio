@@ -1,9 +1,9 @@
 //! ↩ Inverse constructor for `CreateShot` — reconstructed from BASE state.
 
 use super::CreateShot;
-use crate::artifacts::shooting::mutations::ShootingMutation;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 
 pub fn inverse(payload: &CreateShot, _base: &ShootingSnapshot) -> Vec<ShootingMutation> {
-    vec![ShootingMutation::DeleteShot(crate::artifacts::shooting::mutations::delete_shot::DeleteShot { id: payload.shot.id.clone() })]
+    vec![ShootingMutation::DeleteShot(crate::mutations::delete_shot::DeleteShot { id: payload.shot.id.clone() })]
 }

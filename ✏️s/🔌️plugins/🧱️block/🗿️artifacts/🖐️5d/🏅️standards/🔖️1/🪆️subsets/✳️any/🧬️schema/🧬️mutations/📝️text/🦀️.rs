@@ -1,6 +1,6 @@
 //! ⚡️ Block5d artifact — OpText/OpBinary codecs + grammar for `Block5dMutation`.
 
-pub use crate::artifacts::block5d::schema::mutations::{apply_block5d_mutation, inverse_block5d_mutation, Block5dMutation};
+pub use crate::schema::mutations::{apply_block5d_mutation, inverse_block5d_mutation, Block5dMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

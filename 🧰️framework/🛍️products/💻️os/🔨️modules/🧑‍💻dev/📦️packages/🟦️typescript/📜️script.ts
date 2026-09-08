@@ -469,6 +469,8 @@ export async function stageTestBrowserHostV1(input: TestBrowserHostStageInputV1)
   ensureAppleDeveloperDir();
   ensureWasmTarget();
   const builtSpace = await buildPluginCargo(space, join(artifactRoot, "browser-host-wasi-target"));
+  const spaceComponent = ownedTestBrowserHostInput(artifactRoot, builtSpace.artifact, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, "Fresh Space component");
+  const spaceComponentSha256 = await pluginFileDigest(spaceComponent.path);
   const stagingOwner = mkdtempSync(join(artifactRoot, ".browser-host-build-"));
   try {
     const stagingArtifactRoot = join(stagingOwner, "🗑️generated");
@@ -480,9 +482,10 @@ export async function stageTestBrowserHostV1(input: TestBrowserHostStageInputV1)
     writeFileSync(join(shardRoot, SHARD_WORKER_FILE), shardWorkerSource());
     await materializeTestBrowserPluginV1({ target: space, artifact: builtSpace.artifact, moduleRoot: roots.moduleRoot });
     await materializeTestBrowserPluginV1({ target: gis, artifact: component.path, descriptorPath: descriptor.path, moduleRoot: roots.moduleRoot });
+    if (lstatSync(spaceComponent.path).size !== spaceComponent.size || await pluginFileDigest(spaceComponent.path) !== spaceComponentSha256) throw new Error("Fresh Space component changed during browser staging");
     if (await pluginFileDigest(component.path) !== input.selectedGis.componentSha256 || await pluginFileDigest(descriptor.path) !== input.selectedGis.descriptorSha256) throw new Error("Selected GIS bytes changed during browser staging");
     writeFileSync(join(roots.browserHostRoot, "extensions", ".nx-artifact.json"), `${JSON.stringify({ owner: "test-browser-host:extensions", version: 1 })}\n`);
-    const closed = closeTestBrowserHostStagingV1(stagingArtifactRoot, { generationId: input.selectedGis.generationId, currentSha256: input.selectedGis.currentSha256 });
+    const closed = closeTestBrowserHostStagingV1(stagingArtifactRoot, { generationId: input.selectedGis.generationId, currentSha256: input.selectedGis.currentSha256 }, { byteLength: spaceComponent.size, sha256: spaceComponentSha256 });
     stageArtifacts(join(artifactRoot, "browser-host"), "test-browser-host:s:dev", artifactFiles(closed.browserHostRoot));
     const finalRoot = join(artifactRoot, "browser-host");
     return resolveTestBrowserHostRootsV1({
@@ -5515,11 +5518,15 @@ if (import.meta.vitest) {
       mkdirSync(artifactRoot, { recursive: true });
       try {
         const roots = prepareTestBrowserHostRootsV1(artifactRoot);
+        const hostComponent = Buffer.from("space-cargo-component");
+        const hostComponentSha256 = createHash("sha256").update(hostComponent).digest("hex");
+        const hostCoreSha256 = createHash("sha256").update("space-component").digest("hex");
         const files = new Map([
           ["🪞️vendor/.nx-artifact.json", "vendor"],
           ["🧵️shard/🟨️shard-worker.js", "shard"],
           ["🪐️space/semio_s_plugin_space_component.core.wasm", "space-component"],
           ["🪐️space/🛂️.descriptor.semio", "space-descriptor"],
+          ["🪐️space/🔣️.json", JSON.stringify({ hashes: { wasmSha256: hostComponentSha256, coreWasmSha256: hostCoreSha256 } })],
           ["🪐️space/🌉️bridge.js", "space-bridge"],
           ["🌍️gis/semio_s_plugin_gis_component.core.wasm", "gis-component"],
           ["🌍️gis/🛂️.descriptor.semio", "gis-descriptor"],
@@ -5531,10 +5538,11 @@ if (import.meta.vitest) {
           writeFileSync(path, body);
         }
         const current = { generationId: "a".repeat(64), currentSha256: "b".repeat(64) };
-        const closed = closeTestBrowserHostStagingV1(artifactRoot, current);
+        expect(() => closeTestBrowserHostStagingV1(artifactRoot, current, { byteLength: hostComponent.byteLength, sha256: "c".repeat(64) })).toThrow("descriptor component identity differs");
+        const closed = closeTestBrowserHostStagingV1(artifactRoot, current, { byteLength: hostComponent.byteLength, sha256: hostComponentSha256 });
         expect(validate(closed.receipt), JSON.stringify(validate.errors)).toBe(true);
         expect(closed.receipt.selectedGis).toEqual(current);
-        expect(closed.receipt.host.pluginId).toBe("space");
+        expect(closed.receipt.host).toMatchObject({ pluginId: "space", componentByteLength: hostComponent.byteLength, componentSha256: hostComponentSha256, coreSha256: hostCoreSha256 });
         expect(readActivationReceipt(closed.activationRoot).plugins.map((row) => row.pluginId)).toEqual(["gis", "space"]);
         const environment = {
           SEMIO_TEST_ARTIFACT_DIR: artifactRoot,

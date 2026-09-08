@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1997/1/any/mutation/change-z-investigated-m.json",
+  "$id": "https://semio.tech/schema/s/norm/en1997/1/any/mutation/change-z-investigated-m/schema.json",
   "title": "ChangeZInvestigatedM",
   "type": "object",
   "additionalProperties": false,

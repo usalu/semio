@@ -1,6 +1,6 @@
 //! 👥️ Raster presence — shareable live ephemeral state + mutations.
 
-use crate::artifacts::raster::RasterCamera;
+use crate::RasterCamera;
 use protocol::Mutation;
 use store::ArtifactPack;
 

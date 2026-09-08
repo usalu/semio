@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::Process3dSnapshot;
 
 /// 🗄️ The timber-beam-joinery example fixture, handcrafted in this artifact's DSL (`store::ArtifactDsl`).
 pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
@@ -41,7 +41,7 @@ pub fn print_dsl(document: &Process3dSnapshot) -> String {
 mod tests {
     use super::*;
 
-    use crate::artifacts::process3d::{
+    use crate::{
         empty_process3d_snapshot, process_working_scene_to_snapshot, Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, StockQuantity, WorkingSolid, Workshop,
         WorkshopMachine,
     };
@@ -148,8 +148,8 @@ mod tests {
     /// 🏭️ The exact workshop the shipped `timber-beam-joinery` fixture carries today (generic
     /// catalog + `WoodCatalog`) — reused verbatim so regeneration never drifts the catalog content.
     fn timber_workshop() -> Workshop {
-        let mut machines = crate::artifacts::process3d::generic_machines();
-        machines.extend(<crate::artifacts::process3d::schema::WoodCatalog as crate::artifacts::process3d::MachineCatalog>::machines(&crate::artifacts::process3d::schema::WoodCatalog));
+        let mut machines = crate::generic_machines();
+        machines.extend(<crate::schema::WoodCatalog as crate::MachineCatalog>::machines(&crate::schema::WoodCatalog));
         Workshop { machines }
     }
 

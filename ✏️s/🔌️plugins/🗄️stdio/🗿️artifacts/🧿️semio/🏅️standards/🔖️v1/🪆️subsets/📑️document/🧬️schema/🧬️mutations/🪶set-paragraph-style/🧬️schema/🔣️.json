@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutation/set-paragraph-style.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutation/set-paragraph-style/schema.json",
   "title": "SetParagraphStyle",
   "type": "object",
   "additionalProperties": false,
@@ -21,9 +21,9 @@
         }
       ]
     },
-    "kind": {
+    "mutation": {
       "const": "setParagraphStyle",
-      "description": "Aggregate discriminator spliced in by DocPathSegment; absent when the payload stands alone."
+      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

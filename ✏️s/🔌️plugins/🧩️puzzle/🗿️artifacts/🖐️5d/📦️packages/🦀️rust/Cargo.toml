@@ -1,0 +1,50 @@
+[package]
+name = "semio-s-artifact-puzzle-5d"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Puzzle 5d artifact"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+default = []
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-3d", "dep:semio-framework-async", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-geometry = { workspace = true }
+semio-framework-graph = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-puzzle-3d = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-obj = { workspace = true }
+semio-s-artifact-stdio-png = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-stl = { workspace = true }
+semio-s-artifact-stdio-txt = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
+pack = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-3d = { workspace = true, optional = true }
+semio-framework-async = { workspace = true, optional = true }
+semio-framework-dispatch-macros = { workspace = true, optional = true }
+semio-framework-ui-contract = { workspace = true, optional = true }
+semio-framework-ui-scene = { workspace = true, optional = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -1,6 +1,6 @@
 //! 🌳️ Trinity jack query AST.
 
-use crate::artifacts::jack::{JackSnapshot, PropertyValue};
+use crate::{JackSnapshot, PropertyValue};
 
 /// 🌳️ Jack query abstract syntax tree.
 #[derive(Clone, Debug, PartialEq)]

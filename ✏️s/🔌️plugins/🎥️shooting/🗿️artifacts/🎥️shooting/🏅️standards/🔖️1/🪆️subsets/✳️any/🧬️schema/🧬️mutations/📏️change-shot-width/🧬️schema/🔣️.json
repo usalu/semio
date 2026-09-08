@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/mutation/change-shot-width.json",
+  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/mutation/change-shot-width/schema.json",
   "title": "ChangeShotWidth",
   "type": "object",
   "additionalProperties": false,

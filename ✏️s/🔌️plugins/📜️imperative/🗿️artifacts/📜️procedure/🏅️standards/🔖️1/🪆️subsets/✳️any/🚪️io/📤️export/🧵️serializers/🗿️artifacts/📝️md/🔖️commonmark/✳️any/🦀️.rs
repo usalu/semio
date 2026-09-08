@@ -1,5 +1,5 @@
 //! imperative -> md
-use crate::artifacts::procedure::schema::snapshot::ProcedureSnapshot;
+use crate::schema::snapshot::ProcedureSnapshot;
 use semio_s_artifact_stdio_md::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks;
 use semio_s_artifact_stdio_md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 

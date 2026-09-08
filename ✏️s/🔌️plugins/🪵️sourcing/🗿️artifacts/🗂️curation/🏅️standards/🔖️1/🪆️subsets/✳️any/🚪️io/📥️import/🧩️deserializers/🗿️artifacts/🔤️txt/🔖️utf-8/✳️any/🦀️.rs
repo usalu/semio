@@ -7,7 +7,7 @@
 //! plugin's txt target folder. Left as an honest stub producing this artifact's own real
 //! snapshot type, pending a real txt import/export implementation. Wired as a real (if
 //! always-failing) `IoEntry` row, `IoFidelity::Lossy`, rather than a dead composer-table entry.
-use crate::artifacts::curation::CurationSnapshot;
+use crate::CurationSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

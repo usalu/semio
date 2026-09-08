@@ -1,9 +1,9 @@
 //! ↩️ Inverse for `DisconnectNodes` — reconstructs `ConnectNodes` from the edge (and its
 //! relationship, if any) captured from BASE. Missing edge ⇒ `Vec::new()`.
 
-use crate::artifacts::wires::mutations::WiresMutation;
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::{find_board_edge, find_relationship};
-use crate::artifacts::wires::WiresSnapshot;
+use crate::mutations::WiresMutation;
+use crate::standards::v1::subsets::any::schema::inferences::{find_board_edge, find_relationship};
+use crate::WiresSnapshot;
 use dsl::DslValue;
 
 //#region 🔖️Inverse
@@ -11,7 +11,7 @@ pub fn inverse(payload: &super::DisconnectNodes, base: &WiresSnapshot) -> Vec<Wi
     find_board_edge(base, &payload.edge_id)
         .map(|edge| {
             let relationship = find_relationship(base, &payload.edge_id).cloned().unwrap_or(DslValue::Null);
-            crate::artifacts::wires::mutations::connect_nodes::connect_nodes(edge, relationship)
+            crate::mutations::connect_nodes::connect_nodes(edge, relationship)
         })
         .into_iter()
         .collect()

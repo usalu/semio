@@ -12,7 +12,7 @@
 //! `#[cfg(test)]` now. `dsl::ToValue::to_value` (first-party) -> `dsl::json::from_dsl_value`
 //! (`DslValue` -> stdio's own `JsonValue`) instead, same shape the sibling `block3d` leaf already
 //! uses.
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::Puzzle3dSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::write_json_pretty;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 

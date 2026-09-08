@@ -1,12 +1,12 @@
 //! ↩️ Inverse for `ChangeBlockInkWidth`.
 use super::ChangeBlockInkWidth;
-use crate::artifacts::note::schema::mutations::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::schema::mutations::NoteMutation;
+use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangeBlockInkWidth, base: &NoteSnapshot) -> Vec<NoteMutation> {
-    match crate::artifacts::note::schema::find_block(&base.blocks, &payload.id) {
-        Some(crate::artifacts::note::NoteBlockNode::Ink { stroke_width, .. }) => vec![NoteMutation::ChangeBlockInkWidth(ChangeBlockInkWidth { id: payload.id.clone(), new_stroke_width: *stroke_width })],
+    match crate::schema::find_block(&base.blocks, &payload.id) {
+        Some(crate::NoteBlockNode::Ink { stroke_width, .. }) => vec![NoteMutation::ChangeBlockInkWidth(ChangeBlockInkWidth { id: payload.id.clone(), new_stroke_width: *stroke_width })],
         _ => Vec::new(),
     }
 }

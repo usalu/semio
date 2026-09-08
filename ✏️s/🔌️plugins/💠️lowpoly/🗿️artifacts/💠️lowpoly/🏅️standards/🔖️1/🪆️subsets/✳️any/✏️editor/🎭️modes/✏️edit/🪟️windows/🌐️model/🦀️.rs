@@ -2,7 +2,7 @@
 //! transform/UV-unwrap operation runs here; paint operations are scoped on BOTH this window and the UV
 //! window since the paint utilities apply to both).
 
-use crate::artifacts::lowpoly::schema::mesh_data_from_transfer;
+use crate::schema::mesh_data_from_transfer;
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
@@ -53,7 +53,7 @@ pub const LOWPOLY_MAIN_ACTIONS: &[&str] = &[
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::lowpoly::create_lowpoly_app`.
 pub fn definition() -> WindowKindDefinition {
-    let projection = crate::artifacts::lowpoly::schema::default_snapshot();
+    let projection = crate::schema::default_snapshot();
     let config = LowpolyConfig::default();
     let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US");
     let engagement = lowpoly_window_engagement(LowpolyView { snapshot: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);

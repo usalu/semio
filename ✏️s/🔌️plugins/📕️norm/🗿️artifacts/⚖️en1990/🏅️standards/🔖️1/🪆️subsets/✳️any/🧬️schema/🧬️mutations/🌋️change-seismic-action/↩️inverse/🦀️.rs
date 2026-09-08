@@ -2,7 +2,7 @@
 //! inverse partner (per `📓️taxonomy.md`).
 
 use super::ChangeSeismicAction;
-use crate::artifacts::en1990::{En1990Mutation, En1990Snapshot};
+use crate::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeSeismicAction, base: &En1990Snapshot) -> Vec<En1990Mutation> {

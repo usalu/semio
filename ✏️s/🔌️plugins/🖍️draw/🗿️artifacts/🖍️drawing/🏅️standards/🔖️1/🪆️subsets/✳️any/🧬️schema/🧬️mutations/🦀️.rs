@@ -4,15 +4,15 @@
 //! and `impl protocol::SemanticMutation<DrawingSnapshot>` from those payloads — no hand-written
 //! apply/diff/inverse dispatch here.
 
-use crate::artifacts::drawing::schema::{find_drawing_layer, hex_to_rgba, layer_base};
-use crate::artifacts::drawing::{DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
+use crate::schema::{find_drawing_layer, hex_to_rgba, layer_base};
+use crate::{DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
 
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
-#[mutations(snapshot = DrawingSnapshot, diff = crate::artifacts::drawing::diff::DrawingDiff, schema = "drawing.drawing")]
+#[mutations(snapshot = DrawingSnapshot, diff = crate::diff::DrawingDiff, schema = "drawing.drawing")]
 pub enum DrawingMutation {
     SetLayerVisible(SetLayerVisible),
     SetLayerLocked(SetLayerLocked),
@@ -97,20 +97,20 @@ pub fn patch_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: &str, val
 // 🪆️ These fourteen leaves now live under their own semantic subset (`structure`/`style`/
 // `transform`/`metadata`, see `../../../🔣️.json`), not as siblings of this catalog any more — this
 // catalog is the one thing every subset composes back through, so its `use`s are fully qualified.
-pub use crate::artifacts::drawing::standards::v1::subsets::structure::schema::mutations::create_layer::mutation::{create_layer, CreateLayer};
-pub use crate::artifacts::drawing::standards::v1::subsets::structure::schema::mutations::delete_layer::mutation::{delete_layer, DeleteLayer};
-pub use crate::artifacts::drawing::standards::v1::subsets::structure::schema::mutations::duplicate_layer::mutation::{duplicate_layer, DuplicateLayer};
-pub use crate::artifacts::drawing::standards::v1::subsets::metadata::schema::mutations::rename_layer::mutation::{rename_layer, RenameLayer};
-pub use crate::artifacts::drawing::standards::v1::subsets::structure::schema::mutations::reorder_layer::mutation::{reorder_layer, ReorderLayer};
-pub use crate::artifacts::drawing::standards::v1::subsets::style::schema::mutations::replace_layer_fill::mutation::{replace_layer_fill, ReplaceLayerFill};
-pub use crate::artifacts::drawing::standards::v1::subsets::style::schema::mutations::replace_layer_stroke::mutation::{replace_layer_stroke, ReplaceLayerStroke};
-pub use crate::artifacts::drawing::standards::v1::subsets::style::schema::mutations::set_layer_blend_mode::mutation::{set_layer_blend_mode, SetLayerBlendMode};
-pub use crate::artifacts::drawing::standards::v1::subsets::transform::schema::mutations::set_layer_boolean_operation::mutation::{set_layer_boolean_operation, SetLayerBooleanOperation};
-pub use crate::artifacts::drawing::standards::v1::subsets::metadata::schema::mutations::set_layer_locked::mutation::{set_layer_locked, SetLayerLocked};
-pub use crate::artifacts::drawing::standards::v1::subsets::style::schema::mutations::set_layer_opacity::mutation::{set_layer_opacity, SetLayerOpacity};
-pub use crate::artifacts::drawing::standards::v1::subsets::metadata::schema::mutations::set_layer_visible::mutation::{set_layer_visible, SetLayerVisible};
-pub use crate::artifacts::drawing::standards::v1::subsets::transform::schema::mutations::update_layer_trace_params::mutation::{update_layer_trace_params, UpdateLayerTraceParams};
-pub use crate::artifacts::drawing::standards::v1::subsets::transform::schema::mutations::update_layer_transform::mutation::{update_layer_transform, UpdateLayerTransform};
+pub use crate::standards::v1::subsets::structure::schema::mutations::create_layer::mutation::{create_layer, CreateLayer};
+pub use crate::standards::v1::subsets::structure::schema::mutations::delete_layer::mutation::{delete_layer, DeleteLayer};
+pub use crate::standards::v1::subsets::structure::schema::mutations::duplicate_layer::mutation::{duplicate_layer, DuplicateLayer};
+pub use crate::standards::v1::subsets::metadata::schema::mutations::rename_layer::mutation::{rename_layer, RenameLayer};
+pub use crate::standards::v1::subsets::structure::schema::mutations::reorder_layer::mutation::{reorder_layer, ReorderLayer};
+pub use crate::standards::v1::subsets::style::schema::mutations::replace_layer_fill::mutation::{replace_layer_fill, ReplaceLayerFill};
+pub use crate::standards::v1::subsets::style::schema::mutations::replace_layer_stroke::mutation::{replace_layer_stroke, ReplaceLayerStroke};
+pub use crate::standards::v1::subsets::style::schema::mutations::set_layer_blend_mode::mutation::{set_layer_blend_mode, SetLayerBlendMode};
+pub use crate::standards::v1::subsets::transform::schema::mutations::set_layer_boolean_operation::mutation::{set_layer_boolean_operation, SetLayerBooleanOperation};
+pub use crate::standards::v1::subsets::metadata::schema::mutations::set_layer_locked::mutation::{set_layer_locked, SetLayerLocked};
+pub use crate::standards::v1::subsets::style::schema::mutations::set_layer_opacity::mutation::{set_layer_opacity, SetLayerOpacity};
+pub use crate::standards::v1::subsets::metadata::schema::mutations::set_layer_visible::mutation::{set_layer_visible, SetLayerVisible};
+pub use crate::standards::v1::subsets::transform::schema::mutations::update_layer_trace_params::mutation::{update_layer_trace_params, UpdateLayerTraceParams};
+pub use crate::standards::v1::subsets::transform::schema::mutations::update_layer_transform::mutation::{update_layer_transform, UpdateLayerTransform};
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot` through its own diff — the artifact's single apply entry
@@ -134,7 +134,7 @@ pub fn inverse_drawing_mutation(snapshot: &DrawingSnapshot, mutation: &DrawingMu
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::drawing::schema::{create_drawing_path_layer, create_drawing_shape_layer_rect, default_drawing_document};
+    use crate::schema::{create_drawing_path_layer, create_drawing_shape_layer_rect, default_drawing_document};
     use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
@@ -147,7 +147,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_layer_visible_inverse_law() {
         let base = base_document();
-        let layer_id = crate::artifacts::drawing::schema::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
         let mutation = set_layer_visible(layer_id, false);
         assert_mutation_inverse_law(&base, &mutation).await;
     }
@@ -155,7 +155,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn rename_layer_inverse_law() {
         let base = base_document();
-        let layer_id = crate::artifacts::drawing::schema::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
         let mutation = rename_layer(layer_id, "Renamed".into());
         assert_mutation_inverse_law(&base, &mutation).await;
     }
@@ -170,7 +170,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn delete_layer_inverse_law() {
         let base = base_document();
-        let layer_id = crate::artifacts::drawing::schema::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
         let mutation = delete_layer(layer_id);
         assert_mutation_inverse_law(&base, &mutation).await;
     }
@@ -178,7 +178,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn duplicate_layer_inverse_law() {
         let base = base_document();
-        let layer_id = crate::artifacts::drawing::schema::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
         let mutation = duplicate_layer(layer_id);
         assert_mutation_inverse_law(&base, &mutation).await;
     }
@@ -187,7 +187,7 @@ mod tests {
     async fn reorder_layer_inverse_law() {
         let mut base = base_document();
         base.layers.push(create_drawing_path_layer("Second", Vec::new()));
-        let layer_id = crate::artifacts::drawing::schema::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
         let mutation = reorder_layer(layer_id, None, 1);
         assert_mutation_inverse_law(&base, &mutation).await;
     }
@@ -195,7 +195,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_layer_opacity_diff_absorb_law() {
         let base = base_document();
-        let layer_id = crate::artifacts::drawing::schema::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
         let d1 = set_layer_opacity(layer_id.clone(), 0.5).diff(&base).diff().clone();
         let mid = d1.apply(&base).expect("valid mutation diff");
         let d2 = set_layer_opacity(layer_id, 0.25).diff(&mid).diff().clone();
@@ -235,21 +235,21 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn delete_layer_outcome_obeys_the_policy_matrix() {
         let base = base_document();
-        let layer_id = crate::artifacts::drawing::schema::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
         assert_outcome_policy_matrix(&base, &delete_layer(layer_id)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_layer_outcome_obeys_the_policy_matrix() {
         let base = base_document();
-        let layer_id = crate::artifacts::drawing::schema::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
         assert_outcome_policy_matrix(&base, &rename_layer(layer_id, "Renamed".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_layer_opacity_outcome_obeys_the_policy_matrix() {
         let base = base_document();
-        let layer_id = crate::artifacts::drawing::schema::layer_id(&base.layers[0]).to_string();
+        let layer_id = crate::schema::layer_id(&base.layers[0]).to_string();
         assert_outcome_policy_matrix(&base, &set_layer_opacity(layer_id, 0.5)).await;
     }
 

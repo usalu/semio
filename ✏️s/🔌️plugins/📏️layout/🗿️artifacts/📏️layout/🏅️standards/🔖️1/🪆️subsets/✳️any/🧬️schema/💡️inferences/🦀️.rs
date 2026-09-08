@@ -4,7 +4,7 @@
 //! dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::LayoutSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
@@ -53,7 +53,7 @@ impl protocol::InferenceSpec<LayoutSnapshot> for LayoutInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::layout::standards::v1::subsets::any::schema::LayoutBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::LayoutBuilder {
     type Snapshot = LayoutSnapshot;
     type Inference = LayoutInference;
 }

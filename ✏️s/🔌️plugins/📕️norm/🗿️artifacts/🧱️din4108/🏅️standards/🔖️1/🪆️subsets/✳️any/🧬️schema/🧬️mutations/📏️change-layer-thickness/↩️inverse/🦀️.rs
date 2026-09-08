@@ -2,7 +2,7 @@
 //! index ⇒ `Vec::new()`.
 
 use super::ChangeLayerThickness;
-use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
+use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangeLayerThickness, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {

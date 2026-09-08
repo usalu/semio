@@ -1,7 +1,7 @@
 //! 🧬️ Rewriting snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::jack::PropertyValue;
-use crate::artifacts::rewriting::LayoutPoint;
+use semio_s_artifact_trinity_jack::PropertyValue;
+use crate::LayoutPoint;
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 

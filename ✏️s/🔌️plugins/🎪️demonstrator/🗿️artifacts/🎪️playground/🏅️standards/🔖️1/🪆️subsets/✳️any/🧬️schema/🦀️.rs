@@ -16,23 +16,23 @@ pub struct PlaygroundArtifact {
 //#region 🔖️Conversions
 impl Default for PlaygroundArtifact {
     fn default() -> Self {
-        Self { schema: crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA.into() }
+        Self { schema: crate::PLAYGROUND_DOCUMENT_SCHEMA.into() }
     }
 }
 
 impl PlaygroundArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
-        crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot { schema: self.schema.clone() }
+    pub fn to_snapshot(&self) -> crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
+        crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot { schema: self.schema.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub fn from_snapshot(snapshot: crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) -> Self {
         Self { schema: snapshot.schema }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot) {
         self.schema = snapshot.schema;
     }
 }
@@ -42,8 +42,8 @@ impl PlaygroundArtifact {
 /// 🏗️ Empty default playground snapshot (relocated from the deleted `⚙️engine`, ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES: pure document helper, no `&mut self`,
 /// no app type — belongs beside the snapshot it builds).
-pub fn empty_playground_snapshot() -> crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
-    crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot::default()
+pub fn empty_playground_snapshot() -> crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot {
+    crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -85,9 +85,9 @@ pub fn playground_artifact_schema_descriptor() -> schema::ArtifactSchemaDescript
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::playground::standards::v1::subsets::any::schema::diff::PlaygroundDiff;
-    use crate::artifacts::playground::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
-    use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+    use crate::standards::v1::subsets::any::schema::diff::PlaygroundDiff;
+    use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
+    use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -138,7 +138,7 @@ pub mod derived_construction {
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -192,7 +192,7 @@ mod tests {
     #[test]
     fn empty_snapshot_matches_schema() {
         let snapshot = empty_playground_snapshot();
-        assert_eq!(snapshot.schema, crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA);
+        assert_eq!(snapshot.schema, crate::PLAYGROUND_DOCUMENT_SCHEMA);
     }
 }
 //#endregion 🧪️Tests

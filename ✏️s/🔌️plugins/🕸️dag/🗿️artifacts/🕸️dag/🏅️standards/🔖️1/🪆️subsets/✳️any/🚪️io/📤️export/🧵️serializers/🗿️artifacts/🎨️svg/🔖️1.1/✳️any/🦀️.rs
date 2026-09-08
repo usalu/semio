@@ -4,7 +4,7 @@
 //! does NOT invert the sibling `Deserializer`'s text-content bridge, so this hop is
 //! `IoFidelity::Lossy`.
 
-use crate::artifacts::dag::DagSnapshot;
+use crate::DagSnapshot;
 use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};

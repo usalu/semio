@@ -1,5 +1,5 @@
 //! Serialize layout to stdio.svg.
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::LayoutSnapshot;
 use semio_s_artifact_stdio_svg::schema::snapshot::{parse_svg_xml, SvgSnapshot};
 use semio_s_artifact_stdio_svg::STDIO_SVG_DOCUMENT_SCHEMA;
 

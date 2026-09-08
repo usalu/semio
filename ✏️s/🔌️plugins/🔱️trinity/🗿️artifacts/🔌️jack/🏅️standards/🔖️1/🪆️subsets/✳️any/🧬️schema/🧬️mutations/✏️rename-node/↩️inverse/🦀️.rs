@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `RenameNode` — the OLD `name` looked up from BASE. Missing target ⇒ `Vec::new()`.
-use crate::artifacts::jack::mutations::{rename_node, TrinityGraphMutation};
-use crate::artifacts::jack::JackSnapshot;
+use crate::mutations::{rename_node, TrinityGraphMutation};
+use crate::JackSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::RenameNode, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {

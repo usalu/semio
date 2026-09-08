@@ -3,9 +3,9 @@
 //! generic slot this triad was repurposed from — see `sharedFileRequests` in this ticket's wave2
 //! report for the glue.rs rename that would align the directory/module with the verb.
 
-use crate::artifacts::generation2d::diff::Generation2dDiff;
-use crate::artifacts::generation2d::mutations::Generation2dMutation;
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::diff::Generation2dDiff;
+use crate::mutations::Generation2dMutation;
+use crate::Generation2dSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️DeleteWidget

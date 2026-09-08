@@ -1,9 +1,9 @@
 //! 🔧 `change-annex` payload — changes the EN 1992 document's national annex.
 
 
-use crate::artifacts::en1992::En1992Snapshot;
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::En1992Mutation;
+use crate::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::En1992Mutation;
 use crate::document::AnnexChoice;
 
 //#region 🔖️ChangeAnnex

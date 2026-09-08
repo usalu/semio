@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-drawing.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-drawing/schema.json",
   "title": "ApplyDrawing",
   "type": "object",
   "additionalProperties": false,

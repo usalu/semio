@@ -1,6 +1,6 @@
 //! ⏱️ Hidden bounded Forms vector-value continuation.
 
-use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
+use crate::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::commands::set_try_value;
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

@@ -1,18 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/change-texture-mime.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/change-texture-mime/schema.json",
   "title": "ChangeTextureMime",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "id",
-    "newMime"
+    "new_mime"
   ],
   "properties": {
     "id": {
       "type": "string"
     },
-    "newMime": {
+    "new_mime": {
       "type": "string"
     }
   }

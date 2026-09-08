@@ -3,7 +3,7 @@
 //! stub (unchanged behaviour, pre-dates this ticket) — `IoFidelity::Lossy` since it never
 //! succeeds.
 
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::PresentationSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

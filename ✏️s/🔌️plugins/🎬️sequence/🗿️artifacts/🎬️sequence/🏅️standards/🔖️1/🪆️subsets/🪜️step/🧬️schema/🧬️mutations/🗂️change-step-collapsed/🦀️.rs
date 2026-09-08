@@ -1,8 +1,8 @@
 //! 🗂️ Sequence mutation — `ChangeStepCollapsed`: single boolean setter on an addressed step.
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::schema::operations::{SequenceDetectedMutation, SequenceDetectionContext};
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::diff::SequenceDiff;
+use crate::mutations::SequenceMutation;
+use crate::schema::operations::{SequenceDetectedMutation, SequenceDetectionContext};
+use crate::SequenceSnapshot;
 
 //#region 🔖️Mutation
 /// 🗂️ `change-step-collapsed` payload.
@@ -60,7 +60,7 @@ pub fn detect(context: &SequenceDetectionContext<'_>) -> Vec<SequenceDetectedMut
 #[cfg(test)]
 mod mutation_law_tests {
     use super::*;
-    use crate::artifacts::sequence::default_snapshot;
+    use crate::default_snapshot;
     use protocol::os_spr::testkit::assert_missing_target_is_error;
 
     #[semio_framework_async_macros::async_test]

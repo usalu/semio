@@ -1,6 +1,6 @@
 //! 👥️ Rewriting presence — shareable live ephemeral state + mutations.
 
-use crate::artifacts::jack::Camera;
+use semio_s_artifact_trinity_jack::Camera;
 use std::collections::BTreeMap;
 use store::ArtifactPack;
 

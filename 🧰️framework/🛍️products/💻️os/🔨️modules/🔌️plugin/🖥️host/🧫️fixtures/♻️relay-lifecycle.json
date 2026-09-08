@@ -1,5 +1,5 @@
 {
-  "$schema": "./🧬️relay-lifecycle.schema.json",
+  "$schema": "../🧬️schema/🔣️.json",
   "schemaVersion": 1,
   "capacities": {
     "mountedRelaySlots": 16,

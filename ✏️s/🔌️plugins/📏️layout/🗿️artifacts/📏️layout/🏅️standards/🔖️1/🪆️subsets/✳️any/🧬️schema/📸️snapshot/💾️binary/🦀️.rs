@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::LayoutSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `LayoutSnapshot` to its binary pack form.
@@ -23,8 +23,8 @@ pub fn decode(bytes: &[u8]) -> Result<LayoutSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::layout::dsl;
-    use crate::artifacts::layout::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_DOCUMENT_SCHEMA};
+    use crate::dsl;
+    use crate::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_DOCUMENT_SCHEMA};
 
     #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {

@@ -1,10 +1,8 @@
 // #region 🧲️Header
 // 💻️ ♻️mit-bestand/🧺️demonstrator/🎭️playwright.config.ts
 // Specs: Run Playwright acceptance coverage against a live "Entwerfen mit Bestand" demonstrator dev server.
-// Summary: `bun nx run @semio-tech/mit-bestand-demonstrator:test e2e` spawns the demonstrator's own Vite dev
-// server (`📜️script.ts`'s `runAcceptancePlaywright`), waits for it, then runs Playwright against every
-// `*.acceptance.spec.ts` file in this directory with `PLAYWRIGHT_BASE_URL` set — mirrors
-// `.storybook/playwright.config.ts`'s shape/timeout/Chromium launch args; this config does not start its own server.
+// Summary: Nx prepares an isolated continuous service; the E2E consumer validates its generation
+// before supplying PLAYWRIGHT_BASE_URL. Playwright consumes that server and does not start one.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
@@ -18,16 +16,16 @@ import { playwrightTestTimeoutMs } from "@semio-tech/repo-lib";
 // #endregion 🔌️Adapters
 
 const demonstratorDir = resolve(fileURLToPath(import.meta.url), "..");
-const demonstratorPort = process.env.MIT_BESTAND_DEMONSTRATOR_PORT ?? "6029";
 const playwrightTimeoutMs = playwrightTestTimeoutMs();
 function withTrailingSlash(url: string): string {
   return url.endsWith("/") ? url : `${url}/`;
 }
-const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${demonstratorPort}/`);
+if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the Demonstrator test-e2e target through Nx");
+const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL);
 
 export default defineConfig({
-  testDir: demonstratorDir,
-  testMatch: ["*.acceptance.spec.ts"],
+  testDir: resolve(demonstratorDir, "🧪️tests"),
+  testMatch: ["🎭️acceptance/🟦️.ts"],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

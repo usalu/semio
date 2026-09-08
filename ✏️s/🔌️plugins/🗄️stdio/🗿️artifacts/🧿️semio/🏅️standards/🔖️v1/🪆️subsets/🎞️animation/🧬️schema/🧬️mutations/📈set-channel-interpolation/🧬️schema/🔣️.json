@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/set-channel-interpolation.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/animation/mutation/set-channel-interpolation/schema.json",
   "title": "SetChannelInterpolation",
   "type": "object",
   "additionalProperties": false,

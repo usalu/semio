@@ -4,8 +4,8 @@
 //! dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::flow::FlowSnapshot;
-use schema::ArtifactSchema;
+use crate::FlowSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::{compute_flow_topology, FlowTopology};
@@ -29,7 +29,7 @@ impl protocol::Inference<FlowSnapshot> for FlowInference {
 }
 
 /// 🌱 Hand-fixed to agree with `infer(&FlowSnapshot::default())` rather than a naive
-/// `#[derive(Default)]` — `FlowSnapshot`'s own `Default` bridges `flow::FlowFixture::default()`,
+/// `#[derive(Default)]` — `FlowSnapshot`'s own `Default` bridges `semio_framework_artifact_flow_flow::FlowFixture::default()`,
 /// which ships a non-empty three-widget starter graph, the same "match `infer` of the real
 /// default, don't derive structurally" trick as `AddInference`'s hand-written `Default` in
 /// `📡️spr/🎮️command/🦀️.rs`.
@@ -53,7 +53,7 @@ impl protocol::InferenceSpec<FlowSnapshot> for FlowInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::flow::standards::v1::subsets::any::schema::FlowBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::FlowBuilder {
     type Snapshot = FlowSnapshot;
     type Inference = FlowInference;
 }
@@ -62,10 +62,10 @@ impl ArtifactInferrer for crate::artifacts::flow::standards::v1::subsets::any::s
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.flow.flow.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `flow_artifact_schema_descriptor`'s registration.
-pub fn flow_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn flow_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.flow.flow.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -80,13 +80,13 @@ pub fn flow_artifact_inference_descriptor() -> schema::ArtifactInferenceDescript
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use flow::Widget;
+    use semio_framework_artifact_flow_flow::Widget;
     use protocol::Inference;
 
     fn chain_snapshot() -> FlowSnapshot {
         let mut fixture = FlowSnapshot::default().to_fixture();
         fixture.widgets = vec![Widget::InputSlider { id: "a".into(), label: "A".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }, Widget::InputSlider { id: "b".into(), label: "B".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 }];
-        fixture.synapses = vec![flow::SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: String::new(), to_port: String::new() }];
+        fixture.synapses = vec![semio_framework_artifact_flow_flow::SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: String::new(), to_port: String::new() }];
         FlowSnapshot::from_fixture(fixture)
     }
 

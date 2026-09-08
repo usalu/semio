@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/remove-tile-tags.json",
+  "$id": "https://semio.tech/schema/s/stdio/tiff/6.0/baseline/mutation/remove-tile-tags/schema.json",
   "title": "RemoveTileTags",
   "type": "object",
   "additionalProperties": false,

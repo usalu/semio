@@ -2,7 +2,7 @@
 //! Mutation diff/inverse live in the `🧬️mutations/<slug>/` triad leaves; this facet only
 //! handcrafts the op wire forms.
 
-pub use crate::artifacts::playbook::mutations::{
+pub use crate::mutations::{
     add_block_operation, add_step_operation, apply_playbook_mutation, change_title_operation, inverse_playbook_mutation, move_block_operation, move_step_operation, remove_block_operation, remove_step_operation, replace_block_operation,
     update_step_operation, AddBlock, AddStep, ChangeTitle, MoveBlock, MoveStep, PlaybookMutation, RemoveBlock, RemoveStep, ReplaceBlock, UpdateStep,
 };
@@ -51,7 +51,7 @@ impl protocol::OpBinary for PlaybookMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::playbook::empty_playbook_snapshot;
+    use crate::empty_playbook_snapshot;
 
     #[semio_framework_async_macros::async_test]
     async fn change_title_op_sets_title() {
@@ -68,8 +68,8 @@ mod tests {
         assert_eq!(next.steps().len(), 2);
     }
 
-    fn sample_block() -> crate::artifacts::playbook::PlaybookBlock {
-        crate::artifacts::playbook::PlaybookBlock {
+    fn sample_block() -> crate::PlaybookBlock {
+        crate::PlaybookBlock {
             id: "b1".into(),
             label: "Team size".into(),
             kind: "number".into(),

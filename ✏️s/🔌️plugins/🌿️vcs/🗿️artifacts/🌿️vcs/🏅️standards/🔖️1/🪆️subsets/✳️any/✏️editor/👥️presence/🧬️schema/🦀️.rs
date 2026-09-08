@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

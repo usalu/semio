@@ -46,7 +46,6 @@ for (const mutate of [
 //#endregion 🧬️Contract
 //#region 📤️SharedOwnership
 const sharedFixture = await Bun.file(new URL("./👥️shared-owner/🔣️.json", import.meta.url)).json();
-const sharedSchema = schema;
 const validateShared = new Ajv({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/SharedOwnerFixture`)!;
 assert(validateShared(sharedFixture), JSON.stringify(validateShared.errors));
 const sharedKey = sharedFixture.key.text.repeat(sharedFixture.key.repetitions);

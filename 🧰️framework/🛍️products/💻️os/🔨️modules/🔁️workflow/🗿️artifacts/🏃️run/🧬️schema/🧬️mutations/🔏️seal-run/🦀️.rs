@@ -6,16 +6,26 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "seal-run")]
-pub struct SealRun { pub status: RunStatus }
+pub struct SealRun {
+    pub status: RunStatus,
+}
 //#endregion 🔖️Payload
 
 //#region ⚙️Semantics
 impl protocol::MutationKind<RunArtifact, RunMutation> for SealRun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "seal", entity: "run", kind: "seal-run", record: "SealedRun" };
-    fn diff(&self, _base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> { protocol::MutationOutcome::new(RunDiff::Seal { status: self.status }) }
-    fn inverse(&self, _base: &RunArtifact) -> Vec<RunMutation> { Vec::new() }
-    fn label(&self) -> String { "Seal run".into() }
-    fn target(&self) -> Vec<String> { vec!["sealed".into()] }
+    fn diff(&self, _base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
+        protocol::MutationOutcome::new(RunDiff::Seal { status: self.status })
+    }
+    fn inverse(&self, _base: &RunArtifact) -> Vec<RunMutation> {
+        Vec::new()
+    }
+    fn label(&self) -> String {
+        "Seal run".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["sealed".into()]
+    }
 }
 //#endregion ⚙️Semantics
 
@@ -24,5 +34,7 @@ mod tests {
     use super::*;
     use protocol::MutationLeaf;
     #[test]
-    fn metadata_has_the_canonical_seal_identity() { assert_eq!(<SealRun as MutationLeaf>::DESCRIPTOR.semantic_kind, "seal-run"); }
+    fn metadata_has_the_canonical_seal_identity() {
+        assert_eq!(<SealRun as MutationLeaf>::DESCRIPTOR.semantic_kind, "seal-run");
+    }
 }

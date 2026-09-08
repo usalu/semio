@@ -1,7 +1,7 @@
 //! 🔢 Direct `change-curated-item-count` mutation owner: sets one curated item's count.
-use crate::artifacts::curation::diff::CurationDiff;
-use crate::artifacts::curation::mutations::SourcingMutation;
-use crate::artifacts::curation::CurationSnapshot;
+use crate::diff::CurationDiff;
+use crate::mutations::SourcingMutation;
+use crate::CurationSnapshot;
 
 //#region 🔖️Mutation
 /// 🔢 `change-curated-item-count` payload — addressed by `object_id`; the old count is recovered

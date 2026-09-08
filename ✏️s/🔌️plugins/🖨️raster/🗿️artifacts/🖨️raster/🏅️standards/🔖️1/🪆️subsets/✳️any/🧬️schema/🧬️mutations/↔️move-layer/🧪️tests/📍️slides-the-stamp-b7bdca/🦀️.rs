@@ -8,9 +8,9 @@
 //! verb is `reorder-layers`, which this fixture deliberately never reaches — `stamp` keeps index 0
 //! throughout.
 
-use crate::artifacts::raster::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
-use crate::artifacts::raster::schema::{find_layer, layer_transform, locate_layer};
-use crate::artifacts::raster::{RasterDiff, RasterSnapshot};
+use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::schema::{find_layer, layer_transform, locate_layer};
+use crate::{RasterDiff, RasterSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

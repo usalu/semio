@@ -1,6 +1,6 @@
 //! 🔍️ Architect inspection panel — the document-wide register summary.
 
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramSnapshot;
 use crate::editor::architect::config::{active_register, ArchitectConfig};
 use crate::editor::architect::{ui_children, ui_label, ui_node};
 use semio_framework_ui_contract::{column, field, section, text, BuiltNode};
@@ -56,7 +56,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framewo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
+    use crate::sample_plugin;
 
     #[semio_framework_async_macros::async_test]
     async fn the_tab_is_the_framework_inspection_tab_bound_to_this_apps_body_key() {
@@ -96,7 +96,7 @@ mod semantic_contract {
     #[test]
     fn architect_semantic_panels_match_the_json_oracle() {
         let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️panels.json")).expect("neutral semantic vectors");
-        let program = crate::artifacts::program::sample_plugin();
+        let program = crate::sample_plugin();
         let cfg = ArchitectConfig::default();
         let tree = project(render(&program, &cfg).expect("inspector"));
         let fields = tree["children"][0]["children"].as_array().expect("summary fields");

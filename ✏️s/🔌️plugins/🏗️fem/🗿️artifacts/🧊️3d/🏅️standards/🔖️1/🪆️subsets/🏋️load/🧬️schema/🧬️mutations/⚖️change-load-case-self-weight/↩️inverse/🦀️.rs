@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeLoadCaseSelfWeight` — recovers the pre-mutation flag from `base`.
 use super::ChangeLoadCaseSelfWeight;
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangeLoadCaseSelfWeight, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

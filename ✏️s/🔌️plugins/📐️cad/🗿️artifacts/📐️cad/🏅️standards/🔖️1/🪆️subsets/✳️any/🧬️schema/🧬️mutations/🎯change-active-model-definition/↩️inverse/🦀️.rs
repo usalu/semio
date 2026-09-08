@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeActiveModelDefinition` — recovers the pre-mutation selector from `base`.
 use super::ChangeActiveModelDefinition;
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeActiveModelDefinition, base: &CadSnapshot) -> Vec<CadMutation> {

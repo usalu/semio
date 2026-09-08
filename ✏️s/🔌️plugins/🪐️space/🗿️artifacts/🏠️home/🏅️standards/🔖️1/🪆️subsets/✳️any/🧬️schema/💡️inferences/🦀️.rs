@@ -10,7 +10,7 @@
 //! `protocol::Inference<P>` shape (no `InferredField`/caching machinery — nothing here is
 //! per-entity or incremental).
 
-use crate::artifacts::home::SHomeSnapshot;
+use crate::SHomeSnapshot;
 use protocol::Inference;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
@@ -58,7 +58,7 @@ impl protocol::InferenceSpec<SHomeSnapshot> for SHomeInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::home::standards::v1::subsets::any::schema::HomeBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::HomeBuilder {
     type Snapshot = SHomeSnapshot;
     type Inference = SHomeInference;
 

@@ -1,6 +1,6 @@
 //! 🧵️ Remodeling play app panel — the Results tab: the products a run (partially) produced.
 
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::RemodelingSnapshot;
 use crate::editor::remodeling::terminology::RemodelingLabels;
 use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult};
 
@@ -20,7 +20,7 @@ pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels) -> UiAssemb
     let results = &scene.results;
     // 🧩️ The composed handle resolves only fixed constants or committed bounded reconstruction
     // content; unavailable content reports 0/0 rather than fabricating a count.
-    let mesh = crate::artifacts::remodeling::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &results.mesh.mesh).unwrap_or_default();
+    let mesh = crate::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &results.mesh.mesh).unwrap_or_default();
     let mesh_label = format!("{}: {:?}, {} {}, {} {}", labels.mesh.as_str(), results.mesh.source, mesh.vertex_count(), labels.vertices.as_str(), mesh.triangle_count(), labels.triangles.as_str());
     let sparse_label = results
         .sparse

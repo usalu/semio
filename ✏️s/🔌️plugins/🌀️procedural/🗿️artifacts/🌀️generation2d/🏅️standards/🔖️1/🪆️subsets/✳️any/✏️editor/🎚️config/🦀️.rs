@@ -6,7 +6,7 @@
 //! document. It still round-trips through a real `ArtifactStore` (with a real `backwards`), so every
 //! edit is VCS'd exactly like document content.
 
-use flow::CameraJson;
+use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Config

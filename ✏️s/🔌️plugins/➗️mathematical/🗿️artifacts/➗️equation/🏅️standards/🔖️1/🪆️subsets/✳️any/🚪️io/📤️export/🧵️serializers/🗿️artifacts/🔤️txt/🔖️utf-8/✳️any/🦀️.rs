@@ -2,7 +2,7 @@
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Honest stub pending a real txt
 //! export implementation — see the sibling `Deserializer`'s doc comment.
 
-use crate::artifacts::equation::EquationSnapshot;
+use crate::EquationSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

@@ -1,8 +1,8 @@
 //! 🎥 Shooting mutation payload — `CreateSavedCamera`. Brings a new saved camera into existence (append-only apply).
 
-use crate::artifacts::shooting::{ShootingSavedCamera, ShootingSnapshot};
-use crate::artifacts::shooting::diff::ShootingDiff;
-use crate::artifacts::shooting::mutations::ShootingMutation;
+use crate::{ShootingSavedCamera, ShootingSnapshot};
+use crate::diff::ShootingDiff;
+use crate::mutations::ShootingMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

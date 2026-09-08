@@ -1,9 +1,9 @@
 //! 🗑️ 🗑️ Wires play app commands command — `delete-selection`.
 
-use crate::artifacts::wires::op::WiresMutation;
-use crate::artifacts::wires::schema::fixture_edges;
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::WiresSnapshot;
+use crate::op::WiresMutation;
+use crate::schema::fixture_edges;
+use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::WiresSnapshot;
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -14,13 +14,13 @@ pub struct DeleteSelection {}
 
 /// 🕹️ Deletes every currently-selected node/edge — shared by `handle`/`apply` below.
 fn delete_selected(document: &WiresSnapshot, selected: &[String]) -> Emit<WiresMutation, WiresConfigMutation> {
-    let board = crate::artifacts::wires::wires_working_board(document);
+    let board = crate::wires_working_board(document);
     let mut operations = Vec::new();
     for id in selected {
         if find_board_node(document, id).is_some() {
-            operations.push(crate::artifacts::wires::mutations::delete_node(id.clone()));
+            operations.push(crate::mutations::delete_node(id.clone()));
         } else if fixture_edges(&board).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str())) {
-            operations.push(crate::artifacts::wires::mutations::disconnect_nodes(id.clone()));
+            operations.push(crate::mutations::disconnect_nodes(id.clone()));
         }
     }
     Emit { artifact_mutations: operations, ..Default::default() }
@@ -45,7 +45,7 @@ pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, WiresSnapshot>, 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::wires::schema::fixture_nodes;
+    use crate::schema::fixture_nodes;
     use crate::editor::wires::commands::add_node;
     use crate::editor::wires::testkit::{app_with_registry, dispatch, new_app};
     use crate::editor::wires::WiresCommand;
@@ -59,7 +59,7 @@ mod tests {
         let mut app = new_app().await;
         dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() })).await;
         dispatch(&mut app, WiresCommand::DeleteSelection(DeleteSelection {})).await;
-        assert_eq!(fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len(), 1);
+        assert_eq!(fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).len(), 1);
     }
 
     /// 🕹️ End-to-end proof the "graph" domain's live selection actually drives `deleteSelection` —
@@ -73,7 +73,7 @@ mod tests {
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "node".into(), id: "node-1".into() }]).expect("targets");
         app.handle_action(INTERACTION_SELECT_ACTION_ID, semio_framework_plugin::optional_json_to_dsl(Some(json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" }))).as_ref(), &meta("local")).await.expect("interactionSelect");
         dispatch(&mut app, WiresCommand::DeleteSelection(DeleteSelection {})).await;
-        assert!(fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).is_empty());
+        assert!(fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).is_empty());
     }
 }
 //#endregion 🧪️Tests

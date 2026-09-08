@@ -1,8 +1,8 @@
 //! 🌱 Shooting mutation payload — `CreateAsset`. Brings a new asset into existence. `index` is descriptive of authoring intent (the append-only apply always pushes onto the end of the list).
 
-use crate::artifacts::shooting::{ShootingAsset, ShootingSnapshot};
-use crate::artifacts::shooting::diff::ShootingDiff;
-use crate::artifacts::shooting::mutations::ShootingMutation;
+use crate::{ShootingAsset, ShootingSnapshot};
+use crate::diff::ShootingDiff;
+use crate::mutations::ShootingMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

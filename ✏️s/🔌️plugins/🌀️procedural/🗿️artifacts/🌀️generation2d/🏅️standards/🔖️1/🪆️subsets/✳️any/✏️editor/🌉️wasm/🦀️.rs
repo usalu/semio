@@ -5,8 +5,8 @@
 //! no engine entry, no `wasm` script target — see
 //! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).
 
-use crate::artifacts::generation2d::op::Generation2dMutation;
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::op::Generation2dMutation;
+use crate::Generation2dSnapshot;
 use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Store
@@ -281,7 +281,7 @@ impl Generation2dMountedRegistry {
         }
         let operation_id = operation.operation;
         let generation = operation.generation;
-        let _ = crate::artifacts::generation2d::spr::generation2d_release_publication_authority(semio_framework_job::OperationId(operation_id), semio_framework_job::Generation(generation));
+        let _ = crate::spr::generation2d_release_publication_authority(semio_framework_job::OperationId(operation_id), semio_framework_job::Generation(generation));
         let slot = self.operations.iter_mut().find(|slot| slot.as_ref().is_some_and(|entry| entry.matches(operation_id, generation))).expect("Generation2d close operation remains retained");
         *slot = None;
         self.operations.iter().all(Option::is_none)
@@ -430,24 +430,24 @@ mod mounted_laws {
 
         let operation = OperationId(u64::MAX - 71);
         assert_eq!(
-            crate::artifacts::generation2d::spr::generation2d_admit_publication_authority(operation, Generation(41), 41, 40, 41, GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, GENERATION2D_ENVELOPE_CONTROL_CREDITS),
+            crate::spr::generation2d_admit_publication_authority(operation, Generation(41), 41, 40, 41, GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, GENERATION2D_ENVELOPE_CONTROL_CREDITS),
             Err("generation2d-publication.initial-freshness")
         );
-        assert!(crate::artifacts::generation2d::spr::generation2d_admit_publication_authority(operation, Generation(41), 41, 41, 41, GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, GENERATION2D_ENVELOPE_CONTROL_CREDITS,)
+        assert!(crate::spr::generation2d_admit_publication_authority(operation, Generation(41), 41, 41, 41, GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, GENERATION2D_ENVELOPE_CONTROL_CREDITS,)
             .is_ok());
-        assert_eq!(crate::artifacts::generation2d::spr::generation2d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
-        assert_eq!(crate::artifacts::generation2d::spr::generation2d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation2d-publication.wrong-operation"));
-        assert_eq!(crate::artifacts::generation2d::spr::generation2d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("generation2d-publication.wrong-generation"));
-        crate::artifacts::generation2d::spr::generation2d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
-        assert_eq!(crate::artifacts::generation2d::spr::generation2d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("generation2d-publication.wrong-base"));
-        assert!(crate::artifacts::generation2d::spr::generation2d_release_publication_authority(operation, Generation(41)));
+        assert_eq!(crate::spr::generation2d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
+        assert_eq!(crate::spr::generation2d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation2d-publication.wrong-operation"));
+        assert_eq!(crate::spr::generation2d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("generation2d-publication.wrong-generation"));
+        crate::spr::generation2d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
+        assert_eq!(crate::spr::generation2d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("generation2d-publication.wrong-base"));
+        assert!(crate::spr::generation2d_release_publication_authority(operation, Generation(41)));
 
-        assert!(crate::artifacts::generation2d::spr::generation2d_admit_publication_authority(operation, Generation(42), 42, 42, 42, GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, GENERATION2D_ENVELOPE_CONTROL_CREDITS,)
+        assert!(crate::spr::generation2d_admit_publication_authority(operation, Generation(42), 42, 42, 42, GENERATION2D_ENVELOPE_MAXIMUM_ITEMS, GENERATION2D_ENVELOPE_OUTPUT_CHANNELS, GENERATION2D_ENVELOPE_CONTROL_CREDITS,)
             .is_ok());
-        assert!(crate::artifacts::generation2d::spr::generation2d_validate_publication_authority(operation, Generation(41)).is_err());
-        assert_eq!(crate::artifacts::generation2d::spr::generation2d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
-        assert_eq!(crate::artifacts::generation2d::spr::generation2d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
-        assert!(crate::artifacts::generation2d::spr::generation2d_release_publication_authority(operation, Generation(42)));
+        assert!(crate::spr::generation2d_validate_publication_authority(operation, Generation(41)).is_err());
+        assert_eq!(crate::spr::generation2d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
+        assert_eq!(crate::spr::generation2d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
+        assert!(crate::spr::generation2d_release_publication_authority(operation, Generation(42)));
     }
 
     #[test]
@@ -473,7 +473,7 @@ mod mounted_laws {
         assert!(snapshot_source.contains("one scalar byte opportunity"));
         assert!(lifecycle_fixture.contains("complete-before-ack"));
         assert!(owner_fixture.contains("change-generation-value"));
-        assert!(crate::artifacts::generation2d::spr::generation2d_retained_catalog_is_complete());
+        assert!(crate::spr::generation2d_retained_catalog_is_complete());
     }
 }
 //#endregion 🧪️MountedLaws

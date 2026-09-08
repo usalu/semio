@@ -4,7 +4,7 @@
 //! artifact in this repo imports from), so this is a direct `serde_json::from_value`, not a
 //! text-content projection like the prose formats.
 
-use crate::artifacts::writer::WriterSnapshot;
+use crate::WriterSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
@@ -38,7 +38,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn json_into_writer_round_trips_a_real_snapshot() {
-        let original = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello");
+        let original = crate::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello");
         let text = dsl::os_pack::json::to_json_string(&original);
         let outcome = JsonIntoWriter::deserialize(&IoPayload::Text(text)).await.expect("deserialize");
         assert_eq!(outcome.value, original);

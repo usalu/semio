@@ -6,7 +6,7 @@
 //! never a mime type, so `mimes` here is a documented synthesis, not a literal carry-over (see
 //! `📓️w4-vcs-report.md` `## openQuestions`, mirrors the sequence fan-out's identical deviation).
 
-use crate::artifacts::vcs::standards::v1::subsets;
+use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 

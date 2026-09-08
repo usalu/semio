@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔄processes` per Wave C.
 
 use super::DeleteProcess;
-use crate::artifacts::program::diff::ProgramProcessesDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramProcessesDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteProcess, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

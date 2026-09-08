@@ -1,7 +1,7 @@
 //! 🧬️ Drawing app config schema — every local-ui field of DrawingConfig.
 
-use crate::artifacts::drawing::DrawingCamera;
-use schema::ArtifactSchema;
+use crate::DrawingCamera;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Config
 /// 🎚️ Drawing app config — unshared local app state.
@@ -30,17 +30,17 @@ pub struct DrawingConfig {
 /// 📎 The `s.draw.drawing` app-schema descriptor (config + presence facets) — returned, not
 /// self-registered; `ArtifactApp::app_schema` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// W1c) hands it to `register_document_app` for registration.
-pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
-    ::schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> ::framework_schema::AppSchemaDescriptor {
+    ::framework_schema::AppSchemaDescriptor {
         id: "s.draw.drawing",
-        config: ::schema::FacetLeaves {
+        config: ::framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        presence: ::schema::FacetLeaves {
+        presence: ::framework_schema::FacetLeaves {
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),
             typescript: include_str!("../../👥️presence/🧬️schema/🟦️.ts"),
             graphql: include_str!("../../👥️presence/🧬️schema/🔗️.graphql"),

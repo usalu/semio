@@ -12,9 +12,9 @@
 //!
 //! ✂️ `br1` is the TRAILING element, so the `create-element` inverse — which appends — lands it back in its own slot.
 
-use crate::artifacts::fem2d::mutations::Fem2dMutation;
-use crate::artifacts::fem2d::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::mutations::Fem2dMutation;
+use crate::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -41,7 +41,7 @@ fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "delete-element/cuts-the-lower-e4a250: applied state differs from committed after-snapshot");
     assert_ne!(snapshot, base, "delete-element/cuts-the-lower-e4a250: the forward mutation left the model untouched, so nothing was proved");
     assert_eq!(snapshot.elements.len(), 6, "delete-element/cuts-the-lower-e4a250: the elements collection must end up 6 records long");
-    assert!(!snapshot.elements.iter().any(|item| crate::artifacts::fem2d::element_id(item) == "br1"), "delete-element/cuts-the-lower-e4a250: no record named br1 may survive");
+    assert!(!snapshot.elements.iter().any(|item| crate::element_id(item) == "br1"), "delete-element/cuts-the-lower-e4a250: no record named br1 may survive");
 }
 
 /// ↩️ Applying the computed inverse after the forward step lands back on `before`.
@@ -126,7 +126,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-element/cuts-the-lower-e4a250: committed diff JSON is not canonical");
@@ -135,7 +135,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed delta on `before` must reproduce the committed `after`.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-element/cuts-the-lower-e4a250: committed diff did not carry before to after");
 }

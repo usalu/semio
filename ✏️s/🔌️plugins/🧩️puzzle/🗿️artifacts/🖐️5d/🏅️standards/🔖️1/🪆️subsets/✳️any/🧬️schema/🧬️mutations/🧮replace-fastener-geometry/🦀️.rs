@@ -1,7 +1,7 @@
 //! Puzzle5d mutation — `ReplaceFastenerGeometry`: whole-value swap of a fastener's pose-solver connection pose.
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::Puzzle5dDiff;
+use crate::mutations::Puzzle5dMutation;
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
 /// `replace-fastener-geometry` payload.
@@ -42,6 +42,6 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplaceFaste
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_fastener_geometry(id: String, new_gap: f64, new_shift: f64, new_rise: f64, new_rotation: f64, new_turn: f64, new_tilt: f64, new_x: f64, new_y: f64) -> Puzzle5dMutation {
-    Puzzle5dMutation::ReplaceFastenerGeometry(ReplaceFastenerGeometry { id, new_gap, new_shift, new_rise, new_rotation, new_turn, new_tilt, new_x, new_y })
+pub fn replace_fastener_geometry(geometry: ReplaceFastenerGeometry) -> Puzzle5dMutation {
+    Puzzle5dMutation::ReplaceFastenerGeometry(geometry)
 }

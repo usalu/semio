@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/interpreter/component.json",
+  "title": "Semio OS Plugin Interpreter",
+  "$defs": {
+    "MemoryCopyRangesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "version", "cases"],
+      "properties": {
+        "$schema": { "type": "string", "minLength": 1 },
+        "version": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "cases": {
+          "type": "array",
+          "minItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "destination", "source", "length", "growPages", "outcome"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "destination": { "$ref": "#/$defs/InterpreterAddress" },
+              "source": { "$ref": "#/$defs/InterpreterAddress" },
+              "length": { "$ref": "#/$defs/InterpreterAddress" },
+              "growPages": { "type": "integer", "minimum": 0, "maximum": 1 },
+              "outcome": { "enum": ["ok", "trap"] },
+              "ownedError": { "type": "string", "minLength": 1 },
+              "expectedBytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "outcome": { "const": "trap" } }, "required": ["outcome"] },
+                "then": {
+                  "properties": { "ownedError": { "type": "string", "minLength": 1 } },
+                  "required": ["ownedError"],
+                  "not": { "properties": { "expectedBytes": {} }, "required": ["expectedBytes"] }
+                },
+                "else": {
+                  "properties": { "expectedBytes": { "type": "array" } },
+                  "required": ["expectedBytes"],
+                  "not": { "properties": { "ownedError": {} }, "required": ["ownedError"] }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "InterpreterAddress": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+  }
+}

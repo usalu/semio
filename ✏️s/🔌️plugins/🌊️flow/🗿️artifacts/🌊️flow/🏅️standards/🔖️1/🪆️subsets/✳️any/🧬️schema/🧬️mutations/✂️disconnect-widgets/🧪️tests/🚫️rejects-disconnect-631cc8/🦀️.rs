@@ -16,9 +16,9 @@
 //! one flow verb addressed by SYNAPSE id, so a scene full of widgets must still reject, and the
 //! diagnostic must name the synapse id rather than either endpoint widget.
 
-use crate::artifacts::flow::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
-use crate::artifacts::flow::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
-use flow::Widget;
+use crate::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
+use crate::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
+use semio_framework_artifact_flow_flow::Widget;
 use flow::OrderedMap;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

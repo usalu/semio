@@ -12,8 +12,8 @@
 //! shot half — see `ShootingConfig::selected_shot_ids`'s doc comment for why shot selection stayed a
 //! plain config field instead of joining the interaction domain.
 
-use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::op::ShootingMutation;
+use crate::ShootingSnapshot;
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

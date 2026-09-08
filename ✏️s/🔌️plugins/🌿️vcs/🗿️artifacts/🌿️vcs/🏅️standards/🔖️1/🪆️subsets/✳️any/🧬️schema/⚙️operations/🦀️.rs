@@ -1,7 +1,7 @@
 //! ⚙️ VCS mutation protocol dispatch, codec bridges, and cross-mutation store laws.
 
-use crate::artifacts::vcs::mutations::VcsDemoMutation;
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::mutations::VcsDemoMutation;
+use crate::VcsSnapshot;
 
 //#region 🏷️Roster
 /// 🏷️ Language-neutral catalog roster in aggregate declaration order.
@@ -57,9 +57,9 @@ pub fn inverse_vcs_mutation_steps(mutation: &VcsDemoMutation, base: &VcsSnapshot
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::vcs::standards::v1::subsets::any::schema::empty_vcs_snapshot;
+    use crate::standards::v1::subsets::any::schema::empty_vcs_snapshot;
     use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
-    use crate::artifacts::vcs::mutations::{add_tag, change_counter, change_notes, remove_tag, rename_vcs, register_vcs_demo_mutation_descriptors, AddTag, RemoveTag};
+    use crate::mutations::{add_tag, change_counter, change_notes, remove_tag, rename_vcs, register_vcs_demo_mutation_descriptors, AddTag, RemoveTag};
     use protocol::{Mutation, MutationDiff, MutationKind, SemanticMutation};
 
     #[semio_framework_async_macros::async_test]
@@ -107,7 +107,7 @@ mod tests {
         base.tags.push("wip".into());
         let payload = AddTag { tag: "wip".into() };
         let outcome = MutationKind::diff(&payload, &base);
-        assert_eq!(outcome.diff(), &crate::artifacts::vcs::VcsDiff::default());
+        assert_eq!(outcome.diff(), &crate::VcsDiff::default());
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"), "a duplicate add must carry a no-op message");
         assert!(MutationKind::inverse(&payload, &base).is_empty(), "inverse of a no-op add must have nothing to undo");
     }

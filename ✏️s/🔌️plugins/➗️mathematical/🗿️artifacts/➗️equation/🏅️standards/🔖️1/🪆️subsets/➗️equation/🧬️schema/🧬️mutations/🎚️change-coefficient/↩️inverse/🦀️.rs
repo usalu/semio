@@ -1,8 +1,8 @@
 //! ↩️ `change-coefficient` — undo reconstructed from BASE's own value at `label`; missing or
 //! non-numeric target ⇒ `Vec::new()` (nothing to undo).
 
-use crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::EquationNodeKind;
-use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::EquationNodeKind;
+use crate::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::ChangeCoefficient, base: &EquationSnapshot) -> Vec<EquationMutation> {

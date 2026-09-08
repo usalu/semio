@@ -1,0 +1,38 @@
+[package]
+name = "semio-s-artifact-norm-en1991"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Norm en1991 artifact"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+default = []
+cross-fem = []
+
+[dependencies]
+semio-s-artifact-norm-contract = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+pack = { workspace = true }
+semio-s-artifact-norm-en1990 = { workspace = true }
+
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-ui-scene = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

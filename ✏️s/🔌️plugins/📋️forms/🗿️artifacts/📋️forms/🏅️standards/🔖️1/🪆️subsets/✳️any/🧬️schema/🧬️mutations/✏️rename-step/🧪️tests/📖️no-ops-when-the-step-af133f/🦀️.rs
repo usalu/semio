@@ -17,8 +17,8 @@
 //! ✏️ Nothing in the seeded scene is invented: the one step it holds takes its `id` AND its `title`
 //! straight from the committed payload — that identity is precisely the collision the guard tests.
 
-use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{materialize_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
+use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::{materialize_forms_steps, forms_steps, FormStep, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

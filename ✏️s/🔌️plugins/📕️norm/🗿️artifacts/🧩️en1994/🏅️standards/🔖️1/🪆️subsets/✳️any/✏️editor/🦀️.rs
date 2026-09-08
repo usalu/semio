@@ -6,8 +6,8 @@
 //! the sibling command/panel/window nodes moved here too, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
-use crate::artifacts::en1994::op::En1994Mutation;
-use crate::artifacts::en1994::En1994Snapshot;
+use crate::op::En1994Mutation;
+use crate::En1994Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use crate::editor::en1994::commands::{evaluate, selected_check, set_snapshot};
 use crate::editor::en1994::modes::edit as edit_mode;
@@ -66,7 +66,7 @@ impl ArtifactEditor for En1994PlayApp {
 
     type Command = En1994Command;
 
-    const DIALECT: Dialect = crate::artifacts::en1994::EN1994_DIALECT;
+    const DIALECT: Dialect = crate::EN1994_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.norm.en1994/v1";
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -105,7 +105,7 @@ impl ArtifactEditor for En1994PlayApp {
 
     /// 📎️ All fifteen norm apps share NormConfig (see crate::config::schema doc) — one
     /// AppSchemaDescriptor for all fifteen, registered idempotently by whichever app binds first.
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::config::schema::app_schema_descriptor())
     }
 
@@ -185,7 +185,7 @@ impl crate::document::NormFamily for En1994Family {
     }
 
     fn evaluate(document: &En1994Snapshot) -> crate::document::CheckReport {
-        crate::artifacts::en1994::standards::v1::subsets::any::schema::inferences::evaluate(document)
+        crate::standards::v1::subsets::any::schema::inferences::evaluate(document)
     }
 }
 
@@ -194,9 +194,9 @@ pub type Host = NormHost<En1994Family>;
 
 //#region ðï¸Manifest
 pub fn create_en1994_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::en1994::EN1994_DIALECT)
+    Editor::builder(crate::EN1994_DIALECT)
             .document(["semio", "norm", VARIANT])
-            .artifact_kind(crate::artifacts::en1994::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             .io(crate::app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
             .mode_def(edit_mode::definition())
             .default_mode_id(crate::app_surface::MODE_EDIT)

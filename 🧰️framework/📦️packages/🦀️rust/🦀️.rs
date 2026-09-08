@@ -3,14 +3,7 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as protocol_core;
-// 🔁️ ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1: `store`
-// alias (same pattern every plugin's own glue.rs already uses) so `🔁️workflow/🦀️.rs`'s
-// `store::ArtifactPack`/`store::ArtifactDsl`/etc. references resolve once mounted below — this
-// crate never referenced `store::` directly before, only through re-exported item names.
 extern crate semio_framework_os_kernel as store;
-// 🔁️ self-alias so `🔁️workflow/🦀️.rs`'s own `use semio_framework::{...}` lines resolve
-// once mounted below — this crate never needed to refer to itself by its external name before.
-extern crate self as semio_framework;
 
 pub use ui_wgpu::wgpu::IconName;
 pub use ui_wgpu::wgpu::{Locale, Terminology};
@@ -2021,15 +2014,7 @@ pub mod interaction {
     pub mod schema;
 }
 
-// 🔁️ ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1: mounted
-// HERE, not in the os-kernel crate — its `semio_framework::{AppDefinition, MediaClass, MediaType,
-// ConfigSpec, Terminology, Locale, …}` references need this crate's full assembled surface (mesh's
-// media vocabulary, manifest's kernel types, ui_wgpu's Locale/Terminology — all re-exported below),
-// which the wasm-safe os-kernel crate cannot depend on without a real dependency cycle (see the
-// os-kernel glue.rs's own comment at the site this used to be attempted). The run crate's own
-// `extern crate ... as workflow;` alias points here now, not at the kernel.
-#[path = "../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️.rs"]
-pub mod workflow;
+
 
 pub use action_bus::{
     optional_json_to_dsl, ActionBus, ErasedToolJob, ToolCancellationPolicy, ToolDispatchError, ToolExecutionContract, ToolExecutionShape, ToolFactoryKey, ToolFreshnessPolicy, ToolJobDispatch, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
@@ -2178,4 +2163,3 @@ pub use manifest::kernel::{
 };
 pub use manifest::*;
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
-pub use workflow::*;

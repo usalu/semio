@@ -2,10 +2,10 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::presentation::mutations::resize_tile_crop::ResizeTileCrop;
-use crate::artifacts::presentation::op::PresentationMutation;
-use crate::artifacts::presentation::schema::clamp_tile_crop;
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::mutations::resize_tile_crop::ResizeTileCrop;
+use crate::op::PresentationMutation;
+use crate::schema::clamp_tile_crop;
+use crate::PresentationSnapshot;
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
 use crate::editor::animate::PresentationDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -22,7 +22,7 @@ pub struct PatchTileCrops {
 
 pub fn handle(payload: &PatchTileCrops, doc: &ArtifactView<'_, PresentationSnapshot>, _cfg: &ConfigView<'_, PresentationConfig>, _ctx: &mut PresentationDispatchCtx) -> Result<Emit<PresentationMutation, PresentationConfigMutation>, Fault> {
     let deck = doc.snapshot;
-    let (_, deck_tiles) = crate::artifacts::presentation::presentation_working_scene(deck);
+    let (_, deck_tiles) = crate::presentation_working_scene(deck);
     let targets: HashSet<&str> = payload.ids.iter().map(String::as_str).collect();
     let operations: Vec<PresentationMutation> = deck_tiles
         .iter()

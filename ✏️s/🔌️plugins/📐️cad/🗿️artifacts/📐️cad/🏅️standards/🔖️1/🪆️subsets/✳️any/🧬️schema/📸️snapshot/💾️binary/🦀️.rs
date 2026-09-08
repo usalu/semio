@@ -1,7 +1,7 @@
 //! 🎒️ CAD artifact — the binary document surface: `encode`/`decode` over the derive-generated
 //! `store::ArtifactPack`, and the law that pack and dsl are two projections of the same `CadSnapshot`.
 
-use crate::artifacts::cad::CadSnapshot;
+use crate::CadSnapshot;
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -24,7 +24,7 @@ pub fn decode(bytes: &[u8]) -> Result<CadSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::testkit::sample_scene;
+    use crate::testkit::sample_scene;
 
     #[semio_framework_async_macros::async_test]
     async fn cad_scene_round_trips_through_pack() {
@@ -40,9 +40,9 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::cad::mutations::create_shape_model::CreateShapeModel;
-        use crate::artifacts::cad::op::CadMutation;
-        use crate::artifacts::cad::{empty_cad_snapshot, testkit::sample_model_child, CAD_DOCUMENT_SCHEMA};
+        use crate::mutations::create_shape_model::CreateShapeModel;
+        use crate::op::CadMutation;
+        use crate::{empty_cad_snapshot, testkit::sample_model_child, CAD_DOCUMENT_SCHEMA};
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 

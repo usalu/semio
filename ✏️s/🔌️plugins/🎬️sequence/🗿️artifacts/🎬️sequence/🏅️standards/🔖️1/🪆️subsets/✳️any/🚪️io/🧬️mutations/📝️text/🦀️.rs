@@ -2,7 +2,7 @@
 //! Mutation diff/inverse live in the `🧬️mutations/<slug>/` triad leaves; this facet only
 //! handcrafts the op wire forms.
 
-pub use crate::artifacts::sequence::schema::mutations::{apply_sequence_mutation, inverse_sequence_mutation, sequence_snapshot_mutations, SequenceEnvelope, SequenceMutation, SequenceStore};
+pub use crate::schema::mutations::{apply_sequence_mutation, inverse_sequence_mutation, sequence_snapshot_mutations, SequenceEnvelope, SequenceMutation, SequenceStore};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

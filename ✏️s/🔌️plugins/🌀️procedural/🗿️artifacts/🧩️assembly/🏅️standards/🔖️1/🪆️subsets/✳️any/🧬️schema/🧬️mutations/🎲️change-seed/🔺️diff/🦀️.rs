@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeSeed` — a single-field scalar delta.
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::diff::AssemblyDiff;
+use crate::schema::snapshot::AssemblySnapshot;
 
 pub fn diff(payload: &super::ChangeSeed, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     if base.seed == payload.seed {

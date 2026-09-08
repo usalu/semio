@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeActiveModelDefinition`.
 use super::ChangeActiveModelDefinition;
-use crate::artifacts::cad::diff::CadDiff;
-use crate::artifacts::cad::CadSnapshot;
+use crate::diff::CadDiff;
+use crate::CadSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeActiveModelDefinition, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {

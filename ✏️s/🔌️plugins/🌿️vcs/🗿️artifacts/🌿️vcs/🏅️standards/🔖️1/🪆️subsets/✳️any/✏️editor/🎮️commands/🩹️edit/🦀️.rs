@@ -1,13 +1,13 @@
 //! 🩹️ 🩹️ VCS play app commands command — `edit`.
 
-use crate::artifacts::vcs::{op::VcsDemoMutation, VcsSnapshot};
+use crate::{op::VcsDemoMutation, VcsSnapshot};
 use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Helpers
 fn vcs_demo_projection_diff_operations(current: &VcsSnapshot, next: &VcsSnapshot) -> Vec<VcsDemoMutation> {
-    use crate::artifacts::vcs::mutations::{add_tag, change_counter, change_notes, change_status, remove_tag, rename_vcs};
+    use crate::mutations::{add_tag, change_counter, change_notes, change_status, remove_tag, rename_vcs};
     use std::collections::BTreeSet;
     let mut operations = Vec::new();
     if next.title != current.title {

@@ -5,8 +5,8 @@
 //! selection, no engagement, no gumball/dislocate: a viewer has no utilities that edit and emits no
 //! mutations by construction (`ViewEmit`).
 
-use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_camera_projection_config;
-use crate::artifacts::cad::{CadCamera, CadPaneId, CadSnapshot};
+use crate::standards::v1::subsets::any::schema::inferences::cad_camera_projection_config;
+use crate::{CadCamera, CadPaneId, CadSnapshot};
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::{mesh_from_kind, world3d_camera_projection_json, world3d_selection_json, BuiltNode, LocalizedLabel, MeshView, MeshWindowKit, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use ui_wgpu::wgpu::SurfaceKind;
@@ -85,7 +85,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::forest_play_scene();
+        let document = crate::standards::v1::subsets::any::schema::inferences::forest_play_scene();
         let _node = render(&document);
     }
 }

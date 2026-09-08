@@ -1,7 +1,7 @@
 //! 🧬️ VCS snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::vcs::VCS_DOCUMENT_SCHEMA;
-use schema::ArtifactSchema;
+use crate::VCS_DOCUMENT_SCHEMA;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted VCS demo document snapshot (persistent fields of the artifact).

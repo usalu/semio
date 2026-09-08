@@ -1,12 +1,12 @@
 //! ↩️ Inverse for `ReplaceAttractionGeometry` — restores the BASE field value. Missing target ⇒ `Vec::new()`.
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::mutations::Puzzle3dMutation;
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::ReplaceAttractionGeometry, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
     let Some(item) = base.attractions.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::artifacts::puzzle3d::mutations::replace_attraction_geometry::mutation::replace_attraction_geometry(item.id.clone(), item.gap, item.shift, item.rise, item.rotation, item.turn, item.tilt, item.x, item.y)]
+    vec![crate::mutations::replace_attraction_semio_framework_geometry::mutation::replace_attraction_geometry(crate::mutations::ReplaceAttractionGeometry { id: item.id.clone(), new_gap: item.gap, new_shift: item.shift, new_rise: item.rise, new_rotation: item.rotation, new_turn: item.turn, new_tilt: item.tilt, new_x: item.x, new_y: item.y })]
 }
 //#endregion 🔖️Inverse

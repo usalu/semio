@@ -1,8 +1,8 @@
 //! ↩️ Inverse reconstruction for `delete-position` — reads the BASE item, never the diff.
 use super::DeletePosition;
-use crate::artifacts::gismap::mutations::create_position::CreatePosition;
-use crate::artifacts::gismap::mutations::GisMapMutation;
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::mutations::create_position::CreatePosition;
+use crate::mutations::GisMapMutation;
+use crate::GisMapSnapshot;
 
 //#region 🔹Inverse
 /// ↩️ Undo re-creates the feature at its pre-deletion index, captured from `base` — missing target

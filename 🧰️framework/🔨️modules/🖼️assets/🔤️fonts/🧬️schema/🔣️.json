@@ -21,7 +21,7 @@
       ],
       "properties": {
         "$schema": {
-          "const": "./🧬️catalog.schema.json"
+          "const": "./🧬️schema/🔣️.json"
         },
         "version": {
           "const": 1

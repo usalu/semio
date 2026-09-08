@@ -1,5 +1,5 @@
 //! Deserialize layout via stdio.dwg.
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::LayoutSnapshot;
 use semio_s_artifact_stdio_dwg::schema::snapshot::{decode_dwg, encode_dwg};
 use semio_s_artifact_stdio_dwg::{dwg_from_bytes, DwgDrawing, DwgSnapshot};
 
@@ -18,6 +18,6 @@ pub fn deserialize(from: &DwgSnapshot) -> Result<LayoutSnapshot, store::TextErro
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<LayoutSnapshot, store::TextError> {
     let _meta = decode_dwg(bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
     let drawing: DwgDrawing = dwg_from_bytes(bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
-    let value = crate::artifacts::layout::io::layout_document_json_from_dwg(&drawing).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
+    let value = crate::io::layout_document_json_from_dwg(&drawing).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))?;
     <LayoutSnapshot as dsl::FromValue>::from_value(value).map_err(|e| store::TextError::new(format!("layout<-dwg: {e}"), dsl::TextSpan::at(1, 1)))
 }

@@ -7,7 +7,7 @@
 //! plain function suffices — no `InferredField`/per-entity caching needed (see the family root's
 //! doc comment for why).
 
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::PresentationSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
@@ -23,9 +23,9 @@ pub struct PresentationTopology {
 
 /// 🧮️ Computes [`PresentationTopology`] from a presentation snapshot's persisted tile order (read through the
 /// working-scene accessor off the `presentation` child handle — see
-/// `crate::artifacts::presentation::presentation_working_scene`).
+/// `crate::presentation_working_scene`).
 pub fn compute_presentation_topology(snapshot: &PresentationSnapshot) -> PresentationTopology {
-    let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(snapshot);
+    let (_, tiles) = crate::presentation_working_scene(snapshot);
     let topo_order: Vec<String> = tiles.iter().map(|tile| tile.id.clone()).collect();
     let depth = topo_order.iter().enumerate().map(|(index, id)| (id.clone(), index as u32)).collect();
     PresentationTopology { topo_order, depth, cycle_free: true, node_count: tiles.len() as u32 }
@@ -36,7 +36,7 @@ pub fn compute_presentation_topology(snapshot: &PresentationSnapshot) -> Present
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::presentation::{FigureTileDraft, FigureTileFrame};
+    use crate::{FigureTileDraft, FigureTileFrame};
 
     fn tile(id: &str) -> FigureTileDraft {
         FigureTileDraft { id: id.into(), name: id.into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }
@@ -54,8 +54,8 @@ mod tests {
 
     #[test]
     fn depth_matches_persisted_index() {
-        let (source, _) = crate::artifacts::presentation::presentation_working_scene(&PresentationSnapshot::default());
-        let snapshot = crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &[tile("a"), tile("b")]);
+        let (source, _) = crate::presentation_working_scene(&PresentationSnapshot::default());
+        let snapshot = crate::presentation_snapshot_with_tiles(&source, &[tile("a"), tile("b")]);
         let topology = compute_presentation_topology(&snapshot);
         assert_eq!(topology.depth.get("a"), Some(&0));
         assert_eq!(topology.depth.get("b"), Some(&1));

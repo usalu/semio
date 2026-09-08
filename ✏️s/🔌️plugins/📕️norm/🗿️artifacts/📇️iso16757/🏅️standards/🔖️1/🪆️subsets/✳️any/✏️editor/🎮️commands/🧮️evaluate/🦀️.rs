@@ -6,8 +6,8 @@
 //! a command-log entry; now that whole-document replace has no vocabulary equivalent, the honest
 //! fix is to emit zero mutations (`Emit::default()`) rather than inventing a fake semantic edit.
 
-use crate::artifacts::iso16757::op::Iso16757Mutation;
-use crate::artifacts::iso16757::Iso16757Snapshot;
+use crate::op::Iso16757Mutation;
+use crate::Iso16757Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

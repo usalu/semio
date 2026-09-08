@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::presentation::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
+use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 
 /// 📄️ The handcrafted `.presentation` DSL-text fixture — a multi-tile deck exercising every field
 /// (including the optional `source-aspect`), embedded at compile time as the permanent proof that
@@ -119,8 +119,8 @@ impl store::ArtifactDsl for PresentationSnapshot {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::presentation::default_presentation_snapshot;
-    use crate::artifacts::presentation::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+    use crate::default_presentation_snapshot;
+    use crate::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
     use store::os_store::test_support;
 
     #[test]
@@ -132,9 +132,9 @@ mod tests {
     #[test]
     fn dsl_round_trip_presentation_deck_with_tiles() {
         let deck = default_presentation_snapshot();
-        let (source, _) = crate::artifacts::presentation::presentation_working_scene(&deck);
+        let (source, _) = crate::presentation_working_scene(&deck);
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-        let deck = crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &tiles);
+        let deck = crate::presentation_snapshot_with_tiles(&source, &tiles);
         test_support::assert_dsl_round_trip(&deck);
         test_support::assert_dsl_pack_equivalence(&deck);
     }

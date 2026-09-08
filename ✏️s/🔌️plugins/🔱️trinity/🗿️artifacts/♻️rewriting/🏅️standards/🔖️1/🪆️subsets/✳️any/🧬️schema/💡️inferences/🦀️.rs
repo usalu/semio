@@ -7,7 +7,7 @@
 //! a typed shape for — `before_fixture_json`/`lhs_json`/`rhs_json` are opaque JSON blobs, not
 //! structured graph data this artifact's own snapshot exposes).
 
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
@@ -46,7 +46,7 @@ impl protocol::InferenceSpec<RewritingSnapshot> for RewritingInference {
 //#region 🔖️ArtifactInferrer
 /// 🧠️ Uncached: a handful of `{x, y}` points recomputed in one pass — the default `infer_cached`
 /// passthrough (just calls `infer`) is exactly right here, no `InferredField` chain needed.
-impl ArtifactInferrer for crate::artifacts::rewriting::standards::v1::subsets::any::schema::RewritingBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::RewritingBuilder {
     type Snapshot = RewritingSnapshot;
     type Inference = RewritingInference;
 }
@@ -73,7 +73,7 @@ pub fn rewriting_artifact_inference_descriptor() -> schema::ArtifactInferenceDes
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::rewriting::LayoutPoint;
+    use crate::LayoutPoint;
     use protocol::Inference;
     use std::collections::BTreeMap;
 

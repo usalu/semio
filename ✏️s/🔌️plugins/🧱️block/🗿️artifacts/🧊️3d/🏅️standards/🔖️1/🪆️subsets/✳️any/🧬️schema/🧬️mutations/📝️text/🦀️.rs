@@ -1,6 +1,6 @@
 //! ⚡️ Block3d artifact — OpText/OpBinary codecs + grammar for `Block3dMutation`.
 
-pub use crate::artifacts::block3d::schema::mutations::{apply_block3d_mutation, inverse_block3d_mutation, Block3dMutation};
+pub use crate::schema::mutations::{apply_block3d_mutation, inverse_block3d_mutation, Block3dMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

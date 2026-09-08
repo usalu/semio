@@ -1,8 +1,8 @@
 //! ↩️ Inverse reconstruction for `create-route` — undo is deleting the created feature.
 use super::CreateRoute;
-use crate::artifacts::gismap::mutations::delete_route::DeleteRoute;
-use crate::artifacts::gismap::mutations::GisMapMutation;
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::mutations::delete_route::DeleteRoute;
+use crate::mutations::GisMapMutation;
+use crate::GisMapSnapshot;
 
 //#region 🔹Inverse
 /// ↩️ Undo removes the feature this mutation created, addressed by its own id (captured from the

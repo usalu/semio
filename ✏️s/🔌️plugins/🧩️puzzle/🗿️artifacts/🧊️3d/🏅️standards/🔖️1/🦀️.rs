@@ -8,7 +8,7 @@
 //! `🖍️draw`/`🔱️trinity`'s identical documented deviation); `extensions: ["puzzle3d-play"]` is the
 //! real, carried-over value from `definition()`'s `s.puzzle3d.codec.document-1` row.
 
-use crate::artifacts::puzzle3d::standards::v1::subsets;
+use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 

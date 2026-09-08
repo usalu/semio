@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/mathematical/equation/1/graph/mutation/update-graph-algorithm.json",
+  "$id": "https://semio.tech/schema/s/mathematical/equation/1/graph/mutation/update-graph-algorithm/schema.json",
   "title": "UpdateGraphAlgorithm",
   "type": "object",
   "additionalProperties": false,

@@ -1,10 +1,11 @@
 //! 🧩️ 🧩️ Generation3d play app commands command — `patch-flow-widgets`.
 
-use crate::artifacts::generation3d::op::{generation3d_fixture_operations, Generation3dMutation};
-use crate::artifacts::generation3d::schema::host_from_fixture;
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::op::{generation3d_fixture_operations, Generation3dMutation};
+use crate::schema::host_from_fixture;
+use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use flow::{FlowEvalSession, Widget};
+use semio_framework_os_flow::{FlowEvalSession};
+use semio_framework_artifact_flow_semio_framework_os_flow::{Widget};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -21,7 +22,7 @@ pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, Generation3dSna
     let mut host = host_from_fixture(fixture);
     let baseline = host.fixture.clone();
     for widget in host.fixture.widgets.iter_mut() {
-        if !payload.widget_ids.contains(&crate::artifacts::generation3d::widget_id(widget).to_string()) {
+        if !payload.widget_ids.contains(&crate::widget_id(widget).to_string()) {
             continue;
         }
         if let (Widget::InputSlider { value: slider_value, .. }, Some(new_value)) = (widget, payload.value) {

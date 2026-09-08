@@ -1,7 +1,7 @@
 //! 🔺️ Sparse `FlowDiff` construction for `move-widgets` against the current working scene (never a
 //! whole-snapshot capture).
-use crate::artifacts::flow::schema::diff::text::{diff_replace_content, FlowDiff};
-use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
+use crate::schema::diff::text::{diff_replace_content, FlowDiff};
+use crate::{flow_working_scene, FlowSnapshot};
 use protocol::Identified;
 
 use super::MoveWidgets;

@@ -7,7 +7,7 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::din18599::{Din18599Diff, Din18599Mutation, Din18599Snapshot};
+use crate::{Din18599Diff, Din18599Mutation, Din18599Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -34,7 +34,7 @@ fn applied() -> Din18599Snapshot {
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let snapshot = applied();
-    assert_eq!(snapshot.use_class, crate::artifacts::din18599::UseClass::Office, "change-use-class/reclassifies-the-building-as-an-office: the use class must be Office");
+    assert_eq!(snapshot.use_class, crate::UseClass::Office, "change-use-class/reclassifies-the-building-as-an-office: the use class must be Office");
     assert_eq!(snapshot.occupants, before().occupants, "change-use-class/reclassifies-the-building-as-an-office: reclassifying must not silently re-derive the occupancy");
     assert_eq!(snapshot, expected_after(), "change-use-class/reclassifies-the-building-as-an-office: applied state differs from committed after-snapshot");
 }
@@ -102,7 +102,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
-    assert_eq!(raised_diff.use_class, Some(crate::artifacts::din18599::UseClass::Office), "change-use-class/reclassifies-the-building-as-an-office: the diff must publish useClass = Office");
+    assert_eq!(raised_diff.use_class, Some(crate::UseClass::Office), "change-use-class/reclassifies-the-building-as-an-office: the diff must publish useClass = Office");
     assert!(raised_diff.heated_area_m2.is_none(), "change-use-class/reclassifies-the-building-as-an-office: the heated area is a separate scalar and must stay null");
     let produced = serde_json::to_value(raised_diff).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");

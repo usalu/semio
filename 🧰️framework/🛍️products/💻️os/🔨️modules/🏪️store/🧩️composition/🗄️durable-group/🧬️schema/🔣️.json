@@ -1,0 +1,261 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/store/composition/durable-group/schema.json",
+  "title": "Store Durable Owned Group",
+  "$defs": {
+    "DurableOwnedGroupDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "limits", "schemas", "anchor", "members", "carrier", "publication", "committedRecovery", "expected", "cases"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "limits": { "$ref": "#/$defs/DurableOwnedGroupLimits" },
+        "schemas": { "$ref": "#/$defs/DurableOwnedGroupSchemas" },
+        "anchor": { "$ref": "#/$defs/DurableOwnedGroupAnchor" },
+        "members": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parent", "drawing", "value"],
+          "properties": {
+            "parent": { "$ref": "#/$defs/DurableOwnedGroupMember" },
+            "drawing": { "$ref": "#/$defs/DurableOwnedGroupMember" },
+            "value": { "$ref": "#/$defs/DurableOwnedGroupMember" }
+          }
+        },
+        "carrier": { "$ref": "#/$defs/DurableOwnedGroupCarrier" },
+        "publication": { "$ref": "#/$defs/DurableOwnedGroupPublication" },
+        "committedRecovery": { "$ref": "#/$defs/DurableOwnedGroupCommittedRecovery" },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["anchorSha256", "decisionSha256", "unsignedJson"],
+          "properties": {
+            "anchorSha256": { "$ref": "#/$defs/DurableOwnedGroupHash" },
+            "decisionSha256": { "$ref": "#/$defs/DurableOwnedGroupHash" },
+            "unsignedJson": { "type": "string", "minLength": 1 }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/DurableOwnedGroupCase" }
+        }
+      }
+    },
+    "DurableOwnedGroupLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["participants", "eventBytes", "recoveryPackBytes", "structuralIdentityBytes", "identityBytes", "walSegmentBytes", "walFramingReserveBytes"],
+      "properties": {
+        "participants": { "type": "integer", "minimum": 1 },
+        "eventBytes": { "type": "integer", "minimum": 1 },
+        "recoveryPackBytes": { "type": "integer", "minimum": 1 },
+        "structuralIdentityBytes": { "type": "integer", "minimum": 1 },
+        "identityBytes": { "type": "integer", "minimum": 1 },
+        "walSegmentBytes": { "type": "integer", "minimum": 1 },
+        "walFramingReserveBytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "DurableOwnedGroupSchemas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "anchor", "parent", "drawing", "value"],
+      "properties": {
+        "decision": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "anchor": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "parent": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "drawing": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "value": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "DurableOwnedGroupCarrier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxJsonDepth", "maxJsonItems", "numericCases", "escapedControlIdentity", "escapedControlExpected"],
+      "properties": {
+        "maxJsonDepth": { "type": "integer", "minimum": 1 },
+        "maxJsonItems": { "type": "integer", "minimum": 1 },
+        "numericCases": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "canonical", "kind", "expected"],
+            "properties": {
+              "id": { "enum": ["u64-max", "i64-min", "finite-float"] },
+              "canonical": { "type": "string", "minLength": 1 },
+              "kind": { "enum": ["uint", "int", "float"] },
+              "expected": { "$ref": "#/$defs/DurableOwnedGroupAdmission" }
+            }
+          }
+        },
+        "escapedControlIdentity": { "type": "string", "minLength": 1 },
+        "escapedControlExpected": { "$ref": "#/$defs/DurableOwnedGroupAdmission" }
+      }
+    },
+    "DurableOwnedGroupAdmission": { "enum": ["admit", "reject"] },
+    "DurableOwnedGroupPublication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commitPhases", "pendingRoots", "committedRoots", "cancellationResolution", "ambiguousJournalError", "acknowledgement", "host"],
+      "properties": {
+        "commitPhases": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "pendingRoots": { "$ref": "#/$defs/DurableOwnedGroupRoots" },
+        "committedRoots": { "$ref": "#/$defs/DurableOwnedGroupRoots" },
+        "cancellationResolution": { "enum": ["absent", "present"] },
+        "ambiguousJournalError": { "enum": ["retry", "abort"] },
+        "acknowledgement": { "enum": ["required", "optional"] },
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["slots", "operationVisibility", "requestOwnsOperation", "replaceWhileOccupied", "ackSource", "terminalHandoff"],
+          "properties": {
+            "slots": { "type": "integer", "minimum": 1 },
+            "operationVisibility": { "enum": ["private", "public"] },
+            "requestOwnsOperation": { "type": "boolean" },
+            "replaceWhileOccupied": { "enum": ["reject", "replace"] },
+            "ackSource": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "terminalHandoff": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        }
+      }
+    },
+    "DurableOwnedGroupRoots": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "integer", "minimum": 0 }
+    },
+    "DurableOwnedGroupCommittedRecovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority", "witness", "journalBegins", "cancellation", "cases"],
+      "properties": {
+        "authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["consumer", "recordEscape", "receiptSource", "terminalHandoff"],
+          "properties": {
+            "consumer": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "recordEscape": { "type": "boolean" },
+            "receiptSource": { "enum": ["derived", "supplied"] },
+            "terminalHandoff": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        },
+        "witness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["recordKind", "transaction", "bodyRecords", "transactionId", "segmentIndex"],
+          "properties": {
+            "recordKind": { "enum": ["event", "checkpoint"] },
+            "transaction": { "enum": ["pending", "committed", "aborted"] },
+            "bodyRecords": { "type": "integer", "minimum": 0 },
+            "transactionId": { "type": "integer", "minimum": 1 },
+            "segmentIndex": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "journalBegins": { "type": "integer", "minimum": 0 },
+        "cancellation": { "enum": ["forbidden-after-commit", "allowed-before-commit"] },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "frontiers", "receipt", "expected"],
+            "properties": {
+              "id": { "enum": ["all-base", "all-post", "mixed", "foreign-receipt"] },
+              "frontiers": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "enum": ["base", "post"] }
+              },
+              "receipt": { "enum": ["matching", "foreign"] },
+              "expected": { "enum": ["apply", "already-applied", "reject"] }
+            }
+          }
+        }
+      }
+    },
+    "DurableOwnedGroupCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "variants", "codecExpected", "expected"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "variants": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "codecExpected": { "$ref": "#/$defs/DurableOwnedGroupAdmission" },
+        "expected": { "enum": ["admit", "reject", "recover", "corrupt"] }
+      }
+    },
+    "DurableOwnedGroupHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "DurableOwnedGroupHex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
+    "DurableOwnedGroupDialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactKind", "standard", "subset"],
+      "properties": {
+        "artifactKind": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "standard": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "subset": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "DurableOwnedGroupReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactId", "dialect"],
+      "properties": {
+        "artifactId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "dialect": { "$ref": "#/$defs/DurableOwnedGroupDialect" }
+      }
+    },
+    "DurableOwnedGroupOwner": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["parent", "slot", "childId"],
+      "properties": {
+        "parent": { "$ref": "#/$defs/DurableOwnedGroupReference" },
+        "slot": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "childId": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "DurableOwnedGroupAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "parent", "shape"],
+      "properties": {
+        "schema": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "parent": { "$ref": "#/$defs/DurableOwnedGroupReference" },
+        "shape": { "const": "parent-drawing-value" }
+      }
+    },
+    "DurableOwnedGroupMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "reference", "owner", "expectedGeneration", "expectedRevisionHex", "recoverySchema", "callerRecoveryPackHex", "callerRecoveryPackSha256", "callerRecoveryExpected", "unboundOutcomePackHex", "unboundOutcomeSha256", "postGeneration", "postRevisionHex"],
+      "properties": {
+        "role": { "enum": ["parent", "drawing", "value"] },
+        "reference": { "$ref": "#/$defs/DurableOwnedGroupReference" },
+        "owner": { "$ref": "#/$defs/DurableOwnedGroupOwner" },
+        "expectedGeneration": { "type": "integer", "minimum": 0 },
+        "expectedRevisionHex": { "$ref": "#/$defs/DurableOwnedGroupHash" },
+        "recoverySchema": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "callerRecoveryPackHex": { "$ref": "#/$defs/DurableOwnedGroupHex" },
+        "callerRecoveryPackSha256": { "$ref": "#/$defs/DurableOwnedGroupHash" },
+        "callerRecoveryExpected": { "$ref": "#/$defs/DurableOwnedGroupAdmission" },
+        "unboundOutcomePackHex": { "$ref": "#/$defs/DurableOwnedGroupHex" },
+        "unboundOutcomeSha256": { "$ref": "#/$defs/DurableOwnedGroupHash" },
+        "postGeneration": { "type": "integer", "minimum": 1 },
+        "postRevisionHex": { "$ref": "#/$defs/DurableOwnedGroupHash" }
+      }
+    }
+  }
+}

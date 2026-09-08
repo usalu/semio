@@ -1,7 +1,7 @@
 //! 🧭 `topology` — one named inference: execution-order topology stats derived from the DAG's
 //! own node/edge graph (topological order, per-node longest-path depth, cycle-freedom, node count).
 
-use crate::artifacts::dag::{DagFixtureEdge, DagNodeSpec};
+use crate::{DagFixtureEdge, DagNodeSpec};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 //#region 🔖️Topology

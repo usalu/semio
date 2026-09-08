@@ -24,7 +24,7 @@ use crate::wfc_engine::prop_ac3;
 use crate::wfc_engine::propagate::PropQueue;
 use crate::wfc_engine::topology::Topology;
 use crate::wfc_engine::trail::Trail;
-use geometry::random::Rng;
+use semio_framework_geometry::random::Rng;
 
 // #region 🔖️Config
 #[derive(Clone, Copy, Debug)]

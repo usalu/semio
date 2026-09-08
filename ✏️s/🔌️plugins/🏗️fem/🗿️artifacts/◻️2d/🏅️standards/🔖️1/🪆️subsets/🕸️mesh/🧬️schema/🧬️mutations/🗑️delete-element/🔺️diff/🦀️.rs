@@ -4,9 +4,9 @@
 //! `mutation.target-referenced` (Error) while any load case still carries a member UDL naming this
 //! element — deleting it would leave that UDL pointing at nothing.
 use super::DeleteElement;
-use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dElementsDelta};
-use crate::artifacts::fem2d::mutations::guards;
-use crate::artifacts::fem2d::{element_id, Fem2dSnapshot};
+use crate::diff::{Fem2dDiff, Fem2dElementsDelta};
+use crate::mutations::guards;
+use crate::{element_id, Fem2dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteElement, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

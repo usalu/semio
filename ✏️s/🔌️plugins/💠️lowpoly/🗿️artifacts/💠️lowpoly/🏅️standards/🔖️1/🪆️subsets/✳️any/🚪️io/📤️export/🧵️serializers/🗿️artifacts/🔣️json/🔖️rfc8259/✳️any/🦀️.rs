@@ -1,5 +1,5 @@
 //! lowpoly -> json
-use crate::artifacts::lowpoly::LowpolySnapshot;
+use crate::LowpolySnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::write_json_pretty;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 

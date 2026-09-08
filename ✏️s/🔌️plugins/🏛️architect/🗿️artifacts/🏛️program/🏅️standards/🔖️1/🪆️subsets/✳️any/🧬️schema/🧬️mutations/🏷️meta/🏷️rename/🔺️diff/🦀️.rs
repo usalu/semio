@@ -2,8 +2,8 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🏷️update-meta` per Wave C.
 
 use super::RenameMeta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ New `ProgramMeta` with only `title` changed. Root-scoped singleton — always present, so
 /// Warning `mutation.no-op` (empty diff) covers the only degenerate case: the title is unchanged.

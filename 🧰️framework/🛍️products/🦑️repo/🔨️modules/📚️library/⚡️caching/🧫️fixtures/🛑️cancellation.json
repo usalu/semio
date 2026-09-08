@@ -4,24 +4,28 @@
       "name": "malformed-windows-json",
       "platform": "win32",
       "stdout": "{partial",
+      "environment": { "NX_WORKSPACE_DATA_DIRECTORY": "C:\\tickets\\check\\nx-data" },
       "expectedExit": 143
     },
     {
       "name": "missing-windows-row",
       "platform": "win32",
       "stdout": "null",
+      "environment": {},
       "expectedExit": 143
     },
     {
       "name": "malformed-posix-row",
       "platform": "linux",
       "stdout": "bad row\n1234 99999 bun child\n",
+      "environment": { "NX_WORKSPACE_DATA_DIRECTORY": "/tickets/check/nx-data" },
       "expectedExit": 143
     },
     {
       "name": "failed-snapshot-command",
       "platform": "darwin",
       "stdout": "",
+      "environment": {},
       "throws": true,
       "expectedExit": 143
     }

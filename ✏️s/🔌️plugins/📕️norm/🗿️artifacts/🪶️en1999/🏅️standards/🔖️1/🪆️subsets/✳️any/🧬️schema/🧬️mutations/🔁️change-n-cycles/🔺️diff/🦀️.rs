@@ -1,8 +1,8 @@
 //! 🔺️ `change-n-cycles` sparse diff construction — writes only `En1999Diff.n_cycles` from the payload.
 
-use crate::artifacts::en1999::diff::En1999Diff;
-use crate::artifacts::en1999::mutations::change_n_cycles::ChangeNCycles;
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::diff::En1999Diff;
+use crate::mutations::change_n_cycles::ChangeNCycles;
+use crate::En1999Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeNCycles, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {

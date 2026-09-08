@@ -1,84 +1,236 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/browser-bundle/action-handoff/component.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["request", "acknowledged", "rejected", "invocation", "hostileResults"],
+  "required": [
+    "request",
+    "acknowledged",
+    "rejected",
+    "invocation",
+    "hostileResults"
+  ],
   "$defs": {
     "scope": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["spaceId", "documentId"],
+      "required": [
+        "spaceId",
+        "documentId"
+      ],
       "properties": {
-        "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "documentId": { "type": "string", "minLength": 1, "maxLength": 256 }
+        "spaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
       }
     },
     "bytes": {
       "type": "array",
       "minItems": 1,
       "maxItems": 262144,
-      "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
     },
     "owner": {
       "type": "object",
-      "required": ["scope", "verifiedSurfaceId", "appChannelVersion", "activationGeneration", "instanceId", "surfaceRevision", "actionSequence"],
+      "required": [
+        "scope",
+        "verifiedSurfaceId",
+        "appChannelVersion",
+        "activationGeneration",
+        "instanceId",
+        "surfaceRevision",
+        "actionSequence"
+      ],
       "properties": {
-        "scope": { "$ref": "#/$defs/scope" },
-        "verifiedSurfaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "appChannelVersion": { "const": 14 },
-        "activationGeneration": { "type": "string", "pattern": "^[1-9][0-9]{0,19}$" },
-        "instanceId": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
-        "surfaceRevision": { "type": "integer", "minimum": 1 },
-        "actionSequence": { "type": "integer", "minimum": 1 }
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "verifiedSurfaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "appChannelVersion": {
+          "const": 14
+        },
+        "activationGeneration": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,19}$"
+        },
+        "instanceId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "surfaceRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "actionSequence": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "request": {
       "allOf": [
-        { "$ref": "#/$defs/owner" },
+        {
+          "$ref": "#/$defs/owner"
+        },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "scope", "verifiedSurfaceId", "appChannelVersion", "activationGeneration", "instanceId", "surfaceRevision", "actionSequence", "command", "viewState"],
+          "required": [
+            "kind",
+            "scope",
+            "verifiedSurfaceId",
+            "appChannelVersion",
+            "activationGeneration",
+            "instanceId",
+            "surfaceRevision",
+            "actionSequence",
+            "command",
+            "viewState"
+          ],
           "properties": {
-            "kind": { "const": "browser-actor-action" },
-            "scope": { "$ref": "#/$defs/scope" },
-            "verifiedSurfaceId": { "type": "string" },
-            "appChannelVersion": { "const": 14 },
-            "activationGeneration": { "type": "string" },
-            "instanceId": { "type": "integer" },
-            "surfaceRevision": { "type": "integer" },
-            "actionSequence": { "type": "integer" },
-            "command": { "$ref": "#/$defs/bytes" },
-            "viewState": { "$ref": "#/$defs/bytes" }
+            "kind": {
+              "const": "browser-actor-action"
+            },
+            "scope": {
+              "$ref": "#/$defs/scope"
+            },
+            "verifiedSurfaceId": {
+              "type": "string"
+            },
+            "appChannelVersion": {
+              "const": 14
+            },
+            "activationGeneration": {
+              "type": "string"
+            },
+            "instanceId": {
+              "type": "integer"
+            },
+            "surfaceRevision": {
+              "type": "integer"
+            },
+            "actionSequence": {
+              "type": "integer"
+            },
+            "command": {
+              "$ref": "#/$defs/bytes"
+            },
+            "viewState": {
+              "$ref": "#/$defs/bytes"
+            }
           }
         }
       ]
     },
     "result": {
       "allOf": [
-        { "$ref": "#/$defs/owner" },
+        {
+          "$ref": "#/$defs/owner"
+        },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "scope", "verifiedSurfaceId", "appChannelVersion", "activationGeneration", "instanceId", "surfaceRevision", "actionSequence", "outcome", "mutationCount"],
+          "required": [
+            "kind",
+            "scope",
+            "verifiedSurfaceId",
+            "appChannelVersion",
+            "activationGeneration",
+            "instanceId",
+            "surfaceRevision",
+            "actionSequence",
+            "outcome",
+            "mutationCount"
+          ],
           "properties": {
-            "kind": { "const": "browser-actor-action-result" },
-            "scope": { "$ref": "#/$defs/scope" },
-            "verifiedSurfaceId": { "type": "string" },
-            "appChannelVersion": { "const": 14 },
-            "activationGeneration": { "type": "string" },
-            "instanceId": { "type": "integer" },
-            "surfaceRevision": { "type": "integer" },
-            "actionSequence": { "type": "integer" },
-            "outcome": { "enum": ["acknowledged", "rejected"] },
-            "mutationCount": { "type": "integer", "minimum": 0, "maximum": 4096 },
-            "reason": { "type": "string", "minLength": 1, "maxLength": 256 }
+            "kind": {
+              "const": "browser-actor-action-result"
+            },
+            "scope": {
+              "$ref": "#/$defs/scope"
+            },
+            "verifiedSurfaceId": {
+              "type": "string"
+            },
+            "appChannelVersion": {
+              "const": 14
+            },
+            "activationGeneration": {
+              "type": "string"
+            },
+            "instanceId": {
+              "type": "integer"
+            },
+            "surfaceRevision": {
+              "type": "integer"
+            },
+            "actionSequence": {
+              "type": "integer"
+            },
+            "outcome": {
+              "enum": [
+                "acknowledged",
+                "rejected"
+              ]
+            },
+            "mutationCount": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4096
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
           },
           "allOf": [
             {
-              "if": { "properties": { "outcome": { "const": "rejected" } }, "required": ["outcome"] },
-              "then": { "required": ["reason"] },
-              "else": { "not": { "required": ["reason"] } }
+              "if": {
+                "properties": {
+                  "outcome": {
+                    "const": "rejected"
+                  }
+                },
+                "required": [
+                  "outcome"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "reason"
+                  ]
+                }
+              }
             }
           ]
         }
@@ -87,30 +239,80 @@
     "invocation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["address", "arguments"],
+      "required": [
+        "address",
+        "arguments"
+      ],
       "properties": {
         "address": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["pluginId", "appId", "modeId", "windowKindId", "windowInstanceId", "actionId"],
+          "required": [
+            "pluginId",
+            "appId",
+            "modeId",
+            "windowKindId",
+            "windowInstanceId",
+            "actionId"
+          ],
           "properties": {
-            "pluginId": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "appId": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "modeId": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "windowKindId": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "windowInstanceId": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "actionId": { "type": "string", "minLength": 1, "maxLength": 256 }
+            "pluginId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "appId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "modeId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "windowKindId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "windowInstanceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "actionId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
           }
         },
-        "arguments": { "type": "object" }
+        "arguments": {
+          "type": "object"
+        }
       }
     }
   },
   "properties": {
-    "request": { "$ref": "#/$defs/request" },
-    "acknowledged": { "$ref": "#/$defs/result" },
-    "rejected": { "$ref": "#/$defs/result" },
-    "invocation": { "$ref": "#/$defs/invocation" },
-    "hostileResults": { "type": "array", "minItems": 4, "items": { "$ref": "#/$defs/result" } }
+    "request": {
+      "$ref": "#/$defs/request"
+    },
+    "acknowledged": {
+      "$ref": "#/$defs/result"
+    },
+    "rejected": {
+      "$ref": "#/$defs/result"
+    },
+    "invocation": {
+      "$ref": "#/$defs/invocation"
+    },
+    "hostileResults": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "$ref": "#/$defs/result"
+      }
+    }
   }
 }

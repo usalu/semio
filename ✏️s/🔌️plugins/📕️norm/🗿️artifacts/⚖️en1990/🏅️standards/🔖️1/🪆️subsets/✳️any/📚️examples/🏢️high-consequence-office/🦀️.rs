@@ -20,11 +20,11 @@ pub fn source() -> ExampleSource {
 /// content-addressed `child_id` matches whatever `PRIMARY_TEXT`'s `qK=` line decodes to — the
 /// standard way a caller (e.g. a test parsing `PRIMARY_TEXT` fresh) recovers the real entries
 /// behind a parsed-from-text handle within this process.
-pub fn reference_snapshot() -> crate::artifacts::en1990::En1990Snapshot {
-    let q_k = crate::artifacts::en1990::en1990_qk_child_from_entries(&[
-        crate::artifacts::en1990::En1990QkEntry { category: "office".into(), value: 60.0 },
-        crate::artifacts::en1990::En1990QkEntry { category: "partition-walls".into(), value: 12.0 },
-        crate::artifacts::en1990::En1990QkEntry { category: "snow".into(), value: 18.0 },
+pub fn reference_snapshot() -> crate::En1990Snapshot {
+    let q_k = crate::en1990_qk_child_from_entries(&[
+        crate::En1990QkEntry { category: "office".into(), value: 60.0 },
+        crate::En1990QkEntry { category: "partition-walls".into(), value: 12.0 },
+        crate::En1990QkEntry { category: "snow".into(), value: 18.0 },
     ]);
-    crate::artifacts::en1990::En1990Snapshot { g_k: 250.0, q_k, resistance_kn: 420.0, consequence_class: 3, annex: crate::document::AnnexChoice::En, seismic_a_ed_kn: 0.0 }
+    crate::En1990Snapshot { g_k: 250.0, q_k, resistance_kn: 420.0, consequence_class: 3, annex: crate::document::AnnexChoice::En, seismic_a_ed_kn: 0.0 }
 }

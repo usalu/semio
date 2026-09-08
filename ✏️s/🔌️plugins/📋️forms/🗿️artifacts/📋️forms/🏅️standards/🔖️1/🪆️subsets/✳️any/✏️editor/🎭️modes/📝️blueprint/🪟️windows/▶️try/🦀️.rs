@@ -1,7 +1,7 @@
 //! ▶️ Forms play app — the Try window: a wizard preview of the form as an end user would fill it out.
 
-use crate::artifacts::forms::schema::{can_advance, default_value_for_question, is_extension_question_kind, json_f64_value, json_string_value, step_errors, visible_questions};
-use crate::artifacts::forms::FormQuestion;
+use crate::schema::{can_advance, default_value_for_question, is_extension_question_kind, json_f64_value, json_string_value, step_errors, visible_questions};
+use crate::FormQuestion;
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::{effective_try_values, forms_action, parse_contributions, render_extension_question, ProgramContributionEntry};
@@ -155,7 +155,7 @@ fn render_try_question(question: &FormQuestion, values: &Object, contributions: 
 }
 
 fn json_value_from_dsl(question: &FormQuestion) -> Value {
-    crate::artifacts::forms::schema::dsl_to_value(&default_value_for_question(question))
+    crate::schema::dsl_to_value(&default_value_for_question(question))
 }
 
 fn navigation(id: &str, label: &str, icon: &str, command: &str, disabled: bool) -> UiAssemblyResult<ui::BuiltNode> {
@@ -166,14 +166,14 @@ fn navigation(id: &str, label: &str, icon: &str, command: &str, disabled: bool) 
     Ok(node)
 }
 
-pub fn render(spec: &crate::artifacts::forms::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiAssemblyResult<ui::BuiltNode> {
-    let steps = crate::artifacts::forms::forms_steps(spec);
+pub fn render(spec: &crate::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiAssemblyResult<ui::BuiltNode> {
+    let steps = crate::forms_steps(spec);
     if steps.is_empty() { return display(labels.no_steps_in_form.as_str(), false); }
     let contributions = parse_contributions(config);
     let step_index = (config.current_step_index as usize).min(steps.len().saturating_sub(1));
     let step = &steps[step_index];
     let values = effective_try_values(spec, config);
-    let validation_values = values.iter().map(|(key, value)| (key.to_owned(), crate::artifacts::forms::schema::value_to_dsl(value))).collect();
+    let validation_values = values.iter().map(|(key, value)| (key.to_owned(), crate::schema::value_to_dsl(value))).collect();
     let visible = visible_questions(step, &validation_values);
     let errors = step_errors(step, &validation_values);
     let advance = can_advance(step, &validation_values);

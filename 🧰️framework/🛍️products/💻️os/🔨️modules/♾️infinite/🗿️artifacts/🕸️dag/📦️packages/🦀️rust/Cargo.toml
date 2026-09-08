@@ -1,0 +1,27 @@
+[package]
+name = "semio-framework-artifact-infinite-dag"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Composable directed acyclic graph artifact and mutations"
+
+[package.metadata.semio]
+role = "artifact"
+id = "infinite-dag"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+graph = { path = "../../../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
+ui_styling = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["testkit"] }
+semio-framework-async-macros = { workspace = true }
+serde_json = "1"

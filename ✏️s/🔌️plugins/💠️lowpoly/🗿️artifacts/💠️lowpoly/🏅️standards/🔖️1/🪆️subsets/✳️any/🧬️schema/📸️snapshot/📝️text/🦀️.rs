@@ -1,6 +1,6 @@
 //! 📜️ Lowpoly artifact — textual document grammar surface + laws (constitutional: dsl).
 
-use crate::artifacts::lowpoly::LowpolySnapshot;
+use crate::LowpolySnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -35,13 +35,13 @@ mod tests {
     /// struct equality, unlike the pre-fix version of these tests.
     #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_the_default_snapshot() {
-        let projection = crate::artifacts::lowpoly::schema::default_snapshot();
+        let projection = crate::schema::default_snapshot();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_a_projection_with_a_painted_layer() {
-        let mut projection = crate::artifacts::lowpoly::schema::default_snapshot();
+        let mut projection = crate::schema::default_snapshot();
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
@@ -77,7 +77,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_invalid_bool_value() {
-        use crate::artifacts::lowpoly::schema::snapshot::enc_str;
+        use crate::schema::snapshot::enc_str;
         let text = format!("schema={}\nobjects=[[{},{},[0,0,0,0,0,0,1,1,1],notabool,[],[]]]", enc_str("lowpoly.document"), enc_str("o"), enc_str("O"),);
         let result = parse_dsl(&text);
         assert!(result.is_err());
@@ -85,7 +85,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_object_missing_required_field() {
-        use crate::artifacts::lowpoly::schema::snapshot::enc_str;
+        use crate::schema::snapshot::enc_str;
         let text = format!("schema={}\nobjects=[[{}]]", enc_str("lowpoly.document"), enc_str("o"));
         let result = parse_dsl(&text);
         assert!(result.is_err());
@@ -93,7 +93,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_malformed_value_inside_a_nested_block() {
-        use crate::artifacts::lowpoly::schema::snapshot::enc_str;
+        use crate::schema::snapshot::enc_str;
         let text = format!("schema={}\nobjects=[[{},{},[notanumber,0,0,0,0,0,1,1,1],false,[],[]]]", enc_str("lowpoly.document"), enc_str("o"), enc_str("O"),);
         let result = parse_dsl(&text);
         assert!(result.is_err());
@@ -104,7 +104,7 @@ mod tests {
     /// comment handling did not survive the switch). An unrecognized line is a hard parse error.
     #[semio_framework_async_macros::async_test]
     async fn dsl_parse_rejects_unrecognized_lines() {
-        use crate::artifacts::lowpoly::schema::snapshot::enc_str;
+        use crate::schema::snapshot::enc_str;
         let text = format!("# a leading comment\nschema={}\nobjects=[]\n", enc_str("lowpoly.document"));
         let result = parse_dsl(&text);
         assert!(result.is_err(), "comment lines are not a recognized field, unlike the retired derive grammar");
@@ -115,7 +115,7 @@ mod tests {
     /// with zero special-casing, because it is never interpreted as DSL syntax in the first place.
     #[semio_framework_async_macros::async_test]
     async fn dsl_parse_handles_arbitrary_characters_via_hex_encoding() {
-        use crate::artifacts::lowpoly::schema::snapshot::enc_str;
+        use crate::schema::snapshot::enc_str;
         let tricky_name = "Quote \" and \\ and newline\ndone";
         let text = format!("schema={}\nobjects=[[{},{},[0,0,0,0,0,0,1,1,1],false,[],[]]]", enc_str("lowpoly.document"), enc_str("o1"), enc_str(tricky_name),);
         let projection = parse_dsl(&text).expect("hex-encoded strings never need escaping");

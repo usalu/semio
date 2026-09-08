@@ -14,12 +14,13 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::generation2d::diff::Generation2dDiff;
-use crate::artifacts::generation2d::{widget_id, Generation2dSnapshot};
-use flow::playbook::GenerationMutation;
-use flow::FlowFixture;
+use crate::diff::Generation2dDiff;
+use crate::{widget_id, Generation2dSnapshot};
+use semio_framework_artifact_playbook_playbook::GenerationMutation;
+use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
 #[cfg(test)]
-use flow::{Widget, playbook::FormGeneration};
+use semio_framework_artifact_playbook_playbook::FormGeneration;
+use semio_framework_artifact_flow_semio_framework_os_flow::{Widget};
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
@@ -85,10 +86,10 @@ pub const KINDS: &[&str] = &[
 //#endregion 🔖️Mutations
 
 //#region 🔖️GenerationBridge
-/// 🌉️ Bridges one `flow::playbook::GenerationMutation` (the framework's own generation-editing
+/// 🌉️ Bridges one `semio_framework_artifact_playbook_playbook::GenerationMutation` (the framework's own generation-editing
 /// vocabulary — `Add`/`Remove`/`Rename`/`UpdateValues`) onto this facet's semantic
 /// `Generation2dMutation` variants, so app-layer callers that already hold a `GenerationMutation`
-/// (from `flow::playbook::generation_operations`) need only swap the mapping function at the call
+/// (from `semio_framework_artifact_playbook_playbook::generation_operations`) need only swap the mapping function at the call
 /// site, not learn this facet's internal triad-leaf module paths. Twin of generation3d's
 /// `generation_mutation_to_generation3d` — the two facets' generation payloads differ only in field
 /// naming (`name`/`value` here, `new_name`/`new_value` there).
@@ -188,8 +189,8 @@ pub fn inverse_generation2d_mutation(projection: &Generation2dSnapshot, mutation
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::generation2d::schema::empty_generation2d_snapshot;
-    use flow::{CameraJson, SynapseSpec, WidgetLayout};
+    use crate::schema::empty_generation2d_snapshot;
+    use semio_framework_artifact_flow_semio_framework_os_flow::{CameraJson, SynapseSpec, WidgetLayout};
     use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
     use vcs::apply_mutation;
@@ -429,16 +430,16 @@ mod tests {
     #[test]
     fn widgets_diff_apply_replaces_by_id_and_removes_by_id() {
         let mut widgets = vec![Widget::InputNote { id: "a".into(), text: "1".into() }, Widget::InputNote { id: "b".into(), text: "2".into() }];
-        let diff = crate::artifacts::generation2d::diff::WidgetsDiff { removed: vec!["b".into()], set: vec![(0, Widget::InputNote { id: "a".into(), text: "replaced".into() })] };
-        crate::artifacts::generation2d::diff::apply_widgets_diff(&mut widgets, &diff);
+        let diff = crate::diff::WidgetsDiff { removed: vec!["b".into()], set: vec![(0, Widget::InputNote { id: "a".into(), text: "replaced".into() })] };
+        crate::diff::apply_widgets_diff(&mut widgets, &diff);
         assert_eq!(widgets, vec![Widget::InputNote { id: "a".into(), text: "replaced".into() }]);
     }
 
     #[test]
     fn synapses_diff_apply_replaces_by_id_and_removes_by_id() {
         let mut synapses = vec![SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() }];
-        let diff = crate::artifacts::generation2d::diff::SynapsesDiff { removed: vec![], set: vec![(0, SynapseSpec { id: "s1".into(), from: "a".into(), to: "c".into(), from_port: "out".into(), to_port: "in".into() })] };
-        crate::artifacts::generation2d::diff::apply_synapses_diff(&mut synapses, &diff);
+        let diff = crate::diff::SynapsesDiff { removed: vec![], set: vec![(0, SynapseSpec { id: "s1".into(), from: "a".into(), to: "c".into(), from_port: "out".into(), to_port: "in".into() })] };
+        crate::diff::apply_synapses_diff(&mut synapses, &diff);
         assert_eq!(synapses[0].to, "c");
     }
     //#endregion 🔖️FixtureOpsTests

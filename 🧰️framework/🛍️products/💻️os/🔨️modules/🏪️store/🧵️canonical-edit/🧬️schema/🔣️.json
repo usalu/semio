@@ -1,0 +1,338 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/store/canonical-edit/schema.json",
+  "title": "Store Canonical Edit",
+  "$defs": {
+    "CanonicalReader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "sourceFixture", "grants", "expectedByteLength", "expectedJsonSha256", "lifecycle", "hostiles", "expectedRootDrops"],
+      "properties": {
+        "schema": { "const": "semio.store.canonical-reader.v1" },
+        "sourceFixture": { "type": "string", "minLength": 1 },
+        "grants": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "expectedByteLength": { "type": "integer", "minimum": 0 },
+        "expectedJsonSha256": { "$ref": "#/$defs/CanonicalEditDigest" },
+        "lifecycle": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/CanonicalReaderLifecycleStage" }
+        },
+        "hostiles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/CanonicalReaderHostile" }
+        },
+        "expectedRootDrops": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "CanonicalReaderLifecycleStage": {
+      "enum": ["zero-grant", "before-poll-cancel", "mid-key-cancel", "complete", "transfer-root", "close"]
+    },
+    "CanonicalReaderHostile": {
+      "enum": [
+        "early-root-transfer",
+        "root-rebound",
+        "root-drop-before-frame",
+        "non-send-iterator",
+        "closing-zero-depth-bound-root",
+        "unclosed-drop",
+        "double-panic"
+      ]
+    },
+    "CanonicalEditSealer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "grants", "textPattern", "repeat", "edit", "expectedJson", "expectedDigest", "hostile", "largeTextBytes", "origins"],
+      "properties": {
+        "schema": { "const": "semio.store.canonical-edit-sealer.v1" },
+        "grants": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "textPattern": { "type": "string", "minLength": 1 },
+        "repeat": { "type": "integer", "minimum": 1 },
+        "edit": { "$ref": "#/$defs/CanonicalEditSealerEdit" },
+        "expectedJson": { "type": "string", "minLength": 1 },
+        "expectedDigest": { "$ref": "#/$defs/CanonicalEditDigest" },
+        "hostile": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/CanonicalEditSealerHostile" }
+        },
+        "largeTextBytes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "origins": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/CanonicalEditOrigin" }
+        }
+      }
+    },
+    "CanonicalEditSealerHostile": {
+      "enum": [
+        "wrong-operation",
+        "wrong-generation",
+        "wrong-base",
+        "wrong-group",
+        "forged-digest",
+        "rebound-edit",
+        "rebound-post",
+        "forged-prefix",
+        "cancel-before-seal"
+      ]
+    },
+    "CanonicalEditSealerEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "actor", "forwards", "inverse", "mutationMeta", "description", "sequenceNumber", "startedAt"],
+      "properties": {
+        "id": { "type": "string" },
+        "actor": { "type": "string" },
+        "forwards": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/CanonicalEditReplaceMutation" }
+        },
+        "inverse": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CanonicalEditReplaceMutation" }
+        },
+        "mutationMeta": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/CanonicalEditMutationMeta" }
+        },
+        "description": { "type": "string" },
+        "sequenceNumber": { "type": "integer" },
+        "startedAt": { "type": "string" }
+      }
+    },
+    "CanonicalEditReplaceMutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["Replace"],
+      "properties": {
+        "Replace": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "nested", "enabled", "amount"],
+          "properties": {
+            "text": { "type": "string" },
+            "nested": { "type": "array", "items": { "type": "string" } },
+            "enabled": { "type": "boolean" },
+            "amount": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "CanonicalEditOrigin": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "owner" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "plugin_id", "mutation_id", "payload_hash"],
+          "properties": {
+            "kind": { "const": "contributed" },
+            "plugin_id": { "type": "string" },
+            "mutation_id": { "type": "string" },
+            "payload_hash": {
+              "type": "array",
+              "minItems": 32,
+              "maxItems": 32,
+              "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "initiator"],
+          "properties": {
+            "kind": { "const": "transaction" },
+            "initiator": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["artifactId", "artifactKind", "dialect"],
+              "properties": {
+                "artifactId": { "type": "string" },
+                "artifactKind": { "type": "string" },
+                "dialect": { "type": "string" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CanonicalBorrowedMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "grants", "longKeyBytes", "edit", "expectedJson", "expectedDigest", "lifetime", "hostile"],
+      "properties": {
+        "schema": { "const": "semio.store.canonical-borrowed-map.v1" },
+        "grants": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "longKeyBytes": { "type": "integer", "minimum": 1 },
+        "edit": { "$ref": "#/$defs/CanonicalBorrowedMapEdit" },
+        "expectedJson": { "type": "string" },
+        "expectedDigest": { "$ref": "#/$defs/CanonicalEditDigest" },
+        "lifetime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cancelBeforeRootDrop", "liveRootDrops", "iteratorDropsBeforeRoot"],
+          "properties": {
+            "cancelBeforeRootDrop": { "type": "boolean" },
+            "liveRootDrops": { "type": "integer", "minimum": 0 },
+            "iteratorDropsBeforeRoot": { "type": "boolean" }
+          }
+        },
+        "hostile": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/CanonicalBorrowedMapHostile" }
+        }
+      }
+    },
+    "CanonicalBorrowedMapHostile": {
+      "enum": [
+        "rebound-root",
+        "stale-generation",
+        "forged-prefix",
+        "source-without-sync",
+        "iterator-after-root-drop"
+      ]
+    },
+    "CanonicalBorrowedMapEdit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "actor", "forwards", "inverse", "mutationMeta", "description", "sequenceNumber", "startedAt"],
+      "properties": {
+        "id": { "type": "string" },
+        "actor": { "type": "string" },
+        "forwards": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/CanonicalBorrowedMapMutation" }
+        },
+        "inverse": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/CanonicalBorrowedMapMutation" }
+        },
+        "mutationMeta": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/CanonicalEditMutationMeta" }
+        },
+        "description": { "type": "string" },
+        "sequenceNumber": { "type": "integer" },
+        "startedAt": { "type": "string" }
+      }
+    },
+    "CanonicalBorrowedMapMutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ReplaceMap"],
+      "properties": {
+        "ReplaceMap": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["map"],
+          "properties": {
+            "map": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/CanonicalBorrowedValue" }
+            }
+          }
+        }
+      }
+    },
+    "CanonicalBorrowedValue": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "$ref": "#/$defs/CanonicalBorrowedValue" } },
+        { "type": "object", "additionalProperties": { "$ref": "#/$defs/CanonicalBorrowedValue" } }
+      ]
+    },
+    "CanonicalErrorProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "text", "modes", "grants", "sentinel", "expectedPrefix", "expectedBytes", "expectedError", "expectedComplete", "expectedRootRetirements", "expectedSnapshotBytes"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "modes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["indexed", "borrowed"] }
+        },
+        "grants": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "sentinel": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "expectedPrefix": { "type": "string", "minLength": 1 },
+        "expectedBytes": { "type": "integer", "minimum": 0 },
+        "expectedError": { "type": "string", "minLength": 1 },
+        "expectedComplete": { "type": "boolean" },
+        "expectedRootRetirements": { "type": "integer", "minimum": 0 },
+        "expectedSnapshotBytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "CanonicalEditDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "CanonicalEditMutationMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutation_id", "dependencies", "base_version", "author_id", "timestamp", "undo_policy", "label", "group_id"],
+      "properties": {
+        "mutation_id": { "type": "string" },
+        "dependencies": { "type": "array", "items": { "type": "string" } },
+        "base_version": { "type": "integer", "minimum": 0 },
+        "author_id": { "type": "string" },
+        "timestamp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["actor", "physical_ms", "logical"],
+          "properties": {
+            "actor": { "type": "integer", "minimum": 0 },
+            "physical_ms": { "type": "integer", "minimum": 0 },
+            "logical": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "undo_policy": {
+          "enum": ["ExactBaseOnly", "TransformAgainstConcurrent", "SemanticUndo", "CompensatingAction"]
+        },
+        "label": { "type": "string" },
+        "group_id": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 //! 🗃️ 🗃️ Note play app commands command — `set-fixture-json`.
 
-use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
+use crate::op::NoteMutation;
+use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde_json::Value;
@@ -14,7 +14,7 @@ pub struct SetFixtureJson {
 }
 
 pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-    let next_document = if let Ok(document) = crate::artifacts::note::dsl::parse_dsl(&payload.json) {
+    let next_document = if let Ok(document) = crate::dsl::parse_dsl(&payload.json) {
         document
     } else {
         let Ok(parsed) = serde_json::from_str::<Value>(&payload.json) else {

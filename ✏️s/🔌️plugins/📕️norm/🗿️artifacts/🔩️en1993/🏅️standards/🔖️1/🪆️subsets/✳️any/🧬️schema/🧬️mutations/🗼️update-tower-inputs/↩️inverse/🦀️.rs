@@ -1,7 +1,7 @@
 //! ↩️ `update-tower-inputs` — undo restores BASE's tower inputs.
 
 use super::UpdateTowerInputs;
-use crate::artifacts::en1993::{En1993Mutation, En1993Snapshot};
+use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &UpdateTowerInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {

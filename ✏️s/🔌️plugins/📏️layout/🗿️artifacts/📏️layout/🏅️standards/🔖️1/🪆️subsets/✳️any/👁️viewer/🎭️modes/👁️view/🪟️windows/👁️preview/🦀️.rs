@@ -1,5 +1,5 @@
 //! 👁️ Layout viewer — the Preview window: a read-only render of the document's first page, built
-//! from pure artifact-level page resolution (`crate::artifacts::layout::schema::resolve_page`) — this
+//! from pure artifact-level page resolution (`crate::schema::resolve_page`) — this
 //! file itself imports nothing from the sibling editor surface (`policyViewerPurityBreaches` forbids
 //! it outright). No camera persistence (a viewer has no per-session config — `Config = NoConfig`, a
 //! fixed default camera every render), no chrome (guides/margins/dashed inherited-frame strokes —
@@ -9,8 +9,8 @@
 //! simplification for a first-pass viewer, not a bug, mirroring cad's viewer "default camera/sun,
 //! fallback-box mesh" documented gap.
 
-use crate::artifacts::layout::schema::resolve_page;
-use crate::artifacts::layout::{Frame, LayoutSnapshot};
+use crate::schema::resolve_page;
+use crate::{Frame, LayoutSnapshot};
 use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
 
@@ -110,14 +110,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::artifacts::layout::schema::default_document();
+        let document = crate::schema::default_document();
         let node = render(&document).expect("layout preview surface");
         assert!(matches!(node.component, semio_framework_plugin::plugin_app_close_prelude::Component::Surface(_)));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn viewer_canvas_layers_renders_the_page_background() {
-        let document = crate::artifacts::layout::schema::default_document();
+        let document = crate::schema::default_document();
         let json = viewer_canvas_layers(&document);
         assert!(json.contains("layout.page-bg"));
     }

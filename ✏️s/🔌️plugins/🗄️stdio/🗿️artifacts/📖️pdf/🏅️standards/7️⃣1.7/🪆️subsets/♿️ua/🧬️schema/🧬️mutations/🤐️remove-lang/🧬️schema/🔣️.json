@@ -1,15 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/ua/mutation/remove-lang.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/ua/mutation/remove-lang/schema.json",
   "title": "RemoveLang",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "mutation"
-  ],
   "properties": {
     "mutation": {
-      "const": "removeLang"
+      "const": "removeLang",
+      "description": "Aggregate discriminator spliced in by PdfUaMutation; absent when the payload stands alone."
     }
   }
 }

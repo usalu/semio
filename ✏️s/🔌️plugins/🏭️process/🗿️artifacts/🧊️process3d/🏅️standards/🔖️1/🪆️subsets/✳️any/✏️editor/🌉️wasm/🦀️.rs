@@ -4,8 +4,8 @@
 //! entry, no `wasm` script target — see
 //! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).
 
-use crate::artifacts::process3d::op::Process3dMutation;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::op::Process3dMutation;
+use crate::Process3dSnapshot;
 use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Store
@@ -280,7 +280,7 @@ impl Process3dMountedRegistry {
         }
         let operation_id = operation.operation;
         let generation = operation.generation;
-        let _ = crate::artifacts::process3d::spr::process3d_release_publication_authority(semio_framework_job::OperationId(operation_id), semio_framework_job::Generation(generation));
+        let _ = crate::spr::process3d_release_publication_authority(semio_framework_job::OperationId(operation_id), semio_framework_job::Generation(generation));
         let slot = self.operations.iter_mut().find(|slot| slot.as_ref().is_some_and(|entry| entry.matches(operation_id, generation))).expect("Process3d close operation remains retained");
         *slot = None;
         self.operations.iter().all(Option::is_none)
@@ -429,22 +429,22 @@ mod mounted_laws {
 
         let operation = OperationId(u64::MAX - 71);
         assert_eq!(
-            crate::artifacts::process3d::spr::process3d_admit_publication_authority(operation, Generation(41), 41, 40, 41, PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, PROCESS3D_ENVELOPE_CONTROL_CREDITS),
+            crate::spr::process3d_admit_publication_authority(operation, Generation(41), 41, 40, 41, PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, PROCESS3D_ENVELOPE_CONTROL_CREDITS),
             Err("process3d-publication.initial-freshness")
         );
-        assert!(crate::artifacts::process3d::spr::process3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, PROCESS3D_ENVELOPE_CONTROL_CREDITS,).is_ok());
-        assert_eq!(crate::artifacts::process3d::spr::process3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
-        assert_eq!(crate::artifacts::process3d::spr::process3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("process3d-publication.wrong-operation"));
-        assert_eq!(crate::artifacts::process3d::spr::process3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("process3d-publication.wrong-generation"));
-        crate::artifacts::process3d::spr::process3d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
-        assert_eq!(crate::artifacts::process3d::spr::process3d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("process3d-publication.wrong-base"));
-        assert!(crate::artifacts::process3d::spr::process3d_release_publication_authority(operation, Generation(41)));
+        assert!(crate::spr::process3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, PROCESS3D_ENVELOPE_CONTROL_CREDITS,).is_ok());
+        assert_eq!(crate::spr::process3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
+        assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("process3d-publication.wrong-operation"));
+        assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("process3d-publication.wrong-generation"));
+        crate::spr::process3d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
+        assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("process3d-publication.wrong-base"));
+        assert!(crate::spr::process3d_release_publication_authority(operation, Generation(41)));
 
-        assert!(crate::artifacts::process3d::spr::process3d_admit_publication_authority(operation, Generation(42), 42, 42, 42, PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, PROCESS3D_ENVELOPE_CONTROL_CREDITS,).is_ok());
-        assert!(crate::artifacts::process3d::spr::process3d_validate_publication_authority(operation, Generation(41)).is_err());
-        assert_eq!(crate::artifacts::process3d::spr::process3d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
-        assert_eq!(crate::artifacts::process3d::spr::process3d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
-        assert!(crate::artifacts::process3d::spr::process3d_release_publication_authority(operation, Generation(42)));
+        assert!(crate::spr::process3d_admit_publication_authority(operation, Generation(42), 42, 42, 42, PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, PROCESS3D_ENVELOPE_CONTROL_CREDITS,).is_ok());
+        assert!(crate::spr::process3d_validate_publication_authority(operation, Generation(41)).is_err());
+        assert_eq!(crate::spr::process3d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
+        assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
+        assert!(crate::spr::process3d_release_publication_authority(operation, Generation(42)));
     }
 }
 }
@@ -454,15 +454,15 @@ mod mounted_laws {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::process3d::mutations::change_cursor::ChangeCursor;
-    use crate::artifacts::process3d::mutations::change_step_enabled::ChangeStepEnabled;
-    use crate::artifacts::process3d::mutations::change_step_origin::ChangeStepOrigin;
-    use crate::artifacts::process3d::mutations::change_stock_label::ChangeStockLabel;
-    use crate::artifacts::process3d::mutations::create_step::CreateStep;
-    use crate::artifacts::process3d::mutations::delete_step::DeleteStep;
-    use crate::artifacts::process3d::mutations::replace_stock_solid::ReplaceStockSolid;
-    use crate::artifacts::process3d::op::Process3dMutation;
-    use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid, PROCESS_3D_SCHEMA};
+    use crate::mutations::change_cursor::ChangeCursor;
+    use crate::mutations::change_step_enabled::ChangeStepEnabled;
+    use crate::mutations::change_step_origin::ChangeStepOrigin;
+    use crate::mutations::change_stock_label::ChangeStockLabel;
+    use crate::mutations::create_step::CreateStep;
+    use crate::mutations::delete_step::DeleteStep;
+    use crate::mutations::replace_stock_solid::ReplaceStockSolid;
+    use crate::op::Process3dMutation;
+    use crate::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid, PROCESS_3D_SCHEMA};
     use store::{create_document_envelope, Author, ArtifactCommand};
 
     fn cut_step(id: &str) -> ProcessStep {

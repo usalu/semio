@@ -1,14 +1,14 @@
 //! 🏔️ GIS terrain semantic mutation aggregate.
 
-use crate::artifacts::gisterrain::diff::GisTerrainDiff;
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::diff::GisTerrainDiff;
+use crate::GisTerrainSnapshot;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 pub use super::change_exaggeration::ChangeExaggeration;
 pub use super::change_imported_features::ChangeImportedFeatures;
-pub use crate::artifacts::gisterrain::schema::operations::*;
+pub use crate::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🗺️ Typed terrain mutation vocabulary backed by direct semantic owners.

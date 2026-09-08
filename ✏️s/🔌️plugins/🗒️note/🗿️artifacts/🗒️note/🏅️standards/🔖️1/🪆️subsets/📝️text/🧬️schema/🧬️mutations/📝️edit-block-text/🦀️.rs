@@ -1,7 +1,7 @@
 //! 📝 Note mutation — `EditBlockText`: replaces a text block's authored paragraph content.
 
-use crate::artifacts::note::{NoteDiff, NoteSnapshot};
-use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::{NoteDiff, NoteSnapshot};
+use crate::schema::mutations::NoteMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -15,11 +15,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "edit-block-text")]
 pub struct EditBlockText {
     pub id: String,
-    pub new_paragraphs: Vec<crate::artifacts::note::NoteTextParagraph>,
+    pub new_paragraphs: Vec<crate::NoteTextParagraph>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn edit_block_text(id: String, new_paragraphs: Vec<crate::artifacts::note::NoteTextParagraph>) -> NoteMutation {
+pub fn edit_block_text(id: String, new_paragraphs: Vec<crate::NoteTextParagraph>) -> NoteMutation {
     NoteMutation::EditBlockText(EditBlockText { id, new_paragraphs })
 }
 

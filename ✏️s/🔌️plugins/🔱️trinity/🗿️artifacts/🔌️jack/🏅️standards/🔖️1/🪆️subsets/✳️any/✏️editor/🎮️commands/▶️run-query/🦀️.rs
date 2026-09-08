@@ -1,7 +1,7 @@
 //! 🔎️ 🔎️ Trinity Jack app command — `run-query`.
 
-use crate::artifacts::jack::op::TrinityGraphMutation;
-use crate::artifacts::jack::JackSnapshot;
+use crate::op::TrinityGraphMutation;
+use crate::JackSnapshot;
 use crate::core;
 use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::Emit;
@@ -9,7 +9,7 @@ use semio_framework_plugin::Emit;
 /// 🔎️ Runs a jack query against the fixture, returning `(result_json, forward operations)`; a parse/execute
 /// failure yields an error result and no operations (no document mutation).
 pub(crate) fn run_jack_query(fixture: &JackSnapshot, query: &str) -> (String, Vec<TrinityGraphMutation>) {
-    let graph = match crate::artifacts::jack::Graph::from_fixture(fixture.clone()) {
+    let graph = match crate::Graph::from_fixture(fixture.clone()) {
         Ok(graph) => graph,
         Err(error) => return (error_result_json(&error.to_string()), Vec::new()),
     };

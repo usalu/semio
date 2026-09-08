@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1992/1/any/mutation/change-liquid-sigma-s-mpa.json",
+  "$id": "https://semio.tech/schema/s/norm/en1992/1/any/mutation/change-liquid-sigma-s-mpa/schema.json",
   "title": "ChangeLiquidSigmaSMpa",
   "type": "object",
   "additionalProperties": false,

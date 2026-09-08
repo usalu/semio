@@ -1,8 +1,8 @@
 //! 🔺️ `change-sheet-m-ed-knm` sparse diff construction — writes only `En1999Diff.sheet_m_ed_knm` from the payload.
 
-use crate::artifacts::en1999::diff::En1999Diff;
-use crate::artifacts::en1999::mutations::change_sheet_m_ed_knm::ChangeSheetMEdKnm;
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::diff::En1999Diff;
+use crate::mutations::change_sheet_m_ed_knm::ChangeSheetMEdKnm;
+use crate::En1999Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSheetMEdKnm, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {

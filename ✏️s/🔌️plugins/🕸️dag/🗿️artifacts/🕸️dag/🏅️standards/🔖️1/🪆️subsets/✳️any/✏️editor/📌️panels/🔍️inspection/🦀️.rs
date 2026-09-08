@@ -1,9 +1,9 @@
 //! 🔍️ DAG play app panel — the per-node inspector (name/kind/id plus slider-specific fields).
 
-use crate::artifacts::dag::DagSnapshot;
+use crate::DagSnapshot;
 use crate::editor::dag::{dag_action, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::dag::terminology::DagPlayLabels;
-use infinite_board_port_directed_dag::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
+use semio_framework_artifact_infinite_dag::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
 use semio_framework_plugin::{ui_inspector_mixed_number, ui_inspector_mixed_text, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PluginAssemblyError, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER};
 use semio_framework_plugin::plugin_app_close_prelude::{column, field, input, section, text, Buildable, BuiltNode, HasBase, HasChildren, InputKind, Label, Trigger, UiText};
 
@@ -133,7 +133,7 @@ mod tests {
     /// end-to-end through a (now selection-blind) app dispatch.
     #[semio_framework_async_macros::async_test]
     async fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
-        let document = crate::artifacts::dag::default_snapshot();
+        let document = crate::default_snapshot();
         let node_id = document.nodes().first().map(|node| node.id.clone()).expect("node");
         let labels = crate::editor::dag::terminology::dag_play_labels(&crate::editor::dag::config::DagConfig::default());
         let node = render(&document, &[node_id.clone()], labels).expect("inspector component tree");

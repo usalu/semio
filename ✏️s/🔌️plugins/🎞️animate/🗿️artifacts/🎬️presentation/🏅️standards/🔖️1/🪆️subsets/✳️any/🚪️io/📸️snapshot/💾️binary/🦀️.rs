@@ -6,7 +6,7 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::PresentationSnapshot;
 
 //#region 🔖️BinaryPrimitives
 fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {

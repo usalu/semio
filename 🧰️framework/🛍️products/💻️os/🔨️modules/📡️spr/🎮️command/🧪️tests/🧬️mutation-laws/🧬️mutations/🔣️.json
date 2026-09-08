@@ -1,5 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/spr/command/tests/mutation-laws/mutations.json",
   "oneOf": [
     {
       "type": "object",
@@ -11,8 +12,17 @@
           "const": "addCounter"
         }
       },
-      "$ref": "➕️add-counter/🧬️schema/🔣️.json#/$defs/payload",
-      "unevaluatedProperties": false
+      "allOf": [
+        {
+          "$ref": "➕️add-counter/🧬️schema/🔣️.json#/$defs/payload"
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "delta",
+          "operation"
+        ]
+      }
     },
     {
       "type": "object",
@@ -24,8 +34,17 @@
           "const": "addCounterTwice"
         }
       },
-      "$ref": "✌️add-counter-twice/🧬️schema/🔣️.json#/$defs/payload",
-      "unevaluatedProperties": false
+      "allOf": [
+        {
+          "$ref": "✌️add-counter-twice/🧬️schema/🔣️.json#/$defs/payload"
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "delta",
+          "operation"
+        ]
+      }
     },
     {
       "type": "object",
@@ -37,8 +56,17 @@
           "const": "addCounterFourTimes"
         }
       },
-      "$ref": "4️⃣add-counter-four-times/🧬️schema/🔣️.json#/$defs/payload",
-      "unevaluatedProperties": false
+      "allOf": [
+        {
+          "$ref": "4️⃣add-counter-four-times/🧬️schema/🔣️.json#/$defs/payload"
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "delta",
+          "operation"
+        ]
+      }
     },
     {
       "type": "object",
@@ -50,8 +78,18 @@
           "const": "addCounterThenNotifyForeign"
         }
       },
-      "$ref": "🌐️add-counter-then-notify-foreign/🧬️schema/🔣️.json#/$defs/payload",
-      "unevaluatedProperties": false
+      "allOf": [
+        {
+          "$ref": "🌐️add-counter-then-notify-foreign/🧬️schema/🔣️.json#/$defs/payload"
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "delta",
+          "foreignCount",
+          "operation"
+        ]
+      }
     },
     {
       "type": "object",
@@ -63,9 +101,17 @@
           "const": "addCounterSequence"
         }
       },
-      "$ref": "🔢️add-counter-sequence/🧬️schema/🔣️.json#/$defs/payload",
-      "unevaluatedProperties": false
+      "allOf": [
+        {
+          "$ref": "🔢️add-counter-sequence/🧬️schema/🔣️.json#/$defs/payload"
+        }
+      ],
+      "propertyNames": {
+        "enum": [
+          "deltas",
+          "operation"
+        ]
+      }
     }
   ]
 }
-

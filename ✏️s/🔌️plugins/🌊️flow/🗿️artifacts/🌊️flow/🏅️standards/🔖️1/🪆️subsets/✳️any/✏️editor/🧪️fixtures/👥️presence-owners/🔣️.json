@@ -1,6 +1,5 @@
 {
-  "$schema": "./🧬️.schema.json",
-  "contract": "semio.flow.presence-owners/v1",
+"contract": "semio.flow.presence-owners/v1",
   "grants": [1, 64, 4096],
   "cases": [
     { "id": "empty", "local": { "unit": "", "repeat": 0 }, "peers": [], "sharedRoot": false, "expectedBytes": 0 },

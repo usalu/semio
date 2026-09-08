@@ -18,7 +18,7 @@
 //! agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed for the TRIADS — the orphaned
 //! `🟤️set-snapshot` stub is deleted along with its dangling glue mount).
 
-use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
+use crate::{Iso16757Diff, Iso16757Snapshot};
 
 //#region 🔖️Mutations
 use super::add_selection_constraint;
@@ -185,7 +185,7 @@ impl Iso16757Mutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::iso16757::{part_1, part_4, part_5, Cardinality, LocalizedText, Names};
+    use crate::{part_1, part_4, part_5, Cardinality, LocalizedText, Names};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     fn round_trip(base: &Iso16757Snapshot, operation: &Iso16757Mutation) -> Iso16757Snapshot {
@@ -218,9 +218,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn change_and_remove_part_number_input_round_trip() {
         let base = Iso16757Snapshot::reference_fixture();
-        let change = Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: "new-key".into(), new_value: crate::artifacts::iso16757::CatalogueValue::Decimal { value: 7.0 } });
+        let change = Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: "new-key".into(), new_value: crate::CatalogueValue::Decimal { value: 7.0 } });
         let after_change = round_trip(&base, &change);
-        assert_eq!(after_change.part_number_inputs.get("new-key"), Some(&crate::artifacts::iso16757::CatalogueValue::Decimal { value: 7.0 }));
+        assert_eq!(after_change.part_number_inputs.get("new-key"), Some(&crate::CatalogueValue::Decimal { value: 7.0 }));
 
         let remove = Iso16757Mutation::RemovePartNumberInput(remove_part_number_input::mutation::RemovePartNumberInput { key: "dn".into() });
         let after_remove = round_trip(&base, &remove);
@@ -230,7 +230,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn change_part_number_input_undo_of_a_fresh_key_is_remove() {
         let base = Iso16757Snapshot::reference_fixture();
-        let change = Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: "fresh".into(), new_value: crate::artifacts::iso16757::CatalogueValue::Boolean { value: true } });
+        let change = Iso16757Mutation::ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput { key: "fresh".into(), new_value: crate::CatalogueValue::Boolean { value: true } });
         let undo = change.inverse(&base);
         assert_eq!(undo, vec![Iso16757Mutation::RemovePartNumberInput(remove_part_number_input::mutation::RemovePartNumberInput { key: "fresh".into() })]);
     }
@@ -242,7 +242,7 @@ mod tests {
         let after = round_trip(&base, &change_class);
         assert_eq!(after.selection.class_id, "class.other");
 
-        let constraint = part_1::SelectionConstraint { property_id: "prop.other".into(), operator: part_1::ConstraintOperator::NotEqual, value: crate::artifacts::iso16757::CatalogueValue::Text { value: "x".into() } };
+        let constraint = part_1::SelectionConstraint { property_id: "prop.other".into(), operator: part_1::ConstraintOperator::NotEqual, value: crate::CatalogueValue::Text { value: "x".into() } };
         let add = Iso16757Mutation::AddSelectionConstraint(add_selection_constraint::mutation::AddSelectionConstraint { constraint });
         let after_add = round_trip(&base, &add);
         assert_eq!(after_add.selection.constraints.len(), base.selection.constraints.len() + 1);

@@ -1,13 +1,13 @@
 //! 🧬️ Forms artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::forms::op::FormMutation;
+use crate::op::FormMutation;
 // 🧷️ Aliased (not the bare `dsl` name): this file also needs the EXTERN `dsl` crate (kernel DSL
 // value/derive surface) for `value_to_dsl`/`dsl_to_value` below — importing the artifact's own `dsl`
 // submodule under the bare name would shadow that crate and break every `dsl::DslValue`/`dsl::to_dsl_value`
 // reference in this file (confirmed by `cargo check`: E0425/E0433 "not found in `dsl`").
-use crate::artifacts::forms::dsl as forms_dsl;
-use crate::artifacts::forms::{forms_snapshot_with_state, forms_steps, FormQuestion, FormStep, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::document_dsl as forms_dsl;
+use crate::{forms_snapshot_with_state, forms_steps, FormQuestion, FormStep, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 use dsl::os_pack::json::{Object, Value};
 use std::collections::BTreeMap;
 
@@ -15,7 +15,7 @@ use std::collections::BTreeMap;
 /// 🧬️ Full forms artifact state across the artifact, presence and config lanes. Ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`forms→C:value,table`): `steps: Vec<FormStep>` is
 /// replaced by the same `structure`/`results` composed-child slot pair as `FormsSnapshot` — read
-/// through `crate::artifacts::forms::forms_artifact_steps`, never a bare field.
+/// through `crate::forms_artifact_steps`, never a bare field.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms")]
@@ -102,7 +102,7 @@ pub use crate::playbook::{
 
 pub fn initial_try_values(spec: &FormsSnapshot, overrides: &Object) -> Object {
     let overrides_map: std::collections::HashMap<String, dsl::DslValue> = overrides.iter().map(|(key, value)| (key.to_string(), dsl::os_pack::json::to_dsl_value(value))).collect();
-    let result = crate::playbook::initial_values(&crate::artifacts::forms::mutations::as_playbook_spec(spec), &overrides_map);
+    let result = crate::playbook::initial_values(&crate::mutations::as_playbook_spec(spec), &overrides_map);
     result.into_iter().map(|(key, value)| (key, dsl::os_pack::json::from_dsl_value(&value))).collect()
 }
 //#endregion 🔖️PlaybookVocabulary
@@ -181,7 +181,7 @@ pub fn update_block_operation(spec: &FormsSnapshot, question_id: &str, mutate: i
     let location = locate_question(spec, question_id)?;
     let mut question = location.question;
     mutate(&mut question);
-    Some(FormMutation::ReplaceBlock(crate::artifacts::forms::mutations::replace_block::mutation::ReplaceBlock { step_id: location.step_id, block: question }))
+    Some(FormMutation::ReplaceBlock(crate::mutations::replace_block::mutation::ReplaceBlock { step_id: location.step_id, block: question }))
 }
 //#endregion 🔖️QuestionLocation
 
@@ -246,31 +246,31 @@ pub fn json_f64_value(value: &Value) -> f64 {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.forms.forms` — twenty handcrafted schema leaves.
-pub fn forms_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn forms_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.forms.forms",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -319,7 +319,7 @@ mod tests {
     }
 
     fn apply_form_edit_mutation(spec: &FormsSnapshot, operation: &FormMutation) -> FormsSnapshot {
-        crate::artifacts::forms::op::apply_form_edit_mutation(spec, operation).expect("valid mutation diff")
+        crate::op::apply_form_edit_mutation(spec, operation).expect("valid mutation diff")
     }
 
     #[semio_framework_async_macros::async_test]

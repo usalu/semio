@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `UpdatePart3d`.
 
-use crate::artifacts::block5d::{Block5dPart3d, Block5dSnapshot};
-use crate::artifacts::block5d::diff::Block5dDiff;
+use crate::{Block5dPart3d, Block5dSnapshot};
+use crate::diff::Block5dDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdatePart3d, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {

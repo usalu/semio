@@ -5,8 +5,8 @@
 //! `create_fem3d_app`, so this node exports just its id/body-key constants and `render()`.
 
 #[cfg(test)]
-use crate::artifacts::fem3d::Fem3dSnapshot;
-use crate::artifacts::fem3d::FemCamera;
+use crate::Fem3dSnapshot;
+use crate::FemCamera;
 
 /// 🪟️ The manifest's Model window kind id.
 pub const FEM3D_WINDOW_MODEL: &str = "fem3d-model";
@@ -33,10 +33,10 @@ pub fn render(doc: &Fem3dSnapshot, camera: &FemCamera) -> semio_framework_plugin
 /// `scene.snapshot`, the `live_visual` page lease. A `None` lease therefore paints an EMPTY world — the
 /// `[DEBUG]` line below is the discriminator between "the reconcile job has not published yet / the
 /// identity did not line up" and "the app is genuinely rendering geometry".
-pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut scene =
         semio_framework_plugin::world3d_scene(crate::editor::fem3d::fem3d_camera_json(camera), "[]".into(), "[]".into(), semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default());
-    scene.snapshot = visual.map(crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease::snapshot);
+    scene.snapshot = visual.map(crate::live_visual::Fem3dPageVisualLease::snapshot);
     eprintln!("[DEBUG] fem3d model window render: liveVisualLease={} sceneSnapshot={}", visual.is_some(), scene.snapshot.is_some());
     crate::app_surface::world_3d_surface(FEM3D_BODY_MODEL, scene)
 }

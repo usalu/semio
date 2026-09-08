@@ -1,7 +1,7 @@
 //! 🧬️ Remodeling diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::remodeling::schema::{RemodelingArtifact, RemodelingUiCamera, RemodelingUiFrameCursor, RemodelingUiLayers, RemodelingUiSelection};
-use crate::artifacts::remodeling::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelingAssetChild, RemodelingDurableArtifactStore};
+use crate::schema::{RemodelingArtifact, RemodelingUiCamera, RemodelingUiFrameCursor, RemodelingUiLayers, RemodelingUiSelection};
+use crate::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelingAssetChild, RemodelingDurableArtifactStore};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};

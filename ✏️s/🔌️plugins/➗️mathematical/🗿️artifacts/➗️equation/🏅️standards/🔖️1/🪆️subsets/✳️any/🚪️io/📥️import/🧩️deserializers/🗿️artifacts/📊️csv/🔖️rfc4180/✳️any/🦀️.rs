@@ -4,7 +4,7 @@
 //! a label column. `edges`, the geometry point cloud, and `equation` are never recoverable from a
 //! flat grid, so this hop is `IoFidelity::Lossy`.
 
-use crate::artifacts::equation::{equation_snapshot_with_state, EquationGeometry, EquationGraph, EquationNode, EquationSnapshot};
+use crate::{equation_snapshot_with_state, EquationGeometry, EquationGraph, EquationNode, EquationSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

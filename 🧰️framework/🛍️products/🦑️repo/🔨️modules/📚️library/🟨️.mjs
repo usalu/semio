@@ -826,7 +826,13 @@ function createDependenciesImplementation(_options, context) {
     }
     for (const file of name === "workspace" ? [] : context.fileMap?.projectFileMap?.[name] ?? []) {
       if (!/\.[cm]?[jt]sx?$/.test(file.file) || file.file.endsWith(SCRIPT_BASENAME)) continue;
-      const text = readFileSync(join(workspaceRoot, file.file), "utf8");
+      let text;
+      try {
+        text = readFileSync(join(workspaceRoot, file.file), "utf8");
+      } catch (error) {
+        if (error.code === "ENOENT") continue;
+        throw error;
+      }
       for (const match of text.matchAll(/(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\brequire\s*\(\s*)["']([^"']+)["']/g)) {
         const specifier = match[1];
         const packageName = specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];

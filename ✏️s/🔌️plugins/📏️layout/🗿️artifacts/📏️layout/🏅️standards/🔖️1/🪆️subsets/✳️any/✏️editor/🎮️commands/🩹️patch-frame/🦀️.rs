@@ -1,16 +1,16 @@
 //! ✏️ ✏️ Layout play app commands command — `patch-frame`.
 
-use crate::artifacts::layout::mutations::change_frame_columns::ChangeFrameColumns;
-use crate::artifacts::layout::mutations::change_frame_fill::ChangeFrameFill;
-use crate::artifacts::layout::mutations::change_frame_stroke::ChangeFrameStroke;
-use crate::artifacts::layout::mutations::change_frame_wrap_mode::ChangeFrameWrapMode;
-use crate::artifacts::layout::mutations::change_link_path::ChangeLinkPath;
-use crate::artifacts::layout::mutations::edit_story::EditStory;
-use crate::artifacts::layout::mutations::move_frame::MoveFrame;
-use crate::artifacts::layout::mutations::resize_frame::ResizeFrame;
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::schema::text_to_rgba;
-use crate::artifacts::layout::{Frame, LayoutSnapshot};
+use crate::mutations::change_frame_columns::ChangeFrameColumns;
+use crate::mutations::change_frame_fill::ChangeFrameFill;
+use crate::mutations::change_frame_stroke::ChangeFrameStroke;
+use crate::mutations::change_frame_wrap_mode::ChangeFrameWrapMode;
+use crate::mutations::change_link_path::ChangeLinkPath;
+use crate::mutations::edit_story::EditStory;
+use crate::mutations::move_frame::MoveFrame;
+use crate::mutations::resize_frame::ResizeFrame;
+use crate::mutations::LayoutMutation;
+use crate::schema::text_to_rgba;
+use crate::{Frame, LayoutSnapshot};
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

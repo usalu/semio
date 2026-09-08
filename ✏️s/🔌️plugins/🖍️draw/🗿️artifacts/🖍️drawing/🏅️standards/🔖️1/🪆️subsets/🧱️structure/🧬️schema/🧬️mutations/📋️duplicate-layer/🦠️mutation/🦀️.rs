@@ -1,8 +1,8 @@
 //! 🧬️ Drawing mutation — `DuplicateLayer`: copies an existing layer to a new, content-addressed id
 //! right after its source.
-use crate::artifacts::drawing::diff::DrawingDiff;
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::diff::DrawingDiff;
+use crate::mutations::DrawingMutation;
+use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🧬️ `duplicate-layer` payload — source address only; the duplicate's id is deterministic

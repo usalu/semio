@@ -10,13 +10,13 @@
 //! `26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM` §1 CORRECTION) — this file keeps only the
 //! type + its pure transforms.
 
-use crate::artifacts::presentation::{AnimationChild, PresentationChild};
+use crate::{AnimationChild, PresentationChild};
 use schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted presentation document snapshot — a composed `presentation` deck (shared source figure +
-/// named tile crops, see `crate::artifacts::presentation::presentation_snapshot_from_source_tiles`) plus a
-/// composed `animation` set (currently always empty — see `crate::artifacts::presentation::animation_child_handle`'s
+/// named tile crops, see `crate::presentation_snapshot_from_source_tiles`) plus a
+/// composed `animation` set (currently always empty — see `crate::animation_child_handle`'s
 /// doc comment for the honest gap). Both slots are bare (never absent) — this artifact always
 /// composes exactly one of each, matching writer's `document: WriterDocumentChild` single-`Option`-in-
 /// the-diff convention rather than lowpoly's optional-slot double-`Option` shape.
@@ -42,7 +42,7 @@ impl Default for PresentationSnapshot {
 
 /// 🌱 Canonical default document used by the play app and examples.
 pub fn default_snapshot() -> PresentationSnapshot {
-    crate::artifacts::presentation::presentation_snapshot_with_tiles(&crate::artifacts::presentation::default_figure_tile_source(), &[])
+    crate::presentation_snapshot_with_tiles(&crate::default_figure_tile_source(), &[])
 }
 //#endregion 🔖️Snapshot
 
@@ -69,9 +69,9 @@ mod tests {
 
     #[test]
     fn populated_snapshot_pack_and_dsl_round_trip() {
-        let source = crate::artifacts::presentation::default_figure_tile_source();
-        let tiles = vec![crate::artifacts::presentation::FigureTileDraft { id: "t1".into(), name: "Tile One".into(), crop: crate::artifacts::presentation::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } }];
-        let snap = crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &tiles);
+        let source = crate::default_figure_tile_source();
+        let tiles = vec![crate::FigureTileDraft { id: "t1".into(), name: "Tile One".into(), crop: crate::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } }];
+        let snap = crate::presentation_snapshot_with_tiles(&source, &tiles);
         let bytes = <PresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <PresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);

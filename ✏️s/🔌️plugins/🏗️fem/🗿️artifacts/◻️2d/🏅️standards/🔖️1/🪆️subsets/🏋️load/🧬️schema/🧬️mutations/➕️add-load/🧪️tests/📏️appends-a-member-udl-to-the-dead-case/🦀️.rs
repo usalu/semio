@@ -7,9 +7,9 @@
 //!
 //! Loads have no collection of their own: adding one re-emits the *whole* owning case as a single patch entry.
 
-use crate::artifacts::fem2d::mutations::Fem2dMutation;
-use crate::artifacts::fem2d::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::mutations::Fem2dMutation;
+use crate::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -35,7 +35,7 @@ fn applies_to_committed_after() {
     assert_eq!(snapshot, expected_after(), "add-load/appends-a-member-udl-to-the-dead-case: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.load_cases.len(), 1, "add-load/appends-a-member-udl-to-the-dead-case: adding a load must not coin a new case");
     assert_eq!(snapshot.load_cases[0].loads.len(), 2, "add-load/appends-a-member-udl-to-the-dead-case: the UDL must join the existing nodal load");
-    assert_eq!(crate::artifacts::fem2d::load_id(&snapshot.load_cases[0].loads[1]), "l2", "add-load/appends-a-member-udl-to-the-dead-case: the new load must be appended at the tail of the case");
+    assert_eq!(crate::load_id(&snapshot.load_cases[0].loads[1]), "l2", "add-load/appends-a-member-udl-to-the-dead-case: the new load must be appended at the tail of the case");
 }
 
 /// ↩️ The inverse is a `remove-load` of `l2` from `dead`, restoring the single-load case.
@@ -99,7 +99,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "add-load/appends-a-member-udl-to-the-dead-case: committed diff JSON is not canonical");
@@ -108,7 +108,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `loadCases.patched` entry on `before` must yield the two-load case.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "add-load/appends-a-member-udl-to-the-dead-case: committed diff did not carry before to after");
 }

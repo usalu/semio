@@ -2,9 +2,9 @@
 //! never meaningfully edited one field at a time — a margins dialog writes all four at once).
 
 
-use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot, PagePatch};
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::{LayoutDiff, LayoutSnapshot, PagePatch};
+use crate::mutations::LayoutMutation;
+use crate::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

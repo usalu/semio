@@ -3,8 +3,8 @@
 //! cad host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
-use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::op::CadMutation;
+use crate::CadSnapshot;
 use protocol::OpBinary;
 use store::{ArtifactEnvelope, ArtifactStore};
 
@@ -33,8 +33,8 @@ pub type CadStore = ArtifactStore<CadSnapshot, CadMutation>;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::mutations::create_shape_model::CreateShapeModel;
-    use crate::artifacts::cad::{empty_cad_snapshot, testkit::sample_model_child, CAD_DOCUMENT_SCHEMA};
+    use crate::mutations::create_shape_model::CreateShapeModel;
+    use crate::{empty_cad_snapshot, testkit::sample_model_child, CAD_DOCUMENT_SCHEMA};
     use store::{create_document_envelope, ArtifactCommand};
 
     #[semio_framework_async_macros::async_test]

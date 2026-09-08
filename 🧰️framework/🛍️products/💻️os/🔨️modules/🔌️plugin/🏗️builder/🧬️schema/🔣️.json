@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/builder/component.json",
+  "title": "Semio OS Plugin Builder",
+  "$defs": {
+    "ArtifactAdmissionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "cases", "firstParty"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/BuilderContractId" },
+        "cases": {
+          "type": "array",
+          "minItems": 15,
+          "maxItems": 15,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "plugin", "package", "channel", "kind", "code"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "plugin": { "$ref": "#/$defs/BuilderPluginId" },
+              "package": { "$ref": "#/$defs/BuilderPackageId" },
+              "channel": { "enum": ["artifact", "definition", "tree"] },
+              "kind": { "type": "string" },
+              "code": { "enum": ["accepted", "plugin-assembly.artifact-kind", "plugin-assembly.artifact-owner"] }
+            }
+          }
+        },
+        "firstParty": {
+          "type": "array",
+          "minItems": 39,
+          "maxItems": 39,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["plugin", "kind", "definition", "root"],
+            "properties": {
+              "plugin": { "$ref": "#/$defs/BuilderPluginId" },
+              "kind": { "$ref": "#/$defs/BuilderArtifactKind" },
+              "definition": { "type": "string", "minLength": 1 },
+              "root": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "BuilderArtifactKind": { "type": "string", "pattern": "^s\\.[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "BuilderContractId": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*/v[0-9]+$" },
+    "BuilderPackageId": { "type": "string", "pattern": "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "BuilderPluginId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "TopicContributionsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "cases"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/BuilderContractId" },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "contributions"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z]+(-[a-z]+)*$" },
+              "contributions": {
+                "type": "array",
+                "maxItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["topic", "payload"],
+                  "properties": {
+                    "topic": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$" },
+                    "payload": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["identity", "executable"],
+                      "properties": {
+                        "identity": { "type": "string", "minLength": 1 },
+                        "executable": { "type": "boolean" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -18,9 +18,9 @@
 //! re-mint it through gis's own `gis_terrain_snapshot_with_derived_mesh` — the identical call
 //! `apply_gis_terrain_mutation` and `GisTerrainDiff::apply` each make after every edit.
 
-use crate::artifacts::gisterrain::diff::GisTerrainDiff;
-use crate::artifacts::gisterrain::mutations::{apply_gis_terrain_mutation, inverse_gis_terrain_mutation, GisTerrainMutation};
-use crate::artifacts::gisterrain::{gis_terrain_snapshot_with_derived_mesh, GisTerrainSnapshot};
+use crate::diff::GisTerrainDiff;
+use crate::mutations::{apply_gis_terrain_mutation, inverse_gis_terrain_mutation, GisTerrainMutation};
+use crate::{gis_terrain_snapshot_with_derived_mesh, GisTerrainSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

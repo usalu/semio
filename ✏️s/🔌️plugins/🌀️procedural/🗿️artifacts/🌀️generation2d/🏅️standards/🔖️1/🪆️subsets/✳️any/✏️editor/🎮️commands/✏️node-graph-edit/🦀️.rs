@@ -1,10 +1,11 @@
 //! 🕸️ 🕸️ Generation2d play app commands command — `node-graph-edit`.
 
-use crate::artifacts::generation2d::op::Generation2dMutation;
-use crate::artifacts::generation2d::schema::host_operations;
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::op::Generation2dMutation;
+use crate::schema::host_operations;
+use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use flow::{FlowEvalSession, FlowFixture};
+use semio_framework_os_flow::{FlowEvalSession};
+use semio_framework_artifact_flow_semio_framework_os_flow::{FlowFixture};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -19,7 +20,7 @@ fn apply_operations(fixture: &FlowFixture, sub_operations: &[dsl::json::Value], 
         for operation in sub_operations {
             match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                 "setFixture" => {
-                    if let Some(fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| flow::os_pack::json::from_json_str::<FlowFixture>(json).ok()) {
+                    if let Some(fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| semio_framework_os_flow::os_pack::json::from_json_str::<FlowFixture>(json).ok()) {
                         host.replace_fixture(fixture);
                     }
                 }

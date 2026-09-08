@@ -8,7 +8,7 @@
 //! a hand-written slot list — `#[derive(ArtifactSchema)]` still emits `field_states()`/the `#[child(…)]`
 //! slot table for the top-level facets.
 
-use crate::artifacts::gisterrain::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key};
+use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key};
 use dsl::{FromValue, ToValue};
 use schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
@@ -33,7 +33,7 @@ pub struct GisTerrainSnapshot {
     /// `GisTerrainDiff::apply`) re-derives it so the handle never drifts from what
     /// `gis_terrain_mesh_from_snapshot` would actually build. Replaces the placeholder-only
     /// `3d.mesh` `ArtifactKindSpec` this artifact used to re-declare (see
-    /// `crate::artifacts::gisterrain::🦀️.rs`'s removal comment).
+    /// `crate::🦀️.rs`'s removal comment).
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.mesh")]
     #[value(default, skip_serializing_if = "Option::is_none")]

@@ -4,7 +4,7 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::puzzle2d::{Puzzle2dSnapshot, PUZZLE2D_DIALECT, PUZZLE_2D_SCHEMA};
+use crate::{Puzzle2dSnapshot, PUZZLE2D_DIALECT, PUZZLE_2D_SCHEMA};
 use crate::viewer::puzzle2d::modes::view;
 use crate::viewer::puzzle2d::modes::view::windows::board;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -41,7 +41,7 @@ pub struct Puzzle2dViewer;
 
 impl ArtifactViewer for Puzzle2dViewer {
     type Snapshot = Puzzle2dSnapshot;
-    type Mutation = crate::artifacts::puzzle2d::op::Puzzle2dMutation;
+    type Mutation = crate::op::Puzzle2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

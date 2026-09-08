@@ -1,9 +1,9 @@
 //! 🧬️ Cad diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::cad::mutations::CadNodePatch;
-use crate::artifacts::cad::schema::{CadComponentSelection, CadDislocateOptions};
-use crate::artifacts::cad::{CadCamera, CadDrawingChild, CadModelChild, CadNode, CadReferenceList};
-use schema::ArtifactSchema;
+use crate::mutations::CadNodePatch;
+use crate::schema::{CadComponentSelection, CadDislocateOptions};
+use crate::{CadCamera, CadDrawingChild, CadModelChild, CadNode, CadReferenceList};
+use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
@@ -14,7 +14,7 @@ use std::collections::BTreeMap;
 #[artifact_schema(id = "s.cad.cad")]
 pub struct CadDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::cad::schema::CadArtifact>>,
+    pub artifact: Option<Box<crate::schema::CadArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

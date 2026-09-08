@@ -7,9 +7,9 @@
 //!
 //! A footprint is extruded from `baseZ` over two mesh layers — the extrusion parameters are stored, never re-derived at solve time.
 
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -84,7 +84,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "create-solid/appends-an-extruded-roof-slab: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "create-solid/appends-an-extruded-roof-slab: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "create-solid/appends-an-extruded-roof-slab: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "create-solid/appends-an-extruded-roof-slab: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "create-solid/appends-an-extruded-roof-slab: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("create-solid/appends-an-extruded-roof-slab: unknown outcome status {other:?}"),
@@ -106,7 +106,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-solid/appends-an-extruded-roof-slab: committed diff JSON is not canonical");
@@ -115,7 +115,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `solids.added` entry on `before` must reproduce the slab with its geometry intact.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-solid/appends-an-extruded-roof-slab: committed diff did not carry before to after");
 }

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📒audit-events` per Wave C.
 
 use super::DeleteAuditEvent;
-use crate::artifacts::program::diff::ProgramAuditEventsDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramAuditEventsDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteAuditEvent, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `DeleteBlocks`.
 use super::DeleteBlocks;
-use crate::artifacts::note::schema::mutations::CreateBlock;
-use crate::artifacts::note::schema::mutations::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::schema::mutations::CreateBlock;
+use crate::schema::mutations::NoteMutation;
+use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteBlocks, base: &NoteSnapshot) -> Vec<NoteMutation> {
@@ -14,12 +14,12 @@ pub fn inverse(payload: &DeleteBlocks, base: &NoteSnapshot) -> Vec<NoteMutation>
     // inserted FIRST (so it never gets pushed rightward by an insert that hasn't happened yet). Sorting
     // ascending and letting the caller's `.reverse()` flip that to descending-first was exactly backwards
     // — descending here becomes ascending after that reversal, restoring the correct original order.
-    let mut entries: Vec<(Option<String>, usize, crate::artifacts::note::NoteBlockNode)> = payload
+    let mut entries: Vec<(Option<String>, usize, crate::NoteBlockNode)> = payload
         .ids
         .iter()
         .filter_map(|id| {
-            let block = crate::artifacts::note::schema::find_block(&base.blocks, id)?.clone();
-            let (parent_id, index) = crate::artifacts::note::schema::find_block_location(&base.blocks, id)?;
+            let block = crate::schema::find_block(&base.blocks, id)?.clone();
+            let (parent_id, index) = crate::schema::find_block_location(&base.blocks, id)?;
             Some((parent_id, index, block))
         })
         .collect();

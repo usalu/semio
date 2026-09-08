@@ -2,9 +2,9 @@
 //! Warning `no-op` when that shot has no saved camera.
 
 use super::ReplaceShotCamera;
-use crate::artifacts::shooting::diff::{ShootingDiff, ShootingSavedCameraPatchEntry, ShootingSavedCamerasDelta};
-use crate::artifacts::shooting::ShootingSavedCameraPatch;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::{ShootingDiff, ShootingSavedCameraPatchEntry, ShootingSavedCamerasDelta};
+use crate::ShootingSavedCameraPatch;
+use crate::ShootingSnapshot;
 
 pub fn diff(payload: &ReplaceShotCamera, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     let Some(shot) = base.shots.iter().find(|shot| shot.id == payload.shot_id) else {

@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ReplaceSection` — recovers the pre-mutation section from `base`.
 use super::ReplaceSection;
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceSection, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

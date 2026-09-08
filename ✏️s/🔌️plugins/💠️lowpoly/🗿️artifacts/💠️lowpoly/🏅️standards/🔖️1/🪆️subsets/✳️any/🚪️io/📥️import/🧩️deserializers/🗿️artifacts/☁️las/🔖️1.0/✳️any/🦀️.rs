@@ -3,7 +3,7 @@
 //! 🐛️ See the export leaf's doc comment: honest stub, not a silent pack-envelope lie. Real LAS
 //! import would need to synthesize a `LowpolyObject` (and a resolvable mesh child artifact) from
 //! parsed points -- an out-of-scope architecture change, not a pure `&LasSnapshot -> …` mapping.
-use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
+use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_las::LasSnapshot;
 
 pub fn register() {}

@@ -1,9 +1,9 @@
 //! 📥️ 📥️ Remodeling play app commands command — `import-video-bytes-payload`.
 
-use crate::artifacts::remodeling::mutations::{create_asset, create_stream};
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::schema::next_remodeling_id;
-use crate::artifacts::remodeling::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, VideoSource};
+use crate::mutations::{create_asset, create_stream};
+use crate::op::RemodelingMutation;
+use crate::schema::next_remodeling_id;
+use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, VideoSource};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::editor::remodeling::engine::{describe_video_probe, images as remodeling_image, video as remodeling_video, video_codec_to_artifact};
 use crate::editor::remodeling::payload_from_data_url;

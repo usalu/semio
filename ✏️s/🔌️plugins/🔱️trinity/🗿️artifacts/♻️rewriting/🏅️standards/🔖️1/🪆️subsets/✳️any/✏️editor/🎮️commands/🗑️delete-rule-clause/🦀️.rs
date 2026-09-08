@@ -1,11 +1,11 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `delete-rule-clause`.
 
 use crate::editor::rewriting::config::RewritingConfigMutation;
-use crate::artifacts::jack::{Graph, JackSnapshot, PropertyValue};
-use crate::artifacts::rewriting::schema::{ParameterKind, Rhs};
-use crate::artifacts::rewriting::rewriting_snapshot_mutations;
-use crate::artifacts::rewriting::op::RewriteRuleMutation;
-use crate::artifacts::rewriting::RewritingSnapshot;
+use semio_s_artifact_trinity_jack::{Graph, JackSnapshot, PropertyValue};
+use crate::schema::{ParameterKind, Rhs};
+use crate::rewriting_snapshot_mutations;
+use crate::op::RewriteRuleMutation;
+use crate::RewritingSnapshot;
 use semio_framework_plugin::{Emit, Fault};
 
 /// 🧭️ One addressable rule-clause node in the LHS/RHS semantic graphs (`lhs-where`, `rhs-create-N`,
@@ -23,7 +23,7 @@ enum RuleClauseRef {
 fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
     JackSnapshot::from_json(json).ok()
 }
-fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap<String, crate::artifacts::rewriting::LayoutPoint>, current_fixture_json: &str, edited_fixture_json: &str) -> bool {
+fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap<String, crate::LayoutPoint>, current_fixture_json: &str, edited_fixture_json: &str) -> bool {
     let (Some(current), Some(edited)) = (parse_fixture_json(current_fixture_json), parse_fixture_json(edited_fixture_json)) else {
         return false;
     };
@@ -35,7 +35,7 @@ fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap<Strin
             continue;
         };
         if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
-            rule_layout.insert(node.id.clone(), crate::artifacts::rewriting::LayoutPoint { x: node.x, y: node.y });
+            rule_layout.insert(node.id.clone(), crate::LayoutPoint { x: node.x, y: node.y });
             changed = true;
         }
     }
@@ -65,7 +65,7 @@ fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
     }
 }
 fn add_rule_clause(state: &mut RewritingSnapshot, clause_kind: &str) -> bool {
-    let Ok(mut lhs) = pack::from_json_str::<crate::artifacts::rewriting::schema::Lhs>(&state.lhs_json) else {
+    let Ok(mut lhs) = pack::from_json_str::<crate::schema::Lhs>(&state.lhs_json) else {
         return false;
     };
     let Ok(mut rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
@@ -82,15 +82,15 @@ fn add_rule_clause(state: &mut RewritingSnapshot, clause_kind: &str) -> bool {
             }
         }
         "create" => {
-            rhs.create.push(crate::artifacts::rewriting::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
+            rhs.create.push(crate::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
             true
         }
         "merge" => {
-            rhs.merge.push(crate::artifacts::rewriting::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
+            rhs.merge.push(crate::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
             true
         }
         "set" => {
-            rhs.set.push(crate::artifacts::rewriting::schema::AssignmentJson { var: left_var, prop: "label".into(), value: PropertyValue::String(String::new()) });
+            rhs.set.push(crate::schema::AssignmentJson { var: left_var, prop: "label".into(), value: PropertyValue::String(String::new()) });
             true
         }
         "delete" => {
@@ -100,7 +100,7 @@ fn add_rule_clause(state: &mut RewritingSnapshot, clause_kind: &str) -> bool {
         "parameter" => {
             let name = format!("param{}", rhs.parameters.len());
             state.parameter_bindings.insert(name.clone(), PropertyValue::String(String::new()));
-            rhs.parameters.push(crate::artifacts::rewriting::schema::ParameterSpec { name, kind: ParameterKind::String, default: PropertyValue::String(String::new()) });
+            rhs.parameters.push(crate::schema::ParameterSpec { name, kind: ParameterKind::String, default: PropertyValue::String(String::new()) });
             true
         }
         _ => false,
@@ -143,8 +143,8 @@ fn apply_rewriting_node_graph_edit_operations(state: &mut RewritingSnapshot, sel
                         nodes.retain(|node| !selected_node_ids.contains(&node.id));
                         let mut edges = fixture.edges();
                         edges.retain(|edge| {
-                            let from = crate::artifacts::jack::port_node_id(&edge.source).unwrap_or(&edge.source);
-                            let to = crate::artifacts::jack::port_node_id(&edge.target).unwrap_or(&edge.target);
+                            let from = semio_s_artifact_trinity_jack::port_node_id(&edge.source).unwrap_or(&edge.source);
+                            let to = semio_s_artifact_trinity_jack::port_node_id(&edge.target).unwrap_or(&edge.target);
                             !selected_node_ids.iter().any(|id| id == from || id == to)
                         });
                         let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, edges, fixture.root_node_id.clone());
@@ -189,7 +189,7 @@ pub(crate) fn delete_rule_clause(state: &mut RewritingSnapshot, node_id: &str) -
     let Some(clause_ref) = parse_clause_ref(node_id) else {
         return false;
     };
-    let Ok(mut lhs) = pack::from_json_str::<crate::artifacts::rewriting::schema::Lhs>(&state.lhs_json) else {
+    let Ok(mut lhs) = pack::from_json_str::<crate::schema::Lhs>(&state.lhs_json) else {
         return false;
     };
     let Ok(mut rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {

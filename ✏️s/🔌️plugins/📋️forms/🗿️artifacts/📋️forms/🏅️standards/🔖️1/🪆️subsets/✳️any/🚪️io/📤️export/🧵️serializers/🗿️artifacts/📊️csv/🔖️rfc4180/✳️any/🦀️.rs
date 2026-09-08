@@ -1,12 +1,12 @@
 //! 🚪️ forms -> csv — foreign `Serializer<FormsSnapshot>` (ticket
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Real, meaningful export: one
 //! row per question, flattened in step order (`id`/`stepId`/`label`/`kind`/`required`) — the same
-//! projection `crate::artifacts::forms::forms_results_from_steps` already derives for the
+//! projection `crate::forms_results_from_steps` already derives for the
 //! `results` composed child, built directly here to avoid a `s.stdio.semio.table` round trip.
 //! `IoFidelity::Lossy`: drops `schema`/`id`/`version`/`title` and every per-question config field
 //! (`options`/`condition`/`params`/`default`/…) — a flat grid has no place for them.
 
-use crate::artifacts::forms::{forms_steps, FormsSnapshot};
+use crate::{forms_steps, FormsSnapshot};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -39,7 +39,7 @@ impl Serializer<FormsSnapshot> for FormsIntoCsv {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::forms::schema::onboarding_example_spec;
+    use crate::schema::onboarding_example_spec;
 
     #[semio_framework_async_macros::async_test]
     async fn export_flattens_one_row_per_question_plus_header() {

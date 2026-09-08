@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `UpdateMeshParams` — the OLD `MeshParams` looked up from BASE.
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::mutations::RemodelingMutation;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::UpdateMeshParams, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {

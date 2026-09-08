@@ -1,8 +1,8 @@
 //! 🎼️ Energy model mutation — `ChangeSetpointManagerSchedule`: Points one setpoint manager at a schedule the model defines, or clears the slot. `Option<T>` has no `dsl::DslField`, so the optional reference travels as a `present` flag beside the id and an absent slot has to carry zero.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

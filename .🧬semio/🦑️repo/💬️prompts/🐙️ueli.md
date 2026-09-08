@@ -599,7 +599,8 @@ e.g. violations such as locale that is a global os wide setting and not jack spe
 ---
 
 Every test must follow the convention `<parent>/🧪️tests/<test-name>/<implementation>`
-Get rid of all legacy (such as _.test._ pattern etc)
+Get rid of all legacy (such as _.test._ pattern etc).
+Put the tests at the correct scope.
 e.g. violations
 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏛️space-administration.test.tsx
 etc

@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `CreateNode` — always a `delete-node` of the created id.
 use super::CreateNode;
-use crate::artifacts::cad::mutations::delete_node;
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::delete_node;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &CreateNode, _base: &CadSnapshot) -> Vec<CadMutation> {

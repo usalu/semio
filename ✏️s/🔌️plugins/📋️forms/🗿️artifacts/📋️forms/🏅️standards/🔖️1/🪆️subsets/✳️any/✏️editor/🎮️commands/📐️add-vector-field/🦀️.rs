@@ -1,14 +1,14 @@
 //! 📐️ 📐️ Forms play app commands command — `add-vector-field`.
 
-use crate::artifacts::forms::schema::update_block_operation;
-use crate::artifacts::forms::{op::FormMutation, FormVectorField, FormsSnapshot};
+use crate::schema::update_block_operation;
+use crate::{op::FormMutation, FormVectorField, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Shell
 fn add_vector_field(spec: &FormsSnapshot, question_id: &str, key: &str) -> Option<FormMutation> {
-    let location = crate::artifacts::forms::schema::locate_question(spec, question_id)?;
+    let location = crate::schema::locate_question(spec, question_id)?;
     if location.question.fields.iter().flatten().any(|entry| entry.key == key) {
         return None;
     }

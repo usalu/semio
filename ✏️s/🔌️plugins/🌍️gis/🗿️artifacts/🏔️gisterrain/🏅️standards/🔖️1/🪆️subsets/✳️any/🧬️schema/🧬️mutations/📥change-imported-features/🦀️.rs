@@ -1,8 +1,8 @@
 //! 📥️ Direct `change-imported-features` mutation owner — sets the terrain's last-imported `2d.map`
 //! descriptor JSON (the `map:in` insertion point).
-use crate::artifacts::gisterrain::diff::GisTerrainDiff;
-use crate::artifacts::gisterrain::mutations::GisTerrainMutation;
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::diff::GisTerrainDiff;
+use crate::mutations::GisTerrainMutation;
+use crate::GisTerrainSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

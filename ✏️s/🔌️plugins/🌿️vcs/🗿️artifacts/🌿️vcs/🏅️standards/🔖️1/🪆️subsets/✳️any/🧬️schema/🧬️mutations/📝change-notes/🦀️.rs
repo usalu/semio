@@ -1,6 +1,6 @@
 //! 📝 VCS mutation — `ChangeNotes`: sets the document's `notes` scalar to a new value.
-use crate::artifacts::vcs::mutations::VcsDemoMutation;
-use crate::artifacts::vcs::{VcsDiff, VcsSnapshot};
+use crate::mutations::VcsDemoMutation;
+use crate::{VcsDiff, VcsSnapshot};
 
 //#region 🔖️Mutation
 /// 📝 `change-notes` payload.

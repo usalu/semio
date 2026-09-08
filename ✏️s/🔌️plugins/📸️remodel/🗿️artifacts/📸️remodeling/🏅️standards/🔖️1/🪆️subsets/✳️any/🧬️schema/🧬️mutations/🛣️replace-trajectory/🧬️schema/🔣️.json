@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/replace-trajectory.json",
+  "$id": "https://semio.tech/schema/s/remodel/remodeling/1/any/mutation/replace-trajectory/schema.json",
   "title": "ReplaceTrajectory",
   "type": "object",
   "additionalProperties": false,

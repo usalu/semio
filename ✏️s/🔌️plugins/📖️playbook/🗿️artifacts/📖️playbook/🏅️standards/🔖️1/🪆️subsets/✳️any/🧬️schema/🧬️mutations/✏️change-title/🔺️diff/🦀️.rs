@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeTitle` — a real single-field patch (never a whole-snapshot
 //! capture).
 
-use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
+use crate::{PlaybookDiff, PlaybookSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeTitle, base: &PlaybookSnapshot) -> protocol::MutationOutcome<PlaybookDiff> {

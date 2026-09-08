@@ -2,8 +2,8 @@
 
 pub mod apply {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::{EntityId, ProgramSnapshot};
+    use crate::op::ProgramMutation;
+    use crate::{EntityId, ProgramSnapshot};
     use crate::editor::architect::behavior::apply_template;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

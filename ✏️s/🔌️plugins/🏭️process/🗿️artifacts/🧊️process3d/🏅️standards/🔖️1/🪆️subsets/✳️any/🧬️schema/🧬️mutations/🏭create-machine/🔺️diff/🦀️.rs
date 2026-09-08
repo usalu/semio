@@ -3,8 +3,8 @@
 //! mutation's diff shape), built directly from `base` + payload, never a snapshot clone. Fatal
 //! `duplicate-id` on an existing machine id.
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::{Process3dSnapshot, Workshop};
+use crate::diff::Process3dDiff;
+use crate::{Process3dSnapshot, Workshop};
 
 //#region 🔖️Diff
 /// 🏗️ Builds the new workshop value with the machine appended.

@@ -3,7 +3,7 @@
 use crate::wfc_engine::domain::Domain;
 use crate::wfc_engine::ids::PatternId;
 use crate::wfc_engine::model::CompiledModel;
-use geometry::random::Rng;
+use semio_framework_geometry::random::Rng;
 
 // #region 🔖️Sampler
 /// 🎲️ How one pattern is chosen from an unresolved domain.

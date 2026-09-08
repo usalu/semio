@@ -3,8 +3,8 @@
 //! carry ⇒ Fatal `mutation.invariant` (the referential half of `delete-stream`'s own guard), the exact
 //! observation already present ⇒ Warning `mutation.no-op`. The observation lands at its canonical
 //! `(stream_id, frame_index)` position so `remove-gcp-observation` puts it back where it was.
-use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingGcpList};
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::{RemodelingDiff, RemodelingGcpList};
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddGcpObservation, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
@@ -19,7 +19,7 @@ pub fn diff(payload: &super::AddGcpObservation, base: &RemodelingSnapshot) -> pr
     }
     let mut gcps = base.gcps.clone();
     if let Some(gcp) = gcps.iter_mut().find(|gcp| gcp.id == payload.id) {
-        let at = crate::artifacts::remodeling::mutations::ordered_index(&gcp.observations, &(payload.observation.stream_id.clone(), payload.observation.frame_index), |observation| (observation.stream_id.clone(), observation.frame_index));
+        let at = crate::mutations::ordered_index(&gcp.observations, &(payload.observation.stream_id.clone(), payload.observation.frame_index), |observation| (observation.stream_id.clone(), observation.frame_index));
         gcp.observations.insert(at, payload.observation.clone());
     }
     protocol::MutationOutcome::new(RemodelingDiff { gcps: Some(RemodelingGcpList { values: gcps }), ..Default::default() })

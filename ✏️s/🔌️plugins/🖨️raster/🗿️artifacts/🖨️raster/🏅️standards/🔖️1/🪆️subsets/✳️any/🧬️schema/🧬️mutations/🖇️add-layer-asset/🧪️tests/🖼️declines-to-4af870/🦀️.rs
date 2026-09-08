@@ -5,7 +5,7 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`.
 //!
 //! ⚠️ Why this tree pins the NO-OP APPLIED branch rather than a real attachment: an applied
-//! `add-layer-asset` runs the payload's bytes through `crate::artifacts::raster::mint_raster_asset_child`,
+//! `add-layer-asset` runs the payload's bytes through `crate::mint_raster_asset_child`,
 //! which mints the composed child handle as `format!("raster-asset-{hash:016x}")` from a
 //! `std::collections::hash_map::DefaultHasher` digest of the decoded `SemioImageSnapshot`'s pack
 //! bytes. A hand-authored `➡️after` would therefore have to forge a value from `std`'s deliberately
@@ -13,8 +13,8 @@
 //! diff builder (`base.assets.contains_key`), reached before any minting happens: the diff is the
 //! artifact's `Default`, `➡️after` equals `⬅️before`, and no handle is re-minted.
 
-use crate::artifacts::raster::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
-use crate::artifacts::raster::{RasterDiff, RasterSnapshot};
+use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
+use crate::{RasterDiff, RasterSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

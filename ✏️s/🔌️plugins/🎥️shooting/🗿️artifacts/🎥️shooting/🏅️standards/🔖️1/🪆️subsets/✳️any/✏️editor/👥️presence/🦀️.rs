@@ -1,6 +1,6 @@
 //! 👥️ Shooting presence — shareable live ephemeral state + mutations.
 
-use crate::artifacts::shooting::ShootingCamera;
+use crate::ShootingCamera;
 use store::ArtifactPack;
 
 //#region 🔖️Presence

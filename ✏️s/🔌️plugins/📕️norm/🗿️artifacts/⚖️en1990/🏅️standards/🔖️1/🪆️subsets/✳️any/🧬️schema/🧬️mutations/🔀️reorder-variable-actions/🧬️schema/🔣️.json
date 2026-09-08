@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1990/1/any/mutation/reorder-variable-actions.json",
+  "$id": "https://semio.tech/schema/s/norm/en1990/1/any/mutation/reorder-variable-actions/schema.json",
   "title": "ReorderVariableActions",
   "type": "object",
   "additionalProperties": false,

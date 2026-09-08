@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-mechanical-ventilation.json",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-mechanical-ventilation/schema.json",
   "title": "CreateMechanicalVentilation",
   "type": "object",
   "additionalProperties": false,

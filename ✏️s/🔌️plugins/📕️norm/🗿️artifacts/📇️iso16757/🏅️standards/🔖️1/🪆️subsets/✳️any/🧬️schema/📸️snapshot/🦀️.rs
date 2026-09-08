@@ -1,7 +1,7 @@
 //! 🧬️ Iso16757 snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::iso16757::{part_1, part_2, part_4, part_5, CatalogueValue};
-use schema::ArtifactSchema;
+use crate::{part_1, part_2, part_4, part_5, CatalogueValue};
+use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot

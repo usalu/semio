@@ -1,10 +1,11 @@
 //! 🧵️ Flow-owned byte frontiers for retained preparation and retirement.
 
 use super::{FlowConfig, FlowConfigMutation, FlowMutation};
-use flow::{neural, FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, Widget};
+use flow::{neural};
+use semio_framework_artifact_flow_flow::{FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, Widget};
 use std::collections::LinkedList;
 use std::mem::ManuallyDrop;
-use flow::retained::{FlowOwner, FlowRetirement};
+use semio_framework_artifact_flow_flow::retained::{FlowOwner, FlowRetirement};
 use store::ErasedSnapshotRetirement;
 
 #[path = "🎚️config/🦀️.rs"]
@@ -97,7 +98,7 @@ impl Retirement {
                 if !owner.is_empty() { self.push(Owner::Domain(owner)); }
             }
             Owner::Widget(widget) => self.widget(widget),
-            Owner::Scene(value) => self.push(Owner::Domain(crate::artifacts::flow::retirement::retire_scene(value))),
+            Owner::Scene(value) => self.push(Owner::Domain(crate::retirement::retire_scene(value))),
             Owner::Tree(tree) => {
                 self.push(Owner::Neurons(tree.neurons));
                 self.push(Owner::Synapses(tree.synapses));
@@ -147,7 +148,7 @@ impl Retirement {
                 if !values.is_empty() { self.push(Owner::Layout(values)); }
                 if let Some(value) = next { self.text(value.id); }
             }
-            Owner::Mutation(value) => self.push(Owner::Domain(crate::artifacts::flow::retirement::retire_mutation(value))),
+            Owner::Mutation(value) => self.push(Owner::Domain(crate::retirement::retire_mutation(value))),
             Owner::Mutations(mut values) => {
                 let next = values.pop();
                 if !values.is_empty() { self.push(Owner::Mutations(values)); }
@@ -228,7 +229,7 @@ impl ErasedSnapshotRetirement for Retirement {
 pub(super) struct ConfigSource<'a> {
     preview: &'a [String],
     text: [&'a str; 7],
-    camera: &'a flow::CameraJson,
+    camera: &'a semio_framework_artifact_flow_flow::CameraJson,
     proximity: f64,
     visible: bool,
     snap: bool,

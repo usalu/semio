@@ -12,8 +12,8 @@
 //! position. The seeded scene holds a single step, so index 0 is both its position and the only
 //! reachable slot — the exact arithmetic this second guard exists for.
 
-use crate::artifacts::playbook::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
-use crate::artifacts::playbook::{attach_playbook_steps, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
+use crate::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
+use crate::{attach_playbook_steps, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

@@ -1,6 +1,6 @@
 //! 🧭️ Note play app — the navigator (overview/minimap) canvas window: a non-interactive scaled view.
 
-use crate::artifacts::note::{NoteCamera, NoteSnapshot};
+use crate::{NoteCamera, NoteSnapshot};
 use crate::editor::note::config::NoteConfig;
 use crate::editor::note::modes::edit::windows::navigator::options;
 use crate::editor::note::terminology::NotePlayLabels;

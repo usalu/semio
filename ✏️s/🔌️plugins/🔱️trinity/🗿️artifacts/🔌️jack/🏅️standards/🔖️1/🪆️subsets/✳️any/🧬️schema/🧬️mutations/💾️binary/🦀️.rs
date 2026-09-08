@@ -1,6 +1,6 @@
 //! 📡️ Trinity graph mutation binary framing and registry surface.
 
-pub use crate::artifacts::jack::standards::v1::subsets::any::schema::wire_runtime::*;
+pub use crate::standards::v1::subsets::any::schema::wire_runtime::*;
 
 /// 🧾️ Direct-owner binary tags in aggregate declaration order.
 pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[

@@ -10,16 +10,16 @@
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the window render
 //! in `🎭️modes/🖊️main/🪟️windows/🖼️tile-editor`, panel trees in `📌️panels/*`, labels in
 //! `🦀️terminology.rs`, view state in `🦀️config.rs`, pure document helpers in
-//! `crate::artifacts::presentation::schema`, and stateful behaviour (the Manim-class animation core + the
+//! `crate::schema`, and stateful behaviour (the Manim-class animation core + the
 //! headless video renderer, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) in this app's
 //! own `⚙️engine`. This file is a routing table: `handle` → `PresentationCommand::dispatch`, `render` →
 //! body-key → node, `🔖️Io`/`🔌️Registration` regions below, and a `🔖️Manifest` region that calls one
 //! `definition()` per node.
 
-use crate::artifacts::presentation::mutations::create_tile::CreateTile;
-use crate::artifacts::presentation::op::PresentationMutation;
-use crate::artifacts::presentation::schema::build_tile_morph_prompt;
-use crate::artifacts::presentation::{default_presentation_snapshot, FigureTileDraft, PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
+use crate::mutations::create_tile::CreateTile;
+use crate::op::PresentationMutation;
+use crate::schema::build_tile_morph_prompt;
+use crate::{default_presentation_snapshot, FigureTileDraft, PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use crate::editor::animate::commands::{
     add_tile, canvas_pointer_down, clear_tiles, copy_prompt, delete_selection, delete_tile, engagement_input, engagement_submit, export_video_from_deck, no_operation, patch_tile_crops, rename_tiles, reset_grid, seed_grid, set_active_example,
     set_frame, set_locale, set_source,
@@ -168,11 +168,11 @@ pub fn next_frame_tile_id(existing_tile_count: usize) -> String {
     format!("frame-{}", existing_tile_count + 1)
 }
 
-pub fn next_frame_tile_crop(existing_tile_count: usize) -> crate::artifacts::presentation::FigureTileFrame {
+pub fn next_frame_tile_crop(existing_tile_count: usize) -> crate::FigureTileFrame {
     let cell = 1.0 / FRAME_IMPORT_GRID_COLUMNS as f64;
     let column = existing_tile_count % FRAME_IMPORT_GRID_COLUMNS;
     let row = existing_tile_count / FRAME_IMPORT_GRID_COLUMNS;
-    crate::artifacts::presentation::schema::clamp_tile_crop(&crate::artifacts::presentation::FigureTileFrame { x: column as f64 * cell, y: (row as f64 * cell).min(1.0 - cell), width: cell, height: cell })
+    crate::schema::clamp_tile_crop(&crate::FigureTileFrame { x: column as f64 * cell, y: (row as f64 * cell).min(1.0 - cell), width: cell, height: cell })
 }
 //#endregion 🔖️Io
 
@@ -190,7 +190,7 @@ pub(crate) fn new_tile_id(prefix: &str) -> String {
 /// 🧹️ Retains only the ids that reference an existing tile in `deck` — shared by every command that
 /// accepts a selection/target id list.
 pub(crate) fn valid_tile_ids(deck: &PresentationSnapshot, ids: Vec<String>) -> Vec<String> {
-    let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(deck);
+    let (_, tiles) = crate::presentation_working_scene(deck);
     let valid: HashSet<&str> = tiles.iter().map(|tile| tile.id.as_str()).collect();
     ids.into_iter().filter(|id| valid.contains(id.as_str())).collect()
 }
@@ -213,7 +213,7 @@ fn frame_media_name(port: &str, media: &Media) -> Result<String, MediaError> {
 /// Shared by `🎮️commands/📋️copy-prompt::copy_prompt` and `🎮️commands/⌨️engagement::engagement_submit`'s
 /// `"copy"`/`"copy prompt"` keywords.
 pub(crate) fn tile_morph_prompt_effect(deck: &PresentationSnapshot) -> Effect {
-    let (source, tiles) = crate::artifacts::presentation::presentation_working_scene(deck);
+    let (source, tiles) = crate::presentation_working_scene(deck);
     Effect::DownloadMediaExport { filename: "tile-morph-prompt.md".into(), mime_type: "text/markdown".into(), data: build_tile_morph_prompt(&source, &tiles), encoding: None }
 }
 
@@ -525,7 +525,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
 
     type Command = PresentationCommand;
 
-    const DIALECT: Dialect = crate::artifacts::presentation::ANIMATE_DIALECT;
+    const DIALECT: Dialect = crate::ANIMATE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PRESENTATION_DOCUMENT_SCHEMA;
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -578,7 +578,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::presentation::spr::presentation_envelope_decode_owner_bundle())
+        Some(crate::spr::presentation_envelope_decode_owner_bundle())
     }
 
     fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
@@ -606,7 +606,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             return Err(MediaError::NotImplemented);
         }
         let deck = doc.snapshot;
-        let count = crate::artifacts::presentation::presentation_working_scene(deck).1.len();
+        let count = crate::presentation_working_scene(deck).1.len();
         let id = next_frame_tile_id(count);
         let crop = next_frame_tile_crop(count);
         let name = frame_media_name(port, media)?;
@@ -658,9 +658,9 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
 pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::presentation::ANIMATE_DIALECT)
+    Editor::builder(crate::ANIMATE_DIALECT)
             .document(["semio", "animate"])
-            .artifact_kind(crate::artifacts::presentation::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             .icon_id("animate")
             .mode_def(main::definition())
             .default_mode_id(main::PRESENTATION_PLAY_MODE_MAIN)
@@ -750,7 +750,7 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             // old `crate::examples::art_presentation_demo::source()` app-level example registration and the
             // no-op `.workflow("animate", "Animate", "deck")` call are dropped here (not silently:
             // reported in this packet's migration notes). The subset's own `📚️examples/🎬️demo` facet
-            // (`crate::artifacts::presentation::examples::...`, real content, pre-existing) is the modern,
+            // (`crate::examples::...`, real content, pre-existing) is the modern,
             // role-agnostic replacement surface for this.
             .build_definition()
 }
@@ -866,11 +866,11 @@ mod tests {
     async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = presentation_app().await;
         app.dispatch_typed(PresentationCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }), &meta("local")).await.expect("seed grid");
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
+        assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
         app.handle_action("undo", None, &meta("local")).await.expect("undo");
-        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
+        assert!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
         app.handle_action("redo", None, &meta("local")).await.expect("redo");
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
+        assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -938,16 +938,16 @@ mod tests {
         instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
         instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
 
-        instance_a.dispatch_typed(PresentationCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::presentation::FigureTileFrame { x: 0.0, y: 0.0, width: 0.3, height: 0.3 }) }), &meta("actor-a")).await.expect("a adds tile");
-        let (mut source, _) = crate::artifacts::presentation::presentation_working_scene(&instance_b.snapshot().expect("projection"));
+        instance_a.dispatch_typed(PresentationCommand::AddTile(add_tile::AddTile { crop: Some(crate::FigureTileFrame { x: 0.0, y: 0.0, width: 0.3, height: 0.3 }) }), &meta("actor-a")).await.expect("a adds tile");
+        let (mut source, _) = crate::presentation_working_scene(&instance_b.snapshot().expect("projection"));
         source.kind = "video".into();
         instance_b.dispatch_typed(PresentationCommand::SetSource(set_source::SetSource { source }), &meta("actor-b")).await.expect("b sets source kind");
 
         instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
         instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
 
-        let (source_a, tiles_a) = crate::artifacts::presentation::presentation_working_scene(&instance_a.snapshot().expect("projection"));
-        let (source_b, tiles_b) = crate::artifacts::presentation::presentation_working_scene(&instance_b.snapshot().expect("projection"));
+        let (source_a, tiles_a) = crate::presentation_working_scene(&instance_a.snapshot().expect("projection"));
+        let (source_b, tiles_b) = crate::presentation_working_scene(&instance_b.snapshot().expect("projection"));
         assert_eq!(tiles_a.len(), 1, "instance A keeps its own tile");
         assert_eq!(tiles_b.len(), 1, "instance B converges on A's tile");
         assert_eq!(source_a.kind, "video", "instance A converges on B's source edit");
@@ -967,11 +967,11 @@ mod tests {
     async fn import_media_frames_in_inserts_a_new_tile() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         let mut app = testkit::presentation_app_with_registry().await;
-        let before = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len();
+        let before = crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len();
         let frame_json = dsl::os_pack::json::to_string(&dsl::os_pack::json::object([("name".to_string(), dsl::os_pack::json::Value::from("hero-frame")), ("src".to_string(), dsl::os_pack::json::Value::from("/frames/hero.png"))]));
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: frame_json } };
         app.import_media("frames:in", media, &meta("local")).await.expect("import frames:in");
-        let (_, after_tiles) = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection"));
+        let (_, after_tiles) = crate::presentation_working_scene(&app.snapshot().expect("projection"));
         assert_eq!(after_tiles.len(), before + 1);
         assert_eq!(after_tiles.last().expect("imported tile").name, "hero-frame");
     }
@@ -985,7 +985,7 @@ mod tests {
             let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: frame_json } };
             app.import_media("frames:in", media, &meta("local")).await.expect("import frames:in");
         }
-        let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection"));
+        let (_, tiles) = crate::presentation_working_scene(&app.snapshot().expect("projection"));
         assert_eq!(tiles.len(), 2);
         assert_ne!(tiles[0].crop, tiles[1].crop, "repeated imports land in distinct cells");
     }
@@ -1000,8 +1000,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn empty_presentation_snapshot_has_no_tiles() {
-        let snapshot = crate::artifacts::presentation::schema::empty_presentation_snapshot();
-        assert!(crate::artifacts::presentation::presentation_working_scene(&snapshot).1.is_empty());
+        let snapshot = crate::schema::empty_presentation_snapshot();
+        assert!(crate::presentation_working_scene(&snapshot).1.is_empty());
     }
 
     /// 🌱️ Relocated from the former artifact-tree `⚙️engine`'s own tests (ticket
@@ -1092,7 +1092,7 @@ mod tests {
     /// break, not a test-fixture mismatch.
     #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_keep_their_pre_migration_bytes() {
-        let with_crop = PresentationCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::presentation::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 }) });
+        let with_crop = PresentationCommand::AddTile(add_tile::AddTile { crop: Some(crate::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 }) });
         let without_crop = PresentationCommand::AddTile(add_tile::AddTile { crop: None });
         assert!(OpText::print_op(&with_crop).starts_with("add-tile"));
         assert!(OpText::print_op(&without_crop).starts_with("add-tile"));
@@ -1109,13 +1109,13 @@ mod tests {
     pub(super) fn every_command() -> Vec<PresentationCommand> {
         vec![
             PresentationCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 3 }),
-            PresentationCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::presentation::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 }) }),
+            PresentationCommand::AddTile(add_tile::AddTile { crop: Some(crate::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 }) }),
             PresentationCommand::DeleteTile(delete_tile::DeleteTile { id: "t1".into() }),
             PresentationCommand::DeleteSelection(delete_selection::DeleteSelection {}),
             PresentationCommand::RenameTiles(rename_tiles::RenameTiles { ids: vec!["t1".into(), "t2".into()], value: "Hero".into() }),
             PresentationCommand::PatchTileCrops(patch_tile_crops::PatchTileCrops { ids: vec!["t1".into()], field: "width".into(), value: 0.4 }),
-            PresentationCommand::SetSource(set_source::SetSource { source: crate::artifacts::presentation::default_figure_tile_source() }),
-            PresentationCommand::SetFrame(set_frame::SetFrame { frame: crate::artifacts::presentation::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }),
+            PresentationCommand::SetSource(set_source::SetSource { source: crate::default_figure_tile_source() }),
+            PresentationCommand::SetFrame(set_frame::SetFrame { frame: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }),
             PresentationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }),
             PresentationCommand::ClearTiles(clear_tiles::ClearTiles {}),
             PresentationCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "2x2".into() }),

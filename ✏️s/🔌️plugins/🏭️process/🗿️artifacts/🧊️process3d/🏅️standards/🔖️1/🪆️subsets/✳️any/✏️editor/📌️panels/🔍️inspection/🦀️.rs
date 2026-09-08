@@ -8,7 +8,7 @@
 //! This panel resolves that id against the document and renders its real fields; an empty selection (or
 //! one that resolves to nothing, e.g. a just-deleted step) still falls back to the empty state.
 
-use crate::artifacts::process3d::{Capability, Pose, ProcessMeasure, ProcessStep, Process3dSnapshot, Stock, WorkingSolid, WorkshopMachine};
+use crate::{Capability, Pose, ProcessMeasure, ProcessStep, Process3dSnapshot, Stock, WorkingSolid, WorkshopMachine};
 use crate::editor::process3d::terminology::{process3d_measure_label, Process3dLabels};
 use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 

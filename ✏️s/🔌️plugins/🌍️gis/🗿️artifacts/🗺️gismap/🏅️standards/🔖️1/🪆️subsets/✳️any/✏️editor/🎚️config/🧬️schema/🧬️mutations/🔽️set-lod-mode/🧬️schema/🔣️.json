@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/gis/gismap/1/any/editor/config/mutation/set-lod-mode.json",
+  "$id": "https://semio.tech/schema/s/gis/gismap/1/any/editor/config/mutation/set-lod-mode/schema.json",
   "title": "SetLodMode",
   "type": "object",
   "$defs": {

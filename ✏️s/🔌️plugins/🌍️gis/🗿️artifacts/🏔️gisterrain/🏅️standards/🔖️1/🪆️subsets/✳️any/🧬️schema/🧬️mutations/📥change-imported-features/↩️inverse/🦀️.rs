@@ -1,7 +1,7 @@
 //! ↩️ Inverse reconstruction for `change-imported-features` — reads the BASE value, never the diff.
 use super::ChangeImportedFeatures;
-use crate::artifacts::gisterrain::mutations::GisTerrainMutation;
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::mutations::GisTerrainMutation;
+use crate::GisTerrainSnapshot;
 
 //#region 🔹Inverse
 /// ↩️ Undo restores `base.imported_features_json` — captured from pre-state, never from the

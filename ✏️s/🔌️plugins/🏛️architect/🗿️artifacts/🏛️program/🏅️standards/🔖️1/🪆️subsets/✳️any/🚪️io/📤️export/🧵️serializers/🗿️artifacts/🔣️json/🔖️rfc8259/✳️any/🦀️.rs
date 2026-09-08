@@ -7,7 +7,7 @@
 //! update, mirroring the same pattern animate/fem used for the identical gap: a real, honest
 //! structural `serde_json::Value -> JsonValue` converter (stdio provides no such bridge) plus
 //! stdio's own real `write_json_pretty` text codec for `serialize_bytes`.
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::write_json_pretty;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 

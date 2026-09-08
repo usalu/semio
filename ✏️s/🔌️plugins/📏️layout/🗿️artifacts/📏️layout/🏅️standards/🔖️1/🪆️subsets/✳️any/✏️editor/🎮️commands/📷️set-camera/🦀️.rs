@@ -1,7 +1,7 @@
 //! 🖱️ 🖱️ Layout play app commands command — `set-camera`.
 
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::{LayoutCamera, LayoutSnapshot};
+use crate::mutations::LayoutMutation;
+use crate::{LayoutCamera, LayoutSnapshot};
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::config::LayoutConfigMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

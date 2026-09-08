@@ -1,7 +1,7 @@
 //! 📜️ Equation artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
 //! The DSL-mirror types and the `store::ArtifactDsl` impl for `EquationSnapshot` live here rather than
-//! next to `EquationSnapshot` itself in `crate::artifacts::equation`: Rust's orphan rule only requires
+//! next to `EquationSnapshot` itself in `crate`: Rust's orphan rule only requires
 //! the foreign trait (`store::ArtifactDsl`) or the type (`EquationSnapshot`) to live in this crate — since
 //! both now do (the old 7-crate split's per-crate orphan-rule boundary no longer exists), the impl is free
 //! to live wherever is clearest, which is next to its own DSL-mirror machinery.
@@ -15,10 +15,10 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot;
 #[cfg(test)]
-use crate::artifacts::equation::EquationGeometry;
-use crate::artifacts::equation::{EquationEdge, EquationGraph, EquationNode, EquationSnapshot};
+use crate::EquationGeometry;
+use crate::{EquationEdge, EquationGraph, EquationNode, EquationSnapshot};
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state.
 use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
@@ -267,7 +267,7 @@ mod tests {
         let mut graph = EquationGraph { algorithm: "bfs".into(), algorithm_seed: Some("a".into()), ..EquationGraph::default() };
         graph.nodes.clear();
         graph.edges.clear();
-        let projection = crate::artifacts::equation::equation_snapshot_with_state(graph, EquationGeometry { points: Vec::new() });
+        let projection = crate::equation_snapshot_with_state(graph, EquationGeometry { points: Vec::new() });
         store::os_store::test_support::assert_dsl_round_trip(&projection);
     }
 }

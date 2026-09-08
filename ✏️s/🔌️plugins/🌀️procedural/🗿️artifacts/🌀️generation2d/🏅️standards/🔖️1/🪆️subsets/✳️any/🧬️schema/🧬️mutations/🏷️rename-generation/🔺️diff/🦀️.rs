@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff for `RenameGeneration`, built directly from `(payload, base)`.
 use super::RenameGeneration;
-use crate::artifacts::generation2d::diff::diff_generation_from_ops;
-use crate::artifacts::generation2d::{Generation2dDiff, Generation2dSnapshot};
-use flow::playbook::GenerationMutation;
+use crate::diff::diff_generation_from_ops;
+use crate::{Generation2dDiff, Generation2dSnapshot};
+use semio_framework_artifact_playbook_playbook::GenerationMutation;
 
 //#region 🔖️Diff
 pub fn diff(payload: &RenameGeneration, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {

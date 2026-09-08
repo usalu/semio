@@ -11,7 +11,7 @@
 //! (single-line, declaration-order) encoding satisfies `OpText`/`OpBinary`'s laws directly:
 //! `print_op` never contains `\n`, `parse_op(op.print_op()) == op`, and encoding is deterministic.
 
-pub use crate::artifacts::layout::mutations::LayoutMutation;
+pub use crate::mutations::LayoutMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

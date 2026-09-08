@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/node-skin/bind.json",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/bind-node-skin/schema.json",
   "title": "GltfBindNodeSkinMutation",
   "type": "object",
   "additionalProperties": false,

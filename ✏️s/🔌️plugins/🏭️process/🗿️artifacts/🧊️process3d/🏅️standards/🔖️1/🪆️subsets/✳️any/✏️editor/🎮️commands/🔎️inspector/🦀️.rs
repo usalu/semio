@@ -1,11 +1,11 @@
 //! 🔎️ Process 3d play app commands — the generic inspector field-patch dispatcher, addressed by a
 //! `target`/`field` pair against the stock, a selected step, or a workshop machine.
 
-use crate::artifacts::process3d::mutations::change_stock_label::ChangeStockLabel;
-use crate::artifacts::process3d::mutations::move_stock::MoveStock;
-use crate::artifacts::process3d::mutations::rename_machine::RenameMachine;
-use crate::artifacts::process3d::mutations::replace_machine_capabilities::ReplaceMachineCapabilities;
-use crate::artifacts::process3d::{op::Process3dMutation, Pose, Process3dSnapshot, WorkshopMachine};
+use crate::mutations::change_stock_label::ChangeStockLabel;
+use crate::mutations::move_stock::MoveStock;
+use crate::mutations::rename_machine::RenameMachine;
+use crate::mutations::replace_machine_capabilities::ReplaceMachineCapabilities;
+use crate::{op::Process3dMutation, Pose, Process3dSnapshot, WorkshopMachine};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework::DslValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

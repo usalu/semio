@@ -178,9 +178,8 @@ impl OsHost {
         let build_generation = semio_framework_trace::Generation(self.frame_generation);
         self.runtime.observe_presentation_input_generation(build_generation.0);
         let runtime = self.runtime.clone();
-        let dpr = self.presenter.dpr();
         let frame_build = &mut self.frame_build;
-        let _ = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation, dpr));
+        let _ = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation));
         match self.presenter.present_step() {
             Ok(crate::AppPresentStep::Complete { generation, cursor, fullscreen, cursor_wake }) => {
                 if generation.0 != self.frame_generation {

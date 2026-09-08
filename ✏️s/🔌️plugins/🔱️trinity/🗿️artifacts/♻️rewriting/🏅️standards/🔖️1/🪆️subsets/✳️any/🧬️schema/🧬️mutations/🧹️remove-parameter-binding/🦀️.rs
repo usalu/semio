@@ -1,8 +1,8 @@
 //! 🧹️ Direct rewriting mutation — `RemoveParameterBinding`: takes one key out of the `parameter_bindings`
 //! map.
-use crate::artifacts::rewriting::diff::RewritingDiff;
-use crate::artifacts::rewriting::mutations::RewriteRuleMutation;
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::diff::RewritingDiff;
+use crate::mutations::RewriteRuleMutation;
+use crate::RewritingSnapshot;
 
 //#region 🔖️Mutation
 /// 🧹️ `remove-parameter-binding` payload.

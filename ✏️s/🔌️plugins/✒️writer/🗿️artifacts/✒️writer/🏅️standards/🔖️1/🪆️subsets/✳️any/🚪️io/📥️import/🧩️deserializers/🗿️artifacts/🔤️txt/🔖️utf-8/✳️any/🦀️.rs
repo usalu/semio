@@ -5,7 +5,7 @@
 //! hex-encoded wire DSL (that bug — treating arbitrary prose as writer's internal format — is fixed
 //! here, in passing, matching the class of bug `📓️w4-sequence-report.md`'s CSV fix found).
 
-use crate::artifacts::writer::{writer_snapshot_with_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
+use crate::{writer_snapshot_with_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
@@ -39,7 +39,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn txt_into_writer_uses_the_raw_body_as_document_text() {
         let outcome = TxtIntoWriter::deserialize(&IoPayload::Text("hello\nworld".into())).await.expect("deserialize");
-        assert_eq!(crate::artifacts::writer::writer_text(&outcome.value), "hello\nworld");
+        assert_eq!(crate::writer_text(&outcome.value), "hello\nworld");
         assert_eq!(outcome.value.language_id, "plain");
     }
 }

@@ -15,11 +15,11 @@
 //! `mutation.no-op` warning here, never `mutation.target-missing`: this map family has no rejection
 //! branch at all. This case pins the applied removal of a key that really is present.
 
-use crate::artifacts::jack::PropertyValue;
-use crate::artifacts::rewriting::diff::RewritingDiff;
-use crate::artifacts::rewriting::mutations::RewriteRuleMutation;
-use crate::artifacts::rewriting::RewritingSnapshot;
-use crate::artifacts::rewriting::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
+use semio_s_artifact_trinity_jack::PropertyValue;
+use crate::diff::RewritingDiff;
+use crate::mutations::RewriteRuleMutation;
+use crate::RewritingSnapshot;
+use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

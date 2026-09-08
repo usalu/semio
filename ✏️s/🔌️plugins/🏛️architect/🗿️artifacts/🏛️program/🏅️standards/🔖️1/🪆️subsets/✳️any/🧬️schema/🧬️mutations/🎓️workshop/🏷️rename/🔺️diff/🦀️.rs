@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🎓workshops` per Wave C.
 
 use super::RenameWorkshop;
-use crate::artifacts::program::diff::{ProgramWorkshopsDelta, ProgramWorkshopsPatchEntry};
-use crate::artifacts::program::registers::WorkshopPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramWorkshopsDelta, ProgramWorkshopsPatchEntry};
+use crate::registers::WorkshopPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameWorkshop, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

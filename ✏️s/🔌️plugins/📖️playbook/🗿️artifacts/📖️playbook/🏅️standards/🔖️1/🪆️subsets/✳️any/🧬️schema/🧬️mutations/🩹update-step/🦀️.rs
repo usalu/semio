@@ -6,8 +6,8 @@
 //! `PlaybookStep` here but its diff builder silently ignored the `blocks` field, a latent footgun
 //! this payload shape removes by construction.
 
-use crate::artifacts::playbook::mutations::PlaybookMutation;
-use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
+use crate::mutations::PlaybookMutation;
+use crate::{PlaybookDiff, PlaybookSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 // 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle — committed
 // `🧪️tests/<fixture>/🦀️.rs` fixture vectors decode/re-encode through them — never a production

@@ -1,8 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Rename Mini",
+  "$id": "https://semio.tech/schema/framework/os/spr/command/tests/registry/mutation/rename-mini/schema.json",
+  "title": "RenameMini",
+  "description": "Rename Mini",
   "type": "object",
   "additionalProperties": false,
-  "required": ["newName"],
-  "properties": { "newName": { "type": "string" } }
+  "required": [
+    "newName"
+  ],
+  "properties": {
+    "newName": {
+      "type": "string"
+    }
+  }
 }

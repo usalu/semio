@@ -1,8 +1,8 @@
 //! 🧹️ TrinityGraph mutation — `RemoveDataProperty`: takes one key out of a node's or edge's
 //! property bag (addressed via `EntityRef`).
-use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::mutations::TrinityGraphMutation;
-use crate::artifacts::jack::{EntityRef, JackSnapshot};
+use crate::diff::JackDiff;
+use crate::mutations::TrinityGraphMutation;
+use crate::{EntityRef, JackSnapshot};
 
 //#region 🔖️Mutation
 /// 🧹️ `remove-data-property` payload.

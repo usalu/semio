@@ -1,8 +1,8 @@
 //! 🔀️ Repositions a widget within the ordered widget list (never spatial — see `move-widgets`).
 
-use crate::artifacts::flow::FlowSnapshot;
-use crate::artifacts::flow::schema::diff::text::FlowDiff;
-use crate::artifacts::flow::schema::mutations::FlowMutation;
+use crate::FlowSnapshot;
+use crate::schema::diff::text::FlowDiff;
+use crate::schema::mutations::FlowMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔀️ReorderWidgets

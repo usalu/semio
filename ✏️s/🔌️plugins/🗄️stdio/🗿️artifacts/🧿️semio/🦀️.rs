@@ -1515,6 +1515,7 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
+                    #[cfg(feature = "conversion-brep")]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -1536,6 +1537,7 @@ pub mod standards {
                         }
                     }
                     #[path = "."]
+                    #[cfg(feature = "conversion-brep")]
                     pub mod export {
                         #[path = "."]
                         pub mod serializers {
@@ -1790,6 +1792,7 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
+                    #[cfg(feature = "conversion-cad")]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -1835,6 +1838,7 @@ pub mod standards {
                         }
                     }
                     #[path = "."]
+                    #[cfg(feature = "conversion-cad")]
                     pub mod export {
                         #[path = "."]
                         pub mod serializers {
@@ -1941,6 +1945,7 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
+                    #[cfg(feature = "conversion-document")]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -1998,6 +2003,7 @@ pub mod standards {
                         }
                     }
                     #[path = "."]
+                    #[cfg(feature = "conversion-document")]
                     pub mod export {
                         #[path = "."]
                         pub mod serializers {
@@ -2116,6 +2122,7 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
+                    #[cfg(feature = "conversion-drawing")]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -2173,6 +2180,7 @@ pub mod standards {
                         }
                     }
                     #[path = "."]
+                    #[cfg(feature = "conversion-drawing")]
                     pub mod export {
                         #[path = "."]
                         pub mod serializers {
@@ -2461,6 +2469,7 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
+                    #[cfg(feature = "conversion-image")]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -2530,6 +2539,7 @@ pub mod standards {
                         }
                     }
                     #[path = "."]
+                    #[cfg(feature = "conversion-image")]
                     pub mod export {
                         #[path = "."]
                         pub mod serializers {
@@ -2660,6 +2670,7 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
+                    #[cfg(feature = "conversion-mesh")]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -2741,6 +2752,7 @@ pub mod standards {
                         }
                     }
                     #[path = "."]
+                    #[cfg(feature = "conversion-mesh")]
                     pub mod export {
                         #[path = "."]
                         pub mod serializers {
@@ -3058,6 +3070,7 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
+                    #[cfg(feature = "conversion-model")]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -3091,6 +3104,7 @@ pub mod standards {
                         }
                     }
                     #[path = "."]
+                    #[cfg(feature = "conversion-model")]
                     pub mod export {
                         #[path = "."]
                         pub mod serializers {
@@ -3185,6 +3199,7 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
+                    #[cfg(feature = "conversion-value")]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -3230,6 +3245,7 @@ pub mod standards {
                         }
                     }
                     #[path = "."]
+                    #[cfg(feature = "conversion-value")]
                     pub mod export {
                         #[path = "."]
                         pub mod serializers {
@@ -3340,6 +3356,7 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
+                    #[cfg(feature = "conversion-presentation")]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -3361,6 +3378,7 @@ pub mod standards {
                         }
                     }
                     #[path = "."]
+                    #[cfg(feature = "conversion-presentation")]
                     pub mod export {
                         #[path = "."]
                         pub mod serializers {
@@ -3500,6 +3518,7 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
+                    #[cfg(feature = "conversion-flow")]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -3521,6 +3540,7 @@ pub mod standards {
                         }
                     }
                     #[path = "."]
+                    #[cfg(feature = "conversion-flow")]
                     pub mod export {
                         #[path = "."]
                         pub mod serializers {

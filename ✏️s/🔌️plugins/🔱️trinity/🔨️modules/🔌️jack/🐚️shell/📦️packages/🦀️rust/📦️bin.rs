@@ -5,7 +5,7 @@ use std::env;
 use std::fs;
 use std::io::{self, BufRead, Write};
 use store::ArtifactDsl;
-use trinity::artifacts::jack::{Graph, JackSnapshot, PropertyValue};
+use semio_s_artifact_trinity_jack::{Graph, JackSnapshot, PropertyValue};
 use trinity::ast::QueryResult;
 use trinity::executor::run;
 
@@ -15,7 +15,7 @@ use trinity::executor::run;
 enum TrinityJackShellError {
     ReadFixture { path: String, source: io::Error },
     Dsl { path: String, source: store::TextError },
-    Graph(trinity::artifacts::jack::TrinityRamError),
+    Graph(semio_s_artifact_trinity_jack::TrinityRamError),
     Query(String),
     Io(io::Error),
 }
@@ -44,8 +44,8 @@ impl std::error::Error for TrinityJackShellError {
     }
 }
 
-impl From<trinity::artifacts::jack::TrinityRamError> for TrinityJackShellError {
-    fn from(error: trinity::artifacts::jack::TrinityRamError) -> Self {
+impl From<semio_s_artifact_trinity_jack::TrinityRamError> for TrinityJackShellError {
+    fn from(error: semio_s_artifact_trinity_jack::TrinityRamError) -> Self {
         Self::Graph(error)
     }
 }
@@ -125,7 +125,7 @@ fn format_cell(value: &PropertyValue) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use trinity::artifacts::jack::{Camera, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag};
+    use semio_s_artifact_trinity_jack::{Camera, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag};
 
     fn mini_json() -> String {
         let fixture = JackSnapshot::with_content(

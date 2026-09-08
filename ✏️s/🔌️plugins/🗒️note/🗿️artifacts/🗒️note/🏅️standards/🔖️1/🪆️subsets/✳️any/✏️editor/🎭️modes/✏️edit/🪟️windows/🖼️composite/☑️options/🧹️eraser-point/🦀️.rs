@@ -1,7 +1,7 @@
 //! 🧹️ Composite-window option — eraser radius, scoped to the `eraserPoint` canvas utility.
 //! Its command handler lives in `🎮️commands/✏️drawing::set_eraser_radius`.
 
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteSnapshot;
 use crate::editor::note::terminology::NotePlayLabels;
 use semio_framework_plugin::WindowMeasure;
 

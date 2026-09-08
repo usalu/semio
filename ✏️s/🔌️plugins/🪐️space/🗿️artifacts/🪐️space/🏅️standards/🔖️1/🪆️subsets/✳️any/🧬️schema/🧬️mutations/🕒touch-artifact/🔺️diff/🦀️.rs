@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `TouchArtifact` — target-missing ⇒ Error; otherwise a real
 //! timestamp/author stamp (never a no-op check — repeated touches with the same values are legal).
-use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDiff;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::TouchArtifact, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {

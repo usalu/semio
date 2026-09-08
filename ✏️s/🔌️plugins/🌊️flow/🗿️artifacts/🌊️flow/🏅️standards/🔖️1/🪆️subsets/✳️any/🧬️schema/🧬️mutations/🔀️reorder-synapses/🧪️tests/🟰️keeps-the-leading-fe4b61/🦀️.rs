@@ -12,9 +12,9 @@
 //! state-changing flow diff addresses its composed `s.stdio.semio.flow` CHILD by a domain-separated SHA-256
 //! digest of the child content.
 
-use crate::artifacts::flow::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
-use crate::artifacts::flow::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
-use flow::{SynapseSpec, Widget};
+use crate::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
+use crate::{cache_flow_content, flow_working_scene, FlowDiff, FlowSnapshot};
+use semio_framework_artifact_flow_flow::{SynapseSpec, Widget};
 use flow::OrderedMap;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

@@ -1,8 +1,8 @@
 //! 🔺️ `change-humidification-provided-kg-h` sparse diff construction — writes only `Din16798Diff.humidification_provided_kg_h` from the payload.
 
-use crate::artifacts::din16798::diff::Din16798Diff;
-use crate::artifacts::din16798::mutations::change_humidification_provided_kg_h::ChangeHumidificationProvidedKgH;
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::diff::Din16798Diff;
+use crate::mutations::change_humidification_provided_kg_h::ChangeHumidificationProvidedKgH;
+use crate::Din16798Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeHumidificationProvidedKgH, base: &Din16798Snapshot) -> protocol::MutationOutcome<Din16798Diff> {

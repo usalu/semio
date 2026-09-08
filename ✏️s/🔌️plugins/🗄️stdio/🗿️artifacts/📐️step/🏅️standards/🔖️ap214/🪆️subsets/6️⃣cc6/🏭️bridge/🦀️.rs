@@ -11,7 +11,7 @@
 //! @see ../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — RuntimeMutationInventory
 //! @see ../🔣️oracle.json — the manifest this output is held against
 
-use crate::standards::v_ap214::subsets::cc6::schema::mutations::{set_file_schema, set_product_identity, set_shape_representation, set_snapshot, StepCc6Mutation};
+use semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc6::schema::mutations::{set_file_schema, set_product_identity, set_shape_representation, set_snapshot, StepCc6Mutation};
 
 //#region 🔖️Inventory
 /// 🏭️ One value per dispatch variant. Exhaustive by construction: a new variant fails to compile

@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::iso16757::Iso16757Snapshot;
+use crate::Iso16757Snapshot;
 
 /// 📄️ The `default` example document, handcrafted in the `.iso16757` DSL — a demo HVAC catalogue
 /// worked example (control valve product group/class/series/product/variant, ISO 16757-4 dictionary
@@ -27,7 +27,7 @@ pub fn print_dsl(document: &Iso16757Snapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::iso16757::CatalogueValue;
+    use crate::CatalogueValue;
 
     #[semio_framework_async_macros::async_test]
     async fn document_dsl_round_trips_the_reference_fixture() {

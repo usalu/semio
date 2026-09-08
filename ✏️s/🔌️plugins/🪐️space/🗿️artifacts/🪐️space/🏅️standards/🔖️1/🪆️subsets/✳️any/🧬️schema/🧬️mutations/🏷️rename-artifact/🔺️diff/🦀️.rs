@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RenameArtifact` — target-missing ⇒ Error, same name ⇒ no-op Warning
 //! with an empty diff, name collision with a DIFFERENT id ⇒ Fatal duplicate-id.
-use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDiff;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameArtifact, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {

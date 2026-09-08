@@ -1,7 +1,7 @@
 //! 📄️ 📄️ Drawing play app commands command — `set-fixture-json`.
 
-use crate::artifacts::drawing::op::DrawingMutation;
-use crate::artifacts::drawing::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
+use crate::op::DrawingMutation;
+use crate::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
 use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use dsl::{FromValue, ToValue};

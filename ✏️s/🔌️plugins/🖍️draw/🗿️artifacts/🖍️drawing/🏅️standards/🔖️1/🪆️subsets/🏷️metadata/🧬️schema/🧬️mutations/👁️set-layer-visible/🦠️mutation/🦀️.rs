@@ -1,8 +1,8 @@
 //! 👁️ Drawing mutation — `SetLayerVisible`: flips one layer's `visible` flag (addressed, single-field
 //! setter — the taxonomy's own canonical `set` example).
-use crate::artifacts::drawing::diff::DrawingDiff;
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::diff::DrawingDiff;
+use crate::mutations::DrawingMutation;
+use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 👁️ `set-layer-visible` payload.

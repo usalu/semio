@@ -7,8 +7,8 @@ async fn primary_asset_is_nonempty() {
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    use crate::artifacts::sequence::standards::v1::subsets::any::schema::inferences::SequenceInference;
-    use crate::artifacts::sequence::SequenceSnapshot;
+    use crate::standards::v1::subsets::any::schema::inferences::SequenceInference;
+    use crate::SequenceSnapshot;
     use protocol::Inference;
 
     let snapshot = SequenceSnapshot::default();
@@ -17,8 +17,8 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    use crate::artifacts::sequence::standards::v1::subsets::any::schema::inferences::SequenceInference;
-    use crate::artifacts::sequence::SequenceSnapshot;
+    use crate::standards::v1::subsets::any::schema::inferences::SequenceInference;
+    use crate::SequenceSnapshot;
     use protocol::Inference;
 
     assert_eq!(SequenceInference::infer(&SequenceSnapshot::default()), SequenceInference::default());

@@ -1,0 +1,9 @@
+{
+  "definition_version": 1,
+  "id": "s.norm.din16798",
+  "artifact": "din16798",
+  "directory": "🌬️din16798",
+  "rust_package": "semio-s-artifact-norm-din16798",
+  "nx_project": "@semio-tech/norm-din16798-rs",
+  "dependencies": []
+}

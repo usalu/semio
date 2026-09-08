@@ -3,7 +3,7 @@
 //! (whole-struct patch) into two granular semantic mutations — title is meaningfully set alone
 //! (`rename`), and so is description (`change`), so neither is an inseparable `update` facet.
 
-use crate::artifacts::forms::{FormMutation, FormsDiff, FormsSnapshot};
+use crate::{FormMutation, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔖️Mutation

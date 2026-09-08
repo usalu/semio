@@ -2,8 +2,8 @@
 //! captured pre-state (`base`), never by structurally inverting the diff. Split from
 //! `🏛️update-governance` per Wave C.
 
-use crate::artifacts::program::ProgramMutation;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramMutation;
+use crate::ProgramSnapshot;
 
 pub fn inverse(_payload: &super::RenameGovernance, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
     vec![ProgramMutation::RenameGovernance(super::RenameGovernance { new_framework: base.governance.framework.clone() })]

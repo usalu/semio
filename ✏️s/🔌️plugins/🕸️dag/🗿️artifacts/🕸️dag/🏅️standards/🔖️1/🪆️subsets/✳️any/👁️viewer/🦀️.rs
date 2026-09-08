@@ -4,7 +4,7 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::dag::{default_snapshot, DagSnapshot, DAG_DIALECT, DAG_DOCUMENT_SCHEMA};
+use crate::{default_snapshot, DagSnapshot, DAG_DIALECT, DAG_DOCUMENT_SCHEMA};
 use crate::viewer::dag::modes::view;
 use crate::viewer::dag::modes::view::windows::main;
 use semio_framework_plugin::app::{Dialect, InteractionView};
@@ -37,7 +37,7 @@ pub struct DagViewer;
 
 impl ArtifactViewer for DagViewer {
     type Snapshot = DagSnapshot;
-    type Mutation = crate::artifacts::dag::op::DagMutation;
+    type Mutation = crate::op::DagMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

@@ -4,7 +4,7 @@
 //! Session view state round-trips through the config `ArtifactStore` exactly like document content,
 //! with a real `backwards` via `CadConfigMutation` at the bottom of this file.
 
-use crate::artifacts::cad::CadCamera;
+use crate::CadCamera;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️PreviewGeneration
@@ -346,7 +346,7 @@ impl Mutation<CadConfig> for CadConfigMutation {
                 }
                 let mut next = base.clone();
                 next.contributions_json = json.clone();
-                crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(json);
+                crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(json);
                 protocol::MutationOutcome::new(next)
             }
         }

@@ -2,9 +2,9 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::presentation::mutations::resize_source_frame::ResizeSourceFrame;
-use crate::artifacts::presentation::op::PresentationMutation;
-use crate::artifacts::presentation::{FigureTileFrame, PresentationSnapshot};
+use crate::mutations::resize_source_frame::ResizeSourceFrame;
+use crate::op::PresentationMutation;
+use crate::{FigureTileFrame, PresentationSnapshot};
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
 use crate::editor::animate::PresentationDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

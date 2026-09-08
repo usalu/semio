@@ -1,6 +1,6 @@
 //! 🪵️ Process 3d play app commands — swap the stock kind (resets the process timeline).
 
-use crate::artifacts::process3d::{op::Process3dMutation, process_working_scene_to_snapshot, Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
+use crate::{op::Process3dMutation, process_working_scene_to_snapshot, Pose, Process3dSnapshot, ProcessWorkingScene, Stock, WorkingSolid};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::terminology::process3d_labels;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

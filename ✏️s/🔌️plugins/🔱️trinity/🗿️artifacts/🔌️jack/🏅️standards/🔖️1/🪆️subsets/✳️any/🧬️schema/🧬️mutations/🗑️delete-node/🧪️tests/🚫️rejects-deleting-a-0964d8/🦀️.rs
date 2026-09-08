@@ -17,9 +17,9 @@
 //! whose applied path also CASCADES (it severs every incident edge and emits `mutation.cascade`);
 //! rejecting before that point is what keeps the diff empty.
 
-use crate::artifacts::jack::mutations::TrinityGraphMutation;
-use crate::artifacts::jack::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
-use crate::artifacts::jack::{jack_working_scene, JackDiff, JackSnapshot};
+use crate::mutations::TrinityGraphMutation;
+use crate::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
+use crate::{jack_working_scene, JackDiff, JackSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

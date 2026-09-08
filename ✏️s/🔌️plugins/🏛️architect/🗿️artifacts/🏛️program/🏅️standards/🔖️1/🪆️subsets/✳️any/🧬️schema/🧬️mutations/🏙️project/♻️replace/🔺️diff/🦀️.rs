@@ -2,8 +2,8 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📁update-project` per Wave C.
 
 use super::ReplaceProject;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🔁️ New `ProjectDefinition` wholesale. Root-scoped singleton — always present, so Warning
 /// `mutation.no-op` (empty diff) covers the only degenerate case: the value is unchanged.

@@ -9,7 +9,7 @@
 //! svg-graph<->wires-graph mapping exists — this is now an honest not-yet-implemented stub, the
 //! same treatment `🔤️txt` already had. `IoFidelity::Lossy`.
 
-use crate::artifacts::wires::WiresSnapshot;
+use crate::WiresSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

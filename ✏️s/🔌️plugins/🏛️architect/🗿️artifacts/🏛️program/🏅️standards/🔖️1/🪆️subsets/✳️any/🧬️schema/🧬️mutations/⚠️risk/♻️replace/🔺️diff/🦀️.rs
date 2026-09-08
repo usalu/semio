@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `⚠️risks` per Wave C.
 
 use super::ReplaceRisk;
-use crate::artifacts::program::diff::{ProgramRisksDelta, ProgramRisksPatchEntry};
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramRisksDelta, ProgramRisksPatchEntry};
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 use protocol::Patchable;
 
 /// 🔁️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the value is unchanged (both empty diff), else `patched = [{id, full patch}]` via `Patchable::diff_patch`.

@@ -2,8 +2,8 @@
 //! own widget/synapse graph (topological order, per-widget longest-path depth, cycle-freedom,
 //! widget count).
 
-use crate::artifacts::flow::schema::widget_id;
-use flow::{SynapseSpec, Widget};
+use crate::schema::widget_id;
+use semio_framework_artifact_flow_flow::{SynapseSpec, Widget};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 //#region 🔖️Topology

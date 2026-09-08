@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/remove-member.json",
+  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/mutation/remove-member/schema.json",
   "title": "RemoveMember",
   "type": "object",
   "additionalProperties": false,
@@ -18,9 +18,9 @@
     "key": {
       "type": "string"
     },
-    "kind": {
+    "mutation": {
       "const": "removeMember",
-      "description": "Aggregate discriminator spliced in by JsonIJsonRoot; absent when the payload stands alone."
+      "description": "Aggregate discriminator spliced in by JsonIJsonMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `CreateElement` — always a `delete-element` of the created id.
 use super::CreateElement;
-use crate::artifacts::fem2d::element_id;
-use crate::artifacts::fem2d::mutations::{delete_element, Fem2dMutation};
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::element_id;
+use crate::mutations::{delete_element, Fem2dMutation};
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &CreateElement, _base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {

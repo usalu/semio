@@ -1,8 +1,8 @@
 //! 🎊️ Energy model mutation — `RemoveAnnualScheduleHoliday`: Takes one calendar date back out of a year's holiday set, so lookups on it fall back to the matching rule again.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

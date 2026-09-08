@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ReplaceReferences` — restores `base`'s reference list wholesale.
 use super::ReplaceReferences;
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceReferences, base: &CadSnapshot) -> Vec<CadMutation> {

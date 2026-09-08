@@ -16,9 +16,9 @@
 //! `wiresFixture.board` mirror (which is what seeds the working scene) holds a node that is
 //! field-for-field the node the committed payload asks to create.
 
-use crate::artifacts::wires::mutations::{CreateNode, DeleteNode, WiresMutation};
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::{materialize_wires_content, WiresDiff, WiresSnapshot};
+use crate::mutations::{CreateNode, DeleteNode, WiresMutation};
+use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::{materialize_wires_content, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

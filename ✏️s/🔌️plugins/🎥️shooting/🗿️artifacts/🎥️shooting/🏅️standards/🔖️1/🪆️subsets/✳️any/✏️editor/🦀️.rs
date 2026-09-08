@@ -8,8 +8,8 @@
 //! This file is a routing table: `handle` → `ShootingCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
+use crate::op::ShootingMutation;
+use crate::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use crate::editor::shooting::commands::{asset, camera, export, fixture, gumball, locale, scene, selection, shot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::modes::edit;
@@ -162,7 +162,7 @@ pub fn tree_item_with_icon(
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
-/// `crate::artifacts::shooting::artifact_kind` already declares (schema/media type/presentation fields
+/// `crate::artifact_kind` already declares (schema/media type/presentation fields
 /// copied verbatim); the sole app-specific port is `photos:out` (see `shooting_photos_out_port` below)
 /// — the implicit document in/out ports cover the rest.
 ///
@@ -173,7 +173,7 @@ pub fn tree_item_with_icon(
 /// dead as of this migration —
 /// `app.io.export_formats`/`import_formats` have no framework reader (`app.io.all_ports()`/
 /// `document_schema`/`artifact.component_kind` are the only fields anything consumes) — so emptying
-/// them drops no live behavior. `crate::artifacts::shooting::artifact_kind()`'s `export_stdio_kinds`/
+/// them drops no live behavior. `crate::artifact_kind()`'s `export_stdio_kinds`/
 /// `import_stdio_kinds` remain the live source of truth for this artifact's real format list.
 pub fn shooting_io() -> AppIo {
     AppIo {
@@ -203,11 +203,11 @@ pub fn shooting_photos_out_port() -> semio_framework_plugin::MediaPortSpec {
 }
 
 /// 🖼️ Exports the active shot's rendered scene as a `2d.image` `Media` payload for the `photos:out`
-/// port — reuses the same SVG-then-rasterize pipeline (`crate::artifacts::shooting::schema::shooting_scene_svg` +
+/// port — reuses the same SVG-then-rasterize pipeline (`crate::schema::shooting_scene_svg` +
 /// `rasterize_svg_to_png_base64`) as the `exportActiveShot`/PNG shell action, so there is exactly one
 /// photo renderer.
 pub fn shooting_photo_media(snapshot: &ShootingSnapshot) -> Result<Media, MediaError> {
-    let (svg, width, height) = crate::artifacts::shooting::schema::shooting_scene_svg(snapshot).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
+    let (svg, width, height) = crate::schema::shooting_scene_svg(snapshot).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 } })
 }
@@ -411,7 +411,7 @@ impl ArtifactEditor for ShootingPlayApp {
 
     type Command = ShootingCommand;
 
-    const DIALECT: Dialect = crate::artifacts::shooting::SHOOTING_DIALECT;
+    const DIALECT: Dialect = crate::SHOOTING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -466,7 +466,7 @@ impl ArtifactEditor for ShootingPlayApp {
     }
 
     fn initial_snapshot() -> ShootingSnapshot {
-        crate::artifacts::shooting::schema::default_snapshot()
+        crate::schema::default_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -602,9 +602,9 @@ pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
 pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::shooting::SHOOTING_DIALECT)
+    Editor::builder(crate::SHOOTING_DIALECT)
             .document(["semio", "shooting"])
-            .artifact_kind(crate::artifacts::shooting::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             // 🖼️ `2d.image` — the interchange kind `photos:out` produces (WORKFLOWS-END-TO-END-TYPED-PORTS
             // Wave 2 port recipe); a sibling agent may declare the identical shape on the raster app too
             // — identical-shape duplicates are harmless (registry dedupes by id).
@@ -816,8 +816,8 @@ mod tests {
     use semio_framework_plugin::{Effect, PluginApp};
     use serde_json::{json, Value};
 
-    fn default_camera(position: [f64; 3]) -> crate::artifacts::shooting::ShootingCamera {
-        crate::artifacts::shooting::ShootingCamera { position, target: [0.0, 0.0, 0.0], zoom: 1.0, fov: 50.0, up: None, projection: None }
+    fn default_camera(position: [f64; 3]) -> crate::ShootingCamera {
+        crate::ShootingCamera { position, target: [0.0, 0.0, 0.0], zoom: 1.0, fov: 50.0, up: None, projection: None }
     }
 
     //#region 🧵️RetainedCatalogOracle
@@ -1110,7 +1110,7 @@ mod tests {
             ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids: vec!["base".into()], dx: 5.0, dy: 6.0, dz: 7.0 }),
             |app| {
                 let snapshot = app.snapshot().expect("snapshot");
-                (crate::artifacts::shooting::schema::active_shot(&snapshot).unwrap().label.clone(), snapshot.assets[0].origin)
+                (crate::schema::active_shot(&snapshot).unwrap().label.clone(), snapshot.assets[0].origin)
             },
         ).await;
     }
@@ -1118,7 +1118,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_shooting() {
         testkit::assert_ingest_idempotent::<EditorApp<ShootingPlayApp>, String>(ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero".into() }), |app| {
-            crate::artifacts::shooting::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone()
+            crate::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone()
         }).await;
     }
 
@@ -1139,7 +1139,7 @@ mod tests {
         // doc comment) — the real format list lives on `artifact_kind()` instead, asserted below.
         assert_eq!(io.export_formats.len(), 0);
         assert_eq!(io.import_formats.len(), 0);
-        let kind = crate::artifacts::shooting::artifact_kind();
+        let kind = crate::artifact_kind();
         assert_eq!(kind.export_stdio_kinds, kind.import_stdio_kinds);
         assert!(kind.export_stdio_kinds.iter().any(|kind| kind == "stdio.svg"));
         assert!(kind.export_stdio_kinds.iter().any(|kind| kind == "stdio.png"));
@@ -1162,7 +1162,7 @@ mod tests {
     /// 🖼️ `shooting_photo_media` renders the same scene as `exportActiveShot`'s PNG (base64, non-empty).
     #[semio_framework_async_macros::async_test]
     async fn shooting_photo_media_exports_a_raster_2d_image() {
-        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
+        let snapshot = crate::schema::default_snapshot();
         let media = shooting_photo_media(&snapshot).expect("photo export succeeds");
         assert_eq!(media.media_type.class, MediaClass::TwoD);
         assert_eq!(media.media_type.form, MediaForm::Raster);
@@ -1206,7 +1206,7 @@ mod window_action_contract {
     #[test]
     fn shooting_window_actions_match_the_json_oracle() {
         let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️window-actions.json")).expect("neutral window vectors");
-        let document = crate::artifacts::shooting::schema::default_snapshot();
+        let document = crate::schema::default_snapshot();
         let config = ShootingConfig::default();
         for locale in ["en-US", "de-DE"] {
             let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::shooting::terminology::ShootingLabels>(locale);

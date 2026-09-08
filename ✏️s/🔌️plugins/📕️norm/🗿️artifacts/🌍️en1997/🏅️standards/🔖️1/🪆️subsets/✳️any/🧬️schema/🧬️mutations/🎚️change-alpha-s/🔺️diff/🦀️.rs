@@ -1,8 +1,8 @@
 //! 🔺️ `change-alpha-s` sparse diff construction — writes only `En1997Diff.alpha_s` from the payload.
 
-use crate::artifacts::en1997::diff::En1997Diff;
-use crate::artifacts::en1997::mutations::change_alpha_s::ChangeAlphaS;
-use crate::artifacts::en1997::En1997Snapshot;
+use crate::diff::En1997Diff;
+use crate::mutations::change_alpha_s::ChangeAlphaS;
+use crate::En1997Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeAlphaS, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {

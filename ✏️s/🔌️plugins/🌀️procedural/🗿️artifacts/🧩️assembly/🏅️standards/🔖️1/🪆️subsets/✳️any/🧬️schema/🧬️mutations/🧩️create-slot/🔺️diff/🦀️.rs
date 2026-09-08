@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateSlot` — a real id-keyed upsert into `slots` (never a
 //! whole-snapshot capture).
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::diff::AssemblyDiff;
+use crate::schema::snapshot::AssemblySnapshot;
 
 pub fn diff(payload: &super::CreateSlot, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     if base.slots.iter().any(|slot| slot.id == payload.slot.id) {

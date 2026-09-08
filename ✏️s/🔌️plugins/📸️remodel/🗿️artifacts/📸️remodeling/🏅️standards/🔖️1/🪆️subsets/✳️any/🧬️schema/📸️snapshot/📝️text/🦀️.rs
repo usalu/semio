@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::RemodelingSnapshot;
 
 /// 📖️ Parses `.remodeling` DSL text into a `RemodelingSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<RemodelingSnapshot, store::TextError> {
@@ -26,7 +26,7 @@ pub fn print_dsl(scene: &RemodelingSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::remodeling::{
+    use crate::{
         default_remodeling_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, MotionTrackSummary, PackedF32, PackedU8,
         QcReportSnapshot, ReconstructionStage, RemodelingMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
     };
@@ -46,7 +46,7 @@ mod tests {
             source: Some(VideoSource { name: "front.mp4".into(), container: "mp4".into(), codec: VideoCodec::Avc, duration_ms: 6633.3, frame_count: 199, width: 1920, height: 1080 }),
         });
         let asset_one = ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 };
-        scene.assets.insert("asset-1".into(), crate::artifacts::remodeling::store_remodeling_asset("asset-1", &asset_one));
+        scene.assets.insert("asset-1".into(), crate::store_remodeling_asset("asset-1", &asset_one));
         scene.calibration.cameras.push(CameraCalibration {
             id: "cam-1".into(),
             label: "Front".into(),
@@ -74,7 +74,7 @@ mod tests {
         scene.results.dense =
             Some(DenseCloud { positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])), confidence: Some(PackedF32::from_f32_slice(&[0.9])), classification: Some(PackedU8::from_u8_slice(&[2])) });
         scene.results.mesh = RemodelingMesh {
-            mesh: crate::artifacts::remodeling::mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
+            mesh: crate::mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
             source: MeshSource::Reconstructed,
             texture_asset_id: Some("tex-1".into()),
             watertight: Some(WatertightReportSnapshot {
@@ -103,7 +103,7 @@ mod tests {
             ],
         });
         scene.results.tracks.push(MotionTrackSummary { id: "track-1".into(), length: 42, class: TrackClass::Moving, mean_speed_m_s: 1.2 });
-        scene.results.geo = Some(crate::artifacts::remodeling::GeoProducts { dsm_asset_id: Some("asset-dsm".into()), dtm_asset_id: Some("asset-dtm".into()), ortho_asset_id: Some("asset-ortho".into()) });
+        scene.results.geo = Some(crate::GeoProducts { dsm_asset_id: Some("asset-dsm".into()), dtm_asset_id: Some("asset-dtm".into()), ortho_asset_id: Some("asset-ortho".into()) });
         scene.results.qc = Some(QcReportSnapshot {
             reprojection_rms_px: 0.5,
             gcp_checkpoint_rmse: Some(0.02),

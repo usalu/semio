@@ -1,7 +1,7 @@
 //! 🖼️ Animate presentation app — the tile-editor window: the canvas 2d surface rendering the source figure
 //! backdrop plus its crop tiles.
 
-use crate::artifacts::presentation::{FigureTileFrame, PresentationSnapshot};
+use crate::{FigureTileFrame, PresentationSnapshot};
 use semio_framework_plugin::{LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_contract::BuiltNode;
 use semio_framework_ui_scene::Canvas2dScene;
@@ -62,7 +62,7 @@ fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) 
 /// `🖍️draw`'s canvas render, same reason).
 fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
     const SCALE: f64 = 1000.0;
-    let (source, tiles) = crate::artifacts::presentation::presentation_working_scene(deck);
+    let (source, tiles) = crate::presentation_working_scene(deck);
     let mut layers = Vec::new();
     let (sx, sy, sw, sh) = frame_to_canvas(&source.frame, SCALE);
     let has_image_src = !source.src.trim().is_empty() && source.kind != "pdf";
@@ -113,7 +113,7 @@ mod tests {
         let deck = app.snapshot().expect("projection");
         let layers_json = deck_to_canvas_layers(&deck);
         let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
-        let (source, _) = crate::artifacts::presentation::presentation_working_scene(&deck);
+        let (source, _) = crate::presentation_working_scene(&deck);
         assert!(!source.src.trim().is_empty());
         let source_layer = layers.first().expect("source layer is first (renders behind tiles)");
         assert_eq!(source_layer.get("id").and_then(|v| v.as_str()), Some("source-frame"));
@@ -127,10 +127,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
-        let base = crate::artifacts::presentation::default_presentation_snapshot();
-        let (mut source, tiles) = crate::artifacts::presentation::presentation_working_scene(&base);
+        let base = crate::default_presentation_snapshot();
+        let (mut source, tiles) = crate::presentation_working_scene(&base);
         source.src = String::new();
-        let deck = crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &tiles);
+        let deck = crate::presentation_snapshot_with_tiles(&source, &tiles);
         let layers_json = deck_to_canvas_layers(&deck);
         let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
         let source_layer = layers.first().expect("source layer presentation");
@@ -140,10 +140,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn deck_to_canvas_layers_treats_pdf_kind_as_non_image() {
-        let base = crate::artifacts::presentation::default_presentation_snapshot();
-        let (mut source, tiles) = crate::artifacts::presentation::presentation_working_scene(&base);
+        let base = crate::default_presentation_snapshot();
+        let (mut source, tiles) = crate::presentation_working_scene(&base);
         source.kind = "pdf".into();
-        let deck = crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &tiles);
+        let deck = crate::presentation_snapshot_with_tiles(&source, &tiles);
         let layers_json = deck_to_canvas_layers(&deck);
         let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();
         let source_layer = layers.first().expect("source layer presentation");

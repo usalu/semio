@@ -1,6 +1,6 @@
 //! 🧬️ Writer snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::writer::{document_child_handle_with_text, WriterDocumentChild, WRITER_DOCUMENT_SCHEMA};
+use crate::{document_child_handle_with_text, WriterDocumentChild, WRITER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -20,7 +20,7 @@ pub struct WriterSnapshot {
     #[state(artifact)]
     pub language_id: String,
     #[state(artifact)]
-    #[value(default = "crate::artifacts::writer::default_uri")]
+    #[value(default = "crate::default_uri")]
     pub uri: String,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.document")]
@@ -29,7 +29,7 @@ pub struct WriterSnapshot {
 
 impl Default for WriterSnapshot {
     fn default() -> Self {
-        Self { schema: WRITER_DOCUMENT_SCHEMA.into(), id: String::new(), language_id: "plaintext".into(), uri: crate::artifacts::writer::default_uri(), document: document_child_handle_with_text("", "", "plaintext") }
+        Self { schema: WRITER_DOCUMENT_SCHEMA.into(), id: String::new(), language_id: "plaintext".into(), uri: crate::default_uri(), document: document_child_handle_with_text("", "", "plaintext") }
     }
 }
 //#endregion 🔖️Snapshot

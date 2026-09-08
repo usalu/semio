@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteNode` — recreates the captured node from `base`.
 use super::DeleteNode;
-use crate::artifacts::fem2d::mutations::{create_node, Fem2dMutation};
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::mutations::{create_node, Fem2dMutation};
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteNode, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {

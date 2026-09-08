@@ -1,7 +1,7 @@
 //! 🧬️ Forms diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::forms::{FormQuestion, FormStep, FormsResultsChild, FormsStructureChild};
-use schema::ArtifactSchema;
+use crate::{FormQuestion, FormStep, FormsResultsChild, FormsStructureChild};
+use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
@@ -15,11 +15,11 @@ use std::collections::BTreeMap;
 /// (`Option<ArtifactChild<S>>`, single-Option "always-present slot" shape) replace them: every
 /// mutation triad still builds its change as a `FormsStepsDelta` internally (that type is UNCHANGED,
 /// see `🔖️DeltaHelpers` below) and applies it against the WORKING-SCENE steps
-/// (`crate::artifacts::forms::forms_steps`, not a snapshot field) to get the resulting `Vec<FormStep>`,
+/// (`crate::forms_steps`, not a snapshot field) to get the resulting `Vec<FormStep>`,
 /// then regenerates both composed children from that result — the granular, cascade-aware mutation
 /// semantics are unchanged, only the diff's own wire representation of "what changed" becomes a
 /// pair of regenerated content-addressed handles, exactly like every other composed plugin in this
-/// ticket (see `crate::artifacts::forms::🔖️Composition`'s own doc comment).
+/// ticket (see `crate::🔖️Composition`'s own doc comment).
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.forms.forms")]

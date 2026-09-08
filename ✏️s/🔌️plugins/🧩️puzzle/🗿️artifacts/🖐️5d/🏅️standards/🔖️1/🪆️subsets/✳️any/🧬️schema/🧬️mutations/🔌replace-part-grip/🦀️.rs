@@ -1,8 +1,8 @@
 //! 🔌 Puzzle5d mutation — `ReplacePartGrip`: whole-value swap of one grip's presentation fields
 //! (kind/2d/3d together, one property-panel gesture).
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::{Puzzle5dGrip, Puzzle5dSnapshot};
+use crate::diff::Puzzle5dDiff;
+use crate::mutations::Puzzle5dMutation;
+use crate::{Puzzle5dGrip, Puzzle5dSnapshot};
 
 //#region 🔖️Mutation
 /// 🔌 `replace-part-grip` payload.

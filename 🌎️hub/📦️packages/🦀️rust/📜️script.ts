@@ -10,6 +10,7 @@ import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import { requireMcpBinary } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
+import { blake3Hex } from "../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
 import {
   decodeClientFrame,
   decodePresencePeer,
@@ -2902,7 +2903,6 @@ async function proveAdminRelayBoundary(repoRoot: string): Promise<void> {
 async function adminLiveJourneyFixture(repoRoot: string): Promise<AdminLiveJourneyFixture> {
   const fixtureRoot = join(repoRoot, "🌎️hub/📇️directory/🧫️fixtures/🚶️admin-live-journey-v1");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as AdminLiveJourneyFixture;
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   if (!hubSchemaExport(repoRoot, "schema://hub.directory/DirectoryProfileV1")(fixture.profile)) throw new Error("admin live journey profile is not the owned directory profile contract");
   if (!hubSchemaExport(repoRoot, "schema://hub.directory/AdminCreateSpaceIntentV1")(fixture.mutation)) throw new Error("admin live journey mutation is not the owned create-space intent contract");
   if (!hubSchemaExport(repoRoot, "schema://hub.directory/AdminOperationIntentV1")(fixture.operation)) throw new Error("admin live journey operation is not the owned admin operation intent contract");
@@ -4743,7 +4743,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   for (const row of fixture.hostileCases) if (!admitsHostileExpectation(row)) throw new Error(`native-openable hostile expectation is malformed: ${row.name}`);
   const projectionPath = join(repoRoot, fixture.providerProjection);
   const projection = JSON.parse(readFileSync(projectionPath, "utf8")) as { schema: string; provider_id: string; plugin_id: string; package_id: string; receipts: NativeOpenableProjectionReceipt[] };
-  const projectionSchema = JSON.parse(readFileSync(join(projectionPath, "../🧬️native-codec-factories.schema.json"), "utf8"));
+  const projectionSchema = JSON.parse(readFileSync(join(projectionPath, "../🔣️.json"), "utf8"));
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const ajv = new Ajv2020({ allErrors: true, strict: true });
   const claimRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/🧾️claim-authority");
@@ -4798,7 +4798,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
     if (code !== row.code) throw new Error(`native-openable claim oracle differs for ${row.id}`);
   }
   console.log(`native-openable-claim-oracle cases=${claimFixture.cases.length}`);
-  const validateProjection = ajv.compile(projectionSchema);
+  const validateProjection = ajv.compile({ ...projectionSchema.$defs.NativeCodecFactories, $defs: projectionSchema.$defs });
   if (!validateProjection(projection)) throw new Error(`native-openable projection schema invalid: ${JSON.stringify(validateProjection.errors)}`);
   const definitionRoot = join(repoRoot, fixture.artifactDefinitionsRoot);
   const definitionFiles: string[] = [];
@@ -6722,9 +6722,13 @@ class SpacePublicBoundaryCheckScript extends BundleScript {
 async function proveInferenceWalProofFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🧾️inference-wal-proof-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid WAL proof fixture: ${JSON.stringify(validate.errors)}`);
+  const validateCommand = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceCommandV1");
+  const validateTarget = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceWalTargetV1");
+  if (!validateCommand(fixture.command)) throw new Error("WAL proof fixture command is not a hub.inference/InferenceCommandV1");
+  if (!validateTarget({ scope: fixture.scope, documentKey: fixture.documentKey, generation: fixture.generation, jobId: fixture.jobId, proposalHash: fixture.proposalHash, maximumRecords: fixture.maximumRecords }))
+    throw new Error("WAL proof fixture target is not a hub.inference/InferenceWalTargetV1");
+  if (fixture.schema !== "semio.hub.inference-wal-proof-fixture/v1" || fixture.payloadAuthority !== "protocol-envelope-only-not-an-executable-gis-mutation") throw new Error("WAL proof fixture envelope drifted");
+  if (fixture.bindingMismatches.length !== 2 || fixture.ownership.length !== 3 || fixture.traces.length !== 17 || new Set(fixture.traces.map((trace: { name: string }) => trace.name)).size !== 17) throw new Error("WAL proof fixture inventory drifted");
   const key = `v1:${Buffer.byteLength(fixture.scope.spaceId)}:${Buffer.byteLength(fixture.scope.documentId)}:${fixture.scope.spaceId}${fixture.scope.documentId}`;
   if (key !== fixture.documentKey || key !== fixture.command.documentId) throw new Error("WAL fixture full document key mismatch");
   const encoded: number[] = [];
@@ -6826,9 +6830,12 @@ async function proveInferenceWalChainFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "⛓️inference-wal-chain-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const proof = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🧾️inference-wal-proof-v1", "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid WAL chain fixture: ${JSON.stringify(validate.errors)}`);
+  const validatePolicy = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceWalChainPolicyV1");
+  if (!validatePolicy({ hashAlgorithm: fixture.hashAlgorithm, requiredFlags: fixture.requiredFlags, recordDigest: fixture.recordDigest, commitDigest: fixture.commitDigest }))
+    throw new Error("WAL chain fixture policy is not a hub.inference/InferenceWalChainPolicyV1");
+  if (fixture.schema !== "semio.hub.inference-wal-chain-fixture/v1") throw new Error("WAL chain fixture envelope drifted");
+  if (fixture.cases.length !== 14 || new Set(fixture.cases.map((test: { name: string }) => test.name)).size !== 14 || fixture.hashingOwnership.length !== 3 || fixture.retainedBoundaries.length !== 2)
+    throw new Error("WAL chain fixture inventory drifted");
   const { blake3Hex } = await import(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"));
   const digest = (bytes: Buffer): Buffer => Buffer.from(blake3Hex(bytes), "hex");
   const crc = (bytes: Buffer): number => {
@@ -7012,9 +7019,11 @@ async function proveInferenceWalChainFixture(repoRoot: string): Promise<void> {
 async function proveInferenceCatalogSelectionFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🎯️inference-catalog-selection-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid catalog selection fixture: ${JSON.stringify(validate.errors)}`);
+  const validateSelection = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceCatalogSelectionV1");
+  if (!validateSelection({ scope: fixture.scope, descriptor: fixture.descriptor, package: fixture.package, services: fixture.services }))
+    throw new Error("catalog selection fixture is not a hub.inference/InferenceCatalogSelectionV1");
+  if (fixture.schema !== "semio.hub.inference-catalog-selection-fixture/v1") throw new Error("catalog selection fixture envelope drifted");
+  if (fixture.cases.length !== 12 || new Set(fixture.cases.map((test: { name: string }) => test.name)).size !== 12) throw new Error("catalog selection fixture inventory drifted");
   for (const test of fixture.cases) {
     const row = structuredClone(fixture);
     if (test.path.length) {
@@ -7056,9 +7065,23 @@ async function proveInferenceCatalogSelectionFixture(repoRoot: string): Promise<
 async function proveGisMapApprovalUndoFixture(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "↩️gis-map-approval-undo-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid GIS Map approval undo fixture: ${JSON.stringify(validate.errors)}`);
+  const validateTarget = hubSchemaExport(repoRoot, "schema://hub.inference/GisMapApprovalUndoTargetV1");
+  const validateRequest = hubSchemaExport(repoRoot, "schema://hub.inference/GisMapApprovalUndoRequestV1");
+  if (!validateTarget(fixture.target)) throw new Error("GIS Map approval undo target is not a hub.inference/GisMapApprovalUndoTargetV1");
+  if (!validateRequest(fixture.request)) throw new Error("GIS Map approval undo request is not a hub.inference/GisMapApprovalUndoRequestV1");
+  if (fixture.schema !== "semio.hub.gis-map-approval-undo-fixture/v1") throw new Error("GIS Map approval undo fixture envelope drifted");
+  if (fixture.traces.length !== 6 || new Set(fixture.traces.map((trace: { name: string }) => trace.name)).size !== 6 || fixture.sourceHostiles.length !== 8 || new Set(fixture.sourceHostiles).size !== 8)
+    throw new Error("GIS Map approval undo fixture inventory drifted");
+  if (fixture.request.targetId !== fixture.target.targetId) throw new Error("GIS Map approval undo request does not pin its own witness-derived target");
+  const historyDispatch = [
+    { tag: "localGuestTransaction", dispatch: "plugin-channel" },
+    { tag: "hubGisMapApproval", dispatch: "history-undo-port" },
+  ];
+  if (JSON.stringify(fixture.historyMembers.map((member: { tag: string; dispatch: string }) => ({ tag: member.tag, dispatch: member.dispatch }))) !== JSON.stringify(historyDispatch))
+    throw new Error("GIS Map approval undo history dispatch tags drifted");
+  const hubMember = fixture.historyMembers[1];
+  if (!/^https:\/\//.test(hubMember.hubOrigin) || hubMember.targetId !== fixture.target.targetId || hubMember.idempotencyKey !== fixture.request.idempotencyKey || hubMember.spaceId !== fixture.target.scope.spaceId || hubMember.documentId !== fixture.target.scope.documentId)
+    throw new Error("GIS Map approval undo history member is not bound to the server-minted target");
   const genesisFirstUndo = {
     initialShape: "scope-bound-zero-frontier",
     firstCommandOrdinalDelta: 1,
@@ -7116,9 +7139,19 @@ async function proveGisMapApprovalUndoFixture(repoRoot: string): Promise<number>
 async function proveGisInferenceRetainedRuntimeFixture(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-inference-retained-runtime-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid retained GIS inference runtime fixture: ${JSON.stringify(validate.errors)}`);
+  const limits = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceLimitsV1");
+  const canonicalLimits = JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "🧪️fixtures", "🗳️gis-map-proposal-approval-v1", "🔣️.json"), "utf8")).limits;
+  if (!limits(canonicalLimits)) throw new Error("retained GIS inference limits reference is not a hub.inference/InferenceLimitsV1");
+  if (fixture.schema !== "semio.hub.gis-inference-retained-runtime/v1") throw new Error("retained GIS inference fixture envelope drifted");
+  if (
+    fixture.limits.operations !== canonicalLimits.operationCapacity ||
+    fixture.limits.workUnits !== canonicalLimits.workUnitLimit ||
+    fixture.limits.claimLeaseMs !== canonicalLimits.claimLeaseMaxMs ||
+    fixture.limits.jobLifetimeMs !== canonicalLimits.jobMaxLifetimeMs ||
+    fixture.limits.closeMs !== 5000
+  )
+    throw new Error("retained GIS inference limits disagree with the hub.inference limits contract");
+  if (fixture.traces.length !== 9 || fixture.sourceHostiles.length !== 10 || new Set(fixture.sourceHostiles).size !== 10) throw new Error("retained GIS inference fixture inventory drifted");
   if (new Set(fixture.traces.map((trace: any) => trace.name)).size !== fixture.traces.length) throw new Error("retained GIS inference trace names are not unique");
   for (const trace of fixture.traces) {
     const events = ["accepted"];
@@ -7196,12 +7229,17 @@ async function proveGisInferenceRetainedRuntimeFixture(repoRoot: string): Promis
 async function proveGisInferenceCheckpointControlFixture(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "⏸️gis-inference-checkpoint-control-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid GIS inference checkpoint control fixture: ${JSON.stringify(validate.errors)}`);
+  const validateFrame = hubSchemaExport(repoRoot, "schema://hub.inference/GisInferenceCheckpointControlFrameV1");
+  const validateDirection = hubSchemaExport(repoRoot, "schema://hub.inference/GisInferenceCheckpointControlDirectionV1");
+  if (fixture.schema !== "semio.hub.gis-inference-checkpoint-control-fixture/v1" || fixture.version !== 1) throw new Error("GIS inference checkpoint control fixture envelope drifted");
   const expectedHostiles = ["wrong-schema", "wrong-version", "wrong-sequence", "wrong-kind", "unknown-field", "zero-length", "oversized-frame", "closed-before-release"];
   if (JSON.stringify(fixture.hostiles) !== JSON.stringify(expectedHostiles) || fixture.descriptor !== 4 || fixture.frameMaximumBytes !== GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES) {
     throw new Error("GIS inference checkpoint control fixture lost its closed bounded protocol");
+  }
+  if (JSON.stringify(fixture.frames.map((row: any) => row.direction)) !== JSON.stringify(["hub-to-runner", "runner-to-hub"])) throw new Error("GIS inference checkpoint control frame directions drifted");
+  for (const row of fixture.frames) {
+    if (!validateDirection(row.direction)) throw new Error("GIS inference checkpoint control direction is not a hub.inference/GisInferenceCheckpointControlDirectionV1");
+    if (!validateFrame(row.frame)) throw new Error("GIS inference checkpoint control frame is not a hub.inference/GisInferenceCheckpointControlFrameV1");
   }
   const [entered, release] = fixture.frames.map((row: any) => row.frame);
   assertGisInferenceCheckpointControlFrame(entered, 1, "entered", entered.jobId);
@@ -7249,30 +7287,83 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
   const durableUndoCases = await proveGisMapApprovalUndoFixture(repoRoot);
   const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🗳️gis-map-proposal-approval-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const ajv = new Ajv2020({ strict: true, allErrors: true });
-  ajv.addSchema(JSON.parse(readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🧬️schema", "🔣️.json"), "utf8")));
-  const validate = ajv.compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid GIS Map proposal fixture: ${JSON.stringify(validate.errors)}`);
-  const hostile = [
-    { ...fixture, limits: { ...fixture.limits, proposalMaxBytes: 4097 } },
-    { ...fixture, binding: { ...fixture.binding, grantedMode: "read-observe" } },
-    { ...fixture, binding: { ...fixture.binding, surfaceId: "s.gis.gismap@1/*#viewer" } },
-    { ...fixture, binding: { ...fixture.binding, parentDialect: { ...fixture.binding.parentDialect, subset: "lite" } } },
-    { ...fixture, lifecycle: fixture.lifecycle.slice(1) },
-    { ...fixture, visibility: fixture.visibility.slice(1) },
-    { ...fixture, committer: { ...fixture.committer, publicationOrder: ["committed-wal-event", "actor-frontier", "ledger-applied", "public-checkpoint"] } },
-    { ...fixture, committer: { ...fixture.committer, beforePublicAck: { ...fixture.committer.beforePublicAck, ledgerApplied: true } } },
-    { ...fixture, committer: { ...fixture.committer, publicationFailure: { ...fixture.committer.publicationFailure, documentWrite: "released" } } },
-    { ...fixture, committer: { ...fixture.committer, ingressAuthority: { ...fixture.committer.ingressAuthority, documentWrite: "hub-outer-acquired" } } },
-    { ...fixture, committer: { ...fixture.committer, abandonedRequest: { ...fixture.committer.abandonedRequest, commitCutover: "journal-complete" } } },
-    { ...fixture, committer: { ...fixture.committer, documentFence: "request-generation" } },
-    { ...fixture, committer: { ...fixture.committer, genesisPublication: "missing-active-checkpoint-any-frontier" } },
-    { ...fixture, committer: { ...fixture.committer, frontierChain: "nonzero-document-blob-hash-only" } },
-    { ...fixture, committer: { ...fixture.committer, peerNotification: { ...fixture.committer.peerNotification, after: ["public-checkpoint", "ledger-applied"] } } },
-    { ...fixture, nonclaims: ["no-external-model-provider", "no-external-model-provider", "no-wgpu-rendering", "no-auto-apply"] },
+  const validateBinding = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceBindingIdentityV1");
+  const validateLimits = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceLimitsV1");
+  const validatePreview = hubSchemaExport(repoRoot, "schema://hub.inference/GisMapInferencePreviewV1");
+  const validateSummary = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceMapSummaryV1");
+  const validateLifecycleKind = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceLifecycleKindV1");
+  if (fixture.schema !== "semio.hub.gis-map-proposal-approval-fixture/v1" || fixture.version !== 1) throw new Error("GIS Map proposal fixture envelope drifted");
+  if (!validateBinding(fixture.binding)) throw new Error("GIS Map proposal binding is not a hub.inference/InferenceBindingIdentityV1");
+  if (!validateLimits(fixture.limits)) throw new Error("GIS Map proposal limits are not a hub.inference/InferenceLimitsV1");
+  if (!validatePreview(fixture.preview)) throw new Error("GIS Map proposal preview is not a hub.inference/GisMapInferencePreviewV1");
+  if (!validateSummary(fixture.base.expectedInference)) throw new Error("GIS Map proposal base summary is not a hub.inference/InferenceMapSummaryV1");
+  for (const event of [...fixture.lifecycle, ...fixture.cancelLifecycle]) if (!validateLifecycleKind(event.kind)) throw new Error(`GIS Map proposal lifecycle kind ${event.kind} is not a hub.inference/InferenceLifecycleKindV1`);
+  const scalarLaws: readonly (readonly [string, unknown])[] = [
+    ["limits.proposalMaxBytes", 4096],
+    ["binding.grantedMode", "read-write-observe"],
+    ["binding.surfaceId", "s.gis.gismap@1/*#editor"],
+    ["binding.parentDialect.subset", "*"],
+    ["committer.capacity", 64],
+    ["committer.witnessSource", "sole-committed-wal-event"],
+    ["committer.retryOwner", "same-document-three-store-host"],
+    ["committer.frontierChain", "canonical-lowercase-hex-with-genesis-zero"],
+    ["committer.documentFence", "mounted-actor-generation-including-zero"],
+    ["committer.genesisPublication", "active-indexed-genesis-parent-before-first-edit"],
+    ["committer.beforePublicAck.ledgerApplied", false],
+    ["committer.beforePublicAck.documentWrite", "retained"],
+    ["committer.beforePublicAck.state", "publishing"],
+    ["committer.publicationFailure.ledgerApplied", false],
+    ["committer.publicationFailure.documentWrite", "retained"],
+    ["committer.publicationFailure.retry", "same-event-same-owner"],
+    ["committer.publicationFailure.retryDeadline", "process-owned-bounded-attempt"],
+    ["committer.ingressAuthority.owner", "hub-private-sorted-binding-guards"],
+    ["committer.ingressAuthority.documentWrite", "runtime-acquired"],
+    ["committer.ingressAuthority.cutover", "durable-wal-receipt"],
+    ["committer.ingressAuthority.delivery", "fresh-revalidation-under-same-guards"],
+    ["committer.ingressAuthority.recovery", "committed-wal-provenance"],
+    ["committer.abandonedRequest.owner", "runtime-document-maintenance"],
+    ["committer.abandonedRequest.preparedOwner", "armed-before-committer-preflight"],
+    ["committer.abandonedRequest.driver", "document-write-request-token-single-poller"],
+    ["committer.abandonedRequest.cleanupCapacity", 128],
+    ["committer.abandonedRequest.runtimeShutdown", "reinsert-exact-owner-before-task-drop"],
+    ["committer.abandonedRequest.terminalClose", "fence-new-admission-until-cleanup-empty"],
+    ["committer.abandonedRequest.outbox", "abandoned-until-fresh-identical-retry"],
+    ["committer.abandonedRequest.commitCutover", "awaiting-ack"],
+    ["committer.storeIdentities.parentDialect", "s.gis.gismap@1/*"],
+    ["committer.storeIdentities.childOwnerParent", "exact-document-parent-reference"],
+    ["committer.peerNotification.frame", "rebootstrap-required"],
+    ["committer.peerNotification.source", "active-checkpoint"],
+    ["committer.peerNotification.command", "server-stamped-create-region"],
+    ["committer.peerNotification.peers", 2],
+    ["committer.peerNotification.publicationFailure", "none"],
+    ["committer.peerNotification.publicationCancellation", "none"],
   ];
-  for (const [index, candidate] of hostile.entries()) if (validate(candidate)) throw new Error(`GIS Map proposal fixture accepted hostile mutation ${index}`);
+  for (const [name, expected] of scalarLaws) {
+    const actual = name.split(".").reduce<any>((at, key) => at?.[key], fixture);
+    if (actual !== expected) throw new Error(`GIS Map proposal committer law ${name} is ${JSON.stringify(actual)}, expected ${JSON.stringify(expected)}`);
+  }
+  const orderedLaws: readonly (readonly [string, readonly unknown[]])[] = [
+    ["committer.roles", ["map", "drawing", "value"]],
+    ["committer.children", ["gismap-drawing", "gismap-value"]],
+    ["committer.phases", ["ready", "assembly", "journal", "verification", "publishing", "published", "closing"]],
+    ["committer.publicationOrder", ["committed-wal-event", "actor-frontier", "public-checkpoint", "ledger-applied"]],
+    ["committer.peerNotification.after", ["committed-wal-event", "actor-frontier", "public-checkpoint", "ledger-applied"]],
+    ["committer.ingressAuthority.bindings", ["user", "session", "space-authority", "membership"]],
+    ["committer.abandonedRequest.abortPhases", ["no-runtime-unpolled", "unpolled", "rejected-preflight", "ready", "preflight", "assembly", "journal-no-receipt"]],
+    ["committer.abandonedRequest.postCutover", ["verification", "public-checkpoint", "ledger-applied"]],
+    ["committer.storeIdentities.childReferences", ["gismap-drawing!s.stdio.semio@v1/drawing", "gismap-value!s.stdio.semio@v1/value"]],
+    ["committer.storeIdentities.childOwnerRoles", ["drawing", "value"]],
+    ["nonclaims", ["no-external-model-provider", "no-wgpu-rendering", "no-client-supplied-map-pack", "no-auto-apply"]],
+  ];
+  for (const [name, expected] of orderedLaws) {
+    const actual = name.split(".").reduce<any>((at, key) => at?.[key], fixture);
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(`GIS Map proposal ordered law ${name} is ${JSON.stringify(actual)}, expected ${JSON.stringify(expected)}`);
+  }
+  const committerLaws = scalarLaws.length + orderedLaws.length;
+  if (fixture.lifecycle.length !== 5 || fixture.cancelLifecycle.length !== 4 || fixture.visibility.length !== 7 || fixture.errors.length !== 11 || fixture.approvalRejections.length !== 11 || new Set(fixture.nonclaims).size !== 4)
+    throw new Error("GIS Map proposal fixture inventory drifted");
+  for (const row of [...fixture.errors, ...fixture.approvalRejections, ...fixture.visibility.filter((entry: { expectedCode: string | null }) => entry.expectedCode !== null).map((entry: { expectedCode: string }) => ({ code: entry.expectedCode }))])
+    if (!/^(inference|approval)\.[a-z-]+$/.test(row.code)) throw new Error(`GIS Map proposal error code ${row.code} is outside the closed inference/approval namespace`);
   const hash = (value: string): string => createHash("sha256").update(value, "utf8").digest("hex");
   if (hash(fixture.proposalCanonical) !== fixture.proposalHash || hash(fixture.inverseCanonical) !== fixture.inverseHash) throw new Error("independent proposal/inverse canonical hashes differ");
   const proposal = JSON.parse(fixture.proposalCanonical);
@@ -7601,18 +7692,19 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
     if (source === processSource || processConforms(source)) throw new Error(`GIS Map proposal process source oracle admitted hostile ${index}`);
   });
   console.log(
-    `gis-map-proposal-oracle: ajv=1 hostile=${hostile.length} node-sha256=2 independent-bounds=2 preview=1 lifecycle=${fixture.lifecycle.length + fixture.cancelLifecycle.length} checkpoint-control=${checkpointControlCases} retained-runtime=${retainedRuntimeCases} durable-undo=${durableUndoCases} committer=7 visibility=${fixture.visibility.length} errors=${fixture.errors.length} approval-rejections=${fixture.approvalRejections.length} cross-fixture=1 process-source=${processHostiles.length + 1}; no external model provider, no WGPU rendering`,
+    `gis-map-proposal-oracle: scope-exports=5 committer-laws=${committerLaws} node-sha256=2 independent-bounds=2 preview=1 lifecycle=${fixture.lifecycle.length + fixture.cancelLifecycle.length} checkpoint-control=${checkpointControlCases} retained-runtime=${retainedRuntimeCases} durable-undo=${durableUndoCases} committer=7 visibility=${fixture.visibility.length} errors=${fixture.errors.length} approval-rejections=${fixture.approvalRejections.length} cross-fixture=1 process-source=${processHostiles.length + 1}; no external model provider, no WGPU rendering`,
   );
-  return hostile.length;
+  return committerLaws;
 }
 
 /** 🧊️ Independently pins every retained GIS Map catalog and executable binding fact. */
 async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "🧊️gis-map-frozen-binding-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid frozen GIS Map binding fixture: ${JSON.stringify(validate.errors)}`);
+  const validate = hubSchemaExport(repoRoot, "schema://hub.inference/GisMapFrozenBindingV1");
+  if (fixture.schema !== "semio.hub.gis-map-frozen-binding-fixture/v1") throw new Error("frozen GIS Map binding fixture envelope drifted");
+  if (!validate(fixture.binding)) throw new Error("frozen GIS Map binding is not a hub.inference/GisMapFrozenBindingV1");
+  if (!/^[0-9a-f]{64}$/.test(fixture.expectedDigest) || fixture.hostile.length < 24) throw new Error("frozen GIS Map binding fixture inventory drifted");
   const digest = (binding: unknown): string =>
     createHash("sha256")
       .update(Buffer.concat([Buffer.from("semio.hub.gis-map-frozen-binding/v1", "utf8"), Buffer.from([0])]))
@@ -7631,9 +7723,9 @@ async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number
     let at = candidate;
     for (const key of hostile.path.slice(0, -1)) at = at[key];
     at[hostile.path.at(-1)] = hostile.value;
-    const row = { ...fixture, binding: candidate };
-    const admitted = validate(row) && digest(candidate) === fixture.expectedDigest;
+    const admitted = validate(candidate) && digest(candidate) === fixture.expectedDigest;
     if (admitted !== hostile.accepted) throw new Error(`frozen GIS Map binding substitution accepted: ${hostile.name}`);
+    assertHubFixtureExpectation(`frozen GIS Map binding ${hostile.name}`, { stage: "contract", result: hostile.accepted ? "accepted" : "rejected", code: hostile.name }, admitted);
   }
   if (remainingPaths.size !== 0) throw new Error(`frozen binding fields lack substitution coverage: ${[...remainingPaths].join(", ")}`);
   const catalog = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "📇️catalog", "🦀️.rs"), "utf8");
@@ -7672,19 +7764,33 @@ class GisInferenceLedgerOracleScript extends BundleScript {
   async run(): Promise<void> {
     const fixture = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-inference-job-v1", "🔣️.json"), "utf8"));
     const schemaRoot = join(this.repoRoot, "🌎️hub", "💡️inference", "🧬️schema");
-    const schema = JSON.parse(readFileSync(join(schemaRoot, "🔣️.json"), "utf8"));
-    const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-    const ajv = new Ajv2020({ strict: true, allErrors: true });
-    const validate = ajv.compile(schema);
-    const validateIdentity = ajv.getSchema(`${schema.$id}#/$defs/identity`);
-    const validateFixture = ajv.compile(JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub", "🧪️fixtures", "🗺️gis-inference-job-v1", "🧬️.schema.json"), "utf8")));
-    if (!validateFixture(fixture)) throw new Error(`invalid GIS ledger fixture: ${JSON.stringify(validateFixture.errors)}`);
-    const { parseInferenceRequestV1 } = await import(join(schemaRoot, "🟦️.ts"));
+    const validate = hubSchemaExport(this.repoRoot, "schema://hub.inference/InferenceRequestV1");
+    const validateIdentity = hubSchemaExport(this.repoRoot, "schema://hub.inference/InferenceIdentityV1");
+    const validateOutbox = hubSchemaExport(this.repoRoot, "schema://hub.inference/InferenceApprovalOutboxV1");
+    const validateSummary = hubSchemaExport(this.repoRoot, "schema://hub.inference/InferenceMapSummaryV1");
+    const validateServerId = hubSchemaExport(this.repoRoot, "schema://hub.inference/InferenceServerIdV1");
+    if (fixture.schema !== "semio.hub.gis-inference-ledger-fixture/v1" || fixture.version !== 1) throw new Error("GIS ledger fixture envelope drifted");
+    if (fixture.traces.length !== 9 || fixture.hostileRequests.length !== 13 || fixture.hostileIdentities.length !== 17 || fixture.sqliteIntegers.length !== 6) throw new Error("GIS ledger fixture inventory drifted");
+    if (!validateSummary(fixture.expectedInference)) throw new Error("GIS ledger expected inference is not a hub.inference/InferenceMapSummaryV1");
+    if (!validateOutbox(fixture.outbox)) throw new Error("GIS ledger outbox is not a hub.inference/InferenceApprovalOutboxV1");
+    const { parseInferenceRequestV1, parseInferenceIdentityV1, parseInferenceServerIdV1 } = await import(join(schemaRoot, "🟦️.ts"));
     if (!validate(fixture.identity.request)) throw new Error("invalid neutral inference intent");
-    if (!validateIdentity?.(fixture.identity)) throw new Error(`invalid neutral inference identity: ${JSON.stringify(validateIdentity?.errors)}`);
+    if (!validateIdentity(fixture.identity)) throw new Error("GIS ledger identity is not a hub.inference/InferenceIdentityV1");
+    parseInferenceIdentityV1(fixture.identity);
     const identityRoot = join(this.repoRoot, "🌎️hub/🧪️fixtures/🖥️inference-server-identity-v1");
     const identityFixture = JSON.parse(readFileSync(join(identityRoot, "🔣️.json"), "utf8"));
-    if (!ajv.compile(JSON.parse(readFileSync(join(identityRoot, "🧬️.schema.json"), "utf8")))(identityFixture)) throw new Error("invalid server identity corpus");
+    if (identityFixture.schema !== "semio.hub.inference-server-identity-fixture/v1" || identityFixture.maximumBytes !== 96 || identityFixture.cases.length !== 11) throw new Error("server identity corpus envelope drifted");
+    if (JSON.stringify(identityFixture.fields) !== JSON.stringify(["userId", "sessionId", "spaceId", "documentId", "headEditId"])) throw new Error("server identity corpus field set drifted");
+    for (const row of identityFixture.cases) {
+      let parsed = true;
+      try {
+        parseInferenceServerIdV1(row.value);
+      } catch {
+        parsed = false;
+      }
+      if (validateServerId(row.value) !== row.accepted || parsed !== row.accepted) throw new Error(`server identity contract parity: ${row.name}`);
+      assertHubFixtureExpectation(`server identity ${row.name}`, { stage: "contract", result: row.accepted ? "accepted" : "rejected", code: row.name }, row.accepted);
+    }
     for (const row of identityFixture.cases)
       for (const field of identityFixture.fields) {
         const candidate = { ...fixture.identity, headOrdinal: 1, headEditId: "0".repeat(32), [field]: row.value };
@@ -7791,11 +7897,9 @@ class GisInferenceLedgerOracleScript extends BundleScript {
 async function proveInferenceApprovalRequestFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub/🧪️fixtures/✅️inference-approval-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const ajv = new Ajv2020({ strict: true, allErrors: true });
-  if (!ajv.compile(schema)(fixture)) throw new Error("invalid inference approval fixture");
-  const validate = ajv.getSchema(`${schema.$id}#/$defs/request`)!;
+  const validate = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceApprovalRequestV1");
+  const { parseInferenceApprovalRequestV1 } = await import(join(repoRoot, "🌎️hub", "💡️inference", "🧬️schema", "🟦️.ts"));
+  if (fixture.schema !== "semio.hub.inference-approval-fixture/v1" || fixture.maximumBytes !== 1024 || fixture.hostile.length !== 14) throw new Error("inference approval fixture envelope drifted");
   const decode = (bytes: Buffer): boolean => {
     if (bytes.length > fixture.maximumBytes) return false;
     try {
@@ -7806,9 +7910,18 @@ async function proveInferenceApprovalRequestFixture(repoRoot: string): Promise<v
   };
   const request = Buffer.from(JSON.stringify(fixture.request));
   if (!decode(request)) throw new Error("valid inference approval intent denied");
+  parseInferenceApprovalRequestV1(fixture.request);
   for (const hostile of fixture.hostile) {
     const candidate = { ...fixture.request, [hostile.field]: hostile.value };
-    if (decode(Buffer.from(JSON.stringify(candidate)))) throw new Error(`inference approval admitted client authority ${hostile.field}`);
+    const admitted = decode(Buffer.from(JSON.stringify(candidate)));
+    let parsed = true;
+    try {
+      parseInferenceApprovalRequestV1(candidate);
+    } catch {
+      parsed = false;
+    }
+    if (parsed) throw new Error(`TypeScript inference approval admitted client authority ${hostile.field}`);
+    assertHubFixtureExpectation(`inference approval ${hostile.code}`, hostile, admitted);
   }
   const boundary = Buffer.alloc(fixture.maximumBytes, 0x20);
   request.copy(boundary);
@@ -7820,9 +7933,7 @@ async function proveInferenceApprovalRequestFixture(repoRoot: string): Promise<v
 async function proveInferenceAuthorFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub/🧪️fixtures/🛂️inference-author-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid inference Author corpus: ${JSON.stringify(validate.errors)}`);
+  if (fixture.schema !== "semio.hub.inference-author-fixture/v1" || fixture.cases.length !== 16 || new Set(fixture.cases.map((row: { operation: string }) => row.operation)).size !== 16) throw new Error("inference Author corpus envelope drifted");
   const { Database } = await import("bun:sqlite");
   const database = new Database(":memory:");
   try {
@@ -8170,7 +8281,8 @@ async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promi
   const integerRoot = join(repoRoot, "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️fixtures");
   const integerFixture = JSON.parse(readFileSync(join(integerRoot, "🔣️.json"), "utf8"));
   const { default: IntegerAjv } = await import("ajv/dist/2020.js");
-  const integerShape = new IntegerAjv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(integerRoot, "🧬️.schema.json"), "utf8")));
+  const integerSchema = JSON.parse(readFileSync(join(dirname(integerRoot), "🧬️schema/🔣️.json"), "utf8"));
+  const integerShape = new IntegerAjv({ strict: true, allErrors: true }).compile(integerSchema.$defs.CodecFixture);
   if (!integerShape(integerFixture)) throw new Error(`exact integer schema: ${JSON.stringify(integerShape.errors)}`);
   let integerAccepted = 0;
   for (const target of integerFixture.targets) {
@@ -8187,11 +8299,14 @@ async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promi
   console.log(`exact-integer-value-oracle: AJV=1 targets=${integerFixture.targets.length} raw=${integerFixture.raw.length} admitted=${integerAccepted} arithmetic=BigInt; native production parity is a separate exact group`);
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor");
   const fixture = JSON.parse(readFileSync(join(root, "🧪️fixtures/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(root, "🔣️.schema.json"), "utf8"));
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
-  const ajv = new Ajv2020({ allErrors: true, strict: true });
+  const schema = JSON.parse(readFileSync(join(root, "../🔣️.json"), "utf8"));
+  const ajv = new Ajv({ allErrors: true, strict: true });
   ajv.addSchema(schema);
-  const validators = { plan: ajv.compile({ $ref: schema.$id + "#/$defs/plan" }), lease: ajv.compile({ $ref: schema.$id + "#/$defs/lease" }) };
+  const validators = {
+    plan: ajv.getSchema(schema.$id + "#/$defs/DocumentBrowserActorPlan"),
+    lease: ajv.getSchema(schema.$id + "#/$defs/DocumentBrowserActorLease"),
+  };
+  if (!validators.plan || !validators.lease) throw new Error("directory schema omits browser actor plan or lease");
   const contract = await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts");
   const source = { componentSha256: fixture.componentSha256, descriptorByteSha256: fixture.descriptorByteSha256 };
   const parsers = { plan: contract.parseDocumentOpenBrowserActorV1, lease: contract.parseDocumentExecutionTargetBrowserActorV1 };
@@ -8705,10 +8820,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   await proveTrustedGisMapCollaborationContractFixture(repoRoot);
   const stdio = JSON.parse(readFileSync(join(repoRoot, fixture.sources.stdioReceipts), "utf8"));
   const gis = JSON.parse(readFileSync(join(repoRoot, fixture.sources.gisReceipts), "utf8"));
-  const codecs: Record<"gis" | "stdio", TrustedBootstrapCodec[]> = {
-    stdio: stdio.receipts.map((row: any) => ({ artifactKind: row.artifact_kind, artifactSchema: row.document_schema, packSchemaHash: row.pack_schema_sha256 })),
-    gis: gis.receipts.map((row: any) => ({ artifactKind: row.kind, artifactSchema: row.schema, packSchemaHash: row.protocolSha256 })),
-  };
+  const codecs = projectTrustedBootstrapCodecsV1(stdio, gis).codecs;
   const profile = fixture.profile;
   const unique = (rows: readonly TrustedBootstrapCodec[]): boolean =>
     rows.length === new Set(rows.map((row) => JSON.stringify([row.artifactKind, row.artifactSchema, row.packSchemaHash]))).size && rows.every((row) => /^(?!0{64}$)[0-9a-f]{64}$/u.test(row.packSchemaHash));
@@ -8869,7 +8981,8 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
   assert.equal(fixture.ordering.expected.length, 3);
   const kindRoot = join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures");
   const kind = JSON.parse(readFileSync(join(kindRoot, "🗄️artifact-kind-formats.json"), "utf8"));
-  const validateKind = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(kindRoot, "🗄️artifact-kind-formats.schema.json"), "utf8")));
+  const kindSchema = JSON.parse(readFileSync(join(dirname(kindRoot), "🧬️schema/🔣️.json"), "utf8"));
+  const validateKind = new Ajv2020({ strict: true, allErrors: true }).compile(kindSchema.$defs.ArtifactKindFormatsFixture);
   assert(validateKind(kind), JSON.stringify(validateKind.errors));
   assert.deepEqual(packValueToExactJson(decodePackValue(encodePackValue(kind))), JSON.parse(JSON.stringify(kind)));
   for (const field of ["exportStdioKinds", "importStdioKinds"]) for (const invalid of [[1], "stdio.svg"]) assert.equal(validateKind({ ...kind, [field]: invalid }), false);
@@ -8999,6 +9112,20 @@ function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly
   };
   const identity = (value: unknown): value is string => typeof value === "string" && value.length > 0 && value.length <= 256 && !/[\u0000-\u001f\u007f]/u.test(value);
   const digest = (value: unknown): value is string => typeof value === "string" && /^(?!0{64}$)[0-9a-f]{64}$/u.test(value);
+  const packSchemaHash = (value: unknown, keyword: string, expected: readonly (readonly [number, string, boolean, number])[]): string => {
+    const pack = record(value, ["keyword", "fields"]);
+    if (pack.keyword !== keyword || !Array.isArray(pack.fields) || pack.fields.length !== expected.length) return fail();
+    const bytes: Buffer[] = [];
+    for (let index = 0; index < expected.length; index++) {
+      const field = record(pack.fields[index], ["id", "key", "optional"]);
+      const [id, key, optional, shapeTag] = expected[index];
+      if (field.id !== id || field.key !== key || field.optional !== optional) return fail();
+      const keyBytes = Buffer.from(key, "utf8");
+      if (id > 127 || keyBytes.byteLength > 127) return fail();
+      bytes.push(Buffer.from([id, keyBytes.byteLength]), keyBytes, Buffer.from([shapeTag]));
+    }
+    return blake3Hex(Buffer.concat(bytes));
+  };
   const s = record(stdio, ["schema", "provider_id", "plugin_id", "package_id", "receipts"]);
   const g = record(gis, ["schema", "pluginId", "packageId", "packageVersion", "receipts", "hostile"]);
   if (s.schema !== "semio.stdio.native-openable-catalog-provider/v1" || s.provider_id !== "stdio/native-codecs/v1" || s.plugin_id !== "stdio" || s.package_id !== "semio:stdio" || !Array.isArray(s.receipts) || s.receipts.length !== 26) return fail();
@@ -9022,8 +9149,34 @@ function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly
     return Object.freeze({ artifactKind: row.artifact_kind as string, artifactSchema: row.document_schema as string, packSchemaHash: row.pack_schema_sha256 });
   });
   const gisRows = g.receipts.map((value: unknown) => {
-    const row = record(value, ["factoryId", "kind", "schema", "extension", "capability", "protocolPath", "protocolBytes", "protocolSha256"]);
-    const family = row.kind === "s.gis.gismap" ? { id: "gismap", schema: "map", owner: "🗺️gismap" } : row.kind === "s.gis.gisterrain" ? { id: "gisterrain", schema: "terrain", owner: "🏔️gisterrain" } : fail();
+    const row = record(value, ["factoryId", "kind", "schema", "extension", "capability", "packRecord", "protocolPath", "protocolBytes", "protocolSha256"]);
+    const family =
+      row.kind === "s.gis.gismap"
+        ? {
+            id: "gismap",
+            schema: "map",
+            owner: "🗺️gismap",
+            fields: [
+              [1, "positions", false, 9],
+              [2, "routes", false, 9],
+              [3, "regions", false, 9],
+              [4, "drawing", false, 10],
+              [5, "image", true, 10],
+              [6, "value", false, 10],
+            ] as const,
+          }
+        : row.kind === "s.gis.gisterrain"
+          ? {
+              id: "gisterrain",
+              schema: "terrain",
+              owner: "🏔️gisterrain",
+              fields: [
+                [1, "exaggeration", false, 4],
+                [2, "importedFeaturesJson", false, 5],
+                [3, "mesh", true, 10],
+              ] as const,
+            }
+          : fail();
     if (
       row.factoryId !== `gis.${family.id}.v1` ||
       row.schema !== `gis.${family.schema}` ||
@@ -9036,7 +9189,7 @@ function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly
       !digest(row.protocolSha256)
     )
       return fail();
-    return Object.freeze({ artifactKind: row.kind as string, artifactSchema: row.schema as string, packSchemaHash: row.protocolSha256 });
+    return Object.freeze({ artifactKind: row.kind as string, artifactSchema: row.schema as string, packSchemaHash: packSchemaHash(row.packRecord, family.id, family.fields) });
   });
   for (const rows of [stdioRows, gisRows]) if (new Set(rows.map((row: TrustedBootstrapCodec) => JSON.stringify([row.artifactKind, row.artifactSchema]))).size !== rows.length) return fail();
   return Object.freeze({ gisVersion: g.packageVersion as string, codecs: Object.freeze({ stdio: Object.freeze(stdioRows.sort(trustedBootstrapCodecOrder)), gis: Object.freeze(gisRows.sort(trustedBootstrapCodecOrder)) }) });
@@ -9074,7 +9227,7 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
   assert.equal(fixture.maximumTotalBytes, 131_072);
   assert.deepEqual(fixture.cases.map((row: any) => row.change), [
     "none", "permuted", "replaced-source", "invalid-hash", "zero-hash", "duplicate-stdio", "duplicate-gis", "unknown-root", "unknown-row",
-    "foreign-package", "crossed-gis-schema", "foreign-version", "invalid-utf8", "oversize", "cancelled",
+    "foreign-package", "crossed-gis-schema", "changed-pack-record", "foreign-version", "invalid-utf8", "oversize", "cancelled",
   ]);
   for (const row of fixture.cases) assert.deepEqual(Object.keys(row), ["change", "accepted", "schemaAccepted"]);
   assert.equal(new Set(fixture.cases.map((row: any) => row.change)).size, fixture.cases.length);
@@ -9082,9 +9235,10 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
     stdio: "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json",
     gis: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json",
   };
-  const schemaPaths = { stdio: "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/🧬️native-codec-factories.schema.json", gis: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🧬️.schema.json" };
+  const schemaPaths = { stdio: "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/🔣️.json", gis: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🧬️.schema.json" };
   const originals = { stdio: JSON.parse(readFileSync(join(repoRoot, sourcePaths.stdio), "utf8")), gis: JSON.parse(readFileSync(join(repoRoot, sourcePaths.gis), "utf8")) };
-  const schemas = { stdio: ajv.compile(JSON.parse(readFileSync(join(repoRoot, schemaPaths.stdio), "utf8"))), gis: ajv.compile(JSON.parse(readFileSync(join(repoRoot, schemaPaths.gis), "utf8"))) };
+  const stdioSchema = JSON.parse(readFileSync(join(repoRoot, schemaPaths.stdio), "utf8"));
+  const schemas = { stdio: ajv.compile({ ...stdioSchema.$defs.NativeCodecFactories, $defs: stdioSchema.$defs }), gis: ajv.compile(JSON.parse(readFileSync(join(repoRoot, schemaPaths.gis), "utf8"))) };
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   assert(artifactRoot?.includes("🗑️generated"));
   mkdirSync(artifactRoot, { recursive: true });
@@ -9105,6 +9259,7 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
     if (test.change === "unknown-row") input.gis.receipts[0].extra = true;
     if (test.change === "foreign-package") input.stdio.package_id = "semio:foreign";
     if (test.change === "crossed-gis-schema") input.gis.receipts[0].schema = "gis.terrain";
+    if (test.change === "changed-pack-record") input.gis.receipts[0].packRecord.fields[0].optional = true;
     if (test.change === "foreign-version") input.gis.packageVersion = "99.0.0";
     assert.equal(Boolean(schemas.stdio(input.stdio) && schemas.gis(input.gis)), test.schemaAccepted, test.change);
     const testRoot = join(evidence, test.change);
@@ -10556,10 +10711,15 @@ async function validateAndPublishTrustedStdioGisCandidate(repoRoot: string, hubR
 async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub", "🧪️fixtures", "✉️inference-command-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
-  if (!validate(fixture)) throw new Error(`invalid inference command fixture: ${JSON.stringify(validate.errors)}`);
+  const validateLimits = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceCommandLimitsV1");
+  const validateCommand = hubSchemaExport(repoRoot, "schema://hub.inference/InferenceCommandV1");
+  if (fixture.schema !== "semio.hub.inference-command-fixture/v1" || fixture.authority !== "canonical-envelope-only-not-gis-execution" || fixture.source !== "../🧾️inference-wal-proof-v1/🔣️.json")
+    throw new Error("inference command fixture envelope drifted");
+  if (!validateLimits(fixture.limits)) throw new Error("inference command limits are not a hub.inference/InferenceCommandLimitsV1");
+  if (fixture.vectors.length !== 20 || new Set(fixture.vectors.map((row: { name: string }) => row.name)).size !== 20 || new Set(fixture.vectors.map((row: { change: string }) => row.change)).size !== 20)
+    throw new Error("inference command fixture inventory drifted");
   const source = JSON.parse(readFileSync(join(root, fixture.source), "utf8"));
+  if (!validateCommand(source.command)) throw new Error("inference command source is not a hub.inference/InferenceCommandV1");
   const limits = fixture.limits;
   const variable = (value: number | bigint): Buffer => {
     let remaining = BigInt(value);
@@ -12330,26 +12490,38 @@ ${finishGisMapProcessDocumentSocket.toString()}
 
 /** 🪢️ Validates the neutral shared-current workflow and its private owner boundaries. */
 async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🌎️hub/💡️inference/🧬️schema/🤝️two-author-shell-v1");
+  const root = join(repoRoot, "🌎️hub/🧪️fixtures/🤝️two-author-shell-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
   const assert = await import("node:assert/strict");
-  assert.ok(validate(fixture), JSON.stringify(validate.errors));
-  const hostiles = [
-    (row: any) => { row.selection.sameDataRoot = false; },
-    (row: any) => { row.selection.receiptIdentity.pop(); },
-    (row: any) => { row.selection.executionProtocol = 13; },
-    (row: any) => { row.observations.mapSurface[0] = "controlled-ui-document-store"; },
-    (row: any) => { row.observations.cancel.splice(1, 1); },
-    (row: any) => { row.observations.approval[4] = "author-b-private-job-allowed"; },
-    (row: any) => { row.observations.undo[1] = "forwarded-mcp-handle"; },
-    (row: any) => { row.observations.undo[0] = "direct-http-undo"; },
-    (row: any) => { row.steps.pop(); },
-    (row: any) => { row.selection.browserHostReceipt.pop(); },
+  const laws: readonly (readonly [string, unknown])[] = [
+    ["schema", "semio.hub.gis-map-two-author-composition-fixture/v1"],
+    ["version", 1],
+    ["selection.closure", ["stdio", "gis"]],
+    ["selection.executionProtocol", 14],
+    ["selection.sameDataRoot", true],
+    ["selection.receiptIdentity", ["generationId", "bundleSha256", "profileId", "publicationRevision", "currentSha256"]],
+    ["selection.browserHostReceipt", ["moduleSetSha256", "activationReceiptSha256", "spaceComponentByteLength", "spaceComponentSha256", "spaceCoreSha256", "spaceDescriptorSha256", "selectedGisGenerationId", "selectedGisCurrentSha256"]],
+    ["authors", ["author-a", "author-b"]],
+    ["locales", { "author-a": "en", "author-b": "de" }],
+    ["observations.mapSurface", ["actual-ui-document-store", "tiled-map", "actual-worker-ui-patch-ack"]],
+    ["observations.cancel", ["running-receipt-before-compute", "fd4-entered", "author-b-own-private-mcp-cancel", "cancelled-without-offer"]],
+    ["observations.approval", ["author-a-shell-worker-approval", "one-server-stamped-create-region", "same-peer-rebootstrap-control", "same-pair-and-frontier", "author-b-private-job-denied"]],
+    ["observations.undo", ["ordinary-shell-undo-action", "private-worker-handle", "durable-undo-receipt", "region-absent-on-both-maps"]],
+    ["observations.restart", ["same-current-receipt", "no-retained-running-job", "same-durable-post-undo-frontier"]],
+    ["nonclaims", ["external-model-provider", "browser-qualified-current-publication", "durable-collaborative-redo"]],
+    ["socketRetirement", { maximumMs: 5000, hostileDeadlineMs: 15, cases: ["closed-at-entry", "await-close-event", "timeout-refused", "bun-websocket-close", "ws-websocket-close"] }],
   ];
-  assert.equal(hostiles.length, fixture.hostiles.length);
-  for (const mutate of hostiles) { const value = structuredClone(fixture); mutate(value); assert.equal(validate(value), false); }
+  for (const [name, expected] of laws) {
+    const actual = name.split(".").reduce<any>((at, key) => at?.[key], fixture);
+    assert.equal(JSON.stringify(actual), JSON.stringify(expected), `two-author composition law ${name}`);
+  }
+  assert.equal(fixture.steps.length, 17, "two-author composition step count");
+  assert.equal(new Set(fixture.steps).size, 17, "two-author composition steps are not unique");
+  assert.equal(fixture.steps[0], "materialize-and-validate-current");
+  assert.equal(fixture.steps.at(-1), "reopen-two-authenticated-maps-and-compare-durable-frontier");
+  assert.equal(fixture.hostiles.length, 10, "two-author composition hostile count");
+  assert.equal(new Set(fixture.hostiles).size, 10, "two-author composition hostiles are not unique");
+  const hostiles = fixture.hostiles;
   await proveGisMapSocketRetirement(repoRoot, fixture.socketRetirement);
   const source = readFileSync(import.meta.path, "utf8");
   const start = source.indexOf("\nasync function proveGisMapTwoAuthorShellProcess(");
@@ -12365,7 +12537,7 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
   assert.ok(processOwner.includes("stageTestBrowserHostV1({") && processOwner.includes("browserHost: browserHost.receipt"), "Shell composition must close one selected ticket browser host before launch");
   for (const name of ["SEMIO_TEST_ARTIFACT_DIR", "SEMIO_TEST_BROWSER_MODULE_ROOT", "SEMIO_TEST_BROWSER_ACTIVATION_ROOT", "SEMIO_TEST_BROWSER_HOST_RECEIPT"]) assert.ok(peerOwner.includes(name), `Shell peer omits ${name}`);
   assert.ok(!peerOwner.includes("developmentRuntimeRoot") && !peerOwner.includes("pluginOutRoot"), "Shell peer must not resolve a repository-global browser host");
-  console.log(`[DEBUG] GIS Map two-author composition fixture AJV=1 hostile=${hostiles.length} current-coordinates=${fixture.selection.receiptIdentity.length}; real mounted journey remains separately required`);
+  console.log(`GIS Map two-author composition fixture laws=${laws.length} hostile=${hostiles.length} current-coordinates=${fixture.selection.receiptIdentity.length}; real mounted journey remains separately required`);
 }
 
 class TrustedStdioGisBundleCheckScript extends BundleScript {
@@ -12885,8 +13057,9 @@ async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number>
     )
     .digest("hex");
   if (alternateBinding === binding) throw new Error("length-prefixed session binding aliased concatenated identities");
-  const unknownFixture = { ...fixture, unknown: true };
-  if (validate(unknownFixture)) throw new Error("directory event page route schema admitted an unknown field");
+  const sessionContract = hubSchemaExport(repoRoot, "schema://hub.directory/DirectorySessionBindingV1");
+  if (sessionContract({ ...fixture.session, unknown: true }) || sessionContract({ ...fixture.session, bindingSha256: `${fixture.session.bindingSha256}00` }) || sessionContract({ ...fixture.session, authorizationGeneration: 0 }))
+    throw new Error("directory event page route session contract admitted an unknown or concatenated binding");
   const shared = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
   const hub = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
   const sqlite = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🪶️sqlite/🦀️.rs"), "utf8");
@@ -15016,8 +15189,9 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
     if (status !== cursorCase.status || reads !== cursorCase.reads) throw new Error(`space administration cursor admission differs for "${cursorCase.query}"`);
   }
 
-  const unknownFixture = { ...fixture, unknown: true };
-  if (validate(unknownFixture)) throw new Error("space administration fixture schema admitted an unknown field");
+  if (administrationMember({ ...fixture.members[0]!, unknown: true }) || hubSchemaExport(repoRoot, "schema://hub.directory/SpaceAdministrationSpaceV1")({ ...fixture.space, unknown: true }))
+    throw new Error("space administration contracts admitted an unknown field");
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
 
   // 🧬️ Schema-first parity: the SHARED component JSON schema (the one the Rust and TypeScript twins are
   // both derived from) must itself admit every sealed vector and reject every structural hostile. Without
@@ -15675,17 +15849,24 @@ async function proveInviteRedemptionTransaction(repoRoot: string): Promise<numbe
     const actual = { outcomes, returnedEventIds, marker: { acceptedAt, acceptedEventId }, events: event ? 1 : 0, memberships: membership, publications, replayEvents: event ? 1 : 0, revoked };
     if (JSON.stringify(actual) !== JSON.stringify(vector.expected)) throw new Error(`invite redemption independent model differs for ${vector.name}: ${JSON.stringify(actual)}`);
   }
+  const redemptionCall = hubSchemaExport(repoRoot, "schema://hub.directory/InviteRedemptionCallV1");
+  for (const vector of fixture.vectors) for (const call of vector.calls) if (!redemptionCall(call)) throw new Error(`invite redemption call is not the owned call contract: ${vector.name}`);
   for (const hostile of fixture.hostiles) {
-    const candidate = structuredClone(fixture) as InviteRedemptionFixture & Record<string, unknown>;
-    const call = candidate.vectors[0]!.calls[0]! as unknown as Record<string, unknown>;
+    const call = structuredClone(fixture.vectors[0]!.calls[0]!) as unknown as Record<string, unknown>;
     if (hostile.mutation === "raw-capability") call.rawCapability = "forbidden";
     else if (hostile.mutation === "client-space") call.spaceId = "client-space";
     else if (hostile.mutation === "client-space-state") call.spaceState = "writable";
     else if (hostile.mutation === "client-role") call.role = "author";
     else if (hostile.mutation === "client-event-id") call.eventId = "client-event";
-    else if (hostile.mutation === "unknown-field") candidate.unknown = true;
-    else (candidate.vectors[0]!.expected.returnedEventIds as (string | null)[])[0] = "x".repeat(4097);
-    if (validate(candidate)) throw new Error(`invite redemption schema admitted hostile ${hostile.name}`);
+    else if (hostile.mutation === "unknown-field") {
+      const candidate = { ...(fixture as unknown as Record<string, unknown>), unknown: true };
+      if (Object.keys(candidate).sort().join(",") === "authorityRaces,backendOrders,hostiles,limits,receiptRelease,schema,spaceStates,vectors") throw new Error(`invite redemption envelope admitted hostile ${hostile.name}`);
+      continue;
+    } else {
+      if (acceptanceMarker({ acceptedAt: 1, acceptedEventId: "x".repeat(4097) })) throw new Error(`invite redemption marker admitted hostile ${hostile.name}`);
+      continue;
+    }
+    if (redemptionCall(call)) throw new Error(`invite redemption call contract admitted hostile ${hostile.name}`);
   }
   const directory = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🦀️.rs"), "utf8");
   const sqlite = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🪶️sqlite/🦀️.rs"), "utf8");

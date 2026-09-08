@@ -1,7 +1,7 @@
 //! 🧭️ Scene-window option — the sun azimuth slider.
 //! Its command handler lives in `🎮️commands/☀️scene::set_sun_azimuth`.
 
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::ShootingSnapshot;
 use crate::editor::shooting::terminology::ShootingLabels;
 use semio_framework_plugin::WindowMeasure;
 
@@ -33,7 +33,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn sun_azimuth_measure_spans_a_full_turn() {
-        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
+        let snapshot = crate::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {
             WindowMeasure::Slider { min, max, .. } => assert_eq!((min, max), (0.0, 360.0)),

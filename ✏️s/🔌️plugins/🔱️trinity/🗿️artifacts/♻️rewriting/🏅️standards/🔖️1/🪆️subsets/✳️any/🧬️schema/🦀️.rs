@@ -1,10 +1,10 @@
 //! 🧬️ Rewriting artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::jack::{Camera, Graph, PropertyValue};
-use crate::artifacts::rewriting::{LayoutPoint, TrinityRewritingError};
-use crate::ast::{Pattern, PatternEdge, PatternNode, QueryResult};
-use crate::executor::execute;
-use crate::language_service::parse;
+use semio_s_artifact_trinity_jack::{Camera, Graph, PropertyValue};
+use crate::{LayoutPoint, TrinityRewritingError};
+use semio_s_artifact_trinity_jack::ast::{Pattern, PatternEdge, PatternNode, QueryResult};
+use semio_s_artifact_trinity_jack::executor::execute;
+use semio_s_artifact_trinity_jack::language_service::parse;
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -54,8 +54,8 @@ impl Default for RewritingArtifact {
 
 impl RewritingArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::rewriting::RewritingSnapshot {
-        crate::artifacts::rewriting::RewritingSnapshot {
+    pub fn to_snapshot(&self) -> crate::RewritingSnapshot {
+        crate::RewritingSnapshot {
             before_fixture_json: self.before_fixture_json.clone(),
             lhs_json: self.lhs_json.clone(),
             rhs_json: self.rhs_json.clone(),
@@ -65,12 +65,12 @@ impl RewritingArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::rewriting::RewritingSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::RewritingSnapshot) -> Self {
         Self { before_fixture_json: snapshot.before_fixture_json, lhs_json: snapshot.lhs_json, rhs_json: snapshot.rhs_json, parameter_bindings: snapshot.parameter_bindings, rule_layout: snapshot.rule_layout, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::rewriting::RewritingSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::RewritingSnapshot) {
         self.before_fixture_json = snapshot.before_fixture_json;
         self.lhs_json = snapshot.lhs_json;
         self.rhs_json = snapshot.rhs_json;
@@ -306,7 +306,7 @@ pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &BTreeMap<String, Pr
     let parsed = parse(&query).map_err(TrinityRewritingError::Jack)?;
     let (result, operations) = execute(graph, &parsed).map_err(TrinityRewritingError::Jack)?;
     if !operations.is_empty() {
-        let fixture = crate::artifacts::jack::op::apply_trinity_graph_mutations(graph.to_fixture(), &operations)?;
+        let fixture = semio_s_artifact_trinity_jack::op::apply_trinity_graph_mutations(graph.to_fixture(), &operations)?;
         *graph = Graph::from_fixture(fixture)?;
     }
     Ok(result)
@@ -346,11 +346,11 @@ pub struct RuleQueryResult {
 #[cfg(test)]
 mod rule_application_tests {
     use super::*;
-    use crate::artifacts::jack::dsl::NAKAGIN_EXAMPLE_TEXT;
+    use semio_s_artifact_trinity_jack::dsl::NAKAGIN_EXAMPLE_TEXT;
     use store::ArtifactDsl;
 
     fn nakagin_graph() -> Graph {
-        Graph::from_fixture(crate::artifacts::jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap()
+        Graph::from_fixture(semio_s_artifact_trinity_jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap()
     }
 
     fn empty_rule() -> Rule {
@@ -364,7 +364,7 @@ mod rule_application_tests {
     #[semio_framework_async_macros::async_test]
     async fn jack_query_on_nakagin() {
         let mut g = nakagin_graph();
-        let result = crate::executor::run(&mut g, "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").unwrap();
+        let result = semio_s_artifact_trinity_jack::executor::run(&mut g, "MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").unwrap();
         assert_eq!(result.rows.len(), 1);
     }
 
@@ -412,7 +412,7 @@ mod rule_application_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn rewriting_labeled_fixture_reloads() {
-        let mut g = Graph::from_fixture(crate::artifacts::jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
+        let mut g = Graph::from_fixture(semio_s_artifact_trinity_jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
         let rule = Rule {
             name: "label-core".into(),
             lhs: Lhs { pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
@@ -529,7 +529,7 @@ mod rule_application_tests {
 
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::rewriting::{RewritingDiff, RewriteRuleMutation, RewritingSnapshot};
+    use crate::{RewritingDiff, RewriteRuleMutation, RewritingSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -581,7 +581,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::rewriting::RewritingSnapshot;
+    use crate::RewritingSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

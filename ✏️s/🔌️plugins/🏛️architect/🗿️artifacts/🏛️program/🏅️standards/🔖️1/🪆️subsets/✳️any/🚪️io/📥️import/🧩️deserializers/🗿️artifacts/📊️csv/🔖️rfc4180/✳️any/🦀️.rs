@@ -5,7 +5,7 @@
 //! closer), same honest no-mapping-exists semantics fem's csv import leaf documents: no CSV
 //! grid can reconstruct a ~78-register program artifact, so this returns a structurally valid
 //! empty snapshot rather than fabricating one.
-use crate::artifacts::program::schema::snapshot::ProgramSnapshot;
+use crate::schema::snapshot::ProgramSnapshot;
 use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 pub fn register() {}

@@ -1,9 +1,9 @@
 //! 📥️ 📥️ Remodeling play app commands command — `import-video-frame-payload`.
 
-use crate::artifacts::remodeling::mutations::{add_stream_frame, create_asset, create_stream};
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::schema::next_remodeling_id;
-use crate::artifacts::remodeling::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot};
+use crate::mutations::{add_stream_frame, create_asset, create_stream};
+use crate::op::RemodelingMutation;
+use crate::schema::next_remodeling_id;
+use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::editor::remodeling::engine::images as remodeling_image;
 use crate::editor::remodeling::payload_from_data_url;
@@ -73,7 +73,7 @@ fn rebuild_video_import_scratch(scene: &RemodelingSnapshot, stream_id: &str) -> 
     let mut recent: Vec<&FrameRef> = stream.frames.iter().rev().take(BLUR_GATE_ROLLING_WINDOW).collect();
     recent.reverse();
     for frame in recent {
-        let Some(source) = crate::artifacts::remodeling::remodeling_asset_chunk_source(scene, &frame.asset_id) else { continue };
+        let Some(source) = crate::remodeling_asset_chunk_source(scene, &frame.asset_id) else { continue };
         let Ok(rope) = remodeling_image::CompressedChunkRope::from_leaves(source.leaves, 1_114_112) else { continue };
         let mut decoder = remodeling_image::BoundedStillDecoder::new(&source.mime, rope);
         let image = loop {

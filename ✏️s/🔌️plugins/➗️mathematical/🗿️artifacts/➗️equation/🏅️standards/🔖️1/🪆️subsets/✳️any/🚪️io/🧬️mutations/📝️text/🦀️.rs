@@ -3,13 +3,13 @@
 //! `../🦀️.rs`'s `🔖️Mutations` region) — the wire-text/wire-binary codecs stay handcrafted
 //! here, one keyword per semantic verb, grammar `keyword key1=value1 key2=value2 ...`.
 
-pub use crate::artifacts::equation::schema::mutations::EquationMutation;
+pub use crate::schema::mutations::EquationMutation;
 
 // 🪆️ Direct absolute paths, not the `schema::mutations` shim: these 14 leaf modules moved to
 // their real owning subset (ticket
 // 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION),
 // so they are no longer reachable through `✳️any::schema::mutations::<name>`.
-use crate::artifacts::equation::standards::v1::subsets::{
+use crate::standards::v1::subsets::{
     equation::schema::mutations::change_coefficient::ChangeCoefficient,
     geometry::schema::mutations::{insert_point::InsertPoint, move_point::MovePoint, remove_point::RemovePoint, replace_points::ReplacePoints},
     graph::schema::mutations::{
@@ -17,8 +17,8 @@ use crate::artifacts::equation::standards::v1::subsets::{
         delete_nodes::DeleteNodes, disconnect_nodes::DisconnectNodes, move_node::MoveNode, replace_graph::ReplaceGraph, update_graph_algorithm::UpdateGraphAlgorithm,
     },
 };
-use crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
-use crate::artifacts::equation::{EquationGraph, EquationPoint};
+use crate::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
+use crate::{EquationGraph, EquationPoint};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");

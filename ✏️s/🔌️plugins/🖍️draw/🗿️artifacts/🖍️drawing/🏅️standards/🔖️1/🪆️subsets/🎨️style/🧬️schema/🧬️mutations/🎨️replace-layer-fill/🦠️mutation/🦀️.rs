@@ -1,8 +1,8 @@
 //! 🔁 Drawing mutation — `ReplaceLayerFill`: whole-value swap of one layer's structured `fill`
 //! sub-payload (a tagged `FillStyle` union — solid/linear/radial — not a scalar).
-use crate::artifacts::drawing::diff::DrawingDiff;
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::{DrawingSnapshot, FillStyle};
+use crate::diff::DrawingDiff;
+use crate::mutations::DrawingMutation;
+use crate::{DrawingSnapshot, FillStyle};
 
 //#region 🔖️Mutation
 /// 🔁 `replace-layer-fill` payload.

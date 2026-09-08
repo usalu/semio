@@ -15,6 +15,14 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[[test]]
+name = "schema-export-entries"
+path = "../../🧪️tests/📤️schema-export-entries/🦀️.rs"
+
+[[test]]
+name = "schema-module-compile"
+path = "../../🧪️tests/🧩️module-compile/🦀️.rs"
+
 [features]
 default = []
 

@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `ChangeSnapEnabled`.
 use super::ChangeSnapEnabled;
-use crate::artifacts::note::NoteDiff;
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteDiff;
+use crate::NoteSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSnapEnabled, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

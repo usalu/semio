@@ -1,7 +1,7 @@
 //! 📄️ Block 2D play app panel — the document tree: handle-kind catalog + rim-handle templates,
 //! selectable.
 
-use crate::artifacts::block2d::Block2dSnapshot;
+use crate::Block2dSnapshot;
 use crate::editor::block2d::terminology::Block2dLabels;
 use crate::editor::block2d::{ui_label, ui_node_list, BLOCK2D_INTERACTION_HANDLE};
 use semio_framework_plugin::plugin_app_close_prelude::Label;

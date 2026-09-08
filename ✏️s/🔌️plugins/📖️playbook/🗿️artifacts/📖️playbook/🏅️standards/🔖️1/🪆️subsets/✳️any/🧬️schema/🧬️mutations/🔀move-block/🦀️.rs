@@ -2,8 +2,8 @@
 //! step, or relocates it into a different step (same shape covers both — `from_step_id ==
 //! to_step_id` is the same-step reorder case).
 
-use crate::artifacts::playbook::mutations::PlaybookMutation;
-use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
+use crate::mutations::PlaybookMutation;
+use crate::{PlaybookDiff, PlaybookSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 // 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle — committed
 // `🧪️tests/<fixture>/🦀️.rs` fixture vectors decode/re-encode through them — never a production

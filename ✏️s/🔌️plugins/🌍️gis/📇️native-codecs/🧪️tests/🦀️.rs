@@ -4,7 +4,7 @@ use geo::BoundingRect;
 use semio_framework_os_kernel as store;
 use semio_framework_os_kernel::{ArtifactPack, DslValue, FromValue, Mutation, MutationDiff};
 use semio_framework_plugin::{ArtifactInferenceExecutionRequest, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
-use semio_s_plugin_gis::artifacts::gismap::{gis_map_inference_service, gis_map_snapshot_with_derived_children, infer_gis_map_controlled, GisMapSnapshot};
+use semio_s_artifact_gis_gismap::{gis_map_inference_service, gis_map_snapshot_with_derived_children, infer_gis_map_controlled, GisMapSnapshot};
 use semio_s_plugin_gis::native_codecs::native_codec_factory_receipts;
 
 fn assert_zero_history<P, M>(parsed: store::ParsedDocumentText<P, M>, document_id: &str, dialect: &semio_framework::ArtifactDialect) {
@@ -52,8 +52,8 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
         assert_eq!(codec.pack_schema_hash, identity.pack_schema_hash);
         assert_ne!(codec.pack_schema_hash, [0; 32]);
         let declared = match identity.schema {
-            "gis.map" => store::ArtifactCodec::of::<GisMapSnapshot, semio_s_plugin_gis::artifacts::gismap::GisMapMutation>(identity.schema),
-            "gis.terrain" => store::ArtifactCodec::of::<semio_s_plugin_gis::artifacts::gisterrain::GisTerrainSnapshot, semio_s_plugin_gis::artifacts::gisterrain::GisTerrainMutation>(identity.schema),
+            "gis.map" => store::ArtifactCodec::of::<GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(identity.schema),
+            "gis.terrain" => store::ArtifactCodec::of::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>(identity.schema),
             _ => panic!("unhandled GIS schema"),
         };
         assert_eq!(codec.schema, declared.schema);
@@ -61,7 +61,7 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
         assert_eq!(codec.pack_schema_hash, declared.pack_schema_hash);
         let record = match identity.schema {
             "gis.map" => <GisMapSnapshot as ArtifactPack>::record_spec().expect("GIS map structural pack schema"),
-            "gis.terrain" => <semio_s_plugin_gis::artifacts::gisterrain::GisTerrainSnapshot as ArtifactPack>::record_spec().expect("GIS terrain structural pack schema"),
+            "gis.terrain" => <semio_s_artifact_gis_gisterrain::GisTerrainSnapshot as ArtifactPack>::record_spec().expect("GIS terrain structural pack schema"),
             _ => unreachable!(),
         };
         assert_eq!(codec.pack_schema_hash, store::os_pack::schema_hash(&record));
@@ -75,15 +75,15 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
         assert!(std::ptr::fn_addr_eq(codec.edit_text_from_envelope, declared.edit_text_from_envelope));
         assert!(std::ptr::fn_addr_eq(codec.apply_ops_binary, declared.apply_ops_binary));
         let dialect: semio_framework::ArtifactDialect = match identity.schema {
-            "gis.map" => semio_s_plugin_gis::artifacts::gismap::GISMAP_DIALECT.into(),
-            "gis.terrain" => semio_s_plugin_gis::artifacts::gisterrain::GISTERRAIN_DIALECT.into(),
+            "gis.map" => semio_s_artifact_gis_gismap::GISMAP_DIALECT.into(),
+            "gis.terrain" => semio_s_artifact_gis_gisterrain::GISTERRAIN_DIALECT.into(),
             _ => panic!("unhandled GIS genesis dialect"),
         };
         let files = genesis(document_id, &dialect).await.expect("package-owned GIS genesis");
         match identity.schema {
-            "gis.map" => assert_zero_history(store::parse_document_pack::<GisMapSnapshot, semio_s_plugin_gis::artifacts::gismap::GisMapMutation>(&files.pack, &files.spr).await.unwrap(), document_id, &dialect),
+            "gis.map" => assert_zero_history(store::parse_document_pack::<GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(&files.pack, &files.spr).await.unwrap(), document_id, &dialect),
             "gis.terrain" => assert_zero_history(
-                store::parse_document_pack::<semio_s_plugin_gis::artifacts::gisterrain::GisTerrainSnapshot, semio_s_plugin_gis::artifacts::gisterrain::GisTerrainMutation>(&files.pack, &files.spr).await.unwrap(),
+                store::parse_document_pack::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>(&files.pack, &files.spr).await.unwrap(),
                 document_id,
                 &dialect,
             ),
@@ -121,10 +121,10 @@ fn gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline
     assert_eq!(serde_json::to_value(&observed).unwrap(), fixture["checkpoints"]);
     assert_eq!(output.canonical_payload, gis_map_inference_service().infer(&request).unwrap().canonical_payload);
     let value = semio_framework_os_kernel::pack_rt::decode_wire_value(&output.canonical_payload).unwrap();
-    let inferred = <semio_s_plugin_gis::artifacts::gismap::standards::v1::subsets::any::schema::inferences::GisMapInference as FromValue>::from_value(value).unwrap();
+    let inferred = <semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference as FromValue>::from_value(value).unwrap();
     assert_eq!([inferred.position_count, inferred.route_count, inferred.region_count], ["positionCount", "routeCount", "regionCount"].map(|key| fixture["expected"][key].as_u64().unwrap() as usize));
     let proposal = inferred.bounds_proposal(&snapshot, fixture["proposalJobId"].as_str().unwrap()).unwrap();
-    let expected: semio_s_plugin_gis::artifacts::gismap::mutations::GisMapMutation = FromValue::from_value(DslValue::from(&fixture["proposal"])).unwrap();
+    let expected: semio_s_artifact_gis_gismap::mutations::GisMapMutation = FromValue::from_value(DslValue::from(&fixture["proposal"])).unwrap();
     assert_eq!(proposal, expected);
     let updated = proposal.diff(&snapshot).diff().apply(&snapshot).unwrap();
     assert_eq!(updated.regions.len(), snapshot.regions.len() + 1);
@@ -139,7 +139,7 @@ fn gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline
         match rejection["case"].as_str().unwrap() {
             "wrong-job" => job_id = "not-a-job",
             "duplicate-id" => {
-                base.regions.push(semio_s_plugin_gis::artifacts::gismap::MapFeature { id: format!("inference-{job_id}"), data: DslValue::Null });
+                base.regions.push(semio_s_artifact_gis_gismap::MapFeature { id: format!("inference-{job_id}"), data: DslValue::Null });
                 candidate.region_count = base.regions.len();
             }
             "stale-count" => candidate.position_count += 1,

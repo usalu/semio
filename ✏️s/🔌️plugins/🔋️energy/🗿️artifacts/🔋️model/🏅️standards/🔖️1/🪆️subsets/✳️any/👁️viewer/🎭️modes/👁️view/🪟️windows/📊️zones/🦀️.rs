@@ -2,7 +2,7 @@
 //! zone, built from the framework `TableWindowKit` (contract §2.6). Same row/column shape the sibling
 //! mutation-capable surface renders — independent read, no edit affordances.
 
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::EnergyModelSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 
@@ -23,7 +23,7 @@ pub fn definition() -> WindowKindDefinition {
 /// `name`/`volumeM3`/`multiplier`/`conditioned`/`partOfTotalFloorArea` — no run-output row, no
 /// command-driven cell edits (a viewer declares none).
 pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let model = crate::artifacts::model::energy_model(document);
+    let model = crate::energy_model(document);
     let columns = vec!["id".to_string(), "name".to_string(), "volumeM3".to_string(), "multiplier".to_string(), "conditioned".to_string(), "partOfTotalFloorArea".to_string()];
     let rows = model.zones.iter().map(|zone| vec![zone.id.0.to_string(), zone.name.clone(), format!("{}", zone.volume_m3), zone.multiplier.to_string(), zone.conditioned.to_string(), zone.part_of_total_floor_area.to_string()]).collect();
     TableWindowKit::render(&TableView { columns, rows })

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/tsv/iana/any/mutation/set-snapshot.json",
-  "title": "SetSnapshotMutation",
+  "$id": "https://semio.tech/schema/s/stdio/tsv/iana/any/mutation/set-snapshot/schema.json",
+  "title": "SetSnapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -9,11 +9,47 @@
   ],
   "properties": {
     "snapshot": {
-      "$ref": "https://semio.tech/schema/s.stdio.tsv/snapshot.tsv"
+      "$ref": "#/$defs/TsvSnapshot"
     },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by TsvMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "TsvSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "trailingNewline": {
+          "type": "boolean"
+        },
+        "lineEnding": {
+          "$ref": "#/$defs/LineEnding"
+        }
+      }
+    },
+    "LineEnding": {
+      "type": "string",
+      "enum": [
+        "lf",
+        "crlf"
+      ]
     }
   }
 }

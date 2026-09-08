@@ -1,7 +1,7 @@
 //! 🧬️ Sequence diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::sequence::{SequenceCamera, SequenceContentChild};
-use schema::ArtifactSchema;
+use crate::{SequenceCamera, SequenceContentChild};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the sequence artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -14,7 +14,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.sequence.sequence")]
 pub struct SequenceDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::sequence::schema::SequenceArtifact>>,
+    pub artifact: Option<Box<crate::schema::SequenceArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

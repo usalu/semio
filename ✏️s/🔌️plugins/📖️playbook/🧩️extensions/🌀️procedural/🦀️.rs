@@ -3,9 +3,10 @@
 use semio_framework_ui_contract::{ActionId as UiActionId, Buildable, HasBase, HasChildren};
 use semio_framework_plugin::UiAssemblyResult;
 
-use flow::playbook::{visible_blocks, PlaybookBlock};
+use semio_framework_artifact_playbook_playbook::{visible_blocks, PlaybookBlock};
 use flow::{export_solid_json, import_solid_json, tessellate_geometry};
-use flow::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
+use flow::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowHost};
+use semio_framework_artifact_flow_flow::{FlowFixture, Widget};
 use protocol::MutationDiff;
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::app::InteractionView;

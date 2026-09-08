@@ -1,8 +1,8 @@
 //! 🧬️ En1992 artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::en1992::part_1_2::FireRating;
-use crate::artifacts::en1992::part_3::TightnessClass;
-use schema::ArtifactSchema;
+use crate::part_1_2::FireRating;
+use crate::part_3::TightnessClass;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full En1992 artifact state across the artifact and presence lanes.
@@ -90,8 +90,8 @@ pub struct En1992Artifact {
 //#region 🔖️Conversions
 impl En1992Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::en1992::En1992Snapshot {
-        crate::artifacts::en1992::En1992Snapshot {
+    pub fn to_snapshot(&self) -> crate::En1992Snapshot {
+        crate::En1992Snapshot {
             annex: self.annex,
             m_ed_knm: self.m_ed_knm,
             v_ed_kn: self.v_ed_kn,
@@ -131,7 +131,7 @@ impl En1992Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::en1992::En1992Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::En1992Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
             m_ed_knm: snapshot.m_ed_knm,
@@ -172,7 +172,7 @@ impl En1992Artifact {
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1992::En1992Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::En1992Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -183,31 +183,31 @@ impl En1992Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.en1992` — twenty handcrafted schema leaves.
-pub fn en1992_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn en1992_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1992",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -219,7 +219,7 @@ pub fn en1992_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::en1992::{En1992Diff, En1992Mutation, En1992Snapshot};
+    use crate::{En1992Diff, En1992Mutation, En1992Snapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -271,7 +271,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::en1992::En1992Snapshot;
+    use crate::En1992Snapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

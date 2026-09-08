@@ -1,8 +1,8 @@
 //! 🗜️ Energy model mutation — `ChangeSurfaceZone`: Reassigns one surface to another existing zone — the zone whose air heat balance the surface's inside face exchanges with.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

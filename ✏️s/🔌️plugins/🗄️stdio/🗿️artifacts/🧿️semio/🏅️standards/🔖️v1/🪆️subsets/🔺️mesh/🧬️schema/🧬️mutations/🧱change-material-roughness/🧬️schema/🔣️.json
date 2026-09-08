@@ -1,18 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/change-material-roughness.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/change-material-roughness/schema.json",
   "title": "ChangeMaterialRoughness",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "id",
-    "newRoughness"
+    "new_roughness"
   ],
   "properties": {
     "id": {
       "type": "string"
     },
-    "newRoughness": {
+    "new_roughness": {
       "type": "number"
     }
   }

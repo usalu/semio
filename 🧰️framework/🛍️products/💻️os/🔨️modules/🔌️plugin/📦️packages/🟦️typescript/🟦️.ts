@@ -12,15 +12,14 @@ import { spawn } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import ts from "typescript";
-import { rewritePreview2ShimImportSource } from "./🕸️imports/🟦️.ts";
-export { rewritePreview2ShimImportSource } from "./🕸️imports/🟦️.ts";
+import { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "./🕸️imports/🟦️.ts";
+export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "./🕸️imports/🟦️.ts";
 import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";
 export const SHARD_WORKER_FILE = "🟨️shard-worker.js";
-export const PREVIEW2_VENDOR_RELATIVE = "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim";
 export const GUESTSLIM_FONT_RELATIVE = "🪞️vendor/🔤️guestslim-typst-fonts.bin";
 
 /** 🫀️ The generated worker's progress-heartbeat cadence, interpolated into

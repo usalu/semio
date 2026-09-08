@@ -1,8 +1,8 @@
 //! 🔺️ `change-annex` sparse diff construction — writes only `En1999Diff.annex` from the payload.
 
-use crate::artifacts::en1999::diff::En1999Diff;
-use crate::artifacts::en1999::mutations::change_annex::ChangeAnnex;
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::diff::En1999Diff;
+use crate::mutations::change_annex::ChangeAnnex;
+use crate::En1999Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeAnnex, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {

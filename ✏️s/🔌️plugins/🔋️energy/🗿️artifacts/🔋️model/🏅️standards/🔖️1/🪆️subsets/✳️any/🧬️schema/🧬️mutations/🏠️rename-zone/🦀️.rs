@@ -1,8 +1,8 @@
 //! 🏠️ Energy model mutation — `RenameZone`: Sets one zone's identity field. Zone names are the key every EnergyPlus-class report keys on, so a duplicate is refused.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

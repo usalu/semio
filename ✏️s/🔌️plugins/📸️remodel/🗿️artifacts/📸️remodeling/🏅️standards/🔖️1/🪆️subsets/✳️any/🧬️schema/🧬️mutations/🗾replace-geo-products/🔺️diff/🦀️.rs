@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceGeoProducts`. Clearing an already-absent value ⇒ Error;
 //! identical resubmission ⇒ Warning.
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::RemodelingDiff;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceGeoProducts, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

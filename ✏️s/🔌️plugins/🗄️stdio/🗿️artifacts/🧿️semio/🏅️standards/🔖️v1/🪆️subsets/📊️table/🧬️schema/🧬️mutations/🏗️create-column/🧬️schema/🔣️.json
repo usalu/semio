@@ -1,31 +1,43 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/create-column.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/table/mutation/create-column/schema.json",
   "title": "CreateColumn",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "kind",
-    "name"
+    "name",
+    "kind"
   ],
   "properties": {
     "name": {
       "type": "string"
     },
     "kind": {
-      "type": "string",
-      "enum": [
-        "Null",
-        "Bool",
-        "Int",
-        "Float",
-        "Str",
-        "Bytes"
-      ]
+      "$ref": "#/$defs/SemioTableCellKind"
     },
     "index": {
-      "type": "integer",
-      "minimum": 0
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "SemioTableCellKind": {
+      "type": "string",
+      "enum": [
+        "null",
+        "bool",
+        "int",
+        "float",
+        "str",
+        "bytes"
+      ]
     }
   }
 }

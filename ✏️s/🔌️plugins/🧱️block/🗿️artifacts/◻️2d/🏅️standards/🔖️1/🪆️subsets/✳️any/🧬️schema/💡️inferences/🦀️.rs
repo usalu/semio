@@ -10,7 +10,7 @@
 //! handle templates' rim positions (converted from polar to cartesian), expressed as a plain
 //! `Inference` impl (no per-entity `InferredField` caching needed).
 
-use crate::artifacts::block2d::Block2dSnapshot;
+use crate::Block2dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
@@ -52,7 +52,7 @@ impl protocol::InferenceSpec<Block2dSnapshot> for Block2dInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::block2d::standards::v1::subsets::any::schema::Block2dBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Block2dBuilder {
     type Snapshot = Block2dSnapshot;
     type Inference = Block2dInference;
 }
@@ -112,7 +112,7 @@ pub fn block2d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescr
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate, BLOCK_2D_SCHEMA};
+    use crate::{Block2dHandleKind, Block2dHandleTemplate, BLOCK_2D_SCHEMA};
     use crate::BlockKindIdentity;
     use protocol::Inference;
     use std::f64::consts::FRAC_PI_2;

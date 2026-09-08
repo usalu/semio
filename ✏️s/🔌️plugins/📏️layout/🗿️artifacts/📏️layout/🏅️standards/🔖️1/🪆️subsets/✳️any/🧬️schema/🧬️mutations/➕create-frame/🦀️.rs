@@ -2,9 +2,9 @@
 //! significant), optionally registering it on one of the page's layers.
 
 
-use crate::artifacts::layout::{Frame, LayoutDiff, LayoutSnapshot, PageFrameAdded, PagePatch};
-use crate::artifacts::layout::mutations::{LayoutMutation, delete_frame};
-use crate::artifacts::layout::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::{Frame, LayoutDiff, LayoutSnapshot, PageFrameAdded, PagePatch};
+use crate::mutations::{LayoutMutation, delete_frame};
+use crate::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

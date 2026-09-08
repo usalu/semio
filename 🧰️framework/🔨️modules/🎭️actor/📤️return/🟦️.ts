@@ -353,7 +353,6 @@ if (import.meta.vitest) {
   it("ActorReturnDrive matches the shared canonical vectors and independent LEB128 bytes", async () => {
     const { default: fixture } = await import("./🧫️fixture/🔣️.json");
     const { default: schema } = await import("./🧬️schema/🔣️.json");
-    const fixtureSchema = schema;
     const { default: lifetimeSchema } = await import("../🚪️lifetime/🧬️schema/🔣️.json");
     const { default: pageSchema } = await import("../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
@@ -530,12 +529,12 @@ if (import.meta.vitest) {
     const { default: fixture } = await import("./🧫️fixture/🔣️.json");
     const { default: law } = await import("./🌿️framing/🧪️fixture/🔣️.json");
     const { default: schema } = await import("./🌿️framing/🧬️schema/🔣️.json");
-    const returned = schema;
-    const lifetime = lifetimeSchema;
-    const page = pageSchema;
+    const { default: returned } = await import("./🧬️schema/🔣️.json");
+    const { default: lifetime } = await import("../🚪️lifetime/🧬️schema/🔣️.json");
+    const { default: page } = await import("../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
-    const ajv = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).addSchema(schema);
-    expect(ajv.getSchema(`${schema.$id}#/$defs/Return`)!(law)).toBe(true); const oracle = await resultOracle();
+    const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(schema);
+    expect(ajv.validate(schema, law)).toBe(true); const oracle = await resultOracle();
     for (const row of fixture.resultVectors) {
       const value = hydrateResult(row.value); const bytes = oracle(value);
       expect(bytes.toString("hex")).toBe(row.hex);

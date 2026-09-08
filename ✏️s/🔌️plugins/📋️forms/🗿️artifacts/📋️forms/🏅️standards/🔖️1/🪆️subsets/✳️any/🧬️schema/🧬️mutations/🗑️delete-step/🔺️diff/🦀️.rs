@@ -1,9 +1,9 @@
 //! 🔺️ `delete-step` — sparse diff construction.
 
 use super::mutation::DeleteStep;
-use crate::artifacts::forms::diff::text::forms_diff_from_delta;
-use crate::artifacts::forms::schema::diff::FormsStepsDelta;
-use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
+use crate::diff::text::forms_diff_from_delta;
+use crate::schema::diff::FormsStepsDelta;
+use crate::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
 pub fn diff_delete_step(payload: &DeleteStep, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {

@@ -1,5 +1,5 @@
 //! raster <- dwg
-use crate::artifacts::raster::RasterSnapshot;
+use crate::RasterSnapshot;
 use semio_s_artifact_stdio_dwg::schema::snapshot::decode_dwg;
 use semio_s_artifact_stdio_dwg::{dwg_from_bytes, DwgDrawing};
 pub fn register() {}
@@ -12,5 +12,5 @@ pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
     let _meta = decode_dwg(bytes)?;
     let drawing: DwgDrawing = dwg_from_bytes(bytes)?;
-    crate::artifacts::raster::io::raster_document_json_from_dwg(&drawing)
+    crate::io::raster_document_json_from_dwg(&drawing)
 }

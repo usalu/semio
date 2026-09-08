@@ -1,5 +1,5 @@
 //! home -> csv
-use crate::artifacts::home::schema::snapshot::SHomeSnapshot;
+use crate::schema::snapshot::SHomeSnapshot;
 use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 pub fn register() {}

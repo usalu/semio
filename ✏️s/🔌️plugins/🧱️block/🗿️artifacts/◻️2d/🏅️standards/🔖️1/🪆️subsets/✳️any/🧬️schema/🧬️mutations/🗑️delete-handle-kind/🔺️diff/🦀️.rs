@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `DeleteHandleKind`.
 
-use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::diff::{Block2dDiff, Block2dHandleKindsDelta};
+use crate::Block2dSnapshot;
+use crate::diff::{Block2dDiff, Block2dHandleKindsDelta};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteHandleKind, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ReplaceJob` — the OLD `ReconstructionJob` from BASE.
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::mutations::RemodelingMutation;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::ReplaceJob, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {

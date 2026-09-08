@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/flow/flow/1/any/mutation/update-synapse-endpoints.json",
+  "$id": "https://semio.tech/schema/s/flow/flow/1/any/mutation/update-synapse-endpoints/schema.json",
   "title": "UpdateSynapseEndpoints",
   "type": "object",
   "additionalProperties": false,

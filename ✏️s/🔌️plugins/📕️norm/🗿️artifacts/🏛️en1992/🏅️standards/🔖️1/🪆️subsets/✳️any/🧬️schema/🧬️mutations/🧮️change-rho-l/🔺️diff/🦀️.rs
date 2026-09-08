@@ -1,8 +1,8 @@
 //! 🔺️ `change-rho-l` sparse diff construction — writes only `En1992Diff.rho_l` from the payload.
 
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::change_rho_l::ChangeRhoL;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::change_rho_l::ChangeRhoL;
+use crate::En1992Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeRhoL, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {

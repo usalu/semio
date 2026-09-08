@@ -1,6 +1,6 @@
 //! 🌋️ EN 1998 snapshot schema — artifact-lane fields only.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1998 document snapshot.

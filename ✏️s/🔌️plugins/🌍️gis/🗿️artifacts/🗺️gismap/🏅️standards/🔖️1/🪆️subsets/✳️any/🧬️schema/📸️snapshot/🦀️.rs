@@ -5,11 +5,11 @@
 //! `drawing`/`image`/`value` slots, which `dsl::DslRecord`'s derive cannot represent (no `DslField`
 //! impl for `ArtifactChild<S>`) — same reason `🏔️gisterrain`/`💠️lowpoly`/`📐️cad` hand-roll their own
 //! codecs. Follows their exact hex/bracket convention; `positions`/`routes`/`regions` (still real
-//! `Vec<MapFeature>`, gis's own domain data, see `crate::artifacts::gismap::🦀️.rs`'s
+//! `Vec<MapFeature>`, gis's own domain data, see `crate::🦀️.rs`'s
 //! `🔖️Composition` region) round-trip via JSON-then-hex, matching `📐️cad`'s `enc_json`/`dec_json`
 //! convention for its own structured (non-child) fields.
 
-use crate::artifacts::gismap::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
+use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
 use dsl::{FromValue, ToValue};
 use schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
@@ -29,7 +29,7 @@ pub struct GisMapSnapshot {
     #[state(artifact)]
     #[value(default)]
     pub regions: Vec<MapFeature>,
-    /// 🕸️ Composed `s.stdio.semio.drawing` child — see `crate::artifacts::gismap::🦀️.rs`'s
+    /// 🕸️ Composed `s.stdio.semio.drawing` child — see `crate::🦀️.rs`'s
     /// `🔖️Composition` region for the full stable-member design.
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.drawing")]

@@ -1,8 +1,8 @@
 //! 🔺️ Rewriting artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::rewriting::schema::diff::RewritingDiff;
-use crate::artifacts::rewriting::schema::RewritingArtifact;
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::schema::diff::RewritingDiff;
+use crate::schema::RewritingArtifact;
+use crate::RewritingSnapshot;
 use protocol::MutationDiff;
 use std::collections::BTreeMap;
 

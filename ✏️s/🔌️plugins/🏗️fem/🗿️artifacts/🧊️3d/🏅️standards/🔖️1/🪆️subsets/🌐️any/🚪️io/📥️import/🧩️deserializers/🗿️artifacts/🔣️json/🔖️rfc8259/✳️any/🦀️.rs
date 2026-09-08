@@ -2,7 +2,7 @@
 //! channel, the exact inverse of the sibling `📤️export` leaf: `IoFidelity::Exact`. Parsing goes
 //! through stdio's own real RFC 8259 codec (`parse_json_text`), never a re-derived parser.
 
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::Fem3dSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeCatalogGeneration` — the OLD counter value looked up from BASE (never a
 //! structural inversion of the diff).
-use crate::artifacts::home::mutations::SHomeMutation;
-use crate::artifacts::home::SHomeSnapshot;
+use crate::mutations::SHomeMutation;
+use crate::SHomeSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::ChangeCatalogGeneration, base: &SHomeSnapshot) -> Vec<SHomeMutation> {

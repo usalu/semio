@@ -1,6 +1,6 @@
 //! ⚡️ Wires artifact — OpText/OpBinary codecs + grammar for `WiresMutation`.
 
-pub use crate::artifacts::wires::schema::mutations::WiresMutation;
+pub use crate::schema::mutations::WiresMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

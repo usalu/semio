@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/rename-workshop.json",
+  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/rename-workshop/schema.json",
   "title": "RenameWorkshop",
   "type": "object",
   "additionalProperties": false,

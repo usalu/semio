@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `RenameArtifact` — the OLD name looked up from BASE.
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::RenameArtifact, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {

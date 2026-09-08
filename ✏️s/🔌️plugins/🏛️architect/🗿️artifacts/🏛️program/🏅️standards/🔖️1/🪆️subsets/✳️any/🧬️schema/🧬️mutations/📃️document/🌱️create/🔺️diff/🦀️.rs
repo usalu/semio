@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📄documents` per Wave C.
 
 use super::CreateDocument;
-use crate::artifacts::program::diff::ProgramArtifactsDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramArtifactsDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
 pub fn diff(payload: &CreateDocument, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

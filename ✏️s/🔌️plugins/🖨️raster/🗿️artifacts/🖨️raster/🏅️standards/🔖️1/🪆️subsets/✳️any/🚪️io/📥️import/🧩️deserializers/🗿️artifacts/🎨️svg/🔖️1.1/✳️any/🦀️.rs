@@ -8,12 +8,12 @@
 //! 🧾️ That renderer is native-tier only: inside a `wasm32-wasip2` guest it returns its own
 //! "SVG rasterization requires the native semio-framework-os host" error, which this leaf
 //! propagates verbatim rather than substituting a blank canvas.
-use crate::artifacts::raster::RasterSnapshot;
+use crate::RasterSnapshot;
 pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
     let svg = std::str::from_utf8(bytes).map_err(|error| format!("svg import: payload is not UTF-8 XML: {error}"))?;
     let rendered = semio_framework_os::rasterize_svg_to_png_base64(svg, 0, 0)?;
     let raw = base64_codec::base64_standard_decode(rendered.as_bytes()).map_err(|error| error.to_string())?;
-    let image = crate::artifacts::raster::io::semio_image_from_png_bytes(&raw)?;
-    crate::artifacts::raster::io::raster_document_from_semio_image(&image, "svg-import", "Imported svg")
+    let image = crate::io::semio_image_from_png_bytes(&raw)?;
+    crate::io::raster_document_from_semio_image(&image, "svg-import", "Imported svg")
 }

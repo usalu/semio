@@ -120,10 +120,10 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::standards::v_jfif_1_01::subsets::document::schema::jpg_artifact_schema_descriptor())
+        .schema(standards::v_jfif_1_01::subsets::document::schema::jpg_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::standards::v_jfif_1_01::subsets::document::schema::inferences::jpg_artifact_inference_descriptor()])
-        .composers(crate::standards::v_jfif_1_01::engine::io_registry::entries())
+        .inferences([standards::v_jfif_1_01::subsets::document::schema::inferences::jpg_artifact_inference_descriptor()])
+        .composers(standards::v_jfif_1_01::engine::io_registry::entries())
         .subset_validators(declared_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA)
@@ -136,7 +136,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<crate::standards::v_jfif_1_01::subsets::baseline::io::JpgBaselineValidator>()]).as_slice()
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<standards::v_jfif_1_01::subsets::baseline::io::JpgBaselineValidator>()]).as_slice()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — moved
@@ -153,28 +153,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.jpg",
                     extension: Some("jpg"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v_jfif_1_01::subsets::document::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_jfif_1_01::subsets::document::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v_jfif_1_01::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.jpg"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.jpg.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::standards::v_jfif_1_01::subsets::document::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v_jfif_1_01::subsets::document::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v_jfif_1_01::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v_jfif_1_01::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v_jfif_1_01::subsets::document::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_jfif_1_01::subsets::document::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v_jfif_1_01::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.jpg.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.jpg.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::standards::v_jfif_1_01::subsets::document::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v_jfif_1_01::subsets::document::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v_jfif_1_01::subsets::document::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_jfif_1_01::subsets::document::schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.jpg.diff"),
@@ -185,8 +185,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v_jfif_1_01::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.jpg.pack"),
                 },
                 dsl::LanguageSpec {
@@ -195,8 +195,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v_jfif_1_01::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v_jfif_1_01::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v_jfif_1_01::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.jpg.spr"),
                 },
             ]

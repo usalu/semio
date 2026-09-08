@@ -1,7 +1,7 @@
 //! 🔺️ `update-fire-inputs` — sparse diff construction.
 
 use super::UpdateFireInputs;
-use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
+use crate::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &UpdateFireInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {

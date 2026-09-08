@@ -5,7 +5,7 @@
 //! `workflow` crate via os-core's re-export) — building `WorkflowMutation` values from arguments is
 //! still pure compute, not an `apply_X_mutation` match on a locally-owned enum.
 
-use infinite_board_port_directed_dag::{dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
+use semio_framework_artifact_infinite_dag::{dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
 use pack::json::Value;
 use semio_framework_os::workflow::{AddNode, AddParameter, ChangeParameter};
 use semio_framework_os::{

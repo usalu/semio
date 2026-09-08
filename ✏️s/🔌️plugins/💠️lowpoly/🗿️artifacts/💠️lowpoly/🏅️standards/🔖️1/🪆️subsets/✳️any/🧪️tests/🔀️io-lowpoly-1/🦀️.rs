@@ -37,9 +37,9 @@ const STUB_FORMATS: &[&str] = &["dwg", "gltf", "las", "stl"];
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_plugin_lowpoly::artifacts::lowpoly::io::export::serializers::artifacts as export;
-    use semio_s_plugin_lowpoly::artifacts::lowpoly::io::import::deserializers::artifacts as import;
-    use semio_s_plugin_lowpoly::artifacts::lowpoly::LowpolySnapshot;
+    use semio_s_artifact_lowpoly_lowpoly::io::export::serializers::artifacts as export;
+    use semio_s_artifact_lowpoly_lowpoly::io::import::deserializers::artifacts as import;
+    use semio_s_artifact_lowpoly_lowpoly::LowpolySnapshot;
 
     /// 🧫️ The committed fixture the scenario's own doc string names, parsed as a real
     /// `LowpolySnapshot` (not a hand-transcribed Rust literal) so the fixture stays the one place

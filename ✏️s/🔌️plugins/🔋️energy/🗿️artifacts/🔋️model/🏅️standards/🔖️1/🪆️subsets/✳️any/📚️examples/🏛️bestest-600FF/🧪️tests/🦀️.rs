@@ -9,6 +9,6 @@ async fn primary_asset_is_nonempty() {
 #[semio_framework_async_macros::async_test]
 async fn asset_carries_the_registered_case_model() {
     let text = include_str!("../🖼️assets/🗣️.dsl.semio");
-    let snapshot = <crate::artifacts::model::EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("bestest 600FF example parses");
+    let snapshot = <crate::EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("bestest 600FF example parses");
     assert_eq!(snapshot.model, super::model());
 }

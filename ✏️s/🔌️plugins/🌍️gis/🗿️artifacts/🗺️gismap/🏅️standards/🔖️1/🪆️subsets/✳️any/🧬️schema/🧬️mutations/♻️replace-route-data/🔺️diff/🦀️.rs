@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff construction for `replace-route-data`.
 use super::ReplaceRouteData;
-use crate::artifacts::gismap::diff::{GisMapDiff, GisMapFeaturePatchEntry, GisMapFeaturesDelta};
-use crate::artifacts::gismap::{GisMapSnapshot, MapFeaturePatch};
+use crate::diff::{GisMapDiff, GisMapFeaturePatchEntry, GisMapFeaturesDelta};
+use crate::{GisMapSnapshot, MapFeaturePatch};
 
 //#region 🔹Diff
 /// 🔺️ Builds the sparse `routes` delta directly from the payload — a single `patched` entry —

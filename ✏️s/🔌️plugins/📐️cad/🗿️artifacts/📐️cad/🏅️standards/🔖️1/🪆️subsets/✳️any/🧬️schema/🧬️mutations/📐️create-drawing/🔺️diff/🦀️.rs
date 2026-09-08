@@ -1,8 +1,8 @@
 //! 🔺️ `create-drawing` — sparse diff construction, built directly from `(payload, base)`.
 
 use super::CreateDrawing;
-use crate::artifacts::cad::diff::{CadDiff, CadDrawingChildList};
-use crate::artifacts::cad::CadSnapshot;
+use crate::diff::{CadDiff, CadDrawingChildList};
+use crate::CadSnapshot;
 
 //#region 🔖️Diff
 pub(crate) fn parse_target(uri: &str) -> store::os_io::ArtifactRef {

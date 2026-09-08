@@ -9,10 +9,10 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::generation3d::Generation3dSnapshot;
-use flow::neural::{Atom, Dictionary, Value as NeuralValue};
-use flow::playbook::{FormGeneration, GenerationPlayState};
-use flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
+use crate::Generation3dSnapshot;
+use semio_framework_artifact_flow_semio_framework_os_flow::neural::{Atom, Dictionary, Value as NeuralValue};
+use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
+use semio_framework_artifact_flow_semio_framework_os_flow::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use std::collections::BTreeMap;
 
 //#region 🔖️Examples
@@ -370,7 +370,7 @@ pub fn print_dsl(document: &Generation3dSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::generation3d::GENERATION_3D_SCHEMA;
+    use crate::GENERATION_3D_SCHEMA;
     use semio_framework_os_kernel::os_store::test_support;
     use store::ArtifactDsl;
 
@@ -400,12 +400,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::generation3d::op::Generation3dMutation;
+        use crate::op::Generation3dMutation;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let mut store: ArtifactStore<Generation3dSnapshot, Generation3dMutation> = ArtifactStore::new(create_document_envelope(GENERATION_3D_SCHEMA, "generation3d", Generation3dSnapshot::default(), None)).await.expect("valid artifact store fixture");
-        use crate::artifacts::generation3d::mutations::create_widget::CreateWidget;
+        use crate::mutations::create_widget::CreateWidget;
         store.dispatch(ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None }).await.expect("apply");
         let edit: &Edit<Generation3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         test_support::assert_command_envelope_round_trip::<Generation3dSnapshot, Generation3dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;

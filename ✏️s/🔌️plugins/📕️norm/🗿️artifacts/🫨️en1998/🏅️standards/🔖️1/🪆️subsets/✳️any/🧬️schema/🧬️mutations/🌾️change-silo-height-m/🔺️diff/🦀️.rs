@@ -1,8 +1,8 @@
 //! 🔺️ `change-silo-height-m` sparse diff construction — writes only `En1998Diff.silo_height_m` from the payload.
 
-use crate::artifacts::en1998::diff::En1998Diff;
-use crate::artifacts::en1998::mutations::change_silo_height_m::ChangeSiloHeightM;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::diff::En1998Diff;
+use crate::mutations::change_silo_height_m::ChangeSiloHeightM;
+use crate::En1998Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSiloHeightM, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {

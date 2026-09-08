@@ -7,7 +7,6 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
 
 //#region 🧪️RunnerSelection
 /** 🎯️ Selects explicit build inventory or the existing budgeted test runner without interpreting filters. */
@@ -21,8 +20,10 @@ export function pluginTestInvocation(segments: string[]): { mode: "inventory" | 
 /** 🧪️ Pins exact forwarding against the neutral fixture and Node's independent separator parser. */
 export function pluginTestRunnerSelfTests(): number {
   const fixture = JSON.parse(readFileSync(new URL("../../🧪️tests/🏃️runner/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
-  const schema = JSON.parse(readFileSync(new URL("../../🧪️tests/🏃️runner/🧬️schema.json", import.meta.url), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  const schema = JSON.parse(readFileSync(new URL("../../🧪️tests/🏃️runner/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const runnerAjv = new Ajv({ strict: true, allErrors: true });
+  runnerAjv.addSchema(schema);
+  const validate = runnerAjv.getSchema(`${schema.$id}#/$defs/TestRunnerForwardingV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   const level = process.env.SEMIO_TEST_LEVEL,
     coverage = process.env.SEMIO_COVERAGE;
@@ -48,9 +49,10 @@ export function pluginTestRunnerSelfTests(): number {
 /** 🪪️ Independent admission oracle: structural AJV validation and separately decoded owner grammar. */
 export function artifactAdmissionOracle(repoRoot?: string): number {
   const fixture = JSON.parse(readFileSync(new URL("../../🏗️builder/🧪️tests/🪪️artifact-admission/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
-  const schema = JSON.parse(readFileSync(new URL("../../🏗️builder/🧪️tests/🪪️artifact-admission/🧬️schema.json", import.meta.url), "utf8"));
+  const schema = JSON.parse(readFileSync(new URL("../../🏗️builder/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
-  const validate = ajv.compile(schema);
+  ajv.addSchema(schema);
+  const validate = ajv.getSchema(`${schema.$id}#/$defs/ArtifactAdmissionV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   const canonical = ajv.compile({ type: "string", pattern: "^s\\.[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*$" });
   const segment = (value: string) => value.length > 0 && !value.startsWith("-") && !value.endsWith("-") && !value.includes("--") && [...value].every((char) => "abcdefghijklmnopqrstuvwxyz0123456789-".includes(char));
@@ -227,9 +229,11 @@ export function guestLifecycleOracle(): number {
 /** 🧾️ Cross-checks exact issued patch acknowledgement against independent AJV constants. */
 export function issuedPatchOracle(): number {
   const fixture = JSON.parse(readFileSync(new URL("../../⚛️reactor/📨️pending/🧫️fixture/🩹️receipt.json", import.meta.url), "utf8"));
-  const schema = JSON.parse(readFileSync(new URL("../../⚛️reactor/📨️pending/🧬️schema/🩹️receipt.json", import.meta.url), "utf8"));
+  const schema = JSON.parse(readFileSync(new URL("../../⚛️reactor/📨️pending/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
-  assert(ajv.validate(schema, fixture), JSON.stringify(ajv.errors));
+  ajv.addSchema(schema);
+  const validateReceipt = ajv.getSchema(`${schema.$id}#/$defs/PendingPatchReceiptV1`)!;
+  assert(validateReceipt(fixture), JSON.stringify(validateReceipt.errors));
   const accept = ajv.compile({ type: "object", required: ["ack", "committed", "pending", "live"], properties: { ack: { const: fixture.issued }, committed: { const: true }, pending: { const: true }, live: { const: true } } });
   for (const row of fixture.cases) {
     const exact = Object.keys(fixture.issued).every((key) => fixture.issued[key] === row.ack[key]);
@@ -293,7 +297,7 @@ class GuestLifecycleCheckScript extends BundleScript {
 async function coldDocumentPairIngressOracle(repoRoot: string): Promise<number> {
   const fixture = JSON.parse(readFileSync(new URL("../../⚛️reactor/📥️cold-pair/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../⚛️reactor/📥️cold-pair/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));
   assert.equal(validate({ ...fixture, hostile: fixture.hostile.slice(1) }), false, "cold pair corpus must retain every hostile row");
   const pattern = (length: number, row: { multiplier: number; addend: number }) => Uint8Array.from({ length }, (_, index) => (index * row.multiplier + row.addend) & 255);
@@ -308,7 +312,7 @@ async function coldDocumentPairIngressOracle(repoRoot: string): Promise<number> 
   const ingress = readFileSync(new URL("../../⚛️reactor/📥️cold-pair/🦀️.rs", import.meta.url), "utf8");
   const actorFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧪️fixture/🔣️.json"), "utf8"));
   const actorSchema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧬️schema/🔣️.json"), "utf8"));
-  const validateActorStatus = new Ajv2020({ strict: true, allErrors: true }).compile(actorSchema);
+  const validateActorStatus = new Ajv({ strict: true, allErrors: true }).compile(actorSchema);
   for (const row of actorFixture.statusRows) assert(validateActorStatus(row), JSON.stringify(validateActorStatus.errors));
   for (const row of [actorFixture.hostileRows[0], actorFixture.hostileRows[1], actorFixture.hostileRows[4]]) assert.equal(validateActorStatus(row), false, "actor cold status structural hostile must fail AJV");
   const actorCold = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🦀️.rs"), "utf8");

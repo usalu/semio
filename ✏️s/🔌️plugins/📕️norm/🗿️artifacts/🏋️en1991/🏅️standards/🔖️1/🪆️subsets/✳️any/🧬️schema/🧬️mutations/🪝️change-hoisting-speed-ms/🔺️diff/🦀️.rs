@@ -1,7 +1,7 @@
 //! 🔺️ `change-hoisting-speed-ms` — sparse diff construction.
 
 use super::ChangeHoistingSpeedMS;
-use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
+use crate::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeHoistingSpeedMS, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {

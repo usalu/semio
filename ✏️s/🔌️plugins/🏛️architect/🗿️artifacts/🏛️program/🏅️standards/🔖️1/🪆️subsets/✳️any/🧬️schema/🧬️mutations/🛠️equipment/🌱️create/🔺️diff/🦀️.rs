@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🛠️equipment` per Wave C.
 
 use super::CreateEquipment;
-use crate::artifacts::program::diff::ProgramEquipmentDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramEquipmentDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
 pub fn diff(payload: &CreateEquipment, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

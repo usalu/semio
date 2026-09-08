@@ -1,8 +1,8 @@
 //! ↩ Inverse constructor for `RenameAsset` — reconstructed from BASE state.
 
 use super::RenameAsset;
-use crate::artifacts::shooting::mutations::ShootingMutation;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 
 pub fn inverse(payload: &RenameAsset, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
     match base.assets.iter().find(|asset| asset.id == payload.id) {

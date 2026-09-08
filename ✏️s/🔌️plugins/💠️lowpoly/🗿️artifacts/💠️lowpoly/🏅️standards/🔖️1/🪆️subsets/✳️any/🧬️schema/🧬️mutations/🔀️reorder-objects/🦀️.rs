@@ -1,7 +1,7 @@
 //! 🔀️ `reorder-objects` — repositions an object within the document's ordered object list (display
 //! order in the outliner; never spatial — see `move-object`/`rotate-object`/`scale-object` for that).
 
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 

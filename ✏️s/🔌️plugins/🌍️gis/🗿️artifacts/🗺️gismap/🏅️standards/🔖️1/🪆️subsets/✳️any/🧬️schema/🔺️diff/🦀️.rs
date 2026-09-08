@@ -1,6 +1,6 @@
 //! 🧬️ GIS map diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::gismap::{MapFeature, MapFeaturePatch};
+use crate::{MapFeature, MapFeaturePatch};
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[artifact_schema(id = "s.gis.gismap")]
 pub struct GisMapDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::gismap::schema::GisMapArtifact>>,
+    pub artifact: Option<Box<crate::schema::GisMapArtifact>>,
     #[state(artifact)]
     pub positions: Option<GisMapFeaturesDelta>,
     #[state(artifact)]

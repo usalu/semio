@@ -1,0 +1,11 @@
+{
+  "definition_version": 1,
+  "id": "s.norm.iso16757",
+  "artifact": "iso16757",
+  "directory": "📇️iso16757",
+  "rust_package": "semio-s-artifact-norm-iso16757",
+  "nx_project": "@semio-tech/norm-iso16757-rs",
+  "dependencies": [
+    "semio-s-artifact-norm-en1999"
+  ]
+}

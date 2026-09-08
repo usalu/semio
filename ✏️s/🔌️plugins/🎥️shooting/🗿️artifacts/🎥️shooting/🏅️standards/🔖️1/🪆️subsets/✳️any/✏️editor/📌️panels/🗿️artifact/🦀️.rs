@@ -1,6 +1,6 @@
 //! 📄️ Shooting play app panel — the document tree: shots and assets of the current snapshot.
 
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::ShootingSnapshot;
 use crate::editor::shooting::terminology::ShootingLabels;
 use crate::editor::shooting::SHOOTING_INTERACTION_DOMAIN;
 use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};

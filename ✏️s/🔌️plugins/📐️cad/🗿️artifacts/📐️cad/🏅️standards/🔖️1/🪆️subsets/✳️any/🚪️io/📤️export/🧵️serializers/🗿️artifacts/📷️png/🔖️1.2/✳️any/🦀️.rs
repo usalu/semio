@@ -9,7 +9,7 @@
 //! row. A real cad→png export needs an actual 3D-to-raster renderer (camera projection,
 //! rasterization), which doesn't exist anywhere in this repo — reported as a `stdio_gaps` entry,
 //! not worked around here.
-use crate::artifacts::cad::CadSnapshot;
+use crate::CadSnapshot;
 
 //#region Serialize
 pub fn register() {}

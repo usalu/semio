@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔍search-filters` per Wave C.
 
 use super::DeleteSearchFilter;
-use crate::artifacts::program::diff::ProgramSearchFiltersDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramSearchFiltersDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteSearchFilter, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

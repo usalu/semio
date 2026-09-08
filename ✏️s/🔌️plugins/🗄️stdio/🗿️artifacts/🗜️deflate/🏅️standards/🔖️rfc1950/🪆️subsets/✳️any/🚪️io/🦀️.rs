@@ -1139,7 +1139,7 @@ mod codec_tests {
 
     #[test]
     fn exact_pptx_bin_policy() {
-        let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
+        let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         for path in ["ppt/embeddings/oleObject1.bin", "ppt/embeddings/oleObject2.bin", "ppt/embeddings/oleObject3.bin"] {
             let expected = raw_zip_member(&archive, path).expect("fixture OLE");
             let input = inflate_raw(expected).expect("inflate fixture OLE");
@@ -1165,7 +1165,7 @@ mod codec_tests {
 
     #[test]
     fn illustrator_partial_flush_materialization_matches_fixture_stream() {
-        let fixture = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/📄️bachelor-thesis.pdf")).expect("fixture");
+        let fixture = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../temp/📄️bachelor-thesis.pdf")).expect("fixture");
         let marker = b"/Length 3362\n/Filter /FlateDecode\n>>\nstream\n";
         let start = fixture.windows(marker.len()).position(|window| window == marker).expect("Illustrator stream") + marker.len();
         let expected = &fixture[start..start + 3362];

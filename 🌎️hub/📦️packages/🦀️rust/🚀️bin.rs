@@ -9499,7 +9499,7 @@ mod tests {
         )
         .expect("write trusted current pointer");
 
-        let pack = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
+        let pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
         let spr = directory::os_store::empty_document_spr("", &selection.artifact.schema).await;
         let diff = db::document::encode_pathmap_json(&serde_json::json!({ "checkpoint-process": "committed" })).await.expect("encode process mutation diff");
         let inverse = db::document::encode_pathmap_json(&serde_json::json!({ "checkpoint-process": null })).await.expect("encode process mutation inverse");
@@ -9803,9 +9803,9 @@ mod tests {
     }
 
     #[cfg(all(feature = "sqlite", feature = "test-support"))]
-    fn gis_map_test_snapshot() -> semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot {
+    fn gis_map_test_snapshot() -> semio_s_artifact_gis_gismap::GisMapSnapshot {
         use directory::DslValue;
-        use semio_s_plugin_gis::artifacts::gismap::{GisMapSnapshot, MapFeature};
+        use semio_s_artifact_gis_gismap::{GisMapSnapshot, MapFeature};
         let point = |lon: f64, lat: f64| DslValue::object([("lon".into(), DslValue::float(lon)), ("lat".into(), DslValue::float(lat))]);
         let pair = |lon: f64, lat: f64| DslValue::Array(vec![DslValue::float(lon), DslValue::float(lat)]);
         GisMapSnapshot {
@@ -9834,7 +9834,7 @@ mod tests {
         upsert_member_for_test(&state, &space_id, spectator_email, DirectorySpaceRole::Spectator).await;
         let document_id = artifact_document_id_for_test("gis-map-inference");
         let selection = profile.binding().selection();
-        let genesis_pack = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot::default());
+        let genesis_pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
         let genesis_spr = b"gis-map-genesis-spr";
         let descriptor = os_directory::DocumentDescriptor {
             space_id: space_id.clone(),
@@ -9864,7 +9864,7 @@ mod tests {
             genesis_spr,
         )
         .await;
-        let snapshot_pack = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
+        let snapshot_pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
         publish_gis_checkpoint_for_test(&state, &space_id, &document_id, &snapshot_pack, &genesis).await;
         (GisMapInferenceFixture { state, profile, space_id, document_id, snapshot_pack, ledger_path }, author, spectator)
     }

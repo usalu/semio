@@ -1,8 +1,8 @@
 //! 🔺️ `create-layer` sparse diff — a tree-aware insertion, never a whole-snapshot capture.
 
-use crate::artifacts::raster::diff::{diff_add_layer, RasterDiff};
-use crate::artifacts::raster::schema::{find_layer, layer_node_id};
-use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
+use crate::diff::{diff_add_layer, RasterDiff};
+use crate::schema::{find_layer, layer_node_id};
+use crate::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateLayer, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {

@@ -1,7 +1,7 @@
 //! ↩️ `change-en-vbms` — undo restores BASE's basic wind velocity.
 
 use super::ChangeEnVBMS;
-use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
+use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeEnVBMS, base: &En1991Snapshot) -> Vec<En1991Mutation> {

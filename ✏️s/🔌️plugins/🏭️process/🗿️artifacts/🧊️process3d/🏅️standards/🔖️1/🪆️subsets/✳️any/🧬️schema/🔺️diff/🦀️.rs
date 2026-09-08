@@ -8,8 +8,8 @@
 //! uses the sibling "collection of children" convention (`📐️cad`'s `CadDrawingChildList` precedent):
 //! a whole-list wrapper behind a single `Option`.
 
-use crate::artifacts::process3d::{Pose, ProcessStep, Stock, Workshop};
-use schema::ArtifactSchema;
+use crate::{Pose, ProcessStep, Stock, Workshop};
+use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,7 +21,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[artifact_schema(id = "s.process.process3d")]
 pub struct Process3dDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::process3d::schema::Process3dArtifact>>,
+    pub artifact: Option<Box<crate::schema::Process3dArtifact>>,
     #[state(artifact)]
     pub workshop: Option<Workshop>,
     #[state(artifact)]

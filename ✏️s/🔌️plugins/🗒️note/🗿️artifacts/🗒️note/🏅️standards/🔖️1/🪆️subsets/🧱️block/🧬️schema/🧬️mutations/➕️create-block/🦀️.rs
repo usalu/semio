@@ -1,7 +1,7 @@
 //! ➕ Note mutation — `CreateBlock`: brings a new block into existence at an addressed position.
 
-use crate::artifacts::note::{NoteDiff, NoteSnapshot};
-use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::{NoteDiff, NoteSnapshot};
+use crate::schema::mutations::NoteMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -13,13 +13,13 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "create-block")]
 pub struct CreateBlock {
     #[dsl(statements, block)]
-    pub block: Box<crate::artifacts::note::NoteBlockNode>,
+    pub block: Box<crate::NoteBlockNode>,
     pub parent_id: Option<String>,
     pub index: Option<usize>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_block(block: crate::artifacts::note::NoteBlockNode, parent_id: Option<String>, index: Option<usize>) -> NoteMutation {
+pub fn create_block(block: crate::NoteBlockNode, parent_id: Option<String>, index: Option<usize>) -> NoteMutation {
     NoteMutation::CreateBlock(CreateBlock { block: Box::new(block), parent_id, index })
 }
 
@@ -33,10 +33,10 @@ impl MutationKind<NoteSnapshot, NoteMutation> for CreateBlock {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> String {
-        format!("Create block \"{}\"", crate::artifacts::note::schema::block_id(&self.block))
+        format!("Create block \"{}\"", crate::schema::block_id(&self.block))
     }
     fn target(&self) -> Vec<String> {
-        vec![crate::artifacts::note::schema::block_id(&self.block).to_string()]
+        vec![crate::schema::block_id(&self.block).to_string()]
     }
 }
 //#endregion 🔖️Mutation

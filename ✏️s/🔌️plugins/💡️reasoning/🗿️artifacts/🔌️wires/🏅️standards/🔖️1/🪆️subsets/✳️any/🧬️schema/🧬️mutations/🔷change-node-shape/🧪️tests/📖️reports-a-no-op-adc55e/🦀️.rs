@@ -12,9 +12,9 @@
 //! extent keys a former rectangle left behind — `resize-node` owns `radius`/`width`/`height` — so
 //! the committed node keeps its `radius` untouched throughout.
 
-use crate::artifacts::wires::mutations::{ChangeNodeShape, WiresMutation};
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::{materialize_wires_content, WiresDiff, WiresSnapshot};
+use crate::mutations::{ChangeNodeShape, WiresMutation};
+use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::{materialize_wires_content, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

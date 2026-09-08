@@ -1,7 +1,7 @@
 //! ↩️ `change-envelope-area-m2` — undo restores BASE's `envelope_area_m2`.
 
 use super::ChangeEnvelopeAreaM2;
-use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot};
+use crate::{Din4108Mutation, Din4108Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeEnvelopeAreaM2, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {

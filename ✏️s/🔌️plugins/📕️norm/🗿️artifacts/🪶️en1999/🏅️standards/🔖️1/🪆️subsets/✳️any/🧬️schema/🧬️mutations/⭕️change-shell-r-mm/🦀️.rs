@@ -1,9 +1,9 @@
 //! 🐫 `change-shell-r-mm` payload — changes the En1999 document's `shell_r_mm` (shell radius r [mm]).
 
 
-use crate::artifacts::en1999::En1999Snapshot;
-use crate::artifacts::en1999::diff::En1999Diff;
-use crate::artifacts::en1999::mutations::En1999Mutation;
+use crate::En1999Snapshot;
+use crate::diff::En1999Diff;
+use crate::mutations::En1999Mutation;
 //#region 🔖️ChangeShellRMm
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

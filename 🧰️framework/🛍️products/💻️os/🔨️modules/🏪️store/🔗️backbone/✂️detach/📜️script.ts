@@ -1,13 +1,16 @@
 /** ✂️ Checks refusal conservation models; real Store ownership is tested separately. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import _ from "lodash";
 
 //#region ✂️BackboneDetachOracle
 export function testBackboneDetachFixture(): void {
   const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8")));
+  const contract = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(contract);
+  const validate = ajv.getSchema(`${contract.$id}#/$defs/BackboneDetach`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   const maximum = BigInt(fixture.generationMaximum);
   const exactMaximum = Buffer.alloc(8, 255).readBigUInt64LE();

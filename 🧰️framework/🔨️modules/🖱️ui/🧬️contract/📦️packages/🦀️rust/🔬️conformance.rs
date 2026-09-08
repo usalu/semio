@@ -277,7 +277,7 @@ mod tests {
         };
         let expected_groups: BTreeSet<String> = GROUPS_WITHOUT_PATCH.iter().chain(GROUPS_WITH_PATCH.iter()).map(|group| (*group).into()).collect();
         assert_eq!(catalog.groups.keys().cloned().collect::<BTreeSet<_>>(), expected_groups);
-        assert_eq!(names(&corpus_dir()), expected_groups.into_iter().chain(["📇️catalog.json".into(), "🧬️catalog.schema.json".into()]).collect());
+        assert_eq!(names(&corpus_dir()), expected_groups.into_iter().chain(["📇️catalog.json".into()]).collect());
         let mut count = 0;
         for (group, definition) in &catalog.groups {
             assert_eq!(definition.patch, GROUPS_WITH_PATCH.contains(&group.as_str()));

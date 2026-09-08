@@ -3,7 +3,7 @@
 //! inseparable-facet `update` exception rather than two independent `change-` scalars — matches
 //! the app's `SetAlgorithm` command, which always sends both fields together.
 
-use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
+use crate::{EquationMutation, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload

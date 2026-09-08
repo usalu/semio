@@ -2,8 +2,8 @@
 //! empty (`Vec::new()`) when the slot was already absent (nothing to undo).
 
 use super::DeleteStructureClassicModel;
-use crate::artifacts::cad::mutations::{create_structure_classic_model, CadMutation};
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::{create_structure_classic_model, CadMutation};
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &DeleteStructureClassicModel, base: &CadSnapshot) -> Vec<CadMutation> {

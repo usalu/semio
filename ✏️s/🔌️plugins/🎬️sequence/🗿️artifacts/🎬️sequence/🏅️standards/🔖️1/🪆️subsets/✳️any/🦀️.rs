@@ -3,8 +3,8 @@
 //! `✏️editor`/`📚️examples` children — `crate::editor::sequence`/`crate::viewer::sequence` stay
 //! mounted at the plugin's top-level `editor`/`viewer` modules (recipe §5 gotcha 1), not here.
 
-use crate::artifacts::sequence::standards::v1::subsets::any::{io, schema};
-use crate::artifacts::sequence::SEQUENCE_DIALECT;
+use crate::standards::v1::subsets::any::{io, schema};
+use crate::SEQUENCE_DIALECT;
 use crate::editor::sequence as editor;
 use crate::viewer::sequence as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
@@ -13,11 +13,11 @@ use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::artifacts::sequence::examples::demo::source()]).as_slice()
+    EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
 }
 
-fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
+fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: OnceLock<Vec<::framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::sequence_artifact_inference_descriptor()]).as_slice()
 }
 

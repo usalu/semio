@@ -32,8 +32,12 @@ export function encodeScalarRecordFixture(test:Case,oracle:boolean):{bytes:Buffe
 //#region 🧪️Oracle
 export function testScalarRecordWireFixture():void {
   const fixture:Fixture=JSON.parse(readFileSync(new URL("./🧫️fixture/🔣️.json",import.meta.url),"utf8"));
-  const validate=new Ajv({strict:true,allErrors:true}).compile(JSON.parse(readFileSync(new URL("./🧬️fixture.schema.json",import.meta.url),"utf8")));
+  const contract=JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url),"utf8"));
+  const ajv=new Ajv({strict:true,allErrors:true});ajv.addSchema(contract);
+  const validate=ajv.getSchema(`${contract.$id}#/$defs/ScalarRecordWire`)!;
   assert.ok(validate(fixture),JSON.stringify(validate.errors));assert.equal(new Set(fixture.cases.map(test=>test.id)).size,fixture.cases.length);
+  assert.equal(fixture.version,1);assert.deepEqual(fixture.grants,[1,64,4096]);assert.deepEqual(fixture.cancelAfterSteps,[0,1,17,4097]);
+  assert.equal(fixture.cases.length,9);assert.deepEqual(fixture.capture,{ordinal:3,value:7,laterOrdinal:99,laterValue:123,projections:1,wire:[1,3,0,1,0,4,7]});
   const captured=fixture.capture;
   const before:Case={id:"capture",ordinal:captured.ordinal,fields:[{type:"u64",value:String(captured.value)},null,null],wireBytes:captured.wire.length,symbols:0};
   assert.deepEqual([...encodeScalarRecordFixture(before,true).bytes],captured.wire);

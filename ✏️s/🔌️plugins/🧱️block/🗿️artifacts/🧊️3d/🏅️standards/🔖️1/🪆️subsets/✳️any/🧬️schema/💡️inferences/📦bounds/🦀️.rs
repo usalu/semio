@@ -4,7 +4,7 @@
 //! a plain whole-snapshot derivation, not a per-entity `InferredField` chain: every vortex
 //! contributes independently to one aggregate box, there is nothing to invalidate incrementally.
 
-use crate::artifacts::block3d::Block3dSnapshot;
+use crate::Block3dSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned bounding box in the object kind's local space.
@@ -51,7 +51,7 @@ pub fn compute_block3d_bounds(snapshot: &Block3dSnapshot) -> Block3dBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::block3d::Block3dVortexTemplate;
+    use crate::Block3dVortexTemplate;
 
     fn vortex(id: &str, position: [f64; 3], radius: f64) -> Block3dVortexTemplate {
         Block3dVortexTemplate { id: id.into(), vortex_kind: "door".into(), position, direction: [0.0, 1.0, 0.0], radius, label: None }

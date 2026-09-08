@@ -6,7 +6,7 @@
 //! `mimes` here is a documented synthesis, not a literal carry-over (see
 //! `📓️w4-sourcing-report.md` `## openQuestions`); `extensions` IS the real, carried-over value.
 
-use crate::artifacts::curation::standards::v1::subsets;
+use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 

@@ -1,100 +1,118 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/video/mutation/set-snapshot.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/video/mutation/set-snapshot/schema.json",
   "title": "SetSnapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema",
-    "streams"
+    "snapshot"
   ],
   "properties": {
-    "schema": {
-      "type": "string"
-    },
-    "streams": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "kind": {
-            "type": "string",
-            "enum": [
-              "Video",
-              "Audio",
-              "Subtitle"
-            ]
-          },
-          "codec": {
-            "type": "string"
-          },
-          "width": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "height": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "rate": {
-            "type": "object",
-            "properties": {
-              "num": {
-                "type": "integer"
-              },
-              "den": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "num",
-              "den"
-            ],
-            "additionalProperties": false
-          },
-          "samples": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "pts": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "key": {
-                  "type": "boolean"
-                },
-                "data": {
-                  "type": "array",
-                  "items": {
-                    "type": "integer",
-                    "minimum": 0
-                  }
-                }
-              },
-              "required": [
-                "pts",
-                "key",
-                "data"
-              ],
-              "additionalProperties": false
-            }
-          }
-        },
-        "required": [
-          "kind",
-          "codec",
-          "width",
-          "height",
-          "rate",
-          "samples"
-        ],
-        "additionalProperties": false
-      }
+    "snapshot": {
+      "$ref": "#/$defs/SemioVideoSnapshot"
     },
     "mutation": {
       "const": "setSnapshot",
       "description": "Aggregate discriminator spliced in by SemioVideoMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "SemioVideoSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioVideoStream"
+          }
+        }
+      }
+    },
+    "SemioVideoStream": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/SemioVideoStreamKind"
+        },
+        "codec": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rate": {
+          "$ref": "#/$defs/SemioRational"
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioVideoSample"
+          }
+        }
+      }
+    },
+    "SemioVideoStreamKind": {
+      "type": "string",
+      "enum": [
+        "video",
+        "audio",
+        "subtitle"
+      ]
+    },
+    "SemioRational": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "num",
+        "den"
+      ],
+      "properties": {
+        "num": {
+          "type": "integer"
+        },
+        "den": {
+          "type": "integer"
+        }
+      }
+    },
+    "SemioVideoSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pts"
+      ],
+      "properties": {
+        "pts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "key": {
+          "type": "boolean"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
     }
   }
 }

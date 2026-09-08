@@ -7,9 +7,9 @@
 //!
 //! Only `roll` changes — the 3D-only local-axis angle that has no counterpart in the fem2d element at all.
 
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -34,8 +34,8 @@ fn applies_to_committed_after() {
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("replace-element applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "replace-element/rolls-the-column-50f732: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.elements.len(), 1, "replace-element/rolls-the-column-50f732: a replacement must not change the element count");
-    assert!(matches!(snapshot.elements[0], crate::artifacts::fem3d::FemElement::Frame { roll, .. } if roll == 1.5), "replace-element/rolls-the-column-50f732: the new roll angle must survive the round trip exactly");
-    assert_eq!(crate::artifacts::fem3d::element_id(&snapshot.elements[0]), "f1", "replace-element/rolls-the-column-50f732: the identity must survive the whole-value swap");
+    assert!(matches!(snapshot.elements[0], crate::FemElement::Frame { roll, .. } if roll == 1.5), "replace-element/rolls-the-column-50f732: the new roll angle must survive the round trip exactly");
+    assert_eq!(crate::element_id(&snapshot.elements[0]), "f1", "replace-element/rolls-the-column-50f732: the identity must survive the whole-value swap");
 }
 
 /// ↩️ The inverse is a `replace-element` carrying the un-rolled frame recovered from `base`.
@@ -84,7 +84,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "replace-element/rolls-the-column-50f732: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "replace-element/rolls-the-column-50f732: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "replace-element/rolls-the-column-50f732: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "replace-element/rolls-the-column-50f732: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "replace-element/rolls-the-column-50f732: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("replace-element/rolls-the-column-50f732: unknown outcome status {other:?}"),
@@ -106,7 +106,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-element/rolls-the-column-50f732: committed diff JSON is not canonical");
@@ -115,7 +115,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `elements.patched` entry on `before` must leave the rolled frame in `f1`'s slot.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-element/rolls-the-column-50f732: committed diff did not carry before to after");
 }

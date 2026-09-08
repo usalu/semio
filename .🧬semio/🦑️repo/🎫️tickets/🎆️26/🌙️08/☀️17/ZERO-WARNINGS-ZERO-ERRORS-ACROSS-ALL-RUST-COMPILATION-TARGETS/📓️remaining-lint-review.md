@@ -30,3 +30,9 @@ Pass 481 removes three unused pack_err_as_text adapters from CAD, Layout and Flo
 
 
 Pass 480 borrows drawing cache inputs and mutation-report message slices at their read-only boundaries. Layout and Equation topology builders instead consume the buffers already passed to them, moving edge and queue strings rather than cloning them. Node order, neighbor order, indegree/depth calculation, and JSON output are preserved. Compiler and existing topology/drawing checks remain pending.
+
+
+Pass 486 makes the Sourcing stock constructor borrow the stock slice it hashes and projects. Curated items still transfer into the snapshot. All nine Rust callers were updated, with slice literals used for static test inputs. Catalog identity and overflow projection are unchanged. Compiler and existing sourcing fixture checks remain pending.
+
+
+Pass 484 parsed the 27 Rust files in the subsequent ownership, helper, and artifact-root cleanup with rustfmt under edition 2021. 0 files failed parsing. This is syntax validation only and does not establish type correctness, warning-free compilation, or runtime behavior.

@@ -1,8 +1,8 @@
 //! 📐️ Direct rewriting mutation — `ChangeRuleLayoutPoint`: upserts one key on the `rule_layout` map (the
 //! rule-editor position of a pattern var/node).
-use crate::artifacts::rewriting::diff::RewritingDiff;
-use crate::artifacts::rewriting::mutations::RewriteRuleMutation;
-use crate::artifacts::rewriting::{LayoutPoint, RewritingSnapshot};
+use crate::diff::RewritingDiff;
+use crate::mutations::RewriteRuleMutation;
+use crate::{LayoutPoint, RewritingSnapshot};
 
 //#region 🔖️Mutation
 /// 📐️ `change-rule-layout-point` payload.

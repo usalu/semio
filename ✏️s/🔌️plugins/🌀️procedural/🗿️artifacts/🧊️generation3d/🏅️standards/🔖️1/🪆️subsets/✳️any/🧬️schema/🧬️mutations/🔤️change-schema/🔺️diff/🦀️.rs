@@ -1,9 +1,9 @@
 //! 🔺️ `change-schema` sparse diff construction.
 
-use crate::artifacts::generation3d::diff::Generation3dDiff;
-use crate::artifacts::generation3d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::generation3d::mutations::change_schema::ChangeSchema;
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::diff::Generation3dDiff;
+use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::mutations::change_schema::ChangeSchema;
+use crate::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta touching only the schema field. Whole-artifact scope —
 /// there is exactly one schema field, so no missing-target case exists here.

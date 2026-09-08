@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `✔️validations` per Wave C.
 
 use super::RenameValidationRecord;
-use crate::artifacts::program::diff::{ProgramValidationsDelta, ProgramValidationsPatchEntry};
-use crate::artifacts::program::registers::ValidationRecordPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramValidationsDelta, ProgramValidationsPatchEntry};
+use crate::registers::ValidationRecordPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameValidationRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -1,5 +1,5 @@
 //! program -> zip
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramSnapshot;
 use semio_s_artifact_stdio_zip::STDIO_ZIP_DOCUMENT_SCHEMA;
 pub use semio_s_artifact_stdio_zip::ZipSnapshot;
 pub use semio_s_artifact_stdio_zip::schema::snapshot::ZipEntry;
@@ -7,7 +7,7 @@ pub use semio_s_artifact_stdio_zip::schema::snapshot::ZipEntry;
 pub fn register() {}
 
 pub fn serialize(snapshot: &ProgramSnapshot) -> Result<ZipSnapshot, store::TextError> {
-    let tables = crate::artifacts::program::io::program_export_tables(snapshot).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))?;
+    let tables = crate::io::program_export_tables(snapshot).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))?;
     let entries = tables
         .into_iter()
         .map(|table| {
@@ -35,7 +35,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn exports_every_program_table_to_a_real_archive() {
-        let program = crate::artifacts::program::sample_plugin();
+        let program = crate::sample_plugin();
         let archive = serialize(&program).expect("serialize program archive");
         assert_eq!(archive.entries.len(), 70);
         let elements = archive.entries.iter().find(|entry| entry.name == "elements.json").expect("elements entry");

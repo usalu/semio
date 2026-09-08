@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `ChangePencilWidth`.
 use super::ChangePencilWidth;
-use crate::artifacts::note::NoteDiff;
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteDiff;
+use crate::NoteSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangePencilWidth, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

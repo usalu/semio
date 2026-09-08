@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ChangeStatus`.
-use crate::artifacts::vcs::{VcsDiff, VcsSnapshot};
+use crate::{VcsDiff, VcsSnapshot};
 
 //#region 🔖️Diff
 /// 🔺️ Warning `no-op` when `new_status` already equals `base.status`.

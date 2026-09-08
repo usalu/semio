@@ -1,7 +1,7 @@
 //! 🌱 Puzzle3d mutation — `CreateObject`: brings a new id-keyed object into existence.
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::{Puzzle3dObject, Puzzle3dSnapshot};
+use crate::diff::Puzzle3dDiff;
+use crate::mutations::Puzzle3dMutation;
+use crate::{Puzzle3dObject, Puzzle3dSnapshot};
 
 //#region 🔖️Mutation
 /// 🌱 `create-object` payload — full initial payload at an optional FINAL-state `index` (`None`

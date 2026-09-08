@@ -1,6 +1,6 @@
 //! 🧬️ schema leaf
 use super::JackEditorSelection;
-use crate::artifacts::jack::Camera;
+use crate::Camera;
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 

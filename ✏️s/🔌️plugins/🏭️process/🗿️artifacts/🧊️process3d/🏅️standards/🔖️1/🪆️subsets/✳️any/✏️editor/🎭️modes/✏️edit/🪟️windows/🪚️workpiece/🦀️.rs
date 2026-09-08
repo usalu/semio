@@ -1,8 +1,8 @@
 //! 🪚️ Process 3d play app — the workpiece window: the 3D world view of the processed stock, plus the
 //! process-timeline engagement (cursor stepper + command-line input).
 
-use crate::artifacts::process3d::schema::inferences::processed_mesh;
-use crate::artifacts::process3d::{Process3dSnapshot, ProcessWorkingScene};
+use crate::schema::inferences::processed_mesh;
+use crate::{Process3dSnapshot, ProcessWorkingScene};
 use crate::editor::process3d::config::Process3dConfig;
 use crate::editor::process3d::modes::edit::windows::workpiece::options;
 use semio_framework_plugin::app::WindowKit;
@@ -121,7 +121,7 @@ struct Process3dPreviewCache {
 
 fn with_preview_cache<T>(fixture: &Process3dSnapshot, read: impl Fn(&Process3dPreviewCache) -> T) -> T {
     static CACHE: std::sync::OnceLock<std::sync::Mutex<Option<Process3dPreviewCache>>> = std::sync::OnceLock::new();
-    let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(fixture);
+    let scene = crate::process_working_scene_from_snapshot(fixture);
     let cell = CACHE.get_or_init(|| std::sync::Mutex::new(None));
     let Ok(mut slot) = cell.lock() else {
         let entry = build_preview_cache(fixture, scene);
@@ -136,7 +136,7 @@ fn with_preview_cache<T>(fixture: &Process3dSnapshot, read: impl Fn(&Process3dPr
 
 fn build_preview_cache(fixture: &Process3dSnapshot, scene: ProcessWorkingScene) -> Process3dPreviewCache {
     let payload = evaluated_preview_payload(fixture, &scene);
-    let volume = crate::artifacts::process3d::schema::inferences::processed_volume(&scene, fixture.resolved_up_to).unwrap_or(0.0);
+    let volume = crate::schema::inferences::processed_volume(&scene, fixture.resolved_up_to).unwrap_or(0.0);
     Process3dPreviewCache { scene, resolved_up_to: fixture.resolved_up_to, label: fixture.stock_label.clone(), payload, volume }
 }
 

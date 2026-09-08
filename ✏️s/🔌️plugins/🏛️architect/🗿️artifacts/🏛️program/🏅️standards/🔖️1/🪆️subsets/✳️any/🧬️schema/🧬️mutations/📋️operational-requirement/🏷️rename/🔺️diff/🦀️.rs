@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📋operations` per Wave C.
 
 use super::RenameOperationalRequirement;
-use crate::artifacts::program::diff::{ProgramOperationsDelta, ProgramOperationsPatchEntry};
-use crate::artifacts::program::registers::OperationalRequirementPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramOperationsDelta, ProgramOperationsPatchEntry};
+use crate::registers::OperationalRequirementPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameOperationalRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

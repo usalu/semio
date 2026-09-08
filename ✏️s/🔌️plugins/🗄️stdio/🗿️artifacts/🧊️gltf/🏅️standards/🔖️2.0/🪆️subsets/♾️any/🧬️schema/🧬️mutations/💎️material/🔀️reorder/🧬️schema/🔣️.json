@@ -1,19 +1,3536 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/material/reorder.json",
-  "title": "GltfReorderMaterialsPayloadV1",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "order"
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/reorder-materials/schema.json",
+  "title": "ReorderMaterialsMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phase": {
+          "const": "apply"
+        },
+        "value": {
+          "$ref": "#/$defs/GltfReorderMaterialsPayload"
+        }
+      },
+      "required": [
+        "phase",
+        "value"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phase": {
+          "const": "restore"
+        },
+        "value": {
+          "$ref": "#/$defs/GltfDiff"
+        }
+      },
+      "required": [
+        "phase",
+        "value"
+      ]
+    }
   ],
-  "properties": {
-    "order": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "minimum": 0
+  "$defs": {
+    "GltfReorderMaterialsPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "order"
+      ],
+      "properties": {
+        "order": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
       }
+    },
+    "GltfDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "asset": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfAssetDiff"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scene": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scenes": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfSceneDiff"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfScene"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nodes": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfNodeDiff"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfNode"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "meshes": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfMeshDiff"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfMesh"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "accessors": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfAccessorDiff"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfAccessor"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bufferViews": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfBufferView"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfBufferView"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "buffers": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfBufferDiff"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfBuffer"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bufferBytes": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        }
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "materials": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfMaterialDiff"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfMaterial"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "textures": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfTexture"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfTexture"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "images": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfImage"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfImage"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "samplers": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfSampler"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfSampler"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "skins": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfSkin"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfSkin"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "animations": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfAnimation"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfAnimation"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cameras": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "removed": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "modified": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "diff"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "diff": {
+                        "$ref": "#/$defs/GltfCamera"
+                      }
+                    }
+                  }
+                },
+                "added": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "index",
+                      "item"
+                    ],
+                    "properties": {
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "item": {
+                        "$ref": "#/$defs/GltfCamera"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensionsUsed": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensionsRequired": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sourceForm": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfSourceForm"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfAssetDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "generator": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "copyright": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "minVersion": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfJson": {
+      "oneOf": [
+        {
+          "type": "string",
+          "const": "Null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Bool"
+          ],
+          "properties": {
+            "Bool": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Number"
+          ],
+          "properties": {
+            "Number": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "String"
+          ],
+          "properties": {
+            "String": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Array"
+          ],
+          "properties": {
+            "Array": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GltfJson"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Object"
+          ],
+          "properties": {
+            "Object": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/GltfJson"
+                  }
+                ],
+                "additionalItems": false,
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        }
+      ]
+    },
+    "GltfSceneDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfScene": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfNodeDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "children": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mesh": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "camera": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "skin": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "matrix": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 16,
+                  "maxItems": 16
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "translation": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rotation": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 4,
+                  "maxItems": 4
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weights": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "mesh": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "camera": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "skin": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "matrix": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 16,
+              "maxItems": 16
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "translation": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rotation": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfMeshDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primitives": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GltfPrimitive"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weights": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfPrimitive": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "indices": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "material": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfMesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primitives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfPrimitive"
+          }
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfAccessorDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bufferView": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "byteOffset": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "componentType": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfComponentType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "normalized": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfAccessorType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "min": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sparse": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfSparseAccessor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfComponentType": {
+      "type": "string",
+      "enum": [
+        "Byte",
+        "UnsignedByte",
+        "Short",
+        "UnsignedShort",
+        "UnsignedInt",
+        "Float"
+      ]
+    },
+    "GltfAccessorType": {
+      "type": "string",
+      "enum": [
+        "Scalar",
+        "Vec2",
+        "Vec3",
+        "Vec4",
+        "Mat2",
+        "Mat3",
+        "Mat4"
+      ]
+    },
+    "GltfSparseAccessor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "indices",
+        "values"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "indices": {
+          "$ref": "#/$defs/GltfSparseIndices"
+        },
+        "values": {
+          "$ref": "#/$defs/GltfSparseValues"
+        }
+      }
+    },
+    "GltfSparseIndices": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bufferView",
+        "componentType"
+      ],
+      "properties": {
+        "bufferView": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "byteOffset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "componentType": {
+          "$ref": "#/$defs/GltfComponentType"
+        }
+      }
+    },
+    "GltfSparseValues": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bufferView"
+      ],
+      "properties": {
+        "bufferView": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "byteOffset": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "GltfAccessor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "componentType",
+        "count",
+        "type"
+      ],
+      "properties": {
+        "bufferView": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "byteOffset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "componentType": {
+          "$ref": "#/$defs/GltfComponentType"
+        },
+        "normalized": {
+          "type": "boolean"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "type": {
+          "$ref": "#/$defs/GltfAccessorType"
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sparse": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfSparseAccessor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfBufferView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "buffer",
+        "byteLength"
+      ],
+      "properties": {
+        "buffer": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "byteOffset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "byteStride": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfBufferDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "byteLength": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "uri": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfBuffer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "byteLength"
+      ],
+      "properties": {
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfMaterialDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pbrMetallicRoughness": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfPbrMetallicRoughness"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "normalTexture": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfNormalTextureInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occlusionTexture": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfOcclusionTextureInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "emissiveTexture": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfTextureInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "emissiveFactor": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "alphaMode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfAlphaMode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "alphaCutoff": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "doubleSided": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/GltfJson"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfPbrMetallicRoughness": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baseColorFactor": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "baseColorTexture": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfTextureInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metallicFactor": {
+          "type": "number"
+        },
+        "roughnessFactor": {
+          "type": "number"
+        },
+        "metallicRoughnessTexture": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfTextureInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfTextureInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "texCoord": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfNormalTextureInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "texCoord": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scale": {
+          "type": "number"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfOcclusionTextureInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "texCoord": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "strength": {
+          "type": "number"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfAlphaMode": {
+      "type": "string",
+      "enum": [
+        "OPAQUE",
+        "MASK",
+        "BLEND"
+      ]
+    },
+    "GltfMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pbrMetallicRoughness": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfPbrMetallicRoughness"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "normalTexture": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfNormalTextureInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occlusionTexture": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfOcclusionTextureInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "emissiveTexture": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfTextureInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "emissiveFactor": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "alphaMode": {
+          "$ref": "#/$defs/GltfAlphaMode"
+        },
+        "alphaCutoff": {
+          "type": "number"
+        },
+        "doubleSided": {
+          "type": "boolean"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfTexture": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sampler": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mimeType": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bufferView": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfSampler": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "magFilter": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "minFilter": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wrapS": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wrapT": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfSkin": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inverseBindMatrices": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "skeleton": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "joints": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfAnimation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfAnimationChannel"
+          }
+        },
+        "samplers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GltfAnimationSampler"
+          }
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfAnimationChannel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sampler",
+        "target"
+      ],
+      "properties": {
+        "sampler": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target": {
+          "$ref": "#/$defs/GltfAnimationChannelTarget"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfAnimationChannelTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "node": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/GltfAnimationPath"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfAnimationPath": {
+      "type": "string",
+      "enum": [
+        "translation",
+        "rotation",
+        "scale",
+        "weights"
+      ]
+    },
+    "GltfAnimationSampler": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "output"
+      ],
+      "properties": {
+        "input": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "interpolation": {
+          "$ref": "#/$defs/GltfInterpolation"
+        },
+        "output": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfInterpolation": {
+      "type": "string",
+      "enum": [
+        "LINEAR",
+        "STEP",
+        "CUBICSPLINE"
+      ]
+    },
+    "GltfCamera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "projection"
+      ],
+      "properties": {
+        "projection": {
+          "$ref": "#/$defs/GltfCameraProjection"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfCameraProjection": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Perspective"
+          ],
+          "properties": {
+            "Perspective": {
+              "$ref": "#/$defs/GltfPerspective"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Orthographic"
+          ],
+          "properties": {
+            "Orthographic": {
+              "$ref": "#/$defs/GltfOrthographic"
+            }
+          }
+        }
+      ]
+    },
+    "GltfPerspective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "yfov",
+        "znear"
+      ],
+      "properties": {
+        "aspectRatio": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "yfov": {
+          "type": "number"
+        },
+        "zfar": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "znear": {
+          "type": "number"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfOrthographic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xmag",
+        "ymag",
+        "zfar",
+        "znear"
+      ],
+      "properties": {
+        "xmag": {
+          "type": "number"
+        },
+        "ymag": {
+          "type": "number"
+        },
+        "zfar": {
+          "type": "number"
+        },
+        "znear": {
+          "type": "number"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extras": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GltfJson"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GltfSourceForm": {
+      "type": "string",
+      "enum": [
+        "json",
+        "glb"
+      ]
     }
   },
   "x-semio": {

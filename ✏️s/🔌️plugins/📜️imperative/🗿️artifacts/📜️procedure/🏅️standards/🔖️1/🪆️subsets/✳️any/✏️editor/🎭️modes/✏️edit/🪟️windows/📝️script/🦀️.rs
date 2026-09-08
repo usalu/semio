@@ -1,6 +1,6 @@
 //! 📝️ Imperative play app — the script window: the compiled, read-only textual form of the document.
 
-use crate::artifacts::procedure::ProcedureSnapshot;
+use crate::ProcedureSnapshot;
 use crate::editor::procedure::engine::ImperativeHost;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};

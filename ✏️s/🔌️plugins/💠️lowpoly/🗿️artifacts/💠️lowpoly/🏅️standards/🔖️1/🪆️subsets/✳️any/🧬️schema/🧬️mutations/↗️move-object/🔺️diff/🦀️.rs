@@ -4,8 +4,8 @@
 //! `invariant` when the position is non-finite.
 
 use super::MoveObject;
-use crate::artifacts::lowpoly::diff::diff_objects_patch;
-use crate::artifacts::lowpoly::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot, LowpolyTransform};
+use crate::diff::diff_objects_patch;
+use crate::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot, LowpolyTransform};
 
 //#region 🔖️Diff
 pub fn diff(payload: &MoveObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

@@ -95,33 +95,26 @@ path = "🦀️.rs"
 
 [features]
 default = []
-cross-fem = ["dep:fem"]
-
-[[test]]
-name = "config_mutation"
-path = "../../🎚️config/🧪️tests/🦀️.rs"
-
-[[test]]
-name = "surface_render"
-path = "../../🖥️app-surface/🧪️tests/🦀️.rs"
+cross-fem = ["semio-s-artifact-norm-en1992/cross-fem", "semio-s-artifact-norm-en1993/cross-fem"]
 
 [dependencies]
-semio-s-artifact-stdio-semio = { workspace = true }
-semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-job = { workspace = true }
-semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
-semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-# 🔀️ O1 de-dyn: `#[dyn_enum]`/`dyn_enum_close!` codegen replacing `dyn NationalAnnex`/`dyn ScriptRuntime`.
-semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-# 🏗️ Cross-plugin: EN 1992/EN 1993 solve a simply supported beam with the FEM plugin's shared kernel
-# (optional until `semio-s-plugin-fem` completes Wave 4 mutations migration).
-fem = { path = "../../../🏗️fem/📦️packages/🦀️rust", package = "semio-s-plugin-fem", default-features = false, optional = true }
-semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-s-artifact-norm-din4108 = { workspace = true }
+semio-s-artifact-norm-din16798 = { workspace = true }
+semio-s-artifact-norm-din18599 = { workspace = true }
+semio-s-artifact-norm-en1990 = { workspace = true }
+semio-s-artifact-norm-en1991 = { workspace = true }
+semio-s-artifact-norm-en1992 = { workspace = true }
+semio-s-artifact-norm-en1993 = { workspace = true }
+semio-s-artifact-norm-en1994 = { workspace = true }
+semio-s-artifact-norm-en1995 = { workspace = true }
+semio-s-artifact-norm-en1996 = { workspace = true }
+semio-s-artifact-norm-en1997 = { workspace = true }
+semio-s-artifact-norm-en1998 = { workspace = true }
+semio-s-artifact-norm-en1999 = { workspace = true }
+semio-s-artifact-norm-iso16757 = { workspace = true }
+semio-s-artifact-norm-vdi3805 = { workspace = true }
 
 [dev-dependencies]
-semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
-serde.workspace = true
-serde_json.workspace = true
-semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-async-macros = { workspace = true }

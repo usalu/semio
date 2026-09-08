@@ -3,7 +3,7 @@
 //! coercion between `PdfSnapshot`'s and `PresentationSnapshot`'s (unrelated) field shapes — not a real
 //! pdf->presentation semantic mapping (unchanged behaviour, pre-dates this ticket) — `IoFidelity::Lossy`.
 
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::PresentationSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

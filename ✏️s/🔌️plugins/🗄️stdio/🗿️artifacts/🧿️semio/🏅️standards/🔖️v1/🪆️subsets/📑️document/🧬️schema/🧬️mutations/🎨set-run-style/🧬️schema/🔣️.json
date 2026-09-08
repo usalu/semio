@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutation/set-run-style.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/document/mutation/set-run-style/schema.json",
   "title": "SetRunStyle",
   "type": "object",
   "additionalProperties": false,
@@ -20,9 +20,9 @@
     "style": {
       "$ref": "#/$defs/RunStyle"
     },
-    "kind": {
+    "mutation": {
       "const": "setRunStyle",
-      "description": "Aggregate discriminator spliced in by DocPathSegment; absent when the payload stands alone."
+      "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

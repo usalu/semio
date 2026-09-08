@@ -1,6 +1,6 @@
 //! playground <- json
-use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
-use crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA;
+use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+use crate::PLAYGROUND_DOCUMENT_SCHEMA;
 use semio_s_artifact_stdio_json::schema::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::JsonSnapshot;
 

@@ -4,7 +4,9 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
+    #[cfg(feature = "conversion-presentation")]
     use super::super::export::serializers::artifacts::pptx::v_ecma_376::any::SemioPresentationToPptx;
+    #[cfg(feature = "conversion-presentation")]
     use super::super::import::deserializers::artifacts::pptx::v_ecma_376::any::SemioPresentationFromPptx;
     use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
     use crate::standards::v1::subsets::presentation::schema::SemioPresentationAnalyzer;
@@ -108,8 +110,10 @@ pub mod derived_composition {
     /// 🚪️ presentation<->pptx bridge row (W4 G6) — one `deserializer_entry_of` (pptx -> semio) +
     /// one `serializer_entry_of` (semio -> pptx); `register_composer_entries` derives all 4 `IoKey`s
     /// from these 2 rows (see `document`'s own composer for the fuller doc comment on this mechanism).
+    #[cfg(feature = "conversion-presentation")]
     static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    #[cfg(feature = "conversion-presentation")]
     fn io_entries() -> &'static [ComposerEntry] {
         IO_ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioPresentationFromPptx>(), serializer_entry_of::<SemioPresentationToPptx>()])
     }
@@ -125,6 +129,7 @@ pub mod derived_composition {
             crate::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA,
         )).expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        #[cfg(feature = "conversion-presentation")]
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -139,7 +144,7 @@ pub mod derived_composition {
     //#endregion 🔖️Register
 
     //#region 🧪️Tests
-    #[cfg(test)]
+    #[cfg(all(test, feature = "conversion-presentation"))]
     mod tests {
         use super::*;
         use crate::standards::v1::subsets::presentation::schema::snapshot::{Slide, SlideLayout, SlideMaster};

@@ -1,14 +1,17 @@
 /** 🧭️ Qualifies isolated browser WASI resources against neutral traces and Preview2. */
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import Ajv2020 from "ajv/dist/2020.js";
+import { join, resolve } from "node:path";
+import Ajv from "ajv";
 import ts from "typescript";
 import { runExactCargoLawProcess } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 export async function testBrowserWasiActivation(repoRoot: string): Promise<void> {
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "🧬️.schema.json"), "utf8")));
+  const schemaDocument = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(schemaDocument);
+  const validate = ajv.getSchema(`${schemaDocument.$id}#/$defs/WasiActivationV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   const { createBrowserWasiActivation } = await import("../../🌐️wasi/🟦️.ts");
   const program = ts.createProgram([join(import.meta.dir, "../../🌐️wasi/🟦️.ts")], { noEmit: true, strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, lib: ["lib.es2023.d.ts", "lib.esnext.disposable.d.ts", "lib.dom.d.ts"], types: [], skipLibCheck: true });

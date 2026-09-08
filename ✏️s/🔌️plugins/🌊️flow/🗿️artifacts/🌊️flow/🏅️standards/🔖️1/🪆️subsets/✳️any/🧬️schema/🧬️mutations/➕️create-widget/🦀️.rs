@@ -1,9 +1,9 @@
 //! ➕️ Brings a new [`Widget`] into existence at `index`.
 
-use crate::artifacts::flow::FlowSnapshot;
-use crate::artifacts::flow::schema::diff::text::FlowDiff;
-use crate::artifacts::flow::schema::mutations::FlowMutation;
-use flow::Widget;
+use crate::FlowSnapshot;
+use crate::schema::diff::text::FlowDiff;
+use crate::schema::mutations::FlowMutation;
+use semio_framework_artifact_flow_flow::Widget;
 use protocol::{Identified, MutationKind, SemanticDescriptor};
 
 //#region ➕️CreateWidget

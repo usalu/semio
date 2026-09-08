@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteSolid` — recreates the captured solid from `base`.
 use super::DeleteSolid;
-use crate::artifacts::fem3d::mutations::{create_solid, Fem3dMutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::{create_solid, Fem3dMutation};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteSolid, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

@@ -2,7 +2,7 @@
 //! build-up (an intrinsically ordered, anonymous collection — no stable id on `LayerDocument`).
 
 
-use crate::artifacts::din4108::{Din4108Mutation, Din4108Snapshot, LayerDocument};
+use crate::{Din4108Mutation, Din4108Snapshot, LayerDocument};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

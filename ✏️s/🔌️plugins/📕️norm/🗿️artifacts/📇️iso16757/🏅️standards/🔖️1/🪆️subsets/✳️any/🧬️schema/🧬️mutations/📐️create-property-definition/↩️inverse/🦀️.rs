@@ -1,8 +1,8 @@
 //! ↩️ `create-property-definition` — undo is `delete-property-definition`, unless `base` already
 //! had this id (then `create` was a no-op and there's nothing to undo).
 
-use crate::artifacts::iso16757::mutations::delete_property_definition;
-use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
+use crate::mutations::delete_property_definition;
+use crate::{Iso16757Mutation, Iso16757Snapshot};
 
 use super::mutation::CreatePropertyDefinition;
 

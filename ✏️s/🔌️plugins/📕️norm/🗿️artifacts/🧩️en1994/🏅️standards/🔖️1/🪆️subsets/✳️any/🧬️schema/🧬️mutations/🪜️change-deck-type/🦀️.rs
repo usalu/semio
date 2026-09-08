@@ -1,7 +1,7 @@
 //! 🧱 `change-deck-type` — sets the En 1994 composite deck profile type scalar.
 
 
-use crate::artifacts::en1994::{En1994Mutation, En1994Snapshot};
+use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

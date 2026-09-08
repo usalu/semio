@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/delete-element.json",
+  "$id": "https://semio.tech/schema/s/fem/3d/1/mesh/mutation/delete-element/schema.json",
   "title": "DeleteElement",
   "type": "object",
   "additionalProperties": false,

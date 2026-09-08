@@ -1,7 +1,7 @@
 //! 🏷️ `rename-product` — renames a catalogue product's display title, addressed by article number.
 
 
-use crate::artifacts::vdi3805::{LocalizedText, Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{LocalizedText, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
@@ -22,7 +22,7 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for RenameProduct 
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> String {
-        format!("Rename product \"{}\" to \"{}\"", self.id, crate::artifacts::vdi3805::text_in(&self.new_title, "en"))
+        format!("Rename product \"{}\" to \"{}\"", self.id, crate::text_in(&self.new_title, "en"))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

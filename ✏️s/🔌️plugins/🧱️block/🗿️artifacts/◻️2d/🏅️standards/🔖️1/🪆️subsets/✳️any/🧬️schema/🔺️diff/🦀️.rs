@@ -1,6 +1,6 @@
 //! 🧬️ Block2d diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation};
+use crate::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
 use schema::ArtifactSchema;
 
@@ -13,7 +13,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.block.block2d")]
 pub struct Block2dDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::block2d::schema::Block2dArtifact>>,
+    pub artifact: Option<Box<crate::schema::Block2dArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

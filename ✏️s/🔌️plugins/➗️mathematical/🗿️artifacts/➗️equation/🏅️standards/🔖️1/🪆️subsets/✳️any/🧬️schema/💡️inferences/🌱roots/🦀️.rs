@@ -16,8 +16,8 @@
 //! `polynomial::algebraic` machinery (irrational/complex roots, symbolic closed forms) is future
 //! work once the mutation/inference table grows past this vertical slice.
 
-use crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::{EquationNode, EquationNodeKind, EquationExprSnapshot};
-use crate::artifacts::equation::EquationSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::{EquationNode, EquationNodeKind, EquationExprSnapshot};
+use crate::EquationSnapshot;
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state.
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
@@ -193,7 +193,7 @@ pub fn compute_equation_roots(snapshot: &EquationSnapshot) -> Vec<EquationRoot> 
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
+    use crate::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
 
     /// 🧪️ `x^2 - 3x + 2 = (x-1)(x-2)`, roots `{1, 2}` — built directly as a labeled tree (`Add` of
     /// `x^2`, `-3x`, `2`), the same shape `expr_to_equation_node` would produce from

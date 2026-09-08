@@ -1,8 +1,8 @@
 //! 🔺️ `change-wall-thickness-mm` sparse diff construction — writes only `En1996Diff.wall_thickness_mm` from the payload.
 
-use crate::artifacts::en1996::diff::En1996Diff;
-use crate::artifacts::en1996::mutations::change_wall_thickness_mm::ChangeWallThicknessMm;
-use crate::artifacts::en1996::En1996Snapshot;
+use crate::diff::En1996Diff;
+use crate::mutations::change_wall_thickness_mm::ChangeWallThicknessMm;
+use crate::En1996Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeWallThicknessMm, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {

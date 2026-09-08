@@ -10,8 +10,8 @@
 //! topic modules it bridges.
 
 #[cfg(test)]
-use crate::artifacts::remodeling::ImageAsset;
-use crate::artifacts::remodeling::{CalibrationState, CameraPosePreview, DenseResolution, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
+use crate::ImageAsset;
+use crate::{CalibrationState, CameraPosePreview, DenseResolution, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
 use crate::editor::remodeling::engine::{camera as remodeling_camera, geo as remodeling_geo, mesh as remodeling_mesh, reconstruction as remodeling_engine, sfm as remodeling_sfm, video as remodeling_video};
 
 //#region 🔖️EngineMapping

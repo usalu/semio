@@ -11,7 +11,7 @@
 //! `InferredField`/incremental caching is needed here either.
 
 use super::super::fastened_layout_snapshot;
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::Puzzle2dSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️FlatPosition
@@ -45,7 +45,7 @@ pub fn compute_flat_position(snapshot: &Puzzle2dSnapshot) -> Puzzle2dFlatPositio
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
+    use crate::{Puzzle2dEdge, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
 
     //#region 🧸️Fixtures
     fn parent_child_snapshot() -> Puzzle2dSnapshot {
@@ -53,7 +53,7 @@ mod tests {
         let p = Puzzle2dNode { id: "p".into(), x: 5.0, y: 7.0, anchor: Puzzle2dNodeAnchor::Fixed, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
         let c = Puzzle2dNode { id: "c".into(), anchor: Puzzle2dNodeAnchor::Derived, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
         let e = Puzzle2dEdge { id: "e".into(), source: "p:h".into(), target: "c:h".into(), x: 3.0, y: -2.0, ..Default::default() };
-        Puzzle2dSnapshot { schema: crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA.to_string(), camera: Default::default(), nodes: vec![p, c], edges: vec![e], meta: Default::default() }
+        Puzzle2dSnapshot { schema: crate::PUZZLE_2D_SCHEMA.to_string(), camera: Default::default(), nodes: vec![p, c], edges: vec![e], meta: Default::default() }
     }
     //#endregion 🧸️Fixtures
 

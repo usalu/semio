@@ -1,8 +1,8 @@
 //! 🔀 Direct Imperative mutation — `ReorderSteps` repositions an id-keyed step within its `PathRef`'s
 //! step list (never spatial — see `📓️taxonomy.md`'s `reorder` row).
-use crate::artifacts::procedure::diff::ProcedureDiff;
-use crate::artifacts::procedure::mutations::ProcedureMutation;
-use crate::artifacts::procedure::{ProcedureSnapshot, PathRef};
+use crate::diff::ProcedureDiff;
+use crate::mutations::ProcedureMutation;
+use crate::{ProcedureSnapshot, PathRef};
 
 //#region 🔖️Mutation
 /// 🔀 `reorder-steps` payload — FINAL-state target index for `id` within its sibling list.

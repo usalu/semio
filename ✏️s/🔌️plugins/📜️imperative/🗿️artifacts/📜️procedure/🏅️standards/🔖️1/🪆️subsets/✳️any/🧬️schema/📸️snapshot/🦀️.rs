@@ -1,7 +1,7 @@
 //! 🧬️ Imperative snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::procedure::{ProcedureFlowChild, ProcedureTextChild};
-use schema::ArtifactSchema;
+use crate::{ProcedureFlowChild, ProcedureTextChild};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted imperative document snapshot (persistent fields of the artifact). Ticket
@@ -27,7 +27,7 @@ pub struct ProcedureSnapshot {
 
 impl Default for ProcedureSnapshot {
     fn default() -> Self {
-        crate::artifacts::procedure::procedure_snapshot_with_content("procedure.document", &crate::artifacts::procedure::Path::new(), &std::collections::BTreeMap::new())
+        crate::procedure_snapshot_with_content("procedure.document", &crate::Path::new(), &std::collections::BTreeMap::new())
     }
 }
 //#endregion 🔖️Snapshot

@@ -1,7 +1,7 @@
 //! 📍️ TrinityGraph mutation — `MoveNode`: absolute spatial reposition of a node.
-use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::mutations::TrinityGraphMutation;
-use crate::artifacts::jack::JackSnapshot;
+use crate::diff::JackDiff;
+use crate::mutations::TrinityGraphMutation;
+use crate::JackSnapshot;
 
 //#region 🔖️Mutation
 /// 📍️ `move-node` payload — FINAL-state absolute `(x, y)`.

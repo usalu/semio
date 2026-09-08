@@ -1,7 +1,7 @@
 //! 🚪️ equation -> json. The exact carrier is `{graph, geometry, equation}`; composed-child
 //! handles are persistence references and never stand in for their materialized content.
 
-use crate::artifacts::equation::{equation_fixture, EquationSnapshot};
+use crate::{equation_fixture, EquationSnapshot};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

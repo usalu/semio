@@ -1,5 +1,5 @@
 {
-  "$schema": "./🧬️schema/⏱️clock.json",
+  "$schema": "https://semio.tech/schema/framework/job/budget/schema.json#/$defs/Clock",
   "browser": [
     { "milliseconds": "0", "microseconds": "0" },
     { "milliseconds": "0.0005", "microseconds": "0" },

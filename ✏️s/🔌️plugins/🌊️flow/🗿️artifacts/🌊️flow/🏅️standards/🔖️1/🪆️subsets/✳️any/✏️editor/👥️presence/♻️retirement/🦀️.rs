@@ -1,11 +1,11 @@
 //! 🫧️ Flow presence returns preview identifiers through the shared paged domain owner.
 
 use super::{FlowPresence, FlowPresenceMutation};
-use flow::retained::{FlowOwner, FlowRetirement};
+use semio_framework_artifact_flow_flow::retained::{FlowOwner, FlowRetirement};
 use std::{mem::ManuallyDrop, sync::Arc};
 use store::{ErasedSnapshotRetirement, SnapshotRetirementFactory, SnapshotRetirementStep};
 
-const _: () = assert!(!std::mem::needs_drop::<flow::CameraJson>());
+const _: () = assert!(!std::mem::needs_drop::<semio_framework_artifact_flow_flow::CameraJson>());
 
 /// 🌊️ Exact local and peer snapshot ownership, including variable-length UTF-8 identifiers.
 pub struct FlowPresenceRetirementFactory;

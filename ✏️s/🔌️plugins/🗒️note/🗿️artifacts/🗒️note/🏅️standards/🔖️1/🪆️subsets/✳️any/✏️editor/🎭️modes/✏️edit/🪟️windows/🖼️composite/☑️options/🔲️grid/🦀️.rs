@@ -1,7 +1,7 @@
 //! 🔲️ Composite-window option — grid visibility/spacing/subdivisions/opacity.
 //! Its command handlers live in `🎮️commands/🔲️grid`.
 
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteSnapshot;
 use crate::editor::note::terminology::NotePlayLabels;
 use semio_framework_plugin::WindowMeasure;
 

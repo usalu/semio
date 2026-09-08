@@ -1,7 +1,7 @@
 //! ↩️ `rename-object` — undo restores the base-state name; missing id ⇒ `Vec::new()`.
 
 use super::RenameObject;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &RenameObject, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

@@ -1,6 +1,6 @@
 //! 👥️ Flow presence — shareable live ephemeral state + mutations.
 
-use flow::CameraJson;
+use semio_framework_artifact_flow_flow::CameraJson;
 use protocol::Mutation;
 use store::ArtifactPack;
 

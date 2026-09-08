@@ -1,5 +1,5 @@
 //! gismap -> png
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::GisMapSnapshot;
 
 pub fn register() {}
 

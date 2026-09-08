@@ -2,7 +2,7 @@
 //!
 //! Session-only but real, undoable config: it round-trips through the config `ArtifactStore` exactly
 //! like document content, with a true `backwards` per operation. Nothing here is document state — the
-//! map's positions/routes/regions live in `crate::artifacts::gismap`.
+//! map's positions/routes/regions live in `crate`.
 
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -105,7 +105,7 @@ impl Default for Gis2dConfig {
             camera_json: default_gis2d_camera_json(),
             render_mode: default_gis2d_render_mode(),
             vector_style: default_gis2d_vector_style(),
-            // 🔽️ Mirrors `framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC`, spelled out here so
+            // 🔽️ Mirrors `semio_framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC`, spelled out here so
             // the config type stays independent of the tiled-map surface crate.
             lod_mode: "automatic".into(),
             layer_stroke_scale: BTreeMap::new(),
@@ -184,7 +184,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn gis2d_config_default_lod_mode_matches_the_tiled_map_surface_constant() {
-        assert_eq!(Gis2dConfig::default().lod_mode, framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC);
+        assert_eq!(Gis2dConfig::default().lod_mode, semio_framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC);
     }
 
     #[semio_framework_async_macros::async_test]

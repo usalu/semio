@@ -1,8 +1,8 @@
 //! 🔺️ `change-use-fem` sparse diff construction — writes only `En1992Diff.use_fem` from the payload.
 
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::change_use_fem::ChangeUseFem;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::change_use_fem::ChangeUseFem;
+use crate::En1992Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeUseFem, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {

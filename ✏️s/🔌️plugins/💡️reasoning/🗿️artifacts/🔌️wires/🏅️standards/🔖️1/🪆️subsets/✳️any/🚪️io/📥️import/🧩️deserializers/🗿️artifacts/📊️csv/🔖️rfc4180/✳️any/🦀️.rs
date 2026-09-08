@@ -9,7 +9,7 @@
 //! first, as the `FROM: CSV_DIALECT` coordinate requires, proving the payload is real CSV before
 //! discarding it.
 
-use crate::artifacts::wires::WiresSnapshot;
+use crate::WiresSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -28,6 +28,6 @@ impl Deserializer<WiresSnapshot> for CsvIntoWires {
             return Err(IoError { message: "CsvIntoWires: expected a binary csv payload".to_string(), diagnostics: Vec::new() });
         };
         let _csv = <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("CsvIntoWires: csv decode failed: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(crate::artifacts::wires::empty_wires_snapshot()))
+        Ok(IoOutcome::clean(crate::empty_wires_snapshot()))
     }
 }

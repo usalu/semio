@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::raster::RasterSnapshot;
+use crate::RasterSnapshot;
 
 /// 📄️ The `semio` example document, handcrafted in the `.raster` DSL.
 pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
@@ -25,14 +25,14 @@ pub fn print_dsl(document: &RasterSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::raster::RasterOwnedMap;
-    use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+    use crate::RasterOwnedMap;
+    use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
     /// 📄️ Handcrafted document exercising every layer kind/field, shared with the `pack`/`op`
     /// taxonomy nodes' own copies (each node keeps its own private copy, per §7 test isolation).
     fn representative_raster_document() -> RasterSnapshot {
         let mut assets = RasterOwnedMap::new();
-        assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() })).expect("bounded fixture operation succeeds");
+        assets.insert("asset-1".into(), crate::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() })).expect("bounded fixture operation succeeds");
         let mut params = RasterOwnedMap::new();
         params.insert("brightness".into(), dsl::DslValue::float(0.06)).expect("bounded fixture operation succeeds");
         params.insert("label".into(), dsl::DslValue::String("Warm \"Curve\"".to_string())).expect("bounded fixture operation succeeds");
@@ -96,7 +96,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn semio_example_dsl_round_trips() {
-        let fixture = crate::artifacts::raster::schema::semio_fixture_snapshot();
+        let fixture = crate::schema::semio_fixture_snapshot();
         store::os_store::test_support::assert_dsl_round_trip(&fixture);
         let printed = print_dsl(&fixture);
         let reparsed = parse_dsl(&printed).expect("parse printed semio fixture");

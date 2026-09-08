@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/create-mesh.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/create-mesh/schema.json",
   "title": "CreateMesh",
   "type": "object",
   "additionalProperties": false,
@@ -9,12 +9,15 @@
   ],
   "properties": {
     "mesh": {
-      "title": "SemioMesh",
+      "$ref": "#/$defs/SemioMesh"
+    }
+  },
+  "$defs": {
+    "SemioMesh": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
-        "primitives"
+        "id"
       ],
       "properties": {
         "id": {
@@ -23,141 +26,136 @@
         "primitives": {
           "type": "array",
           "items": {
-            "title": "SemioPrimitive",
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "colors",
-              "id",
-              "indices",
-              "normals",
-              "positions",
-              "topology",
-              "uvs"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "topology": {
-                "type": "string",
-                "enum": [
-                  "Points",
-                  "Lines",
-                  "LineStrip",
-                  "Triangles",
-                  "TriangleStrip",
-                  "TriangleFan"
-                ]
-              },
-              "positions": {
-                "type": "array",
-                "items": {
-                  "title": "SemioPoint3",
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "x",
-                    "y",
-                    "z"
-                  ],
-                  "properties": {
-                    "x": {
-                      "type": "number"
-                    },
-                    "y": {
-                      "type": "number"
-                    },
-                    "z": {
-                      "type": "number"
-                    }
-                  }
-                }
-              },
-              "normals": {
-                "type": "array",
-                "items": {
-                  "title": "SemioPoint3",
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "x",
-                    "y",
-                    "z"
-                  ],
-                  "properties": {
-                    "x": {
-                      "type": "number"
-                    },
-                    "y": {
-                      "type": "number"
-                    },
-                    "z": {
-                      "type": "number"
-                    }
-                  }
-                }
-              },
-              "uvs": {
-                "type": "array",
-                "items": {
-                  "title": "SemioUv",
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "u",
-                    "v"
-                  ],
-                  "properties": {
-                    "u": {
-                      "type": "number"
-                    },
-                    "v": {
-                      "type": "number"
-                    }
-                  }
-                }
-              },
-              "colors": {
-                "type": "array",
-                "items": {
-                  "title": "SemioRgba",
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "a",
-                    "b",
-                    "g",
-                    "r"
-                  ],
-                  "properties": {
-                    "r": {
-                      "type": "number"
-                    },
-                    "g": {
-                      "type": "number"
-                    },
-                    "b": {
-                      "type": "number"
-                    },
-                    "a": {
-                      "type": "number"
-                    }
-                  }
-                }
-              },
-              "indices": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              },
-              "materialId": {
-                "type": "string"
-              }
-            }
+            "$ref": "#/$defs/SemioPrimitive"
           }
+        }
+      }
+    },
+    "SemioPrimitive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "topology": {
+          "$ref": "#/$defs/SemioTopology"
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPoint3"
+          }
+        },
+        "normals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioPoint3"
+          }
+        },
+        "uvs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioUv"
+          }
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SemioRgba"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "materialId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SemioTopology": {
+      "type": "string",
+      "enum": [
+        "points",
+        "lines",
+        "lineStrip",
+        "triangles",
+        "triangleStrip",
+        "triangleFan"
+      ]
+    },
+    "SemioPoint3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioUv": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "u",
+        "v"
+      ],
+      "properties": {
+        "u": {
+          "type": "number"
+        },
+        "v": {
+          "type": "number"
+        }
+      }
+    },
+    "SemioRgba": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ],
+      "properties": {
+        "r": {
+          "type": "number"
+        },
+        "g": {
+          "type": "number"
+        },
+        "b": {
+          "type": "number"
+        },
+        "a": {
+          "type": "number"
         }
       }
     }

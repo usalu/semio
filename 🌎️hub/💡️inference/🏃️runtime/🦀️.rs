@@ -269,8 +269,8 @@ impl GisMapApprovalCommitterV1 for UnavailableGisMapApprovalCommitterV1 {
     }
 }
 
-type GisMapParentSnapshotV1 = semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot;
-type GisMapParentMutationV1 = semio_s_plugin_gis::artifacts::gismap::mutations::GisMapMutation;
+type GisMapParentSnapshotV1 = semio_s_artifact_gis_gismap::GisMapSnapshot;
+type GisMapParentMutationV1 = semio_s_artifact_gis_gismap::mutations::GisMapMutation;
 type GisMapDrawingSnapshotV1 = semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 type GisMapDrawingMutationV1 = semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
 type GisMapValueSnapshotV1 = semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
@@ -744,7 +744,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         envelope.dialect = Some(directory::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() });
         let digest = *semio_framework_hash::hash(&snapshot.encode_pack()).as_bytes();
         let runtime = directory::os_store::ArtifactStoreInitializationRuntime::new(id, GIS_DOCUMENT_SCHEMA, snapshot, digest);
-        directory::os_store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, semio_s_plugin_gis::artifacts::gismap::spr::gis_map_document_store_owners())
+        directory::os_store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, semio_s_artifact_gis_gismap::spr::gis_map_document_store_owners())
     }
 
     fn drawing_store(id: &str, parent: directory::os_io::ArtifactRef, snapshot: GisMapDrawingSnapshotV1) -> GisMapDrawingStoreV1 {
@@ -770,8 +770,8 @@ impl RetainedGisMapApprovalCommitterV1 {
     }
 
     fn derived_children(snapshot: &GisMapParentSnapshotV1) -> (GisMapDrawingSnapshotV1, GisMapValueSnapshotV1) {
-        use semio_s_plugin_gis::artifacts::gismap::schema::{gis_map_descriptor_json, gis_map_snapshot_to_drawing};
-        (gis_map_snapshot_to_drawing(snapshot), semio_s_plugin_gis::artifacts::gismap::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(snapshot)))
+        use semio_s_artifact_gis_gismap::schema::{gis_map_descriptor_json, gis_map_snapshot_to_drawing};
+        (gis_map_snapshot_to_drawing(snapshot), semio_s_artifact_gis_gismap::gis_map_value_from_descriptor_json(&gis_map_descriptor_json(snapshot)))
     }
 
     fn stores_match(owners: &GisMapDocumentStoresV1, snapshot: &GisMapParentSnapshotV1) -> bool {
@@ -838,8 +838,8 @@ impl RetainedGisMapApprovalCommitterV1 {
 
     fn preflight_undo(request: &GisMapApprovalUndoCommitRequestV1<'_>) -> Result<(GisMapCommitIdentityV1, GisMapParentSnapshotV1), GisMapApprovalCommitErrorV1> {
         use directory::Inference as _;
-        use semio_s_plugin_gis::artifacts::gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
-        use semio_s_plugin_gis::artifacts::gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
+        use semio_s_artifact_gis_gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
+        use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
         let snapshot = <GisMapParentSnapshotV1 as directory::ArtifactPack>::decode_pack(request.base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         let actor = request.actor.strip_prefix("user:").and_then(|value| value.split_once("#session:"));
         let target = request.target;
@@ -1245,12 +1245,12 @@ impl RetainedGisMapApprovalCommitterV1 {
     ) -> Result<RetainedGisMapDocumentStateV1, (GisMapApprovalCommitErrorV1, GisMapDocumentStoresV1)> {
         use directory::os_store::durable_group::{DurableOwnedMapMemberAdmissionV1, DurableOwnedThreeStoreMapAssemblyV1};
         use directory::Inference as _;
-        use semio_s_plugin_gis::artifacts::gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
+        use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
         use semio_s_plugin_gis::editor::gis2d::{gis_map_drawing_stamped_one_item_preparation_factory, gis_map_parent_stamped_one_item_preparation_factory, gis_map_value_stamped_one_item_preparation_factory, GisMapOneItemStampV1};
         let work = match &identity.operation {
             GisMapCommitOperationV1::Approval => GisMapInference::infer(snapshot).create_region_group_work(snapshot, &identity.job_id),
             GisMapCommitOperationV1::Undo { original_job_id, original_command, .. } => {
-                use semio_s_plugin_gis::artifacts::gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
+                use semio_s_artifact_gis_gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
                 let command = match CanonicalInferenceCommandV1::decode(original_command.as_slice()) {
                     Ok(command) => command,
                     Err(_) => return Err((GisMapApprovalCommitErrorV1::Rejected, owners)),
@@ -2355,7 +2355,7 @@ impl InferenceMapBaseV1 {
 
     /// 🕸️ Returns the composed child members this Map owns, in stable-member order.
     pub fn composed_children(&self) -> Result<Vec<String>, InferenceRouteErrorV1> {
-        let snapshot = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(self.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+        let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(self.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
         let mut members = Vec::with_capacity(3);
         if !snapshot.drawing.child_id.is_empty() {
             members.push(snapshot.drawing.child_id.clone());
@@ -2761,7 +2761,7 @@ impl HubInferenceRuntimeV1 {
         checkpoint: &mut dyn FnMut(u64, u64) -> Result<(), InferenceRouteErrorV1>,
     ) -> Result<InferenceProposalV1, InferenceRouteErrorV1> {
         use directory::FromValue;
-        use semio_s_plugin_gis::artifacts::gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
+        use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
         let _ = identity;
         let budgets = semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: ALLOCATION_BYTES, work_units: WORK_UNIT_LIMIT, recursion_depth: RECURSION_DEPTH };
         let request = semio_framework_plugin::ArtifactInferenceExecutionRequest {
@@ -2774,7 +2774,7 @@ impl HubInferenceRuntimeV1 {
             dependencies: &[],
         };
         let mut failure: Option<InferenceRouteErrorV1> = None;
-        let execution = semio_s_plugin_gis::artifacts::gismap::infer_gis_map_controlled(&request, &mut |completed| {
+        let execution = semio_s_artifact_gis_gismap::infer_gis_map_controlled(&request, &mut |completed| {
             if let Err(error) = control.checkpoint(completed) {
                 failure = Some(error.into());
                 return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("hub.inference.interrupted", "bounded inference interrupted"));
@@ -2796,7 +2796,7 @@ impl HubInferenceRuntimeV1 {
             Ok(execution) => execution,
             Err(_) => return Err(failure.unwrap_or(InferenceRouteErrorV1::Invalid)),
         };
-        let snapshot = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+        let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
         let inference = GisMapInference::from_value(directory::pack_rt::decode_wire_value(&execution.canonical_payload).map_err(|_| InferenceRouteErrorV1::Invalid)?).map_err(|_| InferenceRouteErrorV1::Invalid)?;
         let mutation = inference.bounds_proposal(&snapshot, job_id).map_err(|_| InferenceRouteErrorV1::Conflict)?;
         let proposal_bytes = directory::os_pack::json::to_json_string(&mutation).into_bytes();
@@ -2807,7 +2807,7 @@ impl HubInferenceRuntimeV1 {
 
     /// ✍️ Rebuilds the sole `CreateRegion` and its inverse server-side and stamps one canonical envelope.
     pub fn server_stamped_command(&self, identity: &InferenceIdentityV1, job_id: &str, base: &InferenceMapBaseV1, proposal_hash: &str, now_ms: u64) -> Result<InferencePrivateBytesV1, InferenceRouteErrorV1> {
-        use semio_s_plugin_gis::artifacts::gismap::mutations::inverse_gis_map_mutation;
+        use semio_s_artifact_gis_gismap::mutations::inverse_gis_map_mutation;
         let (snapshot, inference) = deterministic_map_inference(base, job_id)?;
         let mutation = inference.bounds_proposal(&snapshot, job_id).map_err(|_| InferenceRouteErrorV1::Conflict)?;
         let proposal_bytes = directory::os_pack::json::to_json_string(&mutation).into_bytes();
@@ -2834,8 +2834,8 @@ impl HubInferenceRuntimeV1 {
     /// ↩️ Rebuilds the original fixed-three work and stamps only its exact typed inverse.
     fn server_stamped_undo_command(&self, target: &super::sqlite::GisMapApprovalUndoTargetV1, idempotency_key: &str, base: &InferenceMapBaseV1, now_ms: u64) -> Result<GisMapPreparedUndoCommandV1, InferenceRouteErrorV1> {
         use directory::Inference as _;
-        use semio_s_plugin_gis::artifacts::gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
-        use semio_s_plugin_gis::artifacts::gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
+        use semio_s_artifact_gis_gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
+        use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
 
         if sha256(target.original_command.as_slice()) != target.original_command_hash {
             return Err(InferenceRouteErrorV1::Conflict);
@@ -2846,7 +2846,7 @@ impl HubInferenceRuntimeV1 {
         if inverses.len() != 1 {
             return Err(InferenceRouteErrorV1::Conflict);
         }
-        let current = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+        let current = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
         let mut before = current.clone();
         apply_gis_map_mutation(&mut before, &inverses[0]).map_err(|_| InferenceRouteErrorV1::Conflict)?;
         let work = GisMapInference::infer(&before).create_region_group_work(&before, &target.original_job_id).map_err(|_| InferenceRouteErrorV1::Conflict)?;
@@ -2939,11 +2939,11 @@ impl HubInferenceRuntimeV1 {
 fn deterministic_map_inference(
     base: &InferenceMapBaseV1,
     job_id: &str,
-) -> Result<(semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot, semio_s_plugin_gis::artifacts::gismap::standards::v1::subsets::any::schema::inferences::GisMapInference), InferenceRouteErrorV1> {
+) -> Result<(semio_s_artifact_gis_gismap::GisMapSnapshot, semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference), InferenceRouteErrorV1> {
     use directory::FromValue;
-    use semio_s_plugin_gis::artifacts::gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
+    use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
     let budgets = semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: ALLOCATION_BYTES, work_units: WORK_UNIT_LIMIT, recursion_depth: RECURSION_DEPTH };
-    let execution = semio_s_plugin_gis::artifacts::gismap::infer_gis_map_controlled(
+    let execution = semio_s_artifact_gis_gismap::infer_gis_map_controlled(
         &semio_framework_plugin::ArtifactInferenceExecutionRequest {
             policy: b"gis-map-v1",
             budgets: &budgets,
@@ -2956,7 +2956,7 @@ fn deterministic_map_inference(
         &mut |_| Ok(()),
     )
     .map_err(|_| InferenceRouteErrorV1::Invalid)?;
-    let snapshot = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
+    let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
     let inference = GisMapInference::from_value(directory::pack_rt::decode_wire_value(&execution.canonical_payload).map_err(|_| InferenceRouteErrorV1::Invalid)?).map_err(|_| InferenceRouteErrorV1::Invalid)?;
     Ok((snapshot, inference))
 }
@@ -3111,7 +3111,7 @@ pub struct GisMapInferencePreviewDtoV1 {
 }
 
 fn gis_map_inference_preview(job_id: &str, proposal_hash: &str, proposal: &[u8]) -> Result<GisMapInferencePreviewDtoV1, InferenceRouteErrorV1> {
-    use semio_s_plugin_gis::artifacts::gismap::mutations::GisMapMutation;
+    use semio_s_artifact_gis_gismap::mutations::GisMapMutation;
 
     if sha256(proposal) != proposal_hash {
         return Err(InferenceRouteErrorV1::Conflict);
@@ -3591,7 +3591,7 @@ mod tests {
     fn canonical_map_pack() -> InferencePrivateBytesV1 {
         use directory::ArtifactPack as _;
         let descriptor = ledger_fixture()["input"].as_str().expect("literal Map descriptor").to_owned();
-        let snapshot = semio_s_plugin_gis::artifacts::gismap::schema::gis_map_document_from_descriptor_json(&descriptor);
+        let snapshot = semio_s_artifact_gis_gismap::schema::gis_map_document_from_descriptor_json(&descriptor);
         InferencePrivateBytesV1::new(snapshot.encode_pack(), INPUT_MAX_BYTES).expect("bounded canonical Map pack")
     }
 
@@ -3707,7 +3707,7 @@ mod tests {
             decision_now_ms: u64,
         ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<directory::os_directory::PublishedArtifactCheckpoint, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
             Box::pin(async move {
-                let snapshot = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(&request.pair.pack).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+                let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(&request.pair.pack).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
                 let expected_region = format!("inference-{}", self.job_id);
                 let attempt = self.attempts.fetch_add(1, Ordering::AcqRel);
                 let has_expected_region = snapshot
@@ -3984,7 +3984,7 @@ mod tests {
         let (identity, base) = canonical_identity_and_base();
         let undo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("durable undo fixture");
         let undo_contract = &undo_fixture["genesisFirstUndo"];
-        let genesis_snapshot = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).expect("exact initial Map snapshot");
+        let genesis_snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).expect("exact initial Map snapshot");
         let owner = reader(&identity);
         let ledger = ledger();
         let accepted = ledger.accept(&identity, &base.pack, 1_000).expect("accepted job");
@@ -4160,13 +4160,13 @@ mod tests {
         assert_eq!(target.after_base_digest, after_base.digest());
         let original = CanonicalInferenceCommandV1::decode(target.original_command.as_slice()).expect("retained original command");
         let inverses =
-            directory::os_pack::json::from_json_str::<Vec<semio_s_plugin_gis::artifacts::gismap::mutations::GisMapMutation>>(std::str::from_utf8(original.inverse_payload()).expect("canonical inverse text")).expect("canonical inverse mutations");
+            directory::os_pack::json::from_json_str::<Vec<semio_s_artifact_gis_gismap::mutations::GisMapMutation>>(std::str::from_utf8(original.inverse_payload()).expect("canonical inverse text")).expect("canonical inverse mutations");
         assert_eq!(inverses.len(), 1, "the retained approval owns one exact parent inverse");
-        let current = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(after_base.pack.as_slice()).expect("approved Map snapshot");
+        let current = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(after_base.pack.as_slice()).expect("approved Map snapshot");
         let mut before = current.clone();
-        semio_s_plugin_gis::artifacts::gismap::mutations::apply_gis_map_mutation(&mut before, &inverses[0]).expect("server inverse applies to the exact current Map");
+        semio_s_artifact_gis_gismap::mutations::apply_gis_map_mutation(&mut before, &inverses[0]).expect("server inverse applies to the exact current Map");
         use directory::Inference as _;
-        let work = semio_s_plugin_gis::artifacts::gismap::standards::v1::subsets::any::schema::inferences::GisMapInference::infer(&before)
+        let work = semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference::infer(&before)
             .create_region_group_work(&before, &target.original_job_id)
             .expect("server reconstructs the original fixed-three work");
         let undo_diff = directory::os_pack::json::to_json_string(&inverses[0]).into_bytes();
@@ -4232,7 +4232,7 @@ mod tests {
                 _ => panic!("the undo publication retains its exact three Store owners"),
             };
             let pack = semio_framework::io::resolve_ready(owners.parent.as_ref().expect("retained reverted parent Store").snapshot_pack()).expect("reverted Map snapshot").pack;
-            <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(&pack).expect("reverted Map pack")
+            <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(&pack).expect("reverted Map pack")
         };
         assert!(undo_contract["restoresExactInitialSnapshot"].as_bool().expect("snapshot contract"));
         assert_eq!(reverted, genesis_snapshot, "the second durable publication restores the exact package-owned initial Map snapshot");

@@ -1,6 +1,6 @@
 //! 🧬️ En1994 artifact schema — every field of the artifact with its state class.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full En1994 artifact state across the artifact and presence lanes.
@@ -62,8 +62,8 @@ pub struct En1994Artifact {
 //#region 🔖️Conversions
 impl En1994Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::en1994::En1994Snapshot {
-        crate::artifacts::en1994::En1994Snapshot {
+    pub fn to_snapshot(&self) -> crate::En1994Snapshot {
+        crate::En1994Snapshot {
             annex: self.annex,
             m_ed_knm: self.m_ed_knm,
             v_ed_kn: self.v_ed_kn,
@@ -90,7 +90,7 @@ impl En1994Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::en1994::En1994Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::En1994Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
             m_ed_knm: snapshot.m_ed_knm,
@@ -100,10 +100,10 @@ impl En1994Artifact {
             eta: snapshot.eta,
             v_l_rd: snapshot.v_l_rd,
             insulation_thickness_mm: snapshot.insulation_thickness_mm,
-            fire_rating: snapshot.fire_rating.clone(),
-            deck_type: snapshot.deck_type.clone(),
+            fire_rating: snapshot.fire_rating,
+            deck_type: snapshot.deck_type,
             delta_sigma_mpa: snapshot.delta_sigma_mpa,
-            fatigue_detail: snapshot.fatigue_detail.clone(),
+            fatigue_detail: snapshot.fatigue_detail,
             d_mm: snapshot.d_mm,
             h_sc_mm: snapshot.h_sc_mm,
             f_ck_mpa: snapshot.f_ck_mpa,
@@ -118,7 +118,7 @@ impl En1994Artifact {
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1994::En1994Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::En1994Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -129,31 +129,31 @@ impl En1994Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.en1994` — twenty handcrafted schema leaves.
-pub fn en1994_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn en1994_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1994",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -165,7 +165,7 @@ pub fn en1994_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::en1994::{En1994Diff, En1994Mutation, En1994Snapshot};
+    use crate::{En1994Diff, En1994Mutation, En1994Snapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -217,7 +217,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::en1994::En1994Snapshot;
+    use crate::En1994Snapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

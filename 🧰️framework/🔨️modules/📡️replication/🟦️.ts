@@ -1486,10 +1486,10 @@ if (import.meta.vitest) {
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
       const { createHash } = await import("node:crypto");
-      const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+      const { default: Ajv } = await import("ajv");
       const root = join(dirname(fileURLToPath(import.meta.url)), "🧫️fixtures/🚀️artifact-bootstrap");
-      const schema = JSON.parse(await readFile(join(root, "🧬️.schema.json"), "utf8"));
-      expect(new Ajv2020({ strict: true }).compile(schema)(fixture)).toBe(true);
+      const schema = JSON.parse(await readFile(join(dirname(fileURLToPath(import.meta.url)), "🧬️schema/🔣️.json"), "utf8"));
+      expect(new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/ArtifactBootstrapFixture`)!(fixture)).toBe(true);
       const pack = new Uint8Array(fromHex(fixture.payload.packHex));
       const spr = new Uint8Array(fromHex(fixture.payload.sprHex));
       expect(createHash("sha256").update(pack).digest("hex")).toBe(fixture.payload.packHash);

@@ -6,7 +6,7 @@
 //! writer's own hex-encoded wire DSL (dumping the internal wire format into this hop is the same
 //! class of bug this ticket's sequence pilot's CSV fix found; fixed here in passing).
 
-use crate::artifacts::writer::{writer_text, WriterSnapshot};
+use crate::{writer_text, WriterSnapshot};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
@@ -34,7 +34,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_into_md_carries_the_document_text() {
-        let snapshot = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello world");
+        let snapshot = crate::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello world");
         let outcome = WriterIntoMd::serialize(&snapshot).await.expect("serialize");
         let IoPayload::Text(text) = outcome.value else { panic!("expected text payload") };
         assert!(text.contains("hello world"));

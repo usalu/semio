@@ -1,6 +1,6 @@
 //! 👥️ Drawing presence — shareable live ephemeral state + mutations.
 
-use crate::artifacts::drawing::DrawingCamera;
+use crate::DrawingCamera;
 use protocol::Mutation;
 use store::ArtifactPack;
 

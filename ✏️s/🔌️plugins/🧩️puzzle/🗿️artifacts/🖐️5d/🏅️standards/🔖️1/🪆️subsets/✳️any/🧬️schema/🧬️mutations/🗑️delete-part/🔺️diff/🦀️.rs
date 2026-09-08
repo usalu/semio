@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeletePart` — a real cascade-aware removal (part + any fastener
 //! that touches one of its grips), never a whole-snapshot capture. Grip full ids are `part_id:grip_id`.
-use crate::artifacts::puzzle5d::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta, Puzzle5dPartsDelta};
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::{Puzzle5dDiff, Puzzle5dFastenersDelta, Puzzle5dPartsDelta};
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeletePart, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

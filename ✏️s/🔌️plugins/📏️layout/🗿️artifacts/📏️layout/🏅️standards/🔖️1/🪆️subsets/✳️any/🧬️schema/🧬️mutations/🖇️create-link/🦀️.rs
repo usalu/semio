@@ -2,9 +2,9 @@
 //! collection.
 
 
-use crate::artifacts::layout::{ImageLink, LayoutDiff, LayoutSnapshot};
-use crate::artifacts::layout::mutations::{LayoutMutation, delete_link};
-use crate::artifacts::layout::schema::diff::LayoutLinksDelta;
+use crate::{ImageLink, LayoutDiff, LayoutSnapshot};
+use crate::mutations::{LayoutMutation, delete_link};
+use crate::schema::diff::LayoutLinksDelta;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

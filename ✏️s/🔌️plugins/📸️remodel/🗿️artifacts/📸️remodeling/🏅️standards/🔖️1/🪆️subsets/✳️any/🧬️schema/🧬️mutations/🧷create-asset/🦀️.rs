@@ -2,9 +2,9 @@
 //! write path in the app — import handlers always call this, overwriting is intentional so a retried
 //! import with the same key lands cleanly).
 
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::{ImageAsset, RemodelingSnapshot};
+use crate::diff::RemodelingDiff;
+use crate::mutations::RemodelingMutation;
+use crate::{ImageAsset, RemodelingSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 

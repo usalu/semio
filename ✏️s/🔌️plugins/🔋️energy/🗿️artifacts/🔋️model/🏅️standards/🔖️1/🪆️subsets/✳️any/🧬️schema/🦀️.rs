@@ -1,7 +1,7 @@
 //! 🧬️ EnergyModel artifact schema — every field with its state class.
 
-use crate::artifacts::model::{EnergyModelSnapshot, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_ARTIFACT_SCHEMA_ID, ENERGY_MODEL_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::{EnergyModelSnapshot, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_ARTIFACT_SCHEMA_ID, ENERGY_MODEL_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️DocumentHelpers
@@ -16,13 +16,13 @@ pub fn empty_energy_model_snapshot() -> EnergyModelSnapshot {
 /// the working-scene cache (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM). Replaces the old
 /// `serde_json::from_str(&snapshot.model_json)` decode-on-demand now that `model_json` is gone.
 pub fn model_from_snapshot(snapshot: &EnergyModelSnapshot) -> Result<crate::model::Model, String> {
-    Ok(crate::artifacts::model::energy_model(snapshot))
+    Ok(crate::energy_model(snapshot))
 }
 
 /// 📕️ Encode a typed `Model` into snapshot form — mints+caches its composed `structure`/`zones`
-/// children in one call via [`crate::artifacts::model::energy_snapshot_with_state`].
+/// children in one call via [`crate::energy_snapshot_with_state`].
 pub fn snapshot_from_model(model: &crate::model::Model) -> Result<EnergyModelSnapshot, String> {
-    Ok(crate::artifacts::model::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None))
+    Ok(crate::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None))
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -121,31 +121,31 @@ impl EnergyModelArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.energy.model` — twenty handcrafted schema leaves.
-pub fn energy_model_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn energy_model_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: ENERGY_MODEL_ARTIFACT_SCHEMA_ID,
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -157,7 +157,7 @@ pub fn energy_model_artifact_schema_descriptor() -> schema::ArtifactSchemaDescri
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::model::{EnergyModelDiff, EnergyModelMutation, EnergyModelSnapshot};
+    use crate::{EnergyModelDiff, EnergyModelMutation, EnergyModelSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -209,7 +209,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::model::EnergyModelSnapshot;
+    use crate::EnergyModelSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -286,7 +286,7 @@ mod tests {
     /// `structure`/`zones` child handles are real (non-empty ids) instead.
     #[semio_framework_async_macros::async_test]
     async fn example_fixture_parses() {
-        let document = crate::artifacts::model::dsl::parse_dsl(crate::artifacts::model::dsl::SEMIO_ENERGY_MODEL_EXAMPLE_TEXT).expect("parse");
+        let document = crate::document_dsl::parse_dsl(crate::document_dsl::SEMIO_ENERGY_MODEL_EXAMPLE_TEXT).expect("parse");
         assert_eq!(document.schema, ENERGY_MODEL_DOCUMENT_SCHEMA);
         assert!(!document.structure.child_id.is_empty());
         assert!(!document.zones.child_id.is_empty());

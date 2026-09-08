@@ -1,7 +1,7 @@
 //! ✏️ Drawing mutation — `RenameLayer`: changes one layer's identity `name` field.
-use crate::artifacts::drawing::diff::DrawingDiff;
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::diff::DrawingDiff;
+use crate::mutations::DrawingMutation;
+use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// ✏️ `rename-layer` payload — `new_name` per the taxonomy's naming convention for identity fields.

@@ -15,7 +15,7 @@
 //! (Wave-C directory + glue trueing, 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL). This file
 //! `use super::*`-reaches those glue-mounted siblings.
 
-use crate::artifacts::equation::{EquationDiff, EquationSnapshot};
+use crate::{EquationDiff, EquationSnapshot};
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state. No `#[value(tag = …)]`: this enum is externally-tagged (the
 // derive's default representation when `tag` is absent), matching the committed
@@ -28,7 +28,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 // (ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION).
 // This catalog stays in `✳️any` (the closed enum every subset's manifest is measured against) and
 // reaches every leaf by its new absolute path.
-use crate::artifacts::equation::standards::v1::subsets::{
+use crate::standards::v1::subsets::{
     equation::schema::mutations::change_coefficient,
     geometry::schema::mutations::{insert_point, move_point, remove_point, replace_points},
     graph::schema::mutations::{change_graph_directed, change_node_label, connect_nodes, create_node, delete_node, delete_nodes, disconnect_nodes, move_node, replace_graph, update_graph_algorithm},
@@ -62,7 +62,7 @@ pub enum EquationMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::equation::{equation_geometry, equation_graph, EquationGraph, EquationPoint};
+    use crate::{equation_geometry, equation_graph, EquationGraph, EquationPoint};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     #[semio_framework_async_macros::async_test]
@@ -261,7 +261,7 @@ mod tests {
         let label = base.equation.expr.label;
         let mutation = EquationMutation::ChangeCoefficient(change_coefficient::ChangeCoefficient { label, numer: "7".into(), denom: "1".into() });
         let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
-        assert_eq!(after.equation.find(label).map(|node| node.kind.clone()), Some(crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::EquationNodeKind::Integer { lexeme: "7".to_string() }));
+        assert_eq!(after.equation.find(label).map(|node| node.kind.clone()), Some(crate::standards::v1::subsets::any::schema::snapshot::EquationNodeKind::Integer { lexeme: "7".to_string() }));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -269,7 +269,7 @@ mod tests {
         // 🔎️ Diff computed from `(payload, base)` — a stale/foreign label leaves `equation`
         // byte-identical to `base`'s, never a panic or a silently-inserted wrong node.
         let base = EquationSnapshot::default();
-        let unknown_label = crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel(999);
+        let unknown_label = crate::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel(999);
         let mutation = EquationMutation::ChangeCoefficient(change_coefficient::ChangeCoefficient { label: unknown_label, numer: "7".into(), denom: "1".into() });
         let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert_eq!(after.equation, base.equation);

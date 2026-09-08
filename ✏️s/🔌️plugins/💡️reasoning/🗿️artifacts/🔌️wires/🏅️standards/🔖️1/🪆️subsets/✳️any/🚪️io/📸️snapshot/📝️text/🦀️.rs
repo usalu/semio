@@ -6,7 +6,7 @@
 //! region — `🧬️schema` now keeps only the `WiresSnapshot` type). `content` is a composed
 //! `store::ArtifactChild<SemioGraphSnapshot>`, which has no `dsl::DslRecord` derive support, so this
 //! hand-rolls the whole codec. `WiresMutation`'s own op-text grammar is unaffected
-//! (`#[derive(dsl::DslEnum)]`, in `crate::artifacts::wires::op`).
+//! (`#[derive(dsl::DslEnum)]`, in `crate::op`).
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::wires::{wires_working_scene, WiresSnapshot};
+use crate::{wires_working_scene, WiresSnapshot};
 use dsl::DslValue;
 
 /// 📄️ The `metabolism` example, handcrafted in the `.wires` DSL — source of truth for every
@@ -37,7 +37,7 @@ fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 
 /// ⚠️ Serializes/deserializes `DslValue` DIRECTLY through its own `ToValue`/`FromValue` impl
 /// (`dsl::os_pack::json::to_json_string`/`from_json_str::<DslValue>`), never via the
-/// `dsl_to_json`/`serde_json::Value` intermediate `crate::artifacts::wires::schema`'s
+/// `dsl_to_json`/`serde_json::Value` intermediate `crate::schema`'s
 /// `fixture_json_string`/`dsl_to_json` use elsewhere: `serde_json::Value::Object` used to normalize
 /// key order (alphabetical, no `preserve_order` feature), which silently reordered `wires_fixture`'s
 /// object keys on every round trip and broke `DslValue::Object`'s (order-sensitive, `Vec`-backed)
@@ -97,8 +97,8 @@ fn parse_wires_snapshot_body(body: &str) -> Result<WiresSnapshot, store::TextErr
             return Err(to_text_error(format!("wires snapshot: unknown line {line:?}")));
         }
     }
-    let content = crate::artifacts::wires::wires_content_child_with_owner(nodes, edges);
-    Ok(WiresSnapshot { wires_fixture: wires_fixture.ok_or_else(|| to_text_error("wires snapshot: missing wires line".into()))?, content, camera: camera.unwrap_or_else(crate::artifacts::wires::empty_camera), meta: meta.unwrap_or(DslValue::Null) })
+    let content = crate::wires_content_child_with_owner(nodes, edges);
+    Ok(WiresSnapshot { wires_fixture: wires_fixture.ok_or_else(|| to_text_error("wires snapshot: missing wires line".into()))?, content, camera: camera.unwrap_or_else(crate::empty_camera), meta: meta.unwrap_or(DslValue::Null) })
 }
 //#endregion 🔖️TextPrimitives
 
@@ -139,12 +139,12 @@ pub fn print_dsl(document: &WiresSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::wires::{empty_wires_snapshot, wires_working_board};
+    use crate::{empty_wires_snapshot, wires_working_board};
 
     fn populated() -> WiresSnapshot {
         let mut snapshot = empty_wires_snapshot();
         let node = dsl::to_dsl_value(&dsl::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 1.0, "y": 2.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
-        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::create_node(node)).expect("valid mutation").0;
+        snapshot = store::apply_mutation(&snapshot, &crate::mutations::create_node(node)).expect("valid mutation").0;
         snapshot
     }
 
@@ -156,7 +156,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_metabolism_fixture() {
-        let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
+        let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
         assert_eq!(document.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
         assert_eq!(document.wires_fixture.get("relationships").and_then(|value| value.as_array()).map(|items| items.len()), Some(9));
         assert_eq!(wires_working_board(&document).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));

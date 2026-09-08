@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/tiny/mutation/set-transform.json",
+  "$id": "https://semio.tech/schema/s/stdio/svg/1.1/tiny/mutation/set-transform/schema.json",
   "title": "SetTransform",
   "type": "object",
   "additionalProperties": false,

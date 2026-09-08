@@ -1,8 +1,8 @@
 //! 🌱 Sequence mutation — `CreateStep`: brings a new id-keyed step into existence.
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::schema::operations::{SequenceDetectedMutation, SequenceDetectionContext};
-use crate::artifacts::sequence::{SequenceSnapshot, SequenceStep};
+use crate::diff::SequenceDiff;
+use crate::mutations::SequenceMutation;
+use crate::schema::operations::{SequenceDetectedMutation, SequenceDetectionContext};
+use crate::{SequenceSnapshot, SequenceStep};
 
 //#region 🔖️Mutation
 /// 🌱 `create-step` payload — full initial payload (position/kind/params/slot all fixed at
@@ -58,7 +58,7 @@ pub fn detect(context: &SequenceDetectionContext<'_>) -> Vec<SequenceDetectedMut
 #[cfg(test)]
 mod mutation_law_tests {
     use super::*;
-    use crate::artifacts::sequence::{default_snapshot, StepParams};
+    use crate::{default_snapshot, StepParams};
     use protocol::{
         os_spr::testkit::{assert_fatal_never_applies, assert_mutation_inverse_law},
         Mutation,

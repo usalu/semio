@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::ShootingSnapshot;
 
 /// 🗄️ The base-icon example snapshot, handcrafted in `shooting`'s DSL (`store::ArtifactDsl`).
 pub const SHOOTING_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
@@ -30,7 +30,7 @@ pub fn print_dsl(snapshot: &ShootingSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::shooting::{ShootingAmbient, ShootingAsset, ShootingCamera, ShootingMaterial, ShootingSavedCamera, ShootingSceneLighting, ShootingShadow, ShootingShot, ShootingSun, SHOOTING_DOCUMENT_SCHEMA};
+    use crate::{ShootingAmbient, ShootingAsset, ShootingCamera, ShootingMaterial, ShootingSavedCamera, ShootingSceneLighting, ShootingShadow, ShootingShot, ShootingSun, SHOOTING_DOCUMENT_SCHEMA};
 
     /// 🎞️ A fixture exercising every field/variant, shared verbatim by the DSL and OpText law tests.
     #[allow(clippy::approx_constant, reason = "0.7071 is deliberately an approximate quaternion component in this snapshot, not the FRAC_1_SQRT_2 constant")]
@@ -55,7 +55,7 @@ mod tests {
             ],
             active_shot_id: "s1".into(),
             active_asset_id: "a1".into(),
-            emblem: Some(crate::artifacts::shooting::shooting_emblem_child_handle(&crate::artifacts::shooting::shooting_emblem_image_from_bytes(vec![137, 80, 78, 71]))),
+            emblem: Some(crate::shooting_emblem_child_handle(&crate::shooting_emblem_image_from_bytes(vec![137, 80, 78, 71]))),
         }
     }
 
@@ -66,7 +66,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn shooting_dsl_round_trips_empty_fixture() {
-        store::os_store::test_support::assert_dsl_round_trip(&crate::artifacts::shooting::empty_shooting_snapshot());
+        store::os_store::test_support::assert_dsl_round_trip(&crate::empty_shooting_snapshot());
     }
 
     #[semio_framework_async_macros::async_test]

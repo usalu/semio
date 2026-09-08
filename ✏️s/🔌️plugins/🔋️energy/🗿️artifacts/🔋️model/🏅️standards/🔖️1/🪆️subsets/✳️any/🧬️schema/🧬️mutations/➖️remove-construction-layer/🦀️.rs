@@ -1,8 +1,8 @@
 //! ➖️ Energy model mutation — `RemoveConstructionLayer`: Removes the material layer a construction holds at a stated position. Addressed by position rather than by material id because the same material may legitimately appear in a construction more than once.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

@@ -1,7 +1,7 @@
 //! 🧬️ Playbook artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::playbook::{PlaybookDocumentChild, PlaybookFlowChild, PLAYBOOK_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::{PlaybookDocumentChild, PlaybookFlowChild, PLAYBOOK_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full playbook artifact state across the artifact, presence and config lanes.
@@ -34,24 +34,24 @@ pub struct PlaybookArtifact {
 //#region 🔖️Conversions
 impl Default for PlaybookArtifact {
     fn default() -> Self {
-        let snapshot = crate::artifacts::playbook::PlaybookSnapshot::default();
+        let snapshot = crate::PlaybookSnapshot::default();
         Self { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "playbook".into(), version: "1".into(), title: None, document: snapshot.document, flow: snapshot.flow, selected_ids: Vec::new(), locale: "en-US".into(), contributions_json: "[]".into() }
     }
 }
 
 impl PlaybookArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::playbook::PlaybookSnapshot {
-        crate::artifacts::playbook::PlaybookSnapshot { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), document: self.document.clone(), flow: self.flow.clone() }
+    pub fn to_snapshot(&self) -> crate::PlaybookSnapshot {
+        crate::PlaybookSnapshot { schema: self.schema.clone(), id: self.id.clone(), version: self.version.clone(), title: self.title.clone(), document: self.document.clone(), flow: self.flow.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::playbook::PlaybookSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::PlaybookSnapshot) -> Self {
         Self { schema: snapshot.schema, id: snapshot.id, version: snapshot.version, title: snapshot.title, document: snapshot.document, flow: snapshot.flow, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::playbook::PlaybookSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::PlaybookSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.version = snapshot.version;
@@ -105,31 +105,31 @@ impl ::semio_framework_os_kernel::FromValue for PlaybookArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.playbook.playbook` — twenty handcrafted schema leaves.
-pub fn playbook_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn playbook_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.playbook.playbook",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -141,7 +141,7 @@ pub fn playbook_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::playbook::{PlaybookDiff, PlaybookMutation, PlaybookSnapshot};
+    use crate::{PlaybookDiff, PlaybookMutation, PlaybookSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -193,7 +193,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::playbook::PlaybookSnapshot;
+    use crate::PlaybookSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -244,8 +244,8 @@ pub use derived_analysis::*;
 /// 🧱️ A blank block of the requested kind — every optional field defaulted, ready to be edited.
 /// Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — pure over `PlaybookBlock`, no app-runtime parameter.
-pub fn default_block(id: String, kind: &str) -> crate::artifacts::playbook::PlaybookBlock {
-    crate::artifacts::playbook::PlaybookBlock {
+pub fn default_block(id: String, kind: &str) -> crate::PlaybookBlock {
+    crate::PlaybookBlock {
         id,
         label: kind.into(),
         kind: kind.into(),

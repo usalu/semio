@@ -1,5 +1,5 @@
-use crate::artifacts::remodeling::standards::v1::subsets::any::io as io_root;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::io as io_root;
+use crate::RemodelingSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{resolve_ready, ArtifactDeserializer};

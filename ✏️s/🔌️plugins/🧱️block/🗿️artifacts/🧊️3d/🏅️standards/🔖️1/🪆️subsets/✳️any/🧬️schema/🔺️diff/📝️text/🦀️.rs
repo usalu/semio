@@ -1,9 +1,9 @@
 //! 🔺️ Block 3D artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::block3d::schema::diff::*;
+use crate::schema::diff::*;
 
-use crate::artifacts::block3d::schema::Block3dArtifact;
-use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexKind, Block3dVortexTemplate};
+use crate::schema::Block3dArtifact;
+use crate::{Block3dSnapshot, Block3dVortexKind, Block3dVortexTemplate};
 use crate::{BlockAttribute, BlockCompatibilityRule, BlockRepresentation};
 use protocol::MutationDiff;
 
@@ -93,9 +93,9 @@ impl Block3dDiff {
                 next.representations = apply_delta!("representations", &next.representations, d, |i: &BlockRepresentation| i.id.as_str());
             }
             if let Some(d) = &self.vortex_kinds {
-                let current = crate::artifacts::block3d::vortex_kinds_of_parts(&next.catalog, &next.vortex_kind_extra);
+                let current = crate::vortex_kinds_of_parts(&next.catalog, &next.vortex_kind_extra);
                 let merged = apply_delta!("vortexKinds", &current, d, |i: &Block3dVortexKind| i.id.as_str());
-                crate::artifacts::block3d::set_vortex_kinds_parts(&mut next.catalog, &mut next.vortex_kind_extra, merged);
+                crate::set_vortex_kinds_parts(&mut next.catalog, &mut next.vortex_kind_extra, merged);
             }
             if let Some(d) = &self.vortices {
                 next.vortices = apply_delta!("vortices", &next.vortices, d, |i: &Block3dVortexTemplate| i.id.as_str());
@@ -170,9 +170,9 @@ impl MutationDiff<Block3dSnapshot> for Block3dDiff {
                 next.representations = apply_delta!("representations", &next.representations, d, |i: &BlockRepresentation| i.id.as_str());
             }
             if let Some(d) = &self.vortex_kinds {
-                let current = crate::artifacts::block3d::vortex_kinds_of(&next);
+                let current = crate::vortex_kinds_of(&next);
                 let merged = apply_delta!("vortexKinds", &current, d, |i: &Block3dVortexKind| i.id.as_str());
-                crate::artifacts::block3d::set_vortex_kinds(&mut next, merged);
+                crate::set_vortex_kinds(&mut next, merged);
             }
             if let Some(d) = &self.vortices {
                 next.vortices = apply_delta!("vortices", &next.vortices, d, |i: &Block3dVortexTemplate| i.id.as_str());
@@ -287,19 +287,21 @@ pub(crate) fn block3d_index_of<T: Block3dHasId>(items: &[T], id: &str) -> Option
 }
 
 pub fn diff_set_representation(index: usize, item: BlockRepresentation, base: &Block3dSnapshot) -> Block3dDiff {
-    let mut delta = Block3dRepresentationsDelta { added: vec![item.clone()], ..Default::default() };
-    if block3d_index_of(&base.representations, &item.id).is_none() {
+    let reordered = if block3d_index_of(&base.representations, &item.id).is_none() {
         let mut order: Vec<_> = base.representations.iter().map(|e| e.id.clone()).collect();
-        order.insert(index.min(order.len()), item.id);
-        delta.reordered = Some(order);
-    }
+        order.insert(index.min(order.len()), item.id.clone());
+        Some(order)
+    } else {
+        None
+    };
+    let delta = Block3dRepresentationsDelta { added: vec![item], reordered, ..Default::default() };
     Block3dDiff { representations: Some(delta), ..Default::default() }
 }
 pub fn diff_remove_representation(id: String) -> Block3dDiff {
     Block3dDiff { representations: Some(Block3dRepresentationsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 pub fn diff_set_vortex_kind(index: usize, item: Block3dVortexKind, base: &Block3dSnapshot) -> Block3dDiff {
-    let current = crate::artifacts::block3d::vortex_kinds_of(base);
+    let current = crate::vortex_kinds_of(base);
     let mut delta = Block3dVortexKindsDelta { added: vec![item.clone()], ..Default::default() };
     if block3d_index_of(&current, &item.id).is_none() {
         let mut order: Vec<_> = current.iter().map(|e| e.id.clone()).collect();

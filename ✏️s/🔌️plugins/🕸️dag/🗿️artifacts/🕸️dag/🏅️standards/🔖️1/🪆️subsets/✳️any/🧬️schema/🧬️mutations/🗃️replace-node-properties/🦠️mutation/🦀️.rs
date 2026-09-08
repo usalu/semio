@@ -1,7 +1,7 @@
 //! 🗃️ DAG mutation — `ReplaceNodeProperties`: whole-value swap of the node's `PropertyBag`.
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::diff::DagDiff;
+use crate::mutations::DagMutation;
+use crate::DagSnapshot;
 use graph::manifest::PropertyBag;
 
 //#region 🔖️Mutation

@@ -1,8 +1,8 @@
 //! 🔺️ `change-provided-axis-distance-mm` sparse diff construction — writes only `En1992Diff.provided_axis_distance_mm` from the payload.
 
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::change_provided_axis_distance_mm::ChangeProvidedAxisDistanceMm;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::change_provided_axis_distance_mm::ChangeProvidedAxisDistanceMm;
+use crate::En1992Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeProvidedAxisDistanceMm, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {

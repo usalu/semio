@@ -9,7 +9,7 @@
 //! `null`; the two nested states `None` and `Some(None)` are NOT distinguishable in this file's
 //! committed diff, and nothing here asserts that they are.
 
-use crate::artifacts::en1996::{En1996Diff, En1996Mutation, En1996Snapshot};
+use crate::{En1996Diff, En1996Mutation, En1996Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -36,7 +36,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 async fn upgrades_the_general_purpose_mortar_to_m10() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-mortar applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-mortar/upgrades-the-general-purpose-mortar-to-m10: the applied state differs from the committed after-snapshot");
-    assert_eq!(applied.mortar, crate::artifacts::en1996::part_2::MortarClass::M10, "change-mortar/upgrades-the-general-purpose-mortar-to-m10: mortar must read `MortarClass::M10` once the change lands");
+    assert_eq!(applied.mortar, crate::part_2::MortarClass::M10, "change-mortar/upgrades-the-general-purpose-mortar-to-m10: mortar must read `MortarClass::M10` once the change lands");
     assert_eq!(applied.exposure, before().exposure, "change-mortar/upgrades-the-general-purpose-mortar-to-m10: the exposure class is the demand side of the EN 1996-2 Annex B admissibility check and must not move with the supply side");
 }
 
@@ -99,7 +99,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-mortar diff decodes");
-    assert_eq!(decoded.mortar, Some(crate::artifacts::en1996::part_2::MortarClass::M10), "change-mortar/upgrades-the-general-purpose-mortar-to-m10: the committed diff must carry mortar = `MortarClass::M10`");
+    assert_eq!(decoded.mortar, Some(crate::part_2::MortarClass::M10), "change-mortar/upgrades-the-general-purpose-mortar-to-m10: the committed diff must carry mortar = `MortarClass::M10`");
     assert!(decoded.exposure.is_none(), "change-mortar/upgrades-the-general-purpose-mortar-to-m10: change-mortar writes mortar and must leave `exposure` untouched");
     assert!(decoded.bed_joint_thickness_mm.is_none(), "change-mortar/upgrades-the-general-purpose-mortar-to-m10: change-mortar writes mortar and must leave `bed_joint_thickness_mm` untouched");
     assert!(decoded.artifact.is_none(), "change-mortar/upgrades-the-general-purpose-mortar-to-m10: a field-scoped change must never fall back to a whole-artifact replacement");
@@ -115,5 +115,5 @@ async fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-mortar diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-mortar/upgrades-the-general-purpose-mortar-to-m10: the committed diff did not carry before to after");
-    assert_eq!(produced.mortar, crate::artifacts::en1996::part_2::MortarClass::M10, "change-mortar/upgrades-the-general-purpose-mortar-to-m10: applying the committed diff must land mortar on `MortarClass::M10`");
+    assert_eq!(produced.mortar, crate::part_2::MortarClass::M10, "change-mortar/upgrades-the-general-purpose-mortar-to-m10: applying the committed diff must land mortar on `MortarClass::M10`");
 }

@@ -4,7 +4,7 @@
 //! hex-encoded wire DSL (that bug — dumping the internal wire format into a plain `.txt` export —
 //! is fixed here, in passing, matching the class of bug `📓️w4-sequence-report.md`'s CSV fix found).
 
-use crate::artifacts::writer::{writer_text, WriterSnapshot};
+use crate::{writer_text, WriterSnapshot};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
@@ -30,7 +30,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_into_txt_emits_plain_document_text() {
-        let snapshot = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello\nworld");
+        let snapshot = crate::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello\nworld");
         let outcome = WriterIntoTxt::serialize(&snapshot).await.expect("serialize");
         assert_eq!(outcome.value, IoPayload::Text("hello\nworld".into()));
     }

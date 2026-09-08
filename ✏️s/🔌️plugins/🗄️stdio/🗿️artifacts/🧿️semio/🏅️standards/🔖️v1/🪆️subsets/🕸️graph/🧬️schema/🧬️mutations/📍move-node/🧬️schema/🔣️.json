@@ -1,16 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/move-node.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/move-node/schema.json",
   "title": "MoveNode",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "id",
-    "newPosition"
+    "new_position"
   ],
   "properties": {
     "id": {
-      "title": "GraphNodeId",
+      "$ref": "#/$defs/GraphNodeId"
+    },
+    "new_position": {
+      "$ref": "#/$defs/SemioPoint2"
+    }
+  },
+  "$defs": {
+    "GraphNodeId": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -22,8 +29,7 @@
         }
       }
     },
-    "newPosition": {
-      "title": "SemioPoint2",
+    "SemioPoint2": {
       "type": "object",
       "additionalProperties": false,
       "required": [

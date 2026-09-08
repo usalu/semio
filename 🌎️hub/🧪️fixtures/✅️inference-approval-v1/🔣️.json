@@ -8,19 +8,103 @@
     "proposalHash": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
   },
   "hostile": [
-    { "field": "schema", "value": "semio.hub.inference-request/v1" },
-    { "field": "version", "value": 2 },
-    { "field": "jobId", "value": "00112233445566778899AABBCCDDEEFF" },
-    { "field": "proposalHash", "value": "00" },
-    { "field": "jobId", "value": "00112233445566778899aabbccddeeff\n" },
-    { "field": "proposalHash", "value": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff\n" },
-    { "field": "spaceId", "value": "00112233445566778899aabbccddeeff" },
-    { "field": "userId", "value": "00112233445566778899aabbccddeeff" },
-    { "field": "actor", "value": "admin" },
-    { "field": "command", "value": "00" },
-    { "field": "mutationId", "value": "00112233445566778899aabbccddeeff" },
-    { "field": "frontier", "value": {} },
-    { "field": "catalogExecutionGrant", "value": true },
-    { "field": "walWitness", "value": {} }
+    {
+      "field": "schema",
+      "value": "semio.hub.inference-request/v1",
+      "stage": "contract",
+      "result": "rejected",
+      "code": "substituted-schema"
+    },
+    {
+      "field": "version",
+      "value": 2,
+      "stage": "contract",
+      "result": "rejected",
+      "code": "wrong-version"
+    },
+    {
+      "field": "jobId",
+      "value": "00112233445566778899AABBCCDDEEFF",
+      "stage": "contract",
+      "result": "rejected",
+      "code": "uppercase-job-id"
+    },
+    {
+      "field": "proposalHash",
+      "value": "00",
+      "stage": "contract",
+      "result": "rejected",
+      "code": "short-proposal-hash"
+    },
+    {
+      "field": "jobId",
+      "value": "00112233445566778899aabbccddeeff\n",
+      "stage": "contract",
+      "result": "rejected",
+      "code": "job-id-trailing-newline"
+    },
+    {
+      "field": "proposalHash",
+      "value": "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff\n",
+      "stage": "contract",
+      "result": "rejected",
+      "code": "proposal-hash-trailing-newline"
+    },
+    {
+      "field": "spaceId",
+      "value": "00112233445566778899aabbccddeeff",
+      "stage": "contract",
+      "result": "rejected",
+      "code": "client-supplied-space-id"
+    },
+    {
+      "field": "userId",
+      "value": "00112233445566778899aabbccddeeff",
+      "stage": "contract",
+      "result": "rejected",
+      "code": "client-supplied-user-id"
+    },
+    {
+      "field": "actor",
+      "value": "admin",
+      "stage": "contract",
+      "result": "rejected",
+      "code": "client-supplied-actor"
+    },
+    {
+      "field": "command",
+      "value": "00",
+      "stage": "contract",
+      "result": "rejected",
+      "code": "client-supplied-command"
+    },
+    {
+      "field": "mutationId",
+      "value": "00112233445566778899aabbccddeeff",
+      "stage": "contract",
+      "result": "rejected",
+      "code": "client-supplied-mutation-id"
+    },
+    {
+      "field": "frontier",
+      "value": {},
+      "stage": "contract",
+      "result": "rejected",
+      "code": "client-supplied-frontier"
+    },
+    {
+      "field": "catalogExecutionGrant",
+      "value": true,
+      "stage": "contract",
+      "result": "rejected",
+      "code": "client-supplied-catalog-execution-grant"
+    },
+    {
+      "field": "walWitness",
+      "value": {},
+      "stage": "contract",
+      "result": "rejected",
+      "code": "client-supplied-wal-witness"
+    }
   ]
 }

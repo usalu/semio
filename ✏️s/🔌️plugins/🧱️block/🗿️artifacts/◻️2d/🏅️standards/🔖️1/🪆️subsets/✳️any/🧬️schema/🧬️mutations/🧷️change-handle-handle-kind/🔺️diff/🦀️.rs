@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `ChangeHandleHandleKind`.
 
-use crate::artifacts::block2d::{Block2dHandleTemplate, Block2dSnapshot};
-use crate::artifacts::block2d::diff::{Block2dDiff, Block2dHandlesDelta, Block2dHandlesPatch, Block2dHandlesPatchEntry};
+use crate::{Block2dHandleTemplate, Block2dSnapshot};
+use crate::diff::{Block2dDiff, Block2dHandlesDelta, Block2dHandlesPatch, Block2dHandlesPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeHandleHandleKind, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

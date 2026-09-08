@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateRule` — a real id-keyed upsert into `rules`.
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::diff::AssemblyDiff;
+use crate::schema::snapshot::AssemblySnapshot;
 
 pub fn diff(payload: &super::CreateRule, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     if base.rules.iter().any(|rule| rule.id == payload.rule.id) {

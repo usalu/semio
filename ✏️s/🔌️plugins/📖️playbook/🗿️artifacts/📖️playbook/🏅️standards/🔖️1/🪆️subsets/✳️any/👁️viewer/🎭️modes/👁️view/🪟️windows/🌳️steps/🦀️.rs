@@ -4,7 +4,7 @@
 //! editor-only affordances (drag handles, a block palette, per-kind form fields) to be legible
 //! read-only.
 
-use crate::artifacts::playbook::PlaybookSnapshot;
+use crate::PlaybookSnapshot;
 use semio_framework_plugin::WindowKindDefinition;
 // 🚧️ SDK GAP: the seven framework window kits (contract §2.6 — `TreeWindowKit`/`TreeView`/
 // `TreeNodeView`/the `WindowKit` trait) are not yet in `semio_framework_plugin`'s curated crate-root
@@ -53,7 +53,7 @@ pub fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiAssemblyResu
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::playbook::playbook_snapshot_with_steps;
+    use crate::playbook_snapshot_with_steps;
     use crate::playbook::{PlaybookBlock, PlaybookStep};
 
     fn sample_block(id: &str, label: &str, kind: &str) -> PlaybookBlock {

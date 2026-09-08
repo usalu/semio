@@ -1,7 +1,7 @@
 //! 🧩️ Process robotic machine catalog extension — contributes robotic/CNC machines to `process3d-play`.
 
 use semio_framework_plugin::ExtensionBundle;
-use semio_s_plugin_process::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, StockQuantity, WorkshopMachine};
+use semio_s_artifact_process_process3d::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, StockQuantity, WorkshopMachine};
 
 //#region 🔖️Catalog
 pub struct RoboticCatalog;

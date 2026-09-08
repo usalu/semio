@@ -1,6 +1,6 @@
 //! home <- json
-use crate::artifacts::home::SHomeSnapshot;
-use crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA;
+use crate::SHomeSnapshot;
+use crate::S_HOME_DOCUMENT_SCHEMA;
 use semio_s_artifact_stdio_json::JsonSnapshot;
 
 pub fn register() {}

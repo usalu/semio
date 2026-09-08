@@ -1,22 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/replace-texture-bytes.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/mutation/replace-texture-bytes/schema.json",
   "title": "ReplaceTextureBytes",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "id",
-    "newBytes"
+    "new_bytes"
   ],
   "properties": {
     "id": {
       "type": "string"
     },
-    "newBytes": {
+    "new_bytes": {
       "type": "array",
       "items": {
         "type": "integer",
-        "minimum": 0
+        "minimum": 0,
+        "maximum": 255
       }
     }
   }

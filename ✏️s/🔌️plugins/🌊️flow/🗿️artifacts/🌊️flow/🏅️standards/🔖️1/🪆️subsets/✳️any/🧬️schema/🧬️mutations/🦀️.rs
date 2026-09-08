@@ -10,8 +10,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::flow::schema::diff::text::FlowDiff;
-use crate::artifacts::flow::FlowSnapshot;
+use crate::schema::diff::text::FlowDiff;
+use crate::FlowSnapshot;
 use protocol::{Mutation, MutationDiff};
 use store::{ArtifactEnvelope, ArtifactStore};
 
@@ -74,15 +74,15 @@ pub fn decode_flow_mutation_json(text: &str) -> Result<FlowMutation, String> {
 /// real values a composed content child is seeded with. `Widget` is a typed UNION whose variant
 /// decides its own field set, so a caller outside this crate cannot rebuild one by hand without
 /// re-implementing that discriminant — which is exactly the knowledge this subset owns.
-pub fn decode_flow_scene_json(text: &str) -> Result<(Vec<flow::Widget>, Vec<flow::SynapseSpec>, flow::OrderedMap<flow::WidgetLayout>), String> {
+pub fn decode_flow_scene_json(text: &str) -> Result<(Vec<semio_framework_artifact_flow_flow::Widget>, Vec<semio_framework_artifact_flow_flow::SynapseSpec>, flow::OrderedMap<semio_framework_artifact_flow_flow::WidgetLayout>), String> {
     #[derive(value_derive::FromValue)]
     struct CommittedScene {
         #[value(default)]
-        widgets: Vec<flow::Widget>,
+        widgets: Vec<semio_framework_artifact_flow_flow::Widget>,
         #[value(default)]
-        synapses: Vec<flow::SynapseSpec>,
+        synapses: Vec<semio_framework_artifact_flow_flow::SynapseSpec>,
         #[value(default)]
-        layout: flow::OrderedMap<flow::WidgetLayout>,
+        layout: flow::OrderedMap<semio_framework_artifact_flow_flow::WidgetLayout>,
     }
     let json: serde_json::Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
     let value: dsl::DslValue = json.into();
@@ -98,7 +98,7 @@ pub fn decode_flow_scene_json(text: &str) -> Result<(Vec<flow::Widget>, Vec<flow
 /// Dedicated cross-language identity fixtures pin its exact canonical bytes and digest, while this
 /// projection measures semantic mutation behavior without comparing the same content twice.
 pub fn encode_flow_projection_json(snapshot: &FlowSnapshot) -> String {
-    let scene = crate::artifacts::flow::flow_working_scene(snapshot);
+    let scene = crate::flow_working_scene(snapshot);
     let value = dsl::DslValue::object([
         ("schema".to_string(), dsl::ToValue::to_value(&snapshot.schema)),
         ("camera".to_string(), dsl::ToValue::to_value(&snapshot.camera)),
@@ -116,28 +116,28 @@ pub fn encode_flow_projection_json(snapshot: &FlowSnapshot) -> String {
 /// `ReplaceFlowFixture` (whole-fixture replace) has no semantic-mutation representation — banned
 /// per the taxonomy's `set-snapshot` ruling, "it has NO replacement mutation" — so it returns
 /// `None`; callers route that case through `store::ArtifactStore::reset` instead of the `Mutation`
-/// enum. The framework's own diffing helper (`flow::flow_fixture_operations`) never emits
+/// enum. The framework's own diffing helper (`semio_framework_artifact_flow_flow::flow_fixture_operations`) never emits
 /// `ReplaceFlowFixture` (only the add/remove/move/change leaves), so this arm is unreachable on the
 /// live host-bridge path and only matters for a hand-authored/decoded `flow.op` line.
 /// ✏️ Runs a stateful host mutation and diffs the result back into granular `FlowMutation`s — pure
 /// over two snapshots, so it lives here beside [`from_framework_mutation`] rather than under an app.
 /// Returns an empty vec when the two fixtures are identical, or when the framework diff itself fails.
 pub fn snapshot_operations(before: &FlowSnapshot, after: &FlowSnapshot) -> Vec<FlowMutation> {
-    flow::flow_fixture_operations(&before.to_fixture(), &after.to_fixture()).unwrap_or_default().into_iter().filter_map(from_framework_mutation).collect()
+    semio_framework_artifact_flow_flow::flow_fixture_operations(&before.to_fixture(), &after.to_fixture()).unwrap_or_default().into_iter().filter_map(from_framework_mutation).collect()
 }
 
-pub fn from_framework_mutation(mutation: flow::FlowMutation) -> Option<FlowMutation> {
+pub fn from_framework_mutation(mutation: semio_framework_artifact_flow_flow::FlowMutation) -> Option<FlowMutation> {
     Some(match mutation {
-        flow::FlowMutation::AddWidget(payload) => FlowMutation::CreateWidget(super::create_widget::CreateWidget { index: payload.index as usize, widget: payload.widget }),
-        flow::FlowMutation::RemoveWidget(payload) => FlowMutation::DeleteWidget(super::delete_widget::DeleteWidget { id: payload.id }),
-        flow::FlowMutation::MoveWidget(payload) => FlowMutation::ReorderWidgets(super::reorder_widgets::ReorderWidgets { id: payload.id, to_index: payload.to_index as usize }),
-        flow::FlowMutation::ChangeWidget(payload) => FlowMutation::ReplaceWidget(super::replace_widget::ReplaceWidget { id: payload.id, widget: payload.widget }),
-        flow::FlowMutation::AddSynapse(payload) => FlowMutation::ConnectWidgets(super::connect_widgets::ConnectWidgets { index: payload.index as usize, id: payload.synapse.id, from: payload.synapse.from, from_port: payload.synapse.from_port, to: payload.synapse.to, to_port: payload.synapse.to_port }),
-        flow::FlowMutation::RemoveSynapse(payload) => FlowMutation::DisconnectWidgets(super::disconnect_widgets::DisconnectWidgets { id: payload.id }),
-        flow::FlowMutation::MoveSynapse(payload) => FlowMutation::ReorderSynapses(super::reorder_synapses::ReorderSynapses { id: payload.id, to_index: payload.to_index as usize }),
-        flow::FlowMutation::ChangeSynapse(payload) => FlowMutation::UpdateSynapseEndpoints(super::update_synapse_endpoints::UpdateSynapseEndpoints { id: payload.id, from: payload.synapse.from, from_port: payload.synapse.from_port, to: payload.synapse.to, to_port: payload.synapse.to_port }),
-        flow::FlowMutation::ChangeLayout(payload) => FlowMutation::MoveWidgets(super::move_widgets::MoveWidgets { entries: payload.entries }),
-        flow::FlowMutation::ReplaceFlowFixture(_) => return None,
+        semio_framework_artifact_flow_flow::FlowMutation::AddWidget(payload) => FlowMutation::CreateWidget(super::create_widget::CreateWidget { index: payload.index as usize, widget: payload.widget }),
+        semio_framework_artifact_flow_flow::FlowMutation::RemoveWidget(payload) => FlowMutation::DeleteWidget(super::delete_widget::DeleteWidget { id: payload.id }),
+        semio_framework_artifact_flow_flow::FlowMutation::MoveWidget(payload) => FlowMutation::ReorderWidgets(super::reorder_widgets::ReorderWidgets { id: payload.id, to_index: payload.to_index as usize }),
+        semio_framework_artifact_flow_flow::FlowMutation::ChangeWidget(payload) => FlowMutation::ReplaceWidget(super::replace_widget::ReplaceWidget { id: payload.id, widget: payload.widget }),
+        semio_framework_artifact_flow_flow::FlowMutation::AddSynapse(payload) => FlowMutation::ConnectWidgets(super::connect_widgets::ConnectWidgets { index: payload.index as usize, id: payload.synapse.id, from: payload.synapse.from, from_port: payload.synapse.from_port, to: payload.synapse.to, to_port: payload.synapse.to_port }),
+        semio_framework_artifact_flow_flow::FlowMutation::RemoveSynapse(payload) => FlowMutation::DisconnectWidgets(super::disconnect_widgets::DisconnectWidgets { id: payload.id }),
+        semio_framework_artifact_flow_flow::FlowMutation::MoveSynapse(payload) => FlowMutation::ReorderSynapses(super::reorder_synapses::ReorderSynapses { id: payload.id, to_index: payload.to_index as usize }),
+        semio_framework_artifact_flow_flow::FlowMutation::ChangeSynapse(payload) => FlowMutation::UpdateSynapseEndpoints(super::update_synapse_endpoints::UpdateSynapseEndpoints { id: payload.id, from: payload.synapse.from, from_port: payload.synapse.from_port, to: payload.synapse.to, to_port: payload.synapse.to_port }),
+        semio_framework_artifact_flow_flow::FlowMutation::ChangeLayout(payload) => FlowMutation::MoveWidgets(super::move_widgets::MoveWidgets { entries: payload.entries }),
+        semio_framework_artifact_flow_flow::FlowMutation::ReplaceFlowFixture(_) => return None,
     })
 }
 
@@ -146,23 +146,23 @@ pub fn from_framework_mutation(mutation: flow::FlowMutation) -> Option<FlowMutat
 /// framework-generic op (it plans two: an `AddWidget` then an `AddSynapse`), so there is no
 /// framework-generic counterpart to bridge to — mirrors [`from_framework_mutation`]'s
 /// `ReplaceFlowFixture` case, one direction over.
-pub fn to_framework_mutation(mutation: &FlowMutation) -> Option<flow::FlowMutation> {
+pub fn to_framework_mutation(mutation: &FlowMutation) -> Option<semio_framework_artifact_flow_flow::FlowMutation> {
     Some(match mutation {
-        FlowMutation::CreateWidget(payload) => flow::FlowMutation::AddWidget(flow::AddWidget { index: payload.index as u32, widget: payload.widget.clone() }),
-        FlowMutation::DeleteWidget(payload) => flow::FlowMutation::RemoveWidget(flow::RemoveWidget { id: payload.id.clone() }),
-        FlowMutation::ReorderWidgets(payload) => flow::FlowMutation::MoveWidget(flow::MoveWidget { id: payload.id.clone(), to_index: payload.to_index as u32 }),
-        FlowMutation::ReplaceWidget(payload) => flow::FlowMutation::ChangeWidget(flow::ChangeWidget { id: payload.id.clone(), widget: payload.widget.clone() }),
-        FlowMutation::ConnectWidgets(payload) => flow::FlowMutation::AddSynapse(flow::AddSynapse {
+        FlowMutation::CreateWidget(payload) => semio_framework_artifact_flow_flow::FlowMutation::AddWidget(semio_framework_artifact_flow_flow::AddWidget { index: payload.index as u32, widget: payload.widget.clone() }),
+        FlowMutation::DeleteWidget(payload) => semio_framework_artifact_flow_flow::FlowMutation::RemoveWidget(semio_framework_artifact_flow_flow::RemoveWidget { id: payload.id.clone() }),
+        FlowMutation::ReorderWidgets(payload) => semio_framework_artifact_flow_flow::FlowMutation::MoveWidget(semio_framework_artifact_flow_flow::MoveWidget { id: payload.id.clone(), to_index: payload.to_index as u32 }),
+        FlowMutation::ReplaceWidget(payload) => semio_framework_artifact_flow_flow::FlowMutation::ChangeWidget(semio_framework_artifact_flow_flow::ChangeWidget { id: payload.id.clone(), widget: payload.widget.clone() }),
+        FlowMutation::ConnectWidgets(payload) => semio_framework_artifact_flow_flow::FlowMutation::AddSynapse(semio_framework_artifact_flow_flow::AddSynapse {
             index: payload.index as u32,
-            synapse: flow::SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() },
+            synapse: semio_framework_artifact_flow_flow::SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() },
         }),
-        FlowMutation::DisconnectWidgets(payload) => flow::FlowMutation::RemoveSynapse(flow::RemoveSynapse { id: payload.id.clone() }),
-        FlowMutation::ReorderSynapses(payload) => flow::FlowMutation::MoveSynapse(flow::MoveSynapse { id: payload.id.clone(), to_index: payload.to_index as u32 }),
-        FlowMutation::UpdateSynapseEndpoints(payload) => flow::FlowMutation::ChangeSynapse(flow::ChangeSynapse {
+        FlowMutation::DisconnectWidgets(payload) => semio_framework_artifact_flow_flow::FlowMutation::RemoveSynapse(semio_framework_artifact_flow_flow::RemoveSynapse { id: payload.id.clone() }),
+        FlowMutation::ReorderSynapses(payload) => semio_framework_artifact_flow_flow::FlowMutation::MoveSynapse(semio_framework_artifact_flow_flow::MoveSynapse { id: payload.id.clone(), to_index: payload.to_index as u32 }),
+        FlowMutation::UpdateSynapseEndpoints(payload) => semio_framework_artifact_flow_flow::FlowMutation::ChangeSynapse(semio_framework_artifact_flow_flow::ChangeSynapse {
             id: payload.id.clone(),
-            synapse: flow::SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() },
+            synapse: semio_framework_artifact_flow_flow::SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() },
         }),
-        FlowMutation::MoveWidgets(payload) => flow::FlowMutation::ChangeLayout(flow::ChangeLayout { entries: payload.entries.clone() }),
+        FlowMutation::MoveWidgets(payload) => semio_framework_artifact_flow_flow::FlowMutation::ChangeLayout(semio_framework_artifact_flow_flow::ChangeLayout { entries: payload.entries.clone() }),
         FlowMutation::DuplicateWidget(_) => return None,
     })
 }
@@ -172,7 +172,7 @@ pub fn to_framework_mutation(mutation: &FlowMutation) -> Option<flow::FlowMutati
 /// 🏷️ First byte of a `DuplicateWidget` op's binary encoding — reserved so it can never collide with
 /// `store::os_dsl::variants_binary::OP_BINARY_FORMAT` (always `1`), the format every framework-bridged
 /// leaf op decodes through. Any composite's own bytes are canonical-JSON of its payload (the same
-/// idiom `HistoryOpMeta.origin` uses for a structured, non-hot-path field), not a `flow::FlowMutation`
+/// idiom `HistoryOpMeta.origin` uses for a structured, non-hot-path field), not a `semio_framework_artifact_flow_flow::FlowMutation`
 /// bridge — see [`to_framework_mutation`]'s doc comment for why one cannot exist.
 const DUPLICATE_WIDGET_OP_BINARY_TAG: u8 = 0xD0;
 const DUPLICATE_WIDGET_OP_TEXT_KEYWORD: &str = "duplicate-widget ";
@@ -195,7 +195,7 @@ impl protocol::OpBinary for FlowMutation {
             let payload: super::duplicate_widget::mutation::DuplicateWidget = dsl::FromValue::from_value(value).map_err(|error| protocol::ProtocolError::Malformed { what: "flow.op", offset: 1, detail: format!("duplicate-widget: {error}") })?;
             return Ok(FlowMutation::DuplicateWidget(payload));
         }
-        let framework_mutation = <flow::FlowMutation as protocol::OpBinary>::decode_op(bytes)?;
+        let framework_mutation = <semio_framework_artifact_flow_flow::FlowMutation as protocol::OpBinary>::decode_op(bytes)?;
         from_framework_mutation(framework_mutation).ok_or_else(|| protocol::ProtocolError::Malformed {
             what: "flow.op",
             offset: 0,
@@ -211,7 +211,7 @@ impl protocol::OpText for FlowMutation {
             let payload: super::duplicate_widget::mutation::DuplicateWidget = dsl::FromValue::from_value(value).map_err(|error| store::TextError::new(format!("duplicate-widget: {error}"), store::TextSpan::at(1, 1)))?;
             return Ok(FlowMutation::DuplicateWidget(payload));
         }
-        let framework_mutation = <flow::FlowMutation as protocol::OpText>::parse_op(line)?;
+        let framework_mutation = <semio_framework_artifact_flow_flow::FlowMutation as protocol::OpText>::parse_op(line)?;
         from_framework_mutation(framework_mutation).ok_or_else(|| store::TextError::new("replace-flow-fixture has no semantic mutation representation (whole-document replace is banned; route through ArtifactStore::reset)", store::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
@@ -229,16 +229,16 @@ impl protocol::OpText for FlowMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::flow::schema::mutations::connect_widgets::ConnectWidgets;
-    use crate::artifacts::flow::schema::mutations::create_widget::CreateWidget;
-    use crate::artifacts::flow::schema::mutations::delete_widget::DeleteWidget;
-    use crate::artifacts::flow::schema::mutations::disconnect_widgets::DisconnectWidgets;
-    use crate::artifacts::flow::schema::mutations::move_widgets::MoveWidgets;
-    use crate::artifacts::flow::schema::mutations::reorder_synapses::ReorderSynapses;
-    use crate::artifacts::flow::schema::mutations::reorder_widgets::ReorderWidgets;
-    use crate::artifacts::flow::schema::mutations::replace_widget::ReplaceWidget;
-    use crate::artifacts::flow::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
-    use flow::{FlowLayoutEntry, Widget, WidgetLayout};
+    use crate::schema::mutations::connect_widgets::ConnectWidgets;
+    use crate::schema::mutations::create_widget::CreateWidget;
+    use crate::schema::mutations::delete_widget::DeleteWidget;
+    use crate::schema::mutations::disconnect_widgets::DisconnectWidgets;
+    use crate::schema::mutations::move_widgets::MoveWidgets;
+    use crate::schema::mutations::reorder_synapses::ReorderSynapses;
+    use crate::schema::mutations::reorder_widgets::ReorderWidgets;
+    use crate::schema::mutations::replace_widget::ReplaceWidget;
+    use crate::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
+    use semio_framework_artifact_flow_flow::{FlowLayoutEntry, Widget, WidgetLayout};
     use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
 
     fn widget_note(id: &str) -> Widget {

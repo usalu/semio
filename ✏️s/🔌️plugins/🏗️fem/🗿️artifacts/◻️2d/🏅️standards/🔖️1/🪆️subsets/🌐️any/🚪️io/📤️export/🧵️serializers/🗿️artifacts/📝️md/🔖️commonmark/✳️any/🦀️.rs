@@ -11,7 +11,7 @@
 //! The info string is new too: the old envelope wrote `info: None`, so nothing on the wire said what
 //! the fenced block contained.
 
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::Fem2dSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

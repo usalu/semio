@@ -1,8 +1,8 @@
 //! ↔️ Architect adjacency window — the signature adjacency matrix surface: a triangle glyph strip
 //! beside a lower-triangle pair tree, each pair cycling its `AdjacencyKind` on activation.
 
-use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::{adjacency_matrix, detect_adjacency_conflicts};
-use crate::artifacts::program::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::{adjacency_matrix, detect_adjacency_conflicts};
+use crate::ProgramSnapshot;
 use crate::editor::architect::chrome::{adjacency_kind_label, element_label};
 use crate::editor::architect::config::ArchitectConfig;
 use crate::editor::architect::{architect_action, ui_value_bool, ui_value_map, ui_value_text};
@@ -99,7 +99,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framewo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::{empty_plugin, sample_plugin};
+    use crate::{empty_plugin, sample_plugin};
 
     #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_adjacency_surface_and_body_key() {

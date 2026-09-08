@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteEdge` — reconstructs the removed edge from BASE. Missing target ⇒
 //! `Vec::new()`.
-use crate::artifacts::jack::mutations::{create_edge, TrinityGraphMutation};
-use crate::artifacts::jack::JackSnapshot;
+use crate::mutations::{create_edge, TrinityGraphMutation};
+use crate::JackSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DeleteEdge, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {

@@ -6,16 +6,16 @@
 //! and panel layers, several produce framework `ActionArgOption`s, and the artifact has no other
 //! consumer that would benefit from owning them.
 
-use crate::artifacts::program::op::ProgramMutation;
-use crate::artifacts::program::registers::{
+use crate::op::ProgramMutation;
+use crate::registers::{
     Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ReportKind, ReportRecord, Requirement, RequirementKind,
     Risk, RiskLevel, Stakeholder, UserCategory, UserProfile, ValidationStatus,
 };
-use crate::artifacts::program::schema::mutations as leaves;
-use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::AnalysisResult;
-use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::ProgramReport;
-use crate::artifacts::program::standards::v1::subsets::any::schema::normalize_pair;
-use crate::artifacts::program::{EntityHeader, EntityId, ProgramSnapshot, TextField, TraceKind, TraceLink};
+use crate::schema::mutations as leaves;
+use crate::standards::v1::subsets::any::schema::inferences::AnalysisResult;
+use crate::standards::v1::subsets::any::schema::inferences::ProgramReport;
+use crate::standards::v1::subsets::any::schema::normalize_pair;
+use crate::{EntityHeader, EntityId, ProgramSnapshot, TextField, TraceKind, TraceLink};
 use crate::editor::architect::chrome::{element_label, entity_to_json};
 use dsl::DslValue as Value;
 use semio_framework_plugin::{ActionArgOption, LocalizedLabel};
@@ -111,10 +111,10 @@ pub fn default_element(name: impl Into<String>) -> ProgramElement {
         kind: ProgramElementKind::Room,
         parent_id: None,
         level: None,
-        area: crate::artifacts::program::QuantitySpec::default(),
-        volume: crate::artifacts::program::QuantitySpec::default(),
-        height: crate::artifacts::program::QuantitySpec::default(),
-        occupancy: crate::artifacts::program::QuantitySpec::default(),
+        area: crate::QuantitySpec::default(),
+        volume: crate::QuantitySpec::default(),
+        height: crate::QuantitySpec::default(),
+        occupancy: crate::QuantitySpec::default(),
         function_ids: Vec::new(),
         activity_ids: Vec::new(),
         user_profile_ids: Vec::new(),
@@ -175,10 +175,10 @@ pub fn register_entities(program: &ProgramSnapshot, register: &str) -> Vec<Value
     // W4 batch Db) — its rows live behind the working-scene cache, not a direct `Vec<T>` field,
     // so it can't join the generic `program.$field.iter()` macro expansion below.
     if register == "benchmarks" {
-        return crate::artifacts::program::program_benchmarks(program).iter().map(entity_to_json).collect();
+        return crate::program_benchmarks(program).iter().map(entity_to_json).collect();
     }
     if register == "knowledge" {
-        return crate::artifacts::program::program_knowledge(program).iter().map(entity_to_json).collect();
+        return crate::program_knowledge(program).iter().map(entity_to_json).collect();
     }
     macro_rules! collect {
         ($($name:literal => $field:ident),+ $(,)?) => {
@@ -265,10 +265,10 @@ pub fn find_register_for_entity(program: &ProgramSnapshot, id: &EntityId) -> Opt
         return Some("traces");
     }
     // 🧩️ `benchmarks` composes stdio's `table` subset — see `register_entities`'s own comment.
-    if crate::artifacts::program::program_benchmarks(program).iter().any(|row| row.header.id == *id) {
+    if crate::program_benchmarks(program).iter().any(|row| row.header.id == *id) {
         return Some("benchmarks");
     }
-    if crate::artifacts::program::program_knowledge(program).iter().any(|row| row.header.id == *id) {
+    if crate::program_knowledge(program).iter().any(|row| row.header.id == *id) {
         return Some("knowledge");
     }
     macro_rules! find {
@@ -437,7 +437,7 @@ pub fn default_issue(label: &str) -> Issue {
         summary: TextField::plain(""),
         issue_description: TextField::plain(""),
         severity: IssueSeverity::Minor,
-        issue_priority: crate::artifacts::program::Priority::Preferred,
+        issue_priority: crate::Priority::Preferred,
         reporter_id: None,
         assignee_id: None,
         affected_entity_ids: Vec::new(),
@@ -461,11 +461,11 @@ pub fn default_function(label: &str) -> Function {
         code: String::new(),
         kind: FunctionKind::Primary,
         purpose: TextField::plain(""),
-        criticality: crate::artifacts::program::Priority::Preferred,
+        criticality: crate::Priority::Preferred,
         performance_targets: Vec::new(),
         service_level: None,
         operating_hours: None,
-        staffing: crate::artifacts::program::QuantitySpec::default(),
+        staffing: crate::QuantitySpec::default(),
         equipment_ids: Vec::new(),
         resource_ids: Vec::new(),
         activity_ids: Vec::new(),
@@ -535,7 +535,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
         "stakeholders" => create!(CreateStakeholder, create_stakeholder, stakeholder, default_stakeholder(label)),
         "users" => create!(CreateUserProfile, create_user_profile, user_profile, default_user(label)),
         "activities" => {
-            let item: crate::artifacts::program::Activity = default_from_json(
+            let item: crate::Activity = default_from_json(
                 "activities",
                 label,
                 Value::object([("code".to_string(), Value::String("ACT".to_string())), ("category".to_string(), Value::String("general".to_string())), ("activityType".to_string(), Value::String("general".to_string()))]),
@@ -550,7 +550,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             CreateAssumption,
             create_assumption,
             assumption,
-            default_from_json::<crate::artifacts::program::Assumption>(
+            default_from_json::<crate::Assumption>(
                 "assumptions",
                 label,
                 Value::object([("statement".to_string(), Value::object([("text".to_string(), Value::String(String::new()))])), ("validationStatus".to_string(), Value::String("pending".to_string()))]),
@@ -561,7 +561,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 CreateConstraintRecord,
                 create_constraint_record,
                 constraint_record,
-                default_from_json::<crate::artifacts::program::ConstraintRecord>(
+                default_from_json::<crate::ConstraintRecord>(
                     "constraints",
                     label,
                     Value::object([
@@ -578,7 +578,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 CreateComplianceRecord,
                 create_compliance_record,
                 compliance_record,
-                default_from_json::<crate::artifacts::program::ComplianceRecord>(
+                default_from_json::<crate::ComplianceRecord>(
                     "compliance",
                     label,
                     Value::object([
@@ -594,7 +594,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             CreateApprovalRecord,
             create_approval_record,
             approval_record,
-            default_from_json::<crate::artifacts::program::ApprovalRecord>(
+            default_from_json::<crate::ApprovalRecord>(
                 "approvals",
                 label,
                 Value::object([
@@ -609,7 +609,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 CreateMeetingRecord,
                 create_meeting_record,
                 meeting_record,
-                default_from_json::<crate::artifacts::program::MeetingRecord>(
+                default_from_json::<crate::MeetingRecord>(
                     "meetings",
                     label,
                     Value::object([("meetingType".to_string(), Value::String("workshop".to_string())), ("quorumMet".to_string(), Value::Bool(false)), ("meetingStatus".to_string(), Value::String("draft".to_string()))]),
@@ -646,7 +646,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             CreateTemplateRecord,
             create_template_record,
             template_record,
-            default_from_json::<crate::artifacts::program::TemplateRecord>(
+            default_from_json::<crate::TemplateRecord>(
                 "template",
                 label,
                 Value::object([

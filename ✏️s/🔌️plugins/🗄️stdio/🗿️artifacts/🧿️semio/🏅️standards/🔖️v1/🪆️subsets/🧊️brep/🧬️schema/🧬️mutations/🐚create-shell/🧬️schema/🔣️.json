@@ -1,11 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/create-shell.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/create-shell/schema.json",
   "title": "CreateShell",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "faces",
     "id"
   ],
   "properties": {
@@ -15,20 +14,24 @@
     "faces": {
       "type": "array",
       "items": {
-        "title": "BrepShellFace",
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "face",
-          "orientation"
-        ],
-        "properties": {
-          "face": {
-            "type": "string"
-          },
-          "orientation": {
-            "type": "boolean"
-          }
+        "$ref": "#/$defs/BrepShellFace"
+      }
+    }
+  },
+  "$defs": {
+    "BrepShellFace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "face",
+        "orientation"
+      ],
+      "properties": {
+        "face": {
+          "type": "string"
+        },
+        "orientation": {
+          "type": "boolean"
         }
       }
     }

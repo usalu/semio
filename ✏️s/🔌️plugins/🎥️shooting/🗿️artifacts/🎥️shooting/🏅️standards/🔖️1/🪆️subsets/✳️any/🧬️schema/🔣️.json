@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/shooting/shooting/artifact.json",
   "title": "ShootingArtifact",
   "type": "object",
@@ -411,6 +412,239 @@
           "type": "string"
         }
       }
+    },
+    "ShootingRetainedCommandStepContract": {
+      "type": "object",
+      "required": [
+        "maxRawBytes",
+        "maxDecodedItems",
+        "maxWorkUnitsPerStep",
+        "maxOutputBytes",
+        "maxStepMicros"
+      ],
+      "properties": {
+        "maxRawBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxDecodedItems": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxWorkUnitsPerStep": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxOutputBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxStepMicros": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7999
+        },
+        "maxCheckpointBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxInFlightPages": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "ShootingLoadRequestPublication": {
+      "type": "object",
+      "required": [
+        "toolId",
+        "lanes"
+      ],
+      "properties": {
+        "toolId": {
+          "const": "loadRequest"
+        },
+        "lanes": {
+          "const": [
+            "hostOnly"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ShootingImportAssetRequestPublication": {
+      "type": "object",
+      "required": [
+        "toolId",
+        "lanes"
+      ],
+      "properties": {
+        "toolId": {
+          "const": "importAssetRequest"
+        },
+        "lanes": {
+          "const": [
+            "hostOnly"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ShootingRetainedCommandLimits": {
+      "type": "object",
+      "required": [
+        "controller",
+        "documentSchema",
+        "factory",
+        "limits",
+        "publicationContracts",
+        "routes",
+        "oracle"
+      ],
+      "properties": {
+        "controller": {
+          "const": "s.shooting.shooting@1/*#editor"
+        },
+        "documentSchema": {
+          "const": "shooting.shooting"
+        },
+        "factory": {
+          "const": "ShootingCommandJobFactory"
+        },
+        "limits": {
+          "type": "object",
+          "required": [
+            "bounded",
+            "resumable"
+          ],
+          "properties": {
+            "bounded": {
+              "$ref": "#/$defs/ShootingRetainedCommandStepContract"
+            },
+            "resumable": {
+              "$ref": "#/$defs/ShootingRetainedCommandStepContract"
+            }
+          },
+          "additionalProperties": false
+        },
+        "publicationContracts": {
+          "type": "array",
+          "items": [
+            {
+              "$ref": "#/$defs/ShootingLoadRequestPublication"
+            },
+            {
+              "$ref": "#/$defs/ShootingImportAssetRequestPublication"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "routes": {
+          "allOf": [
+            {
+              "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes"
+            },
+            {
+              "type": "array",
+              "minItems": 39,
+              "maxItems": 39,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "execution",
+                  "admission",
+                  "feature"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "execution": {
+                    "enum": [
+                      "bounded",
+                      "resumable"
+                    ]
+                  },
+                  "admission": {
+                    "enum": [
+                      "migrated",
+                      "failClosed"
+                    ]
+                  },
+                  "feature": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          ]
+        },
+        "oracle": {
+          "type": "object",
+          "required": [
+            "library",
+            "scope",
+            "ownedInterface",
+            "runtimeDependency",
+            "expected"
+          ],
+          "properties": {
+            "library": {
+              "const": "serde_json"
+            },
+            "scope": {
+              "const": "test-only-existing-dependency"
+            },
+            "ownedInterface": {
+              "const": "ShootingRetainedCatalogOracle"
+            },
+            "runtimeDependency": {
+              "const": false
+            },
+            "expected": {
+              "type": "object",
+              "required": [
+                "routes",
+                "bounded",
+                "resumable",
+                "migrated",
+                "failClosed",
+                "unique"
+              ],
+              "properties": {
+                "routes": {
+                  "const": 39
+                },
+                "bounded": {
+                  "const": 2
+                },
+                "resumable": {
+                  "const": 37
+                },
+                "migrated": {
+                  "const": 2
+                },
+                "failClosed": {
+                  "const": 37
+                },
+                "unique": {
+                  "const": true
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

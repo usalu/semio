@@ -1,8 +1,8 @@
 //! 🗑️ `delete-route` mutation payload — removes a route feature from `routes` by id.
 
-use crate::artifacts::gismap::GisMapSnapshot;
-use crate::artifacts::gismap::diff::GisMapDiff;
-use crate::artifacts::gismap::mutations::GisMapMutation;
+use crate::GisMapSnapshot;
+use crate::diff::GisMapDiff;
+use crate::mutations::GisMapMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

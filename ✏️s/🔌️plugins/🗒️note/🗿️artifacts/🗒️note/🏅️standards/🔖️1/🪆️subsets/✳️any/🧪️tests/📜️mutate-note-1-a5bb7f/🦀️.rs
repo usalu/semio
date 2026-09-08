@@ -44,8 +44,8 @@ const VECTORS: &str = "local:/";
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_plugin_note::artifacts::note::standards::v1::subsets::any::schema::mutations::{apply_note_mutation_outcome, decode_note_mutation_json, decode_note_snapshot_json, encode_note_snapshot_json, inverse_note_mutation_steps, NoteMutation};
-    use semio_s_plugin_note::artifacts::note::NoteSnapshot;
+    use semio_s_artifact_note_note::standards::v1::subsets::any::schema::mutations::{apply_note_mutation_outcome, decode_note_mutation_json, decode_note_snapshot_json, encode_note_snapshot_json, inverse_note_mutation_steps, NoteMutation};
+    use semio_s_artifact_note_note::NoteSnapshot;
 
     //#region 🔖️VectorReading
     /// 🧫️ The scenario's own doc string, which carries the kind and the committed vector directory

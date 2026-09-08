@@ -7,10 +7,10 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("../🧬️mutations/�
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::jack::dsl::{port_dsl_to_port, port_to_port_dsl, PortDsl};
-use crate::artifacts::jack::mutations::{change_data_property, create_edge, create_node, delete_edge, delete_node, move_node, remove_data_property, rename_node};
-use crate::artifacts::jack::schema::mutations::text::TrinityGraphMutation;
-use crate::artifacts::jack::{Edge, EntityRef, JackSnapshot, Node, Port, PropertyBag, PropertyDef, PropertyValue};
+use crate::dsl::{port_dsl_to_port, port_to_port_dsl, PortDsl};
+use crate::mutations::{change_data_property, create_edge, create_node, delete_edge, delete_node, move_node, remove_data_property, rename_node};
+use crate::schema::mutations::text::TrinityGraphMutation;
+use crate::{Edge, EntityRef, JackSnapshot, Node, Port, PropertyBag, PropertyDef, PropertyValue};
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use store::TextError;
 
@@ -228,9 +228,9 @@ enum JackRetirementOwner {
     Edge(Edge),
     Port(Port),
     PropertyDef(PropertyDef),
-    NodeKind(graph::manifest::TrinityNodeKindDef),
-    EdgeKind(graph::manifest::TrinityEdgeKindDef),
-    PortKind(graph::manifest::TrinityPortKindDef),
+    NodeKind(semio_framework_graph::manifest::TrinityNodeKindDef),
+    EdgeKind(semio_framework_graph::manifest::TrinityEdgeKindDef),
+    PortKind(semio_framework_graph::manifest::TrinityPortKindDef),
 }
 
 struct JackOwnedRetirement {
@@ -1004,9 +1004,9 @@ pub fn jack_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOwner
 
 //#region 🔖️RetainedStoreInitialization
 enum JackSnapshotCloneKind {
-    Node { source: usize, property: usize, port: usize, value: graph::manifest::TrinityNodeKindDef },
-    Edge { source: usize, property: usize, value: graph::manifest::TrinityEdgeKindDef },
-    Port { source: usize, property: usize, value: graph::manifest::TrinityPortKindDef },
+    Node { source: usize, property: usize, port: usize, value: semio_framework_graph::manifest::TrinityNodeKindDef },
+    Edge { source: usize, property: usize, value: semio_framework_graph::manifest::TrinityEdgeKindDef },
+    Port { source: usize, property: usize, value: semio_framework_graph::manifest::TrinityPortKindDef },
 }
 
 struct JackSnapshotCloneAuthority {
@@ -1064,7 +1064,7 @@ impl JackSnapshotCloneAuthority {
                 properties.try_reserve_exact(kind.properties.len()).map_err(|_| "jack-store.initializer-node-property-admission")?;
                 let mut port_kinds = Vec::new();
                 port_kinds.try_reserve_exact(kind.port_kinds.len()).map_err(|_| "jack-store.initializer-node-port-admission")?;
-                *self.active = Some(JackSnapshotCloneKind::Node { source: self.index, property: 0, port: 0, value: graph::manifest::TrinityNodeKindDef { name: Self::clone_string(&kind.name)?, properties, port_kinds } });
+                *self.active = Some(JackSnapshotCloneKind::Node { source: self.index, property: 0, port: 0, value: semio_framework_graph::manifest::TrinityNodeKindDef { name: Self::clone_string(&kind.name)?, properties, port_kinds } });
                 Ok(true)
             }
             5 => {
@@ -1078,7 +1078,7 @@ impl JackSnapshotCloneAuthority {
                 };
                 let mut properties = Vec::new();
                 properties.try_reserve_exact(kind.properties.len()).map_err(|_| "jack-store.initializer-edge-property-admission")?;
-                *self.active = Some(JackSnapshotCloneKind::Edge { source: self.index, property: 0, value: graph::manifest::TrinityEdgeKindDef { name: Self::clone_string(&kind.name)?, properties } });
+                *self.active = Some(JackSnapshotCloneKind::Edge { source: self.index, property: 0, value: semio_framework_graph::manifest::TrinityEdgeKindDef { name: Self::clone_string(&kind.name)?, properties } });
                 Ok(true)
             }
             6 => {
@@ -1092,7 +1092,7 @@ impl JackSnapshotCloneAuthority {
                 };
                 let mut properties = Vec::new();
                 properties.try_reserve_exact(kind.properties.len()).map_err(|_| "jack-store.initializer-port-property-admission")?;
-                *self.active = Some(JackSnapshotCloneKind::Port { source: self.index, property: 0, value: graph::manifest::TrinityPortKindDef { name: Self::clone_string(&kind.name)?, direction: kind.direction, properties } });
+                *self.active = Some(JackSnapshotCloneKind::Port { source: self.index, property: 0, value: semio_framework_graph::manifest::TrinityPortKindDef { name: Self::clone_string(&kind.name)?, direction: kind.direction, properties } });
                 Ok(true)
             }
             _ => Ok(false),
@@ -1432,7 +1432,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                     self.fail(b"jack-store.initializer-envelope-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
-                if envelope.schema != crate::artifacts::jack::TRINITY_GRAPH_SCHEMA || envelope.id.is_empty() || envelope.id.len() > JACK_OWNED_FIELD_BYTES {
+                if envelope.schema != crate::TRINITY_GRAPH_SCHEMA || envelope.id.is_empty() || envelope.id.len() > JACK_OWNED_FIELD_BYTES {
                     self.fail(b"jack-store.initializer-envelope-invalid");
                 } else {
                     self.phase = JackStoreInitializationPhase::ValidateEditPair { left: 0, right: 1 };
@@ -1692,8 +1692,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
             JackStoreInitializationPhase::RetireCancelled | JackStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    self.initial_digest = None;
-                    self.edit_digest = None;
+                    *self.initial_digest = None;
+                    *self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == JackStoreInitializationPhase::RetireCancelled {
                         self.phase = JackStoreInitializationPhase::Cancelled;
@@ -1742,8 +1742,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
         match self.pump_terminal_retirement() {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                self.initial_digest = None;
-                self.edit_digest = None;
+                *self.initial_digest = None;
+                *self.edit_digest = None;
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }
@@ -1756,8 +1756,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
             return None;
         }
         let candidate = self.candidate.take()?;
-        self.initial_digest = None;
-        self.edit_digest = None;
+        *self.initial_digest = None;
+        *self.edit_digest = None;
         self.terminal_handoff = true;
         Some(candidate)
     }
@@ -1787,7 +1787,7 @@ pub fn jack_document_store_initialization_job(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jack::TRINITY_GRAPH_SCHEMA;
+    use crate::TRINITY_GRAPH_SCHEMA;
 
     #[semio_framework_async_macros::async_test]
     async fn rename_op_binary_round_trips_and_agrees_with_text() {
@@ -1807,12 +1807,12 @@ mod tests {
     }
 
     fn create_document_envelope_for_test() -> store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
-        create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::artifacts::jack::schema::empty_jack_document(), None)
+        create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::schema::empty_jack_document(), None)
     }
     use store::create_document_envelope;
 
     fn empty_jack_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> JackStoreInitializationAuthority {
-        let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::artifacts::jack::schema::empty_jack_document(), None);
+        let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::schema::empty_jack_document(), None);
         JackStoreInitializationAuthority::new(envelope, operation, generation)
     }
 
@@ -1885,7 +1885,7 @@ mod tests {
     fn jack_nested_mutation_and_child_snapshot_retire_one_exact_owner_per_grant() {
         let mut object = std::collections::BTreeMap::new();
         object.insert("nested".repeat(32), PropertyValue::Array(vec![PropertyValue::String("payload".repeat(128)), PropertyValue::String("tail".into())]));
-        let mutation = TrinityGraphMutation::ChangeDataProperty(crate::artifacts::jack::mutations::ChangeDataProperty { entity: EntityRef::Node("node".repeat(64)), key: "key".repeat(64), new_value: PropertyValue::Object(object) });
+        let mutation = TrinityGraphMutation::ChangeDataProperty(crate::mutations::ChangeDataProperty { entity: EntityRef::Node("node".repeat(64)), key: "key".repeat(64), new_value: PropertyValue::Object(object) });
         let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&JackMutationRetirementFactory, mutation);
         for _ in 0..10_000 {
             let step = retirement.close_step(1, JACK_OWNED_FIELD_BYTES).expect("one nested Jack owner retires");
@@ -1921,7 +1921,7 @@ mod tests {
             width: 80.0,
             height: 40.0,
             properties: PropertyBag::new(),
-            ports: vec![Port { id: "p1".into(), kind: "Connector".into(), direction: crate::artifacts::jack::PortDirection::Out, properties: PropertyBag::new() }],
+            ports: vec![Port { id: "p1".into(), kind: "Connector".into(), direction: crate::PortDirection::Out, properties: PropertyBag::new() }],
         }));
     }
 
@@ -1940,8 +1940,8 @@ mod tests {
         ::store::os_store::test_support::assert_op_line_round_trip(&create_edge(Edge {
             id: "e2".into(),
             kind: "Connection".into(),
-            source: crate::artifacts::jack::port_key("root", "out-a"),
-            target: crate::artifacts::jack::port_key("child", "in-a"),
+            source: crate::port_key("root", "out-a"),
+            target: crate::port_key("child", "in-a"),
             properties,
         }));
     }
@@ -1979,11 +1979,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::jack::schema::mutations::text::TrinityGraphStore;
+        use crate::schema::mutations::text::TrinityGraphStore;
         use protocol::{ArtifactId, Edit, SchemaId};
 
         let mut store = TrinityGraphStore::new(create_document_envelope_for_test()).await.expect("valid artifact store");
-        crate::artifacts::jack::schema::mutations::text::dispatch_trinity_graph_mutations(&mut store, vec![rename_node("node-1".into(), "Renamed".into())]).await.unwrap_or(());
+        crate::schema::mutations::text::dispatch_trinity_graph_mutations(&mut store, vec![rename_node("node-1".into(), "Renamed".into())]).await.unwrap_or(());
         if let Some(edit) = store.envelope().vcs.edits.last() {
             let edit: &Edit<TrinityGraphMutation> = edit;
             ::store::os_store::test_support::assert_command_envelope_round_trip::<JackSnapshot, TrinityGraphMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;

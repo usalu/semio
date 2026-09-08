@@ -17,9 +17,9 @@
 //! write the `wiresFixture` identities/relationships lane at all, so proving it wrote nothing is
 //! the point.
 
-use crate::artifacts::wires::mutations::WiresMutation;
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::{find_board_edge, find_relationship};
-use crate::artifacts::wires::{materialize_wires_content, wires_working_scene, WiresDiff, WiresSnapshot};
+use crate::mutations::WiresMutation;
+use crate::standards::v1::subsets::any::schema::inferences::{find_board_edge, find_relationship};
+use crate::{materialize_wires_content, wires_working_scene, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

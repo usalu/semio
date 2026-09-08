@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::procedure::ProcedureSnapshot;
-use schema::ArtifactSchema;
+use crate::ProcedureSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::{compute_procedure_topology, ProcedureTopology};
@@ -23,7 +23,7 @@ pub struct ProcedureInference {
 
 impl protocol::Inference<ProcedureSnapshot> for ProcedureInference {
     fn infer(snapshot: &ProcedureSnapshot) -> Self {
-        let path = crate::artifacts::procedure::procedure_working_scene(snapshot).path;
+        let path = crate::procedure_working_scene(snapshot).path;
         Self { topology: compute_procedure_topology(&path) }
     }
 }
@@ -54,7 +54,7 @@ impl protocol::InferenceSpec<ProcedureSnapshot> for ProcedureInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::procedure::standards::v1::subsets::any::schema::ProcedureBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::ProcedureBuilder {
     type Snapshot = ProcedureSnapshot;
     type Inference = ProcedureInference;
 }
@@ -64,10 +64,10 @@ impl ArtifactInferrer for crate::artifacts::procedure::standards::v1::subsets::a
 /// 💡️ Registers `s.imperative.procedure.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `procedure_artifact_schema_descriptor`'s
 /// registration.
-pub fn procedure_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn procedure_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.imperative.procedure.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -82,13 +82,13 @@ pub fn procedure_artifact_inference_descriptor() -> schema::ArtifactInferenceDes
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::procedure::{Path, Step};
+    use crate::{Path, Step};
     use protocol::Inference;
     use std::collections::BTreeMap;
 
     fn chain_snapshot() -> ProcedureSnapshot {
         let path = Path { steps: vec![Step { id: "a".into(), kind: "noop".into(), params: Default::default(), bodies: BTreeMap::new() }, Step { id: "b".into(), kind: "noop".into(), params: Default::default(), bodies: BTreeMap::new() }] };
-        crate::artifacts::procedure::procedure_snapshot_with_content("procedure.document", &path, &BTreeMap::new())
+        crate::procedure_snapshot_with_content("procedure.document", &path, &BTreeMap::new())
     }
 
     #[semio_framework_async_macros::async_test]

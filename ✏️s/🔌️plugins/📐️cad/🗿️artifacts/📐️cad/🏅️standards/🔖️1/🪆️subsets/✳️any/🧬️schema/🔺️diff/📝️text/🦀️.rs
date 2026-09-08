@@ -1,9 +1,9 @@
 //! 🔺️ CAD artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::cad::diff::schema::{CadDiff, CadNodesDelta};
-use crate::artifacts::cad::mutations::CadReferencePatch;
-use crate::artifacts::cad::schema::CadArtifact;
-use crate::artifacts::cad::{CadNode, CadReference, CadSnapshot};
+use crate::diff::schema::{CadDiff, CadNodesDelta};
+use crate::mutations::CadReferencePatch;
+use crate::schema::CadArtifact;
+use crate::{CadNode, CadReference, CadSnapshot};
 use protocol::MutationDiff;
 use std::collections::BTreeMap;
 
@@ -370,11 +370,11 @@ impl MutationDiff<CadSnapshot> for CadDiff {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::mutations::create_node::CreateNode;
-    use crate::artifacts::cad::mutations::delete_node::DeleteNode;
-    use crate::artifacts::cad::mutations::rename_node::RenameNode;
-    use crate::artifacts::cad::op::CadMutation;
-    use crate::artifacts::cad::testkit::sample_scene;
+    use crate::mutations::create_node::CreateNode;
+    use crate::mutations::delete_node::DeleteNode;
+    use crate::mutations::rename_node::RenameNode;
+    use crate::op::CadMutation;
+    use crate::testkit::sample_scene;
     use protocol::Mutation;
 
     /// ⚖️ `CadDiff.artifact` (a whole-artifact replacement fragment) still exists as a `CadDiff`

@@ -1,8 +1,8 @@
 //! 🌤️ Energy model mutation — `UnbindWeatherFile`: Detaches the `weather` link slot. Refused when nothing is bound, so an undo chain can never invent an unbind that had no partner.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

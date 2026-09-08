@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `RewritingSnapshot` to its binary pack form.
@@ -23,8 +23,8 @@ pub fn decode(bytes: &[u8]) -> Result<RewritingSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jack::PropertyValue;
-    use crate::artifacts::rewriting::LayoutPoint;
+    use semio_s_artifact_trinity_jack::PropertyValue;
+    use crate::LayoutPoint;
     use ::store::os_store::test_support::assert_dsl_pack_equivalence;
     use std::collections::BTreeMap;
 

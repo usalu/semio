@@ -1,7 +1,7 @@
 //! 🔺️ `change-vl-rd` — sparse diff construction.
 
 use super::ChangeVLRd;
-use crate::artifacts::en1994::{En1994Diff, En1994Snapshot};
+use crate::{En1994Diff, En1994Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeVLRd, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {

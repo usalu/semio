@@ -1,10 +1,10 @@
 //! 🧭 `topology` — one named inference: the node/edge graph's topological order, per-node depth,
 //! and cycle-freedom, computed by Kahn's algorithm over `nodes`/`edges`. Edge endpoints are
-//! `nodeId@portId` port keys (`crate::artifacts::jack::port_node_id` parses the node id out); a
+//! `nodeId@portId` port keys (`crate::port_node_id` parses the node id out); a
 //! plain whole-snapshot scalar (per the family root's own "simple whole-snapshot scalars"
 //! guidance) — no `InferredField`/incremental caching needed for a single BFS pass.
 
-use crate::artifacts::jack::{port_node_id, JackSnapshot};
+use crate::{port_node_id, JackSnapshot};
 use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology
@@ -35,7 +35,7 @@ impl Default for JackTopology {
 /// 📐️ Computes `topology` directly from `nodes`/`edges` via Kahn's algorithm — deterministic
 /// because both the root frontier and each frontier's children are drained in node-id sort order.
 pub fn compute_topology(snapshot: &JackSnapshot) -> JackTopology {
-    let scene = crate::artifacts::jack::jack_working_scene(snapshot);
+    let scene = crate::jack_working_scene(snapshot);
     let node_count = scene.nodes.len() as u32;
     let mut adjacency: BTreeMap<String, Vec<String>> = scene.nodes.iter().map(|node| (node.id.clone(), Vec::new())).collect();
     let mut indegree: BTreeMap<String, u32> = scene.nodes.iter().map(|node| (node.id.clone(), 0u32)).collect();
@@ -87,7 +87,7 @@ pub fn compute_topology(snapshot: &JackSnapshot) -> JackTopology {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::jack::{Edge, Node, Port, PortDirection, PropertyBag};
+    use crate::{Edge, Node, Port, PortDirection, PropertyBag};
 
     //#region 🧸️Fixtures
     fn node(id: &str) -> Node {

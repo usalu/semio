@@ -12,8 +12,8 @@
 //! declaration into `🚪️io/🦀️.rs` as `io()`. See that file's own module doc for the per-format
 //! fidelity table.
 
-use crate::artifacts::block2d::standards::v1::subsets::any::{io, schema};
-use crate::artifacts::block2d::BLOCK2D_DIALECT;
+use crate::standards::v1::subsets::any::{io, schema};
+use crate::BLOCK2D_DIALECT;
 use crate::editor::block2d as editor;
 use crate::viewer::block2d as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};

@@ -1,6 +1,6 @@
 //! 🔢️ `change-part-number-input` — upserts one scripted part-number input value, addressed by key.
 
-use crate::artifacts::iso16757::{CatalogueValue, Iso16757Mutation, Iso16757Snapshot};
+use crate::{CatalogueValue, Iso16757Mutation, Iso16757Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

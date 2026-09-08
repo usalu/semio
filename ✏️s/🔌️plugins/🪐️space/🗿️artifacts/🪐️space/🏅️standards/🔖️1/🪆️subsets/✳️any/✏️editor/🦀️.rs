@@ -3,9 +3,9 @@
 //! (name · kind · subset · updated · updated-by · presence), create/open/delete/rename commands, the
 //! members panel, and the folded-directory/presence `Config` state that feeds them both.
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
-use crate::artifacts::space::SPACE_INDEX_DIALECT;
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::SPACE_INDEX_DIALECT;
 use crate::editor::space_index::commands::{
     copy_invite_link, create_artifact, delete_artifact, fold_directory_events, invite_member, open_artifact, open_artifact_with, presence_heartbeat, remove_member, rename_artifact, request_delete_artifact, request_invite_member, set_visibility,
     touch_artifact,
@@ -221,7 +221,7 @@ impl semio_framework::ToolJobFactory for SpaceIndexRetainedCommandJobFactory {
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SpaceIndexRetainedCommandJobFactory {
     type Owner = semio_framework_plugin::EditorApp<SpaceIndexEditor>;
     const TOOL_IDS: &'static [&'static str] = SPACE_INDEX_RETAINED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = SPACE_INDEX_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
@@ -245,7 +245,7 @@ impl ArtifactEditor for SpaceIndexEditor {
     type Command = SpaceIndexCommand;
 
     const DIALECT: Dialect = SPACE_INDEX_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<SpaceIndexEditor>,
@@ -374,7 +374,7 @@ impl ArtifactEditor for SpaceIndexEditor {
 pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(SPACE_INDEX_DIALECT)
         .document(["semio", "s", "space", "index"])
-        .artifact_kind(crate::artifacts::space::artifact_kind())
+        .artifact_kind(crate::artifact_kind())
         .icon_id("layout-grid")
         .mode_def(edit::definition())
         .default_mode_id(edit::SPACE_INDEX_MODE_EDIT)
@@ -464,7 +464,7 @@ pub(crate) mod testkit {
     }
 
     pub async fn new_app_with_artifact() -> (SpaceIndexApp, String) {
-        use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{empty_space_index_snapshot, SpaceArtifactDialect, SpaceArtifactRow};
+        use crate::standards::v1::subsets::any::schema::snapshot::{empty_space_index_snapshot, SpaceArtifactDialect, SpaceArtifactRow};
         use semio_framework_plugin::PluginApp;
         use store::ArtifactDsl;
         let mut app = new_app().await;
@@ -486,7 +486,7 @@ pub(crate) mod testkit {
     }
 
     pub async fn new_app_with_indexed_artifact() -> (SpaceIndexApp, String) {
-        use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::empty_space_index_snapshot;
+        use crate::standards::v1::subsets::any::schema::snapshot::empty_space_index_snapshot;
         use crate::editor::space_index::commands::fold_directory_events::FoldDirectoryEvents;
         use semio_framework_os_kernel::os_directory::{
             ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentIndexEntryV1, DocumentOwner, DocumentScope, Hlc,

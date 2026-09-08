@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::en1993::En1993Snapshot;
+use crate::En1993Snapshot;
 
 /// 🔩️ The high-strength-connection example fixture, handcrafted in `en1993`'s DSL
 /// (`store::ArtifactDsl`): an S460 high-strength steel member and bolted/welded connection

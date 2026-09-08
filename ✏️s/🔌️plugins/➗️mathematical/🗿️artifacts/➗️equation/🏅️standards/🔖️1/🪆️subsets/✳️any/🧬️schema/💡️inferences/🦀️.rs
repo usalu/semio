@@ -5,8 +5,8 @@
 //! inference gets its own `<emoji><slug>/` child (`🧭topology/`, and `🌱roots/` — wave M3a,
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS).
 
-use crate::artifacts::equation::EquationSnapshot;
-use schema::ArtifactSchema;
+use crate::EquationSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state.
@@ -36,7 +36,7 @@ impl Default for EquationInference {
 
 impl protocol::Inference<EquationSnapshot> for EquationInference {
     fn infer(snapshot: &EquationSnapshot) -> Self {
-        Self { topology: compute_equation_topology(&crate::artifacts::equation::equation_graph(snapshot)), roots: compute_equation_roots(snapshot) }
+        Self { topology: compute_equation_topology(&crate::equation_graph(snapshot)), roots: compute_equation_roots(snapshot) }
     }
 }
 
@@ -76,10 +76,10 @@ impl ArtifactInferrer for EquationInferrer {
 /// 💡️ Registers `s.mathematical.equation.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `equation_artifact_schema_descriptor`'s
 /// registration.
-pub fn equation_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn equation_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.mathematical.equation.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

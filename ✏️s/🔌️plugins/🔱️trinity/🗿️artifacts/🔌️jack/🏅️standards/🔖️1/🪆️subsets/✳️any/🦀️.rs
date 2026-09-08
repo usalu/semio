@@ -9,7 +9,7 @@
 //! added to `🚪️io/🦀️.rs`. This packet (`fleet-trinity-recipe`) was scoped to EXCLUDE every
 //! path containing `🚪️io/` — a live peer packet (`io-async-signatures`) is mid-sweep rewriting that
 //! exact file this minute. `io_declaration()` below is the same `IoDeclaration` shape, built here
-//! instead: `native` is real (reuses `crate::artifacts::jack::pilot_languages()`'s already-real
+//! instead: `native` is real (reuses `crate::pilot_languages()`'s already-real
 //! grammar/protocol pairs, unchanged, and a real `store::ArtifactCodec::of::<JackSnapshot,
 //! TrinityGraphMutation>(...)`), but `entries: &[]` — the foreign-format hops (svg/csv/md/png/json
 //! import+export) stay UNREGISTERED on the new `io_mechanism` channel. Converting them requires
@@ -22,9 +22,9 @@
 //! (verbatim rename), add the typed leaves, and swap this file's `io: io_declaration()` back to
 //! `io: io::io()` to match the template exactly.
 
-use crate::artifacts::jack::op::TrinityGraphMutation;
-use crate::artifacts::jack::standards::v1::subsets::any::schema;
-use crate::artifacts::jack::{JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
+use crate::op::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema;
+use crate::{JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use crate::editor::jack as editor;
 use crate::viewer::jack as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
@@ -33,7 +33,7 @@ use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::artifacts::jack::examples::demo::source()]).as_slice()
+    EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
 }
 
 fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
@@ -45,7 +45,7 @@ fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInfere
 /// are fixed by that function's own literal `vec![document, op, diff, pack, spr]` order — the same
 /// role→slot mapping `🗒️note`'s `io()` uses for its own five-language array.
 fn io_declaration() -> IoDeclaration {
-    let langs = crate::artifacts::jack::pilot_languages();
+    let langs = crate::pilot_languages();
     IoDeclaration {
         native: NativeCodecs {
             snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },

@@ -1,6 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.dev/schema/plugin/reactor/job-test-mutations/diff",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/reactor/jobs/mutation-plan/job-test-mutations/diff.json",
   "title": "Ordered Job Mutation Plan Test Diff",
   "description": "Each delta is applied in order with checked i32 addition; an intermediate overflow rejects even if the final mathematical sum fits.",
   "type": "object",
@@ -12,7 +12,7 @@
     "deltas": {
       "type": "array",
       "items": {
-        "$ref": "https://semio.dev/schema/plugin/reactor/job-test-mutations/snapshot#/$defs/i32"
+        "$ref": "https://semio.tech/schema/os/plugin/reactor/jobs/mutation-plan/job-test-mutations/snapshot.json#/$defs/i32"
       }
     }
   }

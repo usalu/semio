@@ -1,8 +1,8 @@
 //! 🖌️ 🖌️ Block 3D play app commands command — `hover-surface`.
 
-use crate::artifacts::block3d::op::Block3dMutation;
-use crate::artifacts::block3d::Block3dBrushPreview;
-use crate::artifacts::block3d::Block3dSnapshot;
+use crate::op::Block3dMutation;
+use crate::Block3dBrushPreview;
+use crate::Block3dSnapshot;
 use crate::editor::block3d::config::{Block3dConfig, Block3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

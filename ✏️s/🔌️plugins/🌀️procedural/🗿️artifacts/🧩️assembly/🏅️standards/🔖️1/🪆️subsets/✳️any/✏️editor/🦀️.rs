@@ -8,9 +8,9 @@
 //! `change_weight`/`remove_weight`/`change_seed`) — no synthetic "set field" indirection, since the
 //! domain's own mutations are already exactly this granular.
 
-use crate::artifacts::assembly::mutations::{change_seed, change_weight, connect_slots, create_rule, create_slot, delete_rule, delete_slot, disconnect_slots, remove_weight};
-use crate::artifacts::assembly::schema::snapshot::{AssemblyRule, AssemblySlot, AssemblySlotEdge};
-use crate::artifacts::assembly::{AssemblyMutation, AssemblySnapshot, ASSEMBLY_DIALECT, ASSEMBLY_DOCUMENT_SCHEMA};
+use crate::mutations::{change_seed, change_weight, connect_slots, create_rule, create_slot, delete_rule, delete_slot, disconnect_slots, remove_weight};
+use crate::schema::snapshot::{AssemblyRule, AssemblySlot, AssemblySlotEdge};
+use crate::{AssemblyMutation, AssemblySnapshot, ASSEMBLY_DIALECT, ASSEMBLY_DOCUMENT_SCHEMA};
 use crate::editor::assembly::modes::edit;
 use crate::editor::assembly::modes::edit::windows::structure;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};

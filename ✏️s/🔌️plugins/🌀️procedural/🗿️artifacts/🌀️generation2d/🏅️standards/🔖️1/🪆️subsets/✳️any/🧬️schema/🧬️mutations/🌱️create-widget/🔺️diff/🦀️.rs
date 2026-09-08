@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateWidget` — a real id-keyed upsert into the fixture's widget
 //! collection helper (never a whole-snapshot capture).
 
-use crate::artifacts::generation2d::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::generation2d::{widget_id, Generation2dSnapshot};
+use crate::diff::{diff_fixture_from_helpers, LayoutDiff, Generation2dDiff, SynapsesDiff, WidgetsDiff};
+use crate::{widget_id, Generation2dSnapshot};
 
 pub fn diff(payload: &super::CreateWidget, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
     let id = widget_id(&payload.widget);

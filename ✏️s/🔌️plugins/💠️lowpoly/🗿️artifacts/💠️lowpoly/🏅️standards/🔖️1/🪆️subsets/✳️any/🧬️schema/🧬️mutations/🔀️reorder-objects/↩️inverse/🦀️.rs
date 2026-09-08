@@ -1,7 +1,7 @@
 //! ↩️ `reorder-objects` — undo reorders back to the base-state index; missing id ⇒ `Vec::new()`.
 
 use super::ReorderObjects;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReorderObjects, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

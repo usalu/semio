@@ -3,7 +3,7 @@
 //! (unchanged behaviour, pre-dates this ticket): re-wraps presentation's OWN pack bytes inside a
 //! `PngSnapshot` pack container, not real PNG raster data — `IoFidelity::Lossy`.
 
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::PresentationSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

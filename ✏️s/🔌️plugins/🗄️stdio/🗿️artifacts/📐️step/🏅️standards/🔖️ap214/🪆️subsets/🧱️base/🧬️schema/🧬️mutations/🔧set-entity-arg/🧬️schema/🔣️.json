@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/set-entity-arg.json",
+  "$id": "https://semio.tech/schema/s/stdio/step/ap214/base/mutation/set-entity-arg/schema.json",
   "title": "SetEntityArg",
   "type": "object",
   "additionalProperties": false,
@@ -28,12 +28,13 @@
   },
   "$defs": {
     "StepValue": {
-      "description": "step's own typed Part-21 argument value (see StepSnapshot's own docstring). Unit variants (unset/derived) are bare strings; data-carrying variants are a one-key object keyed by the camelCased variant name, matching value_derive's default externally-tagged enum representation.",
-      "anyOf": [
+      "oneOf": [
         {
+          "type": "string",
           "const": "unset"
         },
         {
+          "type": "string",
           "const": "derived"
         },
         {
@@ -122,10 +123,6 @@
             "typedValue": {
               "type": "object",
               "additionalProperties": false,
-              "required": [
-                "typeName",
-                "value"
-              ],
               "properties": {
                 "typeName": {
                   "type": "string"
@@ -133,7 +130,11 @@
                 "value": {
                   "$ref": "#/$defs/StepValue"
                 }
-              }
+              },
+              "required": [
+                "typeName",
+                "value"
+              ]
             }
           }
         }

@@ -9,8 +9,8 @@
 //! than under `🗿️artifacts`). This file is a routing table: `handle` → `WriterCommand::dispatch`,
 //! `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::{writer_text, writer_text_owner, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
+use crate::op::WriterMutation;
+use crate::{writer_text, writer_text_owner, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use crate::editor::writer::commands::set_camera;
 use crate::editor::writer::commands::set_editor_selection;
 use crate::editor::writer::commands::set_locale;
@@ -180,7 +180,7 @@ pub fn reset_document_effect(scene: &WriterSnapshot) -> Effect {
 /// pruning after a document edit, `selectAll`, range-select, transitive descendant-closure
 /// hover/selection). Empty for a non-jack document (nothing to select) or a document with no AST.
 fn writer_ast_topology(document: &WriterSnapshot) -> DomainTopology {
-    use crate::artifacts::writer::schema::{parse_jack_ast, JackAstNode};
+    use crate::schema::{parse_jack_ast, JackAstNode};
 
     fn visit(node: &JackAstNode, parent: Option<&str>, out: &mut Vec<TopologyNode>) {
         out.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: parent.map(str::to_string) });
@@ -403,8 +403,8 @@ impl WriterCommandToolJob {
         let snapshot = self.snapshot.as_ref().ok_or("writer command job lost its snapshot owner")?;
         let text = self.text.as_ref().ok_or("writer command job lost its text owner")?;
         Ok(match command {
-            WriterCommand::TextEdit(payload) => Emit::amend(vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: payload.text })], "writer-text-edit"),
-            WriterCommand::SetText(payload) => Emit::mutations(vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: payload.text })]),
+            WriterCommand::TextEdit(payload) => Emit::amend(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })], "writer-text-edit"),
+            WriterCommand::SetText(payload) => Emit::mutations(vec![WriterMutation::EditText(crate::op::EditText { text: payload.text })]),
             WriterCommand::SetCamera(payload) => Emit::config(vec![WriterConfigMutation::SetCamera(crate::editor::writer::config::SetCamera { camera: payload.camera })]),
             WriterCommand::RequestCompletions(_) => Emit::config(vec![WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })]),
             WriterCommand::LintDocument(_) => Emit::config(vec![WriterConfigMutation::SetLintSignal(crate::editor::writer::config::SetLintSignal { value: config.lint_signal + 1 }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })]),
@@ -438,9 +438,9 @@ impl WriterCommandToolJob {
             WriterCommand::EngagementInput(_) => Emit::default(),
             WriterCommand::SetActiveExample(payload) => {
                 let document = match payload.example_id.as_str() {
-                    "jack" => crate::artifacts::writer::dsl::jack_example_document(),
-                    "dag.jack" => crate::artifacts::writer::dsl::dag_jack_example_document(),
-                    _ => crate::artifacts::writer::schema::empty_writer_snapshot(),
+                    "jack" => crate::dsl::jack_example_document(),
+                    "dag.jack" => crate::dsl::dag_jack_example_document(),
+                    _ => crate::schema::empty_writer_snapshot(),
                 };
                 Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }
             }
@@ -449,28 +449,28 @@ impl WriterCommandToolJob {
             WriterCommand::SetSnapshotJson(payload) => dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
             WriterCommand::SetFixtureJson(payload) => dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
             WriterCommand::FormatDocument(_) => {
-                let formatted = crate::artifacts::writer::schema::format_writer_text(text, &snapshot.language_id);
+                let formatted = crate::schema::format_writer_text(text, &snapshot.language_id);
                 let mut emit = Emit::config(vec![WriterConfigMutation::SetFormatSignal(crate::editor::writer::config::SetFormatSignal { value: config.format_signal + 1 })]);
                 if formatted != text.as_ref() {
-                    emit.artifact_mutations = vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: formatted })];
+                    emit.artifact_mutations = vec![WriterMutation::EditText(crate::op::EditText { text: formatted })];
                 }
                 emit
             }
             WriterCommand::CommitRename(payload) => {
-                use crate::artifacts::writer::schema::{apply_jack_rename, jack_symbol_at_offset, JackSymbolKind};
+                use crate::schema::{apply_jack_rename, jack_symbol_at_offset, JackSymbolKind};
                 let selection = config.editor_selection.clone().unwrap_or(crate::editor::writer::config::WriterEditorSelection { start: 0, end: 0 });
                 if selection.start == selection.end {
                     if let Some(symbol) = jack_symbol_at_offset(text, selection.start) {
                         if symbol.kind == JackSymbolKind::Variable {
                             let renamed = apply_jack_rename(text, &symbol.occurrences, &payload.text);
-                            return Ok(Emit::mutations(vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: renamed })]));
+                            return Ok(Emit::mutations(vec![WriterMutation::EditText(crate::op::EditText { text: renamed })]));
                         }
                     }
                 }
                 if selection.start <= selection.end && selection.end <= text.len() {
                     let mut updated = text.to_string();
                     updated.replace_range(selection.start..selection.end, &payload.text);
-                    Emit::mutations(vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: updated })])
+                    Emit::mutations(vec![WriterMutation::EditText(crate::op::EditText { text: updated })])
                 } else {
                     Emit::default()
                 }
@@ -482,9 +482,9 @@ impl WriterCommandToolJob {
                 let mut artifact_mutations = Vec::new();
                 if engagement_token_matches(trimmed, "format") {
                     config_mutations.push(WriterConfigMutation::SetFormatSignal(crate::editor::writer::config::SetFormatSignal { value: config.format_signal + 1 }));
-                    let formatted = crate::artifacts::writer::schema::format_writer_text(text, &snapshot.language_id);
+                    let formatted = crate::schema::format_writer_text(text, &snapshot.language_id);
                     if formatted != text.as_ref() {
-                        artifact_mutations.push(WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: formatted }));
+                        artifact_mutations.push(WriterMutation::EditText(crate::op::EditText { text: formatted }));
                     }
                 } else if engagement_token_matches(trimmed, "lint") {
                     config_mutations.push(WriterConfigMutation::SetLintSignal(crate::editor::writer::config::SetLintSignal { value: config.lint_signal + 1 }));
@@ -1020,9 +1020,9 @@ fn prepare_writer_artifact(base: &WriterSnapshot, mutation: WriterMutation) -> R
     if writer_snapshot_retained_bytes(base) > WRITER_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("Writer Artifact base exceeds its fixed retained preparation envelope".into());
     }
-    let inverse = crate::artifacts::writer::op::inverse_writer_mutation(base, &mutation);
+    let inverse = crate::op::inverse_writer_mutation(base, &mutation);
     let mut post = base.clone();
-    crate::artifacts::writer::op::apply_writer_mutation(&mut post, &mutation).map_err(|_| "Writer Artifact preparation could not apply its exact sparse diff".to_string())?;
+    crate::op::apply_writer_mutation(&mut post, &mutation).map_err(|_| "Writer Artifact preparation could not apply its exact sparse diff".to_string())?;
     Ok((post, inverse, mutation))
 }
 
@@ -1147,7 +1147,7 @@ impl ArtifactEditor for WriterPlayApp {
 
     type Command = WriterCommand;
 
-    const DIALECT: Dialect = crate::artifacts::writer::WRITER_DIALECT;
+    const DIALECT: Dialect = crate::WRITER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -1189,11 +1189,11 @@ impl ArtifactEditor for WriterPlayApp {
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::writer::spr::writer_envelope_decode_owner_bundle())
+        Some(crate::spr::writer_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::writer::spr::writer_document_store_owners())
+        Some(crate::spr::writer_document_store_owners())
     }
 
     fn build_document_store_initialization_job(
@@ -1201,7 +1201,7 @@ impl ArtifactEditor for WriterPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::artifacts::writer::spr::writer_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::spr::writer_document_store_initialization_job(envelope, operation, generation))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1213,7 +1213,7 @@ impl ArtifactEditor for WriterPlayApp {
     }
 
     fn initial_snapshot() -> WriterSnapshot {
-        crate::artifacts::writer::schema::empty_writer_snapshot()
+        crate::schema::empty_writer_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -1355,9 +1355,9 @@ impl ArtifactEditor for WriterPlayApp {
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
 pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::writer::WRITER_DIALECT)
+    Editor::builder(crate::WRITER_DIALECT)
             .document(["semio", "writer"])
-            .artifact_kind(crate::artifacts::writer::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             .icon_id("writer")
             .mode_def(edit::definition())
             .default_mode_id(edit::WRITER_PLAY_MODE_EDIT)
@@ -1490,7 +1490,7 @@ pub(crate) mod testkit {
     /// technique `📐️cad`'s own `two_instances_converge_disjoint_edits_via_backbone` test uses.
     pub async fn app_with_jack() -> WriterApp {
         let mut app = new_app().await;
-        let document = crate::artifacts::writer::dsl::jack_example_document();
+        let document = crate::dsl::jack_example_document();
         let (schema, id) = (document.schema.clone(), document.id.clone());
         let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None);
         let files = store::print_document_pack(&envelope).await.expect("print jack document pack");
@@ -1525,9 +1525,9 @@ mod tests {
     }
 
     fn writer_envelope_wire() -> Vec<u8> {
-        let envelope = store::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", crate::artifacts::writer::schema::empty_writer_snapshot(), None);
+        let envelope = store::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", crate::schema::empty_writer_snapshot(), None);
         let wire = dsl::os_pack::json::to_json_string(&envelope.capture_read().expect("Writer fixture envelope read")).into_bytes();
-        let mut retirement = crate::artifacts::writer::spr::writer_envelope_decode_owner_bundle().retire_envelope(envelope);
+        let mut retirement = crate::spr::writer_envelope_decode_owner_bundle().retire_envelope(envelope);
         for _ in 0..10_000 {
             match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Writer fixture envelope retirement") {
                 store::SnapshotRetirementStep::Complete => {
@@ -1587,26 +1587,26 @@ mod tests {
 
     #[test]
     fn writer_artifact_store_preparation_is_exact_bounded_and_reversible() {
-        let base = crate::artifacts::writer::writer_snapshot_with_text(WRITER_DOCUMENT_SCHEMA, "writer", "plaintext", "writer://document", "before");
-        let mutation = WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: "after".into() });
+        let base = crate::writer_snapshot_with_text(WRITER_DOCUMENT_SCHEMA, "writer", "plaintext", "writer://document", "before");
+        let mutation = WriterMutation::EditText(crate::op::EditText { text: "after".into() });
         let footprint = admit_writer_artifact_mutation(&mutation).expect("bounded Writer Artifact mutation");
         assert_eq!(footprint.work_items, 1);
         assert_eq!(footprint.retained_bytes, 5);
         let (post, inverse, forward) = prepare_writer_artifact(&base, mutation.clone()).expect("exact Writer Artifact preparation");
         assert_eq!(writer_text(&post), "after");
         assert_eq!(forward, mutation);
-        assert_eq!(inverse, vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: "before".into() })]);
-        assert!(admit_writer_artifact_mutation(&WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) })).is_err());
-        assert!(admit_writer_artifact_mutation(&WriterMutation::RenameWriter(crate::artifacts::writer::op::RenameWriter { new_id: "other".into() })).is_err());
+        assert_eq!(inverse, vec![WriterMutation::EditText(crate::op::EditText { text: "before".into() })]);
+        assert!(admit_writer_artifact_mutation(&WriterMutation::EditText(crate::op::EditText { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) })).is_err());
+        assert!(admit_writer_artifact_mutation(&WriterMutation::RenameWriter(crate::op::RenameWriter { new_id: "other".into() })).is_err());
     }
 
     #[test]
     fn retained_wire_decoder_and_third_party_serde_have_command_parity() {
-        let snapshot_json = dsl::os_pack::json::to_json_string(&crate::artifacts::writer::schema::empty_writer_snapshot());
+        let snapshot_json = dsl::os_pack::json::to_json_string(&crate::schema::empty_writer_snapshot());
         let commands = vec![
             WriterCommand::TextEdit(text_edit::TextEdit { text: "ä".into() }),
             WriterCommand::SetText(set_text::SetText { text: "bounded".into() }),
-            WriterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::writer::WriterCamera { x: 1.0, y: 2.0, zoom: 3.0 } }),
+            WriterCommand::SetCamera(set_camera::SetCamera { camera: crate::WriterCamera { x: 1.0, y: 2.0, zoom: 3.0 } }),
             WriterCommand::RequestCompletions(request_completions::RequestCompletions {}),
             WriterCommand::LintDocument(lint_document::LintDocument {}),
             WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 1, end: 2 }),
@@ -1639,7 +1639,7 @@ mod tests {
     fn writer_command_job(command: WriterCommand, text: Arc<str>) -> WriterCommandToolJob {
         WriterCommandToolJob {
             command: Some(command),
-            snapshot: Some(Arc::new(crate::artifacts::writer::schema::empty_writer_snapshot())),
+            snapshot: Some(Arc::new(crate::schema::empty_writer_snapshot())),
             text: Some(text),
             config: Some(Arc::new(WriterConfig::default())),
             completion: None,
@@ -1876,7 +1876,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn jack_completions_use_example_fixture() {
-        let json = crate::artifacts::writer::standards::v1::subsets::any::schema::jack_completions_json("RETURN a.", 9).unwrap_or_default();
+        let json = crate::standards::v1::subsets::any::schema::jack_completions_json("RETURN a.", 9).unwrap_or_default();
         assert!(!json.is_empty());
     }
 
@@ -1917,7 +1917,7 @@ mod tests {
             ("active-example", WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() })),
             ("format-document", WriterCommand::FormatDocument(format_document::FormatDocument {})),
             ("commit-rename", WriterCommand::CommitRename(commit_rename::CommitRename { text: "x".into() })),
-            ("camera", WriterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::writer::WriterCamera::default() })),
+            ("camera", WriterCommand::SetCamera(set_camera::SetCamera { camera: crate::WriterCamera::default() })),
             ("request-completions", WriterCommand::RequestCompletions(request_completions::RequestCompletions {})),
             ("lint-document", WriterCommand::LintDocument(lint_document::LintDocument {})),
             ("editor-selection", WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 0, end: 1 })),
@@ -1937,7 +1937,7 @@ mod tests {
 
     /// ✍️ Hand-built representative document — used across the app's own command-surface tests.
     fn jack_snapshot() -> WriterSnapshot {
-        crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
+        crate::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
@@ -1952,7 +1952,7 @@ mod tests {
             WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }),
             WriterCommand::FormatDocument(format_document::FormatDocument {}),
             WriterCommand::CommitRename(commit_rename::CommitRename { text: "piece".into() }),
-            WriterCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::writer::WriterCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
+            WriterCommand::SetCamera(set_camera::SetCamera { camera: crate::WriterCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
             WriterCommand::RequestCompletions(request_completions::RequestCompletions {}),
             WriterCommand::LintDocument(lint_document::LintDocument {}),
             WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: 3, end: 7 }),
@@ -2020,7 +2020,7 @@ mod tests {
     /// root has no parent, every child's parent is its syntactic parent's id.
     #[semio_framework_async_macros::async_test]
     async fn interaction_topology_walks_the_jack_ast_into_parent_links() {
-        let document = crate::artifacts::writer::dsl::jack_example_document();
+        let document = crate::dsl::jack_example_document();
         let config = WriterConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
@@ -2037,7 +2037,7 @@ mod tests {
     /// pruning semantics: every stale `ast` selection id gets pruned for a document with no AST.
     #[semio_framework_async_macros::async_test]
     async fn interaction_topology_is_empty_for_non_jack_documents() {
-        let document = crate::artifacts::writer::schema::empty_writer_snapshot();
+        let document = crate::schema::empty_writer_snapshot();
         let config = WriterConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
@@ -2061,7 +2061,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn export_media_text_out_projects_the_document_as_a_chapter() {
-        let document = crate::artifacts::writer::dsl::jack_example_document();
+        let document = crate::dsl::jack_example_document();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView::new(&document, &history);
         let media = WriterPlayApp::export_media("text:out", &doc_view).expect("export text:out");
@@ -2074,7 +2074,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn export_media_rejects_unknown_ports() {
-        let document = crate::artifacts::writer::schema::empty_writer_snapshot();
+        let document = crate::schema::empty_writer_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView::new(&document, &history);
         assert!(matches!(WriterPlayApp::export_media("nonsense:out", &doc_view), Err(MediaError::NotImplemented)));
@@ -2087,7 +2087,7 @@ mod tests {
     /// of rows, and the destructive `cut` row stays the trailing item.
     #[semio_framework_async_macros::async_test]
     async fn context_menu_is_grouped_and_keeps_cut_last_and_destructive() {
-        let document = crate::artifacts::writer::dsl::jack_example_document();
+        let document = crate::dsl::jack_example_document();
         let config = WriterConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);

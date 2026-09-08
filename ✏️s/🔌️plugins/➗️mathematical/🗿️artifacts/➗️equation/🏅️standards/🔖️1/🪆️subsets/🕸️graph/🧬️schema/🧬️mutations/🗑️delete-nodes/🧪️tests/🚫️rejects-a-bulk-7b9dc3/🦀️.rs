@@ -13,7 +13,7 @@
 //! UNRESOLVED handle and `equation_scene` fails soft to an empty graph — the state this case
 //! pins, and the state in which `delete-nodes`' all-missing `mutation.target-missing` fires.
 
-use crate::artifacts::equation::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
+use crate::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
 use semio_framework_os_kernel::ToValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

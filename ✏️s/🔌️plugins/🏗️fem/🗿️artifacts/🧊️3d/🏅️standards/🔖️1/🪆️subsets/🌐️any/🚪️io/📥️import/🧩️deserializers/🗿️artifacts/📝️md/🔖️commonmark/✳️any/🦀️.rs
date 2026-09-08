@@ -4,7 +4,7 @@
 //! fallback (documents written before the info string existed, and hand-authored ones). A markdown
 //! document with no code block at all is a typed `Err` naming the reason.
 
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::Fem3dSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

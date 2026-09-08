@@ -22,8 +22,8 @@
 //! `Din18599Snapshot`'s hand-rolled `ArtifactDsl` impl already uses — round-trips correctly). Using
 //! the snapshot's own DSL codec here avoids that precision loss entirely.
 
-use crate::artifacts::din18599::op::Din18599Mutation;
-use crate::artifacts::din18599::Din18599Snapshot;
+use crate::op::Din18599Mutation;
+use crate::Din18599Snapshot;
 use crate::config::{NormConfig, NormConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -48,7 +48,7 @@ pub fn handle(payload: &ReplaceSnapshot, _doc: &ArtifactView<'_, Din18599Snapsho
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::din18599::op::Din18599Mutation;
+    use crate::op::Din18599Mutation;
     use semio_framework_plugin::HistoryView;
 
     #[semio_framework_async_macros::async_test]

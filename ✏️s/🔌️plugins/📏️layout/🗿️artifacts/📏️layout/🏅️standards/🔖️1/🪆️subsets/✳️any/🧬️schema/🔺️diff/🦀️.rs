@@ -1,6 +1,6 @@
 //! 🧬️ Layout diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::layout::{CharacterStyle, GridSettings, ImageLink, ImageLinkPatch, LayoutDrawingChild, Page, PagePatch, ParagraphStyle, ParentPage, Spread, TextStory, TextStoryPatch};
+use crate::{CharacterStyle, GridSettings, ImageLink, ImageLinkPatch, LayoutDrawingChild, Page, PagePatch, ParagraphStyle, ParentPage, Spread, TextStory, TextStoryPatch};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::layout::schema::LayoutArtifact>>,
+    pub artifact: Option<Box<crate::schema::LayoutArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]
@@ -63,7 +63,7 @@ pub struct LayoutDiff {
     #[state(config)]
     pub preview_camera_zoom: Option<f64>,
     #[state(config)]
-    pub drop_preview: Option<crate::artifacts::layout::LayoutDropPreviewState>,
+    pub drop_preview: Option<crate::LayoutDropPreviewState>,
     #[state(config)]
     pub locale: Option<String>,
     #[state(artifact)]

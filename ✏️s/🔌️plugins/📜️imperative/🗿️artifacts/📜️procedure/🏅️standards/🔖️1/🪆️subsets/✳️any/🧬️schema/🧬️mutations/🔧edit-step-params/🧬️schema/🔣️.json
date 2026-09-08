@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/imperative/procedure/1/any/mutation/edit-step-params.json",
+  "$id": "https://semio.tech/schema/s/imperative/procedure/1/any/mutation/edit-step-params/schema.json",
   "title": "EditStepParams",
   "type": "object",
   "additionalProperties": false,

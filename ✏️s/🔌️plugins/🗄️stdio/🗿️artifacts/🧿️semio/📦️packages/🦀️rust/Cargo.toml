@@ -5,6 +5,9 @@ edition.workspace = true
 rust-version.workspace = true
 description = "Stdio semio artifact"
 
+[package.metadata.semio]
+role = "s-module"
+
 [lints]
 workspace = true
 
@@ -14,6 +17,19 @@ path = "../../🦀️.rs"
 [features]
 default = []
 component-app-assembly = []
+conversion-animation = ["dep:semio-s-artifact-stdio-gif", "dep:semio-s-artifact-stdio-gltf", "dep:semio-s-artifact-stdio-mp4"]
+conversion-audio = ["dep:semio-s-artifact-stdio-mp3", "dep:semio-s-artifact-stdio-wav"]
+conversion-brep = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-step"]
+conversion-cad = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-dxf", "dep:semio-s-artifact-stdio-step"]
+conversion-document = ["dep:semio-s-artifact-stdio-docx", "dep:semio-s-artifact-stdio-md", "dep:semio-s-artifact-stdio-pdf", "dep:semio-s-artifact-stdio-txt", "dep:semio-s-artifact-stdio-zip"]
+conversion-drawing = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-dxf", "dep:semio-s-artifact-stdio-pdf", "dep:semio-s-artifact-stdio-svg", "dep:semio-s-artifact-stdio-xml"]
+conversion-flow = ["dep:semio-s-artifact-stdio-json"]
+conversion-image = ["dep:semio-s-artifact-stdio-bmp", "dep:semio-s-artifact-stdio-gif", "dep:semio-s-artifact-stdio-jpg", "dep:semio-s-artifact-stdio-png", "dep:semio-s-artifact-stdio-tiff"]
+conversion-mesh = ["dep:semio-s-artifact-stdio-dwg", "dep:semio-s-artifact-stdio-gltf", "dep:semio-s-artifact-stdio-las", "dep:semio-s-artifact-stdio-obj", "dep:semio-s-artifact-stdio-ply", "dep:semio-s-artifact-stdio-stl"]
+conversion-model = ["dep:semio-s-artifact-stdio-bcf", "dep:semio-s-artifact-stdio-ifc", "dep:semio-s-artifact-stdio-step"]
+conversion-presentation = ["dep:semio-s-artifact-stdio-pptx", "dep:semio-s-artifact-stdio-xml", "dep:semio-s-artifact-stdio-zip"]
+conversion-value = ["dep:semio-s-artifact-stdio-csv", "dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-xml"]
+conversion-video = ["dep:semio-s-artifact-stdio-avi", "dep:semio-s-artifact-stdio-mp4"]
 
 [dependencies]
 pack = { workspace = true }
@@ -30,38 +46,44 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-s-artifact-stdio-avi = { workspace = true }
-semio-s-artifact-stdio-bcf = { workspace = true }
-semio-s-artifact-stdio-bmp = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
-semio-s-artifact-stdio-csv = { workspace = true }
-semio-s-artifact-stdio-docx = { workspace = true }
-semio-s-artifact-stdio-dwg = { workspace = true }
-semio-s-artifact-stdio-dxf = { workspace = true }
-semio-s-artifact-stdio-gif = { workspace = true }
-semio-s-artifact-stdio-gltf = { workspace = true }
-semio-s-artifact-stdio-ifc = { workspace = true }
-semio-s-artifact-stdio-jpg = { workspace = true }
-semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-las = { workspace = true }
-semio-s-artifact-stdio-md = { workspace = true }
-semio-s-artifact-stdio-mp3 = { workspace = true }
-semio-s-artifact-stdio-mp4 = { workspace = true }
-semio-s-artifact-stdio-obj = { workspace = true }
-semio-s-artifact-stdio-pdf = { workspace = true }
-semio-s-artifact-stdio-ply = { workspace = true }
-semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-pptx = { workspace = true }
-semio-s-artifact-stdio-step = { workspace = true }
-semio-s-artifact-stdio-stl = { workspace = true }
-semio-s-artifact-stdio-svg = { workspace = true }
-semio-s-artifact-stdio-tiff = { workspace = true }
-semio-s-artifact-stdio-txt = { workspace = true }
-semio-s-artifact-stdio-wav = { workspace = true }
-semio-s-artifact-stdio-xml = { workspace = true }
-semio-s-artifact-stdio-zip = { workspace = true }
+semio-s-artifact-stdio-avi = { workspace = true, optional = true }
+semio-s-artifact-stdio-bcf = { workspace = true, optional = true }
+semio-s-artifact-stdio-bmp = { workspace = true, optional = true }
+semio-s-artifact-stdio-csv = { workspace = true, optional = true }
+semio-s-artifact-stdio-docx = { workspace = true, optional = true }
+semio-s-artifact-stdio-dwg = { workspace = true, optional = true }
+semio-s-artifact-stdio-dxf = { workspace = true, optional = true }
+semio-s-artifact-stdio-gif = { workspace = true, optional = true }
+semio-s-artifact-stdio-gltf = { workspace = true, optional = true }
+semio-s-artifact-stdio-ifc = { workspace = true, optional = true }
+semio-s-artifact-stdio-jpg = { workspace = true, optional = true }
+semio-s-artifact-stdio-json = { workspace = true, optional = true }
+semio-s-artifact-stdio-las = { workspace = true, optional = true }
+semio-s-artifact-stdio-md = { workspace = true, optional = true }
+semio-s-artifact-stdio-mp3 = { workspace = true, optional = true }
+semio-s-artifact-stdio-mp4 = { workspace = true, optional = true }
+semio-s-artifact-stdio-obj = { workspace = true, optional = true }
+semio-s-artifact-stdio-pdf = { workspace = true, optional = true }
+semio-s-artifact-stdio-ply = { workspace = true, optional = true }
+semio-s-artifact-stdio-png = { workspace = true, optional = true }
+semio-s-artifact-stdio-pptx = { workspace = true, optional = true }
+semio-s-artifact-stdio-step = { workspace = true, optional = true }
+semio-s-artifact-stdio-stl = { workspace = true, optional = true }
+semio-s-artifact-stdio-svg = { workspace = true, optional = true }
+semio-s-artifact-stdio-tiff = { workspace = true, optional = true }
+semio-s-artifact-stdio-txt = { workspace = true, optional = true }
+semio-s-artifact-stdio-wav = { workspace = true, optional = true }
+semio-s-artifact-stdio-xml = { workspace = true, optional = true }
+semio-s-artifact-stdio-zip = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+
+[[test]]
+name = "flow_retained_decode"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧪️tests/🦀️.rs"

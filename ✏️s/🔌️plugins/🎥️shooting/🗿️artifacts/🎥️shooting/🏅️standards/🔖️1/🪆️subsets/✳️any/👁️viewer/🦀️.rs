@@ -4,7 +4,7 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::shooting::{ShootingSnapshot, SHOOTING_DIALECT, SHOOTING_DOCUMENT_SCHEMA};
+use crate::{ShootingSnapshot, SHOOTING_DIALECT, SHOOTING_DOCUMENT_SCHEMA};
 use crate::viewer::shooting::modes::view;
 use crate::viewer::shooting::modes::view::windows::scene;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -37,7 +37,7 @@ pub struct ShootingViewer;
 
 impl ArtifactViewer for ShootingViewer {
     type Snapshot = ShootingSnapshot;
-    type Mutation = crate::artifacts::shooting::op::ShootingMutation;
+    type Mutation = crate::op::ShootingMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -50,7 +50,7 @@ impl ArtifactViewer for ShootingViewer {
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> ShootingSnapshot {
-        crate::artifacts::shooting::schema::default_snapshot()
+        crate::schema::default_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `ShootingViewCommand::Noop` variant never carries a config

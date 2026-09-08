@@ -3,7 +3,7 @@
 //! fit). Physical dir name (`📖update-playbook`, wired by `🦀️.rs`) predates the semantic
 //! rename; the Rust module is still `update_playbook`, the type/variant/kind are `change-form-title`.
 
-use crate::artifacts::forms::{FormMutation, FormsDiff, FormsSnapshot};
+use crate::{FormMutation, FormsDiff, FormsSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🖋️ChangeFormTitle

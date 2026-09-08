@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ReplaceSupport` — recovers the pre-mutation support from `base`.
 use super::ReplaceSupport;
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceSupport, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

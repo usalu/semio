@@ -1,8 +1,8 @@
 //! 🔺️ Fem3d artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::fem3d::schema::diff::{Fem3dCombinationsDelta, Fem3dDiff, Fem3dElementsDelta, Fem3dLoadCasesDelta, Fem3dMaterialsDelta, Fem3dNodesDelta, Fem3dSectionsDelta, Fem3dSolidsDelta, Fem3dSupportsDelta};
-use crate::artifacts::fem3d::schema::Fem3dArtifact;
-use crate::artifacts::fem3d::{element_id, Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use crate::schema::diff::{Fem3dCombinationsDelta, Fem3dDiff, Fem3dElementsDelta, Fem3dLoadCasesDelta, Fem3dMaterialsDelta, Fem3dNodesDelta, Fem3dSectionsDelta, Fem3dSolidsDelta, Fem3dSupportsDelta};
+use crate::schema::Fem3dArtifact;
+use crate::{element_id, Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -325,7 +325,7 @@ impl_merge!(Fem3dCombinationsDelta);
 
 /// 🏗️ Set-node field delta.
 pub fn diff_set_node(index: usize, item: FemNode, base: &Fem3dSnapshot) -> Fem3dDiff {
-    use crate::artifacts::fem3d::schema::diff::Fem3dNodesPatchEntry;
+    use crate::schema::diff::Fem3dNodesPatchEntry;
     let id = item.id().to_string();
     let delta = if base.nodes.iter().any(|existing| existing.id() == id) {
         Fem3dNodesDelta { patched: vec![Fem3dNodesPatchEntry { id, item }], ..Default::default() }
@@ -345,7 +345,7 @@ pub fn diff_remove_node(id: String) -> Fem3dDiff {
 
 /// 🏗️ Set-element field delta.
 pub fn diff_set_element(index: usize, item: FemElement, base: &Fem3dSnapshot) -> Fem3dDiff {
-    use crate::artifacts::fem3d::schema::diff::Fem3dElementsPatchEntry;
+    use crate::schema::diff::Fem3dElementsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.elements.iter().any(|existing| existing.id() == id) {
         Fem3dElementsDelta { patched: vec![Fem3dElementsPatchEntry { id, item }], ..Default::default() }
@@ -365,7 +365,7 @@ pub fn diff_remove_element(id: String) -> Fem3dDiff {
 
 /// 🏗️ Set-material field delta.
 pub fn diff_set_material(index: usize, item: FemMaterial, base: &Fem3dSnapshot) -> Fem3dDiff {
-    use crate::artifacts::fem3d::schema::diff::Fem3dMaterialsPatchEntry;
+    use crate::schema::diff::Fem3dMaterialsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.materials.iter().any(|existing| existing.id() == id) {
         Fem3dMaterialsDelta { patched: vec![Fem3dMaterialsPatchEntry { id, item }], ..Default::default() }
@@ -385,7 +385,7 @@ pub fn diff_remove_material(id: String) -> Fem3dDiff {
 
 /// 🏗️ Set-section field delta.
 pub fn diff_set_section(index: usize, item: FemSection, base: &Fem3dSnapshot) -> Fem3dDiff {
-    use crate::artifacts::fem3d::schema::diff::Fem3dSectionsPatchEntry;
+    use crate::schema::diff::Fem3dSectionsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.sections.iter().any(|existing| existing.id() == id) {
         Fem3dSectionsDelta { patched: vec![Fem3dSectionsPatchEntry { id, item }], ..Default::default() }
@@ -405,7 +405,7 @@ pub fn diff_remove_section(id: String) -> Fem3dDiff {
 
 /// 🏗️ Set-solid field delta.
 pub fn diff_set_solid(index: usize, item: FemSolid, base: &Fem3dSnapshot) -> Fem3dDiff {
-    use crate::artifacts::fem3d::schema::diff::Fem3dSolidsPatchEntry;
+    use crate::schema::diff::Fem3dSolidsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.solids.iter().any(|existing| existing.id() == id) {
         Fem3dSolidsDelta { patched: vec![Fem3dSolidsPatchEntry { id, item }], ..Default::default() }
@@ -425,7 +425,7 @@ pub fn diff_remove_solid(id: String) -> Fem3dDiff {
 
 /// 🏗️ Set-support field delta.
 pub fn diff_set_support(index: usize, item: FemSupport, base: &Fem3dSnapshot) -> Fem3dDiff {
-    use crate::artifacts::fem3d::schema::diff::Fem3dSupportsPatchEntry;
+    use crate::schema::diff::Fem3dSupportsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.supports.iter().any(|existing| existing.id() == id) {
         Fem3dSupportsDelta { patched: vec![Fem3dSupportsPatchEntry { id, item }], ..Default::default() }
@@ -445,7 +445,7 @@ pub fn diff_remove_support(id: String) -> Fem3dDiff {
 
 /// 🏗️ Set-load_case field delta.
 pub fn diff_set_load_case(index: usize, item: FemLoadCase, base: &Fem3dSnapshot) -> Fem3dDiff {
-    use crate::artifacts::fem3d::schema::diff::Fem3dLoadCasesPatchEntry;
+    use crate::schema::diff::Fem3dLoadCasesPatchEntry;
     let id = item.id().to_string();
     let delta = if base.load_cases.iter().any(|existing| existing.id() == id) {
         Fem3dLoadCasesDelta { patched: vec![Fem3dLoadCasesPatchEntry { id, item }], ..Default::default() }
@@ -465,7 +465,7 @@ pub fn diff_remove_load_case(id: String) -> Fem3dDiff {
 
 /// 🏗️ Set-combination field delta.
 pub fn diff_set_combination(index: usize, item: FemCombination, base: &Fem3dSnapshot) -> Fem3dDiff {
-    use crate::artifacts::fem3d::schema::diff::Fem3dCombinationsPatchEntry;
+    use crate::schema::diff::Fem3dCombinationsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.combinations.iter().any(|existing| existing.id() == id) {
         Fem3dCombinationsDelta { patched: vec![Fem3dCombinationsPatchEntry { id, item }], ..Default::default() }

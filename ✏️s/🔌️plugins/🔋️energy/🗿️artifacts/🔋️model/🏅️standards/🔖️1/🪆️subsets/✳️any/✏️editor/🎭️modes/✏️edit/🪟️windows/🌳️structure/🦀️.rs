@@ -4,7 +4,7 @@
 //! below them are a real read overview, not yet individually addressable (see the surface root's
 //! `EnergyModelEditorCommand::SetStructureField` doc comment for the honest scope note).
 
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::EnergyModelSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 
@@ -99,7 +99,7 @@ pub fn definition() -> WindowKindDefinition {
 /// plus one leaf per collection on `crate::model::Model`, each labeled with its live element count —
 /// a genuine overview of the whole working model, not a placeholder.
 pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let model = crate::artifacts::model::energy_model(document);
+    let model = crate::energy_model(document);
     fn leaf(id: &str, label: String) -> TreeNodeView {
         TreeNodeView { id: id.into(), label, children: Vec::new() }
     }

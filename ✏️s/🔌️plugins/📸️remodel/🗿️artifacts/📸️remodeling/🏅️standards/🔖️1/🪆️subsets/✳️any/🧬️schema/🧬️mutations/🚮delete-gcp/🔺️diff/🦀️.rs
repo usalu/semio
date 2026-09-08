@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteGcp`. Missing target ⇒ Error; a GCP carrying observations
 //! reports the cascade of its own dependent observations being swept away with it.
-use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingGcpList};
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::{RemodelingDiff, RemodelingGcpList};
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteGcp, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

@@ -5,8 +5,8 @@
 //! applies at once), so it takes taxonomy's `replace` verb ("whole-value swap of a large structured
 //! sub-payload") instead of `update`. Was `PlaybookMutation::UpdateBlock` pre-migration.
 
-use crate::artifacts::playbook::mutations::PlaybookMutation;
-use crate::artifacts::playbook::{PlaybookBlock, PlaybookDiff, PlaybookSnapshot};
+use crate::mutations::PlaybookMutation;
+use crate::{PlaybookBlock, PlaybookDiff, PlaybookSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 // 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle — committed
 // `🧪️tests/<fixture>/🦀️.rs` fixture vectors decode/re-encode through them — never a production

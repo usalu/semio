@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::en1990::En1990Snapshot;
-use schema::ArtifactSchema;
+use crate::En1990Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::En1990Outline;
@@ -44,7 +44,7 @@ impl protocol::InferenceSpec<En1990Snapshot> for En1990Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::en1990::standards::v1::subsets::any::schema::En1990Builder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1990Builder {
     type Snapshot = En1990Snapshot;
     type Inference = En1990Inference;
 }
@@ -53,10 +53,10 @@ impl ArtifactInferrer for crate::artifacts::en1990::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1990.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1990_artifact_schema_descriptor`'s registration.
-pub fn en1990_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn en1990_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1990.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -87,8 +87,8 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::en1990::standards::v1::subsets::any::schema::{append_combination_set, check_reliability_index, check_seismic_situation, ActionSet, NaDe, NaEn, NationalAnnexes};
-use crate::artifacts::en1990::En1990QkEntry;
+use crate::standards::v1::subsets::any::schema::{append_combination_set, check_reliability_index, check_seismic_situation, ActionSet, NaDe, NaEn, NationalAnnexes};
+use crate::En1990QkEntry;
 /// 📋️ Full EN 1990 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1990Snapshot -> CheckReport` projection; everything it composes
@@ -100,7 +100,7 @@ use crate::document::{AnnexChoice, CheckReport, DesignSituation};
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) into the plain `(category, value)` pairs
 /// `ActionSet` expects.
 fn action_set_from_document(document: &En1990Snapshot) -> ActionSet {
-    ActionSet { g_k: document.g_k, q_k: crate::artifacts::en1990::en1990_qk(document).iter().map(|entry: &En1990QkEntry| (entry.category.clone(), entry.value)).collect() }
+    ActionSet { g_k: document.g_k, q_k: crate::en1990_qk(document).iter().map(|entry: &En1990QkEntry| (entry.category.clone(), entry.value)).collect() }
 }
 
 /// 📋️ `En1990Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
@@ -122,7 +122,7 @@ pub fn evaluate(document: &En1990Snapshot) -> CheckReport {
 #[cfg(test)]
 mod compliance_report_tests {
     use super::*;
-    use crate::artifacts::en1990::standards::v1::subsets::any::schema::{check_combination_set, combination_uls, CombinationRule};
+    use crate::standards::v1::subsets::any::schema::{check_combination_set, combination_uls, CombinationRule};
 
     #[semio_framework_async_macros::async_test]
     async fn evaluate_accidental_situation_numeric() {

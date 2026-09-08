@@ -1,6 +1,6 @@
 //! ✒️ Direct `change-schema` payload and behavior owner.
 
-use crate::artifacts::playground::standards::v1::subsets::any::schema::{diff::PlaygroundDiff, mutations::PlaygroundMutation, snapshot::PlaygroundSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::PlaygroundDiff, mutations::PlaygroundMutation, snapshot::PlaygroundSnapshot};
 use dsl::os_pack::json::{array, from_dsl_value, from_json_str, object, to_string, Value};
 
 //#region 🔖️Mutation

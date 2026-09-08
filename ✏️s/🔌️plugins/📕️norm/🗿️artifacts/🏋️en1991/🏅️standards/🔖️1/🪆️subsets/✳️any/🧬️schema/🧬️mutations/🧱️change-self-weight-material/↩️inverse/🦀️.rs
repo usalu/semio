@@ -1,7 +1,7 @@
 //! ↩️ `change-self-weight-material` — undo restores BASE's self-weight material.
 
 use super::ChangeSelfWeightMaterial;
-use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
+use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeSelfWeightMaterial, base: &En1991Snapshot) -> Vec<En1991Mutation> {

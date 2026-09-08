@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1993/mutation.json",
+  "$id": "https://semio.tech/schema/s/norm/en1993/1/any/mutations.json",
   "title": "En1993Mutation",
   "oneOf": [
     {

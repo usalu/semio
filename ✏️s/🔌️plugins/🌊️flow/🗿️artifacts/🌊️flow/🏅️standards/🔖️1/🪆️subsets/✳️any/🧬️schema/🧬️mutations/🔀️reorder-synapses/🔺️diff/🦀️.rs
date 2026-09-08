@@ -1,7 +1,7 @@
 //! 🔺️ Sparse `FlowDiff` construction for `reorder-synapses` — recomputes the synapse order from the
 //! current working scene directly (never a whole-snapshot capture).
-use crate::artifacts::flow::schema::diff::text::{diff_replace_content, FlowDiff};
-use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
+use crate::schema::diff::text::{diff_replace_content, FlowDiff};
+use crate::{flow_working_scene, FlowSnapshot};
 
 use super::ReorderSynapses;
 

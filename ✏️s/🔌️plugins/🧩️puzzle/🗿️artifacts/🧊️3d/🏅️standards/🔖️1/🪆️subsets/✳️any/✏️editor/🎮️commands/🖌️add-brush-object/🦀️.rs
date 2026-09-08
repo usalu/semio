@@ -1,6 +1,6 @@
 //! 🖌️ `add-brush-object` command.
 
-use crate::artifacts::puzzle3d::schema::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
+use crate::schema::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
 use crate::editor::puzzle3d::drive_precompute;
 use crate::editor::puzzle3d::fixture_from_engine_fixture;
 use crate::editor::puzzle3d::puzzle3d_rederive_all_attractions;

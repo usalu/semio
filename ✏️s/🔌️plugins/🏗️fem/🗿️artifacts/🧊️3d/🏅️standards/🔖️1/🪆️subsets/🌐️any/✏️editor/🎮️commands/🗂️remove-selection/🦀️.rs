@@ -1,8 +1,8 @@
 //! 🗂️ 🗂️ FEM 3D app commands command — `remove-selection`.
 
-use crate::artifacts::fem3d::mutations::{delete_combination, delete_element, delete_load_case, delete_material, delete_node, delete_section, delete_solid, delete_support};
-use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::{delete_combination, delete_element, delete_load_case, delete_material, delete_node, delete_section, delete_solid, delete_support};
+use crate::op::Fem3dMutation;
+use crate::Fem3dSnapshot;
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -22,7 +22,7 @@ pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem3dSnapshot>, 
     for id in &payload.ids {
         if snapshot.nodes.iter().any(|n| &n.id == id) {
             operations.push(Fem3dMutation::DeleteNode(delete_node::DeleteNode { id: id.clone() }));
-        } else if snapshot.elements.iter().any(|e| crate::artifacts::fem3d::element_id(e) == id) {
+        } else if snapshot.elements.iter().any(|e| crate::element_id(e) == id) {
             operations.push(Fem3dMutation::DeleteElement(delete_element::DeleteElement { id: id.clone() }));
         } else if snapshot.materials.iter().any(|m| &m.id == id) {
             operations.push(Fem3dMutation::DeleteMaterial(delete_material::DeleteMaterial { id: id.clone() }));

@@ -3,9 +3,9 @@
 
 pub mod query {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::{search_plugin, SearchQuery};
-    use crate::artifacts::program::ProgramSnapshot;
+    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::inferences::{search_plugin, SearchQuery};
+    use crate::ProgramSnapshot;
     use crate::editor::architect::config::{parse_search_history, snapshot, ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     

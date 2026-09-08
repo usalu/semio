@@ -563,7 +563,7 @@ mod tests {
 
     //#region 🔖️ExactSourceRoundtrip
     async fn exact_pptx_bytes() -> Vec<u8> {
-        std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("read exact pptx fixture")
+        std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("read exact pptx fixture")
     }
 
     async fn local_member_names(bytes: &[u8]) -> Vec<String> {

@@ -14,8 +14,8 @@
 //! `equation_scene` fails soft to an EMPTY point cloud, which this committed payload replays
 //! verbatim, taking `replace-points`' own whole-value `mutation.no-op` guard.
 
-use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
-use crate::artifacts::equation::{equation_geometry, EquationDiff, EquationMutation, EquationPoint, EquationSnapshot};
+use crate::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
+use crate::{equation_geometry, EquationDiff, EquationMutation, EquationPoint, EquationSnapshot};
 use semio_framework_os_kernel::ToValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

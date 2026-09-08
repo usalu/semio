@@ -2,7 +2,7 @@
 //! article number (`identity.article_number`, the format's native product key).
 
 
-use crate::artifacts::vdi3805::{CatalogueProduct, Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{CatalogueProduct, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

@@ -6,8 +6,8 @@
 //! addressed by content id rather than by an `assets` key — which is why a commit whose `sparse`/`mesh`
 //! staged leaves are new is not fully invertible; every committed vector of this kind is a refusal, so
 //! nothing pins that gap as if it were the law.
-use crate::artifacts::remodeling::mutations::{create_asset, delete_asset, replace_geo_products, replace_job, replace_mesh_result, replace_qc, replace_sparse, replace_trajectory, RemodelingMutation};
-use crate::artifacts::remodeling::{remodeling_asset, RemodelingSnapshot};
+use crate::mutations::{create_asset, delete_asset, replace_geo_products, replace_job, replace_mesh_result, replace_qc, replace_sparse, replace_trajectory, RemodelingMutation};
+use crate::{remodeling_asset, RemodelingSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::CommitReconstruction, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {

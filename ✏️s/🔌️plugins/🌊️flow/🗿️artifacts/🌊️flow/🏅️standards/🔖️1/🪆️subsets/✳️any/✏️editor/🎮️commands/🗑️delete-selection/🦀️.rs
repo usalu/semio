@@ -1,6 +1,6 @@
 //! 🗂️ 🗂️ Flow play app commands command — `delete-selection`.
 
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::{flow_graph_selection_domains, host_operations, sync_host_selection_domains, FLOW_INTERACTION_GRAPH};
 use flow::FlowEvalSession;
@@ -50,7 +50,7 @@ mod tests {
         select_graph(&mut app, &["slider"], &[]).await;
         let result = dispatch(&mut app, FlowCommand::DeleteSelection(DeleteSelection {})).await;
         assert!(!result.mutations.is_empty(), "deleteSelection must emit operations for a picked widget");
-        assert!(!app.snapshot().expect("snapshot").to_fixture().widgets.iter().any(|widget| crate::artifacts::flow::schema::widget_id(widget) == "slider"), "slider must be deleted");
+        assert!(!app.snapshot().expect("snapshot").to_fixture().widgets.iter().any(|widget| crate::schema::widget_id(widget) == "slider"), "slider must be deleted");
     }
 
     #[semio_framework_async_macros::async_test]

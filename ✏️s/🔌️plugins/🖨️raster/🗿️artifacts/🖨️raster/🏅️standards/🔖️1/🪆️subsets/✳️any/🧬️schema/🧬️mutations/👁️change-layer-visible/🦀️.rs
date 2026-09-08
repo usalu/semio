@@ -1,9 +1,9 @@
 //! 👁️ `change-layer-visible` — sets an id-addressed layer's `visible` scalar.
 
 pub mod mutation {
-use crate::artifacts::raster::diff::RasterDiff;
-use crate::artifacts::raster::mutations::RasterMutation;
-use crate::artifacts::raster::RasterSnapshot;
+use crate::diff::RasterDiff;
+use crate::mutations::RasterMutation;
+use crate::RasterSnapshot;
 
 //#region 🔖️ChangeLayerVisible
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::MutationLeaf)]

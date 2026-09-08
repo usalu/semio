@@ -1,7 +1,7 @@
 //! 🧬️ S Space index snapshot schema — artifact-lane fields only. Ticket
 //! 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C4.
 
-use crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
+use crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 
 //#region 🔖️Dialect

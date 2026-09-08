@@ -1,5 +1,5 @@
 //#region 🔌️Adapters
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { projectTaxonomySourceAdmission } from "../../🟦️.ts";
@@ -10,13 +10,13 @@ const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json
 const vectors = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8")) as {
   cases: readonly { id: string; input: unknown; expected: unknown }[];
   schemaRejections: readonly { id: string; candidate: unknown; expectedKeyword: string }[];
-  schemaCases: readonly { id: string; subject: "candidate" | "sourceAdmissionInput" | "observation" | "sourceAdmission"; value: unknown; valid: boolean }[];
+  schemaCases: readonly { id: string; subject: "Candidate" | "SourceAdmissionInput" | "Observation" | "SourceAdmission"; value: unknown; valid: boolean }[];
 };
 const validator = new Ajv({ strict: true, allErrors: true });
 validator.addSchema(schema);
-const validateCases = validator.getSchema(schema.$id + "#/$defs/sourceAdmissionCases")!;
-const validateCandidate = validator.getSchema(schema.$id + "#/$defs/candidate")!;
-const validateResult = validator.getSchema(schema.$id + "#/$defs/sourceAdmission")!;
+const validateCases = validator.getSchema(schema.$id + "#/$defs/SourceAdmissionCases")!;
+const validateCandidate = validator.getSchema(schema.$id + "#/$defs/Candidate")!;
+const validateResult = validator.getSchema(schema.$id + "#/$defs/SourceAdmission")!;
 //#endregion 🧬️Contract
 
 //#region 🧪️Projection

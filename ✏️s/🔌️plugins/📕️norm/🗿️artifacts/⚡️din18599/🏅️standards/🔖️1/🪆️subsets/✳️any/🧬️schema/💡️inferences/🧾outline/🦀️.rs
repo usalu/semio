@@ -4,7 +4,7 @@
 //! `entryCount` over whatever repeated sub-entries it actually carries (0 when the snapshot has
 //! no collection-typed top-level field).
 
-use crate::artifacts::din18599::Din18599Snapshot;
+use crate::Din18599Snapshot;
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &["use_class", "heated_area_m2", "occupants", "h_t", "h_v", "climate", "internal_gains_w_m2", "solar_gains_kwh", "system_losses_kwh", "renewable_kwh", "annual_limit_kwh", "energy_carrier", "reference_q_p_kwh"];

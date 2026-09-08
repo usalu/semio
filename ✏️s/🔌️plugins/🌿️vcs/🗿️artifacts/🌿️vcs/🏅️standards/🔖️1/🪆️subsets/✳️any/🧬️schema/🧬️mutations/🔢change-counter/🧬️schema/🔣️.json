@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/vcs/vcs/1/any/mutation/change-counter.json",
+  "$id": "https://semio.tech/schema/s/vcs/vcs/1/any/mutation/change-counter/schema.json",
   "title": "ChangeCounter",
   "$ref": "#/$defs/Payload",
   "$defs": {

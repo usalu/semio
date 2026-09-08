@@ -18,10 +18,10 @@
 //! edge arm). It is an upsert: a key absent from the bag is inserted, never rejected — only the
 //! ENTITY can be missing, and only an already-equal value is a no-op.
 
-use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::mutations::TrinityGraphMutation;
-use crate::artifacts::jack::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
-use crate::artifacts::jack::{materialize_jack_content, jack_working_scene, EntityRef, JackSnapshot, Node, PropertyBag, PropertyValue};
+use crate::diff::JackDiff;
+use crate::mutations::TrinityGraphMutation;
+use crate::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
+use crate::{materialize_jack_content, jack_working_scene, EntityRef, JackSnapshot, Node, PropertyBag, PropertyValue};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

@@ -2,9 +2,9 @@
 //! initial connection-parameterization payload included (rule 4: `connect-<nouns>{endpoints,
 //! payload}`).
 
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::Puzzle2dDiff;
+use crate::mutations::Puzzle2dMutation;
+use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// 🔗 `connect-handles` payload — edge `id`, both endpoint handle ids, and the full initial

@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `DeleteObject` — a real cascade-aware removal (object + any
 //! attraction that touches one of its vortices), never a whole-snapshot capture. Full vortex ids
 //! are `object_id:vortex_id`.
-use crate::artifacts::puzzle3d::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff, Puzzle3dObjectsDelta};
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::{Puzzle3dAttractionsDelta, Puzzle3dDiff, Puzzle3dObjectsDelta};
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::DeleteObject, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

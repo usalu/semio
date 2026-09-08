@@ -5,7 +5,7 @@
 //! always-failing) `IoEntry` row rather than a dead composer-table entry. See the sibling
 //! `Serializer`'s doc comment.
 
-use crate::artifacts::equation::EquationSnapshot;
+use crate::EquationSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

@@ -1,9 +1,10 @@
 //! 🪟️ 🧩️ Flow play app commands command — `rename-flow-widget`.
 
-use crate::artifacts::flow::schema::widget_id;
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::schema::widget_id;
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
-use flow::{FlowEvalSession, Widget};
+use flow::{FlowEvalSession};
+use semio_framework_artifact_flow_flow::{Widget};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -14,7 +15,7 @@ pub struct RenameFlowWidget {
 }
 
 /// ✏️ Renames a widget id (rewiring synapses and layout) purely in the fixture; `None` if the target
-/// id is blank, unchanged, or already taken. Operates on the live `flow::FlowFixture` (via
+/// id is blank, unchanged, or already taken. Operates on the live `semio_framework_artifact_flow_flow::FlowFixture` (via
 /// `to_fixture`/`from_fixture`) rather than `FlowSnapshot`'s own composed `content` handle.
 fn renamed_fixture(snapshot: &FlowSnapshot, old_id: &str, new_id: &str) -> Option<FlowSnapshot> {
     let trimmed = new_id.trim();
@@ -60,7 +61,7 @@ fn renamed_fixture(snapshot: &FlowSnapshot, old_id: &str, new_id: &str) -> Optio
 pub fn handle(payload: &RenameFlowWidget, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, FlowConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
     let fixture = doc.snapshot;
     match renamed_fixture(fixture, &payload.old_id, &payload.value) {
-        Some(next) => Ok(Emit::mutations(crate::artifacts::flow::schema::mutations::snapshot_operations(fixture, &next))),
+        Some(next) => Ok(Emit::mutations(crate::schema::mutations::snapshot_operations(fixture, &next))),
         None => Ok(Emit::default()),
     }
 }

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔗relationships` per Wave C.
 
 use super::DeleteRelationship;
-use crate::artifacts::program::diff::ProgramRelationshipsDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramRelationshipsDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteRelationship, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

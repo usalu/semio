@@ -1,8 +1,8 @@
 //! 🗑️ TrinityGraph mutation — `DeleteNode`: removes an id-keyed node (captures cascade-severed
 //! incident edges).
-use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::mutations::TrinityGraphMutation;
-use crate::artifacts::jack::JackSnapshot;
+use crate::diff::JackDiff;
+use crate::mutations::TrinityGraphMutation;
+use crate::JackSnapshot;
 
 //#region 🔖️Mutation
 /// 🗑️ `delete-node` payload.

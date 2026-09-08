@@ -52,8 +52,8 @@ const KINDS: &[&str] = &["create-curated-item", "delete-curated-item", "change-c
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_sourcing::artifacts::curation::standards::v1::subsets::any::schema::mutations::{apply_sourcing_mutation_reporting, decode_sourcing_mutation_json, inverse_sourcing_mutation_steps, SourcingMutation};
-    use semio_s_plugin_sourcing::artifacts::curation::standards::v1::subsets::any::schema::snapshot::{curation_selection_summary, decode_curation_snapshot_json, encode_curation_snapshot_json, parse_curation_dsl, print_curation_dsl, CurationSnapshot};
+    use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::schema::mutations::{apply_sourcing_mutation_reporting, decode_sourcing_mutation_json, inverse_sourcing_mutation_steps, SourcingMutation};
+    use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::schema::snapshot::{curation_selection_summary, decode_curation_snapshot_json, encode_curation_snapshot_json, parse_curation_dsl, print_curation_dsl, CurationSnapshot};
 
     //#region 🔖️Plan
     /// 🧫️ The one declared fixture URI of this scenario's steps containing `needle`.

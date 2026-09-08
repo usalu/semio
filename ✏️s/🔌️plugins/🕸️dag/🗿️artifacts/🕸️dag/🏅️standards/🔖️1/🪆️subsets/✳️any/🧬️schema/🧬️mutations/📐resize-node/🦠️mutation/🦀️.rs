@@ -1,7 +1,7 @@
 //! 📐 DAG mutation — `ResizeNode`: absolute extent change of a canvas node.
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::diff::DagDiff;
+use crate::mutations::DagMutation;
+use crate::DagSnapshot;
 
 //#region 🔖️Mutation
 /// 📐 `resize-node` payload — FINAL-state absolute `(width, height)`.

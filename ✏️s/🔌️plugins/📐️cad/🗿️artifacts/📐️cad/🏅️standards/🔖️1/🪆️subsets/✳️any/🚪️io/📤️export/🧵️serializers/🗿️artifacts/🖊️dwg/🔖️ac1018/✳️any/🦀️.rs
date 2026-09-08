@@ -1,6 +1,6 @@
 //! Serialize cad to stdio.dwg.
 
-use crate::artifacts::cad::CadSnapshot;
+use crate::CadSnapshot;
 use semio_s_artifact_stdio_dwg::{DwgSnapshot, STDIO_DWG_DOCUMENT_SCHEMA};
 
 //#region Serialize

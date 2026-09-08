@@ -1,15 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/ua/mutation/set-struct-tree-root.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/ua/mutation/set-struct-tree-root/schema.json",
   "title": "SetStructTreeRoot",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "mutation"
-  ],
   "properties": {
     "mutation": {
-      "const": "setStructTreeRoot"
+      "const": "setStructTreeRoot",
+      "description": "Aggregate discriminator spliced in by PdfUaMutation; absent when the payload stands alone."
     }
   }
 }

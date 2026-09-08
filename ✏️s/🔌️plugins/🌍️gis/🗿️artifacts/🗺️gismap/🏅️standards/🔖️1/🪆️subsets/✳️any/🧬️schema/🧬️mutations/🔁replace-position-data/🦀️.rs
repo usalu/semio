@@ -2,9 +2,9 @@
 //! feature's opaque payload (`MapFeature::data` is deliberately untyped, so a partial `change`
 //! isn't expressible — this is a `replace`, per the taxonomy's "large structured sub-payload" rule).
 
-use crate::artifacts::gismap::GisMapSnapshot;
-use crate::artifacts::gismap::diff::GisMapDiff;
-use crate::artifacts::gismap::mutations::GisMapMutation;
+use crate::GisMapSnapshot;
+use crate::diff::GisMapDiff;
+use crate::mutations::GisMapMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

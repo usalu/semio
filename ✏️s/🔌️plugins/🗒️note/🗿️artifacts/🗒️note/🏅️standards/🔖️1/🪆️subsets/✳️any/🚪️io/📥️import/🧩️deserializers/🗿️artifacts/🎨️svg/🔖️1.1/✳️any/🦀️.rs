@@ -3,8 +3,8 @@
 //! scene graph back into blocks — it dumps the (truncated) raw XML into one text block, an honest
 //! `IoFidelity::Lossy` stub, unchanged behaviour from the pre-migration free function.
 
-use crate::artifacts::note::schema::{create_note_id, empty_note_snapshot, NoteIdOwner};
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
+use crate::schema::{create_note_id, empty_note_snapshot, NoteIdOwner};
+use crate::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -26,7 +26,7 @@ impl Deserializer<NoteSnapshot> for SvgIntoNote {
         snap.title = Some("Imported SVG".into());
         let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: xml.chars().take(512).collect(), bold: None, italic: None, underline: None, link: None }] }];
         snap.blocks.push(NoteBlockNode::Text {
-            content: crate::artifacts::note::note_text_child_record("svg-text-1", &paragraphs),
+            content: crate::note_text_child_record("svg-text-1", &paragraphs),
             id: "svg-text-1".into(),
             name: "SVG".into(),
             x: 0.0,

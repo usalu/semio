@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/process/process3d/1/any/mutation/delete-step.json",
+  "$id": "https://semio.tech/schema/s/process/process3d/1/any/mutation/delete-step/schema.json",
   "title": "DeleteStep",
   "type": "object",
   "additionalProperties": false,

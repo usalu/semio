@@ -5,7 +5,7 @@
 //! `🗿️artifacts/🔌️jack/🦀️.rs`'s `🔖️ContentBridge`/`🔖️WorkingScene` regions for the
 //! converter/handle/cache machinery this field depends on.
 
-use crate::artifacts::jack::{Camera, JackContentChild, Manifest};
+use crate::{Camera, JackContentChild, Manifest};
 use schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -72,12 +72,12 @@ impl dsl::FromValue for JackSnapshot {
 impl Default for JackSnapshot {
     fn default() -> Self {
         Self {
-            schema: crate::artifacts::jack::TRINITY_GRAPH_SCHEMA.into(),
+            schema: crate::TRINITY_GRAPH_SCHEMA.into(),
             name: String::new(),
             manifest_id: None,
             manifest: Manifest::default(),
             camera: Camera::default(),
-            content: crate::artifacts::jack::jack_content_child_with_owner(Vec::new(), Vec::new()),
+            content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()),
             root_node_id: None,
         }
     }
@@ -126,7 +126,7 @@ pub fn print_jack_dsl(snapshot: &JackSnapshot) -> String {
 /// resolves to — the readable half of a divergence message, so a failing scenario names WHICH piece
 /// moved rather than only that two content digests differ.
 pub fn jack_scene_summary(snapshot: &JackSnapshot) -> String {
-    let scene = crate::artifacts::jack::jack_working_scene(snapshot);
+    let scene = crate::jack_working_scene(snapshot);
     let nodes = scene.nodes.iter().map(|node| format!("{}({})", node.name, node.id)).collect::<Vec<_>>().join(" ");
     let edges = scene.edges.iter().map(|edge| edge.id.clone()).collect::<Vec<_>>().join(" ");
     format!("nodes[{nodes}] edges[{edges}]")

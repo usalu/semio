@@ -1,8 +1,8 @@
 //! ↩ Inverse constructor for `ChangeAssetUrl` — reconstructed from BASE state.
 
 use super::ChangeAssetUrl;
-use crate::artifacts::shooting::mutations::ShootingMutation;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 
 pub fn inverse(payload: &ChangeAssetUrl, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
     match base.assets.iter().find(|asset| asset.id == payload.id) {

@@ -1,5 +1,5 @@
 //! puzzle3d <- las
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::Puzzle3dSnapshot;
 use semio_s_artifact_stdio_las::{LasSnapshot, STDIO_LAS_DOCUMENT_SCHEMA};
 
 pub fn register() {}

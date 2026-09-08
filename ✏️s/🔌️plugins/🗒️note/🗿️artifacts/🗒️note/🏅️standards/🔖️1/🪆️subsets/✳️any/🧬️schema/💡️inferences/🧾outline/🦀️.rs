@@ -3,7 +3,7 @@
 //! block name list (flattened through `Group` nesting, document order), `blockCount` the total
 //! flattened block count, and `wordCount` a real sum over every `Text` block's run text.
 
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
+use crate::{NoteBlockNode, NoteSnapshot};
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -25,7 +25,7 @@ fn flatten_blocks<'a>(blocks: &'a [NoteBlockNode], out: &mut Vec<&'a NoteBlockNo
 
 fn block_word_count(block: &NoteBlockNode) -> u32 {
     match block {
-        NoteBlockNode::Text { content, .. } => crate::artifacts::note::note_block_text(content).iter().map(|paragraph| paragraph.runs.iter().map(|run| run.text.split_whitespace().count()).sum::<usize>()).sum::<usize>() as u32,
+        NoteBlockNode::Text { content, .. } => crate::note_block_text(content).iter().map(|paragraph| paragraph.runs.iter().map(|run| run.text.split_whitespace().count()).sum::<usize>()).sum::<usize>() as u32,
         _ => 0,
     }
 }
@@ -56,12 +56,12 @@ impl NoteOutline {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::note::{NoteTextParagraph, NoteTextRun};
+    use crate::{NoteTextParagraph, NoteTextRun};
 
     fn text_block(id: &str, name: &str, text: &str) -> NoteBlockNode {
         let paragraphs = vec![NoteTextParagraph { runs: vec![NoteTextRun { text: text.into(), bold: None, italic: None, underline: None, link: None }] }];
         NoteBlockNode::Text {
-            content: crate::artifacts::note::note_text_child_record(id, &paragraphs),
+            content: crate::note_text_child_record(id, &paragraphs),
             id: id.into(),
             name: name.into(),
             x: 0.0,

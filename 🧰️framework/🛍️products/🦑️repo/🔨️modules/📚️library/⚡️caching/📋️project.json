@@ -26,6 +26,12 @@
         "command": "bun ./📜️script.ts artifact-check"
       }
     },
+    "artifact-package-contract": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts artifact-package-contract"
+      }
+    },
     "audit": {
       "cache": false,
       "options": {

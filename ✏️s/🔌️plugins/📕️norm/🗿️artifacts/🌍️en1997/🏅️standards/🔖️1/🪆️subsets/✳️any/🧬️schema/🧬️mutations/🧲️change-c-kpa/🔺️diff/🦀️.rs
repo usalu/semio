@@ -1,8 +1,8 @@
 //! 🔺️ `change-c-kpa` sparse diff construction — writes only `En1997Diff.c_kpa` from the payload.
 
-use crate::artifacts::en1997::diff::En1997Diff;
-use crate::artifacts::en1997::mutations::change_c_kpa::ChangeCKpa;
-use crate::artifacts::en1997::En1997Snapshot;
+use crate::diff::En1997Diff;
+use crate::mutations::change_c_kpa::ChangeCKpa;
+use crate::En1997Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeCKpa, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {

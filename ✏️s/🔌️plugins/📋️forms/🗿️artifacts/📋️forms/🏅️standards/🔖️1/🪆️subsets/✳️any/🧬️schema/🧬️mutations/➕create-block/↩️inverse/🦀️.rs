@@ -2,8 +2,8 @@
 //! `create` was a no-op) or the step itself no longer exists.
 
 use super::mutation::CreateBlock;
-use crate::artifacts::forms::mutations::delete_block;
-use crate::artifacts::forms::{forms_steps, FormMutation, FormsSnapshot};
+use crate::mutations::delete_block;
+use crate::{forms_steps, FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse_create_block(payload: &CreateBlock, base: &FormsSnapshot) -> Vec<FormMutation> {

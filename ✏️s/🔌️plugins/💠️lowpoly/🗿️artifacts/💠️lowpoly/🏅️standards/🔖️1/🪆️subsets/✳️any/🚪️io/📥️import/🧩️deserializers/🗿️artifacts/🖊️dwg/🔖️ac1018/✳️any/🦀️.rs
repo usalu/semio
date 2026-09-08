@@ -4,7 +4,7 @@
 //! import would need to synthesize `LowpolyObject`s (and resolvable mesh child artifacts) from
 //! parsed CAD entities -- an out-of-scope architecture change, not a pure `&DwgSnapshot -> …`
 //! mapping.
-use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
+use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_dwg::DwgSnapshot;
 
 pub fn register() {}

@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `RenameNode`.
 use super::RenameNode;
-use crate::artifacts::cad::diff::{CadDiff, CadNodePatchEntry, CadNodesDelta};
-use crate::artifacts::cad::mutations::CadNodePatch;
-use crate::artifacts::cad::CadSnapshot;
+use crate::diff::{CadDiff, CadNodePatchEntry, CadNodesDelta};
+use crate::mutations::CadNodePatch;
+use crate::CadSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &RenameNode, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {

@@ -1,25 +1,36 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/replace-fill.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/drawing/mutation/replace-fill/schema.json",
   "title": "ReplaceFill",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "styleName"
+    "style_name"
   ],
   "properties": {
-    "styleName": {
+    "style_name": {
       "type": "string"
     },
-    "newFill": {
-      "title": "SemioRgba",
+    "new_fill": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SemioRgba"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "SemioRgba": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "a",
-        "b",
+        "r",
         "g",
-        "r"
+        "b",
+        "a"
       ],
       "properties": {
         "r": {

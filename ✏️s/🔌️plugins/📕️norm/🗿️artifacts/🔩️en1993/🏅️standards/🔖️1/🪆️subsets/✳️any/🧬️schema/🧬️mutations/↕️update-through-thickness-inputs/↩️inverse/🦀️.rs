@@ -1,7 +1,7 @@
 //! ↩️ `update-through-thickness-inputs` — undo restores BASE's through thickness inputs.
 
 use super::UpdateThroughThicknessInputs;
-use crate::artifacts::en1993::{En1993Mutation, En1993Snapshot};
+use crate::{En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &UpdateThroughThicknessInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {

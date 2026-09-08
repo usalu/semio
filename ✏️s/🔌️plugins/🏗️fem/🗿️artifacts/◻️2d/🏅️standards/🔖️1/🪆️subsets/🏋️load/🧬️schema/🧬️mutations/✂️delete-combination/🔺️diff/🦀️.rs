@@ -3,9 +3,9 @@
 //! Guards, in the order they run: `mutation.target-missing` (Error), then
 //! `mutation.target-referenced` (Error) while any OTHER combination nests this one as a term.
 use super::DeleteCombination;
-use crate::artifacts::fem2d::diff::{Fem2dCombinationsDelta, Fem2dDiff};
-use crate::artifacts::fem2d::mutations::guards;
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::diff::{Fem2dCombinationsDelta, Fem2dDiff};
+use crate::mutations::guards;
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteCombination, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

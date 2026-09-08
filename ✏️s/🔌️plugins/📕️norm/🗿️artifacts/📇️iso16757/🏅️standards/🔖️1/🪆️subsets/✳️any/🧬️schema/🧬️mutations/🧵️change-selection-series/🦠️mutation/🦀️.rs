@@ -1,6 +1,6 @@
 //! 🧵️ `change-selection-series` — sets the optional product-series scalar of the active selection.
 
-use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
+use crate::{Iso16757Mutation, Iso16757Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

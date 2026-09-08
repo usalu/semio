@@ -1,7 +1,7 @@
 //! 🛍️ Process 3d play app panel — the workshop capability catalogue plus quick-swap stock kinds.
 
-use crate::artifacts::process3d::schema::inferences::{validate_capability, validation_reason, ValidationContext};
-use crate::artifacts::process3d::{MachineCatalog, Process3dSnapshot, WorkingSolid, WorkshopMachine};
+use crate::schema::inferences::{validate_capability, validation_reason, ValidationContext};
+use crate::{MachineCatalog, Process3dSnapshot, WorkingSolid, WorkshopMachine};
 use crate::editor::process3d::iconed_tree_item_with_action;
 use crate::editor::process3d::installed_catalogs;
 use crate::editor::process3d::process3d_action;
@@ -146,8 +146,8 @@ mod tests {
     /// text and no `addStep` action binding; the satisfied one binds `addStep` and carries no reason.
     #[semio_framework_async_macros::async_test]
     async fn catalogue_flags_a_violated_max_rule_and_not_a_satisfied_one() {
-        use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity, Stock, WorkingSolid, Workshop, WorkshopMachine};
-        let mut fixture = crate::artifacts::process3d::empty_process3d_snapshot();
+        use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity, Stock, WorkingSolid, Workshop, WorkshopMachine};
+        let mut fixture = crate::empty_process3d_snapshot();
         fixture.stock_payload = Stock { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::Box { width: 0.5, depth: 0.5, height: 0.2 }, pose: Default::default() };
         fixture.workshop = Workshop {
             machines: vec![WorkshopMachine {

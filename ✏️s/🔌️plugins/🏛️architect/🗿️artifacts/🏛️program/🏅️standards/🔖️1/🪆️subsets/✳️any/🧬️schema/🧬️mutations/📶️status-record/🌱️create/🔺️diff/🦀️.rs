@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📶status-records` per Wave C.
 
 use super::CreateStatusRecord;
-use crate::artifacts::program::diff::ProgramStatusRecordsDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramStatusRecordsDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
 pub fn diff(payload: &CreateStatusRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

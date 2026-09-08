@@ -1,9 +1,9 @@
 //! ⚙️ Rewriting mutation store, application, derivation, and behavior laws.
 
-use crate::artifacts::rewriting::mutations::{
+use crate::mutations::{
     change_parameter_binding, change_rule_layout_point, edit_before_fixture, edit_lhs, edit_rhs, remove_parameter_binding, remove_rule_layout_point, RewriteRuleMutation,
 };
-use crate::artifacts::rewriting::{RewritingSnapshot, TrinityRewritingError, REWRITE_RULE_SCHEMA};
+use crate::{RewritingSnapshot, TrinityRewritingError, REWRITE_RULE_SCHEMA};
 use store::{create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Store
@@ -80,8 +80,8 @@ pub async fn dispatch_rewrite_rule_mutations(store: &mut RewriteRuleStore, mutat
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jack::PropertyValue;
-    use crate::artifacts::rewriting::LayoutPoint;
+    use semio_s_artifact_trinity_jack::PropertyValue;
+    use crate::LayoutPoint;
     use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
     use protocol::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
     
@@ -239,4 +239,4 @@ mod tests {
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-use crate::artifacts::rewriting::mutations::register_rewrite_rule_mutation_descriptors;
+use crate::mutations::register_rewrite_rule_mutation_descriptors;

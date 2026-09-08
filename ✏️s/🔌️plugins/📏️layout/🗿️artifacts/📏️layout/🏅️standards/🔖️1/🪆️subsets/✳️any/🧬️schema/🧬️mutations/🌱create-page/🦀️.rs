@@ -1,9 +1,9 @@
 //! 🌱️ `create-page` — brings a new {@link Page} into existence in the id-keyed `pages` collection.
 
 
-use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot, Page};
-use crate::artifacts::layout::mutations::{LayoutMutation, delete_page};
-use crate::artifacts::layout::schema::diff::LayoutPagesDelta;
+use crate::{LayoutDiff, LayoutSnapshot, Page};
+use crate::mutations::{LayoutMutation, delete_page};
+use crate::schema::diff::LayoutPagesDelta;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

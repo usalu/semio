@@ -1,7 +1,7 @@
 //! 🧪️ Public config protocol laws checked against the language-neutral fixture and serde.
 
 use semio_framework_os_kernel::{Mutation, MutationDiff, OpBinary, OpText};
-use semio_s_plugin_norm::config::{NormConfig, NormConfigMutation};
+use semio_s_artifact_norm_contract::config::{NormConfig, NormConfigMutation};
 
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]

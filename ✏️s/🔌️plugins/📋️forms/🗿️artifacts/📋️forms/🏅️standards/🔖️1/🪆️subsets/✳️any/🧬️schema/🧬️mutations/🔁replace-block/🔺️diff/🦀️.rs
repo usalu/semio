@@ -1,9 +1,9 @@
 //! 🔺️ `replace-block` — sparse diff construction: clones only the touched step's own `blocks` Vec.
 
 use super::mutation::ReplaceBlock;
-use crate::artifacts::forms::diff::text::forms_diff_from_delta;
-use crate::artifacts::forms::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
-use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
+use crate::diff::text::forms_diff_from_delta;
+use crate::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
+use crate::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
 pub fn diff_replace_block(payload: &ReplaceBlock, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {

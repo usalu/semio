@@ -1,8 +1,8 @@
 //! 🧬️ Equation diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot;
-use crate::artifacts::equation::{EquationComputedChild, EquationNotationChild, EquationResultsChild};
-use schema::ArtifactSchema;
+use crate::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot;
+use crate::{EquationComputedChild, EquationNotationChild, EquationResultsChild};
+use framework_schema::ArtifactSchema;
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️Diff

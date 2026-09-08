@@ -11,7 +11,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::forms::FormsSnapshot;
+use crate::FormsSnapshot;
 
 //#region 🔖️ChildCodecPrimitives
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `➗️mathematical`'s/`📐️cad`'s own `enc_child`/
@@ -107,7 +107,7 @@ fn parse_forms_snapshot_body(body: &str) -> Result<FormsSnapshot, String> {
 
 //#region 🔖️HandcraftedArtifactDsl
 /// ✉️ Real hex/bracket text primitives, hand-rolled directly on `FormsSnapshot` — the previous
-/// codec bridged through the shared `flow::playbook::PlaybookSpec` grammar (whose `steps` field
+/// codec bridged through the shared `semio_framework_artifact_playbook_playbook::PlaybookSpec` grammar (whose `steps` field
 /// mapped 1:1 onto this struct's old bare `steps` field); that bridge cannot express a composed
 /// child slot (no `dsl::DslField` impl reachable from this crate for `ArtifactChild<S>`), so this
 /// upgrade drops it in favor of the same `enc_child`/`dec_child` pattern `➗️mathematical`/`📐️cad`/
@@ -115,7 +115,7 @@ fn parse_forms_snapshot_body(body: &str) -> Result<FormsSnapshot, String> {
 impl store::ArtifactDsl for FormsSnapshot {
     const EXTENSION: &'static str = "forms";
     fn envelope_id() -> &'static str {
-        crate::artifacts::forms::FORMS_DOCUMENT_SCHEMA
+        crate::FORMS_DOCUMENT_SCHEMA
     }
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
@@ -227,14 +227,14 @@ pub fn print_dsl(document: &FormsSnapshot) -> String {
 
 /// 🌉 Parses the shared `playbook` kernel's own step/block DSL grammar (the human-authored form
 /// this facet's three example fixtures have always been handcrafted in) into a real, cache-warm
-/// `FormsSnapshot` via [`crate::artifacts::forms::forms_snapshot_with_state`] — the PERMANENT
+/// `FormsSnapshot` via [`crate::forms_snapshot_with_state`] — the PERMANENT
 /// loading path for `building_component_spec`/`default_example_spec`/`onboarding_example_spec`
 /// (`🧬️schema/🦀️component.rs`'s `🔖️DocumentHelpers`), never [`parse_dsl`] above.
 ///
 /// Why: `parse_dsl` decodes `FormsSnapshot`'s OWN persisted wire format — two content-addressed
 /// `structure`/`results` handles, no step/block content at all (that content lives in the composed
 /// children, resolved through the session-side working-scene cache until a real
-/// `ArtifactView::with_children` seam lands — see `crate::artifacts::forms::🔖️Composition`'s own
+/// `ArtifactView::with_children` seam lands — see `crate::🔖️Composition`'s own
 /// doc). A handle decoded fresh from a *previous* process (or, as here, from hand-authored example
 /// text that was never mint-cached in THIS process) has nothing in the cache to resolve against,
 /// so `forms_steps` would read back empty — the same documented staleness gap every composed
@@ -247,16 +247,16 @@ pub fn parse_playbook_example_dsl(text: &str) -> Result<FormsSnapshot, store::Te
         Ok((_, rest)) => rest,
         Err(_) => text,
     };
-    let record = dsl::parse(body, &flow::playbook::PlaybookSpec::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
-    let spec = flow::playbook::PlaybookSpec::__dsl_from_record(&record)?;
-    Ok(crate::artifacts::forms::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, spec.steps))
+    let record = dsl::parse(body, &semio_framework_artifact_playbook_playbook::PlaybookSpec::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+    let spec = semio_framework_artifact_playbook_playbook::PlaybookSpec::__dsl_from_record(&record)?;
+    Ok(crate::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, spec.steps))
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::forms::{forms_children_from_steps, forms_steps, FormStep, FORMS_DOCUMENT_SCHEMA};
+    use crate::{forms_children_from_steps, forms_steps, FormStep, FORMS_DOCUMENT_SCHEMA};
     use store::os_store::test_support::assert_dsl_round_trip;
 
     #[semio_framework_async_macros::async_test]

@@ -5323,8 +5323,8 @@ fn inverse_oracle_for(id: &'static str) -> impl Fn(&Context) -> Result<Outcome, 
 mod subject {
     use super::{canonical, vector, DSL_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_energy::artifacts::model::standards::v1::subsets::any::schema::mutations::energy_model_mutation_report_json;
-    use semio_s_plugin_energy::artifacts::model::standards::v1::subsets::any::schema::snapshot::energy_model_identity_report_json;
+    use semio_s_artifact_energy_model::standards::v1::subsets::any::schema::mutations::energy_model_mutation_report_json;
+    use semio_s_artifact_energy_model::standards::v1::subsets::any::schema::snapshot::energy_model_identity_report_json;
     use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️Report

@@ -1,20 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/material/change-sides.json",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-material-double-sided/schema.json",
   "title": "GltfChangeMaterialDoubleSidedRejection",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "material",
-    "doubleSided"
+    "code",
+    "path",
+    "detail"
   ],
   "properties": {
-    "material": {
-      "type": "integer",
-      "minimum": 0
+    "code": {
+      "type": "string"
     },
-    "doubleSided": {
-      "type": "boolean"
+    "path": {
+      "type": "string"
+    },
+    "detail": {
+      "type": "string"
     }
   },
   "x-semio": {

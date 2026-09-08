@@ -1,9 +1,9 @@
 //! 📚 Puzzle3d mutation — `ReplaceKindCatalogs`: whole-value swap of the fixture-carried typed
 //! kind-catalog bundle (`objects`/`vortices`/`cables`/`attractions` catalogs together, one
 //! manifest-import gesture).
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::{Puzzle3dKindCatalogs, Puzzle3dSnapshot};
+use crate::diff::Puzzle3dDiff;
+use crate::mutations::Puzzle3dMutation;
+use crate::{Puzzle3dKindCatalogs, Puzzle3dSnapshot};
 
 //#region 🔖️Mutation
 /// 📚 `replace-kind-catalogs` payload — `None` clears the catalogs.

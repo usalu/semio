@@ -1,6 +1,6 @@
 //! 📄️ Process 3d play app panel — the document tree: stock + ordered process steps.
 
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::Process3dSnapshot;
 use crate::editor::process3d::process3d_action;
 use crate::editor::process3d::terminology::{process3d_measure_icon, Process3dLabels};
 use crate::editor::process3d::PROCESS3D_INTERACTION_DOMAIN;
@@ -120,7 +120,7 @@ mod tests {
     /// record since wave 4, not the unresolvable `steps` child handle.
     #[semio_framework_async_macros::async_test]
     async fn document_panel_lists_every_step_payload_in_order() {
-        use crate::artifacts::process3d::{process_working_scene_to_snapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, Workshop};
+        use crate::{process_working_scene_to_snapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, Workshop};
         let scene = ProcessWorkingScene {
             stock: Stock::default(),
             steps: vec![

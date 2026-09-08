@@ -88,7 +88,7 @@ pub fn definition() -> WindowKindDefinition {
         utilities: Vec::new(),
         interactions: Vec::new(),
         params_schema: Some(crate::energy_simulation_session::ENERGY_SIMULATION_EVENT_SCHEMA.into()),
-        artifact_snapshot_schema: Some(crate::artifacts::model::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
+        artifact_snapshot_schema: Some(crate::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
         input_event_schema: Some(crate::energy_simulation_session::ENERGY_SIMULATION_EVENT_SCHEMA.into()),
         output_schema: Some("SMENERGY/1".into()),
         capabilities: Vec::new(),

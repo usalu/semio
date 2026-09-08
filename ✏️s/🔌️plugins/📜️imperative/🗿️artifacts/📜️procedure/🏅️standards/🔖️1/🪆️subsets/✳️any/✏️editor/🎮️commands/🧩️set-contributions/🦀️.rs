@@ -1,7 +1,7 @@
 //! 🧩️ 🧩️ Imperative play app commands command — `set-contributions`.
 
-use crate::artifacts::procedure::mutations::ProcedureMutation;
-use crate::artifacts::procedure::ProcedureSnapshot;
+use crate::mutations::ProcedureMutation;
+use crate::ProcedureSnapshot;
 use crate::editor::procedure::config::{ImperativeConfig, ImperativeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

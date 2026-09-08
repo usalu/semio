@@ -29,6 +29,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-imperative-procedure = { workspace = true }
 pack = { package = "semio-framework-pack", path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-ui-contract.workspace = true
 

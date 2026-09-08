@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use crate::artifacts::model::mutations::EnergyModelMutation;
+pub use crate::mutations::EnergyModelMutation;
 
 //#region 🔖️HandcraftedOpCodecs
 impl protocol::OpText for EnergyModelMutation {

@@ -17,9 +17,9 @@ const SEQUENCE_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/
 mod subject {
     use super::SEQUENCE_ASSET;
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_sequence::artifacts::sequence::dsl::{parse_dsl, print_dsl};
-    use semio_s_plugin_sequence::artifacts::sequence::mutations::encode_sequence_projection_json;
-    use semio_s_plugin_sequence::artifacts::sequence::SequenceSnapshot;
+    use semio_s_artifact_sequence_sequence::document_dsl::{parse_dsl, print_dsl};
+    use semio_s_artifact_sequence_sequence::mutations::encode_sequence_projection_json;
+    use semio_s_artifact_sequence_sequence::SequenceSnapshot;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, round_trip_preserves};
 
     fn projection(snapshot: &SequenceSnapshot) -> Result<Json, String> {

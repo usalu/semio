@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff construction for `reorder-positions`.
 use super::ReorderPositions;
-use crate::artifacts::gismap::diff::{GisMapDiff, GisMapFeaturesDelta};
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::diff::{GisMapDiff, GisMapFeaturesDelta};
+use crate::GisMapSnapshot;
 
 //#region 🔹Diff
 /// 🔺️ Builds the sparse `positions` reordered-ids delta directly from the payload: recomputes the

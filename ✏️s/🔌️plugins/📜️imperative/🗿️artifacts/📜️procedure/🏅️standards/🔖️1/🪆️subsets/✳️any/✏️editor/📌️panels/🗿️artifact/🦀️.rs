@@ -1,6 +1,6 @@
 //! 📄️ Imperative play app panel — the document tree: the top-level steps of the current path.
 
-use crate::artifacts::procedure::ProcedureSnapshot;
+use crate::ProcedureSnapshot;
 use crate::editor::procedure::terminology::ImperativeLabels;
 use crate::editor::procedure::IMPERATIVE_INTERACTION_STEPS;
 use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
@@ -48,7 +48,7 @@ fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiAssem
 /// and prunes stale ids through that same topology, so no per-item click action is declared here
 /// anymore (clicks are translated into `interactionSelect` generically)?.
 pub fn render(document: &ProcedureSnapshot, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let path = crate::artifacts::procedure::procedure_working_scene(document).path;
+    let path = crate::procedure_working_scene(document).path;
     let step_items = ui_node_list(path.steps.iter().enumerate().map(|(index, step)| tree_item_desc(step_row_id(&step.id), format!("{}. {}", index + 1, step.kind), Some(step.id.clone()))))?;
     PanelTreeBuilder::new(IMPERATIVE_PLAY_DOCUMENT_NAMESPACE)?
         .section_or_placeholder("imperative-play-document.steps", Some(crate::editor::procedure::ui_label(labels.document_title.as_str())?), true, step_items, labels.document_empty.as_str())?

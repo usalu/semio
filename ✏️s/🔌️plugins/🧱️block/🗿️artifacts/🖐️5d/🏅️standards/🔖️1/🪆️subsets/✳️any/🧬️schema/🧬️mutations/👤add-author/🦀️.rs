@@ -1,9 +1,9 @@
 //! 👤 Block5d mutation — `AddAuthor`: a credited author.
 
 use crate::BlockAuthor;
-use crate::artifacts::block5d::Block5dSnapshot;
-use crate::artifacts::block5d::diff::Block5dDiff;
-use crate::artifacts::block5d::mutations::Block5dMutation;
+use crate::Block5dSnapshot;
+use crate::diff::Block5dDiff;
+use crate::mutations::Block5dMutation;
 
 //#region 🔖️Mutation
 /// 👤 `add-author` payload.

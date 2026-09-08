@@ -2,8 +2,8 @@
 //! `no-op` when the resulting order is unchanged.
 
 use super::ReorderSavedCameras;
-use crate::artifacts::shooting::diff::{ShootingDiff, ShootingSavedCamerasDelta};
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::{ShootingDiff, ShootingSavedCamerasDelta};
+use crate::ShootingSnapshot;
 
 pub fn diff(payload: &ReorderSavedCameras, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !base.saved_cameras.iter().any(|entry| entry.id == payload.id) {

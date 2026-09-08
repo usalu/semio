@@ -9,7 +9,7 @@
 //! the nested states `None` and `Some(None)` are NOT distinguishable in this file's committed diff,
 //! and nothing here asserts that they are.
 
-use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
+use crate::{Iso16757Diff, Iso16757Mutation, Iso16757Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -37,7 +37,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 async fn advances_the_exchange_stage_to_determine_product() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-exchange-process applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-exchange-process/advances-the-exchange-stage-to-determine-product: the applied state differs from the committed after-snapshot");
-    assert_eq!(applied.exchange_process, crate::artifacts::iso16757::part_5::ExchangeProcess::DetermineProduct, "change-exchange-process/advances-the-exchange-stage-to-determine-product: the stage must advance");
+    assert_eq!(applied.exchange_process, crate::part_5::ExchangeProcess::DetermineProduct, "change-exchange-process/advances-the-exchange-stage-to-determine-product: the stage must advance");
     assert_eq!(applied.selection, before().selection, "change-exchange-process/advances-the-exchange-stage-to-determine-product: entering the determine-product stage must not pre-fill the selection request");
     assert_eq!(applied.catalogue, before().catalogue, "change-exchange-process/advances-the-exchange-stage-to-determine-product: nor touch the catalogue being exchanged");
 }
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed change-exchange-process diff decodes");
-    assert_eq!(decoded.exchange_process, Some(crate::artifacts::iso16757::part_5::ExchangeProcess::DetermineProduct), "change-exchange-process/advances-the-exchange-stage-to-determine-product: the diff must carry the new stage");
+    assert_eq!(decoded.exchange_process, Some(crate::part_5::ExchangeProcess::DetermineProduct), "change-exchange-process/advances-the-exchange-stage-to-determine-product: the diff must carry the new stage");
     assert!(decoded.catalogue.is_none(), "change-exchange-process/advances-the-exchange-stage-to-determine-product: change-exchange-process writes `exchangeProcess` and must leave `catalogue` untouched");
     assert!(decoded.dictionary.is_none(), "change-exchange-process/advances-the-exchange-stage-to-determine-product: change-exchange-process writes `exchangeProcess` and must leave `dictionary` untouched");
     assert!(decoded.selection.is_none(), "change-exchange-process/advances-the-exchange-stage-to-determine-product: change-exchange-process writes `exchangeProcess` and must leave `selection` untouched");

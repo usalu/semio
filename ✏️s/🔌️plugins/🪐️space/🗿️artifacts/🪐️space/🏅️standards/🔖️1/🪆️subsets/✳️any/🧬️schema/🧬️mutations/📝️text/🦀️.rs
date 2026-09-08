@@ -1,6 +1,6 @@
 //! ⚡️ SSpace index artifact — OpText/OpBinary codecs + grammar for `SSpaceMutation`.
 
-pub use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+pub use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
     ("create-artifact", super::create_artifact::text::TEXT_OPCODE),

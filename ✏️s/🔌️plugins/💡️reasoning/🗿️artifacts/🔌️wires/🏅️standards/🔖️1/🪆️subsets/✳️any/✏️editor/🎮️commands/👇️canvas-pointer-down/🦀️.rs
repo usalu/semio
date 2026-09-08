@@ -1,8 +1,8 @@
 //! 🖱️ 🖱️ Wires play app commands command — `canvas-pointer-down`.
 
-use crate::artifacts::wires::op::WiresMutation;
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::WiresSnapshot;
+use crate::op::WiresMutation;
+use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::WiresSnapshot;
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
 use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_NODE};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -36,7 +36,7 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, WiresSnapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
+    use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
     use crate::editor::wires::commands::{add_node, canvas_pointer_move, canvas_pointer_up};
     use crate::editor::wires::testkit::{dispatch, new_app};
     use crate::editor::wires::WiresCommand;

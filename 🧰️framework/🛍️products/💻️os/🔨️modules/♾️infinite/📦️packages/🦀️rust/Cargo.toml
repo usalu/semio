@@ -34,6 +34,7 @@ crate-type = ["rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-artifact-infinite-dag = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-job = { workspace = true }

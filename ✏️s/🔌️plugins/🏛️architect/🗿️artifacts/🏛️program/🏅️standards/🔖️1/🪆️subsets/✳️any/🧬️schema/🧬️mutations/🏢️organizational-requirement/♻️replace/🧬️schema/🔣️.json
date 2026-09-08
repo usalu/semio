@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/replace-organizational-requirement.json",
+  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/replace-organizational-requirement/schema.json",
   "title": "ReplaceOrganizationalRequirement",
   "type": "object",
   "additionalProperties": false,

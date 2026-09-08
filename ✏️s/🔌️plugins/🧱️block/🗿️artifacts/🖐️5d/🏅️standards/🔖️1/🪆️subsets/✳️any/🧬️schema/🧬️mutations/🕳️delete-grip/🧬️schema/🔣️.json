@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/5d/1/any/mutation/delete-grip.json",
+  "$id": "https://semio.tech/schema/s/block/5d/1/any/mutation/delete-grip/schema.json",
   "title": "DeleteGrip",
   "type": "object",
   "additionalProperties": false,

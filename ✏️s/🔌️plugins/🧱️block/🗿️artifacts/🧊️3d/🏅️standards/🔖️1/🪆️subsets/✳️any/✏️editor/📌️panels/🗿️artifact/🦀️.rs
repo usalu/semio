@@ -1,7 +1,7 @@
 //! 📄️ Block 3D play app panel — the document tree: representation catalog + rim-vortex templates,
 //! selectable.
 
-use crate::artifacts::block3d::Block3dSnapshot;
+use crate::Block3dSnapshot;
 use crate::editor::block3d::terminology::Block3dLabels;
 use crate::editor::block3d::{ui_label, ui_node_list, BLOCK3D_INTERACTION_VORTEX};
 use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};

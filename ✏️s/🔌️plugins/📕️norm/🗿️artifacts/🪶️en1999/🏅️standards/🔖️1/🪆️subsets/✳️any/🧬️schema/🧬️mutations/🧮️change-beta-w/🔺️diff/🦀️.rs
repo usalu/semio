@@ -1,8 +1,8 @@
 //! 🔺️ `change-beta-w` sparse diff construction — writes only `En1999Diff.beta_w` from the payload.
 
-use crate::artifacts::en1999::diff::En1999Diff;
-use crate::artifacts::en1999::mutations::change_beta_w::ChangeBetaW;
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::diff::En1999Diff;
+use crate::mutations::change_beta_w::ChangeBetaW;
+use crate::En1999Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeBetaW, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {

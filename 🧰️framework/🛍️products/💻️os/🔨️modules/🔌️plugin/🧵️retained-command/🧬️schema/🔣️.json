@@ -1,0 +1,1139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/retained-command/component.json",
+  "title": "Semio OS Plugin Retained Command",
+  "$defs": {
+    "ArtifactCommandCheckpointV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "format",
+        "version",
+        "maximumBytes",
+        "headerBytes",
+        "cases"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "format": {
+          "type": "string",
+          "const": "ARC1"
+        },
+        "version": {
+          "type": "integer",
+          "const": 3
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "const": 512
+        },
+        "headerBytes": {
+          "type": "integer",
+          "const": 48
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "workPhase",
+              "rawPageCursor",
+              "rawBytes",
+              "workProgress",
+              "contextDigest",
+              "workspaceIdentity",
+              "workState",
+              "outcome"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "workPhase": {
+                "type": "boolean"
+              },
+              "rawPageCursor": {
+                "$ref": "#/$defs/RetainedCommandCounter"
+              },
+              "rawBytes": {
+                "$ref": "#/$defs/RetainedCommandCounter"
+              },
+              "workProgress": {
+                "$ref": "#/$defs/RetainedCommandCounter"
+              },
+              "contextDigest": {
+                "$ref": "#/$defs/RetainedCommandCounter"
+              },
+              "workspaceIdentity": {
+                "$ref": "#/$defs/RetainedCommandCounter"
+              },
+              "workState": {
+                "$ref": "#/$defs/ArtifactCommandCheckpointWorkState"
+              },
+              "outcome": {
+                "enum": [
+                  "ok",
+                  "capacityError"
+                ]
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "outcome": {
+                      "const": "ok"
+                    }
+                  },
+                  "required": [
+                    "outcome"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "workState": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "bytes"
+                          ],
+                          "properties": {
+                            "bytes": {
+                              "type": "array",
+                              "maxItems": 464
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "fill",
+                            "length"
+                          ],
+                          "properties": {
+                            "fill": {},
+                            "length": {
+                              "type": "integer",
+                              "maximum": 464
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "workState": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "required": [
+                            "bytes"
+                          ],
+                          "properties": {
+                            "bytes": {
+                              "type": "array",
+                              "minItems": 465,
+                              "maxItems": 465
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "fill",
+                            "length"
+                          ],
+                          "properties": {
+                            "fill": {},
+                            "length": {
+                              "type": "integer",
+                              "minimum": 465,
+                              "maximum": 465
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "ArtifactCommandCheckpointWorkState": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "bytes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "bytes": {
+              "type": "array",
+              "maxItems": 465,
+              "items": {
+                "$ref": "#/$defs/RetainedCommandByte"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "fill",
+            "length"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "fill": {
+              "$ref": "#/$defs/RetainedCommandByte"
+            },
+            "length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 465
+            }
+          }
+        }
+      ]
+    },
+    "ChildPrepublicationCloseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "maximumItems",
+        "maximumBytes",
+        "children",
+        "expectedRetirementOrder",
+        "zeroGrantPreservesOwner",
+        "parentReleasedBeforeChildren",
+        "completionRejections",
+        "rejectionReturnsOwner",
+        "existingCompletionUntouched",
+        "boundedFactoryPublishesChild"
+      ],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/RetainedCommandContractId"
+        },
+        "maximumItems": {
+          "type": "integer",
+          "const": 1
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "const": 4
+        },
+        "children": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "slot",
+              "childId",
+              "value"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "slot": {
+                "type": "string",
+                "minLength": 1
+              },
+              "childId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "expectedRetirementOrder": {
+          "const": [
+            "second",
+            "first"
+          ]
+        },
+        "zeroGrantPreservesOwner": {
+          "type": "boolean",
+          "const": true
+        },
+        "parentReleasedBeforeChildren": {
+          "type": "boolean",
+          "const": false
+        },
+        "completionRejections": {
+          "const": [
+            "duplicate",
+            "busy"
+          ]
+        },
+        "rejectionReturnsOwner": {
+          "type": "boolean",
+          "const": true
+        },
+        "existingCompletionUntouched": {
+          "type": "boolean",
+          "const": true
+        },
+        "boundedFactoryPublishesChild": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    },
+    "MountedDispatchBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "dispatcher",
+        "helper",
+        "cases"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "$ref": "#/$defs/RetainedCommandContractId"
+        },
+        "dispatcher": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "helper": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mutation",
+              "admitted"
+            ],
+            "properties": {
+              "mutation": {
+                "enum": [
+                  "none",
+                  "wrong-helper",
+                  "missing-helper",
+                  "duplicate-helper",
+                  "missing-pipeline-guard",
+                  "duplicate-session",
+                  "duplicate-pump",
+                  "direct-reducer",
+                  "direct-dispatch",
+                  "run-to-completion"
+                ]
+              },
+              "admitted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "OwnerFactoryResolutionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ownerFile",
+        "factoryFile",
+        "factoryType",
+        "glueFile",
+        "ownerSource",
+        "factorySource",
+        "glueSource",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/RetainedCommandContractId"
+        },
+        "ownerFile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "factoryFile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "factoryType": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        "glueFile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ownerSource": {
+          "type": "string",
+          "minLength": 1
+        },
+        "factorySource": {
+          "type": "string",
+          "minLength": 1
+        },
+        "glueSource": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "target",
+              "from",
+              "to",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "target": {
+                "enum": [
+                  "ownerSource",
+                  "factorySource",
+                  "glueSource"
+                ]
+              },
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RawAllocationCloseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "maximumItems",
+        "maximumBytes",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/RetainedCommandContractId"
+        },
+        "maximumItems": {
+          "type": "integer",
+          "const": 1
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "const": 4096
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "capacity",
+              "initializedBytes",
+              "expectedByteRelease",
+              "expectedAllocationRelease"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "capacity": {
+                "type": "integer",
+                "minimum": 16384,
+                "maximum": 65536
+              },
+              "initializedBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 8193
+              },
+              "expectedByteRelease": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 8193
+              },
+              "expectedAllocationRelease": {
+                "type": "integer",
+                "const": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "RetainedCommandByte": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "RetainedCommandContractId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*[./]v[0-9]+$"
+    },
+    "RetainedCommandCounter": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "ScalarConfigCohortV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "textMaximumBytes",
+        "grantBytes",
+        "owners",
+        "sources",
+        "mutations"
+      ],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/RetainedCommandContractId"
+        },
+        "textMaximumBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "grantBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "sources": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "owners": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/ScalarConfigOwner"
+          }
+        },
+        "mutations": {
+          "type": "array",
+          "minItems": 11,
+          "items": {
+            "$ref": "#/$defs/ScalarConfigMutation"
+          }
+        }
+      }
+    },
+    "ScalarConfigMutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "base",
+        "changes",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "$ref": "#/$defs/ScalarConfigOwnerId"
+        },
+        "base": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ScalarConfigValue"
+          }
+        },
+        "changes": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/ScalarConfigValue"
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ScalarConfigValue"
+          }
+        }
+      }
+    },
+    "ScalarConfigOwner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "file",
+        "prefix",
+        "routes"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/ScalarConfigOwnerId"
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prefix": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]+$"
+        },
+        "routes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ScalarConfigRoute"
+          }
+        }
+      }
+    },
+    "ScalarConfigOwnerId": {
+      "enum": [
+        "fem2d",
+        "generation2d",
+        "layout"
+      ]
+    },
+    "ScalarConfigRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "disposition",
+        "lanes",
+        "blocker"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "disposition": {
+          "enum": [
+            "Migrated",
+            "BatchOnlyPendingRewrite",
+            "ForbiddenFromUi"
+          ]
+        },
+        "lanes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "Config",
+              "HostOnly"
+            ]
+          }
+        },
+        "blocker": {
+          "type": "string"
+        }
+      }
+    },
+    "ScalarConfigValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "ToolFactoryProofV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "join",
+        "cases",
+        "cad"
+      ],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/RetainedCommandContractId"
+        },
+        "join": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][A-Za-z0-9]*$"
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "change",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "change": {
+                "enum": [
+                  "none",
+                  "missingType",
+                  "wrongType",
+                  "sameOwnerDifferentFactory",
+                  "wrongTypeName",
+                  "wrongFactory",
+                  "wrongOwner",
+                  "wrongController",
+                  "wrongDocumentSchema",
+                  "wrongTool",
+                  "wrongContract",
+                  "wrongPayloadSchema",
+                  "missingRegistration",
+                  "differentBus",
+                  "sentinel",
+                  "duplicate"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "cad": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "controller",
+            "factory",
+            "proofRows",
+            "injectedTool",
+            "closeItems",
+            "closeBytes"
+          ],
+          "properties": {
+            "controller": {
+              "$ref": "#/$defs/ToolControllerId"
+            },
+            "factory": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Za-z0-9]*$"
+            },
+            "proofRows": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            },
+            "injectedTool": {
+              "$ref": "#/$defs/ToolName"
+            },
+            "closeItems": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65536
+            },
+            "closeBytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16777216
+            }
+          }
+        }
+      }
+    },
+    "ToolControllerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "ToolLatestWinsIntegrationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "maximumItems",
+        "maximumBytes",
+        "cases",
+        "rebase",
+        "keyRetirement",
+        "lostReservations",
+        "deferredFinish",
+        "slotReservation",
+        "reclamation",
+        "fairness"
+      ],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/RetainedCommandContractId"
+        },
+        "maximumItems": {
+          "type": "integer",
+          "const": 1
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "const": 4096
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "firstTarget",
+              "nextTarget",
+              "firstValue",
+              "nextValue",
+              "firstCancelled"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "firstTarget": {
+                "type": "string",
+                "minLength": 1
+              },
+              "nextTarget": {
+                "type": "string",
+                "minLength": 1
+              },
+              "firstValue": {
+                "type": "integer"
+              },
+              "nextValue": {
+                "type": "integer"
+              },
+              "firstCancelled": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "rebase": {
+          "const": {
+            "beforeGeneration": 0,
+            "afterGeneration": 1,
+            "cancelOldKey": false,
+            "cancelFreshKey": true,
+            "retainedPublicationAfterColdEdit": true
+          }
+        },
+        "keyRetirement": {
+          "const": {
+            "text": "aä🧵",
+            "utf8Bytes": 7,
+            "scalarBytes": [
+              4,
+              2,
+              1
+            ],
+            "zeroItemProgress": 0,
+            "subscalarProgress": 0
+          }
+        },
+        "lostReservations": {
+          "const": [
+            {
+              "id": "lost-vacant-slot",
+              "foreignReservation": false,
+              "rejectionAfterVacancy": true
+            },
+            {
+              "id": "foreign-slot-preserved",
+              "foreignReservation": true,
+              "rejectionAfterVacancy": true
+            }
+          ]
+        },
+        "deferredFinish": {
+          "const": {
+            "mutexHeld": true,
+            "activeBeforeSweep": 1,
+            "activeAfterSweep": 0,
+            "replacementPreserved": true
+          }
+        },
+        "slotReservation": {
+          "const": {
+            "capacity": 64,
+            "firstOperation": 1,
+            "collidingOperation": 65,
+            "collisionAdmitted": false
+          }
+        },
+        "reclamation": {
+          "const": {
+            "capacity": 64,
+            "sequentialCompletedTargets": 65,
+            "acceptedTargets": 65
+          }
+        },
+        "fairness": {
+          "const": {
+            "firstOperation": 1,
+            "secondOperation": 2,
+            "firstStage": "Worker",
+            "secondStage": "Publishing",
+            "secondPublishesWithinMetadataVisits": 64
+          }
+        }
+      }
+    },
+    "ToolLatestWinsScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instance",
+        "document",
+        "controller",
+        "tool",
+        "target"
+      ],
+      "properties": {
+        "instance": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "document": {
+          "type": "string",
+          "minLength": 1
+        },
+        "controller": {
+          "$ref": "#/$defs/ToolControllerId"
+        },
+        "tool": {
+          "$ref": "#/$defs/ToolName"
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ToolLatestWinsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "maximumItems",
+        "maximumBytes",
+        "targetBytes",
+        "first",
+        "cases",
+        "linearizationCases",
+        "publicationCases",
+        "resultAck"
+      ],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/RetainedCommandContractId"
+        },
+        "maximumItems": {
+          "type": "integer",
+          "const": 1
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "const": 4096
+        },
+        "targetBytes": {
+          "type": "integer",
+          "const": 8192
+        },
+        "first": {
+          "$ref": "#/$defs/ToolLatestWinsScope"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "next",
+              "superseded"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "next": {
+                "$ref": "#/$defs/ToolLatestWinsScope"
+              },
+              "superseded": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "linearizationCases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "claimFirst",
+              "committed"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "claimFirst": {
+                "type": "boolean"
+              },
+              "committed": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "publicationCases": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "cancelAt",
+              "committed"
+            ],
+            "properties": {
+              "cancelAt": {
+                "enum": [
+                  "producer",
+                  "preparation",
+                  "preflight",
+                  "publishing",
+                  "awaitingAck"
+                ]
+              },
+              "committed": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "resultAck": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "preAckPolls",
+            "deliveries",
+            "attempt"
+          ],
+          "properties": {
+            "preAckPolls": {
+              "type": "integer",
+              "const": 512
+            },
+            "deliveries": {
+              "type": "integer",
+              "const": 1
+            },
+            "attempt": {
+              "type": "integer",
+              "const": 1
+            }
+          }
+        }
+      }
+    },
+    "ToolName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    }
+  }
+}

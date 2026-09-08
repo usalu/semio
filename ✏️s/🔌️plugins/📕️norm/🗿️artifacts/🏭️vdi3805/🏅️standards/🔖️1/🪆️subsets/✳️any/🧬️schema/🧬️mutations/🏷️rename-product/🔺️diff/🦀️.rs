@@ -2,7 +2,7 @@
 //! the `catalog.index` entry's display tags in lockstep with the new title.
 
 use super::RenameProduct;
-use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
+use crate::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &RenameProduct, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {

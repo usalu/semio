@@ -5,8 +5,8 @@
 //! drag, no add-node: a viewer has no utilities that edit and emits no mutations by construction
 //! (`ViewEmit`).
 
-use crate::artifacts::dag::schema::document_to_workflow;
-use crate::artifacts::dag::DagSnapshot;
+use crate::schema::document_to_workflow;
+use crate::DagSnapshot;
 use semio_framework_plugin::{scene_surface, BuiltNode, UiAssemblyResult, LocalizedLabel, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -65,7 +65,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_read_only_node_graph_scene() {
-        let document = crate::artifacts::dag::default_snapshot();
+        let document = crate::default_snapshot();
         let node = render(&document).expect("viewer surface");
         let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = node.component else { panic!("viewer must produce a surface") };
         let scene: NodeGraphScene = semio_framework_ui_scene::decode(&props).expect("node graph scene");

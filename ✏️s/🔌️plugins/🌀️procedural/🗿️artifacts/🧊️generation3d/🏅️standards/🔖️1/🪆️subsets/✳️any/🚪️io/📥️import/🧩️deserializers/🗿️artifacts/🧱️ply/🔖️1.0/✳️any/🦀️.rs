@@ -1,5 +1,5 @@
 //! generation3d <- ply
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::Generation3dSnapshot;
 use semio_s_artifact_stdio_ply::{PlySnapshot, STDIO_PLY_DOCUMENT_SCHEMA};
 
 pub fn register() {}

@@ -1,9 +1,9 @@
 //! 🔧 `change-bridge-sigma-c-mpa` payload — changes the En1992 document's `bridge_sigma_c_mpa` (EN 1992 input).
 
 
-use crate::artifacts::en1992::En1992Snapshot;
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::En1992Mutation;
+use crate::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::En1992Mutation;
 //#region 🔖️ChangeBridgeSigmaCMpa
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

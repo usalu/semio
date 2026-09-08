@@ -1,8 +1,8 @@
 //! 🔺️ `change-layer-visible` sparse diff — writes only the layer's `visible` field.
 
-use crate::artifacts::raster::diff::{diff_patch_layer, RasterDiff};
-use crate::artifacts::raster::schema::find_layer;
-use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
+use crate::diff::{diff_patch_layer, RasterDiff};
+use crate::schema::find_layer;
+use crate::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeLayerVisible, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {

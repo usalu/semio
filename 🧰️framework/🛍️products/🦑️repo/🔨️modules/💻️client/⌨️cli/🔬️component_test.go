@@ -4180,7 +4180,7 @@ export function doWork(): void {}
 
 func TestPostgresSchemaIncludesKitVersionControlTables(t *testing.T) {
 	rootDir := findTestRepoRoot(".")
-	schemaPath := filepath.Join(rootDir, "repo", "postgres", "🛢️schema.sql")
+	schemaPath := filepath.Join(rootDir, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🖥️server", "🧬️schema", "🐘️postgres", "🗄️.sql")
 	data, err := os.ReadFile(schemaPath)
 	if err != nil {
 		t.Fatalf("failed to read postgres schema: %v", err)

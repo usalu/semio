@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};
+use crate::{Block3dBrushPreview, Block3dWindowView};
 use crate::BlockCamera3d;
 use schema::ArtifactSchema;
 

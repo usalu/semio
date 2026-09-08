@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle5d artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dSnapshot};
+use crate::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dSnapshot};
 use artifact_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use std::collections::HashSet;
@@ -202,7 +202,7 @@ pub fn puzzle5d_artifact_schema_descriptor() -> artifact_schema::ArtifactSchemaD
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::puzzle5d::{Puzzle5dDiff, Puzzle5dMutation, Puzzle5dSnapshot};
+    use crate::{Puzzle5dDiff, Puzzle5dMutation, Puzzle5dSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -254,7 +254,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+    use crate::Puzzle5dSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -323,7 +323,7 @@ pub const PUZZLE5D_DEFAULT_MANIFEST_ID: &str = "puzzle5d-default";
 /// `kindCompatibility` rows — the single shared table both the 2D board and 3D world honor so
 /// brush/fill suggestions agree across projections.
 pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> bool {
-    let Some(manifest) = graph::manifest::manifest_by_id(PUZZLE5D_DEFAULT_MANIFEST_ID) else {
+    let Some(manifest) = semio_framework_graph::manifest::manifest_by_id(PUZZLE5D_DEFAULT_MANIFEST_ID) else {
         return false;
     };
     manifest.kind_compatibility.iter().any(|row| {

@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `DeleteSlot` — recreates the slot AND every incident edge the delete cascaded
 //! away, all from a real BASE lookup (missing id ⇒ empty: no-op, nothing to undo).
 
-use crate::artifacts::assembly::mutations::{connect_slots, create_slot, AssemblyMutation};
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::mutations::{connect_slots, create_slot, AssemblyMutation};
+use crate::schema::snapshot::AssemblySnapshot;
 
 pub fn inverse(payload: &super::DeleteSlot, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
     let Some(slot) = base.slots.iter().find(|slot| slot.id == payload.id) else {

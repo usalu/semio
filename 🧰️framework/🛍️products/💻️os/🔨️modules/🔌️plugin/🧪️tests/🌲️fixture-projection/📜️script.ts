@@ -6,7 +6,10 @@ import stableStringify from "fast-json-stable-stringify";
 
 export function testFixtureProjectionRetirement(): void {
   const fixture = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(new URL("./🧬️schema.json", import.meta.url), "utf8")));
+  const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(schema);
+  const validate = ajv.getSchema(`${schema.$id}#/$defs/FixtureProjectionRetirementV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   for (const invalid of [{ ...fixture, terminalBeforeOutcome: false }, { ...fixture, cases: ["success"] }, { ...fixture, reservedPages: 383 }]) assert(!validate(invalid));
   assert.deepEqual(JSON.parse(stableStringify(fixture.foreign)), fixture.foreign);

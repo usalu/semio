@@ -6,7 +6,7 @@
 //! `AppIo`, this app's typed media surface. `default_snapshot()` stayed at `🧬️schema` (pure, no app
 //! type in its signature, and still needed by the artifact's own mutation/diff tests).
 
-use crate::artifacts::procedure::{Dictionary, ProcedureSnapshot, Path, PathRef, Registry, Step};
+use crate::{Dictionary, ProcedureSnapshot, Path, PathRef, Registry, Step};
 use imperative_engine::{compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, RunResult};
 
 //#region ⚠️ Errors
@@ -52,12 +52,12 @@ impl From<dsl::ValueError> for ImperativeCoreError {
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
-/// `crate::artifacts::procedure::artifact_kind()` already declares (`computation.procedure`, reused
+/// `crate::artifact_kind()` already declares (`computation.procedure`, reused
 /// verbatim as this port's `kind_id`), plus one extra output port: `result:out`, the imperative path's
 /// last `run` scope as a generic data value (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe).
 pub fn imperative_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: crate::artifacts::procedure::PROCEDURE_DOCUMENT_SCHEMA.into(),
+        document_schema: crate::PROCEDURE_DOCUMENT_SCHEMA.into(),
         document_media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Procedure },
         ports: vec![semio_framework_plugin::MediaPortSpec {
             id: "result:out".into(),
@@ -93,7 +93,7 @@ pub struct ImperativeHost {
 
 impl Default for ImperativeHost {
     fn default() -> Self {
-        Self::from_snapshot(crate::artifacts::procedure::schema::default_snapshot())
+        Self::from_snapshot(crate::schema::default_snapshot())
     }
 }
 
@@ -102,8 +102,8 @@ impl ImperativeHost {
     /// snapshot's own `flow`/`text` handles — see `ProcedureWorkingScene`'s doc comment for the
     /// staleness gap this inherits in a fresh process with an unseeded cache).
     pub fn from_snapshot(document: ProcedureSnapshot) -> Self {
-        crate::artifacts::procedure::standards::v1::subsets::any::io::bootstrap_imperative_runtime();
-        let scene = crate::artifacts::procedure::procedure_working_scene(&document);
+        crate::standards::v1::subsets::any::io::bootstrap_imperative_runtime();
+        let scene = crate::procedure_working_scene(&document);
         Self { document, path: scene.path, seed: scene.seed, registry: imperative_module_registry(), next_serial: 100 }
     }
 
@@ -127,7 +127,7 @@ impl ImperativeHost {
     /// called after every mutating method so `document` never drifts from `path`. `seed` never
     /// changes through this host's own methods, so `document.text` is left as-is.
     fn sync_document(&mut self) {
-        self.document.flow = crate::artifacts::procedure::procedure_flow_child_with_owner(&self.path);
+        self.document.flow = crate::procedure_flow_child_with_owner(&self.path);
     }
 
     fn resolve_path_mut<'a>(&'a mut self, path_ref: &PathRef) -> Result<&'a mut Path, ImperativeCoreError> {
@@ -208,7 +208,7 @@ impl ImperativeHost {
     }
 
     pub fn run(&self) -> RunResult {
-        Executor::new(&self.registry).run(&self.path, &crate::artifacts::procedure::seed_dictionary(&self.seed))
+        Executor::new(&self.registry).run(&self.path, &crate::seed_dictionary(&self.seed))
     }
 
     pub fn compile_text(&self) -> String {

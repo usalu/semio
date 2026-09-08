@@ -3,7 +3,7 @@
 //! stub, unchanged behavior from the pre-migration free-function version — a real txt<->wires
 //! design is out of scope for this migration pass. `IoFidelity::Lossy`.
 
-use crate::artifacts::wires::WiresSnapshot;
+use crate::WiresSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

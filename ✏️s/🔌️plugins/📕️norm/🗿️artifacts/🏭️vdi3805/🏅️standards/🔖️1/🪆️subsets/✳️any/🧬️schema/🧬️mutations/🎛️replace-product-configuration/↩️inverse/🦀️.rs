@@ -2,7 +2,7 @@
 //! `Vec::new()`.
 
 use super::ReplaceProductConfiguration;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceProductConfiguration, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

@@ -30,23 +30,10 @@ pub use crate::infinite::canvas;
 pub use neural_engine as neural;
 //#endregion 🔖️DagCanvasNeural
 
-//#region 🔖️Playbook
-/// 📖️ Playbook domain types used by the forms bridge (`playbook::PlaybookSpec`, …).
-#[path = "../../../📖️playbook/🦀️.rs"]
-pub mod playbook;
-//#endregion 🔖️Playbook
+use semio_framework_artifact_playbook_playbook as playbook;
 
-#[path = "../../🗿️artifact/🦀️.rs"]
-pub mod artifact;
-pub use artifact::*;
-
-//#region 🎚️GraphParameterIntent
-#[path = "../../🎚️parameter/📨️intent/🦀️.rs"]
-pub mod graph_parameter;
-//#endregion 🎚️GraphParameterIntent
-
-#[path = "../../🧵️retained/🦀️.rs"]
-pub mod retained;
+use semio_framework_artifact_flow_flow::{artifact, graph_parameter, retained};
+use semio_framework_artifact_flow_flow::*;
 
 #[path = "../../🗂️catalogue/🦀️.rs"]
 pub mod catalogue;

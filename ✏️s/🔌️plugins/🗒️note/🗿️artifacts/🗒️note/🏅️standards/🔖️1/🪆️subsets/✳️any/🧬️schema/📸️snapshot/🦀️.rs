@@ -1,6 +1,6 @@
 //! 🧬️ Note snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NOTE_DOCUMENT_SCHEMA};
+use crate::{NoteBlockNode, NoteImageAsset, NOTE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -128,7 +128,7 @@ impl Default for NoteSnapshot {
 #[cfg(test)]
 mod round_trip_tests {
     use super::*;
-    use crate::artifacts::note::NoteBlockNode;
+    use crate::NoteBlockNode;
 
     /// 🧪️ `linked_artifact` (the new `R:any` forward reference slot) and a text block's composed
     /// `content` child handle must both survive the hand-rolled text/binary codecs — codec
@@ -148,7 +148,7 @@ mod round_trip_tests {
             rotation: 0.0,
             visible: true,
             locked: false,
-            content: crate::artifacts::note::note_text_child_handle("text-1", &[]),
+            content: crate::note_text_child_handle("text-1", &[]),
             font_size: 16.0,
             font_weight: "normal".into(),
             align: "left".into(),

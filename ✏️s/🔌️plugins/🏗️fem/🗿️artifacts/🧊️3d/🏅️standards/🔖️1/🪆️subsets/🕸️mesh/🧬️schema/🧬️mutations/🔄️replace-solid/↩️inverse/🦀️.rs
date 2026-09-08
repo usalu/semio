@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ReplaceSolid` — recovers the pre-mutation solid from `base`.
 use super::ReplaceSolid;
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceSolid, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

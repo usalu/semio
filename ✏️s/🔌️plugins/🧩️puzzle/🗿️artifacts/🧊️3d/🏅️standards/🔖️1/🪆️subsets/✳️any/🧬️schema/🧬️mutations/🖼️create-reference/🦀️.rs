@@ -1,7 +1,7 @@
 //! Puzzle3d mutation — `CreateReference`: brings a new id-keyed reference into existence.
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::{Puzzle3dReference, Puzzle3dSnapshot};
+use crate::diff::Puzzle3dDiff;
+use crate::mutations::Puzzle3dMutation;
+use crate::{Puzzle3dReference, Puzzle3dSnapshot};
 
 //#region 🔖️Mutation
 /// `create-reference` payload — full initial payload at an optional FINAL-state `index` (`None` appends). A

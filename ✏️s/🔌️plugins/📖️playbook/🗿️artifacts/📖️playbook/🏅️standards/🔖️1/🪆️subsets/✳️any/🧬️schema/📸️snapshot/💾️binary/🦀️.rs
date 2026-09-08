@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::playbook::PlaybookSnapshot;
+use crate::PlaybookSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `PlaybookSnapshot` to its binary pack form.
@@ -23,8 +23,8 @@ pub fn decode(bytes: &[u8]) -> Result<PlaybookSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::playbook::empty_playbook_snapshot;
-    use crate::artifacts::playbook::PLAYBOOK_DOCUMENT_SCHEMA;
+    use crate::empty_playbook_snapshot;
+    use crate::PLAYBOOK_DOCUMENT_SCHEMA;
 
     #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_the_empty_snapshot() {
@@ -48,7 +48,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::playbook::op::{change_title_operation, PlaybookMutation};
+        use crate::op::{change_title_operation, PlaybookMutation};
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 

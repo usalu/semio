@@ -1,8 +1,8 @@
 //! 🖌️ Block2d mutation — `UpdatePresentation`: the whole rim-presentation facet atomically (shape/radius/width/height/color/iconKind are edited together in the shape inspector — see report).
 
-use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::diff::Block2dDiff;
-use crate::artifacts::block2d::mutations::Block2dMutation;
+use crate::Block2dSnapshot;
+use crate::diff::Block2dDiff;
+use crate::mutations::Block2dMutation;
 
 //#region 🔖️Mutation
 /// 🖌️ `update-presentation` payload.

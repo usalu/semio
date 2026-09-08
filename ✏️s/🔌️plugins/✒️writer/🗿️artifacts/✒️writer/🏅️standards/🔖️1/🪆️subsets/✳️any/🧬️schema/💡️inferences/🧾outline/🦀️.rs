@@ -3,7 +3,7 @@
 //! markdown-style `#`/`##`/… headings become `sectionOutline`, plus real `wordCount`/`lineCount`
 //! stats over the whole document.
 
-use crate::artifacts::writer::{writer_text, WriterSnapshot};
+use crate::{writer_text, WriterSnapshot};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
@@ -40,7 +40,7 @@ mod tests {
     use super::*;
 
     fn snapshot_with_text(text: &str) -> WriterSnapshot {
-        crate::artifacts::writer::writer_snapshot_with_text("writer.document", "outline-test", "plaintext", "writer://outline-test", text)
+        crate::writer_snapshot_with_text("writer.document", "outline-test", "plaintext", "writer://outline-test", text)
     }
 
     #[semio_framework_async_macros::async_test]

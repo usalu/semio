@@ -8,7 +8,7 @@
 //! below) — deleted outright per the master plan's cad extraction row. Real geometry-aware OBJ
 //! export lives at `⚙️engine/🦀️.rs`'s `export_solids_as` (tessellates the live kernel
 //! solids into a real `semio/mesh` snapshot and calls stdio's own `SemioMeshToObj` codec).
-use crate::artifacts::cad::CadSnapshot;
+use crate::CadSnapshot;
 
 //#region Serialize
 pub fn register() {}

@@ -1,7 +1,7 @@
 //! 🖇️ CAD mutation — `ReplaceReferenceMedia` payload + `MutationKind` impl.
 
-use crate::artifacts::cad::mutations::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::CadMutation;
+use crate::CadSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
@@ -25,7 +25,7 @@ pub struct ReplaceReferenceMedia {
 impl MutationKind<CadSnapshot, CadMutation> for ReplaceReferenceMedia {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "replace", entity: "reference", kind: "replace-reference-media", record: "ReplacedReferenceMedia" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::artifacts::cad::diff::CadDiff> {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::diff::CadDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {

@@ -5,9 +5,9 @@
 //! `material_id`, `section_id` (`mutation.target-missing`, Error). `replace-element` calls the
 //! SAME guard, so the twins cannot drift apart.
 use super::CreateElement;
-use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dElementsDelta};
-use crate::artifacts::fem2d::mutations::guards;
-use crate::artifacts::fem2d::{element_id, Fem2dSnapshot};
+use crate::diff::{Fem2dDiff, Fem2dElementsDelta};
+use crate::mutations::guards;
+use crate::{element_id, Fem2dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateElement, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

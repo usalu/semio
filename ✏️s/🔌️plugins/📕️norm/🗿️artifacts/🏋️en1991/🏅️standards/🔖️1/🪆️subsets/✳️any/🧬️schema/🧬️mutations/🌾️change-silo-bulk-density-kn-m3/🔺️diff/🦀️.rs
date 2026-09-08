@@ -1,7 +1,7 @@
 //! 🔺️ `change-silo-bulk-density-kn-m3` — sparse diff construction.
 
 use super::ChangeSiloBulkDensityKnM3;
-use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
+use crate::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSiloBulkDensityKnM3, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {

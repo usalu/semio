@@ -1,5 +1,5 @@
 //! Deserialize flow via stdio.csv.
-use crate::artifacts::flow::FlowSnapshot;
+use crate::FlowSnapshot;
 use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 pub fn register() {}

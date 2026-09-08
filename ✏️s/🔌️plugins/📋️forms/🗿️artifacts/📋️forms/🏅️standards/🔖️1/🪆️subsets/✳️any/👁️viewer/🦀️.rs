@@ -4,9 +4,9 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::forms::op::FormMutation;
-use crate::artifacts::forms::schema::building_component_spec;
-use crate::artifacts::forms::{FormsSnapshot, FORMS_DIALECT, FORMS_DOCUMENT_SCHEMA};
+use crate::op::FormMutation;
+use crate::schema::building_component_spec;
+use crate::{FormsSnapshot, FORMS_DIALECT, FORMS_DOCUMENT_SCHEMA};
 use crate::viewer::forms::modes::view;
 use crate::viewer::forms::modes::view::windows::try_wizard;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};

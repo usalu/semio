@@ -1,9 +1,9 @@
 //! 🧬️ Flow diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::flow::schema::FlowArtifact;
-use crate::artifacts::flow::FlowContentChild;
-use flow::CameraJson;
-use schema::ArtifactSchema;
+use crate::schema::FlowArtifact;
+use crate::FlowContentChild;
+use semio_framework_artifact_flow_flow::CameraJson;
+use framework_schema::ArtifactSchema;
 
 //#region 🔹Diff
 /// 🔺️ Sparse field delta for the flow artifact; persistent entries apply via

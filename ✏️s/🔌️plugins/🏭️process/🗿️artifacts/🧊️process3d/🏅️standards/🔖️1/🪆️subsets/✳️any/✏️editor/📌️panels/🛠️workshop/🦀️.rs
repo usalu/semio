@@ -3,7 +3,7 @@
 //! or a machine already installed from it, renders no duplicate row here (it stays visible above, in
 //! the installed-machines section, where remove lives).
 
-use crate::artifacts::process3d::{MachineCatalog, Process3dSnapshot};
+use crate::{MachineCatalog, Process3dSnapshot};
 use crate::editor::process3d::iconed_tree_item_with_action;
 use crate::editor::process3d::installed_catalogs;
 use crate::editor::process3d::process3d_action;
@@ -146,16 +146,16 @@ mod tests {
     /// tool back off the document" path is covered end to end by the `🎮️commands/🪜️step` tests).
     #[semio_framework_async_macros::async_test]
     async fn workshop_machine_parameter_edit_sizes_the_capability_measure() {
-        use crate::artifacts::process3d::schema::inferences::measure_for_capability;
-        use crate::artifacts::process3d::{Capability, MeasureRecipe, ProcessMeasure, WorkingSolid};
+        use crate::schema::inferences::measure_for_capability;
+        use crate::{Capability, MeasureRecipe, ProcessMeasure, WorkingSolid};
         let capability = Capability {
             id: "crosscut".into(),
             label: "Crosscut".into(),
             icon_id: "scissors".into(),
             recipe: MeasureRecipe::DiscCut { diameter: "bladeDiameter".into(), kerf: "kerf".into() },
             parameters: vec![
-                crate::artifacts::process3d::CapabilityParameter { id: "bladeDiameter".into(), label: "Blade Diameter".into(), value: 0.4 },
-                crate::artifacts::process3d::CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.002 },
+                crate::CapabilityParameter { id: "bladeDiameter".into(), label: "Blade Diameter".into(), value: 0.4 },
+                crate::CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.002 },
             ],
             rules: Vec::new(),
         };

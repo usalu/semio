@@ -1,7 +1,7 @@
 //! ↩️ `reorder-step` — undo reorders back to the BASE-state index; missing id ⇒ `Vec::new()`.
 
 use super::mutation::ReorderStep;
-use crate::artifacts::forms::{forms_steps, FormMutation, FormsSnapshot};
+use crate::{forms_steps, FormMutation, FormsSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse_reorder_step(payload: &ReorderStep, base: &FormsSnapshot) -> Vec<FormMutation> {

@@ -1,68 +1,156 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/replace-curve.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/brep/mutation/replace-curve/schema.json",
   "title": "ReplaceCurve",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "edgeId",
-    "newCurve"
+    "edge_id",
+    "new_curve"
   ],
   "properties": {
-    "edgeId": {
+    "edge_id": {
       "type": "string"
     },
-    "newCurve": {
+    "new_curve": {
+      "$ref": "#/$defs/BrepCurve"
+    }
+  },
+  "$defs": {
+    "BrepCurve": {
       "oneOf": [
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "origin",
+            "direction"
+          ],
           "properties": {
             "kind": {
-              "const": "Line"
+              "const": "line"
+            },
+            "origin": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "direction": {
+              "$ref": "#/$defs/SemioPoint3"
             }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "axis",
+            "radius"
+          ],
           "properties": {
             "kind": {
-              "const": "Circle"
+              "const": "circle"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "axis": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "radius": {
+              "type": "number"
             }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "center",
+            "axis",
+            "radiusMajor",
+            "radiusMinor"
+          ],
           "properties": {
             "kind": {
-              "const": "Ellipse"
+              "const": "ellipse"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "axis": {
+              "$ref": "#/$defs/SemioPoint3"
+            },
+            "radiusMajor": {
+              "type": "number"
+            },
+            "radiusMinor": {
+              "type": "number"
             }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "controlPoints",
+            "weights",
+            "degree",
+            "knots"
+          ],
           "properties": {
             "kind": {
-              "const": "Nurbs"
+              "const": "nurbs"
+            },
+            "controlPoints": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioPoint3"
+              }
+            },
+            "weights": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "degree": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "knots": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
             }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          }
         }
       ]
+    },
+    "SemioPoint3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
     }
   }
 }

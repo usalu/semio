@@ -400,6 +400,28 @@
       }
     },
     {
+      "name": "📦️artifact package contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run repo:artifact-package-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": -16.9
+      }
+    },
+    {
+      "name": "📦️artifact package target",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run ${input:artifactPackageProject}:${input:artifactPackageTarget}",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": -16.8
+      }
+    },
+    {
       "name": "⚡️nx audit",
       "type": "node-terminal",
       "request": "launch",
@@ -1018,6 +1040,28 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6029)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "♻️activate🏚️mitbestand🎪️demonstrator",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/mit-bestand-demonstrator:activate-dev",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.1
+      }
+    },
+    {
+      "name": "🖥️serve🏚️mitbestand🎪️demonstrator",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/mit-bestand-demonstrator:serve",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213.2
       }
     },
     "@generated:generator:react",
@@ -6173,7 +6217,8 @@
         "SEMIO_TEST_NATIVE_RUST_MIN_STACK": "268435456",
         "SEMIO_BUILD_BUDGET_MS": "86400000",
         "SEMIO_TEST_ORCHESTRATION_BUDGET_MS": "86700000",
-        "SEMIO_CMD_BUDGET_MS": "86700000"
+        "SEMIO_CMD_BUDGET_MS": "86700000",
+        "NX_DAEMON": "false"
       },
       "presentation": { "group": "4_gate", "order": 411.1096165 }
     },
@@ -8668,6 +8713,83 @@
       }
     },
     {
+      "name": "📦️generate🧬️schema📇️catalog",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-generate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.1
+      }
+    },
+    {
+      "name": "📦️generate🧬️schema📓️docs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-docs",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.2
+      }
+    },
+    {
+      "name": "📦️verify🧬️schema🚦️check",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.3
+      }
+    },
+    {
+      "name": "📦️verify🧬️schema📇️catalog",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-verify",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.4
+      }
+    },
+    {
+      "name": "📦️generate🧬️schema📋️audit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-audit -- --out .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/SCOPE-OWNED-SCHEMA-CONTRACTS/🗑️generated",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.5
+      }
+    },
+    {
+      "name": "📦️test🧬️schema🔮️oracle",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-oracle",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.6
+      }
+    },
+    {
+      "name": "📦️test🧬️schema🧪️harness",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.7
+      }
+    },
+    {
       "name": "📦️verify🧩️taxonomy📋️report",
       "type": "node-terminal",
       "request": "launch",
@@ -9009,10 +9131,32 @@
       }
     },
     {
+      "name": "🧩️prepare🏚️mitbestand🎪️demonstrator🧪️e2e",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/mit-bestand-demonstrator:prepare-e2e",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 425.18
+      }
+    },
+    {
+      "name": "🖥️serve🏚️mitbestand🎪️demonstrator🧪️e2e",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/mit-bestand-demonstrator:serve-e2e",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 425.19
+      }
+    },
+    {
       "name": "⚖️gate🏚️mitbestand🎪️demonstrator",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/mit-bestand-demonstrator:test e2e",
+      "command": "bun nx run @semio-tech/mit-bestand-demonstrator:test-e2e",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -13584,6 +13728,8 @@
   ],
   "inputs": [
     { "id": "nxCacheTicket", "type": "promptString", "description": "Active ticket directory for Nx diagnostics" },
+    { "id": "artifactPackageProject", "type": "promptString", "description": "Artifact package Nx project, for example @semio-tech/stdio-pdf-rs" },
+    { "id": "artifactPackageTarget", "type": "pickString", "description": "Artifact package target", "options": ["build", "check", "test"] },
     {
       "id": "catalogFreshBuildRoot",
       "type": "promptString",

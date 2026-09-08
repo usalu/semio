@@ -4,8 +4,8 @@
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! or draft mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::program::op::ProgramMutation;
-use crate::artifacts::program::{sample_plugin, ProgramSnapshot, ARCHITECT_DIALECT, ARCHITECT_PROGRAM_SCHEMA};
+use crate::op::ProgramMutation;
+use crate::{sample_plugin, ProgramSnapshot, ARCHITECT_DIALECT, ARCHITECT_PROGRAM_SCHEMA};
 use crate::viewer::architect::modes::view;
 use crate::viewer::architect::modes::view::windows::register;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};

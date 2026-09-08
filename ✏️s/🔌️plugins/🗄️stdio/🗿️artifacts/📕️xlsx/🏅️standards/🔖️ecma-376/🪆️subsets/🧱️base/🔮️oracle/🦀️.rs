@@ -544,7 +544,7 @@ mod tests {
     /// `rust_xlsxwriter` build whose pool holds one entry, which is the right input for the grid
     /// kinds and the wrong one for anything that measures the pool.
     fn real_fixture_bytes() -> Vec<u8> {
-        std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🗿️artifacts/📕️xlsx/🧫️fixtures/📕️reuse-marketplaces.xlsx")).expect("the committed reuse-marketplaces workbook")
+        std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧫️fixtures/📕️reuse-marketplaces.xlsx")).expect("the committed reuse-marketplaces workbook")
     }
 
     fn fixture_bytes() -> Vec<u8> {

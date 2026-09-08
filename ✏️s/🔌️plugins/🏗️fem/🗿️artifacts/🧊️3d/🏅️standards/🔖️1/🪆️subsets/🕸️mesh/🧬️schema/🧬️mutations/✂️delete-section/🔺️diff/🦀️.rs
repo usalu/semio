@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `DeleteSection`.
 use super::DeleteSection;
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dSectionsDelta};
-use crate::artifacts::fem3d::mutations::{section_referrers, target_referenced};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::diff::{Fem3dDiff, Fem3dSectionsDelta};
+use crate::mutations::{section_referrers, target_referenced};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteSection, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

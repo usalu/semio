@@ -1,16 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/add-mark.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/add-mark/schema.json",
   "title": "AddMark",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "run_index",
     "index",
-    "mark",
-    "runIndex"
+    "mark"
   ],
   "properties": {
-    "runIndex": {
+    "run_index": {
       "type": "integer",
       "minimum": 0
     },
@@ -19,27 +19,33 @@
       "minimum": 0
     },
     "mark": {
-      "title": "SemioTextMark",
+      "$ref": "#/$defs/SemioTextMark"
+    }
+  },
+  "$defs": {
+    "SemioTextMark": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "href",
         "kind"
       ],
       "properties": {
         "kind": {
-          "type": "string",
-          "enum": [
-            "Bold",
-            "Italic",
-            "Code",
-            "Link"
-          ]
+          "$ref": "#/$defs/SemioTextMarkKind"
         },
         "href": {
           "type": "string"
         }
       }
+    },
+    "SemioTextMarkKind": {
+      "type": "string",
+      "enum": [
+        "bold",
+        "italic",
+        "code",
+        "link"
+      ]
     }
   }
 }

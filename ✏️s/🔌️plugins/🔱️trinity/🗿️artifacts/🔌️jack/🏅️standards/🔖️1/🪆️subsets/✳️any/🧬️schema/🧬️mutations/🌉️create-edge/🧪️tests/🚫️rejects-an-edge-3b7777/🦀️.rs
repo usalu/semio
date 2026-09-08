@@ -18,9 +18,9 @@
 //! endpoints (`nodeId@portId`) against the scene's nodes. On an unresolved, nodeless scene the
 //! duplicate check passes vacuously and the endpoint check is what fires.
 
-use crate::artifacts::jack::mutations::TrinityGraphMutation;
-use crate::artifacts::jack::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
-use crate::artifacts::jack::{jack_working_scene, JackDiff, JackSnapshot};
+use crate::mutations::TrinityGraphMutation;
+use crate::{apply_trinity_graph_mutation, inverse_trinity_graph_mutation};
+use crate::{jack_working_scene, JackDiff, JackSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

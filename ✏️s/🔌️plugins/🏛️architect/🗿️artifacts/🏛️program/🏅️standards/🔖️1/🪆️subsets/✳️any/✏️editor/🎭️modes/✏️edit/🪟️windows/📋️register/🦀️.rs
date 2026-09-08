@@ -1,6 +1,6 @@
 //! 📋️ Architect register window — the active register's rows as a block-list surface.
 
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramSnapshot;
 use crate::editor::architect::catalog::register_entities;
 use crate::editor::architect::chrome::{entity_id_from_json, entity_name_from_json};
 use crate::editor::architect::config::{active_register, ArchitectConfig};
@@ -92,7 +92,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framewo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::sample_plugin;
+    use crate::sample_plugin;
 
     #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_block_list_surface_and_body_key() {

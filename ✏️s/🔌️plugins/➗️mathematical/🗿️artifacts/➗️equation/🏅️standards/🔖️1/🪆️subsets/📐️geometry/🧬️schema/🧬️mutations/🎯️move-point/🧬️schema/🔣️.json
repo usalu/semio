@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/mathematical/equation/1/geometry/mutation/move-point.json",
+  "$id": "https://semio.tech/schema/s/mathematical/equation/1/geometry/mutation/move-point/schema.json",
   "title": "MovePoint",
   "type": "object",
   "additionalProperties": false,

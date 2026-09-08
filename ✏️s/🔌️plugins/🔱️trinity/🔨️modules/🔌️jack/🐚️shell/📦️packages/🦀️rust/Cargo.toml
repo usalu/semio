@@ -16,6 +16,7 @@ workspace = true
 role = "tool"
 
 [dependencies]
+semio-s-artifact-trinity-jack = { workspace = true }
 trinity = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", package = "semio-s-plugin-trinity" }
 semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 

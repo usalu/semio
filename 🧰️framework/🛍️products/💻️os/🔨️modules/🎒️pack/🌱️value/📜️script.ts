@@ -8,10 +8,13 @@ export async function proveWireValueMaterializationFixture(repoRoot: string): Pr
   const equal = (await import("fast-deep-equal")).default;
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value");
   const fixture = JSON.parse(readFileSync(join(root, "🧪️fixtures/🧮️wire-materialization/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(root, "🧪️fixtures/🧮️wire-materialization/🧬️.schema.json"), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  const contract = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(contract);
+  const validate = ajv.getSchema(`${contract.$id}#/$defs/WireValueMaterialization`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
-  assert.deepEqual(fixture.cases.map((row: { id: string }) => row.id), schema.definitions.case.properties.id.enum);
+  assert.deepEqual(fixture.cases.map((row: { id: string }) => row.id), contract.$defs.WireValueMaterializationCase.properties.id.enum);
+  assert.deepEqual(fixture.bridge, { fieldId: 1, rootTag: "11", exact: true });
   const { decodePackValue, packValueToExactJson } = await import("../../../🟦️.ts");
   for (const row of fixture.cases) {
     const bytes = Buffer.from(row.rawHex, "hex");

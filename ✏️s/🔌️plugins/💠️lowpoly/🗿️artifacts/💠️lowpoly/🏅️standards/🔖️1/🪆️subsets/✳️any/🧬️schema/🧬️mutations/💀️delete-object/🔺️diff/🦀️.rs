@@ -2,8 +2,8 @@
 //! constructor); Error `target-missing` when the object is already absent.
 
 use super::DeleteObject;
-use crate::artifacts::lowpoly::diff::diff_objects_remove;
-use crate::artifacts::lowpoly::{LowpolyDiff, LowpolySnapshot};
+use crate::diff::diff_objects_remove;
+use crate::{LowpolyDiff, LowpolySnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

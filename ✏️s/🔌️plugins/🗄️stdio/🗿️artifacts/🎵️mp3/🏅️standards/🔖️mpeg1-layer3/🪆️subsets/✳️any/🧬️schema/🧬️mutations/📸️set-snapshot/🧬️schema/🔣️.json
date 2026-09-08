@@ -1,152 +1,217 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/mp3/mpeg1-layer3/any/mutation/set-snapshot.json",
+  "$id": "https://semio.tech/schema/s/stdio/mp3/mpeg1-layer3/any/mutation/set-snapshot/schema.json",
   "title": "SetSnapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema",
-    "frames"
+    "snapshot"
   ],
   "properties": {
-    "schema": {
-      "type": "string"
-    },
-    "id3v2": {
+    "snapshot": {
+      "$ref": "#/$defs/Mp3Snapshot"
+    }
+  },
+  "$defs": {
+    "Mp3Snapshot": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
       "properties": {
-        "majorVersion": {
-          "type": "integer",
-          "minimum": 0
+        "schema": {
+          "type": "string"
         },
-        "minorVersion": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "flags": {
-          "type": "integer",
-          "minimum": 0
+        "id3v2": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Id3v2Tag"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "frames": {
           "type": "array",
           "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "flags": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "data": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              }
-            },
-            "required": [
-              "id",
-              "flags",
-              "data"
-            ],
-            "additionalProperties": false
+            "$ref": "#/$defs/Mp3Frame"
           }
+        },
+        "id3v1": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Id3v1Tag"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
-      },
+      }
+    },
+    "Id3v2Tag": {
+      "type": "object",
+      "additionalProperties": false,
       "required": [
         "majorVersion",
         "minorVersion",
-        "flags",
-        "frames"
+        "flags"
       ],
-      "additionalProperties": false
-    },
-    "frames": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "header": {
-            "type": "object",
-            "properties": {
-              "protectionBit": {
-                "type": "boolean"
-              },
-              "bitrateIndex": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "sampleRateIndex": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "padding": {
-                "type": "boolean"
-              },
-              "privateBit": {
-                "type": "boolean"
-              },
-              "modeExtension": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "copyright": {
-                "type": "boolean"
-              },
-              "original": {
-                "type": "boolean"
-              },
-              "emphasis": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": [
-              "protectionBit",
-              "bitrateIndex",
-              "sampleRateIndex",
-              "padding",
-              "privateBit",
-              "modeExtension",
-              "copyright",
-              "original",
-              "emphasis"
-            ],
-            "additionalProperties": false
-          },
-          "payload": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
+      "properties": {
+        "majorVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
         },
-        "required": [
-          "header",
-          "payload"
-        ],
-        "additionalProperties": false
+        "minorVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Id3Frame"
+          }
+        }
       }
     },
-    "id3v1": {
+    "Id3Frame": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "flags"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "Mp3Frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "header"
+      ],
+      "properties": {
+        "header": {
+          "$ref": "#/$defs/Mp3FrameHeader"
+        },
+        "payload": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "Mp3FrameHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mpegVersionId",
+        "layer",
+        "protectionBit",
+        "bitrateIndex",
+        "sampleRateIndex",
+        "padding",
+        "privateBit",
+        "channelMode",
+        "modeExtension",
+        "copyright",
+        "original",
+        "emphasis"
+      ],
+      "properties": {
+        "mpegVersionId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "layer": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "protectionBit": {
+          "type": "boolean"
+        },
+        "bitrateIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "sampleRateIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "padding": {
+          "type": "boolean"
+        },
+        "privateBit": {
+          "type": "boolean"
+        },
+        "channelMode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "modeExtension": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "copyright": {
+          "type": "boolean"
+        },
+        "original": {
+          "type": "boolean"
+        },
+        "emphasis": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "Id3v1Tag": {
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
         "raw": {
           "type": "array",
           "items": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "maximum": 255
           }
         }
-      },
-      "required": [
-        "raw"
-      ],
-      "additionalProperties": false
+      }
     }
   }
 }

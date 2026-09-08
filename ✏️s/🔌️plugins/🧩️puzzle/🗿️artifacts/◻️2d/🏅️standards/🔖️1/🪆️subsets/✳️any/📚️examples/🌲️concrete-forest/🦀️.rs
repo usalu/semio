@@ -28,7 +28,7 @@ pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️.pack.semio")
 pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️forest.spr.semio");
 
 fn document_json() -> String {
-    let projection = crate::artifacts::puzzle2d::dsl::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
+    let projection = crate::dsl::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
     let mut value = dsl::ToValue::to_value(&projection);
     if let dsl::DslValue::Object(entries) = &mut value {
         entries.retain(|(key, _)| key != "camera");

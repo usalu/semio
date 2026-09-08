@@ -59,11 +59,11 @@ const EXAMPLE_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/�
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_playbook::artifacts::playbook::standards::v1::subsets::any::schema::mutations::{
+    use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::schema::mutations::{
         apply_playbook_mutation_outcome, decode_playbook_mutation_json, decode_playbook_snapshot_json, encode_playbook_snapshot_json, inverse_playbook_mutation_steps, seed_playbook_scene_json, PlaybookMutation,
     };
-    use semio_s_plugin_playbook::artifacts::playbook::standards::v1::subsets::any::schema::snapshot::{parse_playbook_dsl, print_playbook_dsl};
-    use semio_s_plugin_playbook::artifacts::playbook::PlaybookSnapshot;
+    use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::schema::snapshot::{parse_playbook_dsl, print_playbook_dsl};
+    use semio_s_artifact_playbook_playbook::PlaybookSnapshot;
     use semio_s_plugin_stdio_test_oracle::law;
 
     //#region 🔖️VectorReading

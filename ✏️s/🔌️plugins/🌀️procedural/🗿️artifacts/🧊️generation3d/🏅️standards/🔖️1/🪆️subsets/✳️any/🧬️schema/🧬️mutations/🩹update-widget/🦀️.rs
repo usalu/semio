@@ -5,13 +5,13 @@
 //! Directory kept at its pre-migration `🎛set-widget` path — see `➖remove-widget/🦠️mutation`'s
 //! docstring for why.
 
-use crate::artifacts::generation3d::diff::Generation3dDiff;
-use crate::artifacts::generation3d::mutations::Generation3dMutation;
-use crate::artifacts::generation3d::Generation3dSnapshot;
-use flow::Widget;
+use crate::diff::Generation3dDiff;
+use crate::mutations::Generation3dMutation;
+use crate::Generation3dSnapshot;
+use semio_framework_artifact_flow_semio_framework_os_flow::Widget;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️UpdateWidget
-/// 🔁 The widget's own id (via [`crate::artifacts::generation3d::widget_id`]) addresses the target
+/// 🔁 The widget's own id (via [`crate::widget_id`]) addresses the target
 /// — no separate `id` field, since `Widget` already carries its identity.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
@@ -24,19 +24,19 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Upda
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "widget", kind: "update-widget", record: "UpdatedWidget" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::artifacts::generation3d::mutations::update_widget::diff::diff(self, base)
+        crate::mutations::update_widget::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        crate::artifacts::generation3d::mutations::update_widget::inverse::inverse(self, base)
+        crate::mutations::update_widget::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {
-        format!("Update widget \"{}\"", crate::artifacts::generation3d::widget_id(&self.widget))
+        format!("Update widget \"{}\"", crate::widget_id(&self.widget))
     }
 
     fn target(&self) -> Vec<String> {
-        vec![crate::artifacts::generation3d::widget_id(&self.widget).to_string()]
+        vec![crate::widget_id(&self.widget).to_string()]
     }
 }
 //#endregion 🔖️UpdateWidget

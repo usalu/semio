@@ -8,7 +8,7 @@
 //! traversal. Whole-snapshot scalar, so a plain function suffices — no `InferredField`/per-entity
 //! caching needed (see the family root's doc comment for why).
 
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::ShootingSnapshot;
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️Topology
@@ -52,7 +52,7 @@ pub fn compute_shooting_topology(snapshot: &ShootingSnapshot) -> ShootingTopolog
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::shooting::{ShootingCamera, ShootingSavedCamera, ShootingShot};
+    use crate::{ShootingCamera, ShootingSavedCamera, ShootingShot};
 
     fn saved_camera(id: &str) -> ShootingSavedCamera {
         ShootingSavedCamera { id: id.into(), label: id.into(), camera: ShootingCamera::default() }

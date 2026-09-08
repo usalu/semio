@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `💰costs` per Wave C.
 
 use super::DeleteCostRequirement;
-use crate::artifacts::program::diff::ProgramCostsDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramCostsDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteCostRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::block3d::Block3dSnapshot;
+use crate::Block3dSnapshot;
 
 /// 📄️ The `nakagin-capsule` example fixture, handcrafted in the `.block3d` DSL — the `ObjectKind` half
 /// of semio_compose_rs's metabolism-kit `Capsule` type.
@@ -37,7 +37,7 @@ pub fn block3d_boot_snapshot() -> Block3dSnapshot {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate};
+    use crate::{Block3dVortexKind, Block3dVortexTemplate};
     use crate::{BlockCamera3d, BlockKindIdentity, BlockRepresentation};
 
     pub fn nakagin_capsule() -> Block3dSnapshot {
@@ -55,7 +55,7 @@ mod tests {
             description: String::new(),
             attributes: Vec::new(),
         });
-        crate::artifacts::block3d::set_vortex_kinds(&mut definition, vec![Block3dVortexKind { id: "door".into(), name: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() }]);
+        crate::set_vortex_kinds(&mut definition, vec![Block3dVortexKind { id: "door".into(), name: "door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() }]);
         definition.vortices.push(Block3dVortexTemplate { id: "v0".into(), vortex_kind: "door".into(), position: [0.0, -1.6, 1.2], direction: [0.0, -1.0, 0.0], radius: 0.3, label: Some("door".into()) });
         definition
     }

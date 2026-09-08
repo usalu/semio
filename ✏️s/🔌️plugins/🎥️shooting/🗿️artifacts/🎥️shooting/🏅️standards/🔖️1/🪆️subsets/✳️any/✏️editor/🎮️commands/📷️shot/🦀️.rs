@@ -1,14 +1,14 @@
 //! 📷️ Shooting play app commands — shot selection, labeling, sticky defaults and bulk field patches.
 
-use crate::artifacts::shooting::mutations::change_shot_format::ChangeShotFormat;
-use crate::artifacts::shooting::mutations::change_shot_height::ChangeShotHeight;
-use crate::artifacts::shooting::mutations::change_shot_shape::ChangeShotShape;
-use crate::artifacts::shooting::mutations::change_shot_width::ChangeShotWidth;
-use crate::artifacts::shooting::mutations::create_shot::CreateShot;
-use crate::artifacts::shooting::mutations::rename_shot::RenameShot;
-use crate::artifacts::shooting::mutations::set_active_shot::SetActiveShot as SetActiveShotMutation;
-use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::ShootingShot;
+use crate::mutations::change_shot_format::ChangeShotFormat;
+use crate::mutations::change_shot_height::ChangeShotHeight;
+use crate::mutations::change_shot_shape::ChangeShotShape;
+use crate::mutations::change_shot_width::ChangeShotWidth;
+use crate::mutations::create_shot::CreateShot;
+use crate::mutations::rename_shot::RenameShot;
+use crate::mutations::set_active_shot::SetActiveShot as SetActiveShotMutation;
+use crate::op::ShootingMutation;
+use crate::ShootingShot;
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -34,8 +34,8 @@ fn shot_mutation_for_field(id: String, field: &str, value: &Value) -> Option<Sho
     }
 }
 
-fn active_shot_id(fixture: &crate::artifacts::shooting::ShootingSnapshot) -> Option<String> {
-    crate::artifacts::shooting::schema::active_shot(fixture).map(|shot| shot.id.clone())
+fn active_shot_id(fixture: &crate::ShootingSnapshot) -> Option<String> {
+    crate::schema::active_shot(fixture).map(|shot| shot.id.clone())
 }
 
 //#region 🔖️SetActiveShot
@@ -50,7 +50,7 @@ pub mod set_active_shot {
 
     pub fn handle(
         payload: &SetActiveShot,
-        _doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>,
+        _doc: &ArtifactView<'_, crate::ShootingSnapshot>,
         _cfg: &ConfigView<'_, ShootingConfig>,
         _ctx: &mut ShootingDispatchCtx,
     ) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
@@ -74,7 +74,7 @@ pub mod set_active_shot_label {
 
     pub fn handle(
         payload: &SetActiveShotLabel,
-        doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>,
+        doc: &ArtifactView<'_, crate::ShootingSnapshot>,
         _cfg: &ConfigView<'_, ShootingConfig>,
         _ctx: &mut ShootingDispatchCtx,
     ) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
@@ -98,7 +98,7 @@ pub mod set_active_shot_format {
 
     pub fn handle(
         payload: &SetActiveShotFormat,
-        doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>,
+        doc: &ArtifactView<'_, crate::ShootingSnapshot>,
         _cfg: &ConfigView<'_, ShootingConfig>,
         _ctx: &mut ShootingDispatchCtx,
     ) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
@@ -122,7 +122,7 @@ pub mod set_active_shot_shape {
 
     pub fn handle(
         payload: &SetActiveShotShape,
-        doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>,
+        doc: &ArtifactView<'_, crate::ShootingSnapshot>,
         _cfg: &ConfigView<'_, ShootingConfig>,
         _ctx: &mut ShootingDispatchCtx,
     ) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
@@ -148,7 +148,7 @@ pub mod patch_shots {
 
     pub fn handle(
         payload: &PatchShots,
-        _doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>,
+        _doc: &ArtifactView<'_, crate::ShootingSnapshot>,
         _cfg: &ConfigView<'_, ShootingConfig>,
         _ctx: &mut ShootingDispatchCtx,
     ) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
@@ -169,7 +169,7 @@ pub mod patch_shots {
 //#region 🔖️AddShot
 pub mod add_shot {
     use super::*;
-    use crate::artifacts::shooting::schema::next_shooting_id;
+    use crate::schema::next_shooting_id;
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "add-shot")]
@@ -178,7 +178,7 @@ pub mod add_shot {
         pub shape: String,
     }
 
-    pub fn handle(payload: &AddShot, doc: &ArtifactView<'_, crate::artifacts::shooting::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
+    pub fn handle(payload: &AddShot, doc: &ArtifactView<'_, crate::ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let id = next_shooting_id("shot");
         let shot = ShootingShot { id: id.clone(), label: format!("Shot {}", snapshot.shots.len() + 1), width: 256, height: 256, format: payload.format.clone(), shape: payload.shape.clone(), background: None, camera_id: None };
@@ -202,7 +202,7 @@ mod tests {
     async fn set_active_shot_label_patches_active_shot() {
         let mut app = shooting_app().await;
         dispatch(&mut app, ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero Shot".into() })).await;
-        assert_eq!(crate::artifacts::shooting::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label, "Hero Shot");
+        assert_eq!(crate::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label, "Hero Shot");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -229,7 +229,7 @@ mod field_value_contract {
     #[test]
     fn shooting_shot_field_values_match_the_json_oracle() {
         let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔢️field-values.json")).expect("neutral input vectors");
-        let base = crate::artifacts::shooting::schema::default_snapshot();
+        let base = crate::schema::default_snapshot();
         let id = base.shots[0].id.clone();
         for vector in vectors["cases"].as_array().expect("cases") {
             let field = vector["field"].as_str().expect("field");

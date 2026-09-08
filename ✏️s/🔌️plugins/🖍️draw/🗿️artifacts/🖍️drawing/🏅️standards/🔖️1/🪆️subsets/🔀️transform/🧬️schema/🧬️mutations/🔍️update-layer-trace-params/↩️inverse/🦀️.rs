@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `UpdateLayerTraceParams` — the OLD params captured from BASE. Missing target or a
 //! non-trace layer ⇒ `Vec::new()`.
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::schema::find_drawing_layer;
-use crate::artifacts::drawing::{DrawingLayerNode, DrawingSnapshot};
+use crate::mutations::DrawingMutation;
+use crate::schema::find_drawing_layer;
+use crate::{DrawingLayerNode, DrawingSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::UpdateLayerTraceParams, base: &DrawingSnapshot) -> Vec<DrawingMutation> {

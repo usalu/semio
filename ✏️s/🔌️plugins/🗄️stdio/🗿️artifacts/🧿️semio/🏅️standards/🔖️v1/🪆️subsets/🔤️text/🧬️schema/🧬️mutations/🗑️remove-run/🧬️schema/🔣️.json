@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/remove-run.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/text/mutation/remove-run/schema.json",
   "title": "RemoveRun",
   "type": "object",
   "additionalProperties": false,

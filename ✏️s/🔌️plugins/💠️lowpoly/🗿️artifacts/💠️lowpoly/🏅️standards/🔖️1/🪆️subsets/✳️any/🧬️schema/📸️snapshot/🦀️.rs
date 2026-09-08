@@ -7,8 +7,8 @@
 //! file follows their exact hex/bracket convention (`w2c-object-kit-report.md`), never a hand-written
 //! slot list — `#[derive(ArtifactSchema)]` still emits `field_states()` for the top-level facets.
 
-use crate::artifacts::lowpoly::{LowpolyObject, LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::{LowpolyObject, LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted lowpoly document snapshot (persistent fields of the artifact).
@@ -355,7 +355,7 @@ pub fn snapshot_from_mesh_json(mesh_json: &str, object_id: &str, object_name: &s
             name: object_name.into(),
             transform: LowpolyTransform::default(),
             smooth_shading: false,
-            mesh: Some(crate::artifacts::lowpoly::mesh_child_handle(object_id, mesh_json)),
+            mesh: Some(crate::mesh_child_handle(object_id, mesh_json)),
             paint_layers: vec![LowpolyPaintLayer::new("Base")],
         }],
     }

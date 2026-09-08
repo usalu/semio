@@ -1,6 +1,6 @@
 //! 🔍️ Forms play app panel — the document-wide summary (schema, step count, question count).
 
-use crate::artifacts::forms::{forms_steps, FormsSnapshot};
+use crate::{forms_steps, FormsSnapshot};
 use crate::editor::forms::{ui_label, ui_node_list};
 use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
@@ -29,9 +29,9 @@ pub fn definition() -> PanelTabDefinition {
 /// `cfg.selected_ids` is gone with it.
 pub fn render(spec: &FormsSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let children = ui_node_list([
-        tree_item_desc("forms-play-inspector.schema", format!("Schema: {}", crate::artifacts::forms::FORMS_DOCUMENT_SCHEMA), None),
+        tree_item_desc("forms-play-inspector.schema", format!("Schema: {}", crate::FORMS_DOCUMENT_SCHEMA), None),
         tree_item_desc("forms-play-inspector.steps", format!("Steps: {}", forms_steps(spec).len()), None),
-        tree_item_desc("forms-play-inspector.questions", format!("Questions: {}", crate::artifacts::forms::schema::flatten_questions(spec).len()), None),
+        tree_item_desc("forms-play-inspector.questions", format!("Questions: {}", crate::schema::flatten_questions(spec).len()), None),
     ])?;
     PanelTreeBuilder::new("forms-play-inspector")?.section("forms-play-inspector.summary", Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, children)?.build()
 }

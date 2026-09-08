@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/set-sample-precision.json",
+  "$id": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/baseline/mutation/set-sample-precision/schema.json",
   "title": "SetSamplePrecision",
   "type": "object",
   "additionalProperties": false,

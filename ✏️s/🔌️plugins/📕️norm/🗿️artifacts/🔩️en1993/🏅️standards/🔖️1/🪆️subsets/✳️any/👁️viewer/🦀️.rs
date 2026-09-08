@@ -4,8 +4,8 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::en1993::En1993Snapshot;
-use crate::artifacts::en1993::{EN1993_DIALECT, EN1993_DOCUMENT_SCHEMA};
+use crate::En1993Snapshot;
+use crate::{EN1993_DIALECT, EN1993_DOCUMENT_SCHEMA};
 use crate::viewer::en1993::modes::view;
 use crate::viewer::en1993::modes::view::windows::report;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -41,7 +41,7 @@ pub struct En1993Viewer;
 
 impl ArtifactViewer for En1993Viewer {
     type Snapshot = En1993Snapshot;
-    type Mutation = crate::artifacts::en1993::op::En1993Mutation;
+    type Mutation = crate::op::En1993Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

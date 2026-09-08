@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::En1998Snapshot;
 
 /// 🗄️ The seismic-rc-frame example fixture, handcrafted in `en1998`'s DSL (`store::ArtifactDsl`): a
 /// high-importance dual-system RC building in seismic zone 3 on ground type D, resolved under the EN

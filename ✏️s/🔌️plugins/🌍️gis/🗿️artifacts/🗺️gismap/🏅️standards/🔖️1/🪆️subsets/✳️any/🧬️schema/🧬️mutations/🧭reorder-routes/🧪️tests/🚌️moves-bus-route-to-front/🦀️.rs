@@ -19,9 +19,9 @@
 //! `apply_gis_map_mutation` and `GisMapDiff::apply` each make after every edit. Only the
 //! artifact-lane feature collections are hand-authored, and those are asserted verbatim.
 
-use crate::artifacts::gismap::diff::GisMapDiff;
-use crate::artifacts::gismap::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
-use crate::artifacts::gismap::{gis_map_snapshot_with_derived_children, GisMapSnapshot};
+use crate::diff::GisMapDiff;
+use crate::mutations::{apply_gis_map_mutation, inverse_gis_map_mutation, GisMapMutation};
+use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

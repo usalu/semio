@@ -1,7 +1,7 @@
 //! 🔺️ `change-en-sk-kn-m2` — sparse diff construction.
 
 use super::ChangeEnSKKnM2;
-use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
+use crate::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeEnSKKnM2, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {

@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `RemoveTag` — no-op (empty diff) when BASE doesn't have the tag.
-use crate::artifacts::vcs::diff::VcsTagsDelta;
-use crate::artifacts::vcs::{VcsDiff, VcsSnapshot};
+use crate::diff::VcsTagsDelta;
+use crate::{VcsDiff, VcsSnapshot};
 
 //#region 🔖️Diff
 /// 🔺️ Error `target-missing` when BASE doesn't have the tag.

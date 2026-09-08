@@ -5,7 +5,7 @@
 //! `CsvSnapshot`'s `{schema,has_header,records}` shape, so only `schema` survives and every row is
 //! dropped, hence `IoFidelity::Lossy`.
 
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::VcsSnapshot;
 use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};

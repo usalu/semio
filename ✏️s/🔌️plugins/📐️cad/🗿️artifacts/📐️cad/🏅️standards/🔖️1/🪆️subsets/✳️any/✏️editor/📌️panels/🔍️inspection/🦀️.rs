@@ -2,8 +2,8 @@
 //! (object multi-selection, a primitive slot, a reference overlay, a node), or a schema summary.
 
 #[cfg(test)]
-use crate::artifacts::cad::standards::v1::subsets::any::io::geometry_import::CadObject;
-use crate::artifacts::cad::{CadNode, CadReference};
+use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
+use crate::{CadNode, CadReference};
 #[cfg(test)]
 use crate::editor::cad::terminology::typology_label;
 use crate::editor::cad::terminology::CadLabels;
@@ -270,8 +270,8 @@ pub fn node_inspector_group(node: &CadNode, labels: &CadLabels) -> UiInspectorFi
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::default_document;
-    use crate::artifacts::cad::CadPaneId;
+    use crate::standards::v1::subsets::any::schema::inferences::default_document;
+    use crate::CadPaneId;
     use semio_framework_plugin::ui_inspector_groups_to_tree;
     use crate::editor::cad::config::CadConfig;
     use crate::editor::cad::terminology::cad_labels;

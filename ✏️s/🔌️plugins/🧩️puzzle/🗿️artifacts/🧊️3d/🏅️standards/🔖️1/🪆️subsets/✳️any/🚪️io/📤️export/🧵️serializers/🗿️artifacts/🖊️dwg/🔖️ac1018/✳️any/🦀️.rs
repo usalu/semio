@@ -1,5 +1,5 @@
 //! puzzle3d -> dwg
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::Puzzle3dSnapshot;
 
 pub fn register() {}
 

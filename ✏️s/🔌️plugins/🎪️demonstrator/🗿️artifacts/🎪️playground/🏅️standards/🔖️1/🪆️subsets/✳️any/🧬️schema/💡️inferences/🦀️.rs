@@ -4,7 +4,7 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use std::collections::BTreeMap;
@@ -66,7 +66,7 @@ impl protocol::InferenceSpec<PlaygroundSnapshot> for PlaygroundInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::playground::standards::v1::subsets::any::schema::PlaygroundBuilderFacets {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::PlaygroundBuilderFacets {
     type Snapshot = PlaygroundSnapshot;
     type Inference = PlaygroundInference;
 }

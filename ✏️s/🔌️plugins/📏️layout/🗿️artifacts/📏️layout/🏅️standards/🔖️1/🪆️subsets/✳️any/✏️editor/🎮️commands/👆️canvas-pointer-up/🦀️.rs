@@ -1,7 +1,7 @@
 //! 🖱️ 🖱️ Layout play app commands command — `canvas-pointer-up`.
 
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::mutations::LayoutMutation;
+use crate::LayoutSnapshot;
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::config::LayoutConfigMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

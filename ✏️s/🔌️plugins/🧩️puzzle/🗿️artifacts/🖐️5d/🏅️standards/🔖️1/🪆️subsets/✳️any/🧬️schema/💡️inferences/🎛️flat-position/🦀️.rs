@@ -12,15 +12,15 @@
 //! `Snapshot -> Value` manifest-projection pure fn living in `🧬️schema/💡️inferences/`), so the math
 //! belongs here beside its one real consumer instead of behind an engine facade.
 
-use crate::artifacts::puzzle3d::schema::inferences::flatten::{self, DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA};
-use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dVortex};
-use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale, Puzzle5dSnapshot};
+use semio_s_artifact_puzzle_3d::schema::inferences::flatten::{self, DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA};
+use semio_s_artifact_puzzle_3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dVortex};
+use crate::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale, Puzzle5dSnapshot};
 use std::collections::HashMap;
 
 // 🔗️ Kept public (the pre-relocation shim's own surface): the result TYPES stay owned by
 // puzzle3d's own low-level geometry, re-exported here so `flat_position::FlattenPose`/`FlattenPlane`
 // keep resolving for any caller reaching through this slug's own name.
-pub use crate::artifacts::puzzle3d::schema::inferences::flatten::{FlattenPlane, FlattenPose};
+pub use semio_s_artifact_puzzle_3d::schema::inferences::flatten::{FlattenPlane, FlattenPose};
 
 //#region 🔖️SnapshotToObjectGraph
 fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
@@ -40,8 +40,8 @@ fn part_to_object(part: &Puzzle5dPart) -> Puzzle3dObject {
         origin: part.part_3d.origin,
         orientation: part.part_3d.orientation,
         scale: part.part_3d.scale.as_ref().map(|scale| match scale {
-            Puzzle5dScale::Uniform(value) => crate::artifacts::puzzle3d::Puzzle3dScale::Uniform(*value),
-            Puzzle5dScale::Vec3(value) => crate::artifacts::puzzle3d::Puzzle3dScale::Vec3(*value),
+            Puzzle5dScale::Uniform(value) => semio_s_artifact_puzzle_3d::Puzzle3dScale::Uniform(*value),
+            Puzzle5dScale::Vec3(value) => semio_s_artifact_puzzle_3d::Puzzle3dScale::Vec3(*value),
         }),
         mesh_url: part.part_3d.mesh_url.clone(),
         vortices: part.grips.iter().map(grip_to_vortex).collect(),
@@ -191,7 +191,7 @@ fn diagram_centers_with_grip_t(snapshot: &Puzzle5dSnapshot, seed_poses: &HashMap
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dSnapshot};
+    use crate::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dSnapshot};
 
     #[test]
     fn flatten_writes_diagram_offsets_onto_part_2d() {

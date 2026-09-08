@@ -1,7 +1,7 @@
 //! ✳️ Writer subset `any` root — mounts `schema`/`io`/`viewer`/`editor`/`examples` and exports the
 //! one `subset() -> SubsetDeclaration` this owner is responsible for (design.md §1).
 
-use crate::artifacts::writer::standards::v1::subsets::any::{io, schema};
+use crate::standards::v1::subsets::any::{io, schema};
 use crate::editor::writer as editor;
 use crate::viewer::writer as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
@@ -11,7 +11,7 @@ use std::sync::OnceLock;
 //#region 🔖️Examples
 fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::artifacts::writer::examples::demo::source()]).as_slice()
+    EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
 }
 //#endregion 🔖️Examples
 
@@ -25,7 +25,7 @@ fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
 //#region 🔖️Subset
 pub fn subset() -> SubsetDeclaration<crate::plugin::WriterApps> {
     SubsetDeclaration {
-        dialect: crate::artifacts::writer::WRITER_DIALECT,
+        dialect: crate::WRITER_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::writer_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
         viewer: viewer_surface::<viewer::WriterViewer, crate::plugin::WriterApps>(viewer::create_writer_viewer()),
@@ -41,7 +41,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn subset_dialect_is_the_canonical_writer_dialect() {
-        assert_eq!(subset().dialect, crate::artifacts::writer::WRITER_DIALECT);
+        assert_eq!(subset().dialect, crate::WRITER_DIALECT);
     }
 
     #[semio_framework_async_macros::async_test]

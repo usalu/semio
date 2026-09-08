@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::din4108::schema::mutations::text::Din4108Mutation;
+use crate::document_schema::mutations::text::Din4108Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -23,8 +23,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<Din4108Mutation, protocol::ProtocolErro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::din4108::schema::mutations::change_airtightness_n50::ChangeAirtightnessN50;
-    use crate::artifacts::din4108::Din4108Snapshot;
+    use crate::document_schema::mutations::change_airtightness_n50::ChangeAirtightnessN50;
+    use crate::Din4108Snapshot;
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {

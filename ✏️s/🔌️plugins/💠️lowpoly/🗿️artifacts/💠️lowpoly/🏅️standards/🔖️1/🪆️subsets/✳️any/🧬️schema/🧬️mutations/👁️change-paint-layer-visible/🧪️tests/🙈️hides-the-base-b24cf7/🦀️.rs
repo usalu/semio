@@ -7,9 +7,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::lowpoly::LowpolyDiff;
-use crate::artifacts::lowpoly::LowpolyMutation;
-use crate::artifacts::lowpoly::LowpolySnapshot;
+use crate::LowpolyDiff;
+use crate::LowpolyMutation;
+use crate::LowpolySnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

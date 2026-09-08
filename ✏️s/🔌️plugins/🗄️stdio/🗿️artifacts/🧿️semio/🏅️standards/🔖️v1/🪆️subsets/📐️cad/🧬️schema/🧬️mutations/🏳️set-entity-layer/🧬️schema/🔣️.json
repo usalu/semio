@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/cad/mutation/set-entity-layer.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/cad/mutation/set-entity-layer/schema.json",
   "title": "SetEntityLayer",
   "type": "object",
   "additionalProperties": false,

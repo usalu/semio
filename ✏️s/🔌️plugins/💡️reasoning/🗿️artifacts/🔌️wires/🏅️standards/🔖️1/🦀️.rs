@@ -1,7 +1,7 @@
 //! 🏅️ Wires standard `1` root — `pub fn standard() -> StandardDeclaration`, mounts subset `any`
 //! (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §1/§2).
 
-use crate::artifacts::wires::standards::v1::subsets;
+use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 

@@ -1,9 +1,9 @@
 //! 🔀️ `reorder-routes` mutation payload — repositions a route feature within `routes`
 //! by id (id-keyed collection, so addressing is `id`+`to_index`, not a bare index pair).
 
-use crate::artifacts::gismap::GisMapSnapshot;
-use crate::artifacts::gismap::diff::GisMapDiff;
-use crate::artifacts::gismap::mutations::GisMapMutation;
+use crate::GisMapSnapshot;
+use crate::diff::GisMapDiff;
+use crate::mutations::GisMapMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

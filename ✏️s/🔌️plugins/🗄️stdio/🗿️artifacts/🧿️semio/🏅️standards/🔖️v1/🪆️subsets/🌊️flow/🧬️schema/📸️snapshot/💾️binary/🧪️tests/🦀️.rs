@@ -1,8 +1,8 @@
 //! 🌊️ Public API law for the real retained Flow binary snapshot decoder.
 use semio_framework_os_kernel as store;
-use crate::{create_semio_member, SemioMembers, SemioMembersOpen};
-use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, SemioFlowSnapshot};
-use crate::standards::v1::subsets::flow::schema::snapshot::binary::{SemioFlowSnapshotDecode, SemioFlowSnapshotDecodeStep};
+use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers, SemioMembersOpen};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, SemioFlowSnapshot};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::binary::{SemioFlowSnapshotDecode, SemioFlowSnapshotDecodeStep};
 use semio_framework_job::StepContext;
 use store::{ErasedSnapshotRetirement, MemberFactory, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenRequest, MemberOpenStep, MemberSnapshotOpenOperation, OwnerRef, SnapshotRetirementStep, SpaceMember};
 use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token};
@@ -100,8 +100,8 @@ fn begin_member_open(request: MemberOpenRequest) -> SemioMembersOpen {
 }
 
 fn expected(value: &serde_json::Value) -> SemioFlowSnapshot {
-    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use crate::standards::v1::subsets::flow::schema::snapshot::PortRef;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::PortRef;
     let string = |value: &serde_json::Value| value.as_str().unwrap().to_owned();
     SemioFlowSnapshot {
         schema: string(&value["schema"]),

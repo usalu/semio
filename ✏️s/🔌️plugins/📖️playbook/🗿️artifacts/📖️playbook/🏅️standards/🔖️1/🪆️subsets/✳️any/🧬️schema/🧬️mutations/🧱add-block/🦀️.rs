@@ -1,8 +1,8 @@
 //! 🧱 Playbook mutation — `AddBlock`: inserts a new block into a step, positioned at `index`
 //! (final-state) or appended when absent.
 
-use crate::artifacts::playbook::mutations::PlaybookMutation;
-use crate::artifacts::playbook::{PlaybookBlock, PlaybookDiff, PlaybookSnapshot};
+use crate::mutations::PlaybookMutation;
+use crate::{PlaybookBlock, PlaybookDiff, PlaybookSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 // 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle — committed
 // `🧪️tests/<fixture>/🦀️.rs` fixture vectors decode/re-encode through them — never a production

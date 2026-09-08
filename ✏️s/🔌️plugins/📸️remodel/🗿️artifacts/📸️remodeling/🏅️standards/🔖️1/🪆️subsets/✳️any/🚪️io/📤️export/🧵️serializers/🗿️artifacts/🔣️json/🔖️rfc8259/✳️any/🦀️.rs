@@ -1,4 +1,4 @@
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::RemodelingSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_os_kernel::ToValue;

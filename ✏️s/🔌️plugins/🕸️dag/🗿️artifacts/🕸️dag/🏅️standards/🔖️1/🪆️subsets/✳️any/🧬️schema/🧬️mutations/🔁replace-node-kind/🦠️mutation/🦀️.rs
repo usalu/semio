@@ -2,9 +2,9 @@
 //! `DagNodeKind` — every kind-specific field, e.g. a Slider's `value`/`min`/`max` or a Note's
 //! `text`, changes through this one mutation; see `deviations` in this ticket's report for why no
 //! finer per-field granularity was minted).
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::{DagNodeKind, DagSnapshot};
+use crate::diff::DagDiff;
+use crate::mutations::DagMutation;
+use crate::{DagNodeKind, DagSnapshot};
 
 //#region 🔖️Mutation
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]

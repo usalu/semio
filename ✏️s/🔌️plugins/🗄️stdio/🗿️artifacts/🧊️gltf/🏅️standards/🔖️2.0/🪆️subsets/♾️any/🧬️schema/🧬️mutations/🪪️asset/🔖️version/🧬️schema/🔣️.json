@@ -1,8 +1,17 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/asset/version.json",
-  "title": "GltfChangeAssetVersionMutation",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-asset-version/schema.json",
+  "title": "GltfChangeAssetVersionPayload",
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version"
+  ],
+  "properties": {
+    "version": {
+      "type": "string"
+    }
+  },
   "x-semio": {
     "id": "s.stdio.gltf.mutation.change-asset-version.v1",
     "version": 1,

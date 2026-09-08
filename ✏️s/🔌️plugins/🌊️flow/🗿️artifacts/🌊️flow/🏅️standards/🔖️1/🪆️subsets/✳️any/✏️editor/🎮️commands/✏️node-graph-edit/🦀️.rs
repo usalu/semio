@@ -1,6 +1,6 @@
 //! 🕸️ 🎯️ Flow play app commands command — `node-graph-edit`.
 
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::{flow_graph_selection_domains, host_operations, sync_host_selection, FLOW_INTERACTION_GRAPH};
 use flow::FlowEvalSession;
@@ -94,7 +94,7 @@ mod tests {
         let mut app = flow_app_with_registry().await;
         select_graph(&mut app, &["slider"], &[]).await;
         dispatch(&mut app, FlowCommand::NodeGraphEdit(NodeGraphEdit { operations: vec![FlowNodeGraphEditOp::DeleteSelection] })).await;
-        assert!(!app.snapshot().expect("snapshot").to_fixture().widgets.iter().any(|widget| crate::artifacts::flow::schema::widget_id(widget) == "slider"), "batched delete removes the picked widget");
+        assert!(!app.snapshot().expect("snapshot").to_fixture().widgets.iter().any(|widget| crate::schema::widget_id(widget) == "slider"), "batched delete removes the picked widget");
         let _ = render(&mut app, crate::editor::flow::FLOW_PLAY_BODY_MAIN).await;
     }
 

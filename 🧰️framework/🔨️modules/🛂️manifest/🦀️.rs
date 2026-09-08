@@ -5940,7 +5940,7 @@ mod app_label_tests {
     /// 🔽️ Shares the schema-first choice cases with the TypeScript AJV enum oracle.
     #[semio_framework_async_macros::async_test]
     async fn unresolved_action_choices_follow_neutral_catalog_contract() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧩️action-argument-resolution/🧬️contracts/🔽️choices/🔣️.json")).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧩️action-argument-resolution/🧫️fixtures/🔽️choices/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             let options = row["options"].as_array().unwrap().iter().map(|value| ActionArgOption::new(value.as_str().unwrap(), LocalizedLabel::data(value.as_str().unwrap()))).collect();
             let mut def = ActionArgDef::select("kindChoice", LocalizedLabel::data("Kind"), options);

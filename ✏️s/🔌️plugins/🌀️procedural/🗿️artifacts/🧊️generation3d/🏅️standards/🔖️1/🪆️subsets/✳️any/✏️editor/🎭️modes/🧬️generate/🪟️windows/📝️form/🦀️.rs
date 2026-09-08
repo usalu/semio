@@ -2,9 +2,9 @@
 
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use flow::forms_bridge::flow_fixture_to_form_spec;
-use flow::playbook::{selected_generation, GenerationPlayState};
-use flow::FlowFixture;
+use semio_framework_os_flow::forms_bridge::flow_fixture_to_form_spec;
+use semio_framework_artifact_playbook_playbook::{selected_generation, GenerationPlayState};
+use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
 use semio_framework_plugin::{built_text_node, BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants

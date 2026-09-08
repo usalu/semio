@@ -1,7 +1,7 @@
 //! 🔺️ Writer artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::writer::schema::WriterArtifact;
-use crate::artifacts::writer::{document_child_handle_with_text, WriterSnapshot};
+use crate::schema::WriterArtifact;
+use crate::{document_child_handle_with_text, WriterSnapshot};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use crate::artifacts::writer::schema::diff::*;
+pub use crate::schema::diff::*;
 
 //#region 🔖️Apply
 impl WriterDiff {
@@ -190,7 +190,7 @@ mod tests {
     use protocol::DiffCodec;
 
     fn jack_snapshot() -> WriterSnapshot {
-        crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
+        crate::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
     #[semio_framework_async_macros::async_test]
@@ -222,7 +222,7 @@ mod tests {
         let base = WriterSnapshot::default();
         let diff = diff_set_text("hio", "jack", "plaintext");
         let next = diff.apply(&base).expect("valid mutation diff");
-        assert_eq!(crate::artifacts::writer::writer_text(&next), "hio");
+        assert_eq!(crate::writer_text(&next), "hio");
     }
 }
 //#endregion 🧪️Tests

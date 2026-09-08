@@ -1,17 +1,17 @@
 //! 🎬️ Sequence semantic mutation aggregate and leaf detection registry.
 
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::diff::SequenceDiff;
+use crate::SequenceSnapshot;
 
-pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::change_step_collapsed::{change_step_collapsed, ChangeStepCollapsed};
-pub use crate::artifacts::sequence::standards::v1::subsets::dependency::schema::mutations::connect_steps::{connect_steps, ConnectSteps};
-pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::create_step::{create_step, CreateStep};
-pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::delete_step::{delete_step, DeleteStep};
-pub use crate::artifacts::sequence::standards::v1::subsets::dependency::schema::mutations::disconnect_steps::{disconnect_steps, DisconnectSteps};
-pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::duplicate_step::{duplicate_step, DuplicateStep};
-pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::edit_step_params::{edit_step_params, EditStepParams};
-pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::move_step::{move_step, MoveStep};
-pub use crate::artifacts::sequence::schema::operations::*;
+pub use crate::standards::v1::subsets::step::schema::mutations::change_step_collapsed::{change_step_collapsed, ChangeStepCollapsed};
+pub use crate::standards::v1::subsets::dependency::schema::mutations::connect_steps::{connect_steps, ConnectSteps};
+pub use crate::standards::v1::subsets::step::schema::mutations::create_step::{create_step, CreateStep};
+pub use crate::standards::v1::subsets::step::schema::mutations::delete_step::{delete_step, DeleteStep};
+pub use crate::standards::v1::subsets::dependency::schema::mutations::disconnect_steps::{disconnect_steps, DisconnectSteps};
+pub use crate::standards::v1::subsets::step::schema::mutations::duplicate_step::{duplicate_step, DuplicateStep};
+pub use crate::standards::v1::subsets::step::schema::mutations::edit_step_params::{edit_step_params, EditStepParams};
+pub use crate::standards::v1::subsets::step::schema::mutations::move_step::{move_step, MoveStep};
+pub use crate::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Closed sequence mutation vocabulary backed by direct semantic owners.
@@ -42,13 +42,13 @@ impl neural_engine::ColdRetire for SequenceMutation {
 //#region 🔎️DetectionRegistry
 pub const DETECTORS: &[SequenceMutationDetector] =
     &[
-        crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::create_step::detect,
-        crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::delete_step::detect,
-        crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::move_step::detect,
-        crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::edit_step_params::detect,
-        crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::change_step_collapsed::detect,
-        crate::artifacts::sequence::standards::v1::subsets::dependency::schema::mutations::connect_steps::detect,
-        crate::artifacts::sequence::standards::v1::subsets::dependency::schema::mutations::disconnect_steps::detect,
+        crate::standards::v1::subsets::step::schema::mutations::create_step::detect,
+        crate::standards::v1::subsets::step::schema::mutations::delete_step::detect,
+        crate::standards::v1::subsets::step::schema::mutations::move_step::detect,
+        crate::standards::v1::subsets::step::schema::mutations::edit_step_params::detect,
+        crate::standards::v1::subsets::step::schema::mutations::change_step_collapsed::detect,
+        crate::standards::v1::subsets::dependency::schema::mutations::connect_steps::detect,
+        crate::standards::v1::subsets::dependency::schema::mutations::disconnect_steps::detect,
     ];
 //#endregion 🔎️DetectionRegistry
 

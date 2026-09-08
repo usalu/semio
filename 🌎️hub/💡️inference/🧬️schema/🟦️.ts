@@ -213,6 +213,25 @@ export function parseGisMapApprovalUndoTargetV1(value: unknown): GisMapApprovalU
   };
 }
 
+/** 🧾️ Durable inverse receipt published only after the second verified WAL decision and pair. */
+export type GisMapApprovalUndoReceiptV1 = {
+  readonly schema: "semio.hub.gis-map-approval-undo-receipt/v1";
+  readonly targetId: string;
+  readonly originalJobId: string;
+  readonly mutationId: string;
+  readonly commandHash: string;
+  readonly applied: boolean;
+  readonly replayed: boolean;
+  readonly frontier: GisMapDocumentFrontierV1;
+};
+export function parseGisMapApprovalUndoReceiptV1(value: unknown): GisMapApprovalUndoReceiptV1 {
+  const name = "hub.inference/GisMapApprovalUndoReceiptV1";
+  const row = rows(value, ["schema", "targetId", "originalJobId", "mutationId", "commandHash", "applied", "replayed", "frontier"], name);
+  if (row.schema !== "semio.hub.gis-map-approval-undo-receipt/v1" || !["targetId", "originalJobId", "mutationId"].every((key) => hex(row[key], 32)) || !hex(row.commandHash, 64)
+    || typeof row.applied !== "boolean" || typeof row.replayed !== "boolean") return fail(name);
+  return { schema: "semio.hub.gis-map-approval-undo-receipt/v1", targetId: row.targetId as string, originalJobId: row.originalJobId as string, mutationId: row.mutationId as string, commandHash: row.commandHash as string, applied: row.applied, replayed: row.replayed, frontier: parseGisMapDocumentFrontierV1(row.frontier) };
+}
+
 /** ✅️ The closed approval outcome; `applied` is true only after a real committed-WAL witness. */
 export type InferenceApprovalReceiptV1 = {
   readonly schema: "semio.hub.inference-approval-receipt/v1";
@@ -257,6 +276,12 @@ export function parseGisInferenceCheckpointControlFrameV1(value: unknown): GisIn
   if (row.schema !== "semio.hub.gis-inference-checkpoint-control/v1" || row.version !== 1 || !uint(row.sequence) || (row.sequence as number) < 1 || (row.sequence as number) > 2
     || !member(row.kind, ["entered", "release"] as const) || !hex(row.jobId, 32)) return fail(name);
   return { schema: "semio.hub.gis-inference-checkpoint-control/v1", version: 1, sequence: row.sequence as number, kind: row.kind as "entered" | "release", jobId: row.jobId as string };
+}
+
+export const GIS_INFERENCE_CHECKPOINT_CONTROL_DIRECTIONS = ["hub-to-runner", "runner-to-hub"] as const;
+export type GisInferenceCheckpointControlDirectionV1 = (typeof GIS_INFERENCE_CHECKPOINT_CONTROL_DIRECTIONS)[number];
+export function parseGisInferenceCheckpointControlDirectionV1(value: unknown): GisInferenceCheckpointControlDirectionV1 {
+  return member(value, GIS_INFERENCE_CHECKPOINT_CONTROL_DIRECTIONS) ? (value as GisInferenceCheckpointControlDirectionV1) : fail("hub.inference/GisInferenceCheckpointControlDirectionV1");
 }
 
 /** 🗺️ The bounded, host-only geometry an owner may inspect before approving a proposal. */

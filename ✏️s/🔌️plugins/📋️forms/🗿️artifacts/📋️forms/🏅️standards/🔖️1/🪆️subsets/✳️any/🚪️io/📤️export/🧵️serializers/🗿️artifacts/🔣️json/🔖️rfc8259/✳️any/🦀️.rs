@@ -2,7 +2,7 @@
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Direct `serde_json`
 //! serialization of every field, so this hop is `IoFidelity::Exact`.
 
-use crate::artifacts::forms::FormsSnapshot;
+use crate::FormsSnapshot;
 use dsl::ToValue;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};

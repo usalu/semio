@@ -1,0 +1,530 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/space/schema.json",
+  "title": "S Space Plugin Schema Module",
+  "$defs": {
+    "SpacePluginIdentity": {
+      "title": "Space plugin identity tuple",
+      "description": "The one identity every authority of the OS host plugin must agree on: the Cargo component package, the plugin root builder id and package_id, the deployment catalog row, the generated registry row and the canonical artifact-kind owner segment. The playground variant that selects this plugin is a different name and is pinned here so the two can never be conflated again.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "pluginId",
+        "packageId",
+        "packageName",
+        "moduleDirectoryName",
+        "artifactKindPrefix",
+        "playgroundVariant",
+        "host"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.space.plugin-identity/v1"
+        },
+        "pluginId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "packageId": {
+          "type": "string",
+          "pattern": "^semio:[a-z][a-z0-9-]*$"
+        },
+        "packageName": {
+          "type": "string",
+          "pattern": "^semio-s-plugin-[a-z0-9-]+$"
+        },
+        "moduleDirectoryName": {
+          "type": "string",
+          "minLength": 2
+        },
+        "artifactKindPrefix": {
+          "type": "string",
+          "pattern": "^s\\.[a-z][a-z0-9-]*\\.$"
+        },
+        "playgroundVariant": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "landingAppId",
+            "hostAppId"
+          ],
+          "properties": {
+            "landingAppId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "hostAppId": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "SpacePlayRetainedCommandLimits": {
+      "allOf": [
+        {
+          "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandLimits"
+        },
+        {
+          "type": "object",
+          "required": [
+            "controller",
+            "documentSchema",
+            "factory",
+            "limits",
+            "publicationContracts",
+            "routes",
+            "oracle"
+          ],
+          "properties": {
+            "controller": {
+              "const": "s-play"
+            },
+            "documentSchema": {
+              "const": "os.workflow"
+            },
+            "factory": {
+              "const": "SpaceCommandJobFactory"
+            },
+            "limits": {
+              "type": "object",
+              "required": [
+                "bounded"
+              ],
+              "properties": {
+                "bounded": {
+                  "type": "object",
+                  "required": [
+                    "maxRawBytes",
+                    "maxDecodedItems",
+                    "maxWorkUnitsPerStep",
+                    "maxOutputBytes",
+                    "maxStepMicros"
+                  ],
+                  "properties": {
+                    "maxRawBytes": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "maxDecodedItems": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "maxWorkUnitsPerStep": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "maxOutputBytes": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "maxStepMicros": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 7999
+                    },
+                    "maxCheckpointBytes": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "maxInFlightPages": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "publicationContracts": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "setActivePanelTab"
+                    },
+                    "lanes": {
+                      "const": [
+                        "config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "nodeGraphViewport"
+                    },
+                    "lanes": {
+                      "const": [
+                        "config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "presenceHeartbeat"
+                    },
+                    "lanes": {
+                      "const": [
+                        "config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "workflowEngagementInput"
+                    },
+                    "lanes": {
+                      "const": [
+                        "config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "compiledDagEngagementInput"
+                    },
+                    "lanes": {
+                      "const": [
+                        "config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "closeFocusedInstance"
+                    },
+                    "lanes": {
+                      "const": [
+                        "config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "setActiveExample"
+                    },
+                    "lanes": {
+                      "const": [
+                        "hostOnly"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "importSpacePack"
+                    },
+                    "lanes": {
+                      "const": [
+                        "hostOnly"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "goHome"
+                    },
+                    "lanes": {
+                      "const": [
+                        "hostOnly"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "navigateVirtualFileSystemNode"
+                    },
+                    "lanes": {
+                      "const": [
+                        "hostOnly"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "spawnApp"
+                    },
+                    "lanes": {
+                      "const": [
+                        "artifact",
+                        "config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "openSpace"
+                    },
+                    "lanes": {
+                      "const": [
+                        "config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "openInstance"
+                    },
+                    "lanes": {
+                      "const": [
+                        "config"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "importSpacePackPayload"
+                    },
+                    "lanes": {
+                      "const": [
+                        "hostOnly"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "toolId",
+                    "lanes"
+                  ],
+                  "properties": {
+                    "toolId": {
+                      "const": "setAppRegistrations"
+                    },
+                    "lanes": {
+                      "const": [
+                        "hostOnly"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ],
+              "additionalItems": false,
+              "minItems": 15,
+              "maxItems": 15
+            },
+            "routes": {
+              "allOf": [
+                {
+                  "$ref": "https://semio.tech/schema/framework/ui/schema.json#/$defs/RetainedCommandRoutes"
+                },
+                {
+                  "type": "array",
+                  "minItems": 40,
+                  "maxItems": 40,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "execution",
+                      "status",
+                      "feature"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "execution": {
+                        "enum": [
+                          "bounded",
+                          "batch"
+                        ]
+                      },
+                      "status": {
+                        "enum": [
+                          "migrated",
+                          "batch-only"
+                        ]
+                      },
+                      "feature": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              ]
+            },
+            "oracle": {
+              "type": "object",
+              "required": [
+                "library",
+                "scope",
+                "ownedInterface",
+                "runtimeDependency",
+                "expected"
+              ],
+              "properties": {
+                "library": {
+                  "const": "serde_json"
+                },
+                "scope": {
+                  "const": "test-only-existing-dependency"
+                },
+                "ownedInterface": {
+                  "const": "SpaceRetainedCatalogOracle"
+                },
+                "runtimeDependency": {
+                  "const": false
+                },
+                "expected": {
+                  "type": "object",
+                  "required": [
+                    "routes",
+                    "bounded",
+                    "batch",
+                    "migrated",
+                    "unique"
+                  ],
+                  "properties": {
+                    "routes": {
+                      "const": 40
+                    },
+                    "bounded": {
+                      "const": 15
+                    },
+                    "migrated": {
+                      "const": 15
+                    },
+                    "unique": {
+                      "const": true
+                    },
+                    "batch": {
+                      "const": 25
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "title": "SpacePlayRetainedCommandLimits",
+          "description": "The `s.space.studio@1/*#editor` play app's retained-command execution law: its owned job factory, its bounded step budget, its fifteen publication contracts and its forty-route census."
+        }
+      ]
+    }
+  }
+}

@@ -1,5 +1,5 @@
 //! home -> zip
-use crate::artifacts::home::SHomeSnapshot;
+use crate::SHomeSnapshot;
 use semio_s_artifact_stdio_zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 
 pub fn register() {}

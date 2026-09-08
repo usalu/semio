@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-infiltration-design-flow-ach.json",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/change-infiltration-design-flow-ach/schema.json",
   "title": "ChangeInfiltrationDesignFlowAch",
   "type": "object",
   "additionalProperties": false,

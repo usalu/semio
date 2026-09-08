@@ -5,7 +5,7 @@
 //! the edges form a cycle, and `depth` gives each node's longest-path distance from a root — the
 //! same information the `algorithm: "topo"` playground mode visualizes interactively.
 
-use crate::artifacts::equation::EquationGraph;
+use crate::EquationGraph;
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state.
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
@@ -87,7 +87,7 @@ fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> Equatio
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::equation::{EquationEdge, EquationNode};
+    use crate::{EquationEdge, EquationNode};
 
     fn node(id: &str) -> EquationNode {
         EquationNode { id: id.into(), label: id.into(), x: 0.0, y: 0.0 }

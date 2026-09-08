@@ -1,8 +1,8 @@
 //! 🔺️ `change-seismic-zone` sparse diff construction — writes only `En1998Diff.seismic_zone` from the payload.
 
-use crate::artifacts::en1998::diff::En1998Diff;
-use crate::artifacts::en1998::mutations::change_seismic_zone::ChangeSeismicZone;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::diff::En1998Diff;
+use crate::mutations::change_seismic_zone::ChangeSeismicZone;
+use crate::En1998Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSeismicZone, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {

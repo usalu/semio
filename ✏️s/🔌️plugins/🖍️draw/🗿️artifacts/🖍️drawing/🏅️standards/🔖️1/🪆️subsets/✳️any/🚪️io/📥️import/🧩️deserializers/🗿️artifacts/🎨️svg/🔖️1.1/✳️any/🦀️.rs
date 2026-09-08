@@ -4,8 +4,8 @@
 //! placeholder empty document rather than fabricating shapes. `IoFidelity::Lossy` — real content is
 //! never actually recovered.
 
-use crate::artifacts::drawing::schema::{create_drawing_id, empty_drawing_snapshot};
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::schema::{create_drawing_id, empty_drawing_snapshot};
+use crate::DrawingSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

@@ -7,7 +7,7 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::en1990::{En1990Diff, En1990Mutation, En1990Snapshot};
+use crate::{En1990Diff, En1990Mutation, En1990Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -37,7 +37,7 @@ async fn applies_to_committed_after() {
     assert_eq!(snapshot.q_k.child_id, "en1990-qk-69c0017661d2372c", "insert-variable-action/seeds-the-first-variable-action-q-snow-at-12-5-kn: the q_k handle must be the content address of the one-entry list");
     assert_ne!(snapshot.q_k.child_id, before().q_k.child_id, "insert-variable-action/seeds-the-first-variable-action-q-snow-at-12-5-kn: inserting must re-mint the handle, never reuse the empty-list address");
     assert_eq!(snapshot.q_k.target, before().q_k.target, "insert-variable-action/seeds-the-first-variable-action-q-snow-at-12-5-kn: only the content address moves — the child slot still targets the same table artifact");
-    assert_eq!(crate::artifacts::en1990::en1990_qk(&snapshot).len(), 1, "insert-variable-action/seeds-the-first-variable-action-q-snow-at-12-5-kn: the working-scene cache seeded by the diff builder must read back exactly one entry");
+    assert_eq!(crate::en1990_qk(&snapshot).len(), 1, "insert-variable-action/seeds-the-first-variable-action-q-snow-at-12-5-kn: the working-scene cache seeded by the diff builder must read back exactly one entry");
     assert_eq!(snapshot, expected_after(), "insert-variable-action/seeds-the-first-variable-action-q-snow-at-12-5-kn: applied state differs from committed after-snapshot");
 }
 

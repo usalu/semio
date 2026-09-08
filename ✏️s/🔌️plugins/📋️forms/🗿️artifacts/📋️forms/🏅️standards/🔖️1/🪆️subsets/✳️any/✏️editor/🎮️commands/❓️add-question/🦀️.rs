@@ -1,7 +1,7 @@
 //! ❓️ ❓️ Forms play app commands command — `add-question`.
 
-use crate::artifacts::forms::schema::{create_form_id, update_block_operation, value_to_dsl};
-use crate::artifacts::forms::{forms_steps, op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
+use crate::schema::{create_form_id, update_block_operation, value_to_dsl};
+use crate::{forms_steps, op::FormMutation, FormQuestion, FormVectorField, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::reset_try_config_mutations;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -73,7 +73,7 @@ pub fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         "single" | "multi" => {
             let mut question = question_shell(id, if kind == "single" { "Single Select" } else { "Multi Select" }.into(), kind.into());
             question.default = if kind == "multi" { Some(value_to_dsl(&Value::Array(vec![]))) } else { None };
-            question.options = Some(vec![crate::artifacts::forms::FormQuestionOption { value: "a".into(), label: "Option A".into() }, crate::artifacts::forms::FormQuestionOption { value: "b".into(), label: "Option B".into() }]);
+            question.options = Some(vec![crate::FormQuestionOption { value: "a".into(), label: "Option A".into() }, crate::FormQuestionOption { value: "b".into(), label: "Option B".into() }]);
             question
         }
         "note" => {
@@ -176,7 +176,7 @@ pub fn handle(payload: &AddQuestion, doc: &ArtifactView<'_, FormsSnapshot>, _cfg
     };
     let question = default_question_for_kind(&payload.kind, create_form_id("q"));
     Ok(Emit {
-        artifact_mutations: vec![FormMutation::CreateBlock(crate::artifacts::forms::mutations::create_block::mutation::CreateBlock { step_id, block: question, index: None })],
+        artifact_mutations: vec![FormMutation::CreateBlock(crate::mutations::create_block::mutation::CreateBlock { step_id, block: question, index: None })],
         config_mutations: reset_try_config_mutations(),
         ..Default::default()
     })
@@ -198,17 +198,17 @@ mod tests {
     async fn add_question_action_appends_question() {
         let mut app = forms_app().await;
         dispatch(&mut app, FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None })).await;
-        assert!(crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).iter().any(|(_, question)| question.kind == "text"));
+        assert!(crate::schema::flatten_questions(&app.snapshot().expect("projection")).iter().any(|(_, question)| question.kind == "text"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_question_undo_redo_round_trip() {
         let mut app = forms_app().await;
-        let before = crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).len();
+        let before = crate::schema::flatten_questions(&app.snapshot().expect("projection")).len();
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(
             &mut app,
             FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }),
-            |app| crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).len(),
+            |app| crate::schema::flatten_questions(&app.snapshot().expect("projection")).len(),
             before,
             before + 1,
         ).await;
@@ -220,7 +220,7 @@ mod tests {
     async fn drop_question_kind_inserts_the_question() {
         let mut app = forms_app().await;
         let step_id = forms_steps(&app.snapshot().expect("projection"))[0].id.clone();
-        dispatch(&mut app, FormsCommand::DropQuestionKind(DropQuestionKind { kind: "slider".into(), target_id: crate::artifacts::forms::schema::forms_play_step_tree_id(&step_id), drop_position: "inside".into() })).await;
+        dispatch(&mut app, FormsCommand::DropQuestionKind(DropQuestionKind { kind: "slider".into(), target_id: crate::schema::forms_play_step_tree_id(&step_id), drop_position: "inside".into() })).await;
         let spec = app.snapshot().expect("projection");
         assert!(forms_steps(&spec)[0].blocks.iter().any(|question| question.kind == "slider"));
     }
@@ -240,7 +240,7 @@ mod tests {
         let mut app = forms_app().await;
         let question_id = forms_steps(&app.snapshot().expect("projection"))[0].blocks[0].id.clone();
         dispatch(&mut app, FormsCommand::RemoveQuestion(RemoveQuestion { question_id: question_id.clone() })).await;
-        assert!(crate::artifacts::forms::schema::flatten_questions(&app.snapshot().expect("projection")).iter().all(|(_, question)| question.id != question_id));
+        assert!(crate::schema::flatten_questions(&app.snapshot().expect("projection")).iter().all(|(_, question)| question.id != question_id));
     }
 
     #[semio_framework_async_macros::async_test]

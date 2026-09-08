@@ -3,8 +3,8 @@
 /// ♻️ Rebuilt source, removed layer, reverse arena and forward arena.
 type DrawingRebuiltLayerOwners = (Vec<DrawingLayerNode>, Option<DrawingLayerNode>, Vec<DrawingLayerNode>, Vec<DrawingLayerNode>);
 
-use crate::artifacts::drawing::op::DrawingMutation;
-use crate::artifacts::drawing::{DrawingAttributes, DrawingImageAsset, DrawingLayerBase, DrawingLayerNode, DrawingSnapshot, FillStyle, GradientStop, PathSegment, StrokeStyle};
+use crate::op::DrawingMutation;
+use crate::{DrawingAttributes, DrawingImageAsset, DrawingLayerBase, DrawingLayerNode, DrawingSnapshot, FillStyle, GradientStop, PathSegment, StrokeStyle};
 use protocol::{Mutation, OpBinary};
 
 //#region 🔖️OwnedSprCatalog
@@ -1659,35 +1659,35 @@ impl DrawingLayerCloneAuthority {
             locked: source.locked,
             opacity: source.opacity,
             blend_mode: String::new(),
-            transform: crate::artifacts::drawing::DrawingTransform { x: source.transform.x, y: source.transform.y, scale_x: source.transform.scale_x, scale_y: source.transform.scale_y, rotation: source.transform.rotation },
+            transform: crate::DrawingTransform { x: source.transform.x, y: source.transform.y, scale_x: source.transform.scale_x, scale_y: source.transform.scale_y, rotation: source.transform.rotation },
             attributes: DrawingAttributes::default(),
         }
     }
 
-    fn rect(source: &crate::artifacts::drawing::DrawingRect) -> crate::artifacts::drawing::DrawingRect {
-        crate::artifacts::drawing::DrawingRect { x: source.x, y: source.y, width: source.width, height: source.height }
+    fn rect(source: &crate::DrawingRect) -> crate::DrawingRect {
+        crate::DrawingRect { x: source.x, y: source.y, width: source.width, height: source.height }
     }
 
     fn skeleton(source: &DrawingLayerNode) -> Result<DrawingLayerNode, &'static str> {
         Ok(match source {
-            DrawingLayerNode::Shape(value) => DrawingLayerNode::Shape(crate::artifacts::drawing::DrawingShapeBody {
+            DrawingLayerNode::Shape(value) => DrawingLayerNode::Shape(crate::DrawingShapeBody {
                 base: Self::base_skeleton(&value.base),
                 shape_kind: String::new(),
                 rect: value.rect.as_ref().map(Self::rect),
-                ellipse: value.ellipse.as_ref().map(|source| crate::artifacts::drawing::DrawingEllipse { cx: source.cx, cy: source.cy, rx: source.rx, ry: source.ry }),
-                circle: value.circle.as_ref().map(|source| crate::artifacts::drawing::DrawingCircle { cx: source.cx, cy: source.cy, r: source.r }),
-                line: value.line.as_ref().map(|source| crate::artifacts::drawing::DrawingLine { x1: source.x1, y1: source.y1, x2: source.x2, y2: source.y2 }),
-                polygon: value.polygon.as_ref().map(|source| crate::artifacts::drawing::DrawingPolygon { points: Vec::with_capacity(source.points.len()) }),
+                ellipse: value.ellipse.as_ref().map(|source| crate::DrawingEllipse { cx: source.cx, cy: source.cy, rx: source.rx, ry: source.ry }),
+                circle: value.circle.as_ref().map(|source| crate::DrawingCircle { cx: source.cx, cy: source.cy, r: source.r }),
+                line: value.line.as_ref().map(|source| crate::DrawingLine { x1: source.x1, y1: source.y1, x2: source.x2, y2: source.y2 }),
+                polygon: value.polygon.as_ref().map(|source| crate::DrawingPolygon { points: Vec::with_capacity(source.points.len()) }),
             }),
-            DrawingLayerNode::Path(value) => DrawingLayerNode::Path(crate::artifacts::drawing::DrawingPathBody { base: Self::base_skeleton(&value.base), segments: Vec::with_capacity(value.segments.len()) }),
-            DrawingLayerNode::Text(value) => DrawingLayerNode::Text(crate::artifacts::drawing::DrawingTextBody { base: Self::base_skeleton(&value.base), x: value.x, y: value.y, content: String::new(), size: value.size }),
-            DrawingLayerNode::Image(value) => DrawingLayerNode::Image(crate::artifacts::drawing::DrawingImageBody { base: Self::base_skeleton(&value.base), image_key: String::new(), width: value.width, height: value.height }),
-            DrawingLayerNode::Group(value) => DrawingLayerNode::Group(crate::artifacts::drawing::DrawingGroupBody { base: Self::base_skeleton(&value.base), children: Vec::with_capacity(value.children.len()) }),
-            DrawingLayerNode::Boolean(value) => DrawingLayerNode::Boolean(crate::artifacts::drawing::DrawingBooleanBody { base: Self::base_skeleton(&value.base), operation: String::new(), children: Vec::with_capacity(value.children.len()) }),
-            DrawingLayerNode::Trace(value) => DrawingLayerNode::Trace(crate::artifacts::drawing::DrawingTraceBody {
+            DrawingLayerNode::Path(value) => DrawingLayerNode::Path(crate::DrawingPathBody { base: Self::base_skeleton(&value.base), segments: Vec::with_capacity(value.segments.len()) }),
+            DrawingLayerNode::Text(value) => DrawingLayerNode::Text(crate::DrawingTextBody { base: Self::base_skeleton(&value.base), x: value.x, y: value.y, content: String::new(), size: value.size }),
+            DrawingLayerNode::Image(value) => DrawingLayerNode::Image(crate::DrawingImageBody { base: Self::base_skeleton(&value.base), image_key: String::new(), width: value.width, height: value.height }),
+            DrawingLayerNode::Group(value) => DrawingLayerNode::Group(crate::DrawingGroupBody { base: Self::base_skeleton(&value.base), children: Vec::with_capacity(value.children.len()) }),
+            DrawingLayerNode::Boolean(value) => DrawingLayerNode::Boolean(crate::DrawingBooleanBody { base: Self::base_skeleton(&value.base), operation: String::new(), children: Vec::with_capacity(value.children.len()) }),
+            DrawingLayerNode::Trace(value) => DrawingLayerNode::Trace(crate::DrawingTraceBody {
                 base: Self::base_skeleton(&value.base),
                 source_key: String::new(),
-                params: crate::artifacts::drawing::DrawingTraceParams { threshold: value.params.threshold, simplify_epsilon: value.params.simplify_epsilon },
+                params: crate::DrawingTraceParams { threshold: value.params.threshold, simplify_epsilon: value.params.simplify_epsilon },
             }),
         })
     }
@@ -2025,7 +2025,7 @@ impl DrawingLayerLocator {
         let node = DrawingSnapshotBoundsAuthority::layer_at(root, &self.path[..self.depth]).ok_or("drawing-store.mutation-locator-path")?;
         if self.frames[self.depth].phase == 0 {
             self.frames[self.depth].phase = 1;
-            if crate::artifacts::drawing::schema::layer_id(node) == target {
+            if crate::schema::layer_id(node) == target {
                 let mut indices = [0; DRAWING_MAXIMUM_LAYER_DEPTH];
                 indices[0] = self.root;
                 if self.depth > 0 {
@@ -3069,7 +3069,7 @@ impl DrawingLayerDigestAuthority {
             return Ok(true);
         }
         let node = DrawingSnapshotBoundsAuthority::layer_at(root, &self.path[..self.depth]).ok_or("drawing-store.digest-layer-path")?;
-        let base = crate::artifacts::drawing::schema::layer_base(node);
+        let base = crate::schema::layer_base(node);
         let phase = self.frames[self.depth].phase;
         match phase {
             0 => {
@@ -3550,7 +3550,7 @@ impl DrawingDuplicateRewriteAuthority {
         };
         let phase = self.frames[self.depth].phase;
         if phase <= 13 {
-            let base = crate::artifacts::drawing::schema::layer_base_mut(node);
+            let base = crate::schema::layer_base_mut(node);
             let suffix = if self.depth == 0 { " copy" } else { "" };
             match phase {
                 0 => {
@@ -3884,7 +3884,7 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutation::ReplaceLayerStroke(value) => &value.layer_id,
             DrawingMutation::SetLayerBooleanOperation(value) => &value.layer_id,
             DrawingMutation::UpdateLayerTraceParams(value) => &value.layer_id,
-            DrawingMutation::CreateLayer(value) => crate::artifacts::drawing::schema::layer_id(&value.layer),
+            DrawingMutation::CreateLayer(value) => crate::schema::layer_id(&value.layer),
             DrawingMutation::DuplicateLayer(value) => &value.layer_id,
             DrawingMutation::DeleteLayer(value) => &value.layer_id,
             DrawingMutation::ReorderLayer(value) => &value.layer_id,
@@ -4244,32 +4244,32 @@ impl DrawingMutationCandidateAuthority {
                 let address = self.primary;
                 match mutation {
                     DrawingMutation::SetLayerVisible(value) => {
-                        crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).visible = value.visible;
+                        crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).visible = value.visible;
                     }
                     DrawingMutation::SetLayerLocked(value) => {
-                        crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).locked = value.locked;
+                        crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).locked = value.locked;
                     }
                     DrawingMutation::SetLayerOpacity(value) if value.opacity.is_finite() => {
-                        crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).opacity = value.opacity;
+                        crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).opacity = value.opacity;
                     }
                     DrawingMutation::SetLayerOpacity(_) => return Err("drawing-store.mutation-opacity-invalid"),
                     DrawingMutation::SetLayerBlendMode(value) => {
                         self.write_overlay_string(
-                            &mut crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).blend_mode,
+                            &mut crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).blend_mode,
                             &value.blend_mode,
                         )?;
                     }
                     DrawingMutation::RenameLayer(value) => {
                         self.write_overlay_string(
-                            &mut crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).name,
+                            &mut crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).name,
                             &value.new_name,
                         )?;
                     }
                     DrawingMutation::UpdateLayerTransform(value)
                         if [value.transform.x, value.transform.y, value.transform.scale_x, value.transform.scale_y, value.transform.rotation].iter().all(|field| field.is_finite()) && value.transform.scale_x > 0.0 && value.transform.scale_y > 0.0 =>
                     {
-                        crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).transform =
-                            crate::artifacts::drawing::DrawingTransform { x: value.transform.x, y: value.transform.y, scale_x: value.transform.scale_x, scale_y: value.transform.scale_y, rotation: value.transform.rotation };
+                        crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).transform =
+                            crate::DrawingTransform { x: value.transform.x, y: value.transform.y, scale_x: value.transform.scale_x, scale_y: value.transform.scale_y, rotation: value.transform.rotation };
                     }
                     DrawingMutation::UpdateLayerTransform(_) => return Err("drawing-store.mutation-transform-invalid"),
                     DrawingMutation::ReplaceLayerFill(value) => {
@@ -4278,7 +4278,7 @@ impl DrawingMutationCandidateAuthority {
                             None => None,
                         };
                         let old = std::mem::replace(
-                            &mut crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).attributes.fill,
+                            &mut crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).attributes.fill,
                             replacement,
                         );
                         if let Some(old) = old {
@@ -4295,7 +4295,7 @@ impl DrawingMutationCandidateAuthority {
                             None => None,
                         };
                         let old = std::mem::replace(
-                            &mut crate::artifacts::drawing::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).attributes.stroke,
+                            &mut crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).attributes.stroke,
                             replacement,
                         );
                         if let Some(old) = old {
@@ -4316,7 +4316,7 @@ impl DrawingMutationCandidateAuthority {
                         let DrawingLayerNode::Trace(target) = DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")? else {
                             return Err("drawing-store.mutation-trace-target");
                         };
-                        target.params = crate::artifacts::drawing::DrawingTraceParams { threshold: value.params.threshold, simplify_epsilon: value.params.simplify_epsilon };
+                        target.params = crate::DrawingTraceParams { threshold: value.params.threshold, simplify_epsilon: value.params.simplify_epsilon };
                     }
                     DrawingMutation::UpdateLayerTraceParams(_) => return Err("drawing-store.mutation-trace-invalid"),
                     DrawingMutation::CreateLayer(_) | DrawingMutation::DuplicateLayer(_) | DrawingMutation::DeleteLayer(_) | DrawingMutation::ReorderLayer(_) => unreachable!("structural Drawing mutations start retained rebuild before scalar mutation"),
@@ -4861,7 +4861,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                     self.fail(b"drawing-store.initializer-envelope-missing");
                     return semio_framework_job::StepOutcome::Yield;
                 };
-                if envelope.schema != crate::artifacts::drawing::DRAWING_DOCUMENT_SCHEMA || envelope.id.is_empty() || envelope.id.len() > DRAWING_OWNED_FIELD_BYTES {
+                if envelope.schema != crate::DRAWING_DOCUMENT_SCHEMA || envelope.id.is_empty() || envelope.id.len() > DRAWING_OWNED_FIELD_BYTES {
                     self.fail(b"drawing-store.initializer-envelope-invalid");
                 } else {
                     self.phase = DrawingStoreInitializationPhase::ValidateEditId { edit: 0 };
@@ -5204,8 +5204,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             DrawingStoreInitializationPhase::RetireCancelled | DrawingStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
-                    self.initial_digest = None;
-                    self.edit_digest = None;
+                    *self.initial_digest = None;
+                    *self.edit_digest = None;
                     self.terminal_handoff = true;
                     if self.phase == DrawingStoreInitializationPhase::RetireCancelled {
                         self.phase = DrawingStoreInitializationPhase::Cancelled;
@@ -5258,8 +5258,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
         match self.pump_terminal_retirement() {
             Ok(false) => Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
             Ok(true) => {
-                self.initial_digest = None;
-                self.edit_digest = None;
+                *self.initial_digest = None;
+                *self.edit_digest = None;
                 drop(self.mutation_digest.take());
                 drop(self.mutation_candidate.take());
                 self.terminal_handoff = true;
@@ -5274,8 +5274,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             return None;
         }
         let candidate = self.candidate.take()?;
-        self.initial_digest = None;
-        self.edit_digest = None;
+        *self.initial_digest = None;
+        *self.edit_digest = None;
         drop(self.mutation_digest.take());
         drop(self.mutation_candidate.take());
         self.terminal_handoff = true;
@@ -5307,7 +5307,7 @@ pub fn drawing_document_store_initialization_job(
 #[cfg(test)]
 mod retained_mutation_authority_tests {
     use super::*;
-    use crate::artifacts::drawing::mutations::{
+    use crate::mutations::{
         CreateLayer, DeleteLayer, DuplicateLayer, RenameLayer, ReorderLayer, ReplaceLayerFill, ReplaceLayerStroke, SetLayerBlendMode, SetLayerBooleanOperation, SetLayerLocked, SetLayerOpacity, SetLayerVisible, UpdateLayerTraceParams,
         UpdateLayerTransform,
     };
@@ -5320,7 +5320,7 @@ mod retained_mutation_authority_tests {
     }
 
     fn admit_layer_string_destinations(layer: &mut DrawingLayerNode) {
-        let base = crate::artifacts::drawing::schema::layer_base_mut(layer);
+        let base = crate::schema::layer_base_mut(layer);
         admit_string_destination(&mut base.id);
         admit_string_destination(&mut base.name);
         admit_string_destination(&mut base.blend_mode);
@@ -5356,11 +5356,11 @@ mod retained_mutation_authority_tests {
 
     fn nested_snapshot() -> DrawingSnapshot {
         initialize_drawing_mutation_arena_pool_for_test();
-        let mut snapshot = crate::artifacts::drawing::schema::default_drawing_document("drawing-retained-mutation", None);
-        let shape = crate::artifacts::drawing::schema::create_drawing_shape_layer_rect("Shape");
-        let boolean = crate::artifacts::drawing::schema::create_drawing_boolean_layer("Boolean", "union", vec![crate::artifacts::drawing::schema::layer_id(&shape).into()]);
-        let trace = crate::artifacts::drawing::schema::create_drawing_trace_layer("Trace", "asset-a");
-        let mut group = crate::artifacts::drawing::schema::create_drawing_group_layer("Group");
+        let mut snapshot = crate::schema::default_drawing_document("drawing-retained-mutation", None);
+        let shape = crate::schema::create_drawing_shape_layer_rect("Shape");
+        let boolean = crate::schema::create_drawing_boolean_layer("Boolean", "union", vec![crate::schema::layer_id(&shape).into()]);
+        let trace = crate::schema::create_drawing_trace_layer("Trace", "asset-a");
+        let mut group = crate::schema::create_drawing_group_layer("Group");
         if let DrawingLayerNode::Group(value) = &mut group {
             value.children.push(shape);
             value.children.push(boolean);
@@ -5512,18 +5512,18 @@ mod retained_mutation_authority_tests {
     }
 
     fn rich_layer() -> DrawingLayerNode {
-        let mut group = crate::artifacts::drawing::schema::create_drawing_group_layer("Digest Group");
-        let base = crate::artifacts::drawing::schema::layer_base_mut(&mut group);
+        let mut group = crate::schema::create_drawing_group_layer("Digest Group");
+        let base = crate::schema::layer_base_mut(&mut group);
         base.visible = false;
         base.locked = true;
         base.opacity = 0.75;
         base.blend_mode = "multiply".into();
-        base.transform = crate::artifacts::drawing::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 0.5 };
+        base.transform = crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 0.5 };
         base.attributes.fill = Some(FillStyle::RadialGradient { cx: 1.0, cy: 2.0, r: 3.0, stops: vec![GradientStop { offset: 0.25, color: [0.1, 0.2, 0.3, 0.4] }] });
         base.attributes.stroke = Some(StrokeStyle { color: [0.5, 0.6, 0.7, 0.8], width: 2.0, cap: "round".into(), join: "bevel".into(), dash: Some(vec![1.0, 2.0]) });
         if let DrawingLayerNode::Group(value) = &mut group {
-            value.children.push(crate::artifacts::drawing::schema::create_drawing_shape_layer_rect("Shape"));
-            value.children.push(crate::artifacts::drawing::schema::create_drawing_path_layer(
+            value.children.push(crate::schema::create_drawing_shape_layer_rect("Shape"));
+            value.children.push(crate::schema::create_drawing_path_layer(
                 "Path",
                 vec![
                     PathSegment::Move { to: [1.0, 2.0] },
@@ -5534,10 +5534,10 @@ mod retained_mutation_authority_tests {
                     PathSegment::Close,
                 ],
             ));
-            value.children.push(crate::artifacts::drawing::schema::create_drawing_text_layer("Text"));
-            value.children.push(crate::artifacts::drawing::schema::create_drawing_image_layer("Image", "asset-reference"));
-            value.children.push(crate::artifacts::drawing::schema::create_drawing_boolean_layer("Boolean", "union", vec!["a".into(), "b".into()]));
-            value.children.push(crate::artifacts::drawing::schema::create_drawing_trace_layer("Trace", "trace-source"));
+            value.children.push(crate::schema::create_drawing_text_layer("Text"));
+            value.children.push(crate::schema::create_drawing_image_layer("Image", "asset-reference"));
+            value.children.push(crate::schema::create_drawing_boolean_layer("Boolean", "union", vec!["a".into(), "b".into()]));
+            value.children.push(crate::schema::create_drawing_trace_layer("Trace", "trace-source"));
         }
         group
     }
@@ -5565,10 +5565,10 @@ mod retained_mutation_authority_tests {
     #[test]
     fn retained_drawing_mutation_candidate_covers_all_fourteen_variants_and_returns_exact_owners() {
         let source = nested_snapshot();
-        let group = crate::artifacts::drawing::schema::layer_id(source.layers.last().expect("group")).to_string();
+        let group = crate::schema::layer_id(source.layers.last().expect("group")).to_string();
         let (shape, boolean, trace) = match source.layers.last().expect("group") {
             DrawingLayerNode::Group(value) => {
-                (crate::artifacts::drawing::schema::layer_id(&value.children[0]).to_string(), crate::artifacts::drawing::schema::layer_id(&value.children[1]).to_string(), crate::artifacts::drawing::schema::layer_id(&value.children[2]).to_string())
+                (crate::schema::layer_id(&value.children[0]).to_string(), crate::schema::layer_id(&value.children[1]).to_string(), crate::schema::layer_id(&value.children[2]).to_string())
             }
             _ => unreachable!("Drawing fixture group remains exact"),
         };
@@ -5578,15 +5578,15 @@ mod retained_mutation_authority_tests {
             DrawingMutation::SetLayerOpacity(SetLayerOpacity { layer_id: shape.clone(), opacity: 0.5 }),
             DrawingMutation::SetLayerBlendMode(SetLayerBlendMode { layer_id: shape.clone(), blend_mode: "multiply".into() }),
             DrawingMutation::RenameLayer(RenameLayer { layer_id: shape.clone(), new_name: "Renamed".into() }),
-            DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: shape.clone(), transform: crate::artifacts::drawing::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 0.5 } }),
+            DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: shape.clone(), transform: crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 0.5 } }),
             DrawingMutation::ReplaceLayerFill(ReplaceLayerFill {
                 layer_id: shape.clone(),
                 fill: Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }] }),
             }),
             DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: shape.clone(), stroke: Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.0, cap: "round".into(), join: "bevel".into(), dash: Some(vec![1.0, 2.0]) }) }),
             DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: boolean, boolean_operation: "subtract".into() }),
-            DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: trace, params: crate::artifacts::drawing::DrawingTraceParams { threshold: 0.4, simplify_epsilon: 1.2 } }),
-            DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group.clone()), index: Some(1), layer: Box::new(crate::artifacts::drawing::schema::create_drawing_path_layer("Created", vec![PathSegment::Move { to: [0.0, 0.0] }])) }),
+            DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: trace, params: crate::DrawingTraceParams { threshold: 0.4, simplify_epsilon: 1.2 } }),
+            DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group.clone()), index: Some(1), layer: Box::new(crate::schema::create_drawing_path_layer("Created", vec![PathSegment::Move { to: [0.0, 0.0] }])) }),
             DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: shape.clone() }),
             DrawingMutation::DeleteLayer(DeleteLayer { layer_id: shape.clone() }),
             DrawingMutation::ReorderLayer(ReorderLayer { layer_id: shape, parent_id: None, index: 0 }),
@@ -5865,15 +5865,15 @@ mod retained_mutation_authority_tests {
 
     #[test]
     fn retained_drawing_depth_plus_one_and_hostile_fields_fault_then_close_terminal_empty() {
-        let mut layer = crate::artifacts::drawing::schema::create_drawing_path_layer("leaf", Vec::new());
+        let mut layer = crate::schema::create_drawing_path_layer("leaf", Vec::new());
         for depth in 0..=DRAWING_MAXIMUM_LAYER_DEPTH {
-            let mut parent = crate::artifacts::drawing::schema::create_drawing_group_layer(&format!("depth-{depth}"));
+            let mut parent = crate::schema::create_drawing_group_layer(&format!("depth-{depth}"));
             if let DrawingLayerNode::Group(value) = &mut parent {
                 value.children.push(layer);
             }
             layer = parent;
         }
-        let mut source = crate::artifacts::drawing::schema::default_drawing_document("drawing-depth-plus-one", None);
+        let mut source = crate::schema::default_drawing_document("drawing-depth-plus-one", None);
         source.layers = vec![layer];
         let mutation = DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: "missing".into(), visible: false });
         let (source, error) = apply(source, &mutation).expect_err("retained Drawing depth +1 authority rejects");
@@ -5888,13 +5888,13 @@ mod retained_mutation_authority_tests {
 
     #[test]
     fn retained_drawing_container_false_terminal_saturation_and_interrupted_close_preserve_exact_owner() {
-        let mut snapshot = crate::artifacts::drawing::schema::default_drawing_document("rebuild-reservation", None);
-        snapshot.layers = vec![crate::artifacts::drawing::schema::create_drawing_path_layer("first", Vec::new()), crate::artifacts::drawing::schema::create_drawing_path_layer("second", Vec::new())];
-        let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::artifacts::drawing::schema::create_drawing_path_layer("pending", Vec::new())) });
+        let mut snapshot = crate::schema::default_drawing_document("rebuild-reservation", None);
+        snapshot.layers = vec![crate::schema::create_drawing_path_layer("first", Vec::new()), crate::schema::create_drawing_path_layer("second", Vec::new())];
+        let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::schema::create_drawing_path_layer("pending", Vec::new())) });
         let reservation = live_reservation(&mut snapshot, &mutation).expect("live Drawing rebuild reservation admitted");
         let source = std::mem::take(&mut snapshot.layers);
         let DrawingMutation::CreateLayer(mut create) = mutation else { unreachable!() };
-        let pending = *std::mem::replace(&mut create.layer, Box::new(crate::artifacts::drawing::schema::create_drawing_path_layer("retired-placeholder", Vec::new())));
+        let pending = *std::mem::replace(&mut create.layer, Box::new(crate::schema::create_drawing_path_layer("retired-placeholder", Vec::new())));
         drain_mutation(DrawingMutation::CreateLayer(create));
         drain_snapshot(snapshot);
         let mut reverse = Vec::new();
@@ -5938,7 +5938,7 @@ mod retained_mutation_authority_tests {
         drop(reverse);
         drop(output);
         drain_mutation(DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: None, layer: Box::new(pending) }));
-        let mut restored_snapshot = crate::artifacts::drawing::schema::default_drawing_document("restored-rebuild", None);
+        let mut restored_snapshot = crate::schema::default_drawing_document("restored-rebuild", None);
         restored_snapshot.layers = restored;
         drain_snapshot(restored_snapshot);
     }
@@ -5948,14 +5948,14 @@ mod retained_mutation_authority_tests {
         for phase in 0..=3 {
             for stale in [false, true] {
                 let pool = DrawingMutationArenaPool::try_new().expect("isolated Drawing rollback pool admits exact owners");
-                let mut source = crate::artifacts::drawing::schema::default_drawing_document("rebuild-rollback", None);
+                let mut source = crate::schema::default_drawing_document("rebuild-rollback", None);
                 source.layers.try_reserve_exact(DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY).expect("Drawing rollback fixture pre-admits original live container backing");
                 for index in 0..3 {
-                    source.layers.push(crate::artifacts::drawing::schema::create_drawing_path_layer(&format!("source-{index}"), Vec::new()));
+                    source.layers.push(crate::schema::create_drawing_path_layer(&format!("source-{index}"), Vec::new()));
                 }
                 let source_owner = source.layers.as_ptr();
-                let source_ids: Vec<_> = source.layers.iter().map(|layer| crate::artifacts::drawing::schema::layer_id(layer).to_string()).collect();
-                let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::artifacts::drawing::schema::create_drawing_path_layer("pending", Vec::new())) });
+                let source_ids: Vec<_> = source.layers.iter().map(|layer| crate::schema::layer_id(layer).to_string()).collect();
+                let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::schema::create_drawing_path_layer("pending", Vec::new())) });
                 let operation = semio_framework_job::OperationId(8_500 + phase as u64);
                 let generation = semio_framework_job::Generation(850 + phase as u64);
                 let mut authority = DrawingMutationCandidateAuthority::try_new_from_pool(operation, generation, pool.clone()).expect("Drawing rollback candidate borrows one exact pool slot");
@@ -5990,7 +5990,7 @@ mod retained_mutation_authority_tests {
                 assert_eq!(authority.step(&mut source, &mutation, &mut rejected), Err(if stale { "drawing-store.mutation-candidate-stale-authority" } else { "drawing-store.mutation-candidate-cancelled" }));
                 close_candidate(&mut authority, Some(&mut source));
                 assert_eq!(source.layers.as_ptr(), source_owner, "rollback restores the exact original live Vec backing");
-                assert_eq!(source.layers.iter().map(|layer| crate::artifacts::drawing::schema::layer_id(layer)).collect::<Vec<_>>(), source_ids.iter().map(String::as_str).collect::<Vec<_>>(), "rollback restores exact FIFO layer order");
+                assert_eq!(source.layers.iter().map(|layer| crate::schema::layer_id(layer)).collect::<Vec<_>>(), source_ids.iter().map(String::as_str).collect::<Vec<_>>(), "rollback restores exact FIFO layer order");
                 drop(authority);
 
                 let mut reused =
@@ -6020,9 +6020,9 @@ mod retained_mutation_authority_tests {
                     group.children.try_reserve_exact(DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY.saturating_sub(group.children.len())).expect("Drawing reorder rollback fixture pre-admits the nested live container");
                     (
                         group.base.id.clone(),
-                        crate::artifacts::drawing::schema::layer_id(&group.children[0]).to_string(),
+                        crate::schema::layer_id(&group.children[0]).to_string(),
                         group.children.as_ptr(),
-                        group.children.iter().map(|layer| crate::artifacts::drawing::schema::layer_id(layer).to_string()).collect::<Vec<_>>(),
+                        group.children.iter().map(|layer| crate::schema::layer_id(layer).to_string()).collect::<Vec<_>>(),
                     )
                 }
                 _ => unreachable!("Drawing reorder rollback fixture remains a group"),
@@ -6061,7 +6061,7 @@ mod retained_mutation_authority_tests {
             drop(authority);
             let DrawingLayerNode::Group(group) = source.layers.last().expect("Drawing reorder rollback group remains retained") else { unreachable!("Drawing reorder rollback group remains a group") };
             assert_eq!(group.children.as_ptr(), source_owner, "source undo restores the exact nested live Vec backing");
-            assert_eq!(group.children.iter().map(|layer| crate::artifacts::drawing::schema::layer_id(layer)).collect::<Vec<_>>(), source_ids.iter().map(String::as_str).collect::<Vec<_>>(), "source undo restores the exact nested FIFO order");
+            assert_eq!(group.children.iter().map(|layer| crate::schema::layer_id(layer)).collect::<Vec<_>>(), source_ids.iter().map(String::as_str).collect::<Vec<_>>(), "source undo restores the exact nested FIFO order");
 
             let mut reused = DrawingMutationCandidateAuthority::try_new_from_pool(semio_framework_job::OperationId(operation.0 + 1), semio_framework_job::Generation(generation.0 + 1), pool).expect("reorder rollback returns the exact pool slot");
             assert_eq!(reused.arena_slot, slot);
@@ -6081,44 +6081,44 @@ mod retained_mutation_authority_tests {
         let mut variants = Vec::new();
 
         let modifiers: &[fn(&mut DrawingLayerNode)] = &[
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).id = "different-id".into(),
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).name = "different-name".into(),
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).transform.x = 9.0,
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).transform.y = 9.0,
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).transform.scale_x = 9.0,
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).transform.scale_y = 9.0,
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).attributes.fill = None,
+            |value| crate::schema::layer_base_mut(value).id = "different-id".into(),
+            |value| crate::schema::layer_base_mut(value).name = "different-name".into(),
+            |value| crate::schema::layer_base_mut(value).transform.x = 9.0,
+            |value| crate::schema::layer_base_mut(value).transform.y = 9.0,
+            |value| crate::schema::layer_base_mut(value).transform.scale_x = 9.0,
+            |value| crate::schema::layer_base_mut(value).transform.scale_y = 9.0,
+            |value| crate::schema::layer_base_mut(value).attributes.fill = None,
             |value| {
-                if let Some(FillStyle::RadialGradient { cx, .. }) = &mut crate::artifacts::drawing::schema::layer_base_mut(value).attributes.fill {
+                if let Some(FillStyle::RadialGradient { cx, .. }) = &mut crate::schema::layer_base_mut(value).attributes.fill {
                     *cx = 9.0;
                 }
             },
             |value| {
-                if let Some(FillStyle::RadialGradient { cy, .. }) = &mut crate::artifacts::drawing::schema::layer_base_mut(value).attributes.fill {
+                if let Some(FillStyle::RadialGradient { cy, .. }) = &mut crate::schema::layer_base_mut(value).attributes.fill {
                     *cy = 9.0;
                 }
             },
             |value| {
-                if let Some(FillStyle::RadialGradient { r, .. }) = &mut crate::artifacts::drawing::schema::layer_base_mut(value).attributes.fill {
+                if let Some(FillStyle::RadialGradient { r, .. }) = &mut crate::schema::layer_base_mut(value).attributes.fill {
                     *r = 9.0;
                 }
             },
             |value| {
-                if let Some(FillStyle::RadialGradient { stops, .. }) = &mut crate::artifacts::drawing::schema::layer_base_mut(value).attributes.fill {
+                if let Some(FillStyle::RadialGradient { stops, .. }) = &mut crate::schema::layer_base_mut(value).attributes.fill {
                     stops[0].offset = 0.75;
                 }
             },
             |value| {
-                if let Some(FillStyle::RadialGradient { stops, .. }) = &mut crate::artifacts::drawing::schema::layer_base_mut(value).attributes.fill {
+                if let Some(FillStyle::RadialGradient { stops, .. }) = &mut crate::schema::layer_base_mut(value).attributes.fill {
                     stops[0].color[2] = 0.9;
                 }
             },
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).attributes.stroke = None,
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").color[0] = 0.9,
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").width = 9.0,
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").cap = "square".into(),
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").join = "round".into(),
-            |value| crate::artifacts::drawing::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").dash.as_mut().expect("dash")[0] = 9.0,
+            |value| crate::schema::layer_base_mut(value).attributes.stroke = None,
+            |value| crate::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").color[0] = 0.9,
+            |value| crate::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").width = 9.0,
+            |value| crate::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").cap = "square".into(),
+            |value| crate::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").join = "round".into(),
+            |value| crate::schema::layer_base_mut(value).attributes.stroke.as_mut().expect("stroke").dash.as_mut().expect("dash")[0] = 9.0,
             |value| {
                 if let DrawingLayerNode::Shape(shape) = rich_child(value, 0) {
                     shape.rect.as_mut().expect("rect").width = 9.0;
@@ -6126,22 +6126,22 @@ mod retained_mutation_authority_tests {
             },
             |value| {
                 if let DrawingLayerNode::Shape(shape) = rich_child(value, 0) {
-                    shape.ellipse = Some(crate::artifacts::drawing::DrawingEllipse { cx: 1.0, cy: 2.0, rx: 3.0, ry: 4.0 });
+                    shape.ellipse = Some(crate::DrawingEllipse { cx: 1.0, cy: 2.0, rx: 3.0, ry: 4.0 });
                 }
             },
             |value| {
                 if let DrawingLayerNode::Shape(shape) = rich_child(value, 0) {
-                    shape.circle = Some(crate::artifacts::drawing::DrawingCircle { cx: 1.0, cy: 2.0, r: 3.0 });
+                    shape.circle = Some(crate::DrawingCircle { cx: 1.0, cy: 2.0, r: 3.0 });
                 }
             },
             |value| {
                 if let DrawingLayerNode::Shape(shape) = rich_child(value, 0) {
-                    shape.line = Some(crate::artifacts::drawing::DrawingLine { x1: 1.0, y1: 2.0, x2: 3.0, y2: 4.0 });
+                    shape.line = Some(crate::DrawingLine { x1: 1.0, y1: 2.0, x2: 3.0, y2: 4.0 });
                 }
             },
             |value| {
                 if let DrawingLayerNode::Shape(shape) = rich_child(value, 0) {
-                    shape.polygon = Some(crate::artifacts::drawing::DrawingPolygon { points: vec![[1.0, 2.0], [3.0, 4.0]] });
+                    shape.polygon = Some(crate::DrawingPolygon { points: vec![[1.0, 2.0], [3.0, 4.0]] });
                 }
             },
             |value| {
@@ -6206,28 +6206,28 @@ mod retained_mutation_authority_tests {
         }
 
         let mut value = baseline.clone();
-        crate::artifacts::drawing::schema::layer_base_mut(&mut value).visible = true;
+        crate::schema::layer_base_mut(&mut value).visible = true;
         variants.push(value);
         let mut value = baseline.clone();
-        crate::artifacts::drawing::schema::layer_base_mut(&mut value).locked = false;
+        crate::schema::layer_base_mut(&mut value).locked = false;
         variants.push(value);
         let mut value = baseline.clone();
-        crate::artifacts::drawing::schema::layer_base_mut(&mut value).opacity = 0.5;
+        crate::schema::layer_base_mut(&mut value).opacity = 0.5;
         variants.push(value);
         let mut value = baseline.clone();
-        crate::artifacts::drawing::schema::layer_base_mut(&mut value).blend_mode = "screen".into();
+        crate::schema::layer_base_mut(&mut value).blend_mode = "screen".into();
         variants.push(value);
         let mut value = baseline.clone();
-        crate::artifacts::drawing::schema::layer_base_mut(&mut value).transform.rotation = 0.75;
+        crate::schema::layer_base_mut(&mut value).transform.rotation = 0.75;
         variants.push(value);
         let mut value = baseline.clone();
-        crate::artifacts::drawing::schema::layer_base_mut(&mut value).attributes.fill = Some(FillStyle::Solid { color: [0.9, 0.2, 0.3, 0.4] });
+        crate::schema::layer_base_mut(&mut value).attributes.fill = Some(FillStyle::Solid { color: [0.9, 0.2, 0.3, 0.4] });
         variants.push(value);
         let mut value = baseline.clone();
-        crate::artifacts::drawing::schema::layer_base_mut(&mut value).attributes.fill = Some(FillStyle::LinearGradient { x1: 1.0, y1: 2.0, x2: 3.0, y2: 4.0, stops: vec![GradientStop { offset: 0.5, color: [0.1, 0.2, 0.8, 0.4] }] });
+        crate::schema::layer_base_mut(&mut value).attributes.fill = Some(FillStyle::LinearGradient { x1: 1.0, y1: 2.0, x2: 3.0, y2: 4.0, stops: vec![GradientStop { offset: 0.5, color: [0.1, 0.2, 0.8, 0.4] }] });
         variants.push(value);
         let mut value = baseline.clone();
-        crate::artifacts::drawing::schema::layer_base_mut(&mut value).attributes.stroke = Some(StrokeStyle { color: [0.9, 0.6, 0.7, 0.8], width: 3.0, cap: "square".into(), join: "round".into(), dash: Some(vec![2.0, 3.0]) });
+        crate::schema::layer_base_mut(&mut value).attributes.stroke = Some(StrokeStyle { color: [0.9, 0.6, 0.7, 0.8], width: 3.0, cap: "square".into(), join: "round".into(), dash: Some(vec![2.0, 3.0]) });
         variants.push(value);
         let mut value = baseline.clone();
         if let DrawingLayerNode::Group(group) = &mut value {
@@ -6272,11 +6272,11 @@ mod retained_mutation_authority_tests {
             DrawingMutation::SetLayerOpacity(SetLayerOpacity { layer_id: id.clone(), opacity: 0.25 }),
             DrawingMutation::SetLayerBlendMode(SetLayerBlendMode { layer_id: id.clone(), blend_mode: "screen".into() }),
             DrawingMutation::RenameLayer(RenameLayer { layer_id: id.clone(), new_name: "renamed".into() }),
-            DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: id.clone(), transform: crate::artifacts::drawing::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0 } }),
+            DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: id.clone(), transform: crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0 } }),
             DrawingMutation::ReplaceLayerFill(ReplaceLayerFill { layer_id: id.clone(), fill: Some(FillStyle::Solid { color: [0.1, 0.2, 0.3, 0.4] }) }),
             DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: id.clone(), stroke: Some(StrokeStyle { color: [0.1, 0.2, 0.3, 0.4], width: 2.0, cap: "round".into(), join: "bevel".into(), dash: Some(vec![1.0]) }) }),
             DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: id.clone(), boolean_operation: "intersect".into() }),
-            DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: id.clone(), params: crate::artifacts::drawing::DrawingTraceParams { threshold: 0.25, simplify_epsilon: 0.5 } }),
+            DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: id.clone(), params: crate::DrawingTraceParams { threshold: 0.25, simplify_epsilon: 0.5 } }),
             DrawingMutation::CreateLayer(CreateLayer { parent_id: Some("parent".into()), index: Some(2), layer: Box::new(baseline.clone()) }),
             DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: id.clone() }),
             DrawingMutation::DeleteLayer(DeleteLayer { layer_id: id.clone() }),
@@ -6296,8 +6296,8 @@ mod retained_mutation_authority_tests {
         );
         assert_mutation_digest_distinct(DrawingMutation::RenameLayer(RenameLayer { layer_id: "layer".into(), new_name: "left".into() }), DrawingMutation::RenameLayer(RenameLayer { layer_id: "layer".into(), new_name: "right".into() }));
         assert_mutation_digest_distinct(
-            DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: "layer".into(), transform: crate::artifacts::drawing::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0 } }),
-            DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: "layer".into(), transform: crate::artifacts::drawing::DrawingTransform { x: 6.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0 } }),
+            DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: "layer".into(), transform: crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0 } }),
+            DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: "layer".into(), transform: crate::DrawingTransform { x: 6.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0 } }),
         );
         assert_mutation_digest_distinct(
             DrawingMutation::ReplaceLayerFill(ReplaceLayerFill { layer_id: "layer".into(), fill: None }),
@@ -6320,8 +6320,8 @@ mod retained_mutation_authority_tests {
             DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: "layer".into(), boolean_operation: "subtract".into() }),
         );
         assert_mutation_digest_distinct(
-            DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: "layer".into(), params: crate::artifacts::drawing::DrawingTraceParams { threshold: 0.25, simplify_epsilon: 0.5 } }),
-            DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: "layer".into(), params: crate::artifacts::drawing::DrawingTraceParams { threshold: 0.75, simplify_epsilon: 1.5 } }),
+            DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: "layer".into(), params: crate::DrawingTraceParams { threshold: 0.25, simplify_epsilon: 0.5 } }),
+            DrawingMutation::UpdateLayerTraceParams(UpdateLayerTraceParams { layer_id: "layer".into(), params: crate::DrawingTraceParams { threshold: 0.75, simplify_epsilon: 1.5 } }),
         );
         assert_mutation_digest_distinct(
             DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: None, layer: Box::new(baseline.clone()) }),
@@ -6333,7 +6333,7 @@ mod retained_mutation_authority_tests {
             DrawingMutation::ReorderLayer(ReorderLayer { layer_id: "layer".into(), parent_id: None, index: 0 }),
             DrawingMutation::ReorderLayer(ReorderLayer { layer_id: "layer".into(), parent_id: Some("parent".into()), index: 1 }),
         );
-        drain_snapshot(DrawingSnapshot { layers: vec![baseline], ..crate::artifacts::drawing::schema::default_drawing_document("digest-owner", None) });
+        drain_snapshot(DrawingSnapshot { layers: vec![baseline], ..crate::schema::default_drawing_document("digest-owner", None) });
     }
 
     #[test]
@@ -6341,7 +6341,7 @@ mod retained_mutation_authority_tests {
         let exact_source = nested_snapshot();
         let exact_owner = exact_source.layers.as_ptr();
         let exact_target = match exact_source.layers.last().expect("Drawing exact-boundary group") {
-            DrawingLayerNode::Group(group) => crate::artifacts::drawing::schema::layer_id(&group.children[0]).to_string(),
+            DrawingLayerNode::Group(group) => crate::schema::layer_id(&group.children[0]).to_string(),
             _ => unreachable!("Drawing exact-boundary group remains exact"),
         };
         let exact = DrawingMutation::RenameLayer(RenameLayer { layer_id: exact_target, new_name: "x".repeat(DRAWING_OWNED_FIELD_BYTES) });
@@ -6353,7 +6353,7 @@ mod retained_mutation_authority_tests {
         let plus_source = nested_snapshot();
         let plus_owner = plus_source.layers.as_ptr();
         let plus_target = match plus_source.layers.last().expect("Drawing +1 group") {
-            DrawingLayerNode::Group(group) => crate::artifacts::drawing::schema::layer_id(&group.children[0]).to_string(),
+            DrawingLayerNode::Group(group) => crate::schema::layer_id(&group.children[0]).to_string(),
             _ => unreachable!("Drawing +1 group remains exact"),
         };
         let plus_one = DrawingMutation::RenameLayer(RenameLayer { layer_id: plus_target, new_name: "x".repeat(DRAWING_OWNED_FIELD_BYTES + 1) });
@@ -6363,11 +6363,11 @@ mod retained_mutation_authority_tests {
         drain_mutation(plus_one);
         drain_snapshot(plus_source);
 
-        let mut source = crate::artifacts::drawing::schema::default_drawing_document("aggregate-owner", None);
-        let mutation = DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: crate::artifacts::drawing::schema::layer_id(&source.layers[0]).into(), visible: false });
+        let mut source = crate::schema::default_drawing_document("aggregate-owner", None);
+        let mutation = DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: crate::schema::layer_id(&source.layers[0]).into(), visible: false });
         let mut last_admitted = None;
         for index in 0..DRAWING_MUTATION_AGGREGATE_ITEMS {
-            source.layers.push(crate::artifacts::drawing::schema::create_drawing_path_layer(&format!("layer-{index}"), Vec::new()));
+            source.layers.push(crate::schema::create_drawing_path_layer(&format!("layer-{index}"), Vec::new()));
             let owner = source.layers.as_ptr();
             match live_reservation(&mut source, &mutation) {
                 Ok(reservation) => {
@@ -6395,16 +6395,16 @@ mod retained_mutation_authority_tests {
     #[test]
     fn retained_drawing_duplicate_hash_frames_domain_id_and_name_lengths_without_concatenation_collision() {
         fn duplicate_id(id: &str, name: &str) -> String {
-            let mut source = crate::artifacts::drawing::schema::default_drawing_document("duplicate-framing", None);
-            let mut layer = crate::artifacts::drawing::schema::create_drawing_path_layer(name, Vec::new());
-            let base = crate::artifacts::drawing::schema::layer_base_mut(&mut layer);
+            let mut source = crate::schema::default_drawing_document("duplicate-framing", None);
+            let mut layer = crate::schema::create_drawing_path_layer(name, Vec::new());
+            let base = crate::schema::layer_base_mut(&mut layer);
             base.id.clear();
             base.id.push_str(id);
             admit_layer_string_destinations(&mut layer);
             source.layers = vec![layer];
             let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: id.into() });
             let source = apply(source, &mutation).expect("framed duplicate mutation applies");
-            let duplicate = source.layers.get(1).map(crate::artifacts::drawing::schema::layer_id).expect("duplicated layer remains retained").to_string();
+            let duplicate = source.layers.get(1).map(crate::schema::layer_id).expect("duplicated layer remains retained").to_string();
             drain_mutation(mutation);
             drain_snapshot(source);
             duplicate
@@ -6415,22 +6415,22 @@ mod retained_mutation_authority_tests {
 
     #[test]
     fn retained_drawing_duplicate_name_uses_preadmitted_page_and_returns_exact_rejection_owner() {
-        let mut source = crate::artifacts::drawing::schema::default_drawing_document("duplicate-name-owner", None);
-        let mut layer = crate::artifacts::drawing::schema::create_drawing_path_layer("Layer", Vec::new());
+        let mut source = crate::schema::default_drawing_document("duplicate-name-owner", None);
+        let mut layer = crate::schema::create_drawing_path_layer("Layer", Vec::new());
         admit_layer_string_destinations(&mut layer);
-        let target = crate::artifacts::drawing::schema::layer_id(&layer).to_string();
-        let original_name_owner = crate::artifacts::drawing::schema::layer_base_mut(&mut layer).name.as_ptr();
+        let target = crate::schema::layer_id(&layer).to_string();
+        let original_name_owner = crate::schema::layer_base_mut(&mut layer).name.as_ptr();
         source.layers = vec![layer];
         let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target });
         let source = apply(source, &mutation).expect("duplicate name suffix uses only pre-admitted destination and fixed scratch page");
-        assert_eq!(crate::artifacts::drawing::schema::layer_base(&source.layers[0]).name.as_ptr(), original_name_owner, "last-valid name backing remains exact");
-        assert_eq!(crate::artifacts::drawing::schema::layer_base(&source.layers[1]).name, "Layer copy");
+        assert_eq!(crate::schema::layer_base(&source.layers[0]).name.as_ptr(), original_name_owner, "last-valid name backing remains exact");
+        assert_eq!(crate::schema::layer_base(&source.layers[1]).name, "Layer copy");
         drain_mutation(mutation);
         drain_snapshot(source);
 
-        let mut rejected = crate::artifacts::drawing::schema::default_drawing_document("duplicate-name-rejected", None);
-        let layer = crate::artifacts::drawing::schema::create_drawing_path_layer("Layer", Vec::new());
-        let target = crate::artifacts::drawing::schema::layer_id(&layer).to_string();
+        let mut rejected = crate::schema::default_drawing_document("duplicate-name-rejected", None);
+        let layer = crate::schema::create_drawing_path_layer("Layer", Vec::new());
+        let target = crate::schema::layer_id(&layer).to_string();
         rejected.layers = vec![layer];
         let exact_owner = rejected.layers.as_ptr();
         let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target });
@@ -6460,13 +6460,13 @@ mod retained_mutation_authority_tests {
             for stale in [false, true] {
                 let mut source = nested_snapshot();
                 let (group_id, target) = match source.layers.last().expect("Drawing group") {
-                    DrawingLayerNode::Group(group) => (group.base.id.clone(), crate::artifacts::drawing::schema::layer_id(&group.children[0]).to_string()),
+                    DrawingLayerNode::Group(group) => (group.base.id.clone(), crate::schema::layer_id(&group.children[0]).to_string()),
                     _ => unreachable!("Drawing fixture group remains exact"),
                 };
                 let last_valid_id = source.id.clone();
                 let mutation = match stage {
                     DrawingMutationCandidatePhase::LocateSecondary => {
-                        DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group_id), index: Some(0), layer: Box::new(crate::artifacts::drawing::schema::create_drawing_path_layer("cancel-create", Vec::new())) })
+                        DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group_id), index: Some(0), layer: Box::new(crate::schema::create_drawing_path_layer("cancel-create", Vec::new())) })
                     }
                     DrawingMutationCandidatePhase::RebuildSource | DrawingMutationCandidatePhase::LocateDestination => DrawingMutation::ReorderLayer(ReorderLayer { layer_id: target, parent_id: Some(group_id), index: 2 }),
                     _ => DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target }),

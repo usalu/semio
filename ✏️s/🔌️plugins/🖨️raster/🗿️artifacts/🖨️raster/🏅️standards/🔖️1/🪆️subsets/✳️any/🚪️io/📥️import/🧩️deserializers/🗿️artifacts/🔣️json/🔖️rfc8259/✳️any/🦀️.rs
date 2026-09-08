@@ -3,7 +3,7 @@
 //! 🩹️ w5b-close fix (stdio_gap/foreign-lag, not svg/dwg-pattern scope — see w5b-close-report.md):
 //! `JsonSnapshot::to_serde_value`/stdio's own real `parse_json_text` do the structural conversion —
 //! no hand-rolled bridge needed here.
-use crate::artifacts::raster::{RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
+use crate::{RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
 use dsl::FromValue;
 use semio_s_artifact_stdio_json::schema::snapshot::{parse_json_text, JsonSnapshot};
 pub fn register() {}

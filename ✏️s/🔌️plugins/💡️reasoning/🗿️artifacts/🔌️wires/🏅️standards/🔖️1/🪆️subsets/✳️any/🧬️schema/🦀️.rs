@@ -2,7 +2,7 @@
 
 use dsl::DslValue;
 use dsl::os_pack::json::Value;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full wires artifact state across the artifact, presence and config lanes.
@@ -14,7 +14,7 @@ pub struct WiresArtifact {
     pub wires_fixture: DslValue,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.graph")]
-    pub content: crate::artifacts::wires::WiresContentChild,
+    pub content: crate::WiresContentChild,
     #[state(artifact)]
     pub camera: DslValue,
     #[state(artifact)]
@@ -34,9 +34,9 @@ pub struct WiresArtifact {
 impl Default for WiresArtifact {
     fn default() -> Self {
         Self {
-            wires_fixture: crate::artifacts::wires::empty_wires_fixture(),
-            content: crate::artifacts::wires::wires_content_child_with_owner(Vec::new(), Vec::new()),
-            camera: crate::artifacts::wires::empty_camera(),
+            wires_fixture: crate::empty_wires_fixture(),
+            content: crate::wires_content_child_with_owner(Vec::new(), Vec::new()),
+            camera: crate::empty_camera(),
             meta: DslValue::Null,
             drag_node_id: None,
             drag_last_x: 0.0,
@@ -48,17 +48,17 @@ impl Default for WiresArtifact {
 
 impl WiresArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::wires::WiresSnapshot {
-        crate::artifacts::wires::WiresSnapshot { wires_fixture: self.wires_fixture.clone(), content: self.content.clone(), camera: self.camera.clone(), meta: self.meta.clone() }
+    pub fn to_snapshot(&self) -> crate::WiresSnapshot {
+        crate::WiresSnapshot { wires_fixture: self.wires_fixture.clone(), content: self.content.clone(), camera: self.camera.clone(), meta: self.meta.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::wires::WiresSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::WiresSnapshot) -> Self {
         Self { wires_fixture: snapshot.wires_fixture, content: snapshot.content, camera: snapshot.camera, meta: snapshot.meta, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::wires::WiresSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::WiresSnapshot) {
         self.wires_fixture = snapshot.wires_fixture;
         self.content = snapshot.content;
         self.camera = snapshot.camera;
@@ -69,31 +69,31 @@ impl WiresArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.reasoning.wires` — twenty handcrafted schema leaves.
-pub fn wires_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn wires_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.reasoning.wires",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -118,9 +118,9 @@ pub fn wires_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 /// not dead API (mirrors how `SurfaceDeclaration.mutation_roster` is kept unread, per debt tracked in
 /// `📓️w1-c-report.md` openQuestion 3).
 pub mod derived_construction {
-    use crate::artifacts::wires::schema::diff::WiresDiff;
-    use crate::artifacts::wires::schema::mutations::WiresMutation;
-    use crate::artifacts::wires::schema::snapshot::WiresSnapshot;
+    use crate::schema::diff::WiresDiff;
+    use crate::schema::mutations::WiresMutation;
+    use crate::schema::snapshot::WiresSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug)]
@@ -134,7 +134,7 @@ pub mod derived_construction {
         type Mutation = WiresMutation;
         type Diff = WiresDiff;
         fn empty() -> Self {
-            Self { snapshot: crate::artifacts::wires::empty_wires_snapshot(), diagnostics: Vec::new() }
+            Self { snapshot: crate::empty_wires_snapshot(), diagnostics: Vec::new() }
         }
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
@@ -267,18 +267,18 @@ pub fn force_layout_board(board: &mut DslValue) {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️ExampleFixture
-/// 📄️ The `metabolism` example, parsed once from `crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT`
+/// 📄️ The `metabolism` example, parsed once from `crate::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT`
 /// — falls back to the empty document if the fixture ever fails to parse.
-pub fn metabolism_wires_example_snapshot() -> protocol::MutationApplyResult<crate::artifacts::wires::WiresSnapshot> {
-    match <crate::artifacts::wires::WiresSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::wires::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT) {
-        Ok(snapshot) if fixture_nodes(&crate::artifacts::wires::wires_working_board(&snapshot)).len() >= 7 => Ok(snapshot),
+pub fn metabolism_wires_example_snapshot() -> protocol::MutationApplyResult<crate::WiresSnapshot> {
+    match <crate::WiresSnapshot as store::ArtifactDsl>::parse_dsl(crate::document_dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT) {
+        Ok(snapshot) if fixture_nodes(&crate::wires_working_board(&snapshot)).len() >= 7 => Ok(snapshot),
         _ => handcrafted_metabolism_snapshot(),
     }
 }
 
 /// 🧪️ Hand-built metabolism demo when the bundled `.dsl.semio` asset is still a stub envelope.
-fn handcrafted_metabolism_snapshot() -> protocol::MutationApplyResult<crate::artifacts::wires::WiresSnapshot> {
-    let mut snapshot = crate::artifacts::wires::empty_wires_snapshot();
+fn handcrafted_metabolism_snapshot() -> protocol::MutationApplyResult<crate::WiresSnapshot> {
+    let mut snapshot = crate::empty_wires_snapshot();
     for i in 1..=7 {
         let node_id = format!("node-{i}");
         let label = if i == 1 { "Metabolism".to_string() } else { format!("Topic {i}") };
@@ -292,7 +292,7 @@ fn handcrafted_metabolism_snapshot() -> protocol::MutationApplyResult<crate::art
             ("text".into(), DslValue::String(label.clone())),
             ("handles".into(), DslValue::Array(vec![])),
         ]);
-        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::create_node(node))?.0;
+        snapshot = store::apply_mutation(&snapshot, &crate::mutations::create_node(node))?.0;
         array_mut(&mut snapshot.wires_fixture, "identities").push(DslValue::object([
             ("identityId".into(), DslValue::uint(i as u64)),
             ("identityKind".into(), DslValue::String("topic".into())),
@@ -313,9 +313,9 @@ fn handcrafted_metabolism_snapshot() -> protocol::MutationApplyResult<crate::art
             ("targetIdentityId".into(), DslValue::uint(((i % 7) + 1) as u64)),
             ("edgeId".into(), DslValue::String(edge_id)),
         ]);
-        snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::connect_nodes(edge, relationship))?.0;
+        snapshot = store::apply_mutation(&snapshot, &crate::mutations::connect_nodes(edge, relationship))?.0;
     }
-    let board = crate::artifacts::wires::wires_working_board(&snapshot);
+    let board = crate::wires_working_board(&snapshot);
     if let DslValue::Object(entries) = &mut snapshot.wires_fixture {
         if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == "board") {
             *slot = board;

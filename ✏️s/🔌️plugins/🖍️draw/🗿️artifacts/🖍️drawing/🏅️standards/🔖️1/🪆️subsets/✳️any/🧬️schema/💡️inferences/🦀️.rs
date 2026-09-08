@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::drawing::DrawingSnapshot;
-use schema::ArtifactSchema;
+use crate::DrawingSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::{compute_drawing_topology, DrawingTopology};
@@ -52,7 +52,7 @@ impl protocol::InferenceSpec<DrawingSnapshot> for DrawingInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::drawing::standards::v1::subsets::any::schema::DrawingInferrer {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::DrawingInferrer {
     type Snapshot = DrawingSnapshot;
     type Inference = DrawingInference;
 }
@@ -61,10 +61,10 @@ impl ArtifactInferrer for crate::artifacts::drawing::standards::v1::subsets::any
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.draw.drawing.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `drawing_artifact_schema_descriptor`'s registration.
-pub fn drawing_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn drawing_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.draw.drawing.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

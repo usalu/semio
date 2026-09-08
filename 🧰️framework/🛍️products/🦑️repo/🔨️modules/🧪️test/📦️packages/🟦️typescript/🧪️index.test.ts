@@ -22,6 +22,9 @@ import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPack
 
 const repoRoot = repoRootFromHere();
 
+/** 🖥️ This module's own committed case — the one discovery must always find, named as it sits on disk. */
+const HOST_PROTOCOL_PARITY_CASE_DIR = `${testTaxonomy(repoRoot).testDomainPath}/${testTaxonomy(repoRoot).testsDirName}/🖥️host-protocol-parity`;
+
 /** ⚖️ The effective profile table: framework profiles plus every one an owner contributes. */
 const contributed = (): ReadonlyMap<string, import("./🟦️.ts").ComparisonProfileSpec> => profileTable(loadOracleRegistry(repoRoot));
 
@@ -238,7 +241,7 @@ describe("🔍️ discovery and contract", () => {
     const cases = discoverTestCases(repoRoot);
     expect(cases.length).toBeGreaterThan(0);
     for (const area of exemptAreas()) expect(cases.every((entry) => !entry.owner.startsWith(`${area}/`) && !entry.caseDir.includes(`${area}/`)), `an exempt area leaked into discovery: ${area}`).toBe(true);
-    expect(cases.some((entry) => entry.case === "host-protocol-parity")).toBe(true);
+    expect(cases.some((entry) => entry.case === basename(HOST_PROTOCOL_PARITY_CASE_DIR))).toBe(true);
   });
 
   // ⏱️ Two FULL repository discoveries back to back, and discovery now walks 164 cases and 157
@@ -1040,7 +1043,7 @@ describe("🧭️ contribution directory ownership", () => {
       { owner: "🧩️other", directory: "🔮️oracle", dependency: "lookalike-production", owned: false },
     ];
     try {
-      const taxonomy = { ...JSON.parse(readFileSync(join(repoRoot, vocabulary), "utf8")), testContributionDirectoryOverrides: contributionDirectoryCases.overrides };
+      const taxonomy = { ...JSON.parse(readFileSync(join(repoRoot, vocabulary), "utf8")), testContributionDirName: contributionDirectoryCases.defaultDirectory, testContributionDirectoryOverrides: contributionDirectoryCases.overrides };
       mkdirSync(join(root, vocabulary, ".."), { recursive: true });
       writeFileSync(join(root, vocabulary), JSON.stringify(taxonomy));
       for (const candidate of candidates) {

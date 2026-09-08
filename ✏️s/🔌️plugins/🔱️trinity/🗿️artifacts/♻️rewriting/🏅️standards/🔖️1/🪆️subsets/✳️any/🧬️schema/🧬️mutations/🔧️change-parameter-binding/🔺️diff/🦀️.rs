@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeParameterBinding`.
-use crate::artifacts::rewriting::diff::RewritingDiff;
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::diff::RewritingDiff;
+use crate::RewritingSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff

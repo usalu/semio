@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `💎quality` per Wave C.
 
 use super::CreateQualityRecord;
-use crate::artifacts::program::diff::ProgramQualityDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramQualityDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🌱️ Fatal `mutation.duplicate-id` if the id already exists (empty diff), else `added = [payload row]`.
 pub fn diff(payload: &CreateQualityRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

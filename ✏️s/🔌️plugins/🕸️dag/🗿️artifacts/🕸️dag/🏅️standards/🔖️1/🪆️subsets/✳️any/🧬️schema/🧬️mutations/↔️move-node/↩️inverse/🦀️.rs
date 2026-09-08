@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `MoveNode` — the OLD `(x, y)` looked up from BASE. Missing target ⇒ `Vec::new()`.
-use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::{dag_working_scene, DagSnapshot};
+use crate::mutations::DagMutation;
+use crate::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::MoveNode, base: &DagSnapshot) -> Vec<DagMutation> {

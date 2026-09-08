@@ -1,6 +1,6 @@
 //! 🗣️ 🗣️ Forms play app commands command — `set-locale`.
 
-use crate::artifacts::forms::{op::FormMutation, FormsSnapshot};
+use crate::{op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/gis/gismap/1/any/mutation/create-position.json",
+  "$id": "https://semio.tech/schema/s/gis/gismap/1/any/mutation/create-position/schema.json",
   "title": "CreatePosition",
   "type": "object",
   "additionalProperties": false,

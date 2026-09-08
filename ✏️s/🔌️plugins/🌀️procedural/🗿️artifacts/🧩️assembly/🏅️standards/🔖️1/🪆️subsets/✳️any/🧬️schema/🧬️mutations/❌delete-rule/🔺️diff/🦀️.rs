@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteRule` — removes the id from `rules`.
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::diff::AssemblyDiff;
+use crate::schema::snapshot::AssemblySnapshot;
 
 pub fn diff(payload: &super::DeleteRule, base: &AssemblySnapshot) -> protocol::MutationOutcome<AssemblyDiff> {
     if !base.rules.iter().any(|rule| rule.id == payload.id) {

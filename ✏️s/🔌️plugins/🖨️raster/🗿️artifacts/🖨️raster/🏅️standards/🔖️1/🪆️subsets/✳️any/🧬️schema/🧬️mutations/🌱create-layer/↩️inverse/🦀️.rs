@@ -1,9 +1,9 @@
 //! ↩️ `create-layer` inverse — `delete-layer` addressed by the created layer's own id (no `base`
 //! lookup needed, the id is already on the payload).
 
-use crate::artifacts::raster::mutations::{delete_layer, RasterMutation};
-use crate::artifacts::raster::schema::layer_node_id;
-use crate::artifacts::raster::RasterSnapshot;
+use crate::mutations::{delete_layer, RasterMutation};
+use crate::schema::layer_node_id;
+use crate::RasterSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::CreateLayer, _base: &RasterSnapshot) -> Vec<RasterMutation> {

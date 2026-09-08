@@ -8,8 +8,8 @@
 //! committed snapshot decodes to an UNRESOLVED handle and `dag_working_scene` fails soft to an
 //! empty scene (`🔖️WorkingScene`) — the state this case pins.
 
-use crate::artifacts::dag::mutations::{apply_dag_mutation, change_node_operator_kind, inverse_dag_mutation, DagMutation};
-use crate::artifacts::dag::{DagDiff, DagSnapshot};
+use crate::mutations::{apply_dag_mutation, change_node_operator_kind, inverse_dag_mutation, DagMutation};
+use crate::{DagDiff, DagSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

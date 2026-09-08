@@ -7,9 +7,9 @@
 //!
 //! An axial `Bar` brace joins the 6-DOF `Frame` column — the bar variant carries no `roll`, and must not gain one.
 
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -34,8 +34,8 @@ fn applies_to_committed_after() {
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("create-element applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "create-element/appends-a-diagonal-bracing-bar: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.elements.len(), 2, "create-element/appends-a-diagonal-bracing-bar: the brace must be appended beside the frame");
-    assert!(matches!(snapshot.elements[1], crate::artifacts::fem3d::FemElement::Bar { .. }), "create-element/appends-a-diagonal-bracing-bar: the brace must stay a Bar, never widen into a Frame");
-    assert!(matches!(snapshot.elements[0], crate::artifacts::fem3d::FemElement::Frame { .. }), "create-element/appends-a-diagonal-bracing-bar: the pre-existing column must stay a Frame");
+    assert!(matches!(snapshot.elements[1], crate::FemElement::Bar { .. }), "create-element/appends-a-diagonal-bracing-bar: the brace must stay a Bar, never widen into a Frame");
+    assert!(matches!(snapshot.elements[0], crate::FemElement::Frame { .. }), "create-element/appends-a-diagonal-bracing-bar: the pre-existing column must stay a Frame");
 }
 
 /// ↩️ The inverse is a `delete-element` of `b1`, leaving the lone frame behind.
@@ -84,7 +84,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "create-element/appends-a-diagonal-bracing-bar: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "create-element/appends-a-diagonal-bracing-bar: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "create-element/appends-a-diagonal-bracing-bar: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "create-element/appends-a-diagonal-bracing-bar: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "create-element/appends-a-diagonal-bracing-bar: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("create-element/appends-a-diagonal-bracing-bar: unknown outcome status {other:?}"),
@@ -106,7 +106,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-element/appends-a-diagonal-bracing-bar: committed diff JSON is not canonical");
@@ -115,7 +115,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `elements.added` entry on `before` must reproduce frame-then-brace.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-element/appends-a-diagonal-bracing-bar: committed diff did not carry before to after");
 }

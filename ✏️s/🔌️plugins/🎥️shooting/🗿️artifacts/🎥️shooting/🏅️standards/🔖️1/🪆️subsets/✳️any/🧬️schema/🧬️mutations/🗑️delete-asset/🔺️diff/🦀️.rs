@@ -1,8 +1,8 @@
 //! 🔺 Diff constructor for `DeleteAsset`. Error `target-missing` when absent.
 
 use super::DeleteAsset;
-use crate::artifacts::shooting::diff::{ShootingAssetsDelta, ShootingDiff};
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::{ShootingAssetsDelta, ShootingDiff};
+use crate::ShootingSnapshot;
 
 pub fn diff(payload: &DeleteAsset, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !base.assets.iter().any(|asset| asset.id == payload.id) {

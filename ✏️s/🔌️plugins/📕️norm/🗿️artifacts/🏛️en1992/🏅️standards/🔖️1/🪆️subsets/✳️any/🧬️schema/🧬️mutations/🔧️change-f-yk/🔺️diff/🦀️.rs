@@ -1,8 +1,8 @@
 //! 🔺️ `change-f-yk` sparse diff construction — writes only `En1992Diff.f_yk` from the payload.
 
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::change_f_yk::ChangeFYk;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::change_f_yk::ChangeFYk;
+use crate::En1992Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeFYk, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {

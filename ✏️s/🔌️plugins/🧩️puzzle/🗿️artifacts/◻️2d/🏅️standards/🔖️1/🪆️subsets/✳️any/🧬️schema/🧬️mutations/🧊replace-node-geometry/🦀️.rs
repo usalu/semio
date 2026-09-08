@@ -2,9 +2,9 @@
 //! `shape`+`radius`+`width`+`height` together are the node's one geometric representation, the
 //! same grouping cad's `replace-object-geometry` uses for `mesh_url`+`extent`+`solid_handle`.
 
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::Puzzle2dDiff;
+use crate::mutations::Puzzle2dMutation;
+use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// 🧊 `replace-node-geometry` payload — new shape/extent, whichever fields the shape uses.

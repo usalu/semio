@@ -3,7 +3,7 @@
 //! leaf holds a plain pure function rather than an `InferredField` dependency chain — nothing here
 //! benefits from per-entity incremental caching, unlike `puzzle3d`'s `flatPosition`.
 
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::Fem2dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Bounds
@@ -47,7 +47,7 @@ pub fn compute_fem2d_bounds(snapshot: &Fem2dSnapshot) -> Fem2dBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::fem2d::{FemElement, FemNode};
+    use crate::{FemElement, FemNode};
 
     //#region 🧸️Fixtures
     fn sample_snapshot() -> Fem2dSnapshot {

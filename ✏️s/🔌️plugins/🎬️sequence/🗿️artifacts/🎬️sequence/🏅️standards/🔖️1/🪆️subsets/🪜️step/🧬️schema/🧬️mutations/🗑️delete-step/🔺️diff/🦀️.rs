@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteStep` — a real cascade-aware removal (step + any edge that
 //! touches it), never a whole-snapshot capture.
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::{diff_replace_content, sequence_working_scene, SequenceSnapshot};
+use crate::diff::SequenceDiff;
+use crate::{diff_replace_content, sequence_working_scene, SequenceSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteStep, base: &SequenceSnapshot) -> protocol::MutationOutcome<SequenceDiff> {

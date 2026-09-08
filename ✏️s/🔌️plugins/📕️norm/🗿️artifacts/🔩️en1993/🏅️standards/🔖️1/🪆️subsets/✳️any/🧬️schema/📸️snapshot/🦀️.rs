@@ -1,7 +1,7 @@
 //! 🧬️ En1993 snapshot schema — artifact-lane fields only.
 
 use crate::document::AnnexChoice;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 

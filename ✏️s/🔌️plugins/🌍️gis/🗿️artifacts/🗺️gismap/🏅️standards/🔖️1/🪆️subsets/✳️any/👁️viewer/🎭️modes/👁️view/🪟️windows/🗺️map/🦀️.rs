@@ -1,12 +1,12 @@
 //! 🗺️ GIS map viewer — the Map window: a read-only tiled-map render of the document's
-//! positions/routes/regions, built from the same `crate::artifacts::gismap::schema::gis_map_descriptor_json`
+//! positions/routes/regions, built from the same `crate::schema::gis_map_descriptor_json`
 //! pure snapshot→descriptor helper the editor's own Map window uses — this file itself imports
 //! nothing from the sibling editor surface (`policyViewerPurityBreaches` forbids it outright). No
 //! layer toggles, no camera persistence, no selection: a viewer has no utilities that edit and emits
 //! no mutations by construction (`ViewEmit`).
 
-use crate::artifacts::gismap::schema::gis_map_descriptor_json;
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::schema::gis_map_descriptor_json;
+use crate::GisMapSnapshot;
 use semio_framework_plugin::{scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, TiledMapScene, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 
@@ -65,7 +65,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
-        let document = crate::artifacts::gismap::schema::default_document();
+        let document = crate::schema::default_document();
         let _node = render(&document);
     }
 }

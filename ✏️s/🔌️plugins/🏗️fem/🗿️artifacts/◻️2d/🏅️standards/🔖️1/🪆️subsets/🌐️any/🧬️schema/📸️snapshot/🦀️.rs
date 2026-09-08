@@ -1,6 +1,6 @@
 //! 🧬️ Fem2d snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::fem2d::{FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+use crate::{FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 

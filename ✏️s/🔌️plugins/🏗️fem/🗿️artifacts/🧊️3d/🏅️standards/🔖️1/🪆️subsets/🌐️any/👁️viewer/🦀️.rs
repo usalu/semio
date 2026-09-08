@@ -4,7 +4,7 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::Fem3dSnapshot;
 use crate::viewer::fem3d::modes::view;
 use crate::viewer::fem3d::modes::view::windows::model;
 use semio_framework_plugin::app::InteractionView;
@@ -37,7 +37,7 @@ pub struct Fem3dViewer;
 
 impl ArtifactViewer for Fem3dViewer {
     type Snapshot = Fem3dSnapshot;
-    type Mutation = crate::artifacts::fem3d::op::Fem3dMutation;
+    type Mutation = crate::op::Fem3dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -46,30 +46,30 @@ impl ArtifactViewer for Fem3dViewer {
     type TransientMutation = NoTransientMutation;
     type Command = Fem3dViewCommand;
 
-    const DIALECT: Dialect = crate::artifacts::fem3d::FEM3D_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem3d::FEM_3D_SCHEMA;
+    const DIALECT: Dialect = crate::FEM3D_DIALECT;
+    const DOCUMENT_SCHEMA: &'static str = crate::FEM_3D_SCHEMA;
 
     fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        Ok(crate::artifacts::fem3d::live_visual::maintenance_step(instance_id, maximum_items, maximum_bytes))
+        Ok(crate::live_visual::maintenance_step(instance_id, maximum_items, maximum_bytes))
     }
 
     fn mounted_job_close_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
-        Ok(crate::artifacts::fem3d::live_visual::close_step(instance_id, maximum_items, maximum_bytes))
+        Ok(crate::live_visual::close_step(instance_id, maximum_items, maximum_bytes))
     }
 
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
-        crate::artifacts::fem3d::live_visual::terminal_is_empty(instance_id)
+        crate::live_visual::terminal_is_empty(instance_id)
     }
 
     fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
-        crate::artifacts::fem3d::live_visual::prepare_snapshot_read(operation, snapshot)
+        crate::live_visual::prepare_snapshot_read(operation, snapshot)
     }
 
     /// 👁️ Real, non-empty default scene: the artifact's own shared boot document (the bundled `default`
     /// example DSL), the very same one `Fem3dPlayApp::initial_snapshot` boots — see
-    /// `crate::artifacts::fem3d::dsl::fem3d_boot_snapshot`.
+    /// `crate::dsl::fem3d_boot_snapshot`.
     fn initial_snapshot() -> Fem3dSnapshot {
-        let snapshot = crate::artifacts::fem3d::dsl::fem3d_boot_snapshot();
+        let snapshot = crate::dsl::fem3d_boot_snapshot();
         eprintln!("[DEBUG] fem3d viewer boot snapshot: nodes={} elements={} solids={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len());
         snapshot
     }
@@ -83,12 +83,12 @@ impl ArtifactViewer for Fem3dViewer {
     }
 
     fn pending_effects(doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Vec<semio_framework::kernel::Effect> {
-        crate::artifacts::fem3d::live_visual::reconcile(doc)
+        crate::live_visual::reconcile(doc)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            model::BODY_KEY => crate::artifacts::fem3d::live_visual::with_live_visual(doc.render_operation(), model::render),
+            model::BODY_KEY => crate::live_visual::with_live_visual(doc.render_operation(), model::render),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem3d viewer unknown-body label admission failed")),
         }
         .map(semio_framework_plugin::built_to_component_tree)
@@ -101,7 +101,7 @@ impl ArtifactViewer for Fem3dViewer {
 /// module's manifest style (its own `create_fem3d_app`), never a `ModeDefinition`/
 /// `WindowKindDefinition` passthrough.
 pub fn create_fem3d_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(crate::artifacts::fem3d::FEM3D_DIALECT)
+    Viewer::builder(crate::FEM3D_DIALECT)
         .document(["semio", "fem", "fem3d"])
         .icon_id("fem-app")
         .mode(view::FEM3D_VIEW_MODE_VIEW, semio_framework_plugin::LocalizedLabel::native("View", "Ansicht"), "eye")
@@ -121,12 +121,12 @@ mod tests {
     fn create_fem3d_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_fem3d_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
-        assert_eq!(def.dialect, crate::artifacts::fem3d::FEM3D_DIALECT.into());
+        assert_eq!(def.dialect, crate::FEM3D_DIALECT.into());
     }
 
     #[test]
     fn viewer_dialect_matches_the_artifact_coordinate() {
-        assert_eq!(<Fem3dViewer as ArtifactViewer>::DIALECT, crate::artifacts::fem3d::FEM3D_DIALECT);
+        assert_eq!(<Fem3dViewer as ArtifactViewer>::DIALECT, crate::FEM3D_DIALECT);
     }
 
     #[test]

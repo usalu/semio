@@ -152,7 +152,7 @@ mod tests {
                 "gravity": 0.0
             }
         });
-        let out = graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = semio_framework_graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let nodes = parsed["nodes"].as_array().unwrap();
         assert!((nodes[0]["x"].as_f64().unwrap() - 0.0).abs() < 1e-9);
@@ -417,7 +417,7 @@ mod tests {
                 "gravity": 0.0
             }
         });
-        let out = graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = semio_framework_graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let nodes = parsed["nodes"].as_array().unwrap();
         let ax = nodes[0]["x"].as_f64().unwrap();
@@ -448,7 +448,7 @@ mod tests {
             ],
             "edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
         });
-        let out = graph::apply_edge_handle_snap_to_fixture_v1_json(&fixture.to_string()).unwrap();
+        let out = semio_framework_graph::apply_edge_handle_snap_to_fixture_v1_json(&fixture.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let nodes = parsed["nodes"].as_array().unwrap();
         let ang_a = nodes[0]["handles"][0]["angle"].as_f64().unwrap();
@@ -492,7 +492,7 @@ mod tests {
                 "gravity": 0.0
             }
         });
-        let out = graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = semio_framework_graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let nodes = parsed["nodes"].as_array().unwrap();
         let ang_a = nodes[0]["handles"][0]["angle"].as_f64().unwrap();
@@ -540,7 +540,7 @@ mod tests {
             "randomSeed": 3,
             "forceGraph": { "iterations": 120, "idealEdgeLength": 160.0, "gravity": 0.0 }
         });
-        let out = graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = semio_framework_graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         for n in parsed["nodes"].as_array().unwrap() {
             assert!(n["x"].as_f64().unwrap().is_finite());
@@ -569,7 +569,7 @@ mod tests {
             "centerY": 0.0,
             "hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
         });
-        let out = graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = semio_framework_graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let mut ys: HashMap<String, f64> = HashMap::new();
         for n in parsed["nodes"].as_array().unwrap() {
@@ -618,7 +618,7 @@ mod tests {
             "centerY": 0.0,
             "hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
         });
-        let out = graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = semio_framework_graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let mut ys: HashMap<String, f64> = HashMap::new();
         for n in parsed["nodes"].as_array().unwrap() {
@@ -674,7 +674,7 @@ mod tests {
             "lockedNodeIds": ["r"],
             "hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
         });
-        let out = graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = semio_framework_graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let mut by_id: HashMap<String, (f64, f64)> = HashMap::new();
         for n in parsed["nodes"].as_array().unwrap() {
@@ -724,7 +724,7 @@ mod tests {
                 "lockedNodeIds": ["r"]
             }
         });
-        let out = graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = semio_framework_graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let mut by_id: HashMap<String, (f64, f64)> = HashMap::new();
         for n in parsed["nodes"].as_array().unwrap() {
@@ -761,7 +761,7 @@ mod tests {
             "centerY": 0.0,
             "hierarchicalTree": { "direction": "right", "layerSpacing": 90.0, "siblingGap": 12.0 }
         });
-        let out = graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = semio_framework_graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let mut xs: HashMap<String, f64> = HashMap::new();
         for n in parsed["nodes"].as_array().unwrap() {
@@ -799,7 +799,7 @@ mod tests {
             "centerY": 0.0,
             "hierarchicalTree": { "direction": "upwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
         });
-        let out = graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+        let out = semio_framework_graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
         let mut ys: HashMap<String, f64> = HashMap::new();
         for n in parsed["nodes"].as_array().unwrap() {
@@ -830,7 +830,7 @@ mod tests {
             "mode": "hierarchical-tree",
             "hierarchicalTree": { "direction": "sideways" }
         });
-        let err = graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap_err();
+        let err = semio_framework_graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap_err();
         assert!(err.contains("unknown hierarchical tree direction"));
     }
 
@@ -842,7 +842,7 @@ mod tests {
             "nodes": [],
             "edges": []
         });
-        let err = graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), r#"{"mode":"nope"}"#).unwrap_err();
+        let err = semio_framework_graph::apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), r#"{"mode":"nope"}"#).unwrap_err();
         assert!(err.contains("unknown redraw mode"));
     }
 }

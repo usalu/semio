@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeDescription` — patches the document `meta.description`.
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::{Puzzle5dMeta, Puzzle5dSnapshot};
+use crate::diff::Puzzle5dDiff;
+use crate::{Puzzle5dMeta, Puzzle5dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeDescription, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

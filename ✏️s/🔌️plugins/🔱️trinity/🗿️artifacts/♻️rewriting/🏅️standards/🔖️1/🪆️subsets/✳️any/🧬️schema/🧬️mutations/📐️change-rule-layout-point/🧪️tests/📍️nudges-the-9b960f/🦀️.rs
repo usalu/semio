@@ -15,11 +15,11 @@
 //! raw Rust tuples, so the point is a two-field record on the wire (`{"x": .., "y": ..}`). This case
 //! pins the applied MOVE of a var that already has a point.
 
-use crate::artifacts::rewriting::diff::RewritingDiff;
-use crate::artifacts::rewriting::mutations::RewriteRuleMutation;
-use crate::artifacts::rewriting::LayoutPoint;
-use crate::artifacts::rewriting::RewritingSnapshot;
-use crate::artifacts::rewriting::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
+use crate::diff::RewritingDiff;
+use crate::mutations::RewriteRuleMutation;
+use crate::LayoutPoint;
+use crate::RewritingSnapshot;
+use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

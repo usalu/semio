@@ -1,6 +1,6 @@
 //! 📥️ Imports the ordered page text of the PDF 1.4 base subset into a Writer document.
 
-use crate::artifacts::writer::{writer_snapshot_with_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
+use crate::{writer_snapshot_with_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{Dialect, StandardId, SubsetId};
@@ -34,7 +34,7 @@ mod tests {
             let pdf: PdfSnapshot = dsl::os_pack::json::from_json_str(&value.to_string()).unwrap();
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&pdf);
             let outcome = PdfIntoWriter::deserialize(&IoPayload::Binary(bytes)).await.expect("deserialize");
-            assert_eq!(crate::artifacts::writer::writer_text(&outcome.value), vector["expected"].as_str().unwrap(), "{}", vector["name"]);
+            assert_eq!(crate::writer_text(&outcome.value), vector["expected"].as_str().unwrap(), "{}", vector["name"]);
             assert_eq!(pdf.pages.iter().map(|page| page.text.as_str()).collect::<Vec<_>>().join("\n"), vector["expected"].as_str().unwrap());
         }
     }

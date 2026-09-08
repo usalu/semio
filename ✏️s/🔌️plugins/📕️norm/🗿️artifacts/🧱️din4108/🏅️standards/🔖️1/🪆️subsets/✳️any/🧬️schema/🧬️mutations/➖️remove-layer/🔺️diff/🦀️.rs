@@ -1,8 +1,8 @@
 //! 🔺️ `remove-layer` — sparse diff construction with strict BASE-index validation.
 
 use super::RemoveLayer;
-use crate::artifacts::din4108::diff::Din4108LayerList;
-use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
+use crate::diff::Din4108LayerList;
+use crate::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &RemoveLayer, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {

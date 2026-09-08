@@ -50,3 +50,11 @@ After their bounded stdio validations, the three Sol Extra High execution slots 
 - `registry_execution`: norm (15) and framework workflow/run (1): 16 artifact roots.
 
 Root coordinates and reviews, updates external consumers once crate APIs settle, validates final integration, and preserves concurrent unrelated edits. All root Cargo mutations are small, current-state edits coordinated among executors; no generated whole-file overwrite from stale snapshots.
+
+## Schema Ownership Completion Pass
+
+The initial 93 roots were a directory inventory, not a complete schema audit. Root additionally extracted the standalone framework `os.workflow` document and shared PlaybookSpec/generation document; workflow/run was part of the initial inventory and is now independently compiled and tested. Registry execution owns subsequent `os.space` and `os.collection` extraction after its norm gates. Framework Flow and Dag serializers must be classified in the final audit: they already reside in dedicated framework Flow and Infinite packages, respectively, and their reusable engine/core types are distinct from the plugin artifact composition wrappers. Test-only DslArtifact types and Store's private durable decision records are protocol/test support and do not automatically define separately installable artifacts.
+
+Current execution ownership: artifact_execution finishes stdio default/selected/full conversion gates and the 17 multi-artifact roots, including Block TypeScript packages and a lower Trinity engine API; nx_execution finishes its 24 artifact compile refinement, VCS/writer plugin dependency removal, package contract, Nx cache restoration/invalidation and dynamic launch inventory; registry_execution finishes norm15 then builtin space/collection. Root owns direct consumer imports/manifests, precise Semio conversion feature declarations, workflow/run, workflow/workflow, shared framework Playbook and integration validation.
+
+All Cargo/compilation results in reports refer to actual executed commands. Concurrent edits require a final fresh resolution and audit before completion. Shared Nx graph waits are isolated for verification using the installed Nx binary via `bun x nx` and ticket-owned workspace data; shared worker processes are preserved.

@@ -1,8 +1,18 @@
-//! 🧬️ Gateway wire types (`📋️master.md` §"MCP tool names"/§"Observe"/§"Verify"/§"Idempotency") —
-//! `schemars`-derived so every type publishes a normative JSON Schema (2020-12) through
-//! [`schemas`], validated at kernel/backend boundaries the same way `🧰️framework/🔨️modules/🧬️schema`
-//! validates artifact snapshots. `GatewayError` is re-exported from `crate::errors` rather than
-//! redefined here — one type, one owning facet.
+//! 🧬️ The `os.mcp` schema registry — the ONE place this crate declares a schema.
+//!
+//! It owns three families, all published through [`schemas`]: the gateway wire types
+//! (`📋️master.md` §"MCP tool names"/§"Observe"/§"Verify"/§"Idempotency", `schemars`-derived from the
+//! structs below and validated at kernel/backend boundaries the same way
+//! `🧰️framework/🔨️modules/🧬️schema` validates artifact snapshots); the MCP protocol types, mirrored
+//! from `🧭️protocol/🦀️.rs`; and every tool `inputSchema`/`outputSchema` shape the facets stamp a
+//! `semio://capability/{id}/{input|output}` `$id` onto ([`🔖️ToolSchemas`]). No facet under `🌉️mcp/`
+//! writes a schema literal of its own.
+//!
+//! [`schema_mirror_document`] projects the whole registry into the committed draft-07 document
+//! `🧬️schema/🔣️.json`, from which `🧬️schema/🟦️.ts` is generated
+//! (`bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`, whose emitter is `semio-os-mcp
+//! schemas`). `GatewayError` is re-exported from `crate::errors` rather than redefined here — one
+//! type, one owning facet.
 
 use schemars::{schema_for, JsonSchema};
 use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
@@ -380,24 +390,27 @@ pub fn action_invoke_input_schema() -> serde_json::Value {
     wire("action.invoke", "input", action_invoke_input_shape())
 }
 
-/// 🎫️ The whole `action.cancel`/`transaction.commit`/`transaction.rollback`/`history.undo`/
-/// `history.redo` family: one handle, named by its kind. The value space is the closed set of handle
-/// field names those five tools draw from, exactly one of which a call may carry — the per-tool
-/// instances [`handle_input_schema`] stamps are projections of this one shape, not five contracts.
+/// 🎫️ Every handle field the five one-handle tools draw from — `action.cancel`'s
+/// `preparedActionHandle`, `transaction.commit`/`transaction.rollback`'s `transactionHandle`, and
+/// `history.undo`/`history.redo`'s `undoToken`.
+pub const HANDLE_INPUT_FIELDS: &[&str] = &["preparedActionHandle", "transactionHandle", "undoToken"];
+
+/// 🎫️ The whole one-handle tool family as ONE contract: a call carries exactly one of
+/// [`HANDLE_INPUT_FIELDS`] and nothing else. Each per-tool document [`handle_input_schema`] stamps is
+/// literally one branch of this `oneOf`, so the family and its members cannot drift apart.
 pub fn handle_input_shape() -> serde_json::Value {
-    serde_json::json!({
-        "type": "object",
-        "properties": { "preparedActionHandle": { "type": "string" }, "transactionHandle": { "type": "string" }, "undoToken": { "type": "string" } },
-        "minProperties": 1,
-        "maxProperties": 1,
-        "additionalProperties": false,
-    })
+    serde_json::json!({ "type": "object", "oneOf": HANDLE_INPUT_FIELDS.iter().map(|field| handle_input_branch(field)).collect::<Vec<_>>() })
 }
 
-/// 🎫️ One member of the [`handle_input_shape`] family, narrowed to the single handle field
-/// `capability_id` accepts.
+/// 🎫️ One closed single-field member of the [`handle_input_shape`] family.
+fn handle_input_branch(field: &str) -> serde_json::Value {
+    serde_json::json!({ "type": "object", "properties": { field: { "type": "string" } }, "required": [field], "additionalProperties": false })
+}
+
+/// 🎫️ The wire document for the one tool that accepts `field`.
 pub fn handle_input_schema(field: &str, capability_id: &str) -> serde_json::Value {
-    wire(capability_id, "input", serde_json::json!({ "type": "object", "properties": { field: { "type": "string" } }, "required": [field], "additionalProperties": false }))
+    assert!(HANDLE_INPUT_FIELDS.contains(&field), "`{field}` is not a declared handle field");
+    wire(capability_id, "input", handle_input_branch(field))
 }
 
 pub fn transaction_begin_input_shape() -> serde_json::Value {
@@ -769,16 +782,13 @@ fn hex_pattern(length: usize) -> String {
 
 /// ✅️ The closed approval intent `POST …/spaces/{space}/documents/{doc}/inference/gis-map/jobs/
 /// {job}/approval` accepts, byte for byte — os is a CLIENT of hub here, so this export is an
-/// explicit MIRROR of hub's own authority (`🌎️hub/🧪️fixtures/✅️inference-approval-v1/
-/// 🧬️.schema.json#/$defs/request`, decoded in Rust by
+/// explicit MIRROR of hub's own authority (decoded in Rust by
 /// `🌎️hub/💡️inference/🧬️schema/✅️approval/🦀️.rs`'s `InferenceApprovalRequestV1::decode`), never a
 /// second authority. `🧪️Tests::os_mirror_of_the_hub_approval_request_is_structurally_identical`
 /// fails the moment hub changes it.
 ///
-/// 🚧️ hub's module schema `🌎️hub/💡️inference/🧬️schema/🔣️.json` publishes no approval export today
-/// (its `$defs` are `id`/`serverId`/`hash`/`safeInteger`/`request`/`identity`/`binding`/`jobState`/
-/// `proposalState`, all job-submission-side), so the conformance test reads the fixture-owned
-/// document that DOES carry the contract.
+/// The authority is `🌎️hub/💡️inference/🧬️schema/🔣️.json#/$defs/InferenceApprovalRequestV1`; hub names
+/// its `jobId`/`proposalHash` patterns through `$ref`s, so the test inlines them before comparing.
 pub fn gis_map_inference_approval_request_schema() -> serde_json::Value {
     serde_json::json!({
         "type": "object",
@@ -904,6 +914,9 @@ pub fn schema_mirror_document() -> serde_json::Value {
         }
         defs.insert((*name).to_string(), entry);
     }
+    for entry in defs.values_mut() {
+        resolve_schemars_number_formats(entry);
+    }
     serde_json::json!({
         "$schema": "http://json-schema.org/draft-07/schema#",
         "$id": SCHEMA_MIRROR_ID,
@@ -937,6 +950,39 @@ fn strip_wire_header(value: &mut serde_json::Value) -> serde_json::Map<String, s
     }
     repoint_definition_refs(value);
     hoisted
+}
+
+/// 🔢️ Replaces `schemars`' Rust-typed number `format` annotations with the draft-07 semantics they
+/// stand for, because they are the ONE thing in these documents a strict validator cannot read:
+/// `new Ajv({ strict: true })` throws `unknown format "double"` and refuses to compile the whole
+/// mirror (observed live running `bun ./📜️script.ts schema-mirror`). An unsigned format becomes a
+/// real `minimum: 0`; a signed/floating one carries no constraint JSON can express and is dropped.
+/// Only the generated mirror is normalized — `schemas()` keeps the annotation for the MCP wire,
+/// whose SDK validators accept it.
+fn resolve_schemars_number_formats(value: &mut serde_json::Value) {
+    const UNSIGNED: &[&str] = &["uint", "uint8", "uint16", "uint32", "uint64", "uint128", "usize"];
+    const UNCONSTRAINED: &[&str] = &["int", "int8", "int16", "int32", "int64", "int128", "isize", "float", "double"];
+    match value {
+        serde_json::Value::Object(map) => {
+            if let Some(format) = map.get("format").and_then(serde_json::Value::as_str).map(str::to_string) {
+                if UNSIGNED.contains(&format.as_str()) {
+                    map.remove("format");
+                    map.entry("minimum").or_insert(serde_json::json!(0));
+                } else if UNCONSTRAINED.contains(&format.as_str()) {
+                    map.remove("format");
+                }
+            }
+            for entry in map.values_mut() {
+                resolve_schemars_number_formats(entry);
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for item in items.iter_mut() {
+                resolve_schemars_number_formats(item);
+            }
+        }
+        _ => {}
+    }
 }
 
 /// 🔗️ `#/definitions/X` → `#/$defs/X`, everywhere in one document.
@@ -1139,6 +1185,7 @@ mod quick {
         let mut registered: Vec<&str> = schemas().into_iter().map(|(name, _)| name).collect();
         registered.sort_unstable();
         assert_eq!(published, registered, "🔣️.json is stale — regenerate it with `bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`");
+        assert_eq!(mirror, schema_mirror_document(), "🔣️.json's CONTENT drifted from the registry — regenerate it with `bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`");
         for value in mirror["$defs"].as_object().expect("$defs object").values() {
             assert!(value.get("$schema").is_none(), "a $defs entry must not redeclare the dialect");
             assert!(value.get("$id").is_none(), "a $defs entry must not carry a wire $id");
@@ -1150,13 +1197,9 @@ mod quick {
     /// instead of drifting. It only READS hub's file.
     #[test]
     fn os_mirror_of_the_hub_approval_request_is_structurally_identical() {
-        let hub_module: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🌎️hub/💡️inference/🧬️schema/🔣️.json")).expect("hub module schema parses");
-        assert!(
-            hub_module["$defs"].get("approval").is_none() && hub_module["$defs"].get("InferenceApprovalRequestV1").is_none(),
-            "hub's module schema grew an approval export — point this mirror at it instead of the fixture document"
-        );
-        let hub_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json")).expect("hub approval fixture schema parses");
-        let authority = &hub_fixture["$defs"]["request"];
+        let hub: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🌎️hub/💡️inference/🧬️schema/🔣️.json")).expect("hub module schema parses");
+        let authority = hub["$defs"].get("InferenceApprovalRequestV1").expect("hub publishes InferenceApprovalRequestV1");
+        let authority = inline_local_refs(authority, &hub);
         let mirror = gis_map_inference_approval_request_schema();
         for key in ["type", "additionalProperties", "required", "properties"] {
             assert_eq!(&mirror[key], &authority[key], "the os.mcp approval mirror drifted from hub on `{key}`");
@@ -1164,6 +1207,19 @@ mod quick {
         let approval = crate::inference::GisMapInferenceApprovalRequestV1::new("00112233445566778899aabbccddeeff", &"ab".repeat(32));
         let owned = compile_validator(&mirror).expect("the mirror compiles");
         validate(&owned, &serde_json::to_value(&approval).expect("approval serializes")).expect("the Rust type's own encoding satisfies hub's contract");
+    }
+
+    /// 🔗️ Replaces every `{"$ref": "#/$defs/X"}` with the document's own `X`, so a mirror that inlines
+    /// a pattern can be compared with an authority that names it.
+    fn inline_local_refs(value: &serde_json::Value, document: &serde_json::Value) -> serde_json::Value {
+        match value {
+            serde_json::Value::Object(map) => match map.get("$ref").and_then(serde_json::Value::as_str).and_then(|reference| reference.strip_prefix("#/$defs/")) {
+                Some(name) => inline_local_refs(&document["$defs"][name], document),
+                None => serde_json::Value::Object(map.iter().map(|(key, entry)| (key.clone(), inline_local_refs(entry, document))).collect()),
+            },
+            serde_json::Value::Array(items) => serde_json::Value::Array(items.iter().map(|item| inline_local_refs(item, document)).collect()),
+            other => other.clone(),
+        }
     }
 }
 //#endregion 🧪️Tests

@@ -1,8 +1,9 @@
 //! 👁️ 👁️ Flow play app commands command — `node-graph-viewport`.
 
-use crate::artifacts::flow::{op::FlowMutation, FlowSnapshot};
+use crate::{op::FlowMutation, FlowSnapshot};
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
-use flow::{CameraJson, FlowEvalSession};
+use flow::{FlowEvalSession};
+use semio_framework_artifact_flow_flow::{CameraJson};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

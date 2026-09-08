@@ -25,7 +25,7 @@
 //! agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed here — the orphaned
 //! `🟤️set-snapshot` stub is deleted along with its dangling glue mount).
 
-use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
+use crate::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<En1993Snapshot, En1993Mutation>`

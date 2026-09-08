@@ -1,9 +1,9 @@
 //! ✂️ `resize-tile-crop` mutation payload — recrops a figure tile's normalized `x,y,width,height`
 //! frame within the shared source (the play app's `patch-tile-crops` gesture).
 
-use crate::artifacts::presentation::{FigureTileFrame, PresentationSnapshot};
-use crate::artifacts::presentation::diff::PresentationDiff;
-use crate::artifacts::presentation::mutations::PresentationMutation;
+use crate::{FigureTileFrame, PresentationSnapshot};
+use crate::diff::PresentationDiff;
+use crate::mutations::PresentationMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔹Payload

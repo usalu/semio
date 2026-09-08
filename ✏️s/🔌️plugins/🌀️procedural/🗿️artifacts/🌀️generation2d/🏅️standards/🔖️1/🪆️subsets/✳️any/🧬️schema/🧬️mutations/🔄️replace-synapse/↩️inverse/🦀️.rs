@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `ReplaceSynapse`, reconstructed from BASE.
 use super::ReplaceSynapse;
-use crate::artifacts::generation2d::mutations::Generation2dMutation;
-use crate::artifacts::generation2d::mutations::{replace_synapse, synapse_index};
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::mutations::Generation2dMutation;
+use crate::mutations::{replace_synapse, synapse_index};
+use crate::Generation2dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceSynapse, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {

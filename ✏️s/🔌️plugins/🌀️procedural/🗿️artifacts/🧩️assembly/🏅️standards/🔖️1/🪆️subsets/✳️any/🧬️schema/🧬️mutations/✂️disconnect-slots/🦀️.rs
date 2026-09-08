@@ -1,8 +1,8 @@
 //! ✂️ Assembly mutation — `DisconnectSlots`: removes an id-addressed adjacency edge.
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::mutations::AssemblyMutation;
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::diff::AssemblyDiff;
+use crate::mutations::AssemblyMutation;
+use crate::schema::snapshot::AssemblySnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️DisconnectSlots

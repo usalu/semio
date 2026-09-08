@@ -1,8 +1,8 @@
 //! 🔺️ `change-annual-limit-kwh` sparse diff construction — writes only `Din18599Diff.annual_limit_kwh` from the payload.
 
-use crate::artifacts::din18599::diff::Din18599Diff;
-use crate::artifacts::din18599::mutations::change_annual_limit_kwh::ChangeAnnualLimitKwh;
-use crate::artifacts::din18599::Din18599Snapshot;
+use crate::diff::Din18599Diff;
+use crate::mutations::change_annual_limit_kwh::ChangeAnnualLimitKwh;
+use crate::Din18599Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeAnnualLimitKwh, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {

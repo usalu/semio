@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::text::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::SSpaceMutation;
 use protocol::OpBinary;
 
 pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[
@@ -30,7 +30,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<SSpaceMutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::touch_artifact;
+    use crate::standards::v1::subsets::any::schema::mutations::touch_artifact;
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {

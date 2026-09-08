@@ -7,7 +7,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::Puzzle5dSnapshot;
 
 /// 📄️ The `concrete-forest` example fixture, handcrafted in the `.puzzle5d` DSL.
 pub const PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio");
@@ -29,7 +29,7 @@ pub fn print_dsl(document: &Puzzle5dSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle5d::{
+    use crate::{
         Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dScale,
     };
 
@@ -103,14 +103,14 @@ mod tests {
     /// known table-column pack bug noted above.
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::puzzle5d::op::Puzzle5dMutation;
-        use crate::artifacts::puzzle5d::spr::Puzzle5dStore;
+        use crate::op::Puzzle5dMutation;
+        use crate::spr::Puzzle5dStore;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand};
 
-        let mut store = semio_framework::io::resolve_ready(Puzzle5dStore::new(create_document_envelope(crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None))).expect("store");
+        let mut store = semio_framework::io::resolve_ready(Puzzle5dStore::new(create_document_envelope(crate::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None))).expect("store");
         let part = Puzzle5dPart { id: "p1".into(), anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle5d::mutations::create_part(part, None)], description: None })).expect("apply");
+        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::create_part(part, None)], description: None })).expect("apply");
         let envelope = store.envelope();
         let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework::io::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));

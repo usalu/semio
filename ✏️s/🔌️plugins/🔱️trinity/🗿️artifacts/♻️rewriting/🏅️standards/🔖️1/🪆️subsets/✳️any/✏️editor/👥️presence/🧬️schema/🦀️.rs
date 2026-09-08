@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::artifacts::jack::Camera;
+use semio_s_artifact_trinity_jack::Camera;
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 

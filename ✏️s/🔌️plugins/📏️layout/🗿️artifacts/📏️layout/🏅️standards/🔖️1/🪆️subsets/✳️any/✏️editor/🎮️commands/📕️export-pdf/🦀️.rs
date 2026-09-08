@@ -1,7 +1,7 @@
 //! 🐚️ 🐚️ Layout play app commands command — `export-pdf`.
 
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::mutations::LayoutMutation;
+use crate::LayoutSnapshot;
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

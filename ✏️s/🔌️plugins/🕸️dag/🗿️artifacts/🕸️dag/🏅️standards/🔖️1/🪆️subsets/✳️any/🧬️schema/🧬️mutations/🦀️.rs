@@ -2,12 +2,12 @@
 //! tuple wrapping a handcrafted `protocol::MutationKind` payload (see the `🧬️mutations/<slug>/`
 //! triad leaves); `#[derive(dsl::Mutations)]` generates `impl protocol::Mutation<DagSnapshot>` and
 //! `impl protocol::SemanticMutation<DagSnapshot>` from those payloads — no hand-written apply/diff/
-//! inverse dispatch here, and no bridge into `infinite_board_port_directed_dag::DagMutation` (the
+//! inverse dispatch here, and no bridge into `semio_framework_artifact_infinite_dag::DagMutation` (the
 //! foreign kernel port type) either — see `📝️text/🦀️.rs` for the local `DagMutationDsl`
 //! mirror that replaced it.
 
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::DagSnapshot;
+use crate::diff::DagDiff;
+use crate::DagSnapshot;
 
 //#region 🔖️Store
 pub type DagEnvelope = store::ArtifactEnvelope<DagSnapshot, DagMutation>;
@@ -119,7 +119,7 @@ pub fn inverse_dag_mutation_steps(mutation: &DagMutation, base: &DagSnapshot) ->
 /// vector free of any transcription: the seeded node IS the mutation JSON's own `node`.
 pub fn seed_dag_working_scene_with(snapshot: &mut DagSnapshot, mutation: &DagMutation) -> bool {
     let DagMutation::CreateNode(payload) = mutation else { return false };
-    snapshot.content.set_local_owner(std::sync::Arc::new(crate::artifacts::dag::DagWorkingScene { nodes: vec![payload.node.clone()], edges: Vec::new() }));
+    snapshot.content.set_local_owner(std::sync::Arc::new(crate::DagWorkingScene { nodes: vec![payload.node.clone()], edges: Vec::new() }));
     true
 }
 //#endregion 🌉️ExternalCodecBridge
@@ -205,7 +205,7 @@ pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::dag::default_snapshot;
+    use crate::default_snapshot;
     use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_deterministic};
     use protocol::Mutation;
     use protocol::SemanticMutation;
@@ -242,8 +242,8 @@ mod tests {
         forward
     }
 
-    fn sample_node(id: &str, x: f64, y: f64) -> crate::artifacts::dag::DagNodeSpec {
-        crate::artifacts::dag::schema::default_node_for_kind("note", id, x, y)
+    fn sample_node(id: &str, x: f64, y: f64) -> crate::DagNodeSpec {
+        crate::schema::default_node_for_kind("note", id, x, y)
     }
 
     #[semio_framework_async_macros::async_test]
@@ -332,7 +332,7 @@ mod tests {
         }
         let source = nodes[0].id.clone();
         let target = nodes[1].id.clone();
-        assert_mutation_inverse_law(&base, &connect_nodes("edge-99".into(), format!("{source}@out"), format!("{target}@in"), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default())).await;
+        assert_mutation_inverse_law(&base, &connect_nodes("edge-99".into(), format!("{source}@out"), format!("{target}@in"), semio_framework_artifact_infinite_dag::EdgeRouteStyle::default(), Default::default())).await;
         if let Some(edge_id) = base.edges().first().map(|edge| edge.id.clone()) {
             assert_mutation_inverse_law(&base, &disconnect_nodes(edge_id)).await;
         }
@@ -439,14 +439,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn connect_nodes_missing_endpoint_is_error() {
         let base = default_snapshot();
-        assert_missing_target_is_error(&base, &connect_nodes("edge-99".into(), "ghost-source@out".into(), "ghost-target@in".into(), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default())).await;
+        assert_missing_target_is_error(&base, &connect_nodes("edge-99".into(), "ghost-source@out".into(), "ghost-target@in".into(), semio_framework_artifact_infinite_dag::EdgeRouteStyle::default(), Default::default())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn connect_nodes_self_loop_is_fatal() {
         let base = default_snapshot();
         let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
-        let outcome = connect_nodes("edge-99".into(), format!("{id}@out"), format!("{id}@in"), infinite_board_port_directed_dag::EdgeRouteStyle::default(), Default::default()).diff(&base);
+        let outcome = connect_nodes("edge-99".into(), format!("{id}@out"), format!("{id}@in"), semio_framework_artifact_infinite_dag::EdgeRouteStyle::default(), Default::default()).diff(&base);
         assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }

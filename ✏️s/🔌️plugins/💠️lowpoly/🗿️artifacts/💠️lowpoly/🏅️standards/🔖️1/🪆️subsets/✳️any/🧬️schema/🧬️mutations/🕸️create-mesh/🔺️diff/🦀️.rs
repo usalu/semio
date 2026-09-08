@@ -8,8 +8,8 @@
 //! check) — replacing an already-present mesh handle is deliberate, per this triad's mutation doc.
 
 use super::CreateMesh;
-use crate::artifacts::lowpoly::diff::diff_objects_patch;
-use crate::artifacts::lowpoly::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot};
+use crate::diff::diff_objects_patch;
+use crate::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateMesh, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

@@ -2,8 +2,8 @@
 //! missing id ⇒ `Vec::new()`.
 
 use super::DeleteObject;
-use crate::artifacts::lowpoly::mutations::create_object;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::mutations::create_object;
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteObject, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

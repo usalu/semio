@@ -1,5 +1,5 @@
 //! Serialize flow to stdio.csv.
-use crate::artifacts::flow::FlowSnapshot;
+use crate::FlowSnapshot;
 use semio_s_artifact_stdio_csv::CsvSnapshot;
 
 pub fn register() {}

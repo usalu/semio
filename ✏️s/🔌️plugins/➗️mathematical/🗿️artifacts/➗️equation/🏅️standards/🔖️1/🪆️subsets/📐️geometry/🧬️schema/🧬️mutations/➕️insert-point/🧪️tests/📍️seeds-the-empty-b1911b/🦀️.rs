@@ -17,9 +17,9 @@
 //! else — the handle targets, the dialects, the inline `equation`, which diff slots are filled, and
 //! both geometry states — remains hand-authored and asserted verbatim.
 
-use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::insert_point::InsertPoint;
-use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::remove_point::RemovePoint;
-use crate::artifacts::equation::{equation_children_from_state, equation_geometry, EquationDiff, EquationGeometry, EquationGraph, EquationMutation, EquationPoint, EquationSnapshot};
+use crate::standards::v1::subsets::geometry::schema::mutations::insert_point::InsertPoint;
+use crate::standards::v1::subsets::geometry::schema::mutations::remove_point::RemovePoint;
+use crate::{equation_children_from_state, equation_geometry, EquationDiff, EquationGeometry, EquationGraph, EquationMutation, EquationPoint, EquationSnapshot};
 use semio_framework_os_kernel::ToValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

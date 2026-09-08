@@ -1,5 +1,5 @@
 //! puzzle3d <- obj
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::Puzzle3dSnapshot;
 use semio_s_artifact_stdio_obj::{ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEMA};
 
 pub fn register() {}

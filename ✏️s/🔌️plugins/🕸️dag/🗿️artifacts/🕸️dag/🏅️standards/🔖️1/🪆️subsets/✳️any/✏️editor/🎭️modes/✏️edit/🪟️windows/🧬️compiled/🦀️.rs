@@ -4,8 +4,8 @@
 //! verbatim from the pre-migration manifest, matching the identical precedent in
 //! `sequence_ui`'s own compiled window (`🎬️sequence/🎛️apps/🎬️sequence/🎭️modes/✏️edit/🪟️windows/🧬️compiled`).
 
-use crate::artifacts::dag::DagSnapshot;
-use infinite_board_port_directed_dag::{dag_fixture_from_document, dag_fixture_to_wire_literal, DagCamera};
+use crate::DagSnapshot;
+use semio_framework_artifact_infinite_dag::{dag_fixture_from_document, dag_fixture_to_wire_literal, DagCamera};
 use semio_framework_plugin::{scene_surface, BuiltNode, UiAssemblyResult, LocalizedLabel, SurfaceKind, TextEditorScene, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -38,7 +38,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(document: &DagSnapshot, camera: &DagCamera) -> UiAssemblyResult<BuiltNode> {
-    let fixture = dag_fixture_from_document(&infinite_board_port_directed_dag::DagSnapshot::from(document), camera.clone());
+    let fixture = dag_fixture_from_document(&semio_framework_artifact_infinite_dag::DagSnapshot::from(document), camera.clone());
     scene_surface(DAG_PLAY_SURFACE_COMPILED, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::TextEditor, &TextEditorScene::base(dag_fixture_to_wire_literal(&fixture), Some("wire".into()), None))
 }
 //#endregion 🔖️Render

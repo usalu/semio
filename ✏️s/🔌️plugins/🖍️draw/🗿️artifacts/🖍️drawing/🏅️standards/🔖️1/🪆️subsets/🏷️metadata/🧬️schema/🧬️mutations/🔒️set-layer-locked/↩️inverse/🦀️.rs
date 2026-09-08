@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `SetLayerLocked` — reconstructed from BASE state.
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::schema::{find_drawing_layer, layer_base};
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::mutations::DrawingMutation;
+use crate::schema::{find_drawing_layer, layer_base};
+use crate::DrawingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::SetLayerLocked, base: &DrawingSnapshot) -> Vec<DrawingMutation> {

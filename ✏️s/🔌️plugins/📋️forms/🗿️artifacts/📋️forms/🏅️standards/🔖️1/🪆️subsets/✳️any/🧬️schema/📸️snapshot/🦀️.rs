@@ -1,14 +1,14 @@
 //! 🧬️ Forms snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::forms::{forms_snapshot_with_state, FormsResultsChild, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::{forms_snapshot_with_state, FormsResultsChild, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted forms document snapshot (persistent fields of the artifact). Ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (`forms→C:value,table`): the inline
 /// `steps: Vec<FormStep>` field is replaced by two fixed composed CHILD slots — this plugin no
 /// longer defines its own bespoke document tree, it composes stdio's `value`/`table` subsets
-/// instead. See `crate::artifacts::forms::🔖️Composition` (`🗿️artifacts/📋️forms/🦀️.rs`)
+/// instead. See `crate::🔖️Composition` (`🗿️artifacts/📋️forms/🦀️.rs`)
 /// for the converters/working-scene this slot pair is built and read through. `#[child(...)]`
 /// drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]

@@ -348,7 +348,7 @@
           "minItems": 1,
           "uniqueItems": true,
           "items": {
-            "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/id"
+            "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/id"
           }
         },
         "cases": {
@@ -397,16 +397,16 @@
                 "minLength": 1
               },
               "before": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/state"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/state"
               },
               "current": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/identity"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/identity"
               },
               "restore": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/restore"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/restore"
               },
               "expected": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/state"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/state"
               },
               "error": {
                 "const": "stale-authority"
@@ -416,7 +416,7 @@
               {
                 "properties": {
                   "expected": {
-                    "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/state"
+                    "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/state"
                   }
                 },
                 "required": [
@@ -585,10 +585,10 @@
                 "maximum": 255
               },
               "uiGeneration": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/generation"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/generation"
               },
               "expected": {
-                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/$defs/revision"
+                "$ref": "https://semio.tech/schema/framework/replication/wire/local-interaction/schema.json#/definitions/revision"
               }
             }
           }

@@ -9,8 +9,8 @@
 //! actually persists. A spatial view over `slots`' raw coordinates is a plausible follow-up, not a
 //! purity or completeness requirement for this packet.
 
-use crate::artifacts::assembly::AssemblySnapshot;
-use crate::artifacts::assembly::schema::snapshot::{AssemblyRule, AssemblySlot, AssemblySlotEdge};
+use crate::AssemblySnapshot;
+use crate::schema::snapshot::{AssemblyRule, AssemblySlot, AssemblySlotEdge};
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
 

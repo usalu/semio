@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `⚠️risks` per Wave C.
 
 use super::DeleteRisk;
-use crate::artifacts::program::diff::ProgramRisksDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramRisksDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteRisk, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

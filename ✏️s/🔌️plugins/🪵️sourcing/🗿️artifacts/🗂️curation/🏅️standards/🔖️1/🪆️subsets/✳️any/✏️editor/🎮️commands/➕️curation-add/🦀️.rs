@@ -1,8 +1,8 @@
 //! 🧺️ 🧺️ Sourcing curation app commands command — `curation-add`.
 
-use crate::artifacts::curation::op::SourcingMutation;
-use crate::artifacts::curation::schema::{curation_decision_for_delta, CurationDecision};
-use crate::artifacts::curation::CurationSnapshot;
+use crate::op::SourcingMutation;
+use crate::schema::{curation_decision_for_delta, CurationDecision};
+use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -14,9 +14,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 fn mutation_for(decision: CurationDecision) -> Option<SourcingMutation> {
     match decision {
         CurationDecision::NoOp => None,
-        CurationDecision::Create(item) => Some(crate::artifacts::curation::mutations::create_curated_item(item)),
-        CurationDecision::ChangeCount { object_id, new_count } => Some(crate::artifacts::curation::mutations::change_curated_item_count(object_id, new_count)),
-        CurationDecision::Delete { object_id } => Some(crate::artifacts::curation::mutations::delete_curated_item(object_id)),
+        CurationDecision::Create(item) => Some(crate::mutations::create_curated_item(item)),
+        CurationDecision::ChangeCount { object_id, new_count } => Some(crate::mutations::change_curated_item_count(object_id, new_count)),
+        CurationDecision::Delete { object_id } => Some(crate::mutations::delete_curated_item(object_id)),
     }
 }
 
@@ -56,7 +56,7 @@ pub fn handle(payload: &CurationAdd, doc: &ArtifactView<'_, CurationSnapshot>, _
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::curation::schema::curated_count;
+    use crate::schema::curated_count;
     use crate::editor::sourcing::commands::{curation_remove, curation_set_count, drop_on_curated, drop_on_pool};
     use crate::editor::sourcing::testkit::{dispatch, new_app};
     use crate::editor::sourcing::SourcingCurationCommand;

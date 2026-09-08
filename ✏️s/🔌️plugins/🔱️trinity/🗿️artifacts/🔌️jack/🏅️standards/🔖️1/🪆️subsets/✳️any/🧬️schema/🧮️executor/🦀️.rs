@@ -1,9 +1,9 @@
 //! 🧮️ Trinity jack query executor.
 #![allow(dead_code)]
 
-use crate::artifacts::jack::mutations::{change_data_property, create_edge, create_node, delete_node, move_node, rename_node, TrinityGraphMutation};
-use crate::artifacts::jack::apply_trinity_graph_mutations;
-use crate::artifacts::jack::{port_key, Edge, EntityRef, Graph, JackSnapshot, Node, Port, PortDirection, PropertyBag, PropertyValue};
+use crate::mutations::{change_data_property, create_edge, create_node, delete_node, move_node, rename_node, TrinityGraphMutation};
+use crate::apply_trinity_graph_mutations;
+use crate::{port_key, Edge, EntityRef, Graph, JackSnapshot, Node, Port, PortDirection, PropertyBag, PropertyValue};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ast::{Clause, Expr, Pattern, Query, QueryResult, ReturnItem};
@@ -122,8 +122,8 @@ fn match_pattern(graph: &Graph, pattern: &Pattern, base: &Binding) -> Result<Vec
                 if edge_pat.kind.as_ref().is_some_and(|k| *k != edge.kind) {
                     continue;
                 }
-                let src = crate::artifacts::jack::port_node_id(&edge.source);
-                let tgt = crate::artifacts::jack::port_node_id(&edge.target);
+                let src = crate::port_node_id(&edge.source);
+                let tgt = crate::port_node_id(&edge.target);
                 if src != Some(node_id.as_str()) {
                     continue;
                 }
@@ -243,7 +243,7 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
 }
 
 fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphMutation, String> {
-    let scene = crate::artifacts::jack::jack_working_scene(fixture);
+    let scene = crate::jack_working_scene(fixture);
     let node = scene.nodes.iter().find(|node| node.id == node_id).ok_or_else(|| format!("node {node_id} not found"))?;
     match prop {
         "name" => {
@@ -265,7 +265,7 @@ fn emit_set_operation(fixture: &JackSnapshot, node_id: &str, prop: &str, value: 
 }
 
 fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<Vec<TrinityGraphMutation>, String> {
-    let scene = crate::artifacts::jack::jack_working_scene(fixture);
+    let scene = crate::jack_working_scene(fixture);
     let left = pattern.nodes.first().ok_or_else(|| "empty create pattern".to_string())?;
     let left_id = format!("{}-{}", left.var, scene.nodes.len());
     let mut operations = Vec::new();
@@ -302,7 +302,7 @@ fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<V
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jack::{Camera, Manifest};
+    use crate::{Camera, Manifest};
     use crate::ast::QueryResultKind;
     use crate::language_service::{complete, format as format_source, hover, lint, semantic_tokens};
     use crate::lexer::{lex, tokenize, Token, TokenClass};

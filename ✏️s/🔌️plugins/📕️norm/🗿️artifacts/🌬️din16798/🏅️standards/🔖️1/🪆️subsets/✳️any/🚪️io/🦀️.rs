@@ -13,8 +13,8 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::din16798::standards::v1::subsets::any::schema::Din16798Analyzer;
-    use crate::artifacts::din16798::Din16798Snapshot;
+    use crate::standards::v1::subsets::any::schema::Din16798Analyzer;
+    use crate::Din16798Snapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.din16798", standard: StandardId("1"), subset: SubsetId("*") };
@@ -53,7 +53,7 @@ pub use derived_composition::*;
 /// 🚪️ Composer registry (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated
 /// verbatim from the deleted `⚙️engine`; io is exactly where composer dispatch belongs.
 pub mod io_registry {
-    use crate::artifacts::din16798::standards::v1::subsets::any::schema::Din16798Composer as Din16798AnyComposer;
+    use crate::standards::v1::subsets::any::schema::Din16798Composer as Din16798AnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

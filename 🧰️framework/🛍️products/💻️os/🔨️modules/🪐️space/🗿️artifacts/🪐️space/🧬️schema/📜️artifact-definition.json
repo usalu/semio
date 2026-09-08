@@ -1,0 +1,9 @@
+{
+  "definition_version": 1,
+  "id": "os.space",
+  "artifact": "space",
+  "directory": "🪐️space",
+  "rust_package": "semio-framework-artifact-space-space",
+  "nx_project": "@semio-tech/space-space-rs",
+  "dependencies": []
+}

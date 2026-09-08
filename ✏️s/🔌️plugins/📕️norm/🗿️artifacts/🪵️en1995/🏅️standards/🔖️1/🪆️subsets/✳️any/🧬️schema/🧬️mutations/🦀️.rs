@@ -18,8 +18,8 @@
 //! are mounted directly as `mutations`-sibling modules in `🦀️.rs` (this lane's agent owns
 //! `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed for the TRIADS).
 
-use crate::artifacts::en1995::diff::En1995Diff;
-use crate::artifacts::en1995::En1995Snapshot;
+use crate::diff::En1995Diff;
+use crate::En1995Snapshot;
 
 //#region 🔖️Mutations
 use super::change_a_ef_mm2;

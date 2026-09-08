@@ -4,7 +4,7 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling `✏️editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::generation3d::{Generation3dMutation, Generation3dSnapshot, GENERATION3D_DIALECT, GENERATION_3D_SCHEMA};
+use crate::{Generation3dMutation, Generation3dSnapshot, GENERATION3D_DIALECT, GENERATION_3D_SCHEMA};
 use crate::viewer::generation3d::modes::view;
 use crate::viewer::generation3d::modes::view::windows::preview;
 // 🚧️ SDK note (ticket 26/08/16 contract §2.1/§2.2/§2.4): `ArtifactViewer`/`Viewer`/`ViewEmit`/
@@ -52,7 +52,7 @@ impl ArtifactViewer for Generation3dViewer {
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
 
     fn initial_snapshot() -> Generation3dSnapshot {
-        crate::artifacts::generation3d::schema::default_snapshot()
+        crate::schema::default_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Generation3dViewCommand::Noop` variant never carries a

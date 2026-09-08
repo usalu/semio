@@ -7,9 +7,9 @@
 //! artifact's `⚙️engine`. This file is a routing table: `handle` → `NoteCommand::dispatch`, `render` →
 //! body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::schema::empty_note_snapshot;
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
+use crate::op::NoteMutation;
+use crate::schema::empty_note_snapshot;
+use crate::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use crate::editor::note::commands::ink_apply_events;
 use crate::editor::note::commands::set_active_utility;
 use crate::editor::note::commands::set_locale;
@@ -94,7 +94,7 @@ pub const NOTE_INTERACTION_BLOCKS: &str = "blocks";
 /// once, so every downstream handler keeps working with the raw ids it always did.
 pub struct NoteDispatchCtx {
     pub selected_block_ids: Vec<String>,
-    pub id_owner: crate::artifacts::note::schema::NoteIdOwner,
+    pub id_owner: crate::schema::NoteIdOwner,
 }
 
 /// 🌳️ `blocks` domain topology from the document's own Group nesting — row-id-prefixed ids (matching
@@ -103,7 +103,7 @@ pub struct NoteDispatchCtx {
 fn note_blocks_topology(document: &NoteSnapshot) -> DomainTopology {
     fn visit(blocks: &[NoteBlockNode], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
         for block in blocks {
-            let id = crate::artifacts::note::schema::block_tree_row_id(block);
+            let id = crate::schema::block_tree_row_id(block);
             out.push(TopologyNode { id: id.clone(), granularity: "block".into(), parent: parent.map(str::to_string) });
             if let NoteBlockNode::Group { children, .. } = block {
                 visit(children, Some(id.as_str()), out);
@@ -190,7 +190,7 @@ impl ArtifactEditor for NotePlayApp {
     /// derived from `DIALECT` + the trait's own fixed `ROLE` (`AppRole::Editor`, not overridable in
     /// practice — mirrors trinity/jack's `TrinityJackPlayApp`, the first real W2 packet to confirm
     /// `ArtifactEditor::ROLE` is NOT restated per-impl) via `surface_app_id`.
-    const DIALECT: Dialect = crate::artifacts::note::NOTE_DIALECT;
+    const DIALECT: Dialect = crate::NOTE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
@@ -252,8 +252,8 @@ impl ArtifactEditor for NotePlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
-        let selected_block_ids = interaction.selection(NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::artifacts::note::schema::block_id_from_tree_row_id(id)).collect();
-        let mut ctx = NoteDispatchCtx { selected_block_ids, id_owner: crate::artifacts::note::schema::NoteIdOwner::for_document_child(doc.snapshot, command.command_id()) };
+        let selected_block_ids = interaction.selection(NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::schema::block_id_from_tree_row_id(id)).collect();
+        let mut ctx = NoteDispatchCtx { selected_block_ids, id_owner: crate::schema::NoteIdOwner::for_document_child(doc.snapshot, command.command_id()) };
         command.dispatch(doc, cfg, &mut ctx)
     }
 
@@ -298,9 +298,9 @@ impl ArtifactEditor for NotePlayApp {
 /// out inline.
 pub fn create_note_app() -> AppDefinition {
     let document = empty_note_snapshot();
-    let mut app = Editor::builder(crate::artifacts::note::NOTE_DIALECT)
+    let mut app = Editor::builder(crate::NOTE_DIALECT)
             .document(["semio", "note"])
-            .artifact_kind(crate::artifacts::note::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             .icon_id("note")
             .mode_def(edit::definition())
             .default_mode_id(edit::NOTE_PLAY_MODE_EDIT)
@@ -476,9 +476,9 @@ pub fn create_note_app() -> AppDefinition {
             .build_definition();
     for window in app.window_kinds.iter_mut() {
         if window.id == NOTE_PLAY_WINDOW_COMPOSITE {
-            window.options.measures = composite::window_measures(&document, &crate::artifacts::note::NoteCamera::default(), &crate::editor::note::terminology::NotePlayLabels::NATIVE_EN);
+            window.options.measures = composite::window_measures(&document, &crate::NoteCamera::default(), &crate::editor::note::terminology::NotePlayLabels::NATIVE_EN);
         } else if window.id == NOTE_PLAY_WINDOW_NAVIGATOR {
-            window.options.measures = navigator::window_measures(&document, &crate::artifacts::note::NoteCamera::default(), &crate::editor::note::terminology::NotePlayLabels::NATIVE_EN);
+            window.options.measures = navigator::window_measures(&document, &crate::NoteCamera::default(), &crate::editor::note::terminology::NotePlayLabels::NATIVE_EN);
         }
     }
     // 👁️✏️ SDK gap (contract §2.4/§7.4): `.example(...)`/`.workflow(...)` do not exist on
@@ -603,7 +603,7 @@ mod tests {
             NoteCommand::NudgeSelectionDownFast(nudge_selection_down_fast::NudgeSelectionDownFast {}),
             NoteCommand::NudgeSelectionLeftFast(nudge_selection_left_fast::NudgeSelectionLeftFast {}),
             NoteCommand::NudgeSelectionRightFast(nudge_selection_right_fast::NudgeSelectionRightFast {}),
-            NoteCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::note::NoteCamera { x: 9.0, y: 9.0, zoom: 2.0 } }),
+            NoteCommand::SetCamera(set_camera::SetCamera { camera: crate::NoteCamera { x: 9.0, y: 9.0, zoom: 2.0 } }),
             NoteCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 1.5 }),
             NoteCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pencil".into() }),
             NoteCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
@@ -669,7 +669,7 @@ mod tests {
     /// links — a top-level block has no parent, every group child's parent is the group's own row id.
     #[semio_framework_async_macros::async_test]
     async fn interaction_topology_walks_group_nesting_into_parent_links() {
-        let document = crate::artifacts::note::schema::semio_example_snapshot();
+        let document = crate::schema::semio_example_snapshot();
         let config = NoteConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
@@ -677,7 +677,7 @@ mod tests {
         let topology = NotePlayApp::interaction_topology(&doc, &cfg);
         let blocks = topology.domains.get(NOTE_INTERACTION_BLOCKS).expect("blocks domain present in topology");
         assert!(!blocks.ordered.is_empty(), "the semio example document must produce a non-empty blocks topology");
-        assert_eq!(blocks.ordered.len(), crate::artifacts::note::schema::flatten_blocks(&document.blocks).len(), "topology must cover every block, nested or not");
+        assert_eq!(blocks.ordered.len(), crate::schema::flatten_blocks(&document.blocks).len(), "topology must cover every block, nested or not");
     }
 
     /// 🌱️ An empty document has no blocks to select — an empty topology (every stale `blocks`
@@ -701,7 +701,7 @@ mod tests {
         use crate::editor::note::testkit::{dispatch as note_dispatch, note_app_with_registry, select_blocks};
         let mut app = note_app_with_registry().await;
         note_dispatch(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 })).await;
-        let new_id = crate::artifacts::note::schema::block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
+        let new_id = crate::schema::block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
         select_blocks(&mut app, &[&new_id]).await;
         note_dispatch(&mut app, NoteCommand::DeleteSelection(delete_selection::DeleteSelection {})).await;
         assert!(app.snapshot().expect("snapshot").blocks.is_empty(), "the picked block must be deleted");

@@ -7,10 +7,11 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "./🧬️contracts/🗨️dialog-origin/🟦️.ts";
-import { OwnedShellDialog } from "./🧬️contracts/🗨️dialog-origin/🌐️browser/🟦️.tsx";
-import { runDocumentOpeningAttemptV1 } from "./🧬️contracts/🗨️dialog-origin/🚪️opening/📄️document/🟦️.ts";
-import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "./🧬️contracts/🗨️dialog-origin/🎥️tutorial/🟦️.ts";
+import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "./🗨️dialog-origin/🟦️.ts";
+import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
+import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, DocumentAttachmentLaneV1, runDocumentOpeningAttemptV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
+import { runArtifactCreationReadyOpeningV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
+import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "./🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 import React, {
   createContext,
   type CSSProperties,
@@ -172,7 +173,7 @@ import {
  * `🧰️framework/🛍️products/💻️os/🟦️.ts` (that package's own root) imports them from for its
  * own `encode`/`decodeMutationEnvelopesPack` helpers above. */
 import { mutationEnvelopeFromWire, mutationEnvelopeToWire, type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework-replication";
-import { scopedPresencePeersV1 } from "./🧬️contracts/👥️presence-scope/🟦️.ts";
+import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
 
 const shellReplicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
 
@@ -585,8 +586,8 @@ import { type WindowFault, type WindowFaultClass, windowFaultFromError } from ".
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🧬️contracts/🪪️host-bootstrap/🟦️.tsx";
-import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1, type ArtifactCreationProgressUiStateV1 } from "./🧬️contracts/🌱️artifact-creation/🏦️.tsx";
+import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🪪️host-bootstrap/🟦️.tsx";
+import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1, type ArtifactCreationProgressUiStateV1 } from "./🌱️artifact-creation/🏦️.tsx";
 import {
   DirectoryBootstrapStatusNotice,
   applyDirectoryEventPageBootstrapV1,
@@ -594,7 +595,7 @@ import {
   openDirectoryHomeOwnerV1,
   type DirectoryBootstrapUiState,
   type DirectoryHomeOwnerV1,
-} from "./🧬️contracts/📇️directory-bootstrap/🟦️.tsx";
+} from "./📇️directory-bootstrap/🟦️.tsx";
 
 
 import { SyncAttachCard } from "../🔄️ShellSync/🟦️.tsx";
@@ -1280,13 +1281,22 @@ export function spaceArtifactCreationRequestFromAction(
 export type SpaceArtifactCreationOwnerV1 = ArtifactCreationProgressOwnerV1 & Readonly<{
   opening: boolean;
   cancelRequested: boolean;
+  ready: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }> | null;
 }>;
 
 export function spaceArtifactCreationOwnerAcceptsStatus(
   owner: SpaceArtifactCreationOwnerV1,
   message: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>,
 ): boolean {
-  return owner.requestId === message.requestId && owner.spaceId === message.spaceId && (message.ready === undefined || message.ready.kindId === owner.kindId);
+  if (owner.requestId !== message.requestId || owner.spaceId !== message.spaceId || (message.ready !== undefined && message.ready.kindId !== owner.kindId)) return false;
+  if (owner.ready === null) return true;
+  const retained = owner.ready.ready;
+  return message.phase === "ready" && retained !== undefined && message.ready !== undefined
+    && message.ready.documentId === retained.documentId && message.ready.kindId === retained.kindId
+    && message.ready.artifactSchema === retained.artifactSchema
+    && message.ready.parentDialect.artifactKind === retained.parentDialect.artifactKind
+    && message.ready.parentDialect.standard === retained.parentDialect.standard
+    && message.ready.parentDialect.subset === retained.parentDialect.subset;
 }
 
 export function spaceArtifactCreationReadyOpening(
@@ -1855,11 +1865,40 @@ function FrameworkOsShellInner({
    * temporal-dead-zone violation at the point `useCallback` evaluates that array. Same ref-forwarding
    * idiom `onActionRef`/`dispatchDirectoryEventsRef` already use: assigned as a plain statement right
    * after each real declaration, read only from inside a later callback body, never from a deps array. */
-  type OpenDocumentSessionTarget = DocumentOpeningTarget<ActiveSession, PluginWasmHandle>;
-  const openDocumentRef = useRef<(ref: DocumentOpeningReference, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget) => Promise<void>>(async () => {});
+  type OpenDocumentSessionTarget = DocumentOpeningTarget<ActiveSession, PluginWasmHandle> & { readonly background?: boolean };
+  type PreparedArtifactOpeningTarget = OpenDocumentSessionTarget & Readonly<{ dialect: ArtifactDialect; role: AppRole }>;
+  type BackgroundSpaceIndexSession = {
+    readonly plugin: PluginWasmHandle;
+    readonly session: ActiveSession;
+    readonly runtimeKey: string;
+    readonly clientInstanceId: string;
+    readonly hubBaseUrl: string;
+    readonly userId: string;
+  };
+  const backgroundSpaceIndexSessionsRef = useRef(new BackgroundDocumentSessionsV1<BackgroundSpaceIndexSession>());
+  const openDocumentRef = useRef<(ref: DocumentOpeningReference, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget) => Promise<DocumentOpeningReceiptV1 | null>>(async () => null);
   const closeDocumentRef = useRef<(runtimeKey: string, clientInstanceId?: string) => void>(() => {});
-  const openArtifactWithAppRefRef = useRef<(target: AppRef, dialect: ArtifactDialect, role: AppRole, admit?: () => boolean) => Promise<OpenDocumentSessionTarget | null>>(async () => null);
+  const documentAttachmentLanesRef = useRef(new WeakMap<PluginWasmHandle, Map<number, DocumentAttachmentLaneV1>>());
+  const documentAttachmentLane = useCallback((plugin: PluginWasmHandle, instanceId: number): DocumentAttachmentLaneV1 => {
+    let lanes = documentAttachmentLanesRef.current.get(plugin);
+    if (lanes === undefined) { lanes = new Map(); documentAttachmentLanesRef.current.set(plugin, lanes); }
+    let lane = lanes.get(instanceId);
+    if (lane === undefined) {
+      lane = new DocumentAttachmentLaneV1(async () => { await plugin.detachBackbone?.(instanceId); });
+      lanes.set(instanceId, lane);
+    }
+    return lane;
+  }, []);
+  const retireDocumentAttachment = useCallback(async (plugin: PluginWasmHandle, instanceId: number, clientInstanceId: string): Promise<void> => {
+    const lanes = documentAttachmentLanesRef.current.get(plugin);
+    const lane = lanes?.get(instanceId);
+    if (lane === undefined) return;
+    await lane.close(clientInstanceId);
+    if (lane.idle && lanes?.get(instanceId) === lane) lanes.delete(instanceId);
+  }, []);
+  const openArtifactWithAppRefRef = useRef<(target: AppRef, dialect: ArtifactDialect, role: AppRole, admit?: () => boolean, publish?: boolean) => Promise<PreparedArtifactOpeningTarget | null>>(async () => null);
   const resolveArtifactOpeningRelayRef = useRef<(actionId: string, args: unknown) => ResolvedArtifactOpeningRelay | null>(() => null);
+  const openReadySpaceArtifactCreationRef = useRef<(requestId: string) => void>(() => {});
   const spaceArtifactCreationOwnersRef = useRef(new Map<string, SpaceArtifactCreationOwnerV1>());
   const [spaceArtifactCreationUi, setSpaceArtifactCreationUi] = useState<ArtifactCreationProgressUiStateV1>({});
   const [spaceArtifactCreationCatalog, setSpaceArtifactCreationCatalog] = useState<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-catalog" }> | null>(null);
@@ -1874,13 +1913,13 @@ function FrameworkOsShellInner({
       if (owner.runtimeKey !== runtimeKey) continue;
       spaceArtifactCreationOwnersRef.current.delete(requestId);
       cleared.push(requestId);
-      worker?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId, spaceId: owner.spaceId }) });
+      if (owner.ready === null) worker?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId, spaceId: owner.spaceId }) });
     }
     if (cleared.length > 0) setSpaceArtifactCreationUi((current) => cleared.reduce((next, requestId) => reduceArtifactCreationProgressUiV1(next, { kind: "cleared", requestId }), current));
   }, []);
   const cancelSpaceArtifactCreation = useCallback((requestId: string, spaceId: string) => {
     const owner = spaceArtifactCreationOwnersRef.current.get(requestId);
-    if (owner === undefined || owner.spaceId !== spaceId || owner.cancelRequested || owner.opening) return;
+    if (owner === undefined || owner.spaceId !== spaceId || owner.cancelRequested || owner.opening || owner.ready !== null) return;
     spaceArtifactCreationOwnersRef.current.set(requestId, { ...owner, cancelRequested: true });
     setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "cancel-requested", requestId, spaceId }));
     backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId, spaceId }) });
@@ -2111,7 +2150,7 @@ function FrameworkOsShellInner({
         ) {
           spaceArtifactCreationOwnersRef.current.delete(owner.requestId);
           setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "cleared", requestId: owner.requestId }));
-          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId: owner.requestId, spaceId: owner.spaceId }) });
+          if (message.phase !== "ready") worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId: owner.requestId, spaceId: owner.spaceId }) });
           return;
         }
         setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "status", message }));
@@ -2121,33 +2160,10 @@ function FrameworkOsShellInner({
         }
         const openingArgs = spaceArtifactCreationReadyOpening(message);
         if (openingArgs === null || owner.opening) return;
-        const openingOwner: SpaceArtifactCreationOwnerV1 = { ...owner, opening: true };
-        spaceArtifactCreationOwnersRef.current.set(owner.requestId, openingOwner);
-        void (async () => {
-          try {
-            const opening = resolveArtifactOpeningRelayRef.current("os.open-artifact", openingArgs);
-            if (opening === null) throw new Error("artifact router is not ready");
-            const admit = (): boolean => {
-              const currentOwner = spaceArtifactCreationOwnersRef.current.get(openingOwner.requestId);
-              const currentEntry = openDocumentSessionsRef.current.get(openingOwner.runtimeKey);
-              return currentOwner === openingOwner && currentEntry?.clientInstanceId === openingOwner.clientInstanceId
-                && shellDialogSessionIsCurrentV1(currentEntry.session, entry.session)
-                && currentEntry.scope?.spaceId === openingOwner.spaceId && currentEntry.scope.documentId === S_SPACE_INDEX_DOCUMENT_ID;
-            };
-            const target = await openArtifactWithAppRefRef.current(opening.app, opening.dialect, opening.role, admit);
-            if (!admit()) return;
-            if (target !== null && opening.documentId && opening.schema) {
-              await openDocumentRef.current({ documentId: opening.documentId, schema: opening.schema, spaceId: openingOwner.spaceId }, undefined, target);
-            }
-          } catch (openingError) {
-            console.warn("[os-shell] space artifact creation opening rejected", openingError);
-          } finally {
-            if (spaceArtifactCreationOwnersRef.current.get(openingOwner.requestId) === openingOwner) {
-              spaceArtifactCreationOwnersRef.current.delete(openingOwner.requestId);
-              setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "cleared", requestId: openingOwner.requestId }));
-            }
-          }
-        })();
+        const firstReady = owner.ready === null;
+        const readyOwner: SpaceArtifactCreationOwnerV1 = firstReady ? { ...owner, ready: message } : owner;
+        spaceArtifactCreationOwnersRef.current.set(owner.requestId, readyOwner);
+        if (firstReady) openReadySpaceArtifactCreationRef.current(owner.requestId);
         return;
       }
       if (message.kind === "space-artifact-creation-catalog") {
@@ -3408,6 +3424,7 @@ function FrameworkOsShellInner({
   expandedCommandIdRef.current = expandedCommandId;
   const commandStagedArgsByCommandIdRef = useRef(commandStagedArgsByCommandId);
   commandStagedArgsByCommandIdRef.current = commandStagedArgsByCommandId;
+  const pendingDocumentOpeningPublicationRef = useRef<Readonly<{ receipt: DocumentOpeningReceiptV1; plugin: PluginWasmHandle; session: ActiveSession }> | null>(null);
 
   /** 🛠️ Overlays the mode-level host-owned `activeToolId` onto a view state at plugin-call time —
    * mirrors `injectActiveUtility` but is windowless (a tool is scoped to the active mode, not a window). */
@@ -3425,7 +3442,16 @@ function FrameworkOsShellInner({
   }, [injectActiveTool]);
 
   useEffect(() => {
-    dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
+    const pending = pendingDocumentOpeningPublicationRef.current;
+    pendingDocumentOpeningPublicationRef.current = null;
+    const entry = pending === null ? undefined : openDocumentSessionsRef.current.get(pending.receipt.runtimeKey);
+    const retainedRuntimeKey = pending !== null
+      && entry?.clientInstanceId === pending.receipt.clientInstanceId
+      && entry.plugin === pending.plugin
+      && shellDialogSessionIsCurrentV1(pending.session, session)
+      ? pending.receipt.runtimeKey
+      : null;
+    dispatch({ type: "SET_SYNC_BACKBONE_URI", value: retainedRuntimeKey === null ? null : `actor://${retainedRuntimeKey}` });
     dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
   }, [panel?.activeSpawnedId, session, hostMode]);
 
@@ -3468,6 +3494,7 @@ function FrameworkOsShellInner({
         worker?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-create-cancel", requestId: owner.requestId, spaceId: owner.spaceId }) });
       }
       spaceArtifactCreationOwnersRef.current.clear();
+      for (const [runtimeKey, entry] of openDocumentSessionsRef.current) closeDocumentRef.current(runtimeKey, entry.clientInstanceId);
       worker?.terminate();
       backboneWorkerRef.current = null;
     };
@@ -3484,6 +3511,11 @@ function FrameworkOsShellInner({
       for (const unregister of pluginBackboneRouteUnregistersRef.current.values()) unregister();
       pluginBackboneRouteUnregistersRef.current.clear();
       const retirements: Promise<unknown>[] = [];
+      retirements.push(backgroundSpaceIndexSessionsRef.current.close());
+      const destroyDetachedApp = async (plugin: PluginWasmHandle, instanceId: number) => {
+        await documentAttachmentLanesRef.current.get(plugin)?.get(instanceId)?.drain();
+        await plugin.destroyApp(instanceId);
+      };
       const directoryHomeOwner = directoryHomeOwnerRef.current;
       directoryHomeOwnerRef.current = null;
       if (directoryHomeOwner) {
@@ -3495,7 +3527,7 @@ function FrameworkOsShellInner({
       const primary = sessionRef.current;
       if (primary) {
         const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === primary.pluginId)?.handle;
-        if (plugin) retirements.push(plugin.destroyApp(primary.instanceId).catch(() => {}));
+        if (plugin) retirements.push(destroyDetachedApp(plugin, primary.instanceId).catch(() => {}));
       }
       // 🪶️ Closes the previously-documented Wave-1 gap: studio-mode spawned apps (`panel.spawnedApps`)
       // and external-slot contributor instances (`contributorInstancesRef`) each hold a live plugin
@@ -3505,11 +3537,11 @@ function FrameworkOsShellInner({
       // pattern the primary session's own destroy already used above.
       for (const spawned of spawnedAppsRef.current) {
         const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === spawned.pluginId)?.handle;
-        if (plugin) retirements.push(plugin.destroyApp(spawned.instanceId).catch(() => {}));
+        if (plugin) retirements.push(destroyDetachedApp(plugin, spawned.instanceId).catch(() => {}));
       }
       for (const [pluginId, instanceId] of contributorInstancesRef.current) {
         const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === pluginId)?.handle;
-        if (plugin) retirements.push(plugin.destroyApp(instanceId).catch(() => {}));
+        if (plugin) retirements.push(destroyDetachedApp(plugin, instanceId).catch(() => {}));
       }
       contributorInstancesRef.current.clear();
       const handles = loadedPluginsRef.current.map((entry) => entry.handle);
@@ -4266,6 +4298,7 @@ function FrameworkOsShellInner({
                   sessionInstanceId: origin[1].session.instanceId,
                   opening: false,
                   cancelRequested: false,
+                  ready: null,
                 };
                 spaceArtifactCreationOwnersRef.current.set(requestId, owner);
                 setSpaceArtifactCreationUi((current) => reduceArtifactCreationProgressUiV1(current, { kind: "issued", owner }));
@@ -4544,9 +4577,9 @@ function FrameworkOsShellInner({
    * verifies the Hub plan and catalog assets before acquiring socket authority. Explicit bindings
    * are used by the manual persistence picker. Local documents never inherit the current route. */
   const openDocument = useCallback(
-    async (ref: DocumentOpeningReference, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget) => {
+    async (ref: DocumentOpeningReference, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget): Promise<DocumentOpeningReceiptV1 | null> => {
       const documentTarget = resolveDocumentOpeningTarget(target, resolveSyncTargetSession(), loadedPlugins);
-      if (!documentTarget) return;
+      if (!documentTarget) return null;
       const { session: targetSession, plugin } = documentTarget;
       const worker = ensureBackboneWorker();
       const resolvedBindings = bindings ?? resolveDocumentOpeningBindings(ref, {
@@ -4559,8 +4592,7 @@ function FrameworkOsShellInner({
       const runtimeKey = scope === undefined ? ref.documentId : documentRuntimeKeyV1({ kind: "hub", ...scope });
       const openingAttempt = { clientInstanceId: crypto.randomUUID() };
       const { clientInstanceId } = openingAttempt;
-      const previous = openDocumentSessionsRef.current.get(runtimeKey);
-      if (previous !== undefined) closeDocumentRef.current(runtimeKey, previous.clientInstanceId);
+      if (!admitDocumentOpeningV1({ runtimeKey, plugin, instanceId: targetSession.instanceId, background: target?.background === true }, openDocumentSessionsRef.current, closeDocumentRef.current)) return null;
       if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
       openDocumentSessionsRef.current.set(runtimeKey, { session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }) });
       // 🐚️ Registers THIS shell as the route for this document's outbound backbone bytes before the
@@ -4582,7 +4614,7 @@ function FrameworkOsShellInner({
         : null;
       void socketActor?.catch(() => {});
       const uri = `actor://${runtimeKey}`;
-      await runDocumentOpeningAttemptV1({
+      const committed = await runDocumentOpeningAttemptV1({
         deadlineMs: 10_000,
         current: () => openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId === clientInstanceId,
         socket: async () => {
@@ -4594,23 +4626,28 @@ function FrameworkOsShellInner({
           if (waiter !== undefined && waiter.clientInstanceId === clientInstanceId) socketActorReadyRef.current.delete(runtimeKey);
         },
         close: () => closeDocumentRef.current(runtimeKey, clientInstanceId),
+        detach: () => retireDocumentAttachment(plugin, targetSession.instanceId, clientInstanceId),
         attach: async () => {
           if (hubBinding && scope) {
             directoryScopedOwnersRef.current.set(runtimeKey, scope);
             worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-open", baseUrl: hubBinding.baseUrl, scope, since: 0 }) });
-            if (scope.documentId === S_SPACE_INDEX_DOCUMENT_ID) {
+            if (scope.documentId === S_SPACE_INDEX_DOCUMENT_ID && !target?.background) {
               setSpaceArtifactCreationCatalog(null);
               setSpaceArtifactCreationCatalogUi({ kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: scope.spaceId, phase: "loading" });
               worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: scope.spaceId }) });
             }
           }
-          if (plugin.attachBackbone) await plugin.attachBackbone(targetSession.instanceId, uri);
+          await documentAttachmentLane(plugin, targetSession.instanceId).attach(clientInstanceId, () => openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId === clientInstanceId, async () => {
+            if (plugin.attachBackbone) await plugin.attachBackbone(targetSession.instanceId, uri);
+          });
         },
         commit: () => {
+          if (target?.background) return;
           dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
           dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
         },
       });
+      return committed ? { committed: true, runtimeKey, clientInstanceId } : null;
     },
     [loadedPlugins, relayPluginBackboneMessage, resolveSyncTargetSession, hubEnv],
   );
@@ -4622,6 +4659,7 @@ function FrameworkOsShellInner({
     if (clientInstanceId !== undefined && entry.clientInstanceId !== clientInstanceId) return;
     cancelSpaceArtifactCreationsForRuntime(runtimeKey, backboneWorkerRef.current);
     if (entry.scope?.documentId === S_SPACE_INDEX_DOCUMENT_ID) {
+      void backgroundSpaceIndexSessionsRef.current.retire(entry.scope.spaceId, owned => owned.clientInstanceId === entry.clientInstanceId).catch(error => console.error("[DEBUG] background document retirement failed", error));
       setSpaceArtifactCreationCatalog((catalog) => catalog?.clientInstanceId === entry.clientInstanceId ? null : catalog);
       setSpaceArtifactCreationCatalogUi((status) => status?.clientInstanceId === entry.clientInstanceId ? null : status);
     }
@@ -4638,7 +4676,7 @@ function FrameworkOsShellInner({
       inferencePortEpochRef.current = inferenceOwner.operationEpoch + 1;
       dispatch({ type: "CLEAR_INFERENCE_PORT_FOR_DOCUMENT", runtimeKey });
     }
-    if (entry?.plugin.detachBackbone) void entry.plugin.detachBackbone(entry.session.instanceId);
+    void retireDocumentAttachment(entry.plugin, entry.session.instanceId, entry.clientInstanceId).catch(error => console.error("[DEBUG] document attachment retirement failed", error));
     openDocumentSessionsRef.current.delete(runtimeKey);
     const dialog = liveDialogRef.current;
     if (dialog?.origin.document?.runtimeKey === runtimeKey && dialog.origin.document.clientInstanceId === entry?.clientInstanceId) closeOwnedDialog(dialog.openingId);
@@ -5961,13 +5999,31 @@ function FrameworkOsShellInner({
     [pluginHandleFor, session],
   );
 
+  const publishPreparedArtifactOpening = useCallback((target: PreparedArtifactOpeningTarget, receipt?: DocumentOpeningReceiptV1): void => {
+    const { session: nextSession, dialect, role } = target;
+    const seeded = applyFrameworkLayoutSeed(nextSession.app.defaultLayout, withLocalizedWindowKindLabels(nextSession.app.windowKinds), EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
+    extraWindowInstancesRef.current = seeded.extraInstances;
+    extraWindowCounterRef.current = seeded.extraInstances.length;
+    pendingDocumentOpeningPublicationRef.current = receipt === undefined ? null : { receipt, plugin: target.plugin, session: nextSession };
+    dispatch({ type: "SET_SESSION", value: nextSession });
+    dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+    dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+    dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
+    try {
+      void (target.plugin as PendingAppChannelMethods).openArtifact?.(canonicalSurfaceId(dialect, role), role === "editor" ? 1 : 0, nextSession.pluginId, nextSession.app.id)
+        ?.catch((commandError) => console.error("[DEBUG] openArtifact failed", commandError));
+    } catch (commandError) {
+      console.error("[DEBUG] openArtifact failed", commandError);
+    }
+  }, [uiLocale, uiTerminology]);
+
   /** 👁️✏️ Re-points the primary session at a different registered `AppRef` for the SAME artifact
    * (contract freeze §3/§5's "Open with…") — installs the target plugin first if it isn't loaded
    * yet, then mirrors `establishPrimarySession`'s non-studio create/seed/dispatch sequence. Also
    * best-effort notifies the host once `openArtifact` is wrapped (see `PendingAppChannelMethods`
    * above) using the canonical role-suffixed surface id. */
   const openArtifactWithAppRef = useCallback(
-    async (target: AppRef, dialect: ArtifactDialect, role: AppRole, admit?: () => boolean): Promise<OpenDocumentSessionTarget | null> => {
+    async (target: AppRef, dialect: ArtifactDialect, role: AppRole, admit?: () => boolean, publish = true): Promise<PreparedArtifactOpeningTarget | null> => {
       const current = shellStateRef.current.pluginRuntime.session;
       const owner = current === null ? null : captureEffectOwner(current, captureDialogOrigin(current));
       const canOpen = admit ?? (() => owner === null ? shellStateRef.current.pluginRuntime.session === null : isCurrentEffectOwner(owner));
@@ -5984,23 +6040,74 @@ function FrameworkOsShellInner({
         console.error(`[DEBUG] openArtifactWithAppRef: ${target.pluginId}/${target.appId} not found after install`);
         return null;
       }
-      void (plugin.handle as PendingAppChannelMethods).openArtifact?.(canonicalSurfaceId(dialect, role), role === "editor" ? 1 : 0, target.pluginId, target.appId)?.catch((commandError) => console.error("[DEBUG] openArtifact failed", commandError));
       const handle = plugin.handle;
       const instanceId = await createAdmittedShellInstanceV1(canOpen, () => handle.createApp(app.id), (id) => handle.destroyApp(id));
       if (instanceId === null) return null;
-      const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), EMPTY_APP_LABELS_OVERLAY, uiTerminology, uiLocale);
-      extraWindowInstancesRef.current = seeded.extraInstances;
-      extraWindowCounterRef.current = seeded.extraInstances.length;
       const nextSession: ActiveSession = { pluginId: plugin.handle.pluginId, instanceId, app, viewState: { activeModeId: app.defaultModeId ?? app.modes[0]?.id } };
-      dispatch({ type: "SET_SESSION", value: nextSession });
-      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
-      dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
-      return { session: nextSession, plugin: plugin.handle };
+      const prepared = { session: nextSession, plugin: plugin.handle, dialect, role };
+      if (publish) publishPreparedArtifactOpening(prepared);
+      return prepared;
     },
-    [loadedPlugins, installPlugin, uiTerminology, uiLocale, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner],
+    [loadedPlugins, installPlugin, captureDialogOrigin, captureEffectOwner, isCurrentEffectOwner, publishPreparedArtifactOpening],
   );
   openArtifactWithAppRefRef.current = openArtifactWithAppRef;
+
+  const openReadySpaceArtifactCreation = useCallback((requestId: string): void => {
+    const owner = spaceArtifactCreationOwnersRef.current.get(requestId);
+    if (owner === undefined || owner.ready === null || owner.opening) return;
+    const openingArgs = spaceArtifactCreationReadyOpening(owner.ready);
+    const origin = openDocumentSessionsRef.current.get(owner.runtimeKey);
+    if (openingArgs === null || origin === undefined) return;
+    const openingOwner: SpaceArtifactCreationOwnerV1 = { ...owner, opening: true };
+    const current = (): boolean => {
+      const retained = spaceArtifactCreationOwnersRef.current.get(openingOwner.requestId);
+      const entry = openDocumentSessionsRef.current.get(openingOwner.runtimeKey);
+      return retained === openingOwner && entry?.clientInstanceId === openingOwner.clientInstanceId
+        && entry.session.instanceId === openingOwner.sessionInstanceId
+        && shellDialogSessionIsCurrentV1(entry.session, shellStateRef.current.pluginRuntime.session)
+        && entry.scope?.spaceId === openingOwner.spaceId && entry.scope.documentId === S_SPACE_INDEX_DOCUMENT_ID;
+    };
+    spaceArtifactCreationOwnersRef.current.set(requestId, openingOwner);
+    setSpaceArtifactCreationUi((state) => reduceArtifactCreationProgressUiV1(state, { kind: "opening", requestId, spaceId: owner.spaceId }));
+    void runArtifactCreationReadyOpeningV1<PreparedArtifactOpeningTarget, DocumentOpeningReceiptV1>({
+      current,
+      prepare: async () => {
+        const opening = resolveArtifactOpeningRelayRef.current("os.open-artifact", openingArgs);
+        if (opening === null) return null;
+        return await openArtifactWithAppRef(opening.app, opening.dialect, opening.role, current, false);
+      },
+      open: (target) => openDocument(
+        { documentId: openingArgs.documentId!, schema: openingArgs.schema!, spaceId: openingOwner.spaceId },
+        undefined,
+        target,
+      ),
+      publish: (target, receipt) => publishPreparedArtifactOpening(target, receipt),
+      release: async (target, receipt) => {
+        try {
+          if (receipt !== null) {
+            const entry = openDocumentSessionsRef.current.get(receipt.runtimeKey);
+            if (entry?.clientInstanceId === receipt.clientInstanceId && entry.plugin === target.plugin && shellDialogSessionIsCurrentV1(entry.session, target.session)) {
+              closeDocument(receipt.runtimeKey, receipt.clientInstanceId);
+            }
+            await retireDocumentAttachment(target.plugin, target.session.instanceId, receipt.clientInstanceId);
+          }
+        } finally {
+          await target.plugin.destroyApp(target.session.instanceId);
+        }
+      },
+      failed: (openingError) => {
+        if (spaceArtifactCreationOwnersRef.current.get(requestId) !== openingOwner) return;
+        spaceArtifactCreationOwnersRef.current.set(requestId, { ...openingOwner, opening: false });
+        setSpaceArtifactCreationUi((state) => reduceArtifactCreationProgressUiV1(state, { kind: "open-failed", requestId, spaceId: openingOwner.spaceId }));
+        console.warn("[os-shell] created artifact remains ready after opening failed", openingError);
+      },
+    }).then((outcome) => {
+      if (outcome === "failed" || spaceArtifactCreationOwnersRef.current.get(requestId) !== openingOwner) return;
+      spaceArtifactCreationOwnersRef.current.delete(requestId);
+      setSpaceArtifactCreationUi((state) => reduceArtifactCreationProgressUiV1(state, { kind: "cleared", requestId }));
+    });
+  }, [closeDocument, openArtifactWithAppRef, openDocument, publishPreparedArtifactOpening, retireDocumentAttachment]);
+  openReadySpaceArtifactCreationRef.current = openReadySpaceArtifactCreation;
 
   /** 👁️✏️ `DefaultAppsHostApi.rows` — one row per `(dialect, role)` pair among `knownDialects`, both
    * roles even when only one has registered surfaces (an empty `options` list still renders the row,
@@ -6794,7 +6901,10 @@ function FrameworkOsShellInner({
 
   const isEditorSession = canCheckIn(session?.app.role);
 
-  const spaceIndexInstanceRef = useRef<Map<string, { readonly pluginId: string; readonly instanceId: number }>>(new Map());
+  useEffect(() => {
+    void backgroundSpaceIndexSessionsRef.current.retain(owned => identity !== null && owned.hubBaseUrl === identity.hubBaseUrl && owned.userId === identity.userId && loadedPlugins.some(entry => entry.handle === owned.plugin) && openDocumentSessionsRef.current.get(owned.runtimeKey)?.clientInstanceId === owned.clientInstanceId)
+      .catch(error => console.error("[DEBUG] background document authority retirement failed", error));
+  }, [identity?.hubBaseUrl, identity?.userId, loadedPlugins]);
 
   /** 📌️ §C5 item 6 — after a successful checkpoint, `TouchArtifact` the space's `index` document so
    * every connected user's home/space table `updated`/`updated-by` columns move. The index document
@@ -6805,72 +6915,52 @@ function FrameworkOsShellInner({
   const touchSpaceIndexArtifact = useCallback(
     async (spaceId: string, artifactId: string) => {
       try {
-        let handle = spaceIndexInstanceRef.current.get(spaceId);
-        let pluginEntry = handle ? loadedPlugins.find((entry) => entry.handle.pluginId === handle!.pluginId) : undefined;
-        // 🐚️ If the space index document happens to already be THIS shell's own visibly-mounted
-        // session (the user is on `/spaces/{id}` itself, RIGHT NOW — `currentDocumentId`, not a
-        // possibly-stale `openDocumentSessionsRef` entry from a space visited earlier this session
-        // and never explicitly `closeDocument`d), reuse THAT session instead of a second instance.
+        const identity = identityRef.current;
+        if (identity === null || extensionFetchAbortRef.current.signal.aborted) return;
+        const identityIsCurrent = () => !extensionFetchAbortRef.current.signal.aborted && identityRef.current?.hubBaseUrl === identity.hubBaseUrl && identityRef.current?.userId === identity.userId;
+        const touch = async (plugin: PluginWasmHandle, targetSession: ActiveSession) => {
+          if (!identityIsCurrent() || !plugin.handleCommand) return;
+          const wire = encodeAppCommandInvocation(plugin.pluginId, targetSession.app, "touchArtifact", { id: artifactId, nowMs: Date.now(), actor: identity.userId });
+          await plugin.handleCommand(targetSession.instanceId, wire, targetSession.viewState);
+        };
         const liveEntry = currentDocumentId === S_SPACE_INDEX_DOCUMENT_ID && currentDocumentRuntimeKey !== null ? openDocumentSessionsRef.current.get(currentDocumentRuntimeKey) : undefined;
-        if (liveEntry) {
-          pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === liveEntry.plugin.pluginId);
-          handle = pluginEntry ? { pluginId: pluginEntry.handle.pluginId, instanceId: liveEntry.session.instanceId } : undefined;
+        if (liveEntry?.scope?.spaceId === spaceId && liveEntry.session.app.role === "editor") {
+          await touch(liveEntry.plugin, liveEntry.session);
+          return;
         }
-        if (!handle || !pluginEntry) {
-          pluginEntry = loadedPlugins.find((entry) => findDialectApp(entry, SPACE_INDEX_DIALECT, "editor"));
-          if (!pluginEntry) return;
-          const app = findDialectApp(pluginEntry, SPACE_INDEX_DIALECT, "editor");
-          if (!app) return;
-          const instanceId = await pluginEntry.handle.createApp(app.id);
-          handle = { pluginId: pluginEntry.handle.pluginId, instanceId };
-          spaceIndexInstanceRef.current.set(spaceId, handle);
-          const worker = ensureBackboneWorker();
-          const currentIdentity = identityRef.current;
-          const dataDir = hubEnv?.dataDir;
-          const folder: PersistenceBinding[] = dataDir ? [{ kind: "folder", path: `${dataDir}/spaces/${spaceId}` }] : [];
-          const bindings: PersistenceBinding[] = currentIdentity ? [{ kind: "hub", baseUrl: currentIdentity.hubBaseUrl, spaceId }, ...folder] : folder;
-          const indexScope: DocumentScope | undefined = currentIdentity ? { spaceId, documentId: S_SPACE_INDEX_DOCUMENT_ID } : undefined;
-          const indexRuntimeKey = indexScope === undefined ? S_SPACE_INDEX_DOCUMENT_ID : documentRuntimeKeyV1({ kind: "hub", ...indexScope });
-          const indexSession: ActiveSession = { pluginId: pluginEntry.handle.pluginId, instanceId, app, viewState: { activeModeId: app.defaultModeId ?? app.modes[0]?.id } };
-          const indexOpeningAttempt = { clientInstanceId: crypto.randomUUID() };
-          const previous = openDocumentSessionsRef.current.get(indexRuntimeKey);
-          if (previous !== undefined) closeDocumentRef.current(indexRuntimeKey, previous.clientInstanceId);
-          openDocumentSessionsRef.current.set(indexRuntimeKey, { session: indexSession, plugin: pluginEntry.handle, documentId: S_SPACE_INDEX_DOCUMENT_ID, clientInstanceId: indexOpeningAttempt.clientInstanceId, ...(indexScope === undefined ? {} : { scope: indexScope }) });
-          pluginBackboneRouteUnregistersRef.current.get(indexRuntimeKey)?.();
-          pluginBackboneRouteUnregistersRef.current.set(indexRuntimeKey, registerPluginBackboneRoute(indexRuntimeKey, relayPluginBackboneMessage));
-          const socketActor = currentIdentity
-            ? new Promise<string>((resolve, reject) => socketActorReadyRef.current.set(indexRuntimeKey, { clientInstanceId: indexOpeningAttempt.clientInstanceId, resolve, reject }))
-            : null;
-          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId: indexOpeningAttempt.clientInstanceId, documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA, bindings, watchExternal: true, actor: shellActorIdRef.current }) });
-          if (socketActor) {
+        const current = (owned: BackgroundSpaceIndexSession) => identityIsCurrent() && owned.hubBaseUrl === identity.hubBaseUrl && owned.userId === identity.userId && loadedPluginsRef.current.some(entry => entry.handle === owned.plugin) && openDocumentSessionsRef.current.get(owned.runtimeKey)?.clientInstanceId === owned.clientInstanceId;
+        await backgroundSpaceIndexSessionsRef.current.run(spaceId, {
+          current,
+          create: async () => {
+            const pluginEntry = loadedPluginsRef.current.find(entry => findDialectApp(entry, SPACE_INDEX_DIALECT, "editor"));
+            const app = pluginEntry && findDialectApp(pluginEntry, SPACE_INDEX_DIALECT, "editor");
+            if (!pluginEntry || !app || !identityIsCurrent()) return null;
+            const plugin = pluginEntry.handle;
+            const instanceId = await createAdmittedShellInstanceV1(() => identityIsCurrent() && loadedPluginsRef.current.some(entry => entry.handle === plugin), () => plugin.createApp(app.id), id => plugin.destroyApp(id));
+            if (instanceId === null) return null;
+            const targetSession: ActiveSession = { pluginId: plugin.pluginId, instanceId, app, viewState: { activeModeId: app.defaultModeId ?? app.modes[0]?.id } };
+            let retained = false;
             try {
-              await Promise.race([
-                socketActor,
-                new Promise<never>((_, reject) => setTimeout(() => reject(new Error("space index socket actor deadline exceeded")), 10_000)),
-              ]);
-            } finally {
-              const waiter = socketActorReadyRef.current.get(indexRuntimeKey);
-              if (waiter?.clientInstanceId === indexOpeningAttempt.clientInstanceId) socketActorReadyRef.current.delete(indexRuntimeKey);
-            }
-          }
-          if (openDocumentSessionsRef.current.get(indexRuntimeKey)?.clientInstanceId !== indexOpeningAttempt.clientInstanceId) return;
-          if (indexScope && currentIdentity) {
-            directoryScopedOwnersRef.current.set(indexRuntimeKey, indexScope);
-            worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-open", baseUrl: currentIdentity.hubBaseUrl, scope: indexScope, since: 0 }) });
-          }
-          const uri = `actor://${indexRuntimeKey}`;
-          if (pluginEntry.handle.attachBackbone) await pluginEntry.handle.attachBackbone(instanceId, uri);
-          if (openDocumentSessionsRef.current.get(indexRuntimeKey)?.clientInstanceId !== indexOpeningAttempt.clientInstanceId) return;
-        }
-        const app = findDialectApp(pluginEntry, SPACE_INDEX_DIALECT, "editor");
-        if (!app || !pluginEntry.handle.handleCommand) return;
-        const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, app, "touchArtifact", { id: artifactId, nowMs: Date.now(), actor: identityRef.current?.userId ?? shellActorIdRef.current });
-        await pluginEntry.handle.handleCommand(handle.instanceId, wire, { activeModeId: app.defaultModeId ?? app.modes[0]?.id });
+              if (!identityIsCurrent() || !loadedPluginsRef.current.some(entry => entry.handle === plugin)) return null;
+              const receipt = await openDocumentRef.current({ documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA, spaceId }, undefined, { session: targetSession, plugin, background: true });
+              if (receipt === null) return null;
+              retained = true;
+              return { ...receipt, plugin, session: targetSession, hubBaseUrl: identity.hubBaseUrl, userId: identity.userId };
+            } finally { if (!retained) await plugin.destroyApp(instanceId); }
+          },
+          release: async owned => {
+            try {
+              try { closeDocumentRef.current(owned.runtimeKey, owned.clientInstanceId); }
+              finally { await retireDocumentAttachment(owned.plugin, owned.session.instanceId, owned.clientInstanceId); }
+            } finally { await owned.plugin.destroyApp(owned.session.instanceId); }
+          },
+          visit: async owned => { if (current(owned)) await touch(owned.plugin, owned.session); },
+        });
       } catch (touchError) {
         console.error("[DEBUG] touchSpaceIndexArtifact failed", touchError);
       }
     },
-    [loadedPlugins, ensureBackboneWorker, hubEnv, currentDocumentId, currentDocumentRuntimeKey, relayPluginBackboneMessage],
+    [currentDocumentId, currentDocumentRuntimeKey, retireDocumentAttachment],
   );
 
   /** 📌️ Fires `commitCheckpoint` through the SAME action funnel the History panel's own quick
@@ -8628,7 +8718,7 @@ function FrameworkOsShellInner({
             <div className="pointer-events-auto absolute top-workbench left-double z-50 flex max-w-[28rem] flex-col gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
               {spaceArtifactCreationCatalogUi === null ? null : <ArtifactCreationCatalogNotice status={spaceArtifactCreationCatalogUi} locale={uiLocale} />}
               {Object.values(spaceArtifactCreationUi).map((status) => (
-                <ArtifactCreationProgressNotice key={status.requestId} state={status} locale={uiLocale} onCancel={cancelSpaceArtifactCreation} />
+                <ArtifactCreationProgressNotice key={status.requestId} state={status} locale={uiLocale} onCancel={cancelSpaceArtifactCreation} onOpen={openReadySpaceArtifactCreation} />
               ))}
             </div>
           ) : null}

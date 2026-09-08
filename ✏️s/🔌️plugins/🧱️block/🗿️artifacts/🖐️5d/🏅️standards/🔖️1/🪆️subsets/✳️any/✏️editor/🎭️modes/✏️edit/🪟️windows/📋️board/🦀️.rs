@@ -1,6 +1,6 @@
 //! 📋️ Block 5D play app — the board window: a lightweight 2D-projection summary surface.
 
-use crate::artifacts::block5d::Block5dSnapshot;
+use crate::Block5dSnapshot;
 use crate::editor::block5d::terminology::Block5dLabels;
 use crate::editor::block5d::ui_label;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasChildren};

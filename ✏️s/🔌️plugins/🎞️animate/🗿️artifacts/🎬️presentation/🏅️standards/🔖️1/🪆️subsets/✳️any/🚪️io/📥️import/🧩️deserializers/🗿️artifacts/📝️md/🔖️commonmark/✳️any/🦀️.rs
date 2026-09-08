@@ -5,7 +5,7 @@
 //! semantic mapping (out of scope here). Still wraps the full `.presentation` DSL text losslessly in
 //! that one block, so this hop is `IoFidelity::Canonical`, not `Lossy`.
 
-use crate::artifacts::presentation::PresentationSnapshot;
+use crate::PresentationSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

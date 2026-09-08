@@ -1,7 +1,7 @@
 //! 🧬️ Cad artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::cad::{CadCamera, CadDrawingChild, CadModelChild, CadNode, CadReferenceList, CadSnapshot};
-use schema::ArtifactSchema;
+use crate::{CadCamera, CadDrawingChild, CadModelChild, CadNode, CadReferenceList, CadSnapshot};
+use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
@@ -161,7 +161,7 @@ pub struct CadArtifact {
 //#region 🔖️Conversions
 impl Default for CadArtifact {
     fn default() -> Self {
-        Self::from_snapshot(crate::artifacts::cad::empty_cad_snapshot())
+        Self::from_snapshot(crate::empty_cad_snapshot())
     }
 }
 
@@ -252,31 +252,31 @@ impl CadArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.cad.cad` — twenty handcrafted schema leaves.
-pub fn cad_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn cad_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.cad.cad",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -288,9 +288,9 @@ pub fn cad_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::cad::diff::schema::CadDiff;
-    use crate::artifacts::cad::mutations::CadMutation;
-    use crate::artifacts::cad::{CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
+    use crate::diff::schema::CadDiff;
+    use crate::mutations::CadMutation;
+    use crate::{CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework_plugin::ArtifactBuilder;
     use std::collections::BTreeMap;
 
@@ -368,7 +368,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::cad::CadSnapshot;
+    use crate::CadSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

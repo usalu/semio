@@ -1,9 +1,9 @@
 //! 🖼️ 🖼️ Raster play app commands command — `move-layer`.
 
-use crate::artifacts::raster::mutations::reorder_layers;
-use crate::artifacts::raster::op::RasterMutation;
-use crate::artifacts::raster::schema::find_layer;
-use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
+use crate::mutations::reorder_layers;
+use crate::op::RasterMutation;
+use crate::schema::find_layer;
+use crate::{RasterLayerNode, RasterSnapshot};
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::editor::raster::layer_id_from_tree_row_id;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

@@ -1,13 +1,13 @@
 //! ✍️ ✍️ Writer play app commands command — `set-active-example`.
 
-use crate::artifacts::writer::dsl::{dag_jack_example_document, jack_example_document};
-use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::dsl::{dag_jack_example_document, jack_example_document};
+use crate::op::WriterMutation;
+use crate::WriterSnapshot;
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::editor::writer::reset_document_effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-use crate::artifacts::writer::schema::empty_writer_snapshot;
+use crate::schema::empty_writer_snapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]

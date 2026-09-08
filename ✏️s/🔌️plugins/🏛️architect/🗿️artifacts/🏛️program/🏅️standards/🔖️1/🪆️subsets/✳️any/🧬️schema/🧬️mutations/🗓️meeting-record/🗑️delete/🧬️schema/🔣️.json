@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/delete-meeting-record.json",
+  "$id": "https://semio.tech/schema/s/architect/program/1/any/mutation/delete-meeting-record/schema.json",
   "title": "DeleteMeetingRecord",
   "type": "object",
   "additionalProperties": false,

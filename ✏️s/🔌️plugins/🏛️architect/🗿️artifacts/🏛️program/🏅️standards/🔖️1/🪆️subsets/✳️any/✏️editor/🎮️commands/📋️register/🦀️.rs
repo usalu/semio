@@ -3,8 +3,8 @@
 
 pub mod select_register {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::ProgramSnapshot;
+    use crate::op::ProgramMutation;
+    use crate::ProgramSnapshot;
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     
@@ -23,8 +23,8 @@ pub mod select_register {
 
 pub mod add_register_item {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::{EntityId, ProgramSnapshot};
+    use crate::op::ProgramMutation;
+    use crate::{EntityId, ProgramSnapshot};
     use crate::editor::architect::behavior::apply_template;
     use crate::editor::architect::catalog::add_register_item_operation;
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
@@ -62,9 +62,9 @@ pub mod add_register_item {
 
 pub mod remove_register_item {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::schema::mutations as leaves;
-    use crate::artifacts::program::{EntityId, ProgramSnapshot};
+    use crate::op::ProgramMutation;
+    use crate::schema::mutations as leaves;
+    use crate::{EntityId, ProgramSnapshot};
     use crate::editor::architect::catalog::remove_register_item_operation;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -97,8 +97,8 @@ pub mod remove_register_item {
 
 pub mod patch_register_item {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::{EntityId, ProgramSnapshot};
+    use crate::op::ProgramMutation;
+    use crate::{EntityId, ProgramSnapshot};
     use crate::editor::architect::catalog::patch_register_item_operation;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

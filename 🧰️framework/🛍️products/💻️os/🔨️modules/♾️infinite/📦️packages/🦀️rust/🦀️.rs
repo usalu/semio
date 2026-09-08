@@ -6,8 +6,6 @@
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 extern crate semio_framework_async as wasm_bindgen_futures;
 extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as store;
 
 extern crate self as infinite;
 
@@ -84,8 +82,5 @@ pub use board::HandleRole;
 //#endregion 🔖️DirectedNormalSurface
 
 //#region 🔖️DirectedDagSurface
-pub use board::ports::directed_dag::{
-    dag_document_from_fixture, dag_fixture_from_document, dag_fixture_to_wire_literal, dag_node_kind_tag, default_dag_document, fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagCamera, DagDiff, DagEdgePatch, DagFixture,
-    DagFixtureEdge, DagHost, DagLayoutOptions, DagLayoutOrientation, DagMutation, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, DagSnapshot, EdgeRouteStyle, IoPortSpec, PortShape, DAG_DOCUMENT_SCHEMA,
-};
+pub use board::ports::directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagHost, DagLayoutOptions, DagLayoutOrientation};
 //#endregion 🔖️DirectedDagSurface

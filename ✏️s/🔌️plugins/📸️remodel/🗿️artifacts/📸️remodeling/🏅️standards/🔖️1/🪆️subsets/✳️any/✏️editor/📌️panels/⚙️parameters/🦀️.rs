@@ -1,7 +1,7 @@
 //! ⚙️ Remodeling play app panel — the Parameters tab: a read-only dump of the 8 param sub-groups (editing
 //! happens via the per-group `setXParams` command-palette actions' typed arg forms, not inline fields).
 
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::RemodelingSnapshot;
 use crate::editor::remodeling::terminology::RemodelingLabels;
 use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult};
 

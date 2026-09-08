@@ -5,9 +5,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::block5d::mutations::Block5dMutation;
-use crate::artifacts::block5d::mutations::{apply_block5d_mutation, inverse_block5d_mutation};
-use crate::artifacts::block5d::Block5dSnapshot;
+use crate::mutations::Block5dMutation;
+use crate::mutations::{apply_block5d_mutation, inverse_block5d_mutation};
+use crate::Block5dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -95,7 +95,7 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::block5d::diff::Block5dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Block5dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "move-grip-3d/repositions-north-grip-in-world: committed diff JSON is not canonical");
@@ -105,7 +105,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::block5d::diff::Block5dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::block5d::diff::Block5dDiff as protocol::MutationDiff<Block5dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Block5dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Block5dDiff as protocol::MutationDiff<Block5dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-grip-3d/repositions-north-grip-in-world: committed diff did not carry before to after");
 }

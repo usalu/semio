@@ -1,8 +1,8 @@
 //! 🔺️ `change-bed-joint-thickness-mm` sparse diff construction — writes only `En1996Diff.bed_joint_thickness_mm` from the payload.
 
-use crate::artifacts::en1996::diff::En1996Diff;
-use crate::artifacts::en1996::mutations::change_bed_joint_thickness_mm::ChangeBedJointThicknessMm;
-use crate::artifacts::en1996::En1996Snapshot;
+use crate::diff::En1996Diff;
+use crate::mutations::change_bed_joint_thickness_mm::ChangeBedJointThicknessMm;
+use crate::En1996Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeBedJointThicknessMm, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {

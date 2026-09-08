@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/1/any/mutation/delete-object.json",
+  "$id": "https://semio.tech/schema/s/lowpoly/lowpoly/1/any/mutation/delete-object/schema.json",
   "title": "DeleteObject",
   "type": "object",
   "additionalProperties": false,

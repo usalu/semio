@@ -1,8 +1,8 @@
 //! ✒️ Writer play app — the main window: the jack/text editor surface (writer's only window kind).
 
-use crate::artifacts::writer::schema::inferences::{language_diagnostics_json, language_tokens_json};
-use crate::artifacts::writer::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_completions_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
-use crate::artifacts::writer::{writer_text, WriterSnapshot};
+use crate::schema::inferences::{language_diagnostics_json, language_tokens_json};
+use crate::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_completions_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
+use crate::{writer_text, WriterSnapshot};
 use crate::editor::writer::config::WriterConfig;
 use crate::editor::writer::modes::edit::windows::main::options;
 use crate::editor::writer::terminology::WriterPlayLabels;
@@ -140,7 +140,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
         let mut app = new_app().await;
-        let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&crate::artifacts::writer::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).await.expect("render");
+        let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&crate::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).await.expect("render");
         let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("render JSON");
         assert!(json.contains("placeholdersJson"));
         assert!(json.contains("selectableSpansJson"));

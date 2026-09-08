@@ -1,8 +1,8 @@
 //! 🔺️ `change-it-mm4` sparse diff construction — writes only `En1999Diff.i_t_mm4` from the payload.
 
-use crate::artifacts::en1999::diff::En1999Diff;
-use crate::artifacts::en1999::mutations::change_i_t_mm4::ChangeITMm4;
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::diff::En1999Diff;
+use crate::mutations::change_i_t_mm4::ChangeITMm4;
+use crate::En1999Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeITMm4, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {

@@ -9,7 +9,7 @@
 //! `null`; the two nested states `None` and `Some(None)` are NOT distinguishable in this file's
 //! committed diff, and nothing here asserts that they are.
 
-use crate::artifacts::en1995::{En1995Diff, En1995Mutation, En1995Snapshot};
+use crate::{En1995Diff, En1995Mutation, En1995Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

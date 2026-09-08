@@ -1,0 +1,20 @@
+{
+  "owner": "fixture:e2e",
+  "pids": [
+    41,
+    42
+  ],
+  "invalidPids": [
+    0,
+    -1,
+    1.5
+  ],
+  "invalidUrls": [
+    "https://127.0.0.1:8080/",
+    "http://example.com:8080/",
+    "http://127.0.0.1:70000/",
+    "http://user@127.0.0.1:8080/",
+    "http://127.0.0.1:8080/path"
+  ],
+  "endpoint": "/__semio/nx-service"
+}

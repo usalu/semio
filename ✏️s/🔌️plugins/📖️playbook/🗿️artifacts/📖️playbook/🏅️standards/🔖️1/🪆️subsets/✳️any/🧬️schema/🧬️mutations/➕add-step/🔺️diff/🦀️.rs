@@ -1,11 +1,11 @@
 //! 🔺️ Sparse diff builder for `AddStep` — a real ordered insert (never a whole-snapshot capture).
 
-use crate::artifacts::playbook::schema::diff::text::diff_replace_content;
-use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
+use crate::schema::diff::text::diff_replace_content;
+use crate::{PlaybookDiff, PlaybookSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddStep, base: &PlaybookSnapshot) -> protocol::MutationOutcome<PlaybookDiff> {
-    let mut steps = crate::artifacts::playbook::playbook_working_scene(base).steps;
+    let mut steps = crate::playbook_working_scene(base).steps;
     if steps.iter().any(|step| step.id == payload.step.id) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Step \"{}\" already exists.", payload.step.id));
     }

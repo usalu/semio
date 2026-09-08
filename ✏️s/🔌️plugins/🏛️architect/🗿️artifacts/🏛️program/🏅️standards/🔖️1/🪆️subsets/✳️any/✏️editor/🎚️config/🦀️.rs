@@ -4,9 +4,9 @@
 //! cached report/analysis JSON, adjacency filter, graph camera) lives here, written via whole-snapshot
 //! `ArchitectConfigMutation::ReplaceConfig` values from the `🎮️commands/*` handlers.
 
-use crate::artifacts::program::registers::AdjacencyKind;
-use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::ProgramReport;
-use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::SearchQuery;
+use crate::registers::AdjacencyKind;
+use crate::standards::v1::subsets::any::schema::inferences::ProgramReport;
+use crate::standards::v1::subsets::any::schema::inferences::SearchQuery;
 use protocol::MutationDiff;
 #[cfg(test)]
 use protocol::Mutation;

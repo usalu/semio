@@ -1,8 +1,8 @@
 //! 🔤 DAG mutation — `ChangeNodeName`: sets the node's display `name` (distinct from its `id`,
 //! which `rename-node` governs).
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::diff::DagDiff;
+use crate::mutations::DagMutation;
+use crate::DagSnapshot;
 
 //#region 🔖️Mutation
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue)]

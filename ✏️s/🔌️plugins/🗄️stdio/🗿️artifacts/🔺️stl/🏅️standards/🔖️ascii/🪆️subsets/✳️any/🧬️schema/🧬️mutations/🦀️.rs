@@ -479,7 +479,7 @@ mod tests {
     //#region 🔖️codec_retention_law
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
-        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧊️.stl"));
+        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧊️.stl"));
         // The checked-in fixture at this path is a shared cross-artifact demo placeholder
         // (not real STL text) — fall back to a synthetic document so this law still exercises
         // a genuine decode -> encode -> decode identity.

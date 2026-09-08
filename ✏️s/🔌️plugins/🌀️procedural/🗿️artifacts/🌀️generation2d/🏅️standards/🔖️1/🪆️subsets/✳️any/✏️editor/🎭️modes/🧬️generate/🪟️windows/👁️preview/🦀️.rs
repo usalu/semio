@@ -1,6 +1,6 @@
 //! 👁️ Generation2d play app — the generation output-preview window (generate mode).
 
-use crate::artifacts::generation2d::schema::generation_preview_layers;
+use crate::schema::generation_preview_layers;
 use crate::editor::generation2d::config::Generation2dConfig;
 use crate::editor::generation2d::terminology::Generation2dLabels;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;

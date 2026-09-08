@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::LayoutSnapshot;
 
 /// 📄️ The bundled sample fixture, handcrafted in the `.layout` DSL.
 pub const LAYOUT_SAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
@@ -25,7 +25,7 @@ pub fn print_dsl(document: &LayoutSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::layout::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_DOCUMENT_SCHEMA};
+    use crate::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_DOCUMENT_SCHEMA};
 
     fn minimal_document_with_character_style() -> LayoutSnapshot {
         LayoutSnapshot {
@@ -96,7 +96,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn demo_dsl_snapshot() {
-        let text = print_dsl(&crate::artifacts::layout::schema::default_document());
+        let text = print_dsl(&crate::schema::default_document());
         assert!(parse_dsl(&text).is_ok());
         if std::env::var("LAYOUT_EMIT_DEMO_DSL").is_ok() {
             eprintln!("{text}");
@@ -105,7 +105,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn example_fixture_matches_engine_demo() {
-        let demo = crate::artifacts::layout::schema::default_document();
+        let demo = crate::schema::default_document();
         let from_example = parse_dsl(LAYOUT_SAMPLE_TEXT).expect("example dsl");
         assert_eq!(from_example.pages.len(), demo.pages.len());
         assert_eq!(from_example.pages[0].frames.len(), demo.pages[0].frames.len());

@@ -6,9 +6,9 @@
 //! `🔺️diff/🚫️.absent` sentinel beside this file stands in its place, so nothing here invents an
 //! empty patch. The board is derived from the shipped `🏗️nakagin-capsule-tower` example, not invented.
 
-use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::mutations::Puzzle2dMutation;
+use crate::mutations::{apply_puzzle2d_mutation, inverse_puzzle2d_mutation};
+use crate::Puzzle2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -42,7 +42,7 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 fn the_refusal_is_the_declared_one() {
     assert!(DIFF_ABSENT.is_empty(), "change-edge-locked/rejects-locking-an-edge-the-board-never-held: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
     let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &crate::artifacts::puzzle2d::diff::Puzzle2dDiff::default(), "change-edge-locked/rejects-locking-an-edge-the-board-never-held: a refusing diff builder answers the default diff, never a half-built delta");
+    assert_eq!(produced.diff(), &crate::diff::Puzzle2dDiff::default(), "change-edge-locked/rejects-locking-an-edge-the-board-never-held: a refusing diff builder answers the default diff, never a half-built delta");
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "change-edge-locked/rejects-locking-an-edge-the-board-never-held: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "change-edge-locked/rejects-locking-an-edge-the-board-never-held: the refusal code is fixed by this vector");

@@ -1,8 +1,8 @@
 //! 🔺️ `change-tower-m-ed-knm` sparse diff construction — writes only `En1998Diff.tower_m_ed_knm` from the payload.
 
-use crate::artifacts::en1998::diff::En1998Diff;
-use crate::artifacts::en1998::mutations::change_tower_m_ed_knm::ChangeTowerMEdKnm;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::diff::En1998Diff;
+use crate::mutations::change_tower_m_ed_knm::ChangeTowerMEdKnm;
+use crate::En1998Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeTowerMEdKnm, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {

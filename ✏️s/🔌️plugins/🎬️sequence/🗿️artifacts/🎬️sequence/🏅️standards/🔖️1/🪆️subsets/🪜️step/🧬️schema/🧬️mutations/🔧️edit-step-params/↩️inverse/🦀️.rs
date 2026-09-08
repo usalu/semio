@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `EditStepParams` — the OLD params body looked up from BASE. Missing target ⇒
 //! `Vec::new()`.
-use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::{sequence_working_scene, SequenceSnapshot};
+use crate::mutations::SequenceMutation;
+use crate::{sequence_working_scene, SequenceSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::EditStepParams, base: &SequenceSnapshot) -> Vec<SequenceMutation> {

@@ -1,7 +1,7 @@
 //! 🔗️ Direct Writer mutation — `ChangeUri` sets the document's addressable location.
-use crate::artifacts::writer::schema::mutations::WriterMutation;
-use crate::artifacts::writer::WriterDiff;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::schema::mutations::WriterMutation;
+use crate::WriterDiff;
+use crate::WriterSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 

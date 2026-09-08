@@ -1,6 +1,6 @@
 //! 📐️ Equation play app — the geometry window: the convex-hull/centroid canvas.
 
-use crate::artifacts::equation::EquationGeometry;
+use crate::EquationGeometry;
 use crate::editor::equation::geometry_layers_json;
 use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 

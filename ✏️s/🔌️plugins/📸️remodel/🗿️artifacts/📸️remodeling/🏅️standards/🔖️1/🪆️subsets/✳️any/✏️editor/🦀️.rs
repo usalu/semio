@@ -11,8 +11,8 @@
 //! routing table: `handle` → `RemodelingCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, REMODELING_DOCUMENT_SCHEMA};
+use crate::op::RemodelingMutation;
+use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, REMODELING_DOCUMENT_SCHEMA};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::editor::remodeling::engine::images as remodeling_image;
 use crate::editor::remodeling::modes::{analyze, capture, model};
@@ -925,13 +925,14 @@ impl store::ArtifactStoreOneItemPreparation<RemodelingConfig, RemodelingConfigMu
 /// 🧾️ The one `protocol::Edit` envelope both lanes above stage — identical field-for-field, so it is
 /// written once and parameterised by the mutation type rather than duplicated per lane.
 fn remodeling_retained_edit<M>(id: String, authority: &store::ArtifactStoreOneItemLiveAuthority, forwards: Vec<M>, inverse: Vec<M>, description: Option<String>) -> protocol::Edit<M> {
+    let mutation_id = protocol::MutationId(format!("{id}#0"));
     protocol::Edit {
-        id: id.clone(),
+        id,
         actor: Some(authority.actor().to_string()),
         forwards,
         inverse,
         mutation_meta: vec![protocol::MutationMeta {
-            mutation_id: Some(protocol::MutationId(format!("{id}#0"))),
+            mutation_id: Some(mutation_id),
             dependencies: Vec::new(),
             base_version: authority.base_applied_edit_count() as u64,
             author_id: Some(protocol::ActorId(authority.actor().to_string())),
@@ -966,7 +967,7 @@ impl ArtifactEditor for RemodelingPlayApp {
 
     type Command = RemodelingCommand;
 
-    const DIALECT: Dialect = crate::artifacts::remodeling::REMODELING_DIALECT;
+    const DIALECT: Dialect = crate::REMODELING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -1058,7 +1059,7 @@ impl ArtifactEditor for RemodelingPlayApp {
                 // through the working-scene cache, honestly `Err` on a cold cache (documented
                 // staleness gap, matches every prior exemplar in this ticket) rather than exporting a
                 // fabricated empty mesh.
-                let mesh = crate::artifacts::remodeling::resolve_bounded_remodeling_mesh(&doc.snapshot.durable_artifacts, &doc.snapshot.results.mesh.mesh)
+                let mesh = crate::resolve_bounded_remodeling_mesh(&doc.snapshot.durable_artifacts, &doc.snapshot.results.mesh.mesh)
                     .ok_or_else(|| MediaError::Payload(port.to_string(), "mesh:out: bounded composed mesh content is unavailable".into()))?;
                 let bytes = MeshExporter::export(&GlbExporter, &mesh).map_err(|error| MediaError::Payload(port.to_string(), error))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: base64_codec::base64_standard_encode(bytes) } })
@@ -1090,14 +1091,14 @@ impl ArtifactEditor for RemodelingPlayApp {
                 let frame_index = scene.streams.iter().find(|stream| stream.id == stream_id).map_or(0, |stream| stream.frames.len() as u32);
                 let asset_key = format!("{stream_id}-frame-{frame_index}");
                 let asset = ImageAsset { mime: "image/png".into(), data: json.clone(), width, height };
-                let mut mutations = vec![crate::artifacts::remodeling::mutations::create_asset(asset_key.clone(), asset)];
+                let mut mutations = vec![crate::mutations::create_asset(asset_key.clone(), asset)];
                 match scene.streams.iter().any(|stream| stream.id == stream_id) {
-                    true => mutations.push(crate::artifacts::remodeling::mutations::add_stream_frame(
+                    true => mutations.push(crate::mutations::add_stream_frame(
                         stream_id.to_string(),
                         FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key },
                         MediaKind::ImageSequence,
                     )),
-                    false => mutations.push(crate::artifacts::remodeling::mutations::create_stream(MediaStream {
+                    false => mutations.push(crate::mutations::create_stream(MediaStream {
                         id: stream_id.to_string(),
                         name: "Workflow Photos".into(),
                         kind: MediaKind::ImageSequence,
@@ -1182,9 +1183,9 @@ fn remodeling_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: 
 /// Only the leaf action/utility declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
 pub fn create_remodeling_app() -> AppDefinition {
-    Editor::builder(crate::artifacts::remodeling::REMODELING_DIALECT)
+    Editor::builder(crate::REMODELING_DIALECT)
             .document(["semio", "remodeling"])
-            .artifact_kind(crate::artifacts::remodeling::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             // 🔌️ `photos:in`/`mesh:out` — `2d.image`/`3d.mesh` are declared by `shooting`/`lowpoly`
             // respectively (reused here, not redeclared).
             .media_input(remodeling_photos_in_port())
@@ -1484,7 +1485,7 @@ pub fn create_remodeling_app() -> AppDefinition {
             // registration (`default_remodeling_scene().print_dsl()` fed to `.example("default", …)`)
             // and the no-op `.workflow("remodeling", …)` call are dropped here (not silently: reported
             // in this packet's migration notes). The subset's own `📚️examples/🎬️demo` facet
-            // (`crate::artifacts::remodeling::examples::…`, real content, pre-existing) is the modern,
+            // (`crate::examples::…`, real content, pre-existing) is the modern,
             // role-agnostic replacement surface for this.
             .build_definition()
 }
@@ -1950,7 +1951,7 @@ mod tests {
         };
         let emit = RemodelingPlayApp::import_media("photos:in", &media, &doc).expect("photos:in import");
         assert_eq!(emit.artifact_mutations.len(), 2, "one create-asset + one create-stream");
-        let next = emit.artifact_mutations.iter().fold(projection.clone(), |scene, operation| crate::artifacts::remodeling::op::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
+        let next = emit.artifact_mutations.iter().fold(projection.clone(), |scene, operation| crate::op::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
         assert_eq!(next.streams.len(), 1);
         assert_eq!(next.streams[0].id, REMODELING_WORKFLOW_PHOTOS_STREAM_ID);
         assert_eq!(next.streams[0].frames.len(), 1);
@@ -1958,7 +1959,7 @@ mod tests {
         let history2 = HistoryView::empty();
         let doc2 = ArtifactView::new(&next, &history2);
         let emit2 = RemodelingPlayApp::import_media("photos:in", &media, &doc2).expect("second photos:in import");
-        let next2 = emit2.artifact_mutations.iter().fold(next.clone(), |scene, operation| crate::artifacts::remodeling::op::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
+        let next2 = emit2.artifact_mutations.iter().fold(next.clone(), |scene, operation| crate::op::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
         assert_eq!(next2.streams.len(), 1, "still one workflow-photos stream");
         assert_eq!(next2.streams[0].frames.len(), 2, "second import appends a second frame");
     }

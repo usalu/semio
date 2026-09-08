@@ -5,11 +5,11 @@
 //! `RasterMutationDsl` enum flattens every real variant into its own keyworded record, converted at
 //! the `OpText`/`OpBinary` boundary only — `RasterMutation` itself is untouched.
 
-use crate::artifacts::raster::mutations::{
+use crate::mutations::{
     add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer,
 };
-pub use crate::artifacts::raster::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterEnvelope, RasterMutation, RasterStore};
-use crate::artifacts::raster::{RasterImageAsset, RasterLayerNode};
+pub use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterEnvelope, RasterMutation, RasterStore};
+use crate::{RasterImageAsset, RasterLayerNode};
 use protocol::OpText;
 
 //#region 📖️SemioGrammar

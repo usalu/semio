@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RemoveStreamFrame`. A missing stream or an out-of-range index ⇒
 //! Error `mutation.target-missing`.
-use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingMediaStreamList};
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::{RemodelingDiff, RemodelingMediaStreamList};
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveStreamFrame, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

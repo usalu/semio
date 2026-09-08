@@ -24,6 +24,8 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-artifact-playbook-playbook = { workspace = true }
+semio-s-artifact-playbook-playbook = { workspace = true }
 semio-framework-ui-contract.workspace = true
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }

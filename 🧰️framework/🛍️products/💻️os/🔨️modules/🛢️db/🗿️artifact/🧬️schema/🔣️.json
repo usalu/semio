@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/db/artifact/component.json",
+  "title": "OS Database Artifact Contracts",
+  "$defs": {
+    "DurableGroupJournalV1": {
+      "title": "Durable Group Journal V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "record", "limits", "lifecycle", "cases", "committedDecisionWitnessCases", "committedRecovery", "nonClaims"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "record": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "durability", "document", "decisionSha256", "anchorSha256"],
+          "properties": {
+            "kind": { "enum": ["event", "command"] },
+            "durability": { "enum": ["fsync", "memory"] },
+            "document": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "decisionSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "anchorSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["storeEventBytes", "walSegmentBytes", "successorHeaderBytes", "storeMaximumTransactionBytes", "storeMaximumSegmentBytes", "maximumEventBytes"],
+          "properties": {
+            "storeEventBytes": { "type": "integer", "minimum": 1 },
+            "walSegmentBytes": { "type": "integer", "minimum": 1 },
+            "successorHeaderBytes": { "type": "integer", "minimum": 1 },
+            "storeMaximumTransactionBytes": { "type": "integer", "minimum": 1 },
+            "storeMaximumSegmentBytes": { "type": "integer", "minimum": 1 },
+            "maximumEventBytes": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "lifecycle": { "type": "array", "minItems": 7, "uniqueItems": true, "items": { "enum": ["not-submitted", "awaiting", "rejected", "failed", "absent", "committed", "empty"] } },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "expected", "mailboxTransfers", "walTransactions"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "expected": { "enum": ["committed", "absent", "rejected", "uncertain"] },
+              "mailboxTransfers": { "type": "integer", "minimum": 0, "maximum": 1 },
+              "walTransactions": { "type": "integer", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "committedDecisionWitnessCases": {
+          "type": "array",
+          "minItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "recordKinds", "transaction", "replayDocument", "expected"],
+            "properties": {
+              "id": { "enum": ["one-event", "ordinary-command", "event-plus-command", "two-events", "foreign-document", "aborted-event"] },
+              "recordKinds": { "type": "array", "minItems": 1, "items": { "enum": ["event", "command"] } },
+              "transaction": { "enum": ["committed", "aborted"] },
+              "replayDocument": { "enum": ["matching", "foreign"] },
+              "expected": { "enum": ["witness", "ignored", "rejected"] }
+            }
+          }
+        },
+        "committedRecovery": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authority", "cases"],
+          "properties": {
+            "authority": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["consumer", "recordEscape", "receiptSource", "cancelAfterCommit", "errorSurface", "terminalHandoff"],
+              "properties": {
+                "consumer": { "enum": ["db-wal-witness"] },
+                "recordEscape": { "const": false },
+                "receiptSource": { "enum": ["derived", "transferred"] },
+                "cancelAfterCommit": { "const": false },
+                "errorSurface": { "enum": ["retaining-fault"] },
+                "terminalHandoff": { "enum": ["stores-and-ack-once"] }
+              }
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "frontier", "expected", "mutations", "returnedStoreOwners"],
+                "properties": {
+                  "id": { "enum": ["pre-mutation-frontier-rejection", "all-base", "all-post", "mixed-frontier"] },
+                  "frontier": { "enum": ["foreign", "base", "post", "mixed"] },
+                  "expected": { "enum": ["fault", "complete", "already-applied"] },
+                  "mutations": { "type": "integer", "minimum": 0 },
+                  "returnedStoreOwners": { "type": "integer", "minimum": 0 }
+                }
+              }
+            }
+          }
+        },
+        "nonClaims": { "type": "array", "minItems": 3, "uniqueItems": true, "items": { "enum": ["production-recovery-consumer", "inference-witness", "hub-approval"] } }
+      }
+    }
+  }
+}

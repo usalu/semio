@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1999/1/any/mutation/change-n-ed-kn.json",
+  "$id": "https://semio.tech/schema/s/norm/en1999/1/any/mutation/change-n-ed-kn/schema.json",
   "title": "ChangeNEdKn",
   "type": "object",
   "additionalProperties": false,

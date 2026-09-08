@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `ChangeRepresentationMeshUrl`.
 
 use crate::BlockRepresentation;
-use crate::artifacts::block3d::Block3dSnapshot;
-use crate::artifacts::block3d::diff::{Block3dDiff, Block3dRepresentationsDelta, Block3dRepresentationsPatch, Block3dRepresentationsPatchEntry};
+use crate::Block3dSnapshot;
+use crate::diff::{Block3dDiff, Block3dRepresentationsDelta, Block3dRepresentationsPatch, Block3dRepresentationsPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeRepresentationMeshUrl, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {

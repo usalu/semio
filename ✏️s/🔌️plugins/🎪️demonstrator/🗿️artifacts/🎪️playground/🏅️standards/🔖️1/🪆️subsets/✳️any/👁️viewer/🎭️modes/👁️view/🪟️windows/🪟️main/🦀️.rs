@@ -3,7 +3,7 @@
 //! directly — no other module's render logic is needed for a single scalar field, so this file never
 //! reaches into the sibling authoring surface for it.
 
-use crate::artifacts::playground::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 

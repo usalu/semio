@@ -1,8 +1,8 @@
 //! 🆕️ `create-tile` mutation payload — adds a new figure tile crop to `tiles`.
 
-use crate::artifacts::presentation::{FigureTileDraft, PresentationSnapshot};
-use crate::artifacts::presentation::diff::PresentationDiff;
-use crate::artifacts::presentation::mutations::PresentationMutation;
+use crate::{FigureTileDraft, PresentationSnapshot};
+use crate::diff::PresentationDiff;
+use crate::mutations::PresentationMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔹Payload

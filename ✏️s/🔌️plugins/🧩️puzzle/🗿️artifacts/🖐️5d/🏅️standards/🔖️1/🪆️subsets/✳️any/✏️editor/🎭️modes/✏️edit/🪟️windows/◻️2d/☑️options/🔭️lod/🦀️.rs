@@ -9,7 +9,7 @@ use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 use serde_json::Value;
 
 fn puzzle5d_lod_tier_ids() -> Vec<String> {
-    serde_json::from_str::<Vec<Value>>(&infinite_board_port_directed_normal::puzzle_2d_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|row| row.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()
+    serde_json::from_str::<Vec<Value>>(&semio_framework_os_infinite::puzzle_2d_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|row| row.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()
 }
 
 /// 📶️ The LOD select measure, persisted via `setLodMode`.

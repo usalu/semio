@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `EditRhs` — the OLD body looked up from BASE.
-use crate::artifacts::rewriting::mutations::{edit_rhs, RewriteRuleMutation};
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::mutations::{edit_rhs, RewriteRuleMutation};
+use crate::RewritingSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::EditRhs, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {

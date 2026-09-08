@@ -2,8 +2,8 @@
 //! `Vec::new()`.
 
 use super::RemoveEditionProfile;
-use crate::artifacts::vdi3805::mutations::change_edition_profile;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::mutations::change_edition_profile;
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &RemoveEditionProfile, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

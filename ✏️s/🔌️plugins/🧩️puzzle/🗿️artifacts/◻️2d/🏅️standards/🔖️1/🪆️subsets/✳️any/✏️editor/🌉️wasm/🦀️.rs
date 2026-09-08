@@ -12,7 +12,7 @@
 
 #![cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::Puzzle2dSnapshot;
 use crate::editor::puzzle2d::engine::board_host::{puzzle_board_host, puzzle_board_host_normal};
 use crate::editor::puzzle2d::engine::layout::redraw_layout_fixture_json;
 use crate::editor::puzzle2d::engine::{
@@ -25,7 +25,7 @@ use wasm_bindgen::prelude::*;
 
 use web_sys::HtmlCanvasElement;
 
-use geometry::ray_from_origin_to_axis_aligned_rectangle_edge;
+use semio_framework_geometry::ray_from_origin_to_axis_aligned_rectangle_edge;
 use js_sys::Promise;
 use semio_framework_async::browser::future_to_promise;
 use std::cell::RefCell;

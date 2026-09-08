@@ -1,7 +1,7 @@
 //! 🔺️ `rename-product` — sparse diff construction; missing id is `mutation.target-missing`.
 
 use super::mutation::RenameProduct;
-use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
+use crate::{Iso16757Diff, Iso16757Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &RenameProduct, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {

@@ -2,9 +2,9 @@
 //! [`WorkshopMachine`]'s `capabilities` list (large structured field, per
 //! `📓️derivation-rules.md` rule 2).
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{Capability, Process3dSnapshot};
+use crate::diff::Process3dDiff;
+use crate::mutations::Process3dMutation;
+use crate::{Capability, Process3dSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ReplaceMachineCapabilities

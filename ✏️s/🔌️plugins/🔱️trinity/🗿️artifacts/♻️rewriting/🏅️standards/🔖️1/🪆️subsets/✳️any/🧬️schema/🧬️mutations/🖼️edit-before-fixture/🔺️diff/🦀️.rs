@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `EditBeforeFixture`.
-use crate::artifacts::rewriting::diff::RewritingDiff;
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::diff::RewritingDiff;
+use crate::RewritingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::EditBeforeFixture, base: &RewritingSnapshot) -> protocol::MutationOutcome<RewritingDiff> {

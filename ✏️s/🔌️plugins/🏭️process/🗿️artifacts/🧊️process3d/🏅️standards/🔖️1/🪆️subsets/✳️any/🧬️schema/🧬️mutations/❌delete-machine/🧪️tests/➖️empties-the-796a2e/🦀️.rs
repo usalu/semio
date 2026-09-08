@@ -7,9 +7,9 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::diff::Process3dDiff;
+use crate::mutations::Process3dMutation;
+use crate::Process3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

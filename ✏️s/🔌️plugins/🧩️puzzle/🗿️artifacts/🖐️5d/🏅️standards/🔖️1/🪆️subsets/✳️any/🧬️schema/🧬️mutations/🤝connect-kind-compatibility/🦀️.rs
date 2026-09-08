@@ -1,7 +1,7 @@
 //! 🤝 Puzzle5d mutation — `ConnectKindCompatibility`: allows one grip-kind-id pair to fasten.
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::{Puzzle5dCompatSpecificity, Puzzle5dSnapshot};
+use crate::diff::Puzzle5dDiff;
+use crate::mutations::Puzzle5dMutation;
+use crate::{Puzzle5dCompatSpecificity, Puzzle5dSnapshot};
 
 //#region 🔖️Mutation
 /// 🤝 `connect-kind-compatibility` payload. A duplicate `(source, target)` pair is a no-op.

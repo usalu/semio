@@ -2,7 +2,7 @@
 //! op's `ConfigOperations` region, both moved here since config is app-level view state, not document
 //! content).
 
-use crate::artifacts::fem3d::FemCamera;
+use crate::FemCamera;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 

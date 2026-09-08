@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/value/mutation/set-value.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/value/mutation/set-value/schema.json",
   "title": "SetValue",
   "type": "object",
   "additionalProperties": false,
@@ -18,9 +18,9 @@
     "value": {
       "$ref": "#/$defs/SemioValue"
     },
-    "kind": {
+    "mutation": {
       "const": "setValue",
-      "description": "Aggregate discriminator spliced in by SemioValuePathSegment; absent when the payload stands alone."
+      "description": "Aggregate discriminator spliced in by SemioValueMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

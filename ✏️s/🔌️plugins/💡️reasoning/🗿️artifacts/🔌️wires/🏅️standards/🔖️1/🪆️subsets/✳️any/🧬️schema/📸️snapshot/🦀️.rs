@@ -3,7 +3,7 @@
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`reasoning/dag→C:graph`): `content` composes
 //! stdio's neutral `s.stdio.semio.graph` subset (nodes/edges) instead of an inline `board_fixture`
 //! blob. `camera`/`meta` stay their own small persisted `DslValue` fields (view state / app config,
-//! never part of the neutral graph subset — see `crate::artifacts::wires`'s module doc).
+//! never part of the neutral graph subset — see `crate`'s module doc).
 //!
 //! Ticket `26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM` design.md §1 CORRECTION: the native
 //! codec (`impl store::ArtifactDsl`/`impl store::ArtifactPack for WiresSnapshot`, formerly here) now
@@ -11,9 +11,9 @@
 //! representation, unsplit, never mirrored under import/export. This file keeps only the type + its
 //! schema derive, per design.md rule 3 ("🧬️schema keeps types + pure transforms").
 
-use crate::artifacts::wires::WiresContentChild;
+use crate::WiresContentChild;
 use dsl::DslValue;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted wires document snapshot (persistent fields of the artifact).
@@ -73,7 +73,7 @@ pub fn print_wires_dsl(snapshot: &WiresSnapshot) -> String {
 /// divergence message, so a failing scenario names WHICH node moved rather than only that two long
 /// hex lines differ.
 pub fn wires_board_summary(snapshot: &WiresSnapshot) -> String {
-    let board = crate::artifacts::wires::wires_working_board(snapshot);
+    let board = crate::wires_working_board(snapshot);
     let ids = |key: &str| board.get(key).and_then(|value| value.as_array()).map(|items| items.iter().filter_map(|item| item.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect::<Vec<_>>()).unwrap_or_default().join(" ");
     format!("nodes[{}] edges[{}]", ids("nodes"), ids("edges"))
 }

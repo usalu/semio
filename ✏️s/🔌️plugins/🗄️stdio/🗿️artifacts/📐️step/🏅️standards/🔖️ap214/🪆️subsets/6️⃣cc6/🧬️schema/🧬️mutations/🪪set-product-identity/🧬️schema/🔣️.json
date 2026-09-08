@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/step/ap214/cc6/mutation/set-product-identity.json",
+  "$id": "https://semio.tech/schema/s/stdio/step/ap214/cc6/mutation/set-product-identity/schema.json",
   "title": "SetProductIdentity",
   "type": "object",
   "additionalProperties": false,

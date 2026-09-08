@@ -1,12 +1,12 @@
 //! 🧬️ 🧬️ Generation2d play app commands command — `update-generation-values`.
 
-use crate::artifacts::generation2d::op::{generation_mutation_to_generation2d, Generation2dMutation};
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::op::{generation_mutation_to_generation2d, Generation2dMutation};
+use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use flow::forms_bridge::flow_fixture_to_form_spec;
-use flow::playbook::{apply_generation_mutation, generation_operations, select_generation, GenerationPlayState};
-use flow::FlowEvalSession;
-use flow::FlowFixture;
+use semio_framework_os_flow::forms_bridge::flow_fixture_to_form_spec;
+use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, generation_operations, select_generation, GenerationPlayState};
+use semio_framework_os_flow::FlowEvalSession;
+use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -16,11 +16,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// on the config (never on the persisted document). References [`Generation2dConfig`], an app type, so
 /// it stayed out of the artifact's `🧬️schema` unlike its sibling document helpers.
 fn refresh_generation_preview(config: &mut Generation2dConfig, fixture: &FlowFixture, generation: &GenerationPlayState) {
-    let Some(selected) = flow::playbook::selected_generation(generation) else {
+    let Some(selected) = semio_framework_artifact_playbook_playbook::selected_generation(generation) else {
         config.generation_preview_text = None;
         return;
     };
-    let preview = crate::artifacts::generation2d::schema::evaluate_generation_preview(fixture, &selected.values);
+    let preview = crate::schema::evaluate_generation_preview(fixture, &selected.values);
     config.generation_preview_text = Some(preview);
 }
 //#endregion 🔖️PreviewHelper

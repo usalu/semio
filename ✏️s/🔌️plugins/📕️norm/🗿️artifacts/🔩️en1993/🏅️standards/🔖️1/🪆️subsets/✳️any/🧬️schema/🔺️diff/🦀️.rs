@@ -1,6 +1,6 @@
 //! 🧬️ En1993 diff schema — sparse field delta over the artifact.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the En1993 artifact.
@@ -11,7 +11,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1993")]
 pub struct En1993Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::en1993::schema::En1993Artifact>>,
+    pub artifact: Option<Box<crate::document_schema::En1993Artifact>>,
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]

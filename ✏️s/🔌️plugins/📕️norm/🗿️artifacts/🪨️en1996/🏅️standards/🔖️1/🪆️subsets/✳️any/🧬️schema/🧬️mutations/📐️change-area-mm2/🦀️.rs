@@ -1,9 +1,9 @@
 //! ⬅️ `change-area-mm2` payload — changes the En1996 document's `area_mm2` (cross-section area [mm2]).
 
 
-use crate::artifacts::en1996::En1996Snapshot;
-use crate::artifacts::en1996::diff::En1996Diff;
-use crate::artifacts::en1996::mutations::En1996Mutation;
+use crate::En1996Snapshot;
+use crate::diff::En1996Diff;
+use crate::mutations::En1996Mutation;
 //#region 🔖️ChangeAreaMm2
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

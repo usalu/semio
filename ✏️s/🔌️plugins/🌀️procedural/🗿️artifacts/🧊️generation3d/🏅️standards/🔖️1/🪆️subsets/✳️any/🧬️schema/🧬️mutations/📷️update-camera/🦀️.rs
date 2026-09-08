@@ -5,10 +5,10 @@
 //! Directory kept at its pre-migration `🎛️set-camera` path — see `➖remove-widget/🦠️mutation`'s
 //! docstring for why.
 
-use crate::artifacts::generation3d::diff::Generation3dDiff;
-use crate::artifacts::generation3d::mutations::Generation3dMutation;
-use crate::artifacts::generation3d::Generation3dSnapshot;
-use flow::CameraJson;
+use crate::diff::Generation3dDiff;
+use crate::mutations::Generation3dMutation;
+use crate::Generation3dSnapshot;
+use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️UpdateCamera
 /// 🔁 Whole-artifact scope — the fixture has exactly one camera.
@@ -23,11 +23,11 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Upda
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "camera", kind: "update-camera", record: "UpdatedCamera" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::artifacts::generation3d::mutations::update_camera::diff::diff(self, base)
+        crate::mutations::update_camera::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        crate::artifacts::generation3d::mutations::update_camera::inverse::inverse(self, base)
+        crate::mutations::update_camera::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {

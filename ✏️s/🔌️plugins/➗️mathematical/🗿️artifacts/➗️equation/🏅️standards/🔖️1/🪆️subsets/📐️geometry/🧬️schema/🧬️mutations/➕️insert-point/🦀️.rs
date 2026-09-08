@@ -1,7 +1,7 @@
 //! ➕️ `insert-point` — places a new point into the geometry playground's anonymous, index-keyed
 //! point cloud. `index` is FINAL-state, per the addressing convention for index-keyed collections.
 
-use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
+use crate::{EquationMutation, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload

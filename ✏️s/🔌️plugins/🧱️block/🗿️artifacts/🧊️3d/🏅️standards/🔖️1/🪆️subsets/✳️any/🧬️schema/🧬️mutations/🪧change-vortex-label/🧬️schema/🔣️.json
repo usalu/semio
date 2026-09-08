@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/block/3d/1/any/mutation/change-vortex-label.json",
+  "$id": "https://semio.tech/schema/s/block/3d/1/any/mutation/change-vortex-label/schema.json",
   "title": "ChangeVortexLabel",
   "type": "object",
   "additionalProperties": false,

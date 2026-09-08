@@ -1,7 +1,7 @@
 //! 🧬️ Generation2d snapshot schema — artifact-lane fields only.
 
-use flow::playbook::GenerationPlayRoot;
-use flow::FlowFixture;
+use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
+use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Generation2dSnapshot

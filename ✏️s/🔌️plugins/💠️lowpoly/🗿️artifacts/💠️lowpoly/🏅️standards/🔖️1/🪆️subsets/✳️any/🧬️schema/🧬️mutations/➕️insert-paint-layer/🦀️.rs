@@ -1,7 +1,7 @@
 //! ➕️ `insert-paint-layer` — places a new paint layer into an object's ordered (compositing-order)
 //! layer list at a FINAL-state index; layers have no stable id, only position.
 
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolyPaintLayer, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolyPaintLayer, LowpolySnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

@@ -1,120 +1,475 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Closed Member Dialect Admission Fixture",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["contractId", "bindings", "cases", "identityCases", "graphCases", "projectionSlots", "projectionCases", "publicRestoreCases"],
-  "properties": {
-    "contractId": { "const": "semio.member-dialect-admission/v1" },
-    "bindings": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/binding" } },
-    "cases": { "type": "array", "minItems": 12, "items": { "$ref": "#/$defs/case" } },
-    "identityCases": { "type": "array", "minItems": 9, "items": { "$ref": "#/$defs/identityCase" } },
-    "graphCases": { "type": "array", "minItems": 7, "items": { "$ref": "#/$defs/graphCase" } },
-    "projectionSlots": { "type": "array", "items": { "$ref": "#/$defs/slot" } },
-    "publicRestoreCases": { "type": "array", "minItems": 4, "items": { "$ref": "#/$defs/publicRestoreCase" } },
-    "projectionCases": { "type": "array", "minItems": 12, "items": { "$ref": "#/$defs/projectionCase" } }
-  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/store/composition/member-dialect/schema.json",
+  "title": "Store Closed Member Dialect Admission",
   "$defs": {
-    "publicRestoreCase": {
-      "type": "object", "additionalProperties": false,
-      "required": ["id", "parentHasChild", "slot", "childId", "accepted"],
+    "ClosedMemberDialectAdmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractId",
+        "bindings",
+        "cases",
+        "identityCases",
+        "graphCases",
+        "projectionSlots",
+        "projectionCases",
+        "publicRestoreCases"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 }, "parentHasChild": { "type": "boolean" },
-        "slot": { "type": "string", "minLength": 1 }, "childId": { "type": "string", "minLength": 1 }, "accepted": { "type": "boolean" }
+        "contractId": {
+          "const": "semio.member-dialect-admission/v1"
+        },
+        "bindings": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/Binding"
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 12,
+          "items": {
+            "$ref": "#/$defs/Case"
+          }
+        },
+        "identityCases": {
+          "type": "array",
+          "minItems": 9,
+          "items": {
+            "$ref": "#/$defs/IdentityCase"
+          }
+        },
+        "graphCases": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+            "$ref": "#/$defs/GraphCase"
+          }
+        },
+        "projectionSlots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slot"
+          }
+        },
+        "publicRestoreCases": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "$ref": "#/$defs/PublicRestoreCase"
+          }
+        },
+        "projectionCases": {
+          "type": "array",
+          "minItems": 12,
+          "items": {
+            "$ref": "#/$defs/ProjectionCase"
+          }
+        }
       }
     },
-    "slot": {
-      "type": "object", "additionalProperties": false,
-      "required": ["name", "kind", "many"],
-      "properties": { "name": { "type": "string" }, "kind": { "type": "string" }, "many": { "type": "boolean" } }
-    },
-    "projectedRef": {
-      "type": "object", "additionalProperties": false,
-      "required": ["slot", "childId", "artifactId", "artifactKind", "standard", "subset"],
+    "PublicRestoreCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "parentHasChild",
+        "slot",
+        "childId",
+        "accepted"
+      ],
       "properties": {
-        "slot": { "type": "string" }, "childId": { "type": "string" }, "artifactId": { "type": "string" },
-        "artifactKind": { "type": "string" }, "standard": { "type": "string" }, "subset": { "type": "string" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parentHasChild": {
+          "type": "boolean"
+        },
+        "slot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "childId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accepted": {
+          "type": "boolean"
+        }
       }
     },
-    "projectionCase": {
-      "type": "object", "additionalProperties": false,
-      "required": ["id", "parent", "incoming", "projected", "accepted"],
+    "Slot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "many"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 }, "projected": { "type": "boolean" }, "accepted": { "type": "boolean" },
-        "parent": { "type": "array", "items": { "$ref": "#/$defs/projectedRef" } },
-        "incoming": { "type": "array", "items": { "$ref": "#/$defs/projectedRef" } }
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "many": {
+          "type": "boolean"
+        }
       }
     },
-    "edge": {
-      "type": "object", "additionalProperties": false,
-      "required": ["parent", "slot", "child"],
-      "properties": { "parent": { "type": "string", "minLength": 1 }, "slot": { "type": "string", "minLength": 1 }, "child": { "type": "string", "minLength": 1 } }
-    },
-    "graphCase": {
-      "type": "object", "additionalProperties": false,
-      "required": ["id", "edges", "candidate", "accepted", "inserted", "syncAccepted"],
+    "ProjectedRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot",
+        "childId",
+        "artifactId",
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 }, "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } },
-        "candidate": { "$ref": "#/$defs/edge" }, "accepted": { "type": "boolean" }, "inserted": { "type": "boolean" }, "syncAccepted": { "type": "boolean" }
+        "slot": {
+          "type": "string"
+        },
+        "childId": {
+          "type": "string"
+        },
+        "artifactId": {
+          "type": "string"
+        },
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
+        }
       }
     },
-    "owner": {
-      "type": "object", "additionalProperties": false,
-      "required": ["parentId", "parentDialect", "slot", "childId"],
+    "ProjectionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "parent",
+        "incoming",
+        "projected",
+        "accepted"
+      ],
       "properties": {
-        "parentId": { "type": "string" }, "parentDialect": { "type": "string" },
-        "slot": { "type": "string" }, "childId": { "type": "string" }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "projected": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "parent": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProjectedRef"
+          }
+        },
+        "incoming": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProjectedRef"
+          }
+        }
       }
     },
-    "identityCase": {
-      "type": "object", "additionalProperties": false,
-      "required": ["id", "expectedOwned", "persistedId", "persistedOwner", "accepted"],
+    "Edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parent",
+        "slot",
+        "child"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 }, "expectedOwned": { "type": "boolean" },
-        "persistedId": { "type": "string" }, "accepted": { "type": "boolean" },
-        "persistedOwner": { "anyOf": [{ "$ref": "#/$defs/owner" }, { "type": "null" }] }
+        "parent": {
+          "type": "string",
+          "minLength": 1
+        },
+        "slot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "child": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
-    "dialect": {
-      "type": "object", "additionalProperties": false,
-      "required": ["artifactKind", "standard", "subset"],
+    "GraphCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "edges",
+        "candidate",
+        "accepted",
+        "inserted",
+        "syncAccepted"
+      ],
       "properties": {
-        "artifactKind": { "type": "string", "minLength": 1 },
-        "standard": { "type": "string", "minLength": 1 },
-        "subset": { "type": "string", "minLength": 1 }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Edge"
+          }
+        },
+        "candidate": {
+          "$ref": "#/$defs/Edge"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "inserted": {
+          "type": "boolean"
+        },
+        "syncAccepted": {
+          "type": "boolean"
+        }
       }
     },
-    "binding": {
-      "type": "object", "additionalProperties": false,
-      "required": ["variant", "schema", "dialect"],
+    "Owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parentId",
+        "parentDialect",
+        "slot",
+        "childId"
+      ],
       "properties": {
-        "variant": { "type": "string", "minLength": 1 },
-        "schema": { "type": "string", "minLength": 1 },
-        "dialect": { "$ref": "#/$defs/dialect" }
+        "parentId": {
+          "type": "string"
+        },
+        "parentDialect": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "string"
+        },
+        "childId": {
+          "type": "string"
+        }
       }
     },
-    "persisted": {
-      "type": "object", "additionalProperties": false,
-      "required": ["schema", "dialect"],
+    "IdentityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "expectedOwned",
+        "persistedId",
+        "persistedOwner",
+        "accepted"
+      ],
       "properties": {
-        "schema": { "type": "string" },
-        "dialect": { "anyOf": [{ "$ref": "#/$defs/dialect" }, { "type": "null" }] }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedOwned": {
+          "type": "boolean"
+        },
+        "persistedId": {
+          "type": "string"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "persistedOwner": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Owner"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
       }
     },
-    "case": {
-      "type": "object", "additionalProperties": false,
-      "required": ["id", "operation", "requested", "accepted", "variant"],
+    "Dialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "operation": { "enum": ["create", "open"] },
-        "requested": { "$ref": "#/$defs/dialect" },
-        "persisted": { "$ref": "#/$defs/persisted" },
-        "accepted": { "type": "boolean" },
-        "variant": { "type": ["string", "null"] }
+        "artifactKind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "standard": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subset": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "variant",
+        "schema",
+        "dialect"
+      ],
+      "properties": {
+        "variant": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dialect": {
+          "$ref": "#/$defs/Dialect"
+        }
+      }
+    },
+    "Persisted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "dialect"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "dialect": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Dialect"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "operation",
+        "requested",
+        "accepted",
+        "variant"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operation": {
+          "enum": [
+            "create",
+            "open"
+          ]
+        },
+        "requested": {
+          "$ref": "#/$defs/Dialect"
+        },
+        "persisted": {
+          "$ref": "#/$defs/Persisted"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "variant": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       },
       "allOf": [
-        { "if": { "properties": { "operation": { "const": "open" } }, "required": ["operation"] }, "then": { "properties": { "persisted": {} }, "required": ["persisted"] }, "else": { "not": { "properties": { "persisted": {} }, "required": ["persisted"] } } },
-        { "if": { "properties": { "accepted": { "const": true } }, "required": ["accepted"] }, "then": { "properties": { "variant": { "type": "string", "minLength": 1 } } }, "else": { "properties": { "variant": { "type": "null" } } } }
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "open"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "persisted": {}
+            },
+            "required": [
+              "persisted"
+            ]
+          },
+          "else": {
+            "not": {
+              "properties": {
+                "persisted": {}
+              },
+              "required": [
+                "persisted"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "accepted": {
+                "const": true
+              }
+            },
+            "required": [
+              "accepted"
+            ]
+          },
+          "then": {
+            "properties": {
+              "variant": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "variant": {
+                "type": "null"
+              }
+            }
+          }
+        }
       ]
     }
   }

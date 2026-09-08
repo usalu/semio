@@ -1,9 +1,9 @@
 //! 🗑️ `delete-step` payload — removes an id-keyed [`ProcessStep`] from the document's ordered
 //! timeline.
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::diff::Process3dDiff;
+use crate::mutations::Process3dMutation;
+use crate::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️DeleteStep

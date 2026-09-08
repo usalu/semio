@@ -2,7 +2,7 @@
 //! [kN], combined per Eq. 6.12b; `0.0` disables the seismic design situation.
 
 
-use crate::artifacts::en1990::{En1990Mutation, En1990Snapshot};
+use crate::{En1990Mutation, En1990Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

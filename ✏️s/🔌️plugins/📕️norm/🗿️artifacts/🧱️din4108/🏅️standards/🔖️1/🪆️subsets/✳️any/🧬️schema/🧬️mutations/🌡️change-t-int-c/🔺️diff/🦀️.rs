@@ -1,7 +1,7 @@
 //! 🔺️ `change-t-int-c` — sparse diff construction.
 
 use super::ChangeTIntC;
-use crate::artifacts::din4108::{Din4108Diff, Din4108Snapshot};
+use crate::{Din4108Diff, Din4108Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeTIntC, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {

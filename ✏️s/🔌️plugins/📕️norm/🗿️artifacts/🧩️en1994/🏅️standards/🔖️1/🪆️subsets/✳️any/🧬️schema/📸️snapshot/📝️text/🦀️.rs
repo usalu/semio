@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::en1994::En1994Snapshot;
+use crate::En1994Snapshot;
 
 /// 🗄️ The composite-bridge-girder example fixture, handcrafted in `en1994`'s DSL (`store::ArtifactDsl`):
 /// an EN-annex EN 1994-2 composite bridge girder with a re-entrant deck under an R90 fire rating and a

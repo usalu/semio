@@ -1,9 +1,9 @@
 //! 🔧 Direct Imperative mutation — `EditStepParams` replaces a step's authored `params` dictionary
 //! wholesale (a full value replace, never a merge — `apply_steps_delta`'s `patched` handling does
 //! `step.params = entry.patch.clone()`).
-use crate::artifacts::procedure::diff::ProcedureDiff;
-use crate::artifacts::procedure::mutations::ProcedureMutation;
-use crate::artifacts::procedure::{Dictionary, ProcedureSnapshot, PathRef};
+use crate::diff::ProcedureDiff;
+use crate::mutations::ProcedureMutation;
+use crate::{Dictionary, ProcedureSnapshot, PathRef};
 
 //#region 🔖️Mutation
 /// 🔧 `edit-step-params` payload.

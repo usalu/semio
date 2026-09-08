@@ -1,8 +1,8 @@
 //! 🛠️ Energy model mutation — `CreateZoneEquipment`: Adds one piece of zone equipment to a zone's own equipment list. `priority` is its rank in that list, so it starts at one.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

@@ -2,9 +2,9 @@
 //! matched node, children included for a `Group`) plus its tree address from `base`, and re-`create`s
 //! it there. Missing target ⇒ `Vec::new()`.
 
-use crate::artifacts::raster::mutations::{create_layer, RasterMutation};
-use crate::artifacts::raster::schema::{find_layer, locate_layer};
-use crate::artifacts::raster::RasterSnapshot;
+use crate::mutations::{create_layer, RasterMutation};
+use crate::schema::{find_layer, locate_layer};
+use crate::RasterSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DeleteLayer, base: &RasterSnapshot) -> Vec<RasterMutation> {

@@ -1,6 +1,6 @@
 //! 🧬️ Block2d artifact schema — every field with its state class.
 
-use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, Block2dSnapshot};
+use crate::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, Block2dSnapshot};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
 use schema::ArtifactSchema;
 
@@ -135,7 +135,7 @@ pub fn block2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::block2d::{Block2dDiff, Block2dMutation, Block2dSnapshot};
+    use crate::{Block2dDiff, Block2dMutation, Block2dSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -187,7 +187,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::block2d::Block2dSnapshot;
+    use crate::Block2dSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

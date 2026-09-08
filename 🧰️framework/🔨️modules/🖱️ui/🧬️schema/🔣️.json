@@ -180,6 +180,23 @@
         },
         "runtimeDependency": {
           "type": "boolean"
+        },
+        "ownedInterface": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          }
         }
       }
     },
@@ -416,6 +433,54 @@
     }
   },
   "$defs": {
+    "PresenceOverlayFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cases"],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "update", "expected"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "update": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["surface", "nodeKey", "own", "ttlMs"],
+                "properties": {
+                  "surface": { "type": "string", "minLength": 1 },
+                  "nodeKey": { "type": "string", "minLength": 1 },
+                  "ttlMs": { "type": "integer", "minimum": 1 },
+                  "own": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "selected": { "type": "boolean" },
+                      "hovered": { "type": "boolean" },
+                      "previewed": { "type": "boolean" }
+                    }
+                  }
+                }
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["selected", "hovered", "previewed"],
+                "properties": {
+                  "selected": { "type": "boolean" },
+                  "hovered": { "type": "boolean" },
+                  "previewed": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "UIDialogModalFixture": {
       "type": "object",
       "additionalProperties": false,
@@ -592,6 +657,14 @@
         },
         "routes": {
           "$ref": "#/$defs/RetainedCommandRoutes"
+        },
+        "maximumRawBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumWorkItems": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     }

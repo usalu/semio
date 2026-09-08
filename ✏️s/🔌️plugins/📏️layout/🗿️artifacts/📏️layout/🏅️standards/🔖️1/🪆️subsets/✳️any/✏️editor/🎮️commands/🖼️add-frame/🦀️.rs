@@ -1,8 +1,8 @@
 //! ✏️ ✏️ Layout play app commands command — `add-frame`.
 
-use crate::artifacts::layout::mutations::create_frame::CreateFrame;
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::{Frame, LayoutSnapshot};
+use crate::mutations::create_frame::CreateFrame;
+use crate::mutations::LayoutMutation;
+use crate::{Frame, LayoutSnapshot};
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -28,19 +28,19 @@ pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
         "text" => Frame::Text {
             id: frame_id.clone(),
             layer_id: layer_id.clone(),
-            bounds: crate::artifacts::layout::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(120.0), width: 200.0, height: 120.0, rotation: 0.0 },
+            bounds: crate::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(120.0), width: 200.0, height: 120.0, rotation: 0.0 },
             locked: None,
             visible: None,
             story_id: document.stories.first().map_or_else(|| "story-1".into(), |story| story.id.clone()),
             thread_next: None,
             columns: 1,
-            inset: crate::artifacts::layout::LayoutRect { x: 4.0, y: 4.0, width: 192.0, height: 112.0 },
+            inset: crate::LayoutRect { x: 4.0, y: 4.0, width: 192.0, height: 112.0 },
             wrap_mode: "box".into(),
         },
         "image" => Frame::Image {
             id: frame_id.clone(),
             layer_id: layer_id.clone(),
-            bounds: crate::artifacts::layout::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(280.0), width: 160.0, height: 120.0, rotation: 0.0 },
+            bounds: crate::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(280.0), width: 160.0, height: 120.0, rotation: 0.0 },
             locked: None,
             visible: None,
             link_id: document.links.first().map_or_else(|| "link-missing".into(), |link| link.id.clone()),
@@ -48,7 +48,7 @@ pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
         _ => Frame::Rect {
             id: frame_id.clone(),
             layer_id: layer_id.clone(),
-            bounds: crate::artifacts::layout::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(48.0), width: 120.0, height: 64.0, rotation: 0.0 },
+            bounds: crate::LayoutBounds { x: payload.x.unwrap_or(48.0), y: payload.y.unwrap_or(48.0), width: 120.0, height: 64.0, rotation: 0.0 },
             locked: None,
             visible: None,
             fill: Some([0.2, 0.24, 0.3, 1.0]),

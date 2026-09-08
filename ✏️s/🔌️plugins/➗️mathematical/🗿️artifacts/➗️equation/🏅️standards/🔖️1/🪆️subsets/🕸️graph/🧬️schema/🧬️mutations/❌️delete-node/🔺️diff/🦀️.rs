@@ -1,6 +1,6 @@
 //! 🔺️ `delete-node` — sparse diff construction, cascading to incident edges.
 
-use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationSnapshot};
+use crate::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteNode, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {

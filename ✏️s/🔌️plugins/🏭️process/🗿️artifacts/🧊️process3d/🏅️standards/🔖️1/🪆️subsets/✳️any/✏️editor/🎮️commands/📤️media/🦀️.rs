@@ -1,7 +1,7 @@
 //! 📤️ Process 3d play app commands — shell effects: model export/import round-trips through the host.
 
-use crate::artifacts::process3d::io::{export_process3d_model, import_process3d_model};
-use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
+use crate::io::{export_process3d_model, import_process3d_model};
+use crate::{op::Process3dMutation, Process3dSnapshot};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
@@ -27,7 +27,7 @@ pub mod export_model {
         // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: no `LinkResolver` — see
         // `ProcessWorkingScene`'s doc comment; `doc.snapshot` alone cannot recover its composed
         // children's content, so export degrades honestly to the empty working scene.
-        let scene = crate::artifacts::process3d::process_working_scene_from_snapshot(doc.snapshot);
+        let scene = crate::process_working_scene_from_snapshot(doc.snapshot);
         match export_process3d_model(&scene, doc.snapshot.resolved_up_to, &payload.format).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("process3d.media.export"), error))? {
             Some(export) => Ok(Emit::effect(Effect::DownloadMediaExport {
                 filename: export.filename,

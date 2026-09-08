@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceFastenerGeometry` — patches the one addressed fastener in place.
-use crate::artifacts::puzzle5d::diff::{Puzzle5dDiff, Puzzle5dFastenerPatch, Puzzle5dFastenerPatchEntry, Puzzle5dFastenersDelta};
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::{Puzzle5dDiff, Puzzle5dFastenerPatch, Puzzle5dFastenerPatchEntry, Puzzle5dFastenersDelta};
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceFastenerGeometry, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

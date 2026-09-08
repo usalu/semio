@@ -7,8 +7,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::mutations::LayoutMutation;
+use crate::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -37,7 +37,7 @@ async fn recolumns_the_text_frame_without_changing_its_wrap_mode() {
     let after = applied();
     let page = &after.pages[0];
     let frame = page.frames.iter().find(|frame| frame.id() == "frame-text").expect("the text frame survives");
-    let crate::artifacts::layout::Frame::Text { wrap_mode, columns, inset, .. } = frame else { panic!("change-frame-columns targets the text frame") };
+    let crate::Frame::Text { wrap_mode, columns, inset, .. } = frame else { panic!("change-frame-columns targets the text frame") };
     assert_eq!(*columns, 2, "change-frame-columns must write the payload column count");
     assert_eq!(wrap_mode, "box", "change-frame-columns must leave the wrap mode at its BASE value");
     assert_eq!(inset.width, 0.0, "change-frame-columns must not touch the text inset");
@@ -109,7 +109,7 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::layout::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
+    let decoded: crate::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
     let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-frame-columns/splits-the-text-frame-into-two-columns: committed diff JSON is not canonical");
@@ -119,7 +119,7 @@ async fn committed_diff_is_canonical() {
 /// description of the change `change-frame-columns` makes, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::layout::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
+    let decoded: crate::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-frame-columns/splits-the-text-frame-into-two-columns: committed diff did not carry before to after");
 }

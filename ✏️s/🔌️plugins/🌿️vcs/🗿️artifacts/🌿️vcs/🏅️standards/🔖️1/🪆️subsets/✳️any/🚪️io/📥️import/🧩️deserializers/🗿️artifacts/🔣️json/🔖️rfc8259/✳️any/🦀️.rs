@@ -4,7 +4,7 @@
 //! 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS — no `serde_json` left in
 //! this hop), so this hop is `IoFidelity::Exact`.
 
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::VcsSnapshot;
 use dsl::FromValue;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};

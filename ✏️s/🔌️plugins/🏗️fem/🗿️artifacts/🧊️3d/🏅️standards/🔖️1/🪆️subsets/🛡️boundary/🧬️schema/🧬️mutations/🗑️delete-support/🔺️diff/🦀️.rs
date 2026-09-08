@@ -4,8 +4,8 @@
 //! at a node and nothing in `Fem3dSnapshot` points back at it, so there is no referrer to protect.
 //! Same for `delete-combination`.
 use super::DeleteSupport;
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dSupportsDelta};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::diff::{Fem3dDiff, Fem3dSupportsDelta};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteSupport, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

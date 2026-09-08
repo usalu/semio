@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 
 const sha256 = (bytes: Uint8Array | string): string => createHash("sha256").update(bytes).digest("hex");
 const bytes = (hex: string): Buffer => {
@@ -14,9 +14,34 @@ const revision = (hex: string): number[] => [...bytes(hex)];
 export function testDurableOwnedGroupDecisionFixture(): void {
   const owner = import.meta.dir;
   const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🧬️.schema.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+  const contract = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(contract);
+  const validate = ajv.getSchema(`${contract.$id}#/$defs/DurableOwnedGroupDecision`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
+  assert.equal(fixture.version, 1);
+  assert.deepEqual(fixture.limits, {
+    participants: 3,
+    eventBytes: 491520,
+    recoveryPackBytes: 162000,
+    structuralIdentityBytes: 4096,
+    identityBytes: 256,
+    walSegmentBytes: 507904,
+    walFramingReserveBytes: 16384,
+  });
+  assert.deepEqual(fixture.schemas, {
+    decision: "semio.store.durable-owned-three-member-decision.v1",
+    anchor: "semio.store.owned-three-member-anchor.v1",
+    parent: "semio.store.one-item-outcome.gis-gismap-v1",
+    drawing: "semio.store.one-item-outcome.stdio-drawing-v1",
+    value: "semio.store.one-item-outcome.stdio-value-v1",
+  });
+  assert.equal(fixture.anchor.schema, fixture.schemas.anchor);
+  assert.deepEqual([fixture.carrier.maxJsonDepth, fixture.carrier.maxJsonItems], [32, 65536]);
+  assert.equal(fixture.cases.length, 8);
+  assert.equal(fixture.committedRecovery.cases.length, 4);
+  assert.equal(fixture.carrier.numericCases.length, 3);
+  assert.equal(fixture.publication.commitPhases.length, 17);
   const member = (role: "parent" | "drawing" | "value") => {
     const row = fixture.members[role];
     const callerRecovery = bytes(row.callerRecoveryPackHex);

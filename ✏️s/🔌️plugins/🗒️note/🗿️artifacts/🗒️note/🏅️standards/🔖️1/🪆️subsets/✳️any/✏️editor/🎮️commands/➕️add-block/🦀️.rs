@@ -1,8 +1,8 @@
 //! 🧱️ 🧱️ Note play app commands command — `add-block`.
 
-use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::schema::create_block_by_kind;
-use crate::artifacts::note::NoteSnapshot;
+use crate::op::NoteMutation;
+use crate::schema::create_block_by_kind;
+use crate::NoteSnapshot;
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,15 +21,15 @@ pub struct AddBlock {
 // lowpoly's `add-primitive`).
 pub fn handle(payload: &AddBlock, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let block = create_block_by_kind(&mut ctx.id_owner, &payload.kind, payload.x, payload.y);
-    Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::create_block(block, None, None)]))
+    Ok(Emit::mutations(vec![crate::schema::mutations::create_block(block, None, None)]))
 }
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::note::schema::{block_id, find_block};
-    use crate::artifacts::note::NoteBlockNode;
+    use crate::schema::{block_id, find_block};
+    use crate::NoteBlockNode;
     use crate::editor::note::testkit::{dispatch, note_app};
     use crate::editor::note::NoteCommand;
 
@@ -40,7 +40,7 @@ mod tests {
         assert_eq!(result.mutations.len(), 1);
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.blocks.len(), 1);
-        assert_eq!(crate::artifacts::note::schema::block_kind(&projection.blocks[0]), "text");
+        assert_eq!(crate::schema::block_kind(&projection.blocks[0]), "text");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -85,7 +85,7 @@ mod tests {
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(projection.blocks.len(), 2);
         let clone = projection.blocks.iter().find(|block| block_id(block) != source_id).expect("clone block");
-        let (x, y, ..) = crate::artifacts::note::schema::block_bounds(clone);
+        let (x, y, ..) = crate::schema::block_bounds(clone);
         assert_eq!((x, y), (34.0, 34.0));
     }
 }

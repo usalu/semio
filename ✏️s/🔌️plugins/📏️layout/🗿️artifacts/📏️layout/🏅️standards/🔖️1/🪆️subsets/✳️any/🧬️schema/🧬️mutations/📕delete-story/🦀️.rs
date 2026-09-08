@@ -1,9 +1,9 @@
 //! 🗑️ `delete-story` — removes a {@link TextStory} by id; inverse recreates it via `create-story`.
 
 
-use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
-use crate::artifacts::layout::mutations::{LayoutMutation, create_story};
-use crate::artifacts::layout::schema::diff::LayoutStoriesDelta;
+use crate::{LayoutDiff, LayoutSnapshot};
+use crate::mutations::{LayoutMutation, create_story};
+use crate::schema::diff::LayoutStoriesDelta;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

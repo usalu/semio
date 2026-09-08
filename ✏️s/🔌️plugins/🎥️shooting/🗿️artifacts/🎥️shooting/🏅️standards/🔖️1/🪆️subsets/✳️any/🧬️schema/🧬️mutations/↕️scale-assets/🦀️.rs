@@ -1,8 +1,8 @@
 //! ↕️ Shooting mutation payload — `ScaleAssets`. The bulk multiplicative-scale gesture. Multiplies every asset in `asset_ids`' current per-axis scale by `(sx, sy, sz)`.
 
-use crate::artifacts::shooting::ShootingSnapshot;
-use crate::artifacts::shooting::diff::ShootingDiff;
-use crate::artifacts::shooting::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
+use crate::diff::ShootingDiff;
+use crate::mutations::ShootingMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

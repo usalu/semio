@@ -1,12 +1,12 @@
 //! 🔺️ Sparse diff builder for `AddBlock` — a real ordered insert into the owning step's block
 //! list (never a whole-snapshot capture).
 
-use crate::artifacts::playbook::schema::diff::text::diff_replace_content;
-use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
+use crate::schema::diff::text::diff_replace_content;
+use crate::{PlaybookDiff, PlaybookSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddBlock, base: &PlaybookSnapshot) -> protocol::MutationOutcome<PlaybookDiff> {
-    let mut steps = crate::artifacts::playbook::playbook_working_scene(base).steps;
+    let mut steps = crate::playbook_working_scene(base).steps;
     let Some(step) = steps.iter().find(|step| step.id == payload.step_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.step_id), [payload.step_id.clone()]);
     };

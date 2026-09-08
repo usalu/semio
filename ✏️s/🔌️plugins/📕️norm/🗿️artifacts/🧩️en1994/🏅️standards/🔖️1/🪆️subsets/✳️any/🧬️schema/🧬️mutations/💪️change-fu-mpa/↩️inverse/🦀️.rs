@@ -1,7 +1,7 @@
 //! ↩️ `change-fu-mpa` — undo restores BASE's f_u_mpa.
 
 use super::ChangeFUMpa;
-use crate::artifacts::en1994::{En1994Mutation, En1994Snapshot};
+use crate::{En1994Mutation, En1994Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeFUMpa, base: &En1994Snapshot) -> Vec<En1994Mutation> {

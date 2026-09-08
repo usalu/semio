@@ -6,10 +6,10 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use crate::artifacts::flow::schema::diff::*;
+pub use crate::schema::diff::*;
 
-use crate::artifacts::flow::schema::FlowArtifact;
-use crate::artifacts::flow::FlowSnapshot;
+use crate::schema::FlowArtifact;
+use crate::FlowSnapshot;
 use protocol::MutationDiff;
 
 //#region 🔹Apply
@@ -141,8 +141,8 @@ pub fn diff_set_snapshot(snapshot: &FlowSnapshot) -> FlowDiff {
 /// capture. Every one of the nine widget/synapse mutation triads' `🔺️diff` leaf reads the CURRENT
 /// scene off `base` (via `flow_working_scene`), applies its own specific semantics to that scene,
 /// then calls this shared builder — mirrors writer's `diff_set_text`.
-pub fn diff_replace_content(widgets: Vec<flow::Widget>, synapses: Vec<flow::SynapseSpec>, layout: flow::OrderedMap<flow::WidgetLayout>) -> FlowDiff {
-    FlowDiff { content: Some(crate::artifacts::flow::flow_content_child_handle_and_cache(widgets, synapses, layout)), ..Default::default() }
+pub fn diff_replace_content(widgets: Vec<semio_framework_artifact_flow_flow::Widget>, synapses: Vec<semio_framework_artifact_flow_flow::SynapseSpec>, layout: flow::OrderedMap<semio_framework_artifact_flow_flow::WidgetLayout>) -> FlowDiff {
+    FlowDiff { content: Some(crate::flow_content_child_handle_and_cache(widgets, synapses, layout)), ..Default::default() }
 }
 //#endregion 🔹Helpers
 
@@ -150,19 +150,19 @@ pub fn diff_replace_content(widgets: Vec<flow::Widget>, synapses: Vec<flow::Syna
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::flow::schema::mutations::FlowMutation;
+    use crate::schema::mutations::FlowMutation;
     use protocol::Mutation;
 
     #[semio_framework_async_macros::async_test]
     async fn move_widgets_diff_touches_only_the_content_slot() {
         let base = FlowSnapshot::default();
-        let operation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::MoveWidgets { entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 3.0, y: 4.0 }) }] });
+        let operation = FlowMutation::MoveWidgets(crate::schema::mutations::move_widgets::MoveWidgets { entries: vec![semio_framework_artifact_flow_flow::FlowLayoutEntry { id: "slider".into(), layout: Some(semio_framework_artifact_flow_flow::WidgetLayout { x: 3.0, y: 4.0 }) }] });
         let outcome = operation.diff(&base);
         let diff = outcome.diff();
         assert!(diff.content.is_some(), "MoveWidgets must produce a content diff: {diff:?}");
         assert!(diff.artifact.is_none(), "MoveWidgets must not replace the whole artifact: {diff:?}");
         let after = diff.apply(&base).expect("valid mutation diff");
-        assert_eq!(after.to_fixture().layout.get("slider"), Some(&flow::WidgetLayout { x: 3.0, y: 4.0 }));
+        assert_eq!(after.to_fixture().layout.get("slider"), Some(&semio_framework_artifact_flow_flow::WidgetLayout { x: 3.0, y: 4.0 }));
     }
 
     #[semio_framework_async_macros::async_test]

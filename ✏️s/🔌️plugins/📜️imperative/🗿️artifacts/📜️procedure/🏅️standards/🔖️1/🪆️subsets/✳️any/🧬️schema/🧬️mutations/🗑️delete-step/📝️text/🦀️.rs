@@ -1,8 +1,8 @@
 //! 🗑️ Text wire record and conversions owned by the direct `delete-step` leaf.
 
-use crate::artifacts::procedure::schema::mutations::binary::ProcedureMutationDsl;
-use crate::artifacts::procedure::schema::mutations::ProcedureMutation;
-use crate::artifacts::procedure::PathRef;
+use crate::schema::mutations::binary::ProcedureMutationDsl;
+use crate::schema::mutations::ProcedureMutation;
+use crate::PathRef;
 
 pub const TEXT_OPCODE: &str = "delete-step";
 

@@ -11,7 +11,7 @@ use semio_repo_test_host::{Adapter, Context, Outcome};
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_plugin_lowpoly::artifacts::lowpoly::{LowpolyMutation, LowpolyObject, LowpolySnapshot};
+    use semio_s_artifact_lowpoly_lowpoly::{LowpolyMutation, LowpolyObject, LowpolySnapshot};
     use semio_s_plugin_lowpoly::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv};
     use semio_s_plugin_lowpoly::editor::lowpoly::config::LowpolyConfig;
     use semio_s_plugin_lowpoly::editor::lowpoly::session::LowpolyScratch;

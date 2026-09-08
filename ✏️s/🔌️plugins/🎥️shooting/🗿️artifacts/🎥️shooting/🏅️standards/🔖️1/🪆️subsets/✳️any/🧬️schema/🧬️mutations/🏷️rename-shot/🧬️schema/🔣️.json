@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/mutation/rename-shot.json",
+  "$id": "https://semio.tech/schema/s/shooting/shooting/1/any/mutation/rename-shot/schema.json",
   "title": "RenameShot",
   "type": "object",
   "additionalProperties": false,

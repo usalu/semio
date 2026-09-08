@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::en1999::schema::mutations::text::En1999Mutation;
+use crate::document_schema::mutations::text::En1999Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -23,8 +23,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<En1999Mutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::en1999::mutations::change_n_ed_kn;
-    use crate::artifacts::en1999::En1999Snapshot;
+    use crate::mutations::change_n_ed_kn;
+    use crate::En1999Snapshot;
 
     fn sample_mutation() -> En1999Mutation {
         En1999Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: 95.0 })

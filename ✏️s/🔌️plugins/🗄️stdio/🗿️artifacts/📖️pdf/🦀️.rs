@@ -72,19 +72,19 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     let builder = semio_framework_plugin::ArtifactDeclaration::builder(definition);
-    let builder = builder.schema(crate::standards::v1_7::subsets::base::schema::pdf_artifact_schema_descriptor());
+    let builder = builder.schema(standards::v1_7::subsets::base::schema::pdf_artifact_schema_descriptor());
     let builder = builder.formats(formats);
-    let builder = builder.schemas([crate::standards::v1_4::subsets::base::schema::pdf_artifact_schema_descriptor()]);
+    let builder = builder.schemas([standards::v1_4::subsets::base::schema::pdf_artifact_schema_descriptor()]);
     let builder = builder
-        .inferences([crate::standards::v1_7::subsets::base::schema::inferences::pdf17_artifact_inference_descriptor(), crate::standards::v1_4::subsets::base::schema::inferences::pdf_artifact_inference_descriptor()]);
-    let builder = builder.composers(crate::standards::v1_7::subsets::base::io::io_registry::entries());
-    let builder = builder.composers(crate::standards::v1_4::subsets::base::io::io_registry::entries());
+        .inferences([standards::v1_7::subsets::base::schema::inferences::pdf17_artifact_inference_descriptor(), standards::v1_4::subsets::base::schema::inferences::pdf_artifact_inference_descriptor()]);
+    let builder = builder.composers(standards::v1_7::subsets::base::io::io_registry::entries());
+    let builder = builder.composers(standards::v1_4::subsets::base::io::io_registry::entries());
     let builder = builder.subset_validators(pdf_1_7_subset_validators());
     let builder = builder.subset_validators(pdf_1_4_subset_validators());
     let builder = builder.languages(pilot_languages_1_7());
     let builder = builder.languages(pilot_languages_1_4());
-    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(crate::standards::v1_7::subsets::base::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA);
-    let builder = builder.document_codec_bare::<crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA);
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(standards::v1_7::subsets::base::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA);
+    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA);
     builder.try_build()
 }
 
@@ -97,12 +97,12 @@ fn pdf_1_7_subset_validators() -> &'static [semio_framework_plugin::SubsetValida
     ENTRIES
         .get_or_init(|| {
             vec![
-                semio_framework_plugin::subset_validator_entry_of::<crate::standards::v1_7::subsets::a::io::PdfAValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<crate::standards::v1_7::subsets::x::io::PdfXValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<crate::standards::v1_7::subsets::e::io::PdfEValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<crate::standards::v1_7::subsets::ua::io::PdfUaValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<crate::standards::v1_7::subsets::vt::io::PdfVtValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<crate::standards::v1_7::subsets::h::io::PdfHValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<standards::v1_7::subsets::a::io::PdfAValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<standards::v1_7::subsets::x::io::PdfXValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<standards::v1_7::subsets::e::io::PdfEValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<standards::v1_7::subsets::ua::io::PdfUaValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<standards::v1_7::subsets::vt::io::PdfVtValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<standards::v1_7::subsets::h::io::PdfHValidator>(),
             ]
         })
         .as_slice()
@@ -116,8 +116,8 @@ fn pdf_1_4_subset_validators() -> &'static [semio_framework_plugin::SubsetValida
     ENTRIES
         .get_or_init(|| {
             vec![
-                semio_framework_plugin::subset_validator_entry_of::<crate::standards::v1_4::subsets::a::io::PdfAValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<crate::standards::v1_4::subsets::x::io::PdfXValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<standards::v1_4::subsets::a::io::PdfAValidator>(),
+                semio_framework_plugin::subset_validator_entry_of::<standards::v1_4::subsets::x::io::PdfXValidator>(),
             ]
         })
         .as_slice()
@@ -135,28 +135,28 @@ fn pilot_languages_1_7() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.pdf.1.7",
                     extension: Some("pdf"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::standards::v1_7::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1_7::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_7::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_7::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.1.7"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.pdf.1.7.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::standards::v1_7::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1_7::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_7::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_7::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.1.7.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.pdf.1.7.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::standards::v1_7::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1_7::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1_7::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_7::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.pdf.1.7.diff"),
@@ -167,8 +167,8 @@ fn pilot_languages_1_7() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.1.7.pack"),
                 },
                 dsl::LanguageSpec {
@@ -177,8 +177,8 @@ fn pilot_languages_1_7() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.1.7.spr"),
                 },
             ]
@@ -198,28 +198,28 @@ fn pilot_languages_1_4() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.pdf",
                     extension: Some("pdf"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::standards::v1_4::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1_4::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_4::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_4::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.pdf.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::standards::v1_4::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1_4::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_4::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_4::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.pdf.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::standards::v1_4::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1_4::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1_4::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_4::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.pdf.diff"),
@@ -230,8 +230,8 @@ fn pilot_languages_1_4() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.pack"),
                 },
                 dsl::LanguageSpec {
@@ -240,8 +240,8 @@ fn pilot_languages_1_4() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.pdf.spr"),
                 },
             ]

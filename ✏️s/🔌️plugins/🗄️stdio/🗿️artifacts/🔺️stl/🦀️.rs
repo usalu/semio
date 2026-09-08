@@ -81,10 +81,10 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::schema::stl_artifact_schema_descriptor())
+        .schema(schema::stl_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([crate::schema::inferences::stl_artifact_inference_descriptor()])
-        .composers(crate::engine::io_registry::entries())
+        .inferences([schema::inferences::stl_artifact_inference_descriptor()])
+        .composers(engine::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<StlSnapshot, StlMutation>(STDIO_STL_DOCUMENT_SCHEMA)
         .try_build()
@@ -104,28 +104,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "stdio.stl",
                     extension: Some("stl"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.stl"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.stl.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.stl.op"),
                 },
                 dsl::LanguageSpec {
                     id: "stdio.stl.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("stdio.stl.diff"),
@@ -136,8 +136,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.stl.pack"),
                 },
                 dsl::LanguageSpec {
@@ -146,8 +146,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("stdio.stl.spr"),
                 },
             ]

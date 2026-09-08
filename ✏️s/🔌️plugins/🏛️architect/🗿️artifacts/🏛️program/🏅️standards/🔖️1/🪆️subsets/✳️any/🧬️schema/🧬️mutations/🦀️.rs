@@ -23,8 +23,8 @@
 //! individual `#[path]` mount. Dispatch coverage compares variants and triad owners
 //! bijectively through that registry.
 
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 //#region 🔖️ProgramMutation
 /// 🧩️ Every variant wraps exactly one `protocol::MutationKind<ProgramSnapshot, ProgramMutation>`
@@ -850,9 +850,9 @@ mod fixture_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::kernel::*;
-    use crate::artifacts::program::registers::*;
-    use crate::artifacts::program::{empty_plugin, sample_plugin};
+    use crate::kernel::*;
+    use crate::registers::*;
+    use crate::{empty_plugin, sample_plugin};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     fn round_trip(snapshot: &ProgramSnapshot, operation: &ProgramMutation) -> ProgramSnapshot {

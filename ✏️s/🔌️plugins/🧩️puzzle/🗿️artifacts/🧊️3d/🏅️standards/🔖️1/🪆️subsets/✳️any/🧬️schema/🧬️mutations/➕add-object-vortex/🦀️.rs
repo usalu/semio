@@ -1,7 +1,7 @@
 //! ➕ Puzzle3d mutation — `AddObjectVortex`: attaches a new rim vortex to an object.
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::{Puzzle3dSnapshot, Puzzle3dVortex};
+use crate::diff::Puzzle3dDiff;
+use crate::mutations::Puzzle3dMutation;
+use crate::{Puzzle3dSnapshot, Puzzle3dVortex};
 
 //#region 🔖️Mutation
 /// ➕ `add-object-vortex` payload — owner object id + new vortex payload at an optional

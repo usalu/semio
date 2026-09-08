@@ -1,8 +1,8 @@
 //! 🕹️ 🕹️ Note play app commands command — `nudge-selection-up`.
 
-use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::schema::{block_id, flatten_blocks};
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
+use crate::op::NoteMutation;
+use crate::schema::{block_id, flatten_blocks};
+use crate::{NoteBlockNode, NoteSnapshot};
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use std::collections::HashSet;
@@ -38,7 +38,7 @@ fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f64) -> 
     if ids.is_empty() {
         return Emit::default();
     }
-    Emit::mutations(vec![crate::artifacts::note::schema::mutations::drag_blocks(ids, dx, dy)])
+    Emit::mutations(vec![crate::schema::mutations::drag_blocks(ids, dx, dy)])
 }
 //#endregion 🔖️Helpers
 
@@ -54,7 +54,7 @@ pub fn handle(_payload: &NudgeSelectionUp, doc: &ArtifactView<'_, NoteSnapshot>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::note::schema::{block_bounds, block_id};
+    use crate::schema::{block_bounds, block_id};
     use crate::editor::note::testkit::{dispatch, note_app_with_registry, select_blocks};
     use crate::editor::note::NoteCommand;
 

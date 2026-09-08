@@ -1,8 +1,8 @@
 //! 🔃 Drawing mutation — `ReorderLayer`: repositions (and optionally re-parents) an existing layer to
 //! a FINAL-state `(parent_id, index)` address — never spatial.
-use crate::artifacts::drawing::diff::DrawingDiff;
-use crate::artifacts::drawing::mutations::DrawingMutation;
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::diff::DrawingDiff;
+use crate::mutations::DrawingMutation;
+use crate::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🔃 `reorder-layer` payload.

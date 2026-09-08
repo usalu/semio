@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-model.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/base/mutation/apply-model/schema.json",
   "title": "ApplyModel",
   "type": "object",
   "additionalProperties": false,

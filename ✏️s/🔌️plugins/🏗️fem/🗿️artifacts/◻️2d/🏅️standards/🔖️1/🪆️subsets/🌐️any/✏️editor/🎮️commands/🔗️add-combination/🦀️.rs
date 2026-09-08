@@ -1,13 +1,13 @@
 //! 🏋️ 🏋️ Fem2d play app commands command — `add-combination`.
 
-use crate::artifacts::fem2d::mutations::create_combination;
-use crate::artifacts::fem2d::op::Fem2dMutation;
-use crate::artifacts::fem2d::FemCombination;
+use crate::mutations::create_combination;
+use crate::op::Fem2dMutation;
+use crate::FemCombination;
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
+type Fem2dSnapshot = crate::Fem2dSnapshot;
 
 //#region 🔖️AddNodalLoad
 //#endregion 🔖️AddNodalLoad
@@ -31,7 +31,7 @@ type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
 #[dsl(keyword = "add-combination")]
 pub struct AddCombination {
     pub name: String,
-    pub terms: Vec<crate::artifacts::fem2d::FemCombinationTerm>,
+    pub terms: Vec<crate::FemCombinationTerm>,
 }
 
 pub fn handle(payload: &AddCombination, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {

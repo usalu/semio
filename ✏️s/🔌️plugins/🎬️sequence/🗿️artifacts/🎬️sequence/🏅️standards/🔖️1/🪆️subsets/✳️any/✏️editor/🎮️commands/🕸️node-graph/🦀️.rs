@@ -1,7 +1,7 @@
 //! 🕸️ Sequence play app commands — bulk node-graph edits and viewport pan/zoom.
 
-use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::{SequenceCamera, SequenceSnapshot};
+use crate::mutations::SequenceMutation;
+use crate::{SequenceCamera, SequenceSnapshot};
 use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::editor::sequence::ops_from_host_mutation;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
@@ -24,7 +24,7 @@ pub mod node_graph_edit {
             for operation in &sub_operations {
                 match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                     "setFixture" => {
-                        if let Some(fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| dsl::os_pack::from_json_str::<crate::artifacts::sequence::SequenceFixture>(json).ok()) {
+                        if let Some(fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| dsl::os_pack::from_json_str::<crate::SequenceFixture>(json).ok()) {
                             let _ = host.replace_snapshot(fixture);
                         }
                     }
@@ -82,7 +82,7 @@ pub mod set_viewport {
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::sequence::SequenceCamera;
+    use crate::SequenceCamera;
     use crate::editor::sequence::testkit::{dispatch, new_app, new_app_with_registry_wired, select_steps};
     use crate::editor::sequence::SequenceCommand;
     use semio_framework_plugin::{PluginApp, ViewModel};

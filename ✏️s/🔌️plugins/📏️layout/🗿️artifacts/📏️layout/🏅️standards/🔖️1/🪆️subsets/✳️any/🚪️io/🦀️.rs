@@ -14,8 +14,8 @@ pub fn layout_from_wire(bytes: &[u8]) -> Result<LayoutSnapshot, store::PackError
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::layout::standards::v1::subsets::any::schema::LayoutAnalyzer;
-    use crate::artifacts::layout::LayoutSnapshot;
+    use crate::standards::v1::subsets::any::schema::LayoutAnalyzer;
+    use crate::LayoutSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", standard: StandardId("1"), subset: SubsetId("*") };
@@ -51,7 +51,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
-                    if let Ok(snapshot) = crate::artifacts::layout::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
+                    if let Ok(snapshot) = crate::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                     }
                 }
@@ -61,7 +61,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::artifacts::layout::io::import::deserializers::artifacts::dxf::v_r12::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::io::import::deserializers::artifacts::dxf::v_r12::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -72,7 +72,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::artifacts::layout::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -83,7 +83,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
                     };
                     if let Some(text) = text {
-                        if let Ok(snapshot) = crate::artifacts::layout::io::import::deserializers::artifacts::svg::v1_1::any::deserialize_text(&text) {
+                        if let Ok(snapshot) = crate::io::import::deserializers::artifacts::svg::v1_1::any::deserialize_text(&text) {
                             return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
                         }
                     }
@@ -158,7 +158,7 @@ impl From<std::io::Error> for LayoutError {
 /// `rect_path_segments` and `compose_svg_from_drawing` are `pub` (were `pub(crate)`, widened because
 /// the app engine's `export_display_list_svg` is now a cross-module SECOND consumer — see this
 /// region's own header on the "more than one consumer" rule).
-use crate::artifacts::layout::{Frame, GridSettings, Layer, LayoutSnapshot, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
+use crate::{Frame, GridSettings, Layer, LayoutSnapshot, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
 use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
 #[cfg(test)]
@@ -255,7 +255,7 @@ pub(crate) fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDra
     let mut styles = vec![DrawStyle { name: "page".into(), fill: None, stroke: Some(SemioRgba { r: 0.58, g: 0.65, b: 0.72, a: 1.0 }), stroke_width: Some(2.0), opacity: None }];
     let mut layers = Vec::with_capacity(doc.pages.len());
 
-    if let Some(background) = crate::artifacts::layout::background_drawing_content(doc) {
+    if let Some(background) = crate::background_drawing_content(doc) {
         for mut layer in background.layers {
             layer.id = format!("background-{}", layer.id);
             layers.push(layer);
@@ -351,7 +351,7 @@ fn dwg_drawing_to_semio_drawing(drawing: &DwgDrawing) -> SemioDrawingSnapshot {
 /// whose snapshot-owned record retains the full drawing — nothing imported is thrown away anymore.
 pub fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
     let drawing_snapshot = dwg_drawing_to_semio_drawing(drawing);
-    let background_child = crate::artifacts::layout::background_drawing_child_handle("dwg", &drawing_snapshot);
+    let background_child = crate::background_drawing_child_handle("dwg", &drawing_snapshot);
     let root_children: &[DrawNode] = match drawing_snapshot.layers.first().map(|layer| &layer.root) {
         Some(DrawNode::Group { children, .. }) => children,
         _ => &[],
@@ -461,7 +461,7 @@ mod media_import_export_tests {
         let document: LayoutSnapshot = LayoutSnapshot::from_value(value).expect("valid layout document");
         let child = document.background_drawing.as_ref().expect("dwg import mints a background_drawing child");
         assert_eq!(child.handle.target.dialect.subset, "drawing");
-        let content = crate::artifacts::layout::background_drawing_content(&document).expect("mint call retained real content");
+        let content = crate::background_drawing_content(&document).expect("mint call retained real content");
         assert_eq!(content.layers.len(), 1, "one imported layer, matching dwg_drawing_to_semio_drawing's single 'imported' layer");
     }
 
@@ -488,7 +488,7 @@ mod media_import_export_tests {
     #[semio_framework_async_macros::async_test]
     async fn svg_export_composes_through_semio_drawing_bridge() {
         ensure_stdio_semio_drawing_registered();
-        let doc = crate::artifacts::layout::schema::default_document();
+        let doc = crate::schema::default_document();
         let value = doc.to_value();
         let (svg, width, height) = layout_document_json_to_svg(&value).expect("svg export succeeds");
         assert!(svg.starts_with("<svg"), "{svg}");
@@ -512,8 +512,8 @@ mod media_import_export_tests {
 /// module's `entries()` (`&'static [ComposerEntry]`, owning storage) — deliberately different return
 /// types; do not conflate them when qualifying paths.
 pub mod io_registry {
-    use crate::artifacts::layout::standards::v1::subsets::any::schema::LayoutBuilder as LayoutAnyBuilder;
-    use crate::artifacts::layout::standards::v1::subsets::any::schema::LayoutComposer as LayoutAnyComposer;
+    use crate::standards::v1::subsets::any::schema::LayoutBuilder as LayoutAnyBuilder;
+    use crate::standards::v1::subsets::any::schema::LayoutComposer as LayoutAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
     use std::sync::OnceLock;
 
@@ -533,7 +533,7 @@ pub mod io_registry {
     const LAYOUT_DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", standard: StandardId("1"), subset: SubsetId("*") };
     const LAYOUT_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::layout::LayoutSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::LayoutSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == LAYOUT_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => LayoutAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -549,7 +549,7 @@ pub mod io_registry {
                 IoPayload::Text(t) => t.clone(),
                 IoPayload::Binary(b) => String::from_utf8_lossy(b).into_owned(),
             };
-            return crate::artifacts::layout::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
+            return crate::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() });
         }
         Err(ComposeError { message: "LayoutComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
@@ -558,7 +558,7 @@ pub mod io_registry {
     fn compose_export_svg(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::artifacts::layout::io::export::serializers::artifacts::svg::v1_1::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let text = crate::io::export::serializers::artifacts::svg::v1_1::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -566,7 +566,7 @@ pub mod io_registry {
     fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::artifacts::layout::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
+            let text = crate::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
         })
     }
@@ -596,16 +596,16 @@ mod pdf_contract_vectors {
     fn layout_pdf_page_collection_matches_the_json_oracle() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📖️pdf-page-text.json")).expect("neutral PDF fixture");
         let snapshot: LayoutSnapshot = dsl::os_pack::from_json_str(&fixture["snapshot"].to_string()).expect("owned layout fixture");
-        let exported = crate::artifacts::layout::io::export::serializers::artifacts::pdf::v1_4::base::serialize(&snapshot).expect("PDF export");
+        let exported = crate::io::export::serializers::artifacts::pdf::v1_4::base::serialize(&snapshot).expect("PDF export");
         let actual: serde_json::Value = serde_json::from_str(&dsl::os_pack::to_json_string(&exported)).expect("independent PDF JSON oracle");
         assert_eq!(actual["pages"].as_array().expect("pages").len(), fixture["exportPages"].as_u64().expect("count") as usize);
         assert_eq!(actual["pages"][0]["width"], fixture["width"]);
         assert_eq!(actual["pages"][0]["height"], fixture["height"]);
         assert_eq!(actual["pages"][0]["text"], snapshot.print_dsl());
-        assert_eq!(crate::artifacts::layout::io::import::deserializers::artifacts::pdf::v1_4::base::deserialize(&exported).expect("single-page import"), snapshot);
+        assert_eq!(crate::io::import::deserializers::artifacts::pdf::v1_4::base::deserialize(&exported).expect("single-page import"), snapshot);
         let text = snapshot.print_dsl();
         let (first, second) = text.split_once('\n').expect("multiline document");
         let split = PdfSnapshot { schema: exported.schema, pages: [first, second].into_iter().map(|text| PageDoc { width: 612.0, height: 792.0, text: text.into() }).collect() };
-        assert_eq!(crate::artifacts::layout::io::import::deserializers::artifacts::pdf::v1_4::base::deserialize(&split).expect("all-page import"), snapshot);
+        assert_eq!(crate::io::import::deserializers::artifacts::pdf::v1_4::base::deserialize(&split).expect("all-page import"), snapshot);
     }
 }

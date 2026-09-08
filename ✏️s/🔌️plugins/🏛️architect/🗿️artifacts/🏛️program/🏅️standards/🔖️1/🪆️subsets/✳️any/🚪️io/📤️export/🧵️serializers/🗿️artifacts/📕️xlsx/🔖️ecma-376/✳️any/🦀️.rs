@@ -1,5 +1,5 @@
 //! program -> xlsx
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramSnapshot;
 pub use semio_s_artifact_stdio_xlsx::XlsxSnapshot;
 pub use semio_s_artifact_stdio_xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
 use std::collections::BTreeSet;
@@ -21,7 +21,7 @@ fn cell_value(value: &dsl::DslValue) -> Result<XlsxCellValue, store::TextError> 
 }
 
 pub fn serialize(snapshot: &ProgramSnapshot) -> Result<XlsxSnapshot, store::TextError> {
-    let tables = crate::artifacts::program::io::program_export_tables(snapshot).map_err(export_error)?;
+    let tables = crate::io::program_export_tables(snapshot).map_err(export_error)?;
     let mut sheets = Vec::with_capacity(tables.len());
     for table in tables {
         let columns: Vec<String> = table.rows.iter().flat_map(|row| row.iter().map(|(key, _)| key.clone())).collect::<BTreeSet<_>>().into_iter().collect();
@@ -58,7 +58,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn exports_every_program_table_to_a_real_workbook() {
-        let program = crate::artifacts::program::sample_plugin();
+        let program = crate::sample_plugin();
         let workbook = serialize(&program).expect("serialize program workbook");
         assert_eq!(workbook.workbook.sheets.len(), 70);
         assert!(workbook.workbook.sheets.iter().any(|sheet| sheet.name == "meta" && sheet.cells.iter().any(|cell| cell.row == 2 && cell.value == XlsxCellValue::InlineString("Sample Clinic".into()))));

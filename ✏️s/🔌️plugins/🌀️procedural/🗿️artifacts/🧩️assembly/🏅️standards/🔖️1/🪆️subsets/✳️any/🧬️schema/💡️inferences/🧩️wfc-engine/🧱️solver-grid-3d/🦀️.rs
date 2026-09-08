@@ -260,7 +260,7 @@ mod tests {
 
         let config = SearchConfig::default();
         for seed in 0..10u64 {
-            let mut graph_solver = crate::wfc_engine::solver_graph::GraphSolverBuilder::new(model.clone(), graph_topo.clone()).config(config).build().unwrap();
+            let mut graph_solver = crate::wfc_engine::solver_semio_framework_graph::GraphSolverBuilder::new(model.clone(), graph_topo.clone()).config(config).build().unwrap();
             let mut grid_solver = Grid3dSolverBuilder::new(model.clone(), grid_topo.clone()).config(config).build().unwrap();
             let graph_outcome = graph_solver.solve(seed);
             let grid_outcome = grid_solver.solve(seed);

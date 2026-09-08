@@ -1,9 +1,9 @@
 //! 🔺️ Block 5D artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::block5d::schema::diff::*;
+use crate::schema::diff::*;
 
-use crate::artifacts::block5d::schema::Block5dArtifact;
-use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate, Block5dSnapshot};
+use crate::schema::Block5dArtifact;
+use crate::{Block5dGripKind, Block5dGripTemplate, Block5dSnapshot};
 use crate::{BlockAttribute, BlockCompatibilityRule, BlockRepresentation};
 use protocol::MutationDiff;
 
@@ -267,12 +267,14 @@ pub(crate) fn block5d_index_of<T: Block5dHasId>(items: &[T], id: &str) -> Option
 }
 
 pub fn diff_set_representation(index: usize, item: BlockRepresentation, base: &Block5dSnapshot) -> Block5dDiff {
-    let mut delta = Block5dRepresentationsDelta { added: vec![item.clone()], ..Default::default() };
-    if block5d_index_of(&base.representations, &item.id).is_none() {
+    let reordered = if block5d_index_of(&base.representations, &item.id).is_none() {
         let mut order: Vec<_> = base.representations.iter().map(|e| e.id.clone()).collect();
-        order.insert(index.min(order.len()), item.id);
-        delta.reordered = Some(order);
-    }
+        order.insert(index.min(order.len()), item.id.clone());
+        Some(order)
+    } else {
+        None
+    };
+    let delta = Block5dRepresentationsDelta { added: vec![item], reordered, ..Default::default() };
     Block5dDiff { representations: Some(delta), ..Default::default() }
 }
 pub fn diff_remove_representation(id: String) -> Block5dDiff {

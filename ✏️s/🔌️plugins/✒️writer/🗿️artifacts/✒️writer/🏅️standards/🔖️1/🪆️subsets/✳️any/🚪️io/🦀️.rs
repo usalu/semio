@@ -3,7 +3,7 @@
 //! `serializer_entry`/`deserializer_entry`; the native codec lives unsplit under `📸️snapshot/`,
 //! `🔺️diff/`, `🧬️mutations/`, `💡️inferences/` (design.md §1 CORRECTION).
 
-use crate::artifacts::writer::{WriterMutation, WriterSnapshot, WRITER_DIALECT, WRITER_DOCUMENT_SCHEMA};
+use crate::{WriterMutation, WriterSnapshot, WRITER_DIALECT, WRITER_DOCUMENT_SCHEMA};
 use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
 use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
 
@@ -22,8 +22,8 @@ pub fn io() -> IoDeclaration {
 }
 
 fn entries() -> &'static [IoEntry] {
-    use crate::artifacts::writer::io::export::serializers::artifacts as export;
-    use crate::artifacts::writer::io::import::deserializers::artifacts as import;
+    use crate::io::export::serializers::artifacts as export;
+    use crate::io::import::deserializers::artifacts as import;
     static ENTRIES: std::sync::OnceLock<Vec<IoEntry>> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| {

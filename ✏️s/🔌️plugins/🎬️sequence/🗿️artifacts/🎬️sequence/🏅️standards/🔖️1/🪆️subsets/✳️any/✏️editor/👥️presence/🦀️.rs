@@ -1,6 +1,6 @@
 //! 👥️ Sequence presence — shareable live ephemeral state + mutations.
 
-use crate::artifacts::sequence::SequenceCamera;
+use crate::SequenceCamera;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;

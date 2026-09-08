@@ -1,7 +1,7 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `reset-rule`.
 
-use crate::artifacts::rewriting::op::RewriteRuleMutation;
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::op::RewriteRuleMutation;
+use crate::RewritingSnapshot;
 use crate::editor::rewriting::config::RewritingConfigMutation;
 use semio_framework_plugin::Emit;
 

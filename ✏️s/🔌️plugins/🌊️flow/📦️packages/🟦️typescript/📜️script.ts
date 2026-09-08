@@ -139,11 +139,11 @@ class ActionCohortAuditScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const flowRoot = resolve(this.root, "../..");
     const noteRoot = resolve(flowRoot, "../🗒️note");
-    const schema = await Bun.file(resolve(flowRoot, "🔣️action-cohort.schema.json")).json();
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
+    const schemaModule = await Bun.file(resolve(flowRoot, "🎬️action-cohort/🧬️schema/🔣️.json")).json();
+    const validate = new Ajv({ allErrors: true, strict: true }).addSchema(schemaModule).compile({ $ref: `${schemaModule.$id}#/$defs/ActionCohort` });
     const fixtures = [
-      await Bun.file(resolve(flowRoot, "🔣️action-cohort.json")).json() as Fixture,
-      await Bun.file(resolve(noteRoot, "🔣️action-cohort.json")).json() as Fixture,
+      await Bun.file(resolve(flowRoot, "🎬️action-cohort/🔣️.json")).json() as Fixture,
+      await Bun.file(resolve(noteRoot, "🧪️action-cohort/🔣️.json")).json() as Fixture,
     ];
     const scope = segments[0] ?? "all";
     if (!["all", "flow", "note"].includes(scope)) throw new Error(`unknown action-cohort scope ${scope}`);

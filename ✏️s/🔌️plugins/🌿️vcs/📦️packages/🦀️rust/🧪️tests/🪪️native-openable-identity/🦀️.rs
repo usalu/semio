@@ -6,13 +6,13 @@ fn vcs_guest_descriptor_has_one_canonical_native_openable_identity() {
     let authority = &fixture["authority"];
     let bundle = semio_s_plugin_vcs::plugin().expect("schema-owned VCS plugin");
     assert_eq!(bundle.manifest.plugin_id, authority["pluginId"].as_str().unwrap());
-    assert_eq!(semio_s_plugin_vcs::artifacts::vcs::artifact_kind().id, authority["artifactKind"].as_str().unwrap());
-    assert_eq!(semio_s_plugin_vcs::artifacts::vcs::VCS_DOCUMENT_SCHEMA, authority["artifactSchema"].as_str().unwrap());
-    assert_eq!(semio_s_plugin_vcs::artifacts::vcs::VCS_DIALECT.artifact_kind, authority["dialectKind"].as_str().unwrap());
-    let codec = semio_s_plugin_vcs::artifacts::vcs::standards::v1::subsets::any::io::io().native.codec;
+    assert_eq!(semio_s_artifact_vcs_vcs::artifact_kind().id, authority["artifactKind"].as_str().unwrap());
+    assert_eq!(semio_s_artifact_vcs_vcs::VCS_DOCUMENT_SCHEMA, authority["artifactSchema"].as_str().unwrap());
+    assert_eq!(semio_s_artifact_vcs_vcs::VCS_DIALECT.artifact_kind, authority["dialectKind"].as_str().unwrap());
+    let codec = semio_s_artifact_vcs_vcs::standards::v1::subsets::any::io::io().native.codec;
     assert_eq!(codec.schema, authority["artifactSchema"].as_str().unwrap());
     assert_eq!(codec.extension, "vcs");
-    let record = <semio_s_plugin_vcs::artifacts::vcs::VcsSnapshot as semio_framework_os_kernel::ArtifactPack>::record_spec().expect("VCS schema-owned record");
+    let record = <semio_s_artifact_vcs_vcs::VcsSnapshot as semio_framework_os_kernel::ArtifactPack>::record_spec().expect("VCS schema-owned record");
     assert_eq!(codec.pack_schema_hash, semio_framework_os_kernel::os_pack::schema_hash(&record));
     assert_ne!(codec.pack_schema_hash, [0; 32]);
     let runtime = PluginRuntime::<semio_s_plugin_vcs::VcsApps>::new();

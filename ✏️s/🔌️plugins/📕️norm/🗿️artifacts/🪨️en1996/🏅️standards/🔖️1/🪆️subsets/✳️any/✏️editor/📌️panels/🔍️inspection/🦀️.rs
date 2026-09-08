@@ -38,7 +38,7 @@ mod tests {
     /// renders agree for a document whose report has fewer rows than the index.
     #[semio_framework_async_macros::async_test]
     async fn an_out_of_range_selected_index_falls_back_to_the_first_check() {
-        let host = NormHost::<En1996Family>::from_document(crate::artifacts::en1996::En1996Snapshot::default());
+        let host = NormHost::<En1996Family>::from_document(crate::En1996Snapshot::default());
         let first = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render(&host, None).expect("node assembly") }).expect("json");
         let clamped = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render(&host, Some(9_999)).expect("node assembly") }).expect("json");
         assert_eq!(first, clamped);

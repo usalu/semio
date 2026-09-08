@@ -62,7 +62,7 @@ describe("shared asset delivery", () => {
   it("agrees with JSON Schema and WHATWG URL on neutral publication cases", async () => {
     const root = resolve(resolveSemioAssetRoot(repoRoot), "🔍️resolver");
     const fixture = JSON.parse(readFileSync(resolve(root, "🧪️delivery-cases.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(resolve(root, "🧬️delivery.schema.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8"));
     const authority = JSON.parse(readFileSync(resolve(root, "🚚️delivery.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
     const validate = new Ajv({ strict: true }).compile(schema);
@@ -189,7 +189,7 @@ describe("build output write authority", () => {
       put(resolve(sandbox, "📥️input/🖼️icon.ico"), fixture.payload);
       put(resolve(sandbox, SEMIO_ASSET_ROOT, "🔤️fonts/🔤️font.ttf"), fixture.payload);
       put(resolve(sandbox, ".🧬semio/🗺️map/tiles/0/0/0.png"), fixture.payload);
-      put(resolve(sandbox, "📇️catalog.json"), JSON.stringify({ $schema: "./🧬️catalog.schema.json", version: 1, collections: [], entries: [{ url: "/mesh/🧊️model.glb", source: "📥️input/🧊️model.glb", path: "🧊️model.glb" }] }));
+      put(resolve(sandbox, "📇️catalog.json"), JSON.stringify({ $schema: "./🧬️schema/🔣️.json", version: 1, collections: [], entries: [{ url: "/mesh/🧊️model.glb", source: "📥️input/🧊️model.glb", path: "🧊️model.glb" }] }));
       for (const mode of fixture.modes) {
         const brand = semioBrandHtmlVitePlugins(sandbox, { windowTitle: "fixture", logoSvg: fixture.markup, faviconIcoPath: "📥️input/🖼️icon.ico", cnameHost: fixture.cname });
         const hooks = {
@@ -224,7 +224,7 @@ describe("font source identity", () => {
   it("admits the catalog independently with JSON Schema and resolves all 219 exact binaries", async () => {
     const assetRoot = resolveSemioAssetRoot(repoRoot);
     const input = JSON.parse(readFileSync(resolve(assetRoot, "🔤️fonts/📇️catalog.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(resolve(assetRoot, "🔤️fonts/🧬️catalog.schema.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(resolve(assetRoot, "🔤️fonts/🧬️schema/🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(input)).toBe(true);

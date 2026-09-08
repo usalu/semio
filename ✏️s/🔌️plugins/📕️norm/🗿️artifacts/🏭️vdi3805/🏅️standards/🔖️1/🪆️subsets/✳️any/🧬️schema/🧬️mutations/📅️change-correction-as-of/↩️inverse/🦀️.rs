@@ -1,7 +1,7 @@
 //! ↩️ `change-correction-as-of` — undo restores BASE's edition.
 
 use super::ChangeCorrectionAsOf;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeCorrectionAsOf, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

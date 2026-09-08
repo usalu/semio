@@ -1,6 +1,6 @@
 //! 🧬️ En1992 diff schema — sparse field delta over the artifact.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the En1992 artifact.
@@ -11,7 +11,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1992")]
 pub struct En1992Diff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::en1992::schema::En1992Artifact>>,
+    pub artifact: Option<Box<crate::document_schema::En1992Artifact>>,
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]
@@ -43,7 +43,7 @@ pub struct En1992Diff {
     #[state(artifact)]
     pub udl_kn_m: Option<f64>,
     #[state(artifact)]
-    pub fire_rating: Option<crate::artifacts::en1992::part_1_2::FireRating>,
+    pub fire_rating: Option<crate::part_1_2::FireRating>,
     #[state(artifact)]
     pub provided_axis_distance_mm: Option<f64>,
     #[state(artifact)]
@@ -51,7 +51,7 @@ pub struct En1992Diff {
     #[state(artifact)]
     pub bridge_delta_sigma_s_mpa: Option<f64>,
     #[state(artifact)]
-    pub tightness_class: Option<crate::artifacts::en1992::part_3::TightnessClass>,
+    pub tightness_class: Option<crate::part_3::TightnessClass>,
     #[state(artifact)]
     pub hd_over_h: Option<f64>,
     #[state(artifact)]

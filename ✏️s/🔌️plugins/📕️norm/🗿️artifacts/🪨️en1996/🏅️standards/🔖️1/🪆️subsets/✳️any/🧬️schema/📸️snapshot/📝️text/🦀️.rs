@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::en1996::En1996Snapshot;
+use crate::En1996Snapshot;
 
 /// 🗄️ The load-bearing-wall example fixture, handcrafted in `en1996`'s DSL (`store::ArtifactDsl`):
 /// an EN-annex masonry class 2 wall check under a transient design situation, distinct from
@@ -28,7 +28,7 @@ pub fn print_dsl(document: &En1996Snapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::en1996::part_2;
+    use crate::part_2;
     use crate::document::{AnnexChoice, DesignSituation};
 
     #[semio_framework_async_macros::async_test]
@@ -40,7 +40,7 @@ mod tests {
     async fn loadbearing_wall_example_fixture_parses_and_round_trips() {
         let document = parse_dsl(EN1996_LOADBEARING_WALL_EXAMPLE_TEXT).expect("parse loadbearing wall example");
         assert_eq!(document.annex, AnnexChoice::En);
-        assert_eq!(document.masonry_class, crate::artifacts::en1996::MasonryClass::Class2);
+        assert_eq!(document.masonry_class, crate::MasonryClass::Class2);
         assert_eq!(document.design_situation, DesignSituation::Transient);
         assert_eq!(document.exposure, part_2::ExposureClass::Mx3);
         assert_eq!(document.mortar, part_2::MortarClass::M10);

@@ -5,7 +5,7 @@
 //! and the wgpu hit-target's `control_id`, plus real row-action buttons dispatching a normal
 //! `ActionDescriptor` through the existing, unmodified `space_index_action` relay.
 
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{space_index_table_row, SSpaceSnapshot, SpaceArtifactRow, SPACE_INDEX_TABLE_COLUMNS};
+use crate::standards::v1::subsets::any::schema::snapshot::{space_index_table_row, SSpaceSnapshot, SpaceArtifactRow, SPACE_INDEX_TABLE_COLUMNS};
 use crate::editor::space_index::config::SpaceIndexConfig;
 use crate::editor::space_index::space_index_action;
 use semio_framework_plugin::app::{TableRow, TableRowAction, TableRowsView, TableWindowKit, WindowKit};
@@ -172,7 +172,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_reflects_live_presence_for_a_row() {
-        use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
+        use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
         use crate::editor::space_index::config::SpaceIndexArtifactPresence;
         let document = SSpaceSnapshot::default();
         let config = SpaceIndexConfig {
@@ -189,7 +189,7 @@ mod tests {
     /// id — per ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 3-F.
     #[semio_framework_async_macros::async_test]
     async fn a_directory_row_stamps_the_artifact_row_id_and_carries_only_the_safe_open_button() {
-        use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
+        use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow};
         let config = SpaceIndexConfig {
             indexed_artifacts: vec![SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() }],
             ..Default::default()

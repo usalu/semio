@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::block2d::Block2dSnapshot;
+use crate::Block2dSnapshot;
 
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block2d` DSL —
 /// the `NodeKind` half of `s/plugin/puzzle/app/2d/manifest/🔣️.json`.
@@ -28,7 +28,7 @@ pub fn print_dsl(document: &Block2dSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate};
+    use crate::{Block2dHandleKind, Block2dHandleTemplate};
     use crate::{BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity};
 
     /// 🌱️ Builds the `Hexagonal Cut Concrete Forest Left` node kind — the representative fixture also

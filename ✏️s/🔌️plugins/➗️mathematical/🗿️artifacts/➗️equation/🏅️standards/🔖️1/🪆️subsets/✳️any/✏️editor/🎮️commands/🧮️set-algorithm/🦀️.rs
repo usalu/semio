@@ -1,8 +1,8 @@
 //! 🕸️ 🕸️ Equation play app commands command — `set-algorithm`.
 
-use crate::artifacts::equation::op::EquationMutation;
-use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
-use crate::artifacts::equation::EquationSnapshot;
+use crate::op::EquationMutation;
+use crate::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
+use crate::EquationSnapshot;
 use crate::editor::equation::config::{EquationConfig, EquationConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
@@ -14,7 +14,7 @@ pub struct SetAlgorithm {
 }
 
 pub fn handle(payload: &SetAlgorithm, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, EquationConfig>) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
-    let mut graph = crate::artifacts::equation::equation_graph(doc.snapshot);
+    let mut graph = crate::equation_graph(doc.snapshot);
     graph.algorithm = payload.algorithm.clone();
     graph.algorithm_seed = payload.seed.clone();
     Ok(Emit::commit(vec![EquationMutation::ReplaceGraph(ReplaceGraph { graph })], "setAlgorithm"))
@@ -24,7 +24,7 @@ pub fn handle(payload: &SetAlgorithm, doc: &ArtifactView<'_, EquationSnapshot>, 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::equation::{equation_graph, EquationCamera};
+    use crate::{equation_graph, EquationCamera};
     use crate::editor::equation::commands::{node_graph_edit, node_graph_viewport, set_directed};
     use crate::editor::equation::testkit::{dispatch, math_app, MathApp};
     use crate::editor::equation::EquationCommand;

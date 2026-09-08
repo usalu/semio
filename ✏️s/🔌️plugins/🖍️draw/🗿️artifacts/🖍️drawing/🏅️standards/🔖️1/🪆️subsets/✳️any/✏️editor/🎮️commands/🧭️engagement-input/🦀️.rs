@@ -1,7 +1,7 @@
 //! 👁️ 👁️ Drawing play app commands command — `engagement-input`.
 
-use crate::artifacts::drawing::op::DrawingMutation;
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::op::DrawingMutation;
+use crate::DrawingSnapshot;
 use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
 use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

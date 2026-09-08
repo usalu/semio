@@ -11,8 +11,8 @@
 
 pub use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, HistoryView};
 
-use crate::artifacts::lowpoly::op::LowpolyMutation;
-use crate::artifacts::lowpoly::{artifact_kind, LowpolyObject, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
+use crate::op::LowpolyMutation;
+use crate::{artifact_kind, LowpolyObject, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
 use crate::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, paint, patch_object, selection, sun, transform, utility, uv};
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::modes::{edit, paint as paint_mode};
@@ -108,7 +108,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
-/// `crate::artifacts::lowpoly::artifact_kind()` declares for `"3d.lowpoly"`, plus the two workflow
+/// `crate::artifact_kind()` declares for `"3d.lowpoly"`, plus the two workflow
 /// ports: `mesh:in` (Many, unrequired — accepts upstream mesh producers, e.g. cad via a Brep→Mesh
 /// conversion) and `mesh:out` (Many, unrequired). Relocated from the deleted
 /// `🗿️artifacts/💠️lowpoly/…/⚙️engine/🦀️.rs` (ticket
@@ -422,8 +422,9 @@ enum LowpolyCommandDisposition {
     /// (`CreateObject`) and a `Config` mutation (`SetActiveObject`), AND — like every other
     /// `session::build_doc`/`mesh_edit` reacher — reads and writes the session-local `mesh_workspace`
     /// cache, so it needs the same rehydrate-then-republish treatment `ArtifactTransient` documents.
-    /// The coordinator's own schema edit (`🔣️interactive-job.schema.json`'s 8th `oneOf` signature,
-    /// `["Artifact","Config","Transient"]`/`["Artifact","Config"]`) is what makes this representable.
+    /// The coordinator's own schema edit (`schema://s.lowpoly/LowpolyInteractiveJobPartition`'s 8th
+    /// `oneOf` arm, `["Artifact","Config","Transient"]`/`["Artifact","Config"]`) is what makes this
+    /// representable.
     ArtifactConfigTransient = 7,
 }
 
@@ -550,7 +551,7 @@ fn lowpoly_sample_pixel(snapshot: &LowpolySnapshot, config: &LowpolyConfig, payl
     let Some((u, v)) = crate::editor::lowpoly::session::paint_uv_from_command(payload.u, payload.v, payload.x, payload.y) else { return Emit::default() };
     let object_id = payload.object_id.clone().unwrap_or_else(|| resolve_active_object_id(snapshot, config));
     let Some(object) = snapshot.objects.iter().find(|object| object.id == object_id) else { return Emit::default() };
-    let size = crate::artifacts::lowpoly::LOWPOLY_PAINT_TEXTURE_SIZE;
+    let size = crate::LOWPOLY_PAINT_TEXTURE_SIZE;
     let x = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
     let y = (((1.0 - v.clamp(0.0, 1.0)) * (size as f32 - 1.0)).round() as usize).min(size - 1);
     let offset = (y * size + x) * 4;
@@ -717,7 +718,7 @@ struct LowpolyRetainedCommandWork {
     stage: u8,
     replay_target: Option<u8>,
     paint_cursor: usize,
-    paint_runs: Vec<crate::artifacts::lowpoly::mutations::PixelRun>,
+    paint_runs: Vec<crate::mutations::PixelRun>,
     paint_open_offset: Option<u32>,
     paint_open_bytes: Vec<u8>,
     paint_digest: u64,
@@ -753,7 +754,7 @@ impl LowpolyRetainedCommandWork {
         if self.paint_runs.len() >= LOWPOLY_RETAINED_PAINT_RUNS {
             return Err(Fault::from("lowpoly-retained-paint-run-capacity"));
         }
-        self.paint_runs.push(crate::artifacts::lowpoly::mutations::PixelRun { offset, bytes: std::mem::take(&mut self.paint_open_bytes) });
+        self.paint_runs.push(crate::mutations::PixelRun { offset, bytes: std::mem::take(&mut self.paint_open_bytes) });
         Ok(())
     }
 
@@ -801,7 +802,7 @@ impl LowpolyRetainedCommandWork {
             Emit::default()
         } else {
             Emit::commit(
-                vec![LowpolyMutation::EditPaintLayer(crate::artifacts::lowpoly::mutations::edit_paint_layer::EditPaintLayer { object_id: object_id.to_string(), layer_index, runs })],
+                vec![LowpolyMutation::EditPaintLayer(crate::mutations::edit_paint_layer::EditPaintLayer { object_id: object_id.to_string(), layer_index, runs })],
                 "Paint stroke",
             )
         };
@@ -943,7 +944,7 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
             self.paint_open_offset = None;
             return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
         }
-        let outer_bytes = self.paint_runs.capacity().saturating_mul(size_of::<crate::artifacts::lowpoly::mutations::PixelRun>());
+        let outer_bytes = self.paint_runs.capacity().saturating_mul(size_of::<crate::mutations::PixelRun>());
         if outer_bytes != 0 {
             if maximum_bytes < outer_bytes {
                 return InteractiveJobCloseStep::Blocked;
@@ -1078,7 +1079,7 @@ impl ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
 const LOWPOLY_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 16 * 1024 * 1024;
 const LOWPOLY_CONFIG_STORE_MAXIMUM_BYTES: usize = 16_384;
 
-fn lowpoly_paint_layer_retained_bytes(layer: &crate::artifacts::lowpoly::LowpolyPaintLayer) -> usize {
+fn lowpoly_paint_layer_retained_bytes(layer: &crate::LowpolyPaintLayer) -> usize {
     layer.name.len().saturating_add(layer.blend_mode.len()).saturating_add(layer.pixels.len())
 }
 
@@ -1127,7 +1128,7 @@ fn lowpoly_artifact_mutation_retained_bytes(mutation: &LowpolyMutation) -> Resul
             Ok(payload
                 .object_id
                 .len()
-                .saturating_add(payload.runs.len().saturating_mul(size_of::<crate::artifacts::lowpoly::mutations::PixelRun>()))
+                .saturating_add(payload.runs.len().saturating_mul(size_of::<crate::mutations::PixelRun>()))
                 .saturating_add(payload.runs.iter().fold(0_usize, |bytes, run| bytes.saturating_add(run.bytes.len()))))
         }
         LowpolyMutation::EditPaintLayer(_) => Err("Lowpoly paint edit exceeds its fixed run envelope".into()),
@@ -1519,7 +1520,7 @@ fn lowpoly_export_media(port: &str, doc: &ArtifactView<'_, LowpolySnapshot>, scr
     match port {
         "mesh:out" => {
             let mesh = crate::editor::lowpoly::engine::lowpoly_mesh_from_document(doc.snapshot, &scratch.mesh_workspace_map()).map_err(|error| MediaError::Payload(port.into(), error))?;
-            let mesh_document = crate::artifacts::lowpoly::schema::mesh_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
+            let mesh_document = crate::schema::mesh_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
             let json = dsl::json::to_json_string(&dsl::DslValue::from(&mesh_document));
             Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } })
         }
@@ -1584,7 +1585,7 @@ impl ArtifactEditor for LowpolyPlayApp {
 
     type Command = LowpolyCommand;
 
-    const DIALECT: semio_framework_plugin::app::Dialect = crate::artifacts::lowpoly::LOWPOLY_DIALECT;
+    const DIALECT: semio_framework_plugin::app::Dialect = crate::LOWPOLY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -1687,12 +1688,12 @@ impl ArtifactEditor for LowpolyPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::lowpoly::config::schema::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> LowpolySnapshot {
-        crate::artifacts::lowpoly::schema::default_snapshot()
+        crate::schema::default_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -1712,7 +1713,7 @@ impl ArtifactEditor for LowpolyPlayApp {
     }
 
     fn export_media_with_request_context(port: &str, doc: &ArtifactView<'_, LowpolySnapshot>, transient: &semio_framework_plugin::TransientView<'_, LowpolyTransient>) -> Result<Media, MediaError> {
-        let scratch = LowpolyScratch::from_transient(transient.snapshot, crate::artifacts::lowpoly::LowpolySelection::default()).map_err(|error| MediaError::Payload(port.into(), error))?;
+        let scratch = LowpolyScratch::from_transient(transient.snapshot, crate::LowpolySelection::default()).map_err(|error| MediaError::Payload(port.into(), error))?;
         lowpoly_export_media(port, doc, &scratch)
     }
 
@@ -1726,8 +1727,8 @@ impl ArtifactEditor for LowpolyPlayApp {
                     return Err(MediaError::Payload(port.into(), "mesh:in importer only accepts a Structured payload".into()));
                 };
                 let mesh_document: serde_json::Value = dsl::json::from_json_str::<dsl::DslValue>(json).map(|value| (&value).into()).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-                let mesh = crate::artifacts::lowpoly::schema::mesh_from_mesh_document(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error))?;
-                let projection_json = crate::artifacts::lowpoly::schema::lowpoly_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
+                let mesh = crate::schema::mesh_from_mesh_document(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error))?;
+                let projection_json = crate::schema::lowpoly_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
                 let snapshot: LowpolySnapshot = dsl::json::from_json_str(&projection_json.to_string()).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
                 Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
             }
@@ -1779,7 +1780,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         transient: &semio_framework_plugin::TransientView<'_, LowpolyTransient>,
         _interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let mut scratch = LowpolyScratch::from_transient(transient.snapshot, crate::artifacts::lowpoly::LowpolySelection::default()).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("lowpoly.transient", error))?;
+        let mut scratch = LowpolyScratch::from_transient(transient.snapshot, crate::LowpolySelection::default()).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("lowpoly.transient", error))?;
         lowpoly_render(body_key, doc, cfg, &mut scratch)
     }
 
@@ -1858,7 +1859,7 @@ fn lowpoly_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group
 /// facet is the intended replacement mechanism per the pilot's report, not confirmed with the
 /// coordinator by this packet.
 pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::lowpoly::LOWPOLY_DIALECT)
+    Editor::builder(crate::LOWPOLY_DIALECT)
             .document(["semio", "lowpoly"])
             .artifact_kind(artifact_kind())
             .icon_id("shapes")
@@ -2130,7 +2131,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn retained_progress_replay_freshness_and_close_are_exact() {
         let command = LowpolyCommand::ToggleShowEdges(toggle_show_edges::ToggleShowEdges {});
-        let snapshot = crate::artifacts::lowpoly::schema::default_snapshot();
+        let snapshot = crate::schema::default_snapshot();
         let config = LowpolyConfig::default();
         let interaction = protocol::InteractionState::default();
         let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -2162,7 +2163,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_migrated_turns_stay_below_eight_milliseconds() {
-        let snapshot = crate::artifacts::lowpoly::schema::default_snapshot();
+        let snapshot = crate::schema::default_snapshot();
         let config = LowpolyConfig::default();
         let interaction = protocol::InteractionState::default();
         let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -2353,10 +2354,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn import_media_mesh_in_round_trips_into_a_reset_document_effect() {
         let mesh = semio_framework_plugin::mesh_from_kind("box");
-        let mesh_document = crate::artifacts::lowpoly::schema::mesh_document_from_mesh(&mesh).expect("mesh document");
+        let mesh_document = crate::schema::mesh_document_from_mesh(&mesh).expect("mesh document");
         let json = serde_json::to_string(&mesh_document).expect("mesh document json");
         let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } };
-        let projection = crate::artifacts::lowpoly::schema::default_snapshot();
+        let projection = crate::schema::default_snapshot();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
         let emit = LowpolyPlayApp::import_media("mesh:in", &media, &doc).expect("import mesh:in");

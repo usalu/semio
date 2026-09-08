@@ -1,7 +1,7 @@
 //! 🚪️ block3d ← json — foreign `Deserializer<Block3dSnapshot>` on the framework's `io_mechanism`
 //! channel, the exact inverse of the sibling `📤️export` leaf: `IoFidelity::Exact`.
 
-use crate::artifacts::block3d::{Block3dSnapshot, BLOCK_3D_SCHEMA};
+use crate::{Block3dSnapshot, BLOCK_3D_SCHEMA};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

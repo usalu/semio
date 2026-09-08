@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📌requirements` per Wave C.
 
 use super::DeleteRequirement;
-use crate::artifacts::program::diff::ProgramRequirementsDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramRequirementsDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -1,7 +1,7 @@
 //! 🎥️ 🎥️ Writer play app commands command — `set-camera`.
 
-use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::{WriterCamera, WriterSnapshot};
+use crate::op::WriterMutation;
+use crate::{WriterCamera, WriterSnapshot};
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,7 +21,7 @@ pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg
 #[cfg(test)]
 mod tests {
     use super::SetCamera;
-    use crate::artifacts::writer::WriterCamera;
+    use crate::WriterCamera;
     use crate::editor::writer::testkit::new_app;
     use crate::editor::writer::{WriterCommand, WRITER_PLAY_BODY_MAIN};
     use semio_framework_plugin::{PluginApp, ViewModel};

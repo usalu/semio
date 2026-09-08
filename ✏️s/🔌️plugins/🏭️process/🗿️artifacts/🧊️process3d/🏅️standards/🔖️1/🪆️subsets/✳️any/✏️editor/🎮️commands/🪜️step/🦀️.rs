@@ -1,13 +1,13 @@
 //! 🪜️ Process 3d play app commands — process-step lifecycle (add / remove / move / update / enable).
 
-use crate::artifacts::process3d::mutations::change_step_enabled::ChangeStepEnabled;
-use crate::artifacts::process3d::mutations::change_step_origin::ChangeStepOrigin;
-use crate::artifacts::process3d::mutations::rename_step::RenameStep;
-use crate::artifacts::process3d::mutations::reorder_steps::ReorderSteps;
-use crate::artifacts::process3d::mutations::replace_step_measure::ReplaceStepMeasure;
-use crate::artifacts::process3d::schema::inferences::{capability_for_measure_kind, find_capability, measure_for_capability};
-use crate::artifacts::process3d::schema::{insert_step_mutations, next_step_id, remove_step_mutations};
-use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Process3dSnapshot, ProcessStep, StepOrigin};
+use crate::mutations::change_step_enabled::ChangeStepEnabled;
+use crate::mutations::change_step_origin::ChangeStepOrigin;
+use crate::mutations::rename_step::RenameStep;
+use crate::mutations::reorder_steps::ReorderSteps;
+use crate::mutations::replace_step_measure::ReplaceStepMeasure;
+use crate::schema::inferences::{capability_for_measure_kind, find_capability, measure_for_capability};
+use crate::schema::{insert_step_mutations, next_step_id, remove_step_mutations};
+use crate::{op::Process3dMutation, MeasureKind, Process3dSnapshot, ProcessStep, StepOrigin};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

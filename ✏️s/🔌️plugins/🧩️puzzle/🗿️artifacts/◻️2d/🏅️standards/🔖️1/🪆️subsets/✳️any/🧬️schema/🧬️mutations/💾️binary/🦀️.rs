@@ -9,8 +9,8 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::puzzle2d::schema::mutations::text::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::schema::mutations::text::Puzzle2dMutation;
+use crate::Puzzle2dSnapshot;
 use protocol::OpBinary;
 use store::{ArtifactEnvelope, ArtifactStore};
 
@@ -36,9 +36,9 @@ mod tests {
 
     #[test]
     fn puzzle2d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::puzzle2d::mutations::create_node;
-        use crate::artifacts::puzzle2d::schema::empty_puzzle2d_snapshot;
-        use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
+        use crate::mutations::create_node;
+        use crate::schema::empty_puzzle2d_snapshot;
+        use crate::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = semio_framework::io::resolve_ready(Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_snapshot(), None))).expect("store");
@@ -60,8 +60,8 @@ mod wire_format_guard {
     //! (`print_op`/`parse_op`, `encode_op`/`decode_op`) instead of pinning byte literals for a wire
     //! shape this ticket deliberately changed.
     use super::*;
-    use crate::artifacts::puzzle2d::mutations::{change_manifest_id, connect_handles, create_node, delete_node, disconnect_handles, move_node};
-    use crate::artifacts::puzzle2d::Puzzle2dNode;
+    use crate::mutations::{change_manifest_id, connect_handles, create_node, delete_node, disconnect_handles, move_node};
+    use crate::Puzzle2dNode;
     use protocol::OpText;
 
     fn ops() -> Vec<Puzzle2dMutation> {

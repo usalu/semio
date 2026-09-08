@@ -1,7 +1,7 @@
 //! 🧲️ 🧲️ Note play app commands command — `set-snap-grid-spacing`.
 
-use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::op::NoteMutation;
+use crate::NoteSnapshot;
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -13,5 +13,5 @@ pub struct SetSnapGridSpacing {
 }
 
 pub fn handle(payload: &SetSnapGridSpacing, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-    Ok(Emit::mutations(vec![crate::artifacts::note::schema::mutations::change_snap_grid_spacing(Some(payload.value.max(1.0)))]))
+    Ok(Emit::mutations(vec![crate::schema::mutations::change_snap_grid_spacing(Some(payload.value.max(1.0)))]))
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** lowpoly TypeScript package */
 import { BundleScript, ScriptRouter, runCmd, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -63,7 +63,7 @@ class TestScript extends BundleScript {
     runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🟦️.ts","✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
 
     const root = resolve(import.meta.dir, "../..");
-    const schema = JSON.parse(readFileSync(resolve(root, "🧪️interactive-job/🧬️.schema.json"), "utf8"));
+    const module = JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8")) as { $id: string };
     const fixture = JSON.parse(readFileSync(resolve(root, "🧪️interactive-job/🔣️.json"), "utf8")) as Fixture;
     const source = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), "utf8");
     const schemaSource = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"), "utf8");
@@ -107,8 +107,9 @@ class TestScript extends BundleScript {
     reject(sessionSource.includes("pub(crate) fn finish_stroke_drag(&self)"), "Lowpoly session lacks bounded transient completion");
     console.log("lowpoly interactive-job owned source/fixture ok: 47 Migrated, 0 BatchOnlyPendingRewrite");
 
-    const ajv = new Ajv2020({ allErrors: true, strict: true, allowUnionTypes: true });
-    const validateOracle = ajv.compile(schema);
+    const ajv = new Ajv({ allErrors: true, strict: true, allowUnionTypes: true });
+    ajv.addSchema(module);
+    const validateOracle = ajv.compile({ $ref: `${module.$id}#/$defs/LowpolyInteractiveJobPartition` });
     reject(validateOracle(fixture), `Ajv oracle rejected canonical fixture: ${ajv.errorsText(validateOracle.errors)}`);
     const hostiles: Fixture[] = [
       { ...structuredClone(fixture), routes: fixture.routes.map((route, index) => index === 1 ? structuredClone(fixture.routes[0]!) : route) },

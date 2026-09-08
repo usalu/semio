@@ -9,10 +9,10 @@
 //! `render` → body-key → node, plus `import_media`'s `"chapters:in"` importer (an editor-level override,
 //! not a command).
 
-use crate::artifacts::playbook::flatten_playbook_blocks;
-use crate::artifacts::playbook::op::{AddStep, PlaybookMutation};
-use crate::artifacts::playbook::schema::default_block;
-use crate::artifacts::playbook::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
+use crate::flatten_playbook_blocks;
+use crate::op::{AddStep, PlaybookMutation};
+use crate::schema::default_block;
+use crate::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
 use crate::editor::playbook::commands::{add_block, add_step, move_block, move_step, remove_block, remove_step, set_contributions, set_locale, update_playbook};
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::editor::playbook::engine::{playbook_io, PlaybookChapterPayload};
@@ -379,12 +379,12 @@ impl ArtifactEditor for PlaybookPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::playbook::config::schema::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> PlaybookSnapshot {
-        crate::artifacts::playbook::empty_playbook_snapshot()
+        crate::empty_playbook_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -437,7 +437,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         let mut block = default_block(block_id, "note");
         block.label = chapter.title;
         block.text = Some(chapter.text);
-        operations.push(crate::artifacts::playbook::op::add_block_operation(PLAYBOOK_IMPORTED_STEP_ID, block, None));
+        operations.push(crate::op::add_block_operation(PLAYBOOK_IMPORTED_STEP_ID, block, None));
         Ok(Emit::mutations(operations))
     }
 
@@ -485,7 +485,7 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
             ActionArgDef::select(
                 "kind",
                 LocalizedLabel::native("Kind", "Art"),
-                crate::artifacts::playbook::PLAYBOOK_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, LocalizedLabel::data(*kind))).collect(),
+                crate::PLAYBOOK_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, LocalizedLabel::data(*kind))).collect(),
             )
             .default_value(&"text"),
         ])
@@ -567,7 +567,7 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::playbook::op::AddBlock;
+    use crate::op::AddBlock;
     use crate::editor::playbook::testkit::{dispatch, playbook_app};
     use semio_framework_plugin::testkit;
     use semio_framework_plugin::{MediaClass, MediaForm};
@@ -748,7 +748,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_media_creates_the_imported_step_and_a_note_block() {
-        let spec = crate::artifacts::playbook::empty_playbook_snapshot();
+        let spec = crate::empty_playbook_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView::new(&spec, &history);
         let media = chapter_media("MATCH (a) RETURN a", "Jack Query");
@@ -768,10 +768,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_media_reuses_the_imported_step_on_a_second_import() {
-        let base = crate::artifacts::playbook::empty_playbook_snapshot();
+        let base = crate::empty_playbook_snapshot();
         let mut steps = base.steps();
         steps.push(PlaybookStep { id: PLAYBOOK_IMPORTED_STEP_ID.into(), title: "Imported".into(), description: None, blocks: Vec::new() });
-        let spec = crate::artifacts::playbook::playbook_snapshot_with_steps(&base.schema, &base.id, &base.version, base.title.clone(), steps);
+        let spec = crate::playbook_snapshot_with_steps(&base.schema, &base.id, &base.version, base.title.clone(), steps);
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView::new(&spec, &history);
         let media = chapter_media("second chapter", "Second");
@@ -782,7 +782,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_media_rejects_unknown_ports_and_malformed_payloads() {
-        let spec = crate::artifacts::playbook::empty_playbook_snapshot();
+        let spec = crate::empty_playbook_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView::new(&spec, &history);
         assert!(matches!(PlaybookPlayApp::import_media("nonsense:in", &chapter_media("x", "y"), &doc_view), Err(MediaError::NotImplemented)));

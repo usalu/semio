@@ -7,7 +7,7 @@
 //! only ever calls `serialize_text` below) — deleted outright per the master plan's cad extraction
 //! row. No real cad↔ifc bridge exists (cad has no `model`-subset spatial-tree representation to
 //! source one from) — reported as a `stdio_gaps` entry, not worked around here.
-use crate::artifacts::cad::CadSnapshot;
+use crate::CadSnapshot;
 
 //#region Serialize
 pub fn register() {}

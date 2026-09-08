@@ -1,5 +1,145 @@
 # Current End-to-End Acceptance Frontier
 
+## 2026-09-08 15:40 UTC Actual Nx Isolation and Current Failed Gates
+
+Root verified with lsof that earlier caller-supplied ticket graph directories were
+not honored: NxScript overwrote NX_WORKSPACE_DATA_DIRECTORY with the repository
+default. Source now preserves a nonempty invocation or process environment value,
+falling back only when neither is present. Four neutral Windows/Linux/macOS
+coordinator cases and the existing third-party schema/path oracles cover explicit
+and default paths. The first repo:test attempt52895 stopped before those laws
+because SEMIO_TICKET_DIR was missing; retry11418 supplies the exact active ticket.
+A fresh ticket-local graph directory now exists. At15:42UTC lsof on the exact
+root Nx process33414 confirmed its database, WAL, SHM and graph lock all under
+the ticket's nx-root-tutorial-lane. Coordinator assertions still await the
+remaining repo:test phases. No shared database or other agent's process was
+modified.
+
+Renderer79060 is terminal typecheck RED on remaining relocated schemas. Full
+renderer20291 passed7 files/33 tests but failed6 import loads; it is not a passing
+suite. Renderer74436 stopped before typecheck on concurrent native project-owner
+and removed quick-test paths during graph construction. Root is following the
+current canonical test locations, leaving Home's UiDocumentStore/PluginRuntime
+schema scope alone. WGPU retains the genuine process lane49859; root has no Cargo.
+All four fleet agents remain active and the end-to-end journey remains unqualified.
+
+The window-fault test now resides under engine/🧪️tests and compiles the canonical
+plugin lifetime RuntimeFaultVectorsV1 definition, preserving all hostile cases.
+Root added the relocated tests to renderer TypeScript include and Nx namedInputs;
+otherwise the move silently excluded their compile and invalidation coverage.
+Renderer56413 is the fresh typecheck, with actual ticket-local Nx graph ownership.
+
+## 2026-09-08 15:21 UTC Ready Opening Qualified and Schema Repair Split
+
+Home62923 passed the registered standalone Ready/catalog UI checks3/3 and worker
+creation-owner checks4/4. Coverage includes nine neutral opening dispositions,
+release-at-most-once including release failures, bilingual retry without cancel,
+and invalid ready-empty catalogs presented as unavailable. Root review identified
+the retired-route attachment-drain and post-SET_SESSION URI-reset seams; Home
+reports both now fixed with exact receipt retention and destruction in finally.
+The integrated browser journey is still pending. Home now owns UiDocumentStore
+and PluginRuntime schema import/validator repair, supported by Terra's inventory.
+
+Root has repaired the shared renderer descriptor, action semantics, tutorial
+document track, puzzle session and router-fault validators to use exact current
+module $defs. A missing PresenceOverlayFixture was not safely relocated anywhere;
+root authored its strict definition in the canonical UI schema, preserving the
+four neutral cases and hostile extra-field rejection, with extra invalid TTL and
+non-boolean cases. Renderer79060 typecheck and full20291 tests are running.
+
+A further possible outbound ownership issue is under read-only audit: global
+runtimeKey relay registration occurs before old physical attachment retirement,
+but the current actor adapter's actual emitting path must first be confirmed.
+No speculative bridge rewrite has been made. Root has no Cargo producer; the
+genuine process gate remains WGPU-owned and unqualified.
+
+## 2026-09-08 15:09 UTC Moving Schema Owners and No False Gate Completion
+
+Renderer72014 failed on remaining relocated schema imports and the prior fixture
+narrowing issue; there were no reported errors in the new Shell opening/Ready
+source. UI17678 narrowed its failures to that fixture and a worker test rejection
+callback typed Error instead of unknown. Root changed the validator to typed
+synchronous compile($ref), and the callback now preserves the actual rejection
+reason. UI78558 could not reach tsc: two Playbook projects existed during a move.
+Print44145 and report72650 preview checks likewise stopped before preview, on
+graph construction and the in-progress schemaExportResolution taxonomy contract.
+Their generated logs remain in this ticket. These commands are not qualified.
+
+The action-choice schema/fixture moved to their module schema/fixtures owners;
+root updated the renderer imports after inspecting the new allOf/$defs schema.
+The native include_str was already updated by concurrent work and was preserved.
+Terra is mapping all other renderer/UiDocumentStore schema owners read-only.
+WGPU62767 stopped pre-Cargo on the removed artifact-kind-formats schema; the
+current merged manifest definition is now used and source13761 passed. Genuine
+process10456 is the active retry. No current component or two-peer pass exists.
+
+## 2026-09-08 14:59 UTC Admission Laws and Current Compile Frontier
+
+Root29926 passed6 document-opening tests after17782 reproduced the absent shared
+admission function. The actual host now uses that function: six neutral rows
+cover background refusal and foreground predecessor retirement by exact runtime
+or plugin/app instance. Pool tests additionally cover immediate exact retirement,
+authority sweeps and attachment drain; Shell identity/plugin changes trigger a
+sweep rather than waiting for another checkpoint. Home's typed exact opening
+receipt is now integrated. Terra continues the read-only lifecycle/schema audit.
+
+Root90262 typecheck failed on moved schema JSON imports plus five orphan export
+tokens left by current UI alias removal, its missed Search consumer, omitted
+UIDialogFieldBinding public export and an untyped validated fixture. Root removed
+the orphan tokens without restoring removed aliases, pointed Search at the same
+existing engagement-body constant, exported the owned field-binding interface,
+and gave the Ajv validator its fixture type. Renderer72014 and UI17678 are fresh
+checks; no green typecheck is claimed yet. Schema relocations are being mapped
+to their actual current owners instead of restoring old files.
+
+WGPU reports host-staging13916 passed1 and exact H source1578 passed16 laws plus
+10 hostile cases and five socket-retirement rows. The new current process62767
+is running at graph construction with jobs1 and the64MiB bound unchanged; no
+Cargo/component/browser outcome is yet known. The goal remains active.
+
+## 2026-09-08 14:47 UTC Shared Background Opening and Disk Recovery
+
+Root25012 reproduced the missing background-session owner constructor; after
+implementation,21786 passed5 tests, including four neutral background reuse,
+replacement, closed-during-create, and failed-create retry scenarios. The host
+now delegates background index admission through openDocument with background
+publication suppressed. Cached admissions carry exact identity/plugin/document
+receipts, commands serialize per Space, and retirement drains before destroy.
+Its integrated typecheck awaits Home's exact receipt conversion. Terra audits
+visibility changes while opening and unmount ordering; no live browser pass is
+claimed from these pure contract tests.
+
+The cleanup skill was inspected because disk pressure blocked the next build.
+Its default workspace-wide sweep was not executed: it would remove other active
+tickets' outputs. The exact root-owned inactive reactor native debug/incremental
+directory was validated by process arguments and an empty lsof scan, then removed
+successfully by76656. This deletes only reproducible compiler cache, roughly
+64.6GiB nominal; available disk rose to63GiB. Source, inputs, reports, dependencies,
+and the trusted acceptance build cache were preserved. WGPU may resume its
+bounded producer after current entry validation; all acceptance gaps remain.
+
+## 2026-09-08 14:39 UTC Exact Document Attachment Retirement
+
+Root focused14330 passed4 document-opening tests, covering six neutral socket/
+attachment outcomes, both close-throws cleanup rows, paused late attachment, and
+already-attached predecessor retirement. Failed admission now retires its exact
+worker waiter, deadline, route and physical attachment; a per-plugin-instance
+lane serializes physical detach before a successor. Foreground admission also
+closes any previous document targeting that exact app instance.
+
+Background Space-index opening is being consolidated onto the same path, with
+serialized reusable sessions and explicit disposal; its additional tests are not
+yet qualified. Home owns exact Ready-opening receipts and deferred visible app
+publication. Terra is auditing both lifecycles read-only.
+
+Registry83189 passed generated freshness. Type4442 stopped on concurrent moved
+schema imports; this is not a current typecheck pass. Opening72577 stopped in Nx
+graph construction on an in-flight FEM path; the following14330 reached Vitest.
+WGPU76597 was stopped before any Cargo/component/browser task began, after an
+idle graph-stage stall. Available disk fell from40GiB to5.5GiB due other builds;
+no large fleet producer is running. Warm verified-input caches remain intact.
+The composed two-peer/MCP/Undo/restart acceptance journey remains unqualified.
+
 ## 2026-09-08 14:13 UTC Native Build Release and Verification Entry Repair
 
 Home2954 terminated after62m14s during GIS compilation: renamed Stdio direct

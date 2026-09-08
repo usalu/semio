@@ -1,8 +1,8 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `delete-layer`.
 
-use crate::artifacts::drawing::op::DrawingMutation;
-use crate::artifacts::drawing::schema::find_drawing_layer;
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::op::DrawingMutation;
+use crate::schema::find_drawing_layer;
+use crate::DrawingSnapshot;
 use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
 use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -23,5 +23,5 @@ pub fn handle(payload: &DeleteLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _c
     // `Flat`-hierarchy domains are deliberately never auto-pruned on document change (see the plugin
     // SDK's `validate_state` doc), so a deleted layer's stale id simply stays selected until the next
     // real pick — a documented, accepted gap, not routed around here.
-    Ok(Emit { artifact_mutations: vec![crate::artifacts::drawing::mutations::delete_layer(payload.layer_id.clone())], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![crate::mutations::delete_layer(payload.layer_id.clone())], ..Default::default() })
 }

@@ -1,8 +1,8 @@
 //! 🖱️ 🖱️ Drawing play app commands command — `canvas-pointer-down`.
 
-use crate::artifacts::drawing::op::DrawingMutation;
-use crate::artifacts::drawing::schema::{create_drawing_path_layer, create_drawing_trace_layer, layer_id};
-use crate::artifacts::drawing::{DrawingCamera, DrawingLayerNode, DrawingSnapshot, PathSegment};
+use crate::op::DrawingMutation;
+use crate::schema::{create_drawing_path_layer, create_drawing_trace_layer, layer_id};
+use crate::{DrawingCamera, DrawingLayerNode, DrawingSnapshot, PathSegment};
 use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use crate::editor::drawing::{DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY};
 use semio_framework_plugin::{kernel::Effect, ArtifactView, ConfigView, Emit, Fault, RequestId, UiFixedList};
@@ -177,8 +177,8 @@ fn commit_shape_drag(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end:
     if width < 1.0 && height < 1.0 {
         return Vec::new();
     }
-    let layer = DrawingLayerNode::Shape(crate::artifacts::drawing::DrawingShapeBody {
-        base: crate::artifacts::drawing::schema::default_layer_base(match utility {
+    let layer = DrawingLayerNode::Shape(crate::DrawingShapeBody {
+        base: crate::schema::default_layer_base(match utility {
             "shapeLine" => "Line",
             "shapeEllipse" => "Ellipse",
             _ => "Rectangle",
@@ -189,19 +189,19 @@ fn commit_shape_drag(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end:
             _ => "rect",
         }
         .into(),
-        rect: if utility == "shapeRect" { Some(crate::artifacts::drawing::DrawingRect { x, y, width, height }) } else { None },
-        ellipse: if utility == "shapeEllipse" { Some(crate::artifacts::drawing::DrawingEllipse { cx: x + width / 2.0, cy: y + height / 2.0, rx: width / 2.0, ry: height / 2.0 }) } else { None },
+        rect: if utility == "shapeRect" { Some(crate::DrawingRect { x, y, width, height }) } else { None },
+        ellipse: if utility == "shapeEllipse" { Some(crate::DrawingEllipse { cx: x + width / 2.0, cy: y + height / 2.0, rx: width / 2.0, ry: height / 2.0 }) } else { None },
         circle: None,
-        line: if utility == "shapeLine" { Some(crate::artifacts::drawing::DrawingLine { x1: start[0], y1: start[1], x2: end[0], y2: end[1] }) } else { None },
+        line: if utility == "shapeLine" { Some(crate::DrawingLine { x1: start[0], y1: start[1], x2: end[0], y2: end[1] }) } else { None },
         polygon: None,
     });
-    vec![crate::artifacts::drawing::mutations::create_layer(None, Some(doc.layers.len()), layer)]
+    vec![crate::mutations::create_layer(None, Some(doc.layers.len()), layer)]
 }
 
 fn commit_trace_source(doc: &DrawingSnapshot, source_key: Option<String>) -> Vec<DrawingMutation> {
     let Some(source_key) = source_key else { return Vec::new() };
     let layer = create_drawing_trace_layer("Trace", &source_key);
-    vec![crate::artifacts::drawing::mutations::create_layer(None, Some(doc.layers.len()), layer)]
+    vec![crate::mutations::create_layer(None, Some(doc.layers.len()), layer)]
 }
 
 /// 🧰️ Wraps a committed gesture's `operations` as a single described edit plus the host effect that returns
@@ -281,10 +281,8 @@ fn gesture_start_draft(ctx: &mut GestureContext, event: Option<&drawing_gesture:
 
 fn gesture_append_draft_point(ctx: &mut GestureContext, event: Option<&drawing_gesture::Event>, _sink: &mut Vec<fsm::Command<drawing_gesture::DrawingGesture>>) {
     if let Some(drawing_gesture::Event::PointerDown { world, .. }) = event {
-        if ctx.points.len() < MAX_GESTURE_POINTS {
-            if ctx.points.try_push(*world).is_err() {
-                ctx.points_overflowed = true;
-            }
+        if ctx.points.len() < MAX_GESTURE_POINTS && ctx.points.try_push(*world).is_err() {
+            ctx.points_overflowed = true;
         }
         ctx.cursor = *world;
     }
@@ -655,7 +653,7 @@ fn trace_segment_point(segment: &PathSegment) -> Option<[f64; 2]> {
     }
 }
 
-fn trace_segment_control_hit(segment: &PathSegment, transform: &crate::artifacts::drawing::DrawingTransform, world: [f64; 2], tolerance: f64) -> bool {
+fn trace_segment_control_hit(segment: &PathSegment, transform: &crate::DrawingTransform, world: [f64; 2], tolerance: f64) -> bool {
     let cos = transform.rotation.cos();
     let sin = transform.rotation.sin();
     let matrix = [transform.scale_x * cos, transform.scale_x * sin, -transform.scale_y * sin, transform.scale_y * cos, transform.x, transform.y];
@@ -680,7 +678,7 @@ fn extend_trace_bounds(min: &mut [f64; 2], max: &mut [f64; 2], point: [f64; 2]) 
     max[1] = max[1].max(point[1]);
 }
 
-fn trace_world_bounds(transform: &crate::artifacts::drawing::DrawingTransform, min: [f64; 2], max: [f64; 2]) -> (f64, f64, f64, f64) {
+fn trace_world_bounds(transform: &crate::DrawingTransform, min: [f64; 2], max: [f64; 2]) -> (f64, f64, f64, f64) {
     let cos = transform.rotation.cos();
     let sin = transform.rotation.sin();
     let matrix = [transform.scale_x * cos, transform.scale_x * sin, -transform.scale_y * sin, transform.scale_y * cos, transform.x, transform.y];
@@ -698,7 +696,7 @@ fn trace_transform_point(matrix: [f64; 6], point: [f64; 2]) -> [f64; 2] {
     [a * point[0] + c * point[1] + e, b * point[0] + d * point[1] + f]
 }
 
-fn trace_layer_base(layer: &DrawingLayerNode) -> &crate::artifacts::drawing::DrawingLayerBase {
+fn trace_layer_base(layer: &DrawingLayerNode) -> &crate::DrawingLayerBase {
     match layer {
         DrawingLayerNode::Shape(value) => &value.base,
         DrawingLayerNode::Path(value) => &value.base,
@@ -855,17 +853,17 @@ impl DrawingDraftQuery {
         let layer = if self.utility == "pen" {
             create_drawing_path_layer("Path", std::mem::take(&mut self.path_segments))
         } else {
-            DrawingLayerNode::Shape(crate::artifacts::drawing::DrawingShapeBody {
-                base: crate::artifacts::drawing::schema::default_layer_base("Polygon"),
+            DrawingLayerNode::Shape(crate::DrawingShapeBody {
+                base: crate::schema::default_layer_base("Polygon"),
                 shape_kind: "polygon".into(),
                 rect: None,
                 ellipse: None,
                 circle: None,
                 line: None,
-                polygon: Some(crate::artifacts::drawing::DrawingPolygon { points: std::mem::take(&mut self.polygon_points) }),
+                polygon: Some(crate::DrawingPolygon { points: std::mem::take(&mut self.polygon_points) }),
             })
         };
-        Some(commit_with_utility_reset(vec![crate::artifacts::drawing::mutations::create_layer(None, Some(document.layers.len()), layer)], "Commit draft"))
+        Some(commit_with_utility_reset(vec![crate::mutations::create_layer(None, Some(document.layers.len()), layer)], "Commit draft"))
     }
 }
 
@@ -1109,7 +1107,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trace_pointer_step_consumes_at_most_the_fixed_work_budget() {
-        let mut document = crate::artifacts::drawing::schema::default_drawing_document("bounded-trace", None);
+        let mut document = crate::schema::default_drawing_document("bounded-trace", None);
         let mut segments = vec![PathSegment::Move { to: [0.0, 0.0] }];
         segments.extend((0..256).map(|index| PathSegment::Line { to: [index as f64, index as f64] }));
         document.layers = vec![create_drawing_path_layer("long-path", segments)];
@@ -1129,7 +1127,7 @@ mod tests {
 
     #[test]
     fn stale_generation_and_wrong_owner_cannot_take_retained_trace() {
-        let document = crate::artifacts::drawing::schema::default_drawing_document("fresh-trace", None);
+        let document = crate::schema::default_drawing_document("fresh-trace", None);
         let mut session = DrawingSession::default();
         assert!(session.retain_trace_pointer(TracePointerJob::new(11, &document, [0.0, 0.0])).is_ok());
         let base = format!("unbound:{}", document.id);
@@ -1142,17 +1140,17 @@ mod tests {
     #[test]
     fn wide_roots_and_groups_enqueue_at_most_two_items_per_work_unit() {
         let leaf = create_drawing_path_layer("leaf", vec![PathSegment::Move { to: [0.0, 0.0] }]);
-        let mut roots = crate::artifacts::drawing::schema::default_drawing_document("wide-roots", None);
+        let mut roots = crate::schema::default_drawing_document("wide-roots", None);
         roots.layers = vec![leaf.clone(); 10_000];
         let mut roots_job = TracePointerJob::new(8, &roots, [0.0, 0.0]);
         roots_job.advance(&roots);
         assert_eq!(roots_job.completed_work, TRACE_POINTER_WORK_PER_STEP);
         assert!(roots_job.work.len() <= TRACE_POINTER_WORK_PER_STEP + 2);
 
-        let mut group = crate::artifacts::drawing::schema::create_drawing_group_layer("wide");
+        let mut group = crate::schema::create_drawing_group_layer("wide");
         let DrawingLayerNode::Group(body) = &mut group else { unreachable!() };
         body.children = vec![leaf; 10_000];
-        let mut document = crate::artifacts::drawing::schema::default_drawing_document("wide-group", None);
+        let mut document = crate::schema::default_drawing_document("wide-group", None);
         document.layers = vec![group];
         let mut job = TracePointerJob::new(9, &document, [0.0, 0.0]);
         job.advance(&document);
@@ -1162,7 +1160,7 @@ mod tests {
 
     #[test]
     fn retained_trace_interruption_cancel_and_repeated_cancel_are_exact() {
-        let document = crate::artifacts::drawing::schema::default_drawing_document("retained", None);
+        let document = crate::schema::default_drawing_document("retained", None);
         let mut session = DrawingSession::default();
         assert!(session.retain_trace_pointer(TracePointerJob::new(91, &document, [4.0, 5.0])).is_ok());
         assert!(!session.cancel_trace_pointer(0, &document.id, 90));
@@ -1172,7 +1170,7 @@ mod tests {
 
     #[test]
     fn marquee_maximum_plus_one_faults_without_unbounded_growth() {
-        let mut document = crate::artifacts::drawing::schema::default_drawing_document("marquee-max", None);
+        let mut document = crate::schema::default_drawing_document("marquee-max", None);
         document.layers = (0..=DRAWING_QUERY_HIT_CAPACITY)
             .map(|index| create_drawing_path_layer(&format!("hit-{index}"), vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [1.0, 1.0] }]))
             .collect();
@@ -1189,7 +1187,7 @@ mod tests {
 
     #[test]
     fn draft_cursor_advances_one_point_per_turn_and_hands_back_one_commit() {
-        let document = crate::artifacts::drawing::schema::default_drawing_document("draft-cursor", None);
+        let document = crate::schema::default_drawing_document("draft-cursor", None);
         let mut points = UiFixedList::default();
         for index in 0..DRAWING_GESTURE_PREVIEW_POINT_CAPACITY {
             assert!(points.try_push([index as f64, index as f64]).is_ok());

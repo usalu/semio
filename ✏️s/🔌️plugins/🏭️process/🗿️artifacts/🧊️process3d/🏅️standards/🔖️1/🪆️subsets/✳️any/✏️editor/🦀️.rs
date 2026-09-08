@@ -12,8 +12,8 @@
 //! written via `config::Process3dConfigMutation`s; every action dispatches through the single typed
 //! `Process3dCommand` channel via `ArtifactEditor::handle`.
 
-use crate::artifacts::process3d::op::Process3dMutation;
-use crate::artifacts::process3d::{Capability, CapabilityRule, MachineCatalog, MachineCatalogs, MeasureRecipe, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, WorkingSolid, WorkshopMachine};
+use crate::op::Process3dMutation;
+use crate::{Capability, CapabilityRule, MachineCatalog, MachineCatalogs, MeasureRecipe, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, WorkingSolid, WorkshopMachine};
 use crate::editor::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, locale, media, step, stock, sun, utility, workshop, world};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::modes::edit;
@@ -172,7 +172,7 @@ pub fn iconed_tree_item_with_action(
 /// op-log — a genesis envelope with no history to encode.
 pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {
     let pack = <Process3dSnapshot as ArtifactPack>::encode_pack(document);
-    let envelope = store::create_document_envelope::<Process3dSnapshot, Process3dMutation>(crate::artifacts::process3d::PROCESS_3D_SCHEMA, "process3d", document.clone(), None);
+    let envelope = store::create_document_envelope::<Process3dSnapshot, Process3dMutation>(crate::PROCESS_3D_SCHEMA, "process3d", document.clone(), None);
     let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("process3d document spr encode is infallible for a fresh, edit-free envelope");
     Effect::LoadDocument { pack, spr }
 }
@@ -555,7 +555,7 @@ impl ToolJobFactory for Process3dBoundedCommandJobFactory {
 impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
     type Owner = EditorApp<Process3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PROCESS3D_BOUNDED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;
     /// 🛤️ The lane each tool publishes on, read off what its `🎮️commands/*` handler actually emits.
     /// `HostOnly` is a whole-document replacement or a shell round-trip carried as an `Effect`
     /// (`setSnapshot`/`setActiveExample`/`setStock`/`importModelFile` build
@@ -648,7 +648,7 @@ impl ToolJobFactory for Process3dResumableCommandJobFactory {
 impl ArtifactOwnedToolJobFactory for Process3dResumableCommandJobFactory {
     type Owner = EditorApp<Process3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PROCESS3D_RESUMABLE_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
@@ -1327,9 +1327,9 @@ impl ArtifactEditor for Process3dPlayApp {
 
     type Command = Process3dCommand;
 
-    const DIALECT: Dialect = crate::artifacts::process3d::PROCESS3D_DIALECT;
+    const DIALECT: Dialect = crate::PROCESS3D_DIALECT;
 
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::process3d::PROCESS_3D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Process3dArtifactPreparationFactory))
@@ -1383,11 +1383,11 @@ impl ArtifactEditor for Process3dPlayApp {
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::process3d::spr::process3d_envelope_decode_owner_bundle())
+        Some(crate::spr::process3d_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::process3d::spr::process3d_document_store_owners())
+        Some(crate::spr::process3d_document_store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -1399,11 +1399,11 @@ impl ArtifactEditor for Process3dPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::artifacts::process3d::spr::process3d_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::spr::process3d_document_store_initialization_job(envelope, operation, generation))
     }
 
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        crate::artifacts::process3d::spr::process3d_validate_atomic_publication_authority(operation, generation, live_generation)
+        crate::spr::process3d_validate_atomic_publication_authority(operation, generation, live_generation)
             .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Process3d atomic publication authority is absent or stale"))
     }
 
@@ -1415,12 +1415,12 @@ impl ArtifactEditor for Process3dPlayApp {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::process3d::config::schema::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> Process3dSnapshot {
-        crate::artifacts::process3d::schema::default_document()
+        crate::schema::default_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -1433,7 +1433,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// shadows the trait's provided body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
-            "brep:out" => match crate::artifacts::process3d::io::export_process3d_model(&crate::artifacts::process3d::process_working_scene_from_snapshot(doc.snapshot), doc.snapshot.resolved_up_to, "step")
+            "brep:out" => match crate::io::export_process3d_model(&crate::process_working_scene_from_snapshot(doc.snapshot), doc.snapshot.resolved_up_to, "step")
                 .map_err(|error| MediaError::Payload("brep:out".into(), error))?
             {
                 Some(export) => {
@@ -1470,14 +1470,14 @@ impl ArtifactEditor for Process3dPlayApp {
                 let MediaPayload::Structured { schema, json } = &media.payload else {
                     return Err(MediaError::Payload("geometry:in".into(), "expected a structured payload".into()));
                 };
-                if schema != crate::artifacts::process3d::PROCESS_3D_SCHEMA && schema != "3d.process" {
+                if schema != crate::PROCESS_3D_SCHEMA && schema != "3d.process" {
                     return Err(MediaError::Payload("geometry:in".into(), format!("unrecognized schema: {schema}")));
                 }
                 // 📦️ `export_process3d_model("step")` hands back raw (non-base64) STEP text — the
                 // "stdio.step" format is not binary — so this re-encodes it as base64 to satisfy
                 // `import_process3d_model`'s `data:...,<base64>` expectation.
                 let data_url = format!("data:application/octet-stream;base64,{}", base64_codec::base64_standard_encode(json.as_bytes()));
-                match crate::artifacts::process3d::io::import_process3d_model("geometry-in.step", &data_url) {
+                match crate::io::import_process3d_model("geometry-in.step", &data_url) {
                     Some(snapshot) => Ok(Emit { effects: vec![reset_process3d_document_effect(&snapshot)], ..Default::default() }),
                     None => Err(MediaError::Payload("geometry:in".into(), "STEP import failed".into())),
                 }
@@ -1658,7 +1658,7 @@ impl ArtifactEditor for Process3dPlayApp {
 /// out inline. `WindowKindDefinition.options.measures` stays empty: measures are config-derived per
 /// frame by `ArtifactEditor::window_measures`, never frozen into the manifest.
 pub fn create_process3d_app() -> AppDefinition {
-    Editor::builder(crate::artifacts::process3d::PROCESS3D_DIALECT)
+    Editor::builder(crate::PROCESS3D_DIALECT)
             .command({
                 let mut definition = CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) };
                 definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
@@ -1782,7 +1782,7 @@ pub fn create_process3d_app() -> AppDefinition {
             // `PROCESS3D_EXAMPLE_TIMBER`/`PROCESS3D_EXAMPLE_PLATE` app-level example registrations and
             // the no-op `.workflow("process3d", …)` call are dropped here, not silently: reported in
             // this packet's migration notes. The subset's own `📚️examples/🎬️demo` facet
-            // (`crate::artifacts::process3d::examples::...`, real content, pre-existing) is the
+            // (`crate::examples::...`, real content, pre-existing) is the
             // modern, role-agnostic replacement surface for this.
             // 🧵️ Every one of this app's 33 tool ids is UI-reachable, so the classification is set in one
             // sweep. `.action_interactive_job(id, …)` cannot express it: it only mutates `self.actions`
@@ -1797,14 +1797,14 @@ pub fn create_process3d_app() -> AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Io
-/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors `crate::artifacts::process3d::
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors `crate::
 /// artifact_kind()`'s literal for `"3d.process"` (schema/media type/export+import formats/presentation
 /// fields copied verbatim), plus the two workflow ports: `geometry:in` (Many, unrequired — accepts
 /// upstream geometry producers, e.g. cad/lowpoly) and `brep:out` (Many, unrequired, `kind_id:
 /// "3d.process"` — reusing the artifact kind already declared, never a second `.artifact_kind(...)` call).
 pub fn process3d_io() -> semio_framework_plugin::AppIo {
     semio_framework_plugin::AppIo {
-        document_schema: crate::artifacts::process3d::PROCESS_3D_SCHEMA.into(),
+        document_schema: crate::PROCESS_3D_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
         ports: vec![
             semio_framework_plugin::MediaPortSpec {
@@ -1854,7 +1854,7 @@ pub fn axis_angle_from_up_to(normal: [f64; 3]) -> ([f64; 3], f64) {
 }
 
 /// 🧩️ One hot-installed machine catalog deserialized from the `"process.machines"` topic contribution.
-/// 🔓️ `pub` (not private): a variant payload of `crate::artifacts::process3d::MachineCatalogs`
+/// 🔓️ `pub` (not private): a variant payload of `crate::MachineCatalogs`
 /// (closed in the trait's own module, not here — see that enum's doc comment for why), which is
 /// itself `pub` — a variant field can never be less visible than the enum wrapping it.
 #[derive(Clone)]
@@ -2006,11 +2006,11 @@ fn contributed_machine_catalogs(contributions_json: &str) -> Vec<ContributedMach
 
 fn builtin_installed_catalogs() -> Vec<MachineCatalogs> {
     vec![
-        crate::artifacts::process3d::schema::GenericCatalog.into(),
-        crate::artifacts::process3d::schema::wood_catalog().into(),
-        crate::artifacts::process3d::schema::concrete_catalog().into(),
-        crate::artifacts::process3d::schema::metal_catalog().into(),
-        crate::artifacts::process3d::schema::robotic_catalog().into(),
+        crate::schema::GenericCatalog.into(),
+        crate::schema::wood_catalog().into(),
+        crate::schema::concrete_catalog().into(),
+        crate::schema::metal_catalog().into(),
+        crate::schema::robotic_catalog().into(),
     ]
 }
 
@@ -2104,7 +2104,7 @@ pub(crate) mod testkit {
 
     /// 🧪 Seeds wood/metal contribution catalogs so panel tests can install machines without the host.
     fn seed_domain_catalog_contributions(app: &mut Process3dRawApp) {
-        use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity, WorkshopMachine};
+        use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity, WorkshopMachine};
         use semio_framework::{ProgramContributionEntry, TopicContribution};
         fn param(id: &str, label: &str, value: f64) -> CapabilityParameter {
             CapabilityParameter { id: id.into(), label: label.into(), value }
@@ -2238,7 +2238,7 @@ mod tests {
     use semio_framework_plugin::{testkit, ContextMenuRequest, ContextMenuSurfaceTarget, EditorApp, HistoryView, PluginApp, UiMenuRef, SET_ACTIVE_UTILITY_ACTION_ID};
 
     fn production_initial_snapshot(label: &str) -> Process3dSnapshot {
-        let mut snapshot = crate::artifacts::process3d::empty_process3d_snapshot();
+        let mut snapshot = crate::empty_process3d_snapshot();
         snapshot.stock_label = label.into();
         snapshot.workshop.machines.push(WorkshopMachine { id: "machine".into(), label: "Original Machine".into(), icon_id: "original-tool".into(), catalog_id: Some("original-catalog".into()), capabilities: Vec::new() });
         snapshot
@@ -2254,9 +2254,9 @@ mod tests {
         let snapshot = production_initial_snapshot(label);
         let snapshot_pack = snapshot.encode_pack();
         let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-        let mutations = crate::artifacts::process3d::spr::process3d_all_retained_mutation_fixtures_for_test();
+        let mutations = crate::spr::process3d_all_retained_mutation_fixtures_for_test();
         assert_eq!(mutations.len(), 16, "production ingress carries every Process3d mutation variant");
-        let mutation_hex: Vec<String> = mutations.iter().map(|mutation| crate::artifacts::process3d::spr::encode_op(mutation).expect("deep Process3d mutation encoding").iter().map(|byte| format!("{byte:02x}")).collect()).collect();
+        let mutation_hex: Vec<String> = mutations.iter().map(|mutation| crate::spr::encode_op(mutation).expect("deep Process3d mutation encoding").iter().map(|byte| format!("{byte:02x}")).collect()).collect();
         let mut expected = production_initial_snapshot(label);
         let expected_capability = match &mutations[11] {
             Process3dMutation::ReplaceMachineCapabilities(value) => value.new_capabilities[0].clone(),
@@ -2276,7 +2276,7 @@ mod tests {
         expected.resolved_up_to = Some(7);
         let expected_digest = production_semantic_digest(&expected);
         let wire = serde_json::to_vec(&serde_json::json!({
-            "schema": crate::artifacts::process3d::PROCESS_3D_SCHEMA,
+            "schema": crate::PROCESS_3D_SCHEMA,
             "id": "process3d-production-mounted-law",
             "vcs": {
                 "initialSnapshot": snapshot_hex,
@@ -2296,8 +2296,8 @@ mod tests {
             "conflicts": []
         }))
         .expect("schema-first Process3d production fixture envelope");
-        let envelope = store::create_document_envelope(crate::artifacts::process3d::PROCESS_3D_SCHEMA, "process3d-production-mounted-law", snapshot, None);
-        let mut retirement = crate::artifacts::process3d::spr::process3d_envelope_decode_owner_bundle().retire_envelope(envelope);
+        let envelope = store::create_document_envelope(crate::PROCESS_3D_SCHEMA, "process3d-production-mounted-law", snapshot, None);
+        let mut retirement = crate::spr::process3d_envelope_decode_owner_bundle().retire_envelope(envelope);
         for _ in 0..100_000 {
             match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture envelope retirement") {
                 store::SnapshotRetirementStep::Complete => {
@@ -2318,15 +2318,15 @@ mod tests {
     fn admit_production_envelope(app: &mut crate::editor::process3d::testkit::Process3dRawApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
         let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Process3d production ingress credits");
-        crate::artifacts::process3d::spr::process3d_admit_publication_authority(
+        crate::spr::process3d_admit_publication_authority(
             handle.operation,
             handle.generation,
             handle.generation.0,
             handle.generation.0,
             handle.generation.0,
             8_192,
-            crate::artifacts::process3d::spr::PROCESS3D_MOUNTED_OUTPUT_CHANNELS,
-            crate::artifacts::process3d::spr::PROCESS3D_MOUNTED_CONTROL_CREDITS,
+            crate::spr::PROCESS3D_MOUNTED_OUTPUT_CHANNELS,
+            crate::spr::PROCESS3D_MOUNTED_CONTROL_CREDITS,
         )
         .expect("Process3d production publication authority");
         for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -2341,7 +2341,7 @@ mod tests {
 
     fn drive_production_envelope(app: &mut crate::editor::process3d::testkit::Process3dRawApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
         for _ in 0..200_000 {
-            crate::artifacts::process3d::spr::process3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("Process3d authority refresh immediately before production maintenance");
+            crate::spr::process3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("Process3d authority refresh immediately before production maintenance");
             PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Process3d production maintenance turn");
             let poll = app.advance_artifact_envelope_load(handle).expect("Process3d production load advancement");
             if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
@@ -2372,9 +2372,9 @@ mod tests {
         assert!(matches!(&capability.recipe, MeasureRecipe::BoxAttach { width, depth, height } if (width.as_str(), depth.as_str(), height.as_str()) == ("width", "depth", "height")));
         assert_eq!((capability.parameters.len(), capability.rules.len(), accepted_snapshot.stock_label.as_str(), accepted_snapshot.resolved_up_to), (3, 2, "Beam", Some(7)));
         assert!(accepted.acknowledge_artifact_store_replacement(accepted_handle).expect("accepted Process3d terminal ACK"));
-        assert!(crate::artifacts::process3d::spr::process3d_release_publication_authority(accepted_handle.operation, accepted_handle.generation));
+        assert!(crate::spr::process3d_release_publication_authority(accepted_handle.operation, accepted_handle.generation));
 
-        use crate::artifacts::process3d::spr::Process3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
+        use crate::spr::Process3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
         for (hostile, expected_code) in [
             (Missing, "process3d-publication.authority-missing"),
             (WrongOperation, "process3d-publication.wrong-operation"),
@@ -2389,21 +2389,21 @@ mod tests {
             let (hostile_wire, hostile_snapshot, hostile_digest) = production_envelope_wire("rejected-production-candidate");
             assert_eq!(production_semantic_digest(&hostile_snapshot), hostile_digest);
             let handle = admit_production_envelope(&mut app, &hostile_wire);
-            crate::artifacts::process3d::spr::process3d_arm_publication_hostile(handle.operation, hostile);
+            crate::spr::process3d_arm_publication_hostile(handle.operation, hostile);
             assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
-            assert_eq!(crate::artifacts::process3d::spr::process3d_take_publication_hostile_observed(handle.operation), Some(expected_code), "removing or bypassing the real validator must fail this law");
+            assert_eq!(crate::spr::process3d_take_publication_hostile_observed(handle.operation), Some(expected_code), "removing or bypassing the real validator must fail this law");
             assert_eq!(app.artifact_generation_now(), base_generation);
             let retained = app.snapshot().expect("last-valid snapshot after rejected candidate");
             assert_eq!(retained, last_valid);
             assert_eq!(production_semantic_digest(&retained), last_valid_digest, "hostile candidate must not change the last-valid digest");
             assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected Process3d terminal ACK after candidate retirement"));
-            assert!(crate::artifacts::process3d::spr::process3d_release_publication_authority(handle.operation, handle.generation));
+            assert!(crate::spr::process3d_release_publication_authority(handle.operation, handle.generation));
         }
     }
 
     //#region 🔖️CommandSurface
     fn retained_snapshot(machine_count: usize) -> Process3dSnapshot {
-        let mut snapshot = crate::artifacts::process3d::empty_process3d_snapshot();
+        let mut snapshot = crate::empty_process3d_snapshot();
         snapshot.workshop.machines.clear();
         snapshot.step_payloads.clear();
         snapshot.tool_solids.clear();
@@ -2500,18 +2500,18 @@ mod tests {
     /// outcome instead of publishing its forced-empty diff as a no-op edit.
     #[test]
     fn document_preparation_uses_the_mutations_own_semantics_and_a_fixed_per_turn_grant() {
-        use crate::artifacts::process3d::mutations::create_step::CreateStep;
-        use crate::artifacts::process3d::mutations::delete_step::DeleteStep;
+        use crate::mutations::create_step::CreateStep;
+        use crate::mutations::delete_step::DeleteStep;
 
         assert_eq!(PROCESS3D_DOCUMENT_GRANT_BYTES, 4_096);
         assert!(PROCESS3D_DOCUMENT_MAXIMUM_BYTES > PROCESS3D_DOCUMENT_GRANT_BYTES, "the document maximum is a validation, never the per-turn grant");
-        let base = crate::artifacts::process3d::schema::default_document();
+        let base = crate::schema::default_document();
         let step = ProcessStep {
             id: "step-retained".into(),
             label: "Retained Cut".into(),
             enabled: true,
             origin: None,
-            measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::artifacts::process3d::Pose::default() },
+            measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::Pose::default() },
         };
         let (post, inverse, forward) = prepare_process3d_document(&base, Process3dMutation::CreateStep(CreateStep { index: 0, step: step.clone() })).expect("create step prepares");
         assert!(matches!(forward, Process3dMutation::CreateStep(_)));
@@ -2699,7 +2699,7 @@ mod tests {
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) fn every_command() -> Vec<Process3dCommand> {
         vec![
-            Process3dCommand::SetDocument(set_snapshot::SetDocument { json: semio_framework_os_kernel::json::to_json_string(&crate::artifacts::process3d::empty_process3d_snapshot()) }),
+            Process3dCommand::SetDocument(set_snapshot::SetDocument { json: semio_framework_os_kernel::json::to_json_string(&crate::empty_process3d_snapshot()) }),
             Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() }),
             Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: Some([1.0, 2.0, 3.0]) }),
             Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "wood".into(), machine_id: "circularSaw".into() }),
@@ -2716,7 +2716,7 @@ mod tests {
                     label: "Cut".into(),
                     enabled: true,
                     origin: None,
-                    measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::artifacts::process3d::Pose::default() },
+                    measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::Pose::default() },
                 }),
             }),
             Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled { id: "cut-1".into(), enabled: false }),
@@ -2784,7 +2784,7 @@ mod tests {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <Process3dSnapshot as ArtifactPack>::decode_pack(pack).expect("decode example document");
-        assert_eq!(loaded, crate::artifacts::process3d::schema::plate_document());
+        assert_eq!(loaded, crate::schema::plate_document());
     }
 
     /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `worldPick` (a pure selection-setting
@@ -2848,7 +2848,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn process3d_io_mirrors_the_declared_artifact_kind() {
         let io = process3d_io();
-        assert_eq!(io.document_schema, crate::artifacts::process3d::PROCESS_3D_SCHEMA);
+        assert_eq!(io.document_schema, crate::PROCESS_3D_SCHEMA);
         assert_eq!(io.artifact.id, "3d.process");
         assert!(io.export_formats.is_empty());
         assert!(io.import_formats.is_empty());
@@ -2927,9 +2927,9 @@ mod tests {
             panic!("expected a LoadDocument effect");
         };
         let document = <Process3dSnapshot as ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-        let expected_solid = crate::artifacts::process3d::brep_child_handle("stock", &crate::artifacts::process3d::brep_snapshot_for_working_solid(&WorkingSolid::Cylinder { radius: 0.3, height: 1.0 }));
+        let expected_solid = crate::brep_child_handle("stock", &crate::brep_snapshot_for_working_solid(&WorkingSolid::Cylinder { radius: 0.3, height: 1.0 }));
         assert_eq!(document.stock_solid, expected_solid, "setStock kind=cylinder must swap the stock solid to the real cylinder-content handle");
-        let cleared_steps = crate::artifacts::process3d::flow_child_handle(&crate::artifacts::process3d::flow_snapshot_for_steps(&[], &Default::default()));
+        let cleared_steps = crate::flow_child_handle(&crate::flow_snapshot_for_steps(&[], &Default::default()));
         assert_eq!(document.steps, cleared_steps, "swapping stock resets the step timeline");
     }
 
@@ -3054,7 +3054,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn export_brep_out_returns_step_text_structured_payload() {
         semio_framework::register_format_descriptors(semio_s_artifact_stdio_step::formats().expect("STEP format descriptors")).await.expect("register stdio format descriptors");
-        let document = crate::artifacts::process3d::schema::default_document();
+        let document = crate::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
         let media = Process3dPlayApp::export_media("brep:out", &doc).expect("export brep:out");
@@ -3071,7 +3071,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn export_unknown_port_is_not_implemented() {
-        let document = crate::artifacts::process3d::schema::default_document();
+        let document = crate::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
         assert!(matches!(Process3dPlayApp::export_media("nonsense:out", &doc), Err(MediaError::NotImplemented)));
@@ -3079,7 +3079,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_geometry_in_rejects_unrecognized_schema() {
-        let document = crate::artifacts::process3d::schema::default_document();
+        let document = crate::schema::default_document();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
         let media = semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "unknown.schema".into(), json: "irrelevant".into() } };

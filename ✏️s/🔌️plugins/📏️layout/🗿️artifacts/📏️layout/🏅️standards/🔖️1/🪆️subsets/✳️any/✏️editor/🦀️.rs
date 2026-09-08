@@ -14,9 +14,9 @@
 // (only on the free functions the taxonomy split creates), so this is a pure artefact of decomposition.
 // (clippy::result_large_err is allowed crate-wide from the plugin root 🦀️.rs.)
 
-use crate::artifacts::layout::mutations::change_data_fields::ChangeDataFields;
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::mutations::change_data_fields::ChangeDataFields;
+use crate::mutations::LayoutMutation;
+use crate::LayoutSnapshot;
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use crate::editor::layout::modes::edit;
 use crate::editor::layout::modes::edit::windows::{blueprint, preview};
@@ -271,7 +271,7 @@ impl semio_framework::ToolJobFactory for LayoutRetainedCommandJobFactory {
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutRetainedCommandJobFactory {
     type Owner = EditorApp<LayoutPlayApp>;
     const TOOL_IDS: &'static [&'static str] = LAYOUT_RETAINED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "setActivePage", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "focusPreflightIssue", lanes: &[ArtifactToolPublicationLane::Config] },
@@ -532,15 +532,15 @@ impl ArtifactEditor for LayoutPlayApp {
 
     type Command = LayoutCommand;
 
-    const DIALECT: Dialect = crate::artifacts::layout::LAYOUT_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
+    const DIALECT: Dialect = crate::LAYOUT_DIALECT;
+    const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;
 
     fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::layout::config::schema::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> LayoutSnapshot {
-        crate::artifacts::layout::schema::default_document()
+        crate::schema::default_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -626,7 +626,7 @@ impl ArtifactEditor for LayoutPlayApp {
                 let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(Media {
                     media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-                    payload: MediaPayload::Structured { schema: crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) },
+                    payload: MediaPayload::Structured { schema: crate::LAYOUT_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) },
                 })
             }
             "layout:out" => Err(MediaError::NotImplemented),
@@ -637,7 +637,7 @@ impl ArtifactEditor for LayoutPlayApp {
     /// 🎞️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: `fields:in` binds the incoming `form.dictionary`
     /// values into `LayoutSnapshot::data_fields_json` — layout has no existing text-interpolation/
     /// field-binding concept for frames/stories yet, so this stores the dictionary verbatim as a new
-    /// named data source (see `crate::artifacts::layout::LayoutSnapshot::data_fields_json`'s doc) rather
+    /// named data source (see `crate::LayoutSnapshot::data_fields_json`'s doc) rather
     /// than wiring it into rendering today.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
@@ -681,7 +681,7 @@ impl ArtifactEditor for LayoutPlayApp {
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
 pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::layout::LAYOUT_DIALECT)
+    Editor::builder(crate::LAYOUT_DIALECT)
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.layout".into(),
                 name: "Layout".into(),
@@ -798,7 +798,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             // `.example(...)`/`.workflow(...)` on this builder, so the old `"sample"`/`"cylinder"`
             // app-level example registration and the no-op `.workflow("layout", …)` call are dropped
             // here (not silently: reported in this packet's migration notes). The subset's own
-            // `📚️examples/🎬️demo` facet (`crate::artifacts::layout::examples::...`, real content,
+            // `📚️examples/🎬️demo` facet (`crate::examples::...`, real content,
             // pre-existing) is the modern, role-agnostic replacement surface for this.
             .build_definition()
 }
@@ -931,7 +931,7 @@ mod tests {
     /// pins exact historical bytes (greenfield: no back-compat), only text/binary equivalence.
     #[semio_framework_async_macros::async_test]
     async fn optional_field_rows_round_trip_text_and_binary_either_way() {
-        use crate::artifacts::layout::LayoutCamera;
+        use crate::LayoutCamera;
         let cases: [(LayoutCommand, &str); 3] = [
             (LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: None, x: 1.0, y: 2.0, width: 800.0, height: 600.0 }), "canvas-pointer-move x=1 y=2 width=800 height=600"),
             (LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: Some(1.0), y: None }), "add-frame kind=rect x=1"),
@@ -945,7 +945,7 @@ mod tests {
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) fn every_command() -> Vec<LayoutCommand> {
-        use crate::artifacts::layout::LayoutCamera;
+        use crate::LayoutCamera;
         vec![
             LayoutCommand::SetActivePage(set_active_page::SetActivePage { page_id: "page-2".into() }),
             LayoutCommand::FocusPreflightIssue(focus_preflight_issue::FocusPreflightIssue { object_id: Some("frame-1".into()), page_id: Some("page-1".into()) }),
@@ -1007,8 +1007,8 @@ mod tests {
     //#region 🔖️CrossCutting
     #[semio_framework_async_macros::async_test]
     async fn sample_fixture_parses() {
-        let doc = crate::artifacts::layout::dsl::parse_dsl(crate::artifacts::layout::dsl::LAYOUT_SAMPLE_TEXT).expect("sample fixture");
-        assert_eq!(doc.schema, crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA);
+        let doc = crate::dsl::parse_dsl(crate::dsl::LAYOUT_SAMPLE_TEXT).expect("sample fixture");
+        assert_eq!(doc.schema, crate::LAYOUT_DOCUMENT_SCHEMA);
         assert!(!doc.pages.is_empty());
     }
 
@@ -1073,7 +1073,7 @@ mod tests {
         let doc = ArtifactView::new(&document, &history);
         let media = LayoutPlayApp::export_media("document:out", &doc).expect("export document:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
-        assert_eq!(schema, crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA);
+        assert_eq!(schema, crate::LAYOUT_DOCUMENT_SCHEMA);
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
         let decoded = <LayoutSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
         assert_eq!(decoded, document);

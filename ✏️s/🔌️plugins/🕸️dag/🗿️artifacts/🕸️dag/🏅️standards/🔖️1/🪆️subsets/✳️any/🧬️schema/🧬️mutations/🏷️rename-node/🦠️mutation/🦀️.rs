@@ -1,8 +1,8 @@
 //! 🏷️ DAG mutation — `RenameNode`: changes a node's identity key (its `id`), cascading to every
 //! edge endpoint string that referenced it (`"<id>@<port>"`).
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::diff::DagDiff;
+use crate::mutations::DagMutation;
+use crate::DagSnapshot;
 
 //#region 🔖️Mutation
 /// 🏷️ `rename-node` payload — the node's `id` is its identity field (its separate `name` display

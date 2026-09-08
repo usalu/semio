@@ -3,8 +3,8 @@
 //! canvas sized to the document bounds — no block content is actually painted (unchanged behaviour
 //! from the pre-migration free function) — an honest `IoFidelity::Lossy` hop.
 
-use crate::artifacts::note::io::note_document_bounds;
-use crate::artifacts::note::NoteSnapshot;
+use crate::io::note_document_bounds;
+use crate::NoteSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

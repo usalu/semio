@@ -4,8 +4,8 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::lowpoly::schema::default_snapshot;
-use crate::artifacts::lowpoly::{LowpolySnapshot, LOWPOLY_DIALECT, LOWPOLY_DOCUMENT_SCHEMA};
+use crate::schema::default_snapshot;
+use crate::{LowpolySnapshot, LOWPOLY_DIALECT, LOWPOLY_DOCUMENT_SCHEMA};
 use crate::viewer::lowpoly::modes::view;
 use crate::viewer::lowpoly::modes::view::windows::model;
 use semio_framework_plugin::app::{ArtifactViewer, Dialect, ViewEmit, Viewer};
@@ -38,7 +38,7 @@ pub struct LowpolyViewer;
 
 impl ArtifactViewer for LowpolyViewer {
     type Snapshot = LowpolySnapshot;
-    type Mutation = crate::artifacts::lowpoly::op::LowpolyMutation;
+    type Mutation = crate::op::LowpolyMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

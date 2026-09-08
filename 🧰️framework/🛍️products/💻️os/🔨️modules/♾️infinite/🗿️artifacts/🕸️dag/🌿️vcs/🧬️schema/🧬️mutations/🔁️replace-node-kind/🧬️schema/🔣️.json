@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/infinite/dag/vcs/mutation/replace-node-kind/schema.json",
+  "title": "ReplaceNodeKind",
+  "type": "object",
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": [
+        "id",
+        "newKind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "newKind": {
+          "$ref": "../../../🔣️.json#/$defs/DagNodeKind"
+        }
+      },
+      "description": "Actual intrinsic DagNodeKind payload; the shared intrinsic DslField lowering provides text and binary codecs."
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/payload"
+    }
+  ],
+  "propertyNames": {
+    "enum": [
+      "id",
+      "newKind"
+    ]
+  }
+}

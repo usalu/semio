@@ -14,7 +14,7 @@
 //! snapshot's own persisted shape.
 //!
 //! ⚠️ **The WIRE FORMAT still carries the real `nodes`/`edges` data** (JSON-blob-encoded), not just
-//! the opaque handle — matching `dag`'s `<flow::FlowFixture as ArtifactDsl>::parse_dsl` precedent.
+//! the opaque handle — matching `dag`'s `<semio_framework_artifact_flow_flow::FlowFixture as ArtifactDsl>::parse_dsl` precedent.
 //! No `LinkResolver`/child-dispatch seam exists yet (see the artifact root's `🔖️WorkingScene`), so
 //! the working-scene cache is only populated in-process, by whatever call SET the `content` field. A
 //! codec that persisted only the bare handle would produce an UNRECOVERABLE snapshot the instant a
@@ -37,11 +37,11 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::jack::{Edge, JackSnapshot, Node, Port, PortDirection, PropertyBag};
+use crate::{Edge, JackSnapshot, Node, Port, PortDirection, PropertyBag};
 use store::{ArtifactDsl, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 
 //#region 🔖️DslMirrors
-/// 🔒️ Local twin of `PortDirection` (foreign, re-exported from `graph::manifest` and
+/// 🔒️ Local twin of `PortDirection` (foreign, re-exported from `semio_framework_graph::manifest` and
 /// consumed by the shared jack query kernel/`semio_s_plugin_trinity`/`framework::*` — this crate does
 /// not own the freedom to reshape it) purely so the DSL engine's derive macros have something local to
 /// bind: the orphan rule blocks `impl dsl::DslField for PortDirection` directly in this crate.
@@ -126,7 +126,7 @@ fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
 }
 
 fn print_jack_snapshot_body(s: &JackSnapshot) -> String {
-    let scene = crate::artifacts::jack::jack_working_scene(s);
+    let scene = crate::jack_working_scene(s);
     let camera_json = pack::to_json_string(&s.camera);
     let nodes_json = pack::to_json_string(&scene.nodes);
     let edges_json = pack::to_json_string(&scene.edges);
@@ -180,8 +180,8 @@ fn parse_jack_snapshot_body(body: &str) -> Result<JackSnapshot, String> {
     let nodes = nodes.ok_or_else(|| "jack snapshot: missing nodes line".to_string())?;
     let edges = edges.ok_or_else(|| "jack snapshot: missing edges line".to_string())?;
     let root_node_id = root_node_id.ok_or_else(|| "jack snapshot: missing rootNodeId line".to_string())?;
-    let content = crate::artifacts::jack::jack_content_child_with_owner(nodes, edges);
-    let mut fixture = JackSnapshot { schema, name, manifest_id, manifest: crate::artifacts::jack::Manifest::default(), camera, content, root_node_id };
+    let content = crate::jack_content_child_with_owner(nodes, edges);
+    let mut fixture = JackSnapshot { schema, name, manifest_id, manifest: crate::Manifest::default(), camera, content, root_node_id };
     fixture.resolve_manifest().map_err(|error| error.to_string())?;
     Ok(fixture)
 }
@@ -231,7 +231,7 @@ impl ArtifactDsl for JackSnapshot {
 impl store::ArtifactPack for JackSnapshot {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let _ = options;
-        let scene = crate::artifacts::jack::jack_working_scene(self);
+        let scene = crate::jack_working_scene(self);
         let mut out = Vec::new();
         const PACK_BINARY_FORMAT: u8 = 1;
         out.push(PACK_BINARY_FORMAT);
@@ -274,8 +274,8 @@ impl store::ArtifactPack for JackSnapshot {
         let root_node_id_raw = read_str_lp(&mut reader).map_err(PackError::Schema)?;
         let root_node_id_present: bool = read_str_lp(&mut reader).map_err(PackError::Schema)?.parse().unwrap_or(false);
         let root_node_id = root_node_id_present.then_some(root_node_id_raw);
-        let content = crate::artifacts::jack::jack_content_child_with_owner(nodes, edges);
-        let mut fixture = JackSnapshot { schema, name, manifest_id, manifest: crate::artifacts::jack::Manifest::default(), camera, content, root_node_id };
+        let content = crate::jack_content_child_with_owner(nodes, edges);
+        let mut fixture = JackSnapshot { schema, name, manifest_id, manifest: crate::Manifest::default(), camera, content, root_node_id };
         fixture.resolve_manifest().map_err(|error| store::text_error_to_pack_error(TextError::new(error.to_string(), TextSpan::at(1, 1))))?;
         Ok(fixture)
     }
@@ -299,7 +299,7 @@ pub fn print_dsl(document: &JackSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::jack::empty_trinity_graph_fixture;
+    use crate::empty_trinity_graph_fixture;
 
     #[semio_framework_async_macros::async_test]
     async fn nakagin_example_dsl_round_trips() {
@@ -330,7 +330,7 @@ mod tests {
     /// JSON-blob content codec round trip on non-trivial `PropertyBag`'s `Object`/`Number` variants.
     #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_mini_fixture() {
-        use crate::artifacts::jack::{Camera, Edge, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
+        use crate::{Camera, Edge, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
         use std::collections::BTreeMap;
 
         let fixture = JackSnapshot::with_content(

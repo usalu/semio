@@ -1,9 +1,9 @@
 //! ↩️ `change-design-approach` inverse — restores the pre-change `design_approach` from BASE state; `change` is its own
 //! inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::en1997::mutations::change_design_approach::ChangeDesignApproach;
-use crate::artifacts::en1997::mutations::En1997Mutation;
-use crate::artifacts::en1997::En1997Snapshot;
+use crate::mutations::change_design_approach::ChangeDesignApproach;
+use crate::mutations::En1997Mutation;
+use crate::En1997Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeDesignApproach, base: &En1997Snapshot) -> Vec<En1997Mutation> {

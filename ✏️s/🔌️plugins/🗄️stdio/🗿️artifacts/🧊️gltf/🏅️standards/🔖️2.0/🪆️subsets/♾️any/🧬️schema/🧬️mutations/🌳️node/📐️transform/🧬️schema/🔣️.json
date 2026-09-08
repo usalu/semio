@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/node/transform.json",
-  "title": "GltfTransformNodeMutation",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-transform/schema.json",
+  "title": "GltfTransformNodePayload",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,63 +14,89 @@
       "minimum": 0
     },
     "transform": {
+      "$ref": "#/$defs/GltfNodeTransform"
+    }
+  },
+  "$defs": {
+    "GltfNodeTransform": {
       "oneOf": [
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "matrix"
+          ],
           "properties": {
             "kind": {
               "const": "matrix"
             },
             "matrix": {
               "type": "array",
-              "minItems": 16,
-              "maxItems": 16,
               "items": {
                 "type": "number"
-              }
+              },
+              "minItems": 16,
+              "maxItems": 16
             }
-          },
-          "required": [
-            "kind",
-            "matrix"
-          ],
-          "additionalProperties": false
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
           "properties": {
             "kind": {
               "const": "trs"
             },
             "translation": {
-              "type": "array",
-              "minItems": 3,
-              "maxItems": 3,
-              "items": {
-                "type": "number"
-              }
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "rotation": {
-              "type": "array",
-              "minItems": 4,
-              "maxItems": 4,
-              "items": {
-                "type": "number"
-              }
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 4,
+                  "maxItems": 4
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "scale": {
-              "type": "array",
-              "minItems": 3,
-              "maxItems": 3,
-              "items": {
-                "type": "number"
-              }
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
-          },
-          "required": [
-            "kind"
-          ],
-          "additionalProperties": false
+          }
         }
       ]
     }

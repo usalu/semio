@@ -5,7 +5,7 @@
 //! editor-only interaction, not something a read-only viewer needs. MUST NOT import anything from the
 //! sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::curation::{stock_of, CurationSnapshot};
+use crate::{stock_of, CurationSnapshot};
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, UiAssemblyResult, WindowKindDefinition};
 
@@ -47,7 +47,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn view_model_lists_every_stock_row_with_five_columns() {
-        let document = crate::artifacts::curation::schema::default_document();
+        let document = crate::schema::default_document();
         let stock = stock_of(&document);
         let view = view_model(&document);
         assert_eq!(view.columns.len(), 5);
@@ -56,7 +56,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_table_ui_node() {
-        let document = crate::artifacts::curation::schema::default_document();
+        let document = crate::schema::default_document();
         let json = serde_json::to_string(&render(&document).expect("bounded table")).expect("render json");
         assert!(json.contains("table"), "expected a table UiNode: {json}");
     }

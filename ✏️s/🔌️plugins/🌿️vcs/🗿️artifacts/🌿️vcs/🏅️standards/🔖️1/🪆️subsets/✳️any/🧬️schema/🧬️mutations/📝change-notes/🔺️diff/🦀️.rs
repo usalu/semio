@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ChangeNotes`.
-use crate::artifacts::vcs::{VcsDiff, VcsSnapshot};
+use crate::{VcsDiff, VcsSnapshot};
 
 //#region 🔖️Diff
 /// 🔺️ Warning `no-op` when `new_notes` already equals `base.notes`.

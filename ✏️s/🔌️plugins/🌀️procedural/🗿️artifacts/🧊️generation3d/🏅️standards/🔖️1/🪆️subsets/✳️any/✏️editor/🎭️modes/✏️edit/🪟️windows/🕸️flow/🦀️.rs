@@ -1,10 +1,10 @@
 //! 🕸️ Generation3d play app — the main flow-graph window (edit mode).
 
-use crate::artifacts::generation3d::schema::{fixture_to_workflow, host_from_fixture};
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::schema::{fixture_to_workflow, host_from_fixture};
+use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::Generation3dConfig;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use flow::{flow_backed_node_graph_extras, FlowEvalSession};
+use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use crate::editor::generation3d::PreviewInteractionMarks;
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, NodeGraphHover, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowMeasure, WindowOptions};
 

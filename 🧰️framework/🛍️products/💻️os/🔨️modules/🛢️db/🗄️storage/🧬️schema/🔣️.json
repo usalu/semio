@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/db/storage/component.json",
+  "title": "OS Database Storage Contracts",
+  "$defs": {
+    "DirectoryDurabilityV1": {
+      "title": "Filesystem Directory Durability V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "create", "seal", "delete", "replace", "duplicatePreservesBytes", "deleteFaultState", "recoverySync"],
+      "properties": {
+        "schema": { "const": "semio.db.fs-directory-durability/v1" },
+        "recoverySync": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["wal-file-synced", "wal-parent-synced"] } },
+        "create": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["segment-created", "segment-file-synced", "segment-parent-synced"] } },
+        "seal": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["marker-created", "marker-file-synced", "marker-parent-synced"] } },
+        "delete": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["segment-deleted", "segment-delete-parent-synced", "marker-deleted", "marker-delete-parent-synced"] } },
+        "replace": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["replacement-renamed", "replacement-parent-synced"] } },
+        "duplicatePreservesBytes": { "const": true },
+        "deleteFaultState": { "type": "string", "minLength": 1 }
+      }
+    },
+    "BackendPoolUseV1": {
+      "title": "Backend Pool Use V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "cases", "opening"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "cases": {
+          "type": "array",
+          "minItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "registeredUses", "expected"],
+            "properties": {
+              "name": { "enum": ["registered-backend-blocks-shutdown", "task-derives-registered-pool", "dropped-facade-retains-use", "compaction-acquires-before-admission", "forged-kind-rejected-before-page-admission", "rollback-reserved-before-owner-transfer", "all-retirement-tiers-full-return-exact-executor", "committed-rollback-retains-use-until-terminal", "prepared-post-transfer-refusal-returns-close-owner"] },
+              "registeredUses": { "type": "integer", "minimum": 0 },
+              "expected": { "enum": ["busy", "registered-pool", "deferred-close", "retained-rejection", "stale-generation", "exact-owner"] }
+            }
+          }
+        },
+        "opening": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["backend", "cause", "closeRequestedBeforeRetry", "poolShutdownAfterDrain", "ledgerBaseline", "reopens"],
+            "properties": {
+              "backend": { "enum": ["fs", "sqlite"] },
+              "cause": { "enum": ["queued-drop", "path-type-conflict"] },
+              "closeRequestedBeforeRetry": { "type": "boolean" },
+              "poolShutdownAfterDrain": { "type": "boolean" },
+              "ledgerBaseline": { "type": "boolean" },
+              "reopens": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "MemoryBackingV1": {
+      "title": "Memory Backing V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "maximumInlineBytes", "writerTable", "controllerCredit", "tables", "admission", "closeWhileAdmitted", "retry", "sequentialTasks", "retainedPageResults", "sameSlotReuseBeforeOldResultClose", "taskSlotReleasedWhileResultRetained", "droppedResultRetirement"],
+      "properties": {
+        "schema": { "const": "semio.db.memory-backing/v1" },
+        "maximumInlineBytes": { "type": "integer", "minimum": 1 },
+        "writerTable": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["slots", "separateBox"],
+          "properties": {
+            "slots": { "type": "integer", "minimum": 1 },
+            "separateBox": { "const": true }
+          }
+        },
+        "controllerCredit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["items", "controls", "bytesFormula"],
+          "properties": {
+            "items": { "type": "integer", "minimum": 0 },
+            "controls": { "type": "integer", "minimum": 0 },
+            "bytesFormula": { "type": "string", "minLength": 1 }
+          }
+        },
+        "closeWhileAdmitted": { "const": false },
+        "sequentialTasks": { "type": "integer", "minimum": 1 },
+        "retainedPageResults": { "type": "integer", "minimum": 0 },
+        "sameSlotReuseBeforeOldResultClose": { "const": true },
+        "taskSlotReleasedWhileResultRetained": { "const": true },
+        "droppedResultRetirement": { "enum": ["mounted-io-maintenance"] },
+        "retry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maximumAttempts", "timerDelayMs", "terminalAfterQueueRelease"],
+          "properties": {
+            "maximumAttempts": { "type": "integer", "minimum": 1 },
+            "timerDelayMs": { "type": "integer", "minimum": 0 },
+            "terminalAfterQueueRelease": { "const": true }
+          }
+        },
+        "tables": {
+          "type": "array",
+          "minItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "slots"],
+            "properties": {
+              "name": { "enum": ["wal", "snapshots", "payloads", "index-runs", "leases", "operations", "retired-pages", "retired-wal"] },
+              "slots": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "admission": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["remaining", "accepted"],
+            "properties": {
+              "remaining": { "enum": ["exact", "one-short", "zero"] },
+              "accepted": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

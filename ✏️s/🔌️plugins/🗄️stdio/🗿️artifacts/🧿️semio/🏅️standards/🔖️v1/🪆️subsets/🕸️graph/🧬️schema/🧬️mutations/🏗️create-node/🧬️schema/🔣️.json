@@ -1,20 +1,40 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/create-node.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/graph/mutation/create-node/schema.json",
   "title": "CreateNode",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id",
-    "kind",
-    "label",
-    "ports",
-    "position",
-    "properties"
+    "id"
   ],
   "properties": {
     "id": {
-      "title": "GraphNodeId",
+      "$ref": "#/$defs/GraphNodeId"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "position": {
+      "$ref": "#/$defs/SemioPoint2"
+    },
+    "ports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SemioGraphPort"
+      }
+    },
+    "properties": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SemioValueEntry"
+      }
+    }
+  },
+  "$defs": {
+    "GraphNodeId": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -26,14 +46,7 @@
         }
       }
     },
-    "kind": {
-      "type": "string"
-    },
-    "label": {
-      "type": "string"
-    },
-    "position": {
-      "title": "SemioPoint2",
+    "SemioPoint2": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -49,145 +62,210 @@
         }
       }
     },
-    "ports": {
-      "type": "array",
-      "items": {
-        "title": "SemioGraphPort",
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "kind",
-          "name"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "In",
-              "Out",
-              "InOut"
-            ]
-          }
+    "SemioGraphPort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/SemioGraphPortKind"
         }
       }
     },
-    "properties": {
-      "type": "array",
-      "items": {
-        "title": "SemioValueEntry",
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "key",
-          "value"
-        ],
-        "properties": {
-          "key": {
-            "type": "string"
-          },
-          "value": {
-            "oneOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "const": "Bool"
-                  }
-                },
-                "required": [
-                  "kind"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "const": "Int"
-                  }
-                },
-                "required": [
-                  "kind"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "const": "Float"
-                  }
-                },
-                "required": [
-                  "kind"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "const": "Str"
-                  }
-                },
-                "required": [
-                  "kind"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "const": "Bytes"
-                  }
-                },
-                "required": [
-                  "kind"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "const": "List"
-                  }
-                },
-                "required": [
-                  "kind"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "const": "Map"
-                  }
-                },
-                "required": [
-                  "kind"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "const": "Ref"
-                  }
-                },
-                "required": [
-                  "kind"
-                ],
-                "additionalProperties": false
-              }
-            ]
+    "SemioGraphPortKind": {
+      "type": "string",
+      "enum": [
+        "in",
+        "out",
+        "inOut"
+      ]
+    },
+    "SemioValueEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/SemioValue"
+        }
+      }
+    },
+    "SemioValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "null"
+            }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bool"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lexeme"
+          ],
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "lexeme": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lexeme"
+          ],
+          "properties": {
+            "kind": {
+              "const": "float"
+            },
+            "lexeme": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "str"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bytes"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "items"
+          ],
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValue"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "entries"
+          ],
+          "properties": {
+            "kind": {
+              "const": "map"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SemioValueEntry"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ref"
+            },
+            "id": {
+              "$ref": "#/$defs/ValueId"
+            }
+          }
+        }
+      ]
+    },
+    "ValueId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
         }
       }
     }

@@ -12,6 +12,8 @@ const DIGEST = /^[0-9a-f]{64}$/u;
 const MODULE_DIRECTORIES = ["🪞️vendor", "🧵️shard", "🪐️space", "🌍️gis"] as const;
 const MODULE_FILES_MAX = 512;
 const MODULE_BYTES_MAX = 768 * 1024 * 1024;
+const HOST_COMPONENT_MAX_BYTES = 64 * 1024 * 1024;
+const HOST_DESCRIPTOR_JSON_MAX_BYTES = 4 * 1024 * 1024;
 
 export type TestBrowserHostStagingReceiptV1 = Readonly<{
   schema: "semio.os.test-browser-host-staging/v1";
@@ -19,7 +21,7 @@ export type TestBrowserHostStagingReceiptV1 = Readonly<{
   profile: "dev";
   moduleSetSha256: string;
   activationReceiptSha256: string;
-  host: Readonly<{ pluginId: "space"; componentSha256: string; descriptorSha256: string }>;
+  host: Readonly<{ pluginId: "space"; componentByteLength: number; componentSha256: string; coreSha256: string; descriptorSha256: string }>;
   selectedGis: Readonly<{ generationId: string; currentSha256: string }>;
 }>;
 
@@ -59,8 +61,9 @@ export function parseTestBrowserHostStagingReceiptV1(value: unknown): TestBrowse
     row.profile !== "dev" ||
     !digest(row.moduleSetSha256) ||
     !digest(row.activationReceiptSha256) ||
-    !host || !exactKeys(host, ["pluginId", "componentSha256", "descriptorSha256"]) ||
-    host.pluginId !== "space" || !digest(host.componentSha256) || !digest(host.descriptorSha256) ||
+    !host || !exactKeys(host, ["pluginId", "componentByteLength", "componentSha256", "coreSha256", "descriptorSha256"]) ||
+    host.pluginId !== "space" || typeof host.componentByteLength !== "number" || !Number.isSafeInteger(host.componentByteLength) || host.componentByteLength < 1 || host.componentByteLength > HOST_COMPONENT_MAX_BYTES ||
+    !digest(host.componentSha256) || !digest(host.coreSha256) || !digest(host.descriptorSha256) ||
     !selectedGis || !exactKeys(selectedGis, ["generationId", "currentSha256"]) ||
     !digest(selectedGis.generationId) || !digest(selectedGis.currentSha256)
   ) throw new Error("Invalid test browser-host receipt fields");
@@ -70,7 +73,7 @@ export function parseTestBrowserHostStagingReceiptV1(value: unknown): TestBrowse
     profile: "dev",
     moduleSetSha256: row.moduleSetSha256,
     activationReceiptSha256: row.activationReceiptSha256,
-    host: Object.freeze({ pluginId: "space", componentSha256: host.componentSha256, descriptorSha256: host.descriptorSha256 }),
+    host: Object.freeze({ pluginId: "space", componentByteLength: host.componentByteLength, componentSha256: host.componentSha256, coreSha256: host.coreSha256, descriptorSha256: host.descriptorSha256 }),
     selectedGis: Object.freeze({ generationId: selectedGis.generationId, currentSha256: selectedGis.currentSha256 }),
   });
 }
@@ -154,9 +157,23 @@ function onlyCoreComponent(entries: readonly FileEntry[]): FileEntry {
   return components[0]!;
 }
 
+function hostDescriptorComponentHashes(entries: readonly FileEntry[]): Readonly<{ componentSha256: string; coreSha256: string }> {
+  const json = entries.find((entry) => entry.relativePath === "🔣️.json");
+  if (!json || json.size > HOST_DESCRIPTOR_JSON_MAX_BYTES) throw new Error("Test browser host descriptor JSON is absent or exceeds its bound");
+  const value: unknown = JSON.parse(readFileSync(json.path, "utf8"));
+  const hashes = record(value) && record(value.hashes) ? value.hashes : undefined;
+  if (!hashes || !digest(hashes.wasmSha256) || !digest(hashes.coreWasmSha256)) throw new Error("Test browser host descriptor omits its component identities");
+  return Object.freeze({ componentSha256: hashes.wasmSha256, coreSha256: hashes.coreWasmSha256 });
+}
+
 /** 🔐 Closes an already atomically materialized Space/GIS module set with an exact activation and receipt. */
-export function closeTestBrowserHostStagingV1(artifactRootInput: string, selectedGis: Readonly<{ generationId: string; currentSha256: string }>): TestBrowserHostRootsV1 {
+export function closeTestBrowserHostStagingV1(
+  artifactRootInput: string,
+  selectedGis: Readonly<{ generationId: string; currentSha256: string }>,
+  hostComponent: Readonly<{ byteLength: number; sha256: string }>,
+): TestBrowserHostRootsV1 {
   if (!digest(selectedGis.generationId) || !digest(selectedGis.currentSha256)) throw new Error("Invalid selected GIS current identity");
+  if (!Number.isSafeInteger(hostComponent.byteLength) || hostComponent.byteLength < 1 || hostComponent.byteLength > HOST_COMPONENT_MAX_BYTES || !digest(hostComponent.sha256)) throw new Error("Invalid test browser host component identity");
   if (!isAbsolute(artifactRootInput)) throw new Error("Test browser-host owner must be absolute");
   const artifactRoot = regularDirectory(artifactRootInput, "Test artifact root");
   if (!artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("Test browser-host owner is not ticket generated");
@@ -166,6 +183,12 @@ export function closeTestBrowserHostStagingV1(artifactRootInput: string, selecte
   mkdirSync(activationRoot, { recursive: true, mode: 0o700 });
   regularDirectory(activationRoot, "Test browser activation root");
   const entries = exactModuleEntries(moduleRoot);
+  const hostEntries = moduleSubset(entries, "🪐️space");
+  const component = onlyCoreComponent(hostEntries);
+  const descriptor = hostEntries.find((entry) => entry.relativePath === "🛂️.descriptor.semio");
+  const descriptorHashes = hostDescriptorComponentHashes(hostEntries);
+  if (!descriptor) throw new Error("Test browser host descriptor is absent");
+  if (descriptorHashes.componentSha256 !== hostComponent.sha256 || descriptorHashes.coreSha256 !== component.sha256) throw new Error("Test browser host descriptor component identity differs from its materialized owner");
   const supportEntries = [...moduleSubset(entries, "🪞️vendor"), ...moduleSubset(entries, "🧵️shard")];
   const supportSha256 = entriesDigest(supportEntries, "support/");
   const plugins = (["gis", "space"] as const).map((pluginId) => {
@@ -177,17 +200,13 @@ export function closeTestBrowserHostStagingV1(artifactRootInput: string, selecte
   publishActivationReceipt(activationRoot, nextActivationReceipt("s", "dev", plugins, previous));
   const activationPath = regularFile(join(activationRoot, ACTIVATION_RECEIPT_FILE), "Test browser activation receipt");
   const activationReceiptSha256 = sha256File(activationPath);
-  const hostEntries = moduleSubset(entries, "🪐️space");
-  const component = onlyCoreComponent(hostEntries);
-  const descriptor = hostEntries.find((entry) => entry.relativePath === "🛂️.descriptor.semio");
-  if (!descriptor) throw new Error("Test browser host descriptor is absent");
   const receipt = parseTestBrowserHostStagingReceiptV1({
     schema: "semio.os.test-browser-host-staging/v1",
     variant: "s",
     profile: "dev",
     moduleSetSha256: entriesDigest(entries),
     activationReceiptSha256,
-    host: { pluginId: "space", componentSha256: component.sha256, descriptorSha256: descriptor.sha256 },
+    host: { pluginId: "space", componentByteLength: hostComponent.byteLength, componentSha256: hostComponent.sha256, coreSha256: component.sha256, descriptorSha256: descriptor.sha256 },
     selectedGis,
   });
   const receiptPath = join(browserHostRoot, TEST_BROWSER_HOST_RECEIPT_FILE);
@@ -227,7 +246,8 @@ export function resolveTestBrowserHostRootsV1(environment: Environment): TestBro
   const activation = parseActivationReceipt(readActivationReceipt(activationRoot));
   if (activation.variant !== "s" || activation.profile !== "dev" || JSON.stringify(activation.plugins.map((row) => row.pluginId)) !== JSON.stringify(["gis", "space"])) throw new Error("Test browser-host activation is not the exact session");
   const hostEntries = moduleSubset(entries, "🪐️space");
-  if (onlyCoreComponent(hostEntries).sha256 !== receipt.host.componentSha256 || hostEntries.find((entry) => entry.relativePath === "🛂️.descriptor.semio")?.sha256 !== receipt.host.descriptorSha256) throw new Error("Test browser host identity changed after closure");
+  const descriptorHashes = hostDescriptorComponentHashes(hostEntries);
+  if (descriptorHashes.componentSha256 !== receipt.host.componentSha256 || descriptorHashes.coreSha256 !== receipt.host.coreSha256 || onlyCoreComponent(hostEntries).sha256 !== receipt.host.coreSha256 || hostEntries.find((entry) => entry.relativePath === "🛂️.descriptor.semio")?.sha256 !== receipt.host.descriptorSha256) throw new Error("Test browser host identity changed after closure");
   return Object.freeze({ artifactRoot, browserHostRoot, moduleRoot, activationRoot, receiptPath, receipt });
 }
 

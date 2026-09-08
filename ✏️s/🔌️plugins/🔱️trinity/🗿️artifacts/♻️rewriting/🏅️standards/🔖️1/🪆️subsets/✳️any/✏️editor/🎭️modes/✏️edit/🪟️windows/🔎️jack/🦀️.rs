@@ -8,7 +8,7 @@
 //! same trinity-wide gap), so this static scene can no longer compute which variable to highlight.
 //! `occurrences_json` is left unset until a future wave threads interaction state through `render`.
 
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 use crate::editor::rewriting::config::RewritingConfig;
 use semio_framework_plugin::{scene_surface, BuiltNode, TextEditorScene, UiAssemblyResult};
 use semio_framework_ui_contract::SurfaceKind;
@@ -18,6 +18,6 @@ pub(crate) fn render(state: &RewritingSnapshot, _cfg: &RewritingConfig) -> UiAss
     scene_surface(
         crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_JACK,
         SurfaceKind::TextEditor,
-        &TextEditorScene { tokens_json: Some(pack::to_json_string(&crate::language_service::semantic_tokens(&query))), ..TextEditorScene::base(query, Some("jack".into()), None) },
+        &TextEditorScene { tokens_json: Some(pack::to_json_string(&semio_s_artifact_trinity_jack::language_service::semantic_tokens(&query))), ..TextEditorScene::base(query, Some("jack".into()), None) },
     )
 }

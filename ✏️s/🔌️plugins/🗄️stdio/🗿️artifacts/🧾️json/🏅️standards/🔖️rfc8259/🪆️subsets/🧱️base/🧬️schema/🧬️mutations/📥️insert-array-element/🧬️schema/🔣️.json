@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/base/mutation/insert-array-element.json",
+  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/base/mutation/insert-array-element/schema.json",
   "title": "InsertArrayElementPayload",
   "type": "object",
   "additionalProperties": false,
@@ -13,16 +13,54 @@
     "path": {
       "type": "array",
       "items": {
-        "type": [
-          "object",
-          "integer"
-        ]
+        "$ref": "#/$defs/JsonPathSegment"
       }
     },
     "index": {
       "type": "integer",
       "minimum": 0
     },
-    "value": {}
+    "value": {
+      "description": "any JSON value"
+    }
+  },
+  "$defs": {
+    "JsonPathSegment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "key"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "index"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    }
   }
 }

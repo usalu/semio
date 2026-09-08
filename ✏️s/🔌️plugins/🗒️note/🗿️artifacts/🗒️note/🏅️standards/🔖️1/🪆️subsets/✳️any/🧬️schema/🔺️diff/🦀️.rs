@@ -8,9 +8,9 @@
 //! registration, for LSP/verification tooling — a grammar can be registered and validated without a
 //! literal parser impl backing it at runtime) stayed at `🚪️io/🔺️diff/📝️text/`.
 
-use crate::artifacts::note::schema::NoteArtifact;
-use crate::artifacts::note::schema::{block_id, find_block, flatten_blocks, insert_block, remove_block_from_tree, update_block_in_tree};
-use crate::artifacts::note::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
+use crate::schema::NoteArtifact;
+use crate::schema::{block_id, find_block, flatten_blocks, insert_block, remove_block_from_tree, update_block_in_tree};
+use crate::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
@@ -482,7 +482,7 @@ mod diff_apply_tests {
     async fn malformed_nested_parent_rejects_without_changing_the_base() {
         let base = NoteSnapshot::default();
         let diff = NoteDiff {
-            blocks: Some(NoteBlocksDelta { added: vec![NoteAddedBlockEntry { parent_id: Some("missing-group".into()), index: Some(0), block: crate::artifacts::note::schema::create_block_by_kind(&mut crate::artifacts::note::schema::NoteIdOwner::new("diff-hostile-test", 0), "text", 0.0, 0.0) }], ..Default::default() }),
+            blocks: Some(NoteBlocksDelta { added: vec![NoteAddedBlockEntry { parent_id: Some("missing-group".into()), index: Some(0), block: crate::schema::create_block_by_kind(&mut crate::schema::NoteIdOwner::new("diff-hostile-test", 0), "text", 0.0, 0.0) }], ..Default::default() }),
             ..Default::default()
         };
         let error = diff.apply(&base).expect_err("missing nested parent must reject");

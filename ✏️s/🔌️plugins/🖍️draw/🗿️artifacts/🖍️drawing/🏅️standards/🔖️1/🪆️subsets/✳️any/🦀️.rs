@@ -3,8 +3,8 @@
 //! `✏️editor`/`📚️examples` children — `crate::editor::drawing`/`crate::viewer::drawing` stay mounted at
 //! the plugin's top-level `editor`/`viewer` modules (recipe §5 gotcha 1), not here.
 
-use crate::artifacts::drawing::standards::v1::subsets::any::{io, schema};
-use crate::artifacts::drawing::DRAWING_DIALECT;
+use crate::standards::v1::subsets::any::{io, schema};
+use crate::DRAWING_DIALECT;
 use crate::editor::drawing as editor;
 use crate::viewer::drawing as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
@@ -19,11 +19,11 @@ use std::sync::OnceLock;
 /// registering it would advertise an id `setActiveExample` could never parse into a document.
 pub fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::artifacts::drawing::examples::demo::source()]).as_slice()
+    EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
 }
 
-fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
-    static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
+fn inference_descriptors() -> &'static [::framework_schema::ArtifactInferenceDescriptor] {
+    static DESCRIPTORS: OnceLock<Vec<::framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::drawing_artifact_inference_descriptor()]).as_slice()
 }
 

@@ -1019,7 +1019,7 @@ mod codec_tests {
         assert_eq!(e.name, "readme.md");
         assert_eq!(e.data, snap.entries[0].data);
 
-        let pptx_bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("read exact OPC fixture");
+        let pptx_bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("read exact OPC fixture");
         let logical = decode_zip(&pptx_bytes).expect("decode native OPC ZIP");
         assert_eq!(logical.entries.len(), 211);
 

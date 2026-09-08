@@ -4,7 +4,7 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::generation2d::{Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
+use crate::{Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
 use crate::viewer::generation2d::modes::view;
 use crate::viewer::generation2d::modes::view::windows::preview;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -36,7 +36,7 @@ pub struct Generation2dViewer;
 
 impl ArtifactViewer for Generation2dViewer {
     type Snapshot = Generation2dSnapshot;
-    type Mutation = crate::artifacts::generation2d::op::Generation2dMutation;
+    type Mutation = crate::op::Generation2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -49,7 +49,7 @@ impl ArtifactViewer for Generation2dViewer {
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
 
     fn initial_snapshot() -> Generation2dSnapshot {
-        crate::artifacts::generation2d::schema::default_snapshot()
+        crate::schema::default_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Generation2dViewCommand::Noop` variant never carries a

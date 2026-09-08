@@ -7,9 +7,9 @@
 //! duplicate that losslessly (same rationale ISO 16757's sibling facet documents for its
 //! structured-only fields, applied uniformly here given this facet's field-count).
 
-pub use crate::artifacts::din4108::schema::mutations::Din4108Mutation;
+pub use crate::document_schema::mutations::Din4108Mutation;
 
-use crate::artifacts::din4108::schema::mutations::{
+use crate::document_schema::mutations::{
     change_airtightness_class::ChangeAirtightnessClass, change_airtightness_n50::ChangeAirtightnessN50, change_application_type::ChangeApplicationType, change_bb2_details_conform::ChangeBb2DetailsConform,
     change_catalog_id::ChangeCatalogId, change_category::ChangeCategory, change_climate::ChangeClimate, change_declared_application_class::ChangeDeclaredApplicationClass,
     change_envelope_area_m2::ChangeEnvelopeAreaM2, change_irradiance_w_m2::ChangeIrradianceWM2, change_layer_lambda::ChangeLayerLambda, change_layer_thickness::ChangeLayerThickness,
@@ -354,7 +354,7 @@ impl protocol::OpBinary for Din4108Mutation {
 /// 🧪️ One representative value per variant — reused by the round-trip law test below.
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<Din4108Mutation> {
-    use crate::artifacts::din4108::LayerDocument;
+    use crate::LayerDocument;
 
     vec![
         Din4108Mutation::ChangeCategory(ChangeCategory { new_category: "nonresidential".into() }),

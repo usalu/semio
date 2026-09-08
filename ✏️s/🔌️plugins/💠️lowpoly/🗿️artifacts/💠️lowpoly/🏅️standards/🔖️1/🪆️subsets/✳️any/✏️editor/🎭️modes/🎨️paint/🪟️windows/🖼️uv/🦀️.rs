@@ -1,7 +1,7 @@
 //! 🖼️ Lowpoly play app — the UV window: the 2D UV-canvas paint surface. Only the paint operations it
 //! shares with the Model window are scoped here (no mesh-editing/transform ops).
 
-use crate::artifacts::lowpoly::LOWPOLY_PAINT_TEXTURE_SIZE;
+use crate::LOWPOLY_PAINT_TEXTURE_SIZE;
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::modes::edit::windows::model::LOWPOLY_TRANSFORM_UTILITY_DEFAULT;
@@ -22,7 +22,7 @@ pub const LOWPOLY_UV_ACTIONS: &[&str] = &["addPaintLayer", "paintStrokeEnd", "pa
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::lowpoly::create_lowpoly_app`.
 pub fn definition() -> WindowKindDefinition {
-    let projection = crate::artifacts::lowpoly::schema::default_snapshot();
+    let projection = crate::schema::default_snapshot();
     let config = LowpolyConfig::default();
     let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US");
     let engagement = lowpoly_window_engagement(LowpolyView { snapshot: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);

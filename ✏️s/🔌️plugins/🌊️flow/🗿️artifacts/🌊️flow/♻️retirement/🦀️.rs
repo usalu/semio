@@ -1,8 +1,8 @@
 //! 🗃️ Shared document ownership for Flow scenes, snapshots and mutations.
 
-use crate::artifacts::flow::{FlowSnapshot, FlowWorkingScene};
-use crate::artifacts::flow::op::FlowMutation;
-use flow::retained::{FlowOwner, FlowRetirement};
+use crate::{FlowSnapshot, FlowWorkingScene};
+use crate::op::FlowMutation;
+use semio_framework_artifact_flow_flow::retained::{FlowOwner, FlowRetirement};
 use std::{mem::ManuallyDrop, sync::Arc};
 use store::{ErasedSnapshotRetirement, SnapshotRetirementStep};
 

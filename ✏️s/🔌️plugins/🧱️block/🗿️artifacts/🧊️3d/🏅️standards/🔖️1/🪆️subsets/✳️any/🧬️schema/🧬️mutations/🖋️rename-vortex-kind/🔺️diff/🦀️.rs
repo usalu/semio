@@ -1,11 +1,11 @@
 //! 🔺️ Diff for `RenameVortexKind`.
 
-use crate::artifacts::block3d::{Block3dSnapshot, Block3dVortexKind};
-use crate::artifacts::block3d::diff::{Block3dDiff, Block3dVortexKindsDelta, Block3dVortexKindsPatch, Block3dVortexKindsPatchEntry};
+use crate::{Block3dSnapshot, Block3dVortexKind};
+use crate::diff::{Block3dDiff, Block3dVortexKindsDelta, Block3dVortexKindsPatch, Block3dVortexKindsPatchEntry};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameVortexKind, base: &Block3dSnapshot) -> protocol::MutationOutcome<Block3dDiff> {
-    let current = crate::artifacts::block3d::vortex_kinds_of(base);
+    let current = crate::vortex_kinds_of(base);
     let Some(existing) = current.iter().find(|item| item.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "vortex-kind", payload.id), vec![payload.id.clone()]);
     };

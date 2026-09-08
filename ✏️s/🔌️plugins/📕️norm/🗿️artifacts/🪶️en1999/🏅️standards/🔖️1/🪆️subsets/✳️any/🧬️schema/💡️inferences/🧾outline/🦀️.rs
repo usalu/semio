@@ -4,7 +4,7 @@
 //! `entryCount` over whatever repeated sub-entries it actually carries (0 when the snapshot has
 //! no collection-typed top-level field).
 
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::En1999Snapshot;
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &[

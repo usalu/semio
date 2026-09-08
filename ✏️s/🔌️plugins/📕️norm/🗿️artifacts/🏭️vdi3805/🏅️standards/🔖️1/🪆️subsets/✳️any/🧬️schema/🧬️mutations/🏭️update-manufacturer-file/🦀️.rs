@@ -2,7 +2,7 @@
 //! norm's `010` record fields are always authored together, never one-field-at-a-time).
 
 
-use crate::artifacts::vdi3805::{ManufacturerFile, Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{ManufacturerFile, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

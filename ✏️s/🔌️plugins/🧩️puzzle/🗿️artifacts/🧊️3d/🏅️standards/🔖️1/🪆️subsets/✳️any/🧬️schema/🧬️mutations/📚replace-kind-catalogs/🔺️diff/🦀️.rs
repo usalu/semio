@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceKindCatalogs` — patches the document `meta.kindCatalogs`.
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::Puzzle3dDiff;
+use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ReplaceKindCatalogs, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {

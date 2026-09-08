@@ -5,8 +5,8 @@
 //! `🎭️modes/*/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view state in
 //! `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
 
-use crate::artifacts::generation3d::op::Generation3dMutation;
-use crate::artifacts::generation3d::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use crate::op::Generation3dMutation;
+use crate::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
 use crate::editor::generation3d::commands::{
     add_generation, add_widget, delete_selection, flow_eval_tick, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget,
     rename_generation, reorganize, rotate_selection, scale_selection, select_generation, set_active_example, set_active_utility, set_camera, set_locale, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun,
@@ -18,7 +18,7 @@ use crate::editor::generation3d::modes::generate::windows::{form, generations, p
 use crate::editor::generation3d::modes::{edit, generate};
 use crate::editor::generation3d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::generation3d::terminology::generation3d_labels;
-use flow::FlowEvalSession;
+use semio_framework_os_flow::FlowEvalSession;
 // 🚧️ SDK note (ticket 26/08/16 contract §2.1/§2.4): `ArtifactEditor`/`Editor`/`Dialect` are curated at
 // `semio_framework_plugin`'s crate root as of W0-F/W2-FIX — imported bare here, no `app::` prefix
 // needed (unlike the earlier cad pilot, written before that gap closed). `app::InteractionView` is a
@@ -104,16 +104,16 @@ pub struct Generation3dPlayApp;
 
 /// 🎥️ Parses the flow-graph camera out of `command_from_action`'s JSON args — either a nested
 /// `{camera: {...}}` object or flat `x`/`y`/`zoom` keys.
-fn parse_flow_camera_json(args: &dsl::DslValue) -> flow::CameraJson {
+fn parse_flow_camera_json(args: &dsl::DslValue) -> semio_framework_artifact_flow_semio_framework_os_flow::CameraJson {
     if let Some(camera) = args.get("camera") {
-        // 🌉️ `flow::CameraJson` derives `ToValue`/`FromValue` alongside its `Serialize`/
+        // 🌉️ `semio_framework_artifact_flow_semio_framework_os_flow::CameraJson` derives `ToValue`/`FromValue` alongside its `Serialize`/
         // `Deserialize` (see `🌊️flow/🗿️artifact/🦀️.rs`), so this decodes straight off the
         // first-party bridge — no `serde_json` involved.
-        if let Ok(parsed) = dsl::from_dsl_value::<flow::CameraJson>(camera.clone()) {
+        if let Ok(parsed) = dsl::from_dsl_value::<semio_framework_artifact_flow_semio_framework_os_flow::CameraJson>(camera.clone()) {
             return parsed;
         }
     }
-    flow::CameraJson { x: args.get("x").and_then(dsl::DslValue::as_f64).unwrap_or(0.0), y: args.get("y").and_then(dsl::DslValue::as_f64).unwrap_or(0.0), zoom: args.get("zoom").and_then(dsl::DslValue::as_f64).unwrap_or(1.0) }
+    semio_framework_artifact_flow_semio_framework_os_flow::CameraJson { x: args.get("x").and_then(dsl::DslValue::as_f64).unwrap_or(0.0), y: args.get("y").and_then(dsl::DslValue::as_f64).unwrap_or(0.0), zoom: args.get("zoom").and_then(dsl::DslValue::as_f64).unwrap_or(1.0) }
 }
 
 /// 🎥️ Parses the 3D preview camera out of `command_from_action`'s JSON args; falls back to the default
@@ -130,9 +130,9 @@ fn parse_preview_camera_json(args: &dsl::DslValue) -> crate::editor::generation3
 /// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`), read from the SAME
 /// `fixture_to_workflow` projection the node-graph window paints — so an interaction target and a
 /// graph pick can never drift apart.
-fn generation3d_port_ids_by_node(fixture: &flow::FlowFixture) -> std::collections::BTreeMap<String, Vec<String>> {
-    let host = crate::artifacts::generation3d::schema::host_from_fixture(fixture);
-    let (graph_nodes, _) = crate::artifacts::generation3d::schema::fixture_to_workflow(&host.dag.fixture);
+fn generation3d_port_ids_by_node(fixture: &semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture) -> std::collections::BTreeMap<String, Vec<String>> {
+    let host = crate::schema::host_from_fixture(fixture);
+    let (graph_nodes, _) = crate::schema::fixture_to_workflow(&host.dag.fixture);
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
 
@@ -653,11 +653,11 @@ impl ArtifactEditor for Generation3dPlayApp {
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::generation3d::spr::generation3d_envelope_decode_owner_bundle())
+        Some(crate::spr::generation3d_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::generation3d::spr::generation3d_document_store_owners())
+        Some(crate::spr::generation3d_document_store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -669,11 +669,11 @@ impl ArtifactEditor for Generation3dPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::artifacts::generation3d::spr::generation3d_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::spr::generation3d_document_store_initialization_job(envelope, operation, generation))
     }
 
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        crate::artifacts::generation3d::spr::generation3d_validate_atomic_publication_authority(operation, generation, live_generation)
+        crate::spr::generation3d_validate_atomic_publication_authority(operation, generation, live_generation)
             .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Generation3d atomic publication authority is absent or stale"))
     }
 
@@ -685,7 +685,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
 
-    const DIALECT: Dialect = crate::artifacts::generation3d::GENERATION3D_DIALECT;
+    const DIALECT: Dialect = crate::GENERATION3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -772,7 +772,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     }
 
     fn initial_snapshot() -> Generation3dSnapshot {
-        crate::artifacts::generation3d::schema::default_snapshot()
+        crate::schema::default_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -813,10 +813,10 @@ impl ArtifactEditor for Generation3dPlayApp {
                 let mut operations = Vec::new();
                 for (target_id, value) in object.iter() {
                     let Some(number) = value.as_f64() else { continue };
-                    let Some((_index, widget)) = fixture.widgets.iter().enumerate().find(|(_, widget)| crate::artifacts::generation3d::widget_id(widget) == target_id) else { continue };
-                    if let flow::Widget::InputSlider { id, label, min, max, step, .. } = widget {
-                        operations.push(Generation3dMutation::UpdateWidget(crate::artifacts::generation3d::schema::mutations::update_widget::UpdateWidget {
-                            widget: flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step },
+                    let Some((_index, widget)) = fixture.widgets.iter().enumerate().find(|(_, widget)| crate::widget_id(widget) == target_id) else { continue };
+                    if let semio_framework_artifact_flow_semio_framework_os_flow::Widget::InputSlider { id, label, min, max, step, .. } = widget {
+                        operations.push(Generation3dMutation::UpdateWidget(crate::schema::mutations::update_widget::UpdateWidget {
+                            widget: semio_framework_artifact_flow_semio_framework_os_flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step },
                         }));
                     }
                 }
@@ -960,7 +960,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// a Cluster's own tree item transitively covers every widget nested inside it). Synapses become
     /// "edge" targets, parented to nothing (edges are leaves, not containers).
     fn interaction_topology(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>) -> InteractionTopology {
-        fn walk_neuron(neuron: &flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
+        fn walk_neuron(neuron: &semio_framework_artifact_flow_semio_framework_os_flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
             ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
             if let Some(tree) = &neuron.tree {
                 for child in &tree.neurons {
@@ -972,12 +972,12 @@ impl ArtifactEditor for Generation3dPlayApp {
         let mut ordered = Vec::new();
         let ports_by_node = generation3d_port_ids_by_node(fixture);
         for widget in &fixture.widgets {
-            let id = crate::artifacts::generation3d::widget_id(widget).to_string();
+            let id = crate::widget_id(widget).to_string();
             ordered.push(TopologyNode { id: id.clone(), granularity: "node".into(), parent: None });
             for port in ports_by_node.get(&id).into_iter().flatten() {
                 ordered.push(TopologyNode { id: port.clone(), granularity: "handle".into(), parent: Some(id.clone()) });
             }
-            if let flow::Widget::Cluster { tree, .. } = widget {
+            if let semio_framework_artifact_flow_semio_framework_os_flow::Widget::Cluster { tree, .. } = widget {
                 for child in &tree.neurons {
                     walk_neuron(child, id.clone(), &mut ordered);
                 }
@@ -994,7 +994,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes.
     fn pending_effects(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>) -> Vec<Effect> {
         let mut session = FlowEvalSession::new();
-        let host = flow::flow_host_with_session(&doc.snapshot.fixture, &session);
+        let host = semio_framework_os_flow::flow_host_with_session(&doc.snapshot.fixture, &session);
         if session.sync(&host) {
             vec![Effect::DispatchAction { req: semio_framework_plugin::RequestId(104), action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
         } else {
@@ -1073,7 +1073,7 @@ impl ArtifactEditor for Generation3dPlayApp {
 
 //#region 🔖️Manifest
 pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::generation3d::GENERATION3D_DIALECT).document(["semio", "procedural", "3d"])
+    Editor::builder(crate::GENERATION3D_DIALECT).document(["semio", "procedural", "3d"])
             .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) }))
             .artifact_kind(artifact_kind())
             .icon_id("workflow")
@@ -1162,14 +1162,14 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
-                    ActionArgOption::new(crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_HEX_COLUMN, LocalizedLabel::native("Hexagonal Mushroom Column", "Sechseckige Pilzsäule")),
-                    ActionArgOption::new(crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_RECT_EXTRUDE, LocalizedLabel::native("Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen")),
-                    ActionArgOption::new(crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS, LocalizedLabel::native("Sphere Cut With Torus", "Kugel mit Torus geschnitten")),
-                    ActionArgOption::new(crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_BOX_FILLET, LocalizedLabel::native("Box Fillet Preview", "Kantenrundung Vorschau")),
-                    ActionArgOption::new(crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, LocalizedLabel::native("Sphere Box Fuse", "Kugel und Quader vereinen")),
-                    ActionArgOption::new(crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, LocalizedLabel::native("Face Sweep Extrude", "Fläche extrudieren")),
-                    ActionArgOption::new(crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, LocalizedLabel::native("Rectangle Wire Preview", "Rechteck-Draht Vorschau")),
-                    ActionArgOption::new(crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_BOX_SHELL, LocalizedLabel::native("Box Shell Preview", "Hohlkörper Vorschau")),
+                    ActionArgOption::new(crate::schema::PROCEDURAL_EXAMPLE_HEX_COLUMN, LocalizedLabel::native("Hexagonal Mushroom Column", "Sechseckige Pilzsäule")),
+                    ActionArgOption::new(crate::schema::PROCEDURAL_EXAMPLE_RECT_EXTRUDE, LocalizedLabel::native("Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen")),
+                    ActionArgOption::new(crate::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS, LocalizedLabel::native("Sphere Cut With Torus", "Kugel mit Torus geschnitten")),
+                    ActionArgOption::new(crate::schema::PROCEDURAL_EXAMPLE_BOX_FILLET, LocalizedLabel::native("Box Fillet Preview", "Kantenrundung Vorschau")),
+                    ActionArgOption::new(crate::schema::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, LocalizedLabel::native("Sphere Box Fuse", "Kugel und Quader vereinen")),
+                    ActionArgOption::new(crate::schema::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, LocalizedLabel::native("Face Sweep Extrude", "Fläche extrudieren")),
+                    ActionArgOption::new(crate::schema::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, LocalizedLabel::native("Rectangle Wire Preview", "Rechteck-Draht Vorschau")),
+                    ActionArgOption::new(crate::schema::PROCEDURAL_EXAMPLE_BOX_SHELL, LocalizedLabel::native("Box Shell Preview", "Hohlkörper Vorschau")),
                 ]).required(),
             ])
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", LocalizedLabel::native("Move", "Verschieben"), "move") })
@@ -1267,7 +1267,7 @@ pub async fn generation3d_io() -> semio_framework_plugin::AppIo {
 /// 🎥️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
 /// every function here references [`Generation3dConfig`] (directly, or is reachable only from a
 /// function that does), which made this app behavior, not artifact-schema-pure document compute; the
-/// snapshot-pure fixture/gumball helpers stayed in `crate::artifacts::generation3d::schema` instead.
+/// snapshot-pure fixture/gumball helpers stayed in `crate::schema` instead.
 pub fn preview_tolerance(lod_mode: &str) -> f64 {
     match lod_mode {
         "coarse" => 0.15,
@@ -1277,7 +1277,7 @@ pub fn preview_tolerance(lod_mode: &str) -> f64 {
 }
 
 pub fn preview_camera_json(cfg: &Generation3dConfig) -> String {
-    ui_wgpu::wgpu::world3d_camera_json(cfg.preview_camera.position, cfg.preview_camera.target, cfg.preview_camera.fov)
+    semio_framework_ui::wgpu::world3d_camera_json(cfg.preview_camera.position, cfg.preview_camera.target, cfg.preview_camera.fov)
 }
 
 //#region 🔖️PreviewInteraction
@@ -1465,7 +1465,7 @@ pub struct PreviewChannelItem {
 }
 
 /// 🔎️ A `$schema: "list"` dictionary's entries in index order (`"0"`, `"1"`, …) — the wire form
-/// `flow::neural::Dictionary` lists actually take (an object with numeric-string keys, not a JSON
+/// `semio_framework_artifact_flow_semio_framework_os_flow::neural::Dictionary` lists actually take (an object with numeric-string keys, not a JSON
 /// array), so ordering has to be recovered by parsing the keys rather than trusting map iteration.
 fn preview_channel_list_entries(map: &dsl::json::Object) -> Vec<&dsl::json::Value> {
     let mut entries: Vec<(usize, &dsl::json::Value)> = map.iter().filter_map(|(key, value)| key.parse::<usize>().ok().map(|index| (index, value))).collect();
@@ -1539,11 +1539,11 @@ pub fn preview_channel_items_for_widget(eval: &dsl::json::Value, widget_id: &str
 
 /// 👁️ Whether a widget contributes preview geometry at all. A `Neuron` carries its own author-set
 /// `preview` toggle; an `OutputPreview` is a preview by construction; a `Cluster` has no toggle of
-/// its own (`flow::neural::Neuron` — its inner neurons — carries none either), so its contract
+/// its own (`semio_framework_artifact_flow_semio_framework_os_flow::neural::Neuron` — its inner neurons — carries none either), so its contract
 /// output channels always preview, which is the only way a grouped sub-graph's geometry reaches
 /// the 3D world at all.
-pub fn widget_previews(widget: &flow::Widget) -> bool {
-    matches!(widget, flow::Widget::Neuron { preview: true, .. } | flow::Widget::OutputPreview { .. } | flow::Widget::Cluster { .. })
+pub fn widget_previews(widget: &semio_framework_artifact_flow_semio_framework_os_flow::Widget) -> bool {
+    matches!(widget, semio_framework_artifact_flow_semio_framework_os_flow::Widget::Neuron { preview: true, .. } | semio_framework_artifact_flow_semio_framework_os_flow::Widget::OutputPreview { .. } | semio_framework_artifact_flow_semio_framework_os_flow::Widget::Cluster { .. })
 }
 
 fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
@@ -1596,7 +1596,7 @@ fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &
     }
 }
 
-pub fn preview_status_json(eval_json: &str, fixture: &flow::FlowFixture) -> Option<String> {
+pub fn preview_status_json(eval_json: &str, fixture: &semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture) -> Option<String> {
     let eval = dsl::json::parse(eval_json).ok()?;
     if eval.get("error").and_then(dsl::json::Value::as_str).is_some() {
         let mut error_object = dsl::json::Object::new();
@@ -1605,7 +1605,7 @@ pub fn preview_status_json(eval_json: &str, fixture: &flow::FlowFixture) -> Opti
     }
     let mut errors = dsl::json::Object::new();
     for widget in &fixture.widgets {
-        let id = crate::artifacts::generation3d::widget_id(widget).to_string();
+        let id = crate::widget_id(widget).to_string();
         let Some(entry) = eval.get(&id) else { continue };
         if let Some(error) = entry.get("error").and_then(dsl::json::Value::as_str) {
             errors.insert(id, dsl::json::Value::String(error.to_string()));
@@ -1637,12 +1637,12 @@ fn mesh_data_for_preview_handle(handle: &str, tolerance: f64, session: Option<&F
             }
         }
     }
-    let data = flow::tessellate_geometry(handle, tolerance).ok()?;
+    let data = semio_framework_os_flow::tessellate_geometry(handle, tolerance).ok()?;
     mesh_has_preview_geometry(&data).then_some(data)
 }
 
 /// 🧊 Geometry handles on preview widgets that still need an extension tessellate.
-pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &flow::FlowFixture, session: &FlowEvalSession) -> Vec<String> {
+pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture, session: &FlowEvalSession) -> Vec<String> {
     if eval_json.is_empty() {
         return Vec::new();
     }
@@ -1653,7 +1653,7 @@ pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &flow::FlowF
         if !preview {
             continue;
         }
-        let id = crate::artifacts::generation3d::widget_id(widget).to_string();
+        let id = crate::widget_id(widget).to_string();
         for handle in preview_channel_items_for_widget(&eval, &id).into_iter().filter_map(|item| (!item.handle.is_empty()).then_some(item.handle)) {
             let ready = session.preview_mesh_json(&handle).and_then(|json| {
                 if dsl::json::parse(json).ok()?.get("error").is_some() {
@@ -1671,13 +1671,13 @@ pub fn pending_preview_tessellate_handles(eval_json: &str, fixture: &flow::FlowF
 }
 
 /// 📨 Host effects that tessellate preview handles inside the owning brep extension kernel.
-pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str, fixture: &flow::FlowFixture, cfg: &Generation3dConfig) -> Vec<Effect> {
+pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str, fixture: &semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture, cfg: &Generation3dConfig) -> Vec<Effect> {
     let tolerance = preview_tolerance(&cfg.lod_mode);
     let tolerance_bits = tolerance.to_bits();
     let mut live = std::collections::HashSet::new();
     let eval = dsl::json::parse(eval_json).unwrap_or_else(|_| dsl::json::Value::Object(dsl::json::Object::new()));
     for widget in &fixture.widgets {
-        let id = crate::artifacts::generation3d::widget_id(widget).to_string();
+        let id = crate::widget_id(widget).to_string();
         for item in preview_channel_items_for_widget(&eval, &id) {
             if !item.handle.is_empty() {
                 live.insert(item.handle);
@@ -1687,7 +1687,7 @@ pub fn preview_tessellate_effects(session: &mut FlowEvalSession, eval_json: &str
     session.retain_preview_meshes(&live);
     let mut effects = Vec::new();
     for handle in pending_preview_tessellate_handles(eval_json, fixture, session) {
-        let node_hash = flow::preview_tessellate_node_hash(&handle, tolerance_bits);
+        let node_hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance_bits);
         if session.note_pending_tessellate(node_hash, handle.clone()) {
             let mut request_object = dsl::json::Object::new();
             request_object.insert("handle", dsl::json::Value::String(handle));
@@ -1725,7 +1725,7 @@ impl Default for PreviewPayload {
 
 /// 🧊️ The interaction-free, session-free entry point: the mesh-export bridge and the schema tests
 /// evaluate geometry without any live window, so they carry no marks and no tessellation cache.
-pub fn preview_payload_from_eval(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Generation3dConfig) -> (String, String) {
+pub fn preview_payload_from_eval(eval_json: &str, fixture: &semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture, cfg: &Generation3dConfig) -> (String, String) {
     let payload = preview_payload(eval_json, fixture, cfg, None, &PreviewInteractionMarks::default());
     (payload.meshes_json, payload.instances_json)
 }
@@ -1738,7 +1738,7 @@ fn vec3_json(v: [f64; 3]) -> dsl::json::Value {
     dsl::json::Value::Array(v.into_iter().map(dsl::json::Value::from).collect())
 }
 
-pub fn preview_payload(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Generation3dConfig, session: Option<&FlowEvalSession>, marks: &PreviewInteractionMarks) -> PreviewPayload {
+pub fn preview_payload(eval_json: &str, fixture: &semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture, cfg: &Generation3dConfig, session: Option<&FlowEvalSession>, marks: &PreviewInteractionMarks) -> PreviewPayload {
     if eval_json.is_empty() {
         return PreviewPayload::default();
     }
@@ -1759,7 +1759,7 @@ pub fn preview_payload(eval_json: &str, fixture: &flow::FlowFixture, cfg: &Gener
     let mut selected_ids: Vec<String> = Vec::new();
     let mut hovered_id: Option<String> = None;
     for widget in &fixture.widgets {
-        let id = crate::artifacts::generation3d::widget_id(widget).to_string();
+        let id = crate::widget_id(widget).to_string();
         let preview = widget_previews(widget);
         if !preview {
             continue;
@@ -1848,7 +1848,7 @@ pub fn merge_preview_meshes(meshes: &[semio_framework_plugin::MeshData]) -> semi
 
 pub fn export_mesh_from_document(projection: &Generation3dSnapshot) -> semio_framework_plugin::MeshData {
     let config = Generation3dConfig::default();
-    let mut host = crate::artifacts::generation3d::schema::host_from_fixture(&projection.fixture);
+    let mut host = crate::schema::host_from_fixture(&projection.fixture);
     let eval_json = host.evaluate().unwrap_or_default();
     let (meshes_json, _) = preview_payload_from_eval(&eval_json, &projection.fixture, &config);
     // 🌉️ `MeshData` has its own first-party `FromValue` (see `mesh_data_for_preview_handle`'s
@@ -1870,7 +1870,7 @@ pub fn generation3d_mesh_from_document(doc: &dsl::DslValue) -> Result<semio_fram
 }
 
 pub fn generation3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<protocol::json::Value, String> {
-    Ok(protocol::json::from_dsl_value(&protocol::ToValue::to_value(&crate::artifacts::generation3d::schema::default_snapshot())))
+    Ok(protocol::json::from_dsl_value(&protocol::ToValue::to_value(&crate::schema::default_snapshot())))
 }
 
 //#endregion 🔖️MeshBridge
@@ -1960,36 +1960,36 @@ mod tests {
         let mut snapshot = Generation3dSnapshot::default();
         snapshot.fixture.schema = label.into();
         for (id, text) in [("replace-target", "before replacement"), ("delete-target", "delete me"), ("move-target", "move me"), ("clear-target", "clear me")] {
-            snapshot.fixture.widgets.push(flow::Widget::InputNote { id: id.into(), text: text.into() });
+            snapshot.fixture.widgets.push(semio_framework_artifact_flow_semio_framework_os_flow::Widget::InputNote { id: id.into(), text: text.into() });
         }
-        snapshot.fixture.synapses.push(flow::SynapseSpec { id: "update-synapse".into(), from: "replace-target".into(), to: "move-target".into(), from_port: "old".into(), to_port: "old".into() });
-        snapshot.fixture.synapses.push(flow::SynapseSpec { id: "disconnect-synapse".into(), from: "move-target".into(), to: "clear-target".into(), from_port: String::new(), to_port: String::new() });
-        snapshot.fixture.layout.insert("move-target".into(), flow::WidgetLayout { x: 1.0, y: 2.0 });
-        snapshot.fixture.layout.insert("clear-target".into(), flow::WidgetLayout { x: 3.0, y: 4.0 });
+        snapshot.fixture.synapses.push(semio_framework_artifact_flow_semio_framework_os_flow::SynapseSpec { id: "update-synapse".into(), from: "replace-target".into(), to: "move-target".into(), from_port: "old".into(), to_port: "old".into() });
+        snapshot.fixture.synapses.push(semio_framework_artifact_flow_semio_framework_os_flow::SynapseSpec { id: "disconnect-synapse".into(), from: "move-target".into(), to: "clear-target".into(), from_port: String::new(), to_port: String::new() });
+        snapshot.fixture.layout.insert("move-target".into(), semio_framework_artifact_flow_semio_framework_os_flow::WidgetLayout { x: 1.0, y: 2.0 });
+        snapshot.fixture.layout.insert("clear-target".into(), semio_framework_artifact_flow_semio_framework_os_flow::WidgetLayout { x: 3.0, y: 4.0 });
         for (id, name) in [("delete-generation", "Delete"), ("rename-generation", "Before Rename"), ("change-generation", "Change Value")] {
-            snapshot.generation.cold_builder_mut().unwrap().generations.push(flow::playbook::FormGeneration { id: id.into(), name: name.into(), values: Default::default() });
+            snapshot.generation.cold_builder_mut().unwrap().generations.push(semio_framework_artifact_playbook_playbook::FormGeneration { id: id.into(), name: name.into(), values: Default::default() });
         }
         snapshot.generation.cold_builder_mut().unwrap().selected_generation_id = Some("rename-generation".into());
         snapshot
     }
 
     fn production_mutations() -> Vec<Generation3dMutation> {
-        use crate::artifacts::generation3d::mutations::*;
-        let params = flow::neural::Dictionary::new()
-            .insert("integer", flow::neural::Value::Atom(flow::neural::Atom::Integer(7)))
-            .insert("nested", flow::neural::Value::Dictionary(flow::neural::Dictionary::new().insert("text", flow::neural::Value::Atom(flow::neural::Atom::String("production".into())))));
+        use crate::mutations::*;
+        let params = semio_framework_artifact_flow_semio_framework_os_flow::neural::Dictionary::new()
+            .insert("integer", semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Atom(semio_framework_artifact_flow_semio_framework_os_flow::neural::Atom::Integer(7)))
+            .insert("nested", semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Dictionary(semio_framework_artifact_flow_semio_framework_os_flow::neural::Dictionary::new().insert("text", semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Atom(semio_framework_artifact_flow_semio_framework_os_flow::neural::Atom::String("production".into())))));
         vec![
-            Generation3dMutation::CreateWidget(create_widget::CreateWidget { index: 0, widget: flow::Widget::Neuron { id: "created-widget".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true } }),
-            Generation3dMutation::UpdateWidget(update_widget::UpdateWidget { widget: flow::Widget::Cluster { id: "replace-target".into(), name: "After Replacement".into(), tree: Default::default(), flow: Default::default() } }),
+            Generation3dMutation::CreateWidget(create_widget::CreateWidget { index: 0, widget: semio_framework_artifact_flow_semio_framework_os_flow::Widget::Neuron { id: "created-widget".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true } }),
+            Generation3dMutation::UpdateWidget(update_widget::UpdateWidget { widget: semio_framework_artifact_flow_semio_framework_os_flow::Widget::Cluster { id: "replace-target".into(), name: "After Replacement".into(), tree: Default::default(), flow: Default::default() } }),
             Generation3dMutation::DeleteWidget(delete_widget::DeleteWidget { id: "delete-target".into() }),
-            Generation3dMutation::ConnectSynapse(connect_synapse::ConnectSynapse { index: 0, synapse: flow::SynapseSpec { id: "created-synapse".into(), from: "created-widget".into(), to: "replace-target".into(), from_port: "out".into(), to_port: "in".into() } }),
-            Generation3dMutation::UpdateSynapse(update_synapse::UpdateSynapse { synapse: flow::SynapseSpec { id: "update-synapse".into(), from: "replace-target".into(), to: "move-target".into(), from_port: "new-out".into(), to_port: "new-in".into() } }),
+            Generation3dMutation::ConnectSynapse(connect_synapse::ConnectSynapse { index: 0, synapse: semio_framework_artifact_flow_semio_framework_os_flow::SynapseSpec { id: "created-synapse".into(), from: "created-widget".into(), to: "replace-target".into(), from_port: "out".into(), to_port: "in".into() } }),
+            Generation3dMutation::UpdateSynapse(update_synapse::UpdateSynapse { synapse: semio_framework_artifact_flow_semio_framework_os_flow::SynapseSpec { id: "update-synapse".into(), from: "replace-target".into(), to: "move-target".into(), from_port: "new-out".into(), to_port: "new-in".into() } }),
             Generation3dMutation::DisconnectSynapse(disconnect_synapse::DisconnectSynapse { id: "disconnect-synapse".into() }),
-            Generation3dMutation::MoveWidget(move_widget::MoveWidget { id: "move-target".into(), layout: flow::WidgetLayout { x: 31.0, y: -17.0 } }),
+            Generation3dMutation::MoveWidget(move_widget::MoveWidget { id: "move-target".into(), layout: semio_framework_artifact_flow_semio_framework_os_flow::WidgetLayout { x: 31.0, y: -17.0 } }),
             Generation3dMutation::DeleteWidgetPosition(delete_widget_position::DeleteWidgetPosition { id: "clear-target".into() }),
-            Generation3dMutation::UpdateCamera(update_camera::UpdateCamera { camera: flow::CameraJson { x: 9.0, y: 8.0, zoom: 1.75 } }),
+            Generation3dMutation::UpdateCamera(update_camera::UpdateCamera { camera: semio_framework_artifact_flow_semio_framework_os_flow::CameraJson { x: 9.0, y: 8.0, zoom: 1.75 } }),
             Generation3dMutation::ChangeSchema(change_schema::ChangeSchema { new_schema: "flow.fixture.production-retained".into() }),
-            Generation3dMutation::CreateGeneration(create_generation::CreateGeneration { generation: flow::playbook::FormGeneration { id: "created-generation".into(), name: "Created".into(), values: Default::default() } }),
+            Generation3dMutation::CreateGeneration(create_generation::CreateGeneration { generation: semio_framework_artifact_playbook_playbook::FormGeneration { id: "created-generation".into(), name: "Created".into(), values: Default::default() } }),
             Generation3dMutation::DeleteGeneration(delete_generation::DeleteGeneration { id: "delete-generation".into() }),
             Generation3dMutation::RenameGeneration(rename_generation::RenameGeneration { id: "rename-generation".into(), new_name: "After Rename".into() }),
             Generation3dMutation::ChangeGenerationValue(change_generation_value::ChangeGenerationValue { id: "change-generation".into(), question_id: "deep-answer".into(), new_value: serde_json::json!({"object": {"array": [1.0, false, "retained"]}}).into() }),
@@ -2009,7 +2009,7 @@ mod tests {
 
     fn production_semantic_digest(snapshot: &Generation3dSnapshot) -> [u8; 32] {
         let mut digest = store::ArtifactStoreInitializationDigest::new(b"generation3d.production-law.semantic");
-        digest.observe(&crate::artifacts::generation3d::snapshot::binary::encode(snapshot));
+        digest.observe(&crate::snapshot::binary::encode(snapshot));
         digest.finish()
     }
 
@@ -2020,16 +2020,16 @@ mod tests {
         let mut mutation_hex = Vec::new();
         mutation_hex.try_reserve_exact(mutations.len()).expect("P3 production mutation owner preflight");
         for mutation in &mutations {
-            mutation_hex.push(production_hex(&crate::artifacts::generation3d::spr::encode_op(mutation).expect("P3 production mutation encoding")));
+            mutation_hex.push(production_hex(&crate::spr::encode_op(mutation).expect("P3 production mutation encoding")));
         }
         let mut expected = production_initial_snapshot(label);
-        crate::artifacts::generation3d::spr::generation3d_apply_retained_mutations_for_test(&mut expected, &mutations);
+        crate::spr::generation3d_apply_retained_mutations_for_test(&mut expected, &mutations);
         let expected_digest = production_semantic_digest(&expected);
         let wire = serde_json::to_vec(&serde_json::json!({
             "schema": GENERATION_3D_SCHEMA,
             "id": "generation3d-production-mounted-law",
             "vcs": {
-                "initialSnapshot": production_hex(&crate::artifacts::generation3d::snapshot::binary::encode(&snapshot)),
+                "initialSnapshot": production_hex(&crate::snapshot::binary::encode(&snapshot)),
                 "edits": [{
                     "id": "generation3d-production-all14-edit",
                     "actor": "generation3d-production-law",
@@ -2052,15 +2052,15 @@ mod tests {
     fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
         let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P3 production ingress credits");
-        crate::artifacts::generation3d::spr::generation3d_admit_publication_authority(
+        crate::spr::generation3d_admit_publication_authority(
             handle.operation,
             handle.generation,
             handle.generation.0,
             handle.generation.0,
             handle.generation.0,
             8_192,
-            crate::artifacts::generation3d::spr::GENERATION3D_MOUNTED_OUTPUT_CHANNELS,
-            crate::artifacts::generation3d::spr::GENERATION3D_MOUNTED_CONTROL_CREDITS,
+            crate::spr::GENERATION3D_MOUNTED_OUTPUT_CHANNELS,
+            crate::spr::GENERATION3D_MOUNTED_CONTROL_CREDITS,
         )
         .expect("P3 production publication authority");
         for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -2078,7 +2078,7 @@ mod tests {
         handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle,
     ) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
         for _ in 0..300_000 {
-            crate::artifacts::generation3d::spr::generation3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("P3 authority refresh immediately before production maintenance");
+            crate::spr::generation3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("P3 authority refresh immediately before production maintenance");
             PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one P3 production maintenance turn");
             let poll = app.advance_artifact_envelope_load(handle).expect("P3 production load advancement");
             if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
@@ -2105,9 +2105,9 @@ mod tests {
         assert!(snapshot.fixture.layout.contains_key("move-target"));
         assert!(!snapshot.fixture.layout.contains_key("clear-target"), "3D-only delete-widget-position must survive retained replay");
         assert!(accepted.acknowledge_artifact_store_replacement(handle).expect("accepted P3 terminal ACK"));
-        assert!(crate::artifacts::generation3d::spr::generation3d_release_publication_authority(handle.operation, handle.generation));
+        assert!(crate::spr::generation3d_release_publication_authority(handle.operation, handle.generation));
 
-        use crate::artifacts::generation3d::spr::Generation3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
+        use crate::spr::Generation3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
         for (hostile, expected_code) in [
             (Missing, "generation3d-publication.authority-missing"),
             (WrongOperation, "generation3d-publication.wrong-operation"),
@@ -2121,15 +2121,15 @@ mod tests {
             let base_generation = app.artifact_generation_now();
             let (wire, _, _) = production_envelope_wire("rejected-production-candidate");
             let handle = admit_production_envelope(&mut app, &wire);
-            crate::artifacts::generation3d::spr::generation3d_arm_publication_hostile(handle.operation, hostile);
+            crate::spr::generation3d_arm_publication_hostile(handle.operation, hostile);
             assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
-            assert_eq!(crate::artifacts::generation3d::spr::generation3d_take_publication_hostile_observed(handle.operation), Some(expected_code));
+            assert_eq!(crate::spr::generation3d_take_publication_hostile_observed(handle.operation), Some(expected_code));
             assert_eq!(app.artifact_generation_now(), base_generation);
             let retained = app.snapshot().expect("last-valid P3 snapshot after rejected candidate");
             assert_eq!(production_semantic_digest(&retained), last_valid_digest);
             assert_eq!(retained, last_valid);
             assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected P3 terminal ACK after candidate retirement"));
-            assert!(crate::artifacts::generation3d::spr::generation3d_release_publication_authority(handle.operation, handle.generation));
+            assert!(crate::spr::generation3d_release_publication_authority(handle.operation, handle.generation));
         }
     }
 
@@ -2244,7 +2244,7 @@ mod tests {
             Generation3dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "generation-1".into() }),
             Generation3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "generation-1".into(), name: "Renamed".into() }),
             Generation3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("generation-1".into()), question_id: "q1".into(), value: dsl::DslValue::float(5.0) }),
-            Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: flow::CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }),
+            Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: semio_framework_artifact_flow_semio_framework_os_flow::CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }),
             Generation3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown {}),
             Generation3dCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}),
             Generation3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: "coarse".into() }),
@@ -2295,8 +2295,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn each_example_loads_distinct_fixture_and_preview_geometry() {
-        use crate::artifacts::generation3d::schema::*;
-        use crate::artifacts::generation3d::widget_id;
+        use crate::schema::*;
+        use crate::widget_id;
         let _serial = test_support::lock();
         let examples = [
             PROCEDURAL_EXAMPLE_HEX_COLUMN,
@@ -2321,7 +2321,7 @@ mod tests {
     async fn refresh_pending_effects_arms_flow_eval_tick_chain() {
         let _serial = test_support::lock();
         let mut app = app().await;
-        app.dispatch_typed(Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() }), &semio_framework_plugin::testkit::meta("local"))
+        app.dispatch_typed(Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() }), &semio_framework_plugin::testkit::meta("local"))
             .await
             .expect("set example");
         let effects = app.pending_effects().await;
@@ -2347,7 +2347,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_disjoint_widget_moves() {
         let _serial = test_support::lock();
-        let widgets: Vec<String> = app().await.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::generation3d::widget_id(widget).to_string()).collect();
+        let widgets: Vec<String> = app().await.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
         assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
         let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
         semio_framework_plugin::testkit::assert_two_instances_converge::<EditorApp<Generation3dPlayApp>, (Option<f64>, Option<f64>)>(
@@ -2384,7 +2384,7 @@ mod tests {
             .fixture
             .widgets
             .first()
-            .map(crate::artifacts::generation3d::widget_id)
+            .map(crate::widget_id)
             .expect("default fixture node")
             .to_string();
         let targets = serde_json::to_string(&vec![semio_framework_plugin::InteractionTarget { granularity: "node".into(), id: node_id.clone() }]).expect("selection targets");
@@ -2403,7 +2403,7 @@ mod tests {
     async fn context_menu_grouped_disclosure_stays_within_budget() {
         let _serial = test_support::lock();
         let mut app = app_with_registry().await;
-        let widgets: Vec<String> = app.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::artifacts::generation3d::widget_id(widget).to_string()).collect();
+        let widgets: Vec<String> = app.snapshot().expect("snapshot").fixture.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).collect();
         assert!(!widgets.is_empty(), "default fixture needs at least one widget for the test");
         let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
         let menu = app.context_menu(&request).await;
@@ -2426,7 +2426,7 @@ mod tests {
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — these tests exercise
     /// `PreviewPipeline`/`MeshBridge` functions above, all of which are app
     /// behavior (they construct or take a [`Generation3dConfig`]), so the tests travel with them.
-    use ui_wgpu::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Vec3};
+    use semio_framework_ui::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Vec3};
 
     fn test_serial() -> MutexGuard<'static, ()> {
         test_support::lock()
@@ -2444,7 +2444,7 @@ mod tests {
     }
 
     /// 🌉️ `Mesh3d` (a plain positions/normals/indices struct) no longer exists —
-    /// `ui_wgpu::wgpu::kernel_3d_scene`'s mesh API is now a generation/revision-keyed write-token/lease
+    /// `semio_framework_ui::wgpu::kernel_3d_scene`'s mesh API is now a generation/revision-keyed write-token/lease
     /// pair (`mesh3d_begin`/`mesh3d_write_vec3`/`mesh3d_seal`) meant for the shared render-owned mesh
     /// arena, not for a one-off AABB check. This test only ever needed the bounding box of the raw
     /// position buffer, so compute it directly instead of standing up a lease.
@@ -2460,9 +2460,9 @@ mod tests {
         (min, max)
     }
 
-    fn preview_payload_from_evaluated_fixture(fixture: &flow::FlowFixture, cfg: &Generation3dConfig) -> (String, String) {
-        let mut host = flow::FlowHost::from_fixture(fixture.clone());
-        host.set_neuron_kind_infos_json(&flow::flow_neuron_kind_infos_json());
+    fn preview_payload_from_evaluated_fixture(fixture: &semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture, cfg: &Generation3dConfig) -> (String, String) {
+        let mut host = semio_framework_os_flow::FlowHost::from_fixture(fixture.clone());
+        host.set_neuron_kind_infos_json(&semio_framework_os_flow::flow_neuron_kind_infos_json());
         let eval_json = host.evaluate().unwrap_or_default();
         preview_payload_from_eval(&eval_json, fixture, cfg)
     }
@@ -2470,7 +2470,7 @@ mod tests {
     #[test]
     fn preview_payload_has_meshes_and_instances() {
         let _serial = test_serial();
-        let projection = crate::artifacts::generation3d::schema::default_snapshot();
+        let projection = crate::schema::default_snapshot();
         let config = Generation3dConfig::default();
         let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         assert_ne!(meshes_json, "[]", "meshes_json was empty");
@@ -2527,7 +2527,7 @@ mod tests {
     fn generation3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
         let _serial = test_serial();
         use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
-        let document_json: Value = serde_json::from_str(&dsl::json::to_json_string(&crate::artifacts::generation3d::schema::default_snapshot())).expect("projection json");
+        let document_json: Value = serde_json::from_str(&dsl::json::to_json_string(&crate::schema::default_snapshot())).expect("projection json");
         let mesh = generation3d_mesh_from_document(&dsl::DslValue::from(&document_json)).expect("mesh from document");
         assert!(!mesh.positions.is_empty());
 
@@ -2550,7 +2550,7 @@ mod tests {
     #[test]
     fn rectangle_wire_preview_emits_edge_only_mesh() {
         let _serial = test_serial();
-        let projection = <Generation3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::generation3d::dsl::GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
+        let projection = <Generation3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::dsl::GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
         let config = Generation3dConfig::default();
         let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
@@ -2566,17 +2566,17 @@ mod tests {
         let _serial = test_serial();
         let config = Generation3dConfig::default();
         let cases = [
-            ("hexagonal-mushroom-column", crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_HEX_COLUMN),
-            ("rectangle-extrude-volume", crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_RECT_EXTRUDE),
-            ("sphere-cut-with-torus", crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS),
-            ("box-fillet-preview", crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_BOX_FILLET),
-            ("sphere-box-fuse", crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE),
-            ("face-sweep-extrude", crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE),
-            ("rectangle-wire-preview", crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE),
-            ("box-shell-preview", crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_BOX_SHELL),
+            ("hexagonal-mushroom-column", crate::schema::PROCEDURAL_EXAMPLE_HEX_COLUMN),
+            ("rectangle-extrude-volume", crate::schema::PROCEDURAL_EXAMPLE_RECT_EXTRUDE),
+            ("sphere-cut-with-torus", crate::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS),
+            ("box-fillet-preview", crate::schema::PROCEDURAL_EXAMPLE_BOX_FILLET),
+            ("sphere-box-fuse", crate::schema::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE),
+            ("face-sweep-extrude", crate::schema::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE),
+            ("rectangle-wire-preview", crate::schema::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE),
+            ("box-shell-preview", crate::schema::PROCEDURAL_EXAMPLE_BOX_SHELL),
         ];
         for (label, example_id) in cases {
-            let projection = crate::artifacts::generation3d::schema::example_snapshot(example_id).unwrap_or_else(|| panic!("{label}: missing projection"));
+            let projection = crate::schema::example_snapshot(example_id).unwrap_or_else(|| panic!("{label}: missing projection"));
             let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
             assert_ne!(meshes_json, "[]", "{label}: meshes empty; eval may have failed");
             assert_ne!(instances_json, "[]", "{label}: instances empty");
@@ -2595,7 +2595,7 @@ mod tests {
     #[test]
     fn wireframe_show_mode_strips_shaded_triangles() {
         let _serial = test_serial();
-        let projection = crate::artifacts::generation3d::schema::default_snapshot();
+        let projection = crate::schema::default_snapshot();
         let config = Generation3dConfig { show_mode: "wireframe".into(), ..Default::default() };
         let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.fixture, &config);
         let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
@@ -2622,9 +2622,9 @@ mod tests {
     /// 🔌️ One `preview: true` neuron with two output channels (a point channel and a vector
     /// channel — neither needs a brep kernel) must yield one instance PER CHANNEL, each id
     /// qualified with its own channel, not one flattened instance for the whole widget.
-    fn preview_widget_fixture(id: &str, output_ports: Vec<String>) -> flow::FlowFixture {
-        let widget = flow::Widget::Neuron { id: id.into(), neuron_kind: "test.multi".into(), params: flow::neural::Dictionary::new(), input_ports: Vec::new(), output_ports, preview: true };
-        flow::FlowFixture { schema: "flow.fixture".into(), camera: flow::CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, widgets: vec![widget], synapses: Vec::new(), layout: Default::default() }
+    fn preview_widget_fixture(id: &str, output_ports: Vec<String>) -> semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture {
+        let widget = semio_framework_artifact_flow_semio_framework_os_flow::Widget::Neuron { id: id.into(), neuron_kind: "test.multi".into(), params: semio_framework_artifact_flow_semio_framework_os_flow::neural::Dictionary::new(), input_ports: Vec::new(), output_ports, preview: true };
+        semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture { schema: "flow.fixture".into(), camera: semio_framework_artifact_flow_semio_framework_os_flow::CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, widgets: vec![widget], synapses: Vec::new(), layout: Default::default() }
     }
 
     #[test]
@@ -2652,7 +2652,7 @@ mod tests {
     }
 
     /// 🔌️ A single channel whose value is a `$schema: "list"` dictionary (the wire form
-    /// `flow::neural::Dictionary` lists actually take) of N geometry-bearing entries must flatten
+    /// `semio_framework_artifact_flow_semio_framework_os_flow::neural::Dictionary` lists actually take) of N geometry-bearing entries must flatten
     /// to N instances, indexed `#0..#{N-1}` in list order — proven here with inline points so the
     /// test needs no brep kernel/session.
     #[test]
@@ -2775,7 +2775,7 @@ mod tests {
     #[test]
     fn interaction_topology_ports_match_the_node_graph_port_ids() {
         let _serial = test_serial();
-        let projection = crate::artifacts::generation3d::schema::default_snapshot();
+        let projection = crate::schema::default_snapshot();
         let ports_by_node = generation3d_port_ids_by_node(&projection.fixture);
         assert!(!ports_by_node.is_empty(), "default fixture should project graph nodes");
         assert!(ports_by_node.values().any(|ports| !ports.is_empty()), "default fixture should project at least one port");
@@ -2788,14 +2788,14 @@ mod tests {
     }
     /// 👁️ Which widget kinds contribute preview geometry: a neuron only when its author-set toggle
     /// is on, an output preview always, a cluster always (it has no toggle of its own, and its
-    /// inner `flow::neural::Neuron`s have none either), and a pure input widget never.
+    /// inner `semio_framework_artifact_flow_semio_framework_os_flow::neural::Neuron`s have none either), and a pure input widget never.
     #[test]
     fn widget_preview_eligibility_covers_neurons_output_previews_and_clusters() {
-        let on = flow::Widget::Neuron { id: "n".into(), neuron_kind: "k".into(), params: flow::neural::Dictionary::new(), input_ports: Vec::new(), output_ports: Vec::new(), preview: true };
-        let off = flow::Widget::Neuron { id: "n".into(), neuron_kind: "k".into(), params: flow::neural::Dictionary::new(), input_ports: Vec::new(), output_ports: Vec::new(), preview: false };
-        let output = flow::Widget::OutputPreview { id: "p".into(), preview: Default::default(), expanded: Default::default() };
-        let cluster = flow::Widget::Cluster { id: "c".into(), name: "Cluster".into(), tree: Default::default(), flow: Default::default() };
-        let slider = flow::Widget::InputSlider { id: "s".into(), label: "S".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 };
+        let on = semio_framework_artifact_flow_semio_framework_os_flow::Widget::Neuron { id: "n".into(), neuron_kind: "k".into(), params: semio_framework_artifact_flow_semio_framework_os_flow::neural::Dictionary::new(), input_ports: Vec::new(), output_ports: Vec::new(), preview: true };
+        let off = semio_framework_artifact_flow_semio_framework_os_flow::Widget::Neuron { id: "n".into(), neuron_kind: "k".into(), params: semio_framework_artifact_flow_semio_framework_os_flow::neural::Dictionary::new(), input_ports: Vec::new(), output_ports: Vec::new(), preview: false };
+        let output = semio_framework_artifact_flow_semio_framework_os_flow::Widget::OutputPreview { id: "p".into(), preview: Default::default(), expanded: Default::default() };
+        let cluster = semio_framework_artifact_flow_semio_framework_os_flow::Widget::Cluster { id: "c".into(), name: "Cluster".into(), tree: Default::default(), flow: Default::default() };
+        let slider = semio_framework_artifact_flow_semio_framework_os_flow::Widget::InputSlider { id: "s".into(), label: "S".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 };
         assert!(widget_previews(&on));
         assert!(!widget_previews(&off));
         assert!(widget_previews(&output));

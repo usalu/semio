@@ -169,7 +169,7 @@ async function proveGisMapApprovalHistory(repoRoot: string): Promise<Record<stri
   const deepEqual = (await import("fast-deep-equal")).default;
   for (const row of fixture.cases) if (!deepEqual(oracleApprovalHistory(row), row.expected)) throw new Error(`approval history oracle disagrees at ${row.name}`);
 
-  const production = await import("../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🪪️host-bootstrap/🟦️.tsx");
+  const production = await import("../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx");
   const routes = {
     remoteNewerThanLocal: production.shellHistoryUndoRouteV1({ phase: "available", canUndo: true, order: 2 }, { canUndo: true, order: 1 }),
     localNewerThanRemote: production.shellHistoryUndoRouteV1({ phase: "available", canUndo: true, order: 1 }, { canUndo: true, order: 2 }),

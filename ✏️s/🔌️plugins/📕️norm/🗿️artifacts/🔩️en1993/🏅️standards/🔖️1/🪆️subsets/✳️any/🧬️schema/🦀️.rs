@@ -1,6 +1,6 @@
 //! 🧬️ En1993 artifact schema — every field of the artifact with its state class.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full En1993 artifact state across the artifact and presence lanes.
@@ -166,8 +166,8 @@ pub struct En1993Artifact {
 //#region 🔖️Conversions
 impl En1993Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::en1993::En1993Snapshot {
-        crate::artifacts::en1993::En1993Snapshot {
+    pub fn to_snapshot(&self) -> crate::En1993Snapshot {
+        crate::En1993Snapshot {
             annex: self.annex,
             n_ed_kn: self.n_ed_kn,
             m_ed_knm: self.m_ed_knm,
@@ -246,7 +246,7 @@ impl En1993Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::en1993::En1993Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::En1993Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
             n_ed_kn: snapshot.n_ed_kn,
@@ -261,7 +261,7 @@ impl En1993Artifact {
             a_net_mm2: snapshot.a_net_mm2,
             tension_n_ed_kn: snapshot.tension_n_ed_kn,
             fire_thickness_mm: snapshot.fire_thickness_mm,
-            fire_rating: snapshot.fire_rating.clone(),
+            fire_rating: snapshot.fire_rating,
             fire_massivity: snapshot.fire_massivity,
             fire_mu_0: snapshot.fire_mu_0,
             fire_design_temperature_c: snapshot.fire_design_temperature_c,
@@ -295,12 +295,12 @@ impl En1993Artifact {
             weld_a_mm: snapshot.weld_a_mm,
             weld_l_mm: snapshot.weld_l_mm,
             weld_f_u_mpa: snapshot.weld_f_u_mpa,
-            weld_steel_grade: snapshot.weld_steel_grade.clone(),
+            weld_steel_grade: snapshot.weld_steel_grade,
             weld_f_ed_kn: snapshot.weld_f_ed_kn,
             delta_sigma_mpa: snapshot.delta_sigma_mpa,
             fatigue_category: snapshot.fatigue_category,
-            fatigue_method: snapshot.fatigue_method.clone(),
-            t10_steel_subgrade: snapshot.t10_steel_subgrade.clone(),
+            fatigue_method: snapshot.fatigue_method,
+            t10_steel_subgrade: snapshot.t10_steel_subgrade,
             t10_actual_thickness_mm: snapshot.t10_actual_thickness_mm,
             t10_t_ed_c: snapshot.t10_t_ed_c,
             tension_component_f_uk_kn: snapshot.tension_component_f_uk_kn,
@@ -326,7 +326,7 @@ impl En1993Artifact {
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::en1993::En1993Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::En1993Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -337,31 +337,31 @@ impl En1993Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.en1993` — twenty handcrafted schema leaves.
-pub fn en1993_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn en1993_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.en1993",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -373,7 +373,7 @@ pub fn en1993_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::en1993::{En1993Diff, En1993Mutation, En1993Snapshot};
+    use crate::{En1993Diff, En1993Mutation, En1993Snapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -425,7 +425,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::en1993::En1993Snapshot;
+    use crate::En1993Snapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

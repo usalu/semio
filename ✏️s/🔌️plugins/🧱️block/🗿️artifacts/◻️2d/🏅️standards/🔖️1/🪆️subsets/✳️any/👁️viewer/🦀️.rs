@@ -4,7 +4,7 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::block2d::{schema, Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D_SCHEMA};
+use crate::{schema, Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D_SCHEMA};
 use crate::viewer::block2d::modes::view;
 use crate::viewer::block2d::modes::view::windows::board;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -37,7 +37,7 @@ pub struct Block2dViewer;
 
 impl ArtifactViewer for Block2dViewer {
     type Snapshot = Block2dSnapshot;
-    type Mutation = crate::artifacts::block2d::op::Block2dMutation;
+    type Mutation = crate::op::Block2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -52,7 +52,7 @@ impl ArtifactViewer for Block2dViewer {
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document so the view board
     /// renders real handle kinds/handles instead of two bare header lines — the artifact-side
     /// `default_block2d_snapshot` the editor boots on too (no editor import: this is
-    /// `crate::artifacts::block2d::schema`).
+    /// `crate::schema`).
     fn initial_snapshot() -> Block2dSnapshot {
         schema::default_block2d_snapshot()
     }

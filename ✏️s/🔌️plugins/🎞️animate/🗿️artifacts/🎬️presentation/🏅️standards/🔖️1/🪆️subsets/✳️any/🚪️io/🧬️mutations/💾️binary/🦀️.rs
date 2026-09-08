@@ -2,7 +2,7 @@
 //! `protocol`).
 //!
 //! Also hosts the `PresentationEnvelope`/`PresentationStore` type aliases and the VCS envelope helpers — both need
-//! `PresentationMutation` (from `crate::artifacts::presentation::op`) alongside `PresentationSnapshot` (from the artifact's
+//! `PresentationMutation` (from `crate::op`) alongside `PresentationSnapshot` (from the artifact's
 //! own component file), so this is the natural home for them.
 //!
 //! The app's typed `PresentationCommand` enum — which used to share the old `📡️protocol` crate with this
@@ -17,9 +17,9 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use store::ArtifactOwnedValueRetirementFactory as _;
-use crate::artifacts::presentation::schema::mutations::PresentationMutation;
-use crate::artifacts::presentation::schema::empty_presentation_snapshot;
-use crate::artifacts::presentation::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
+use crate::schema::mutations::PresentationMutation;
+use crate::schema::empty_presentation_snapshot;
+use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use protocol::{Mutation as _, MutationDiff as _, OpBinary};
 use store::{create_document_envelope, ArtifactEnvelope, ArtifactStore};
 
@@ -1526,8 +1526,8 @@ pub fn create_presentation_envelope(id: &str) -> PresentationEnvelope {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::presentation::schema::mutations::PresentationMutation;
-    use crate::artifacts::presentation::schema::mutations::{create_tile, replace_tiles};
+    use crate::schema::mutations::PresentationMutation;
+    use crate::schema::mutations::{create_tile, replace_tiles};
     use store::{os_store::test_support, ArtifactCommand};
 
     struct PresentationProjectionFixtureTarget {
@@ -1631,7 +1631,7 @@ mod tests {
         drop(registry);
         let deck = target.value.take().expect("typed projection published exactly once");
         assert_eq!(deck.schema, PRESENTATION_DOCUMENT_SCHEMA);
-        assert!(crate::artifacts::presentation::presentation_working_scene(&deck).1.is_empty());
+        assert!(crate::presentation_working_scene(&deck).1.is_empty());
         close_presentation_snapshot(deck);
     }
 
@@ -1664,7 +1664,7 @@ mod tests {
         assert!(registry.terminal_is_empty());
         drop(registry);
         let deck = target.value.take().expect("populated history published exactly once");
-        assert!(crate::artifacts::presentation::presentation_working_scene(&deck).1.is_empty());
+        assert!(crate::presentation_working_scene(&deck).1.is_empty());
         close_presentation_snapshot(deck);
     }
 
@@ -1824,24 +1824,24 @@ mod tests {
             .dispatch(ArtifactCommand::Apply {
                 mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile {
                     index: 0,
-                    tile: crate::artifacts::presentation::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::presentation::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } },
+                    tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } },
                 })],
                 description: None,
             })
             .await
             .expect("apply");
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&store.snapshot().expect("projection")).1.len(), 1);
+        assert_eq!(crate::presentation_working_scene(&store.snapshot().expect("projection")).1.len(), 1);
     }
 
     //#region 🔖️DocumentTextTests
     #[semio_framework_async_macros::async_test]
     async fn document_text_round_trip_with_operation_applied() {
-        let mut store = PresentationStore::new(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", crate::artifacts::presentation::default_presentation_snapshot(), None)).await.expect("valid artifact store fixture");
+        let mut store = PresentationStore::new(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", crate::default_presentation_snapshot(), None)).await.expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {
                 mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile {
                     index: 0,
-                    tile: crate::artifacts::presentation::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::artifacts::presentation::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } },
+                    tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } },
                 })],
                 description: None,
             })

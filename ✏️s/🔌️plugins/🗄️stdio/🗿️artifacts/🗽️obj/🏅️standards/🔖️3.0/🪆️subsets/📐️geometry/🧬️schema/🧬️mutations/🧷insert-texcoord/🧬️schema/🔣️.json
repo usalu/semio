@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/insert-texcoord.json",
+  "$id": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/mutation/insert-texcoord/schema.json",
   "title": "InsertTexcoord",
   "type": "object",
   "additionalProperties": false,

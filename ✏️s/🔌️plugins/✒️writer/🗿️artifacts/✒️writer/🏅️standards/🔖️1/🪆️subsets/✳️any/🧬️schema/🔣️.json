@@ -90,6 +90,7 @@
       "x-semio-state": "config"
     }
   },
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$defs": {
     "WriterEditorSelection": {
       "type": "object",
@@ -200,6 +201,63 @@
         "locale"
       ],
       "properties": {}
+    },
+    "WriterChildLocalTextLaw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "maximumCases",
+        "cases"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "maximumCases": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "law",
+              "first",
+              "second",
+              "expected"
+            ],
+            "properties": {
+              "law": {
+                "enum": [
+                  "cloneIdentity",
+                  "instanceIsolation",
+                  "abaIsolation",
+                  "wireOmission"
+                ]
+              },
+              "first": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "second": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "expected": {
+                "type": "string",
+                "maxLength": 64
+              }
+            }
+          }
+        }
+      },
+      "title": "WriterChildLocalTextLaw"
     }
   }
 }

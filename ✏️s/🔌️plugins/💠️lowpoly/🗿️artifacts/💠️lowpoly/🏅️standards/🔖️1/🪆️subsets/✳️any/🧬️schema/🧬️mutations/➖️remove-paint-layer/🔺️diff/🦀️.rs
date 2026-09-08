@@ -3,8 +3,8 @@
 //! absent.
 
 use super::RemovePaintLayer;
-use crate::artifacts::lowpoly::diff::diff_remove_paint_layer;
-use crate::artifacts::lowpoly::{LowpolyDiff, LowpolySnapshot};
+use crate::diff::diff_remove_paint_layer;
+use crate::{LowpolyDiff, LowpolySnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &RemovePaintLayer, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

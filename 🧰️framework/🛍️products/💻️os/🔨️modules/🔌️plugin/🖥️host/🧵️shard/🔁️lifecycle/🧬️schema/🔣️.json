@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/host/shard/lifecycle/component.json",
+  "title": "Semio OS Plugin Host Shard Lifecycle",
+  "$defs": {
+    "ShardLifecycleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "items", "bytes", "traces", "ownership", "registrationStages", "unknownActorGrants", "terminalWakeOutsideLock", "admittedWakeOutsideLock"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "items": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "bytes": { "type": "integer", "minimum": 1, "maximum": 268435456 },
+        "registrationStages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/ShardRegistrationStage" }
+        },
+        "unknownActorGrants": { "type": "integer", "minimum": 0, "maximum": 65536 },
+        "terminalWakeOutsideLock": { "type": "boolean" },
+        "admittedWakeOutsideLock": { "type": "boolean" },
+        "traces": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "queued", "retry", "expected"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "queued": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/ShardWakeKey" } },
+              "retry": { "$ref": "#/$defs/ShardWakeKey" },
+              "expected": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/ShardWakeKey" } }
+            }
+          }
+        },
+        "ownership": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sameRegistration", "sameBudget", "sameBytes", "cancelRevokes", "replacementRefused"],
+          "properties": {
+            "sameRegistration": { "type": "boolean" },
+            "sameBudget": { "type": "boolean" },
+            "sameBytes": { "type": "boolean" },
+            "cancelRevokes": { "type": "boolean" },
+            "replacementRefused": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "ShardRegistrationStage": { "enum": ["closed", "pending", "receiver-lost", "wrong-actor"] },
+    "ShardWakeKey": { "type": "string", "pattern": "^[AB][12]$" }
+  }
+}

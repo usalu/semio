@@ -3,7 +3,7 @@
 //! `Deserializer`: wraps the full `.wires` DSL text losslessly inside `md`'s own binary pack, so
 //! `IoFidelity::Canonical`.
 
-use crate::artifacts::wires::WiresSnapshot;
+use crate::WiresSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

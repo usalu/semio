@@ -1,9 +1,9 @@
 //! 🔧 `change-fire-rating` payload — changes the En1992 document's `fire_rating` (EN 1992 input).
 
 
-use crate::artifacts::en1992::En1992Snapshot;
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::En1992Mutation;
+use crate::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::En1992Mutation;
 //#region 🔖️ChangeFireRating
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -11,7 +11,7 @@ use crate::artifacts::en1992::mutations::En1992Mutation;
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ChangeFireRating {
-    pub new_fire_rating: crate::artifacts::en1992::part_1_2::FireRating,
+    pub new_fire_rating: crate::part_1_2::FireRating,
 }
 
 impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeFireRating {

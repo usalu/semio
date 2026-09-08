@@ -1,8 +1,8 @@
 //! ↩ Inverse constructor for `ReplaceSavedCameraView` — reconstructed from BASE state.
 
 use super::ReplaceSavedCameraView;
-use crate::artifacts::shooting::mutations::ShootingMutation;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 
 pub fn inverse(payload: &ReplaceSavedCameraView, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
     match base.saved_cameras.iter().find(|entry| entry.id == payload.id) {

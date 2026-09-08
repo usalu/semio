@@ -3,8 +3,8 @@
 //! `PlaybookMutation::UpdatePlaybook` pre-migration; renamed because `update` requires a cohesive
 //! multi-field facet and `title` is the document's only mutable root scalar.
 
-use crate::artifacts::playbook::mutations::PlaybookMutation;
-use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
+use crate::mutations::PlaybookMutation;
+use crate::{PlaybookDiff, PlaybookSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 // 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle — committed
 // `🧪️tests/<fixture>/🦀️.rs` fixture vectors decode/re-encode through them — never a production

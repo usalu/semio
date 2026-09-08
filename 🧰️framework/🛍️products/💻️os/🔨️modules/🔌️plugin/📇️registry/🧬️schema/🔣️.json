@@ -1,0 +1,168 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/registry/component.json",
+  "title": "Semio OS Plugin Registry",
+  "$defs": {
+    "ArtifactDocumentIdV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "cases"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/RegistryContractId" },
+        "cases": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "documentId", "accepted"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "documentId": { "type": "string", "maxLength": 64 },
+              "accepted": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "NativeCatalogSelectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "authority", "packages", "profiles", "availableProviders", "cases"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/RegistryContractId" },
+        "authority": { "enum": ["planning-only", "publishing"] },
+        "packages": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/NativeCatalogPackage" } },
+        "profiles": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "$ref": "#/$defs/NativeCatalogProfile" } },
+        "availableProviders": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/$defs/NativeCatalogProvider" } },
+        "cases": {
+          "type": "array",
+          "minItems": 23,
+          "maxItems": 23,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "profileId", "mutation", "expectedCode", "expectedCalls", "expectedReceiptCount"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "maxLength": 80 },
+              "profileId": { "$ref": "#/$defs/NativeCatalogProfileId" },
+              "mutation": { "enum": ["none", "unknown-profile", "duplicate-root", "missing-root", "missing-dependency", "dependency-version", "cycle", "duplicate-package", "foreign-package", "duplicate-provider", "missing-provider", "provider-package", "provider-count", "unselected-result", "selected-provider-failure", "cancel-before-first", "cancel-after-first", "registry-conflict"] },
+              "expectedCode": { "enum": ["planned", "denied"] },
+              "expectedCalls": { "type": "array", "maxItems": 3, "uniqueItems": true, "items": { "$ref": "#/$defs/RegistryPackageId" } },
+              "expectedReceiptCount": { "type": "integer", "minimum": 0, "maximum": 29 }
+            }
+          }
+        }
+      }
+    },
+    "NativeCatalogIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "packageId", "version"],
+      "properties": {
+        "pluginId": { "$ref": "#/$defs/RegistryPluginId" },
+        "packageId": { "$ref": "#/$defs/RegistryPackageId" },
+        "version": { "$ref": "#/$defs/RegistrySemanticVersion" }
+      }
+    },
+    "NativeCatalogPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "packageId", "version", "dependencies", "receiptCount"],
+      "properties": {
+        "pluginId": { "$ref": "#/$defs/RegistryPluginId" },
+        "packageId": { "$ref": "#/$defs/RegistryPackageId" },
+        "version": { "$ref": "#/$defs/RegistrySemanticVersion" },
+        "dependencies": { "type": "array", "maxItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/NativeCatalogIdentity" } },
+        "receiptCount": { "type": "integer", "minimum": 1, "maximum": 16384 }
+      }
+    },
+    "NativeCatalogProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "roots"],
+      "properties": {
+        "id": { "$ref": "#/$defs/NativeCatalogProfileId" },
+        "roots": { "type": "array", "minItems": 1, "maxItems": 3, "uniqueItems": true, "items": { "$ref": "#/$defs/NativeCatalogIdentity" } }
+      }
+    },
+    "NativeCatalogProfileId": { "enum": ["native-stdio-v1", "native-stdio-vcs-v1", "native-stdio-gis-v1", "native-stdio-gis-vcs-v1"] },
+    "NativeCatalogProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "packageId", "receiptCount"],
+      "properties": {
+        "pluginId": { "$ref": "#/$defs/RegistryPluginId" },
+        "packageId": { "$ref": "#/$defs/RegistryPackageId" },
+        "receiptCount": { "type": "integer", "minimum": 1, "maximum": 16384 }
+      }
+    },
+    "PluginRootOwnershipV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "cases"],
+      "properties": {
+        "format": { "$ref": "#/$defs/RegistryContractId" },
+        "cases": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "files", "expected"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z]+(?:-[a-z]+)*$" },
+              "files": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "enum": ["🦀️.rs", "🎮️commands/🦀️.rs", "🔨️modules/📌️.empty.md", "🔨️modules/🦀️.rs", "🎮️commands/📌️.empty.md", "🔌️plugin/🦀️.rs"] }
+              },
+              "expected": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "enum": ["missing:🦀️.rs", "missing:🎮️commands/🦀️.rs", "nested-contract"] }
+              }
+            }
+          }
+        }
+      }
+    },
+    "RegistryContractId": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*/v[0-9]+$" },
+    "RegistryPackageId": { "type": "string", "pattern": "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 134 },
+    "RegistryPluginId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 128 },
+    "RegistrySemanticVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$", "maxLength": 64 },
+    "RustTaxonomyMountsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "cases"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "cases": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "files", "expectedCodes", "rustcSuccess", "expectedUnmounted"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z]+(?:-[a-z]+)*$" },
+              "files": {
+                "type": "object",
+                "minProperties": 3,
+                "propertyNames": { "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$" },
+                "additionalProperties": { "type": "string" }
+              },
+              "expectedCodes": { "type": "array", "uniqueItems": true, "items": { "enum": ["unmounted", "missing-target", "missing-manifest", "invalid-manifest"] } },
+              "rustcSuccess": { "type": "boolean" },
+              "expectedUnmounted": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "\\.rs$" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

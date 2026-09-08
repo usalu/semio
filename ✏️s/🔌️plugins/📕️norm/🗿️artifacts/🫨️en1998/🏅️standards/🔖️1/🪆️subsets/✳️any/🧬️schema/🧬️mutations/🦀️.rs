@@ -15,8 +15,8 @@
 //! the per-mutation fixture cases self-wire from here, because `🦀️.rs` is shared across all
 //! fifteen norm artifacts and is under concurrent edit.
 
-use crate::artifacts::en1998::diff::En1998Diff;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::diff::En1998Diff;
+use crate::En1998Snapshot;
 
 //#region 🔖️Leaves
 use super::change_annex;

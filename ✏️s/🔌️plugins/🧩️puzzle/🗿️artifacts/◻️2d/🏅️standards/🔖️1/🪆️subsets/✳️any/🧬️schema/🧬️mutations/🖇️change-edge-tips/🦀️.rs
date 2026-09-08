@@ -1,8 +1,8 @@
 //! Puzzle2d mutation — `ChangeEdgeTips`: changes an edge's source/target terminator markers together (one cohesive tips facet).
 
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::Puzzle2dDiff;
+use crate::mutations::Puzzle2dMutation;
+use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
 /// `change-edge-tips` payload.

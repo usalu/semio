@@ -1,7 +1,7 @@
 //! 🧬️ Equation snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::equation::{EquationComputedChild, EquationGeometry, EquationGraph, EquationNotationChild, EquationResultsChild};
-use schema::ArtifactSchema;
+use crate::{EquationComputedChild, EquationGeometry, EquationGraph, EquationNotationChild, EquationResultsChild};
+use framework_schema::ArtifactSchema;
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
@@ -260,7 +260,7 @@ pub fn expr_to_equation_node(expr: &crate::cas::expr::Expr, next_label: &mut u64
 
 impl Default for EquationSnapshot {
     fn default() -> Self {
-        crate::artifacts::equation::equation_snapshot_with_state(EquationGraph::default(), EquationGeometry::default())
+        crate::equation_snapshot_with_state(EquationGraph::default(), EquationGeometry::default())
     }
 }
 //#endregion 🔖️Snapshot

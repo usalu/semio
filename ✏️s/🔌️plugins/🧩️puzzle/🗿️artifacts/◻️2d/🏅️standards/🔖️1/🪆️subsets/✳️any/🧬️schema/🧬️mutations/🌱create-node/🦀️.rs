@@ -1,8 +1,8 @@
 //! 🌱 Puzzle2d mutation — `CreateNode`: brings a new id-keyed node into existence.
 
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
-use crate::artifacts::puzzle2d::{Puzzle2dNode, Puzzle2dSnapshot};
+use crate::diff::Puzzle2dDiff;
+use crate::mutations::Puzzle2dMutation;
+use crate::{Puzzle2dNode, Puzzle2dSnapshot};
 
 //#region 🔖️Mutation
 /// 🌱 `create-node` payload — full initial payload at an optional FINAL-state `index` (`None`

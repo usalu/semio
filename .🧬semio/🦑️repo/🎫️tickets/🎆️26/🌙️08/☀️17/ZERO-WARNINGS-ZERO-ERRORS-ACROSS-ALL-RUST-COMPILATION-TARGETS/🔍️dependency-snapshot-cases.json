@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "id": "present-source",
+      "sourceFile": "consumer/source.ts",
+      "source": "import { value } from 'dependency';",
+      "exists": true,
+      "expectedTargets": [
+        "dependency"
+      ]
+    },
+    {
+      "id": "deleted-source",
+      "sourceFile": "consumer/removed.ts",
+      "exists": false,
+      "expectedTargets": []
+    }
+  ]
+}

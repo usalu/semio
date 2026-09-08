@@ -4,7 +4,7 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::GisTerrainSnapshot;
 use schema::ArtifactSchema;
 
 use super::bounds::{imported_lon_lat_positions, lon_lat_bounds, GisTerrainBounds};
@@ -46,7 +46,7 @@ impl protocol::InferenceSpec<GisTerrainSnapshot> for GisTerrainInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::gisterrain::standards::v1::subsets::any::schema::GisterrainBuilder {
+impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets::any::schema::GisterrainBuilder {
     type Snapshot = GisTerrainSnapshot;
     type Inference = GisTerrainInference;
 }
@@ -63,9 +63,9 @@ impl semio_framework_plugin::ArtifactInferrer for crate::artifacts::gisterrain::
 /// flagged by another session — `crate::modules` was never mounted in this crate's `🦀️.rs`).
 /// Fixed opportunistically while touching this file for the `mesh` composition (ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`): the real home of these types is
-/// `crate::artifacts::gisterrain::schema`'s `🔖️TerrainDescriptor` region — a one-line path
+/// `crate::schema`'s `🔖️TerrainDescriptor` region — a one-line path
 /// correction, not an engine-dissolution rewrite.
-use crate::artifacts::gisterrain::schema::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
+use crate::schema::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
 
 /// 📜️ Hand-rolled reader for the `.gisterrain` fixture's `origin`/`position` scenery lines — the
 /// read-only pins/project-origin data rendered alongside the document; the `gisterrain
@@ -193,9 +193,9 @@ fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData>
 /// 🏔️ The full rendering descriptor (project origin + fixture pins + `map:in` overlay pins +
 /// exaggeration) for the given document — `exaggeration` always mirrors the LIVE document, and the
 /// bundled fixture's own `gisterrain exaggeration=...` header only ever seeds it once via
-/// `crate::artifacts::gisterrain::schema::default_terrain_document`.
+/// `crate::schema::default_terrain_document`.
 pub fn parse_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson {
-    let mut descriptor = terrain_fixture_text::parse_descriptor(crate::artifacts::gisterrain::dsl::REUSE_TERRAIN_EXAMPLE_TEXT, crate::artifacts::gisterrain::GIS_3D_TERRAIN_SCHEMA, document.exaggeration);
+    let mut descriptor = terrain_fixture_text::parse_descriptor(crate::dsl::REUSE_TERRAIN_EXAMPLE_TEXT, crate::GIS_3D_TERRAIN_SCHEMA, document.exaggeration);
     descriptor.positions.extend(imported_positions(document));
     descriptor
 }

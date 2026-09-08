@@ -9,7 +9,7 @@
 //! (`policyViewerPurityBreaches`), so the shared code cannot live here anymore. Reach it as `crate::X`
 //! from any module in this crate.
 
-use crate::artifacts::home::SHomeSnapshot;
+use crate::SHomeSnapshot;
 use crate::editor::home::commands::apply_directory_event_page;
 use crate::editor::home::commands::set_active_panel_tab;
 use crate::editor::home::commands::{bind_space_file, create_studio, import_space, open_space};
@@ -32,7 +32,7 @@ pub const S_HOME_CONTROLLER_ID: &str = "s.space.home@1/*#editor";
 app_commands! {
     /// 🎯️ `HomeApp::Command` — the SOLE dispatch surface for the Home launcher's own behavior, one
     /// variant per action declared in `create_home_app`'s manifest.
-    pub enum HomeCommand for SHomeSnapshot, crate::artifacts::home::op::SHomeMutation, HomeConfig, HomeConfigMutation {
+    pub enum HomeCommand for SHomeSnapshot, crate::op::SHomeMutation, HomeConfig, HomeConfigMutation {
         "applyDirectoryEventPage" as "apply-directory-event-page" => apply_directory_event_page::ApplyDirectoryEventPage,
         "createStudio" as "create-studio" => create_studio::CreateStudio,
         "bindSpaceFile" as "bind-space-file" => bind_space_file::BindSpaceFile,
@@ -125,7 +125,7 @@ fn home_retained_reduce(
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     operation: &AppOperationContext,
-) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
+) -> Result<Emit<crate::op::SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
     if home_retained_extent(command, snapshot, _interaction).is_none() {
         return Err(Fault::from("space-home-retained-route-mismatch"));
     }
@@ -170,7 +170,7 @@ impl ToolJobFactory for HomeRetainedCommandJobFactory {
 impl ArtifactOwnedToolJobFactory for HomeRetainedCommandJobFactory {
     type Owner = EditorApp<HomeApp>;
     const TOOL_IDS: &'static [&'static str] = HOME_RETAINED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::S_HOME_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = HOME_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
@@ -374,7 +374,7 @@ pub struct HomeApp;
 
 impl ArtifactEditor for HomeApp {
     type Snapshot = SHomeSnapshot;
-    type Mutation = crate::artifacts::home::op::SHomeMutation;
+    type Mutation = crate::op::SHomeMutation;
     type Config = HomeConfig;
     type ConfigMutation = HomeConfigMutation;
     type Draft = NoDraft;
@@ -385,8 +385,8 @@ impl ArtifactEditor for HomeApp {
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
     type Command = HomeCommand;
 
-    const DIALECT: Dialect = crate::artifacts::home::HOME_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA;
+    const DIALECT: Dialect = crate::HOME_DIALECT;
+    const DOCUMENT_SCHEMA: &'static str = crate::S_HOME_DOCUMENT_SCHEMA;
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(HomeConfigPreparationFactory))
@@ -528,7 +528,7 @@ impl ArtifactEditor for HomeApp {
         _interaction: &InteractionView<'_>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<crate::artifacts::home::op::SHomeMutation, HomeConfigMutation, Self::DraftMutation>, Fault> {
+    ) -> Result<Emit<crate::op::SHomeMutation, HomeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
@@ -552,7 +552,7 @@ impl ArtifactEditor for HomeApp {
 /// dropped here (unlike other W2 packets that had to note a loss).
 pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
     
-    Editor::builder(crate::artifacts::home::HOME_DIALECT)
+    Editor::builder(crate::HOME_DIALECT)
         .document(["semio", "s", "home"])
         .icon_id("home")
         .mode_def(crate::editor::home::modes::explore::definition())
@@ -718,7 +718,8 @@ mod tests {
     }
     //#endregion 🧪️RetainedCommandEnvelope
 
-    use semio_framework_os::{create_backbone_document, empty_space_snapshot, load_os_space_document, seed_os_space_catalog_if_empty, LocalStorageBackbonePort, OsBackbonePorts, OsSpaceDocument, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA};
+    use semio_framework_artifact_space_space::{empty_space_snapshot, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA};
+    use semio_framework_os::{create_backbone_document, load_os_space_document, seed_os_space_catalog_if_empty, LocalStorageBackbonePort, OsBackbonePorts, OsSpaceDocument};
     use std::sync::Arc;
 
     fn empty_history() -> semio_framework_plugin::HistoryView {

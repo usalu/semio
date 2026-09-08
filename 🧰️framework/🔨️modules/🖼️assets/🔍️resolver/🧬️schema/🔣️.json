@@ -13,7 +13,7 @@
       "additionalProperties": false,
       "properties": {
         "$schema": {
-          "const": "./🧬️delivery.schema.json"
+          "const": "./🧬️schema/🔣️.json"
         },
         "version": {
           "const": 1

@@ -1,7 +1,7 @@
 //! 🌑️ Scene-window option — the shadow-enabled toggle.
 //! Its command handler lives in `🎮️commands/☀️scene::set_shadow_enabled`.
 
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::ShootingSnapshot;
 use crate::editor::shooting::terminology::ShootingLabels;
 use semio_framework_plugin::WindowMeasure;
 
@@ -27,7 +27,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn shadow_measure_starts_pressed_by_default() {
-        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
+        let snapshot = crate::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {
             WindowMeasure::Toggle { pressed, .. } => assert!(pressed),

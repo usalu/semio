@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🧵traces` per Wave C.
 
 use super::ConnectTrace;
-use crate::artifacts::program::diff::ProgramTracesDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramTracesDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 use protocol::Patchable;
 
 /// 🔌️ Warning `mutation.no-op` if the trace already carries this exact value (empty diff); else
@@ -19,7 +19,7 @@ pub fn diff(payload: &ConnectTrace, base: &ProgramSnapshot) -> protocol::Mutatio
             }
             let patch = existing.diff_patch(&payload.trace).expect("diff_patch always produces a full patch");
             protocol::MutationOutcome::new(ProgramDiff {
-                traces: Some(ProgramTracesDelta { patched: vec![crate::artifacts::program::diff::ProgramTracesPatchEntry { id: payload.trace.id.0.clone(), patch }], ..Default::default() }),
+                traces: Some(ProgramTracesDelta { patched: vec![crate::diff::ProgramTracesPatchEntry { id: payload.trace.id.0.clone(), patch }], ..Default::default() }),
                 ..Default::default()
             })
         }

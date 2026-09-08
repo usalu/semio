@@ -5,7 +5,7 @@
 //! the derived generation preview live here rather than under `🗿️artifacts/`, since none of it survives
 //! into the `.generation3d` document.
 
-use flow::CameraJson;
+use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️PreviewCamera

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateCombination`.
 use super::CreateCombination;
-use crate::artifacts::fem3d::diff::{Fem3dCombinationsDelta, Fem3dDiff};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::diff::{Fem3dCombinationsDelta, Fem3dDiff};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateCombination, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

@@ -3,7 +3,7 @@
 //! holds a plain pure function rather than an `InferredField` dependency chain — nothing here
 //! benefits from per-entity incremental caching, unlike `puzzle3d`'s `flatPosition`.
 
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::Fem3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Bounds
@@ -49,7 +49,7 @@ pub fn compute_fem3d_bounds(snapshot: &Fem3dSnapshot) -> Fem3dBounds {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::fem3d::{FemElement, FemNode};
+    use crate::{FemElement, FemNode};
 
     //#region 🧸️Fixtures
     fn sample_snapshot() -> Fem3dSnapshot {

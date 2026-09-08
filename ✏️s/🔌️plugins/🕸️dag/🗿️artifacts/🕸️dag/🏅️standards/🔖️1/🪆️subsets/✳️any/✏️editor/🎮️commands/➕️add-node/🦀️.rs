@@ -1,8 +1,8 @@
 //! 🔧️ 🔧️ DAG play app commands command — `add-node`.
 
-use crate::artifacts::dag::mutations::create_node;
-use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::mutations::create_node;
+use crate::op::DagMutation;
+use crate::DagSnapshot;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
@@ -18,8 +18,8 @@ pub struct AddNode {
 /// directly anymore (the framework owns it exclusively; ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let id = crate::artifacts::dag::schema::next_node_id(document);
-    let node = crate::artifacts::dag::schema::default_node_for_kind(&payload.kind, &id, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0));
+    let id = crate::schema::next_node_id(document);
+    let node = crate::schema::default_node_for_kind(&payload.kind, &id, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0));
     Ok(Emit::mutations(vec![create_node(node)]))
 }
 
@@ -30,7 +30,7 @@ mod tests {
     use crate::editor::dag::commands::{patch_dag_nodes, remove_node, rename_dag_node};
     use crate::editor::dag::testkit;
     use crate::editor::dag::DagCommand;
-    use infinite_board_port_directed_dag::DagNodeKind;
+    use semio_framework_artifact_infinite_dag::DagNodeKind;
     use semio_framework_plugin::PluginApp;
 
     #[semio_framework_async_macros::async_test]
@@ -74,8 +74,8 @@ mod tests {
         let document = app.snapshot().expect("projection");
         assert!(document.nodes().iter().all(|node| node.id != node_id));
         assert!(document.edges().iter().all(|edge| {
-            let (from, _) = crate::artifacts::dag::schema::split_endpoint(&edge.source);
-            let (to, _) = crate::artifacts::dag::schema::split_endpoint(&edge.target);
+            let (from, _) = crate::schema::split_endpoint(&edge.source);
+            let (to, _) = crate::schema::split_endpoint(&edge.target);
             from != node_id && to != node_id
         }));
     }

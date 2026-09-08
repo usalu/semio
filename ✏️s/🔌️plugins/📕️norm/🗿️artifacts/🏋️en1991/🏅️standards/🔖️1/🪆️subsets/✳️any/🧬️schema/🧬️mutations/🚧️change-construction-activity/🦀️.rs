@@ -1,7 +1,7 @@
 //! 🏗️ `change-construction-activity` — sets the En1991 construction activity scalar.
 
 
-use crate::artifacts::en1991::{En1991Mutation, En1991Snapshot};
+use crate::{En1991Mutation, En1991Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

@@ -2,7 +2,7 @@
 //! imperative document's own `Path`/`Step` tree (depth-first execution order, per-step nesting
 //! depth, cycle-freedom, total step count across every nested `Step::bodies` scope).
 
-use crate::artifacts::procedure::Path;
+use crate::Path;
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology
@@ -51,7 +51,7 @@ fn walk(path: &Path, level: u32, topo_order: &mut Vec<String>, depth: &mut BTree
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::procedure::Step;
+    use crate::Step;
     use std::collections::BTreeMap as StdBTreeMap;
 
     fn step(id: &str, bodies: StdBTreeMap<String, Path>) -> Step {

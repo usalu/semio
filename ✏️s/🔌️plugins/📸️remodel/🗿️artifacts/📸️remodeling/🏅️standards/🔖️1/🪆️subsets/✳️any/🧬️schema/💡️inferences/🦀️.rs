@@ -12,7 +12,7 @@
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d as this artifact's
 //! first genuine `DepHash`-chained CQRS path (see `🔄relative-pose/🦀️.rs`).
 
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::RemodelingSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -71,7 +71,7 @@ impl protocol::InferenceSpec<RemodelingSnapshot> for RemodelingInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::remodeling::standards::v1::subsets::any::schema::RemodelingBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::RemodelingBuilder {
     type Snapshot = RemodelingSnapshot;
     type Inference = RemodelingInference;
 }
@@ -92,7 +92,7 @@ pub fn remodeling_artifact_inference_descriptor() -> schema::ArtifactInferenceDe
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::remodeling::mint_and_stash_mesh;
+    use crate::mint_and_stash_mesh;
     use protocol::Inference;
     use semio_framework::MeshData;
 

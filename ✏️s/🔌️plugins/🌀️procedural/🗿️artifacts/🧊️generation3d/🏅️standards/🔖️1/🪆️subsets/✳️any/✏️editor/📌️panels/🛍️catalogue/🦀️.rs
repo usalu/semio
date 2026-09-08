@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 mod identity;
 
 pub fn render(labels: &Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let sections = flow::flow_palette_catalogue_sections();
+    let sections = semio_framework_os_flow::flow_palette_catalogue_sections();
     let mut items = semio_framework_plugin::UiFixedList::default();
     for section in sections {
         for item in section.items {

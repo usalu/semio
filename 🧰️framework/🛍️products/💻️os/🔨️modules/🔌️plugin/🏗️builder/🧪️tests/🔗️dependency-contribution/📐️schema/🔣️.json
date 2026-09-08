@@ -1,6 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.dev/schema/plugin/builder/dependency-contribution/snapshot",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/builder/dependency-contribution/snapshot.json",
   "type": "object",
   "required": [
     "value"
@@ -14,4 +14,3 @@
   },
   "additionalProperties": false
 }
-

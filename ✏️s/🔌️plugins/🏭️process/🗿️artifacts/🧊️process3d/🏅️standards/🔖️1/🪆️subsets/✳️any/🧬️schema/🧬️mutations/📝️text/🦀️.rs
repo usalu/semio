@@ -7,12 +7,12 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use crate::artifacts::process3d::schema::mutations::Process3dMutation;
-use crate::artifacts::process3d::schema::mutations::{
+pub use crate::schema::mutations::Process3dMutation;
+use crate::schema::mutations::{
     change_cursor, change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities,
     replace_step_measure, replace_stock_solid,
 };
-use crate::artifacts::process3d::{Capability, Pose, StepOrigin, WorkshopMachine};
+use crate::{Capability, Pose, StepOrigin, WorkshopMachine};
 use protocol::OpText;
 
 //#region 🔖️OpText
@@ -183,11 +183,11 @@ impl OpText for Process3dMutation {
 /// remains isolated to explicit text routes.
 impl protocol::OpBinary for Process3dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        crate::artifacts::process3d::spr::encode_op(self)
+        crate::spr::encode_op(self)
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        crate::artifacts::process3d::spr::decode_op(bytes)
+        crate::spr::decode_op(bytes)
     }
 }
 //#endregion 🔖️OpText
@@ -196,8 +196,8 @@ impl protocol::OpBinary for Process3dMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::process3d::schema::mutations::*;
-    use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, Process3dSnapshot, WorkingSolid};
+    use crate::schema::mutations::*;
+    use crate::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, Process3dSnapshot, WorkingSolid};
     use protocol::Mutation;
 
     fn cut_step(id: &str) -> ProcessStep {
@@ -205,7 +205,7 @@ mod tests {
     }
 
     fn circular_saw_machine() -> WorkshopMachine {
-        use crate::artifacts::process3d::{CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity};
+        use crate::{CapabilityParameter, CapabilityRule, MeasureRecipe, StockQuantity};
         WorkshopMachine {
             id: "circularSaw".into(),
             label: "Circular Saw".into(),

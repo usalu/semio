@@ -9,8 +9,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use crate::artifacts::din16798::schema::mutations::Din16798Mutation;
-use crate::artifacts::din16798::schema::mutations::{
+pub use crate::document_schema::mutations::Din16798Mutation;
+use crate::document_schema::mutations::{
     change_air_speed_m_s, change_annex, change_bedrooms, change_cellar_area_m2, change_cellar_ventilation_m3_h, change_chiller_type, change_co2_ppm, change_comfort_category, change_cooling_delta_t_h, change_cooling_gains_kwh,
     change_cooling_reference_kwh, change_cooling_utilization_factor, change_data_center_supply_c, change_df_percent, change_dhw_delivery_c, change_duct_class, change_duct_leakage_m3_s_m2, change_duct_test_pressure_pa,
     change_dwelling_ventilation_m3_h, change_eer_actual, change_fan_energy_reference_kwh, change_fan_q_v_m3_s, change_fan_t_run_h, change_floor_area_m2, change_generation_reference_kwh, change_h_st_w_k, change_h_tr_w_k, change_h_ve_w_k,

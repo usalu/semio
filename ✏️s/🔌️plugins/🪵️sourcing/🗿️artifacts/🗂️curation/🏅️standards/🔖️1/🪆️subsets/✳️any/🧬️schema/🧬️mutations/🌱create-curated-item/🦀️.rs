@@ -1,8 +1,8 @@
 //! 🌱 Direct `create-curated-item` mutation owner: brings a new id-keyed curated selection into
 //! existence.
-use crate::artifacts::curation::diff::CurationDiff;
-use crate::artifacts::curation::mutations::SourcingMutation;
-use crate::artifacts::curation::{CurationSnapshot, CuratedItem};
+use crate::diff::CurationDiff;
+use crate::mutations::SourcingMutation;
+use crate::{CurationSnapshot, CuratedItem};
 
 //#region 🔖️Mutation
 /// 🌱 `create-curated-item` payload — full initial payload (`object_id` + starting `count` fixed

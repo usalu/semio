@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ChangeNotes` — the OLD notes value looked up from BASE.
-use crate::artifacts::vcs::mutations::VcsDemoMutation;
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::mutations::VcsDemoMutation;
+use crate::VcsSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::ChangeNotes, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {

@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::DrawingSnapshot;
 
 /// 🗄️ The Semio emblem example fixture, handcrafted in `drawing`'s DSL (`store::ArtifactDsl`).
 pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
@@ -51,8 +51,8 @@ pub fn print_dsl(document: &DrawingSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::drawing::schema::{create_drawing_boolean_layer, create_drawing_image_layer, create_drawing_path_layer, create_drawing_shape_layer_rect, create_drawing_trace_layer, default_drawing_document, default_layer_base, layer_id};
-    use crate::artifacts::drawing::{DrawingArtboard, DrawingCircle, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingLayerNode, DrawingLine, DrawingPolygon, DrawingShapeBody, DrawingTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA};
+    use crate::schema::{create_drawing_boolean_layer, create_drawing_image_layer, create_drawing_path_layer, create_drawing_shape_layer_rect, create_drawing_trace_layer, default_drawing_document, default_layer_base, layer_id};
+    use crate::{DrawingArtboard, DrawingCircle, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingLayerNode, DrawingLine, DrawingPolygon, DrawingShapeBody, DrawingTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA};
     use store::ArtifactDsl;
 
     fn representative_drawing_document() -> DrawingSnapshot {

@@ -1,7 +1,7 @@
 //! 🔗️ `connect-nodes` — creates an edge relationship between two graph nodes (the node-graph
 //! canvas's `connect` edit op).
 
-use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
+use crate::{EquationMutation, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload

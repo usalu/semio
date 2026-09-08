@@ -1,8 +1,8 @@
 //! 🗑️ `delete-tile` mutation payload — removes a figure tile crop from `tiles` by id.
 
-use crate::artifacts::presentation::PresentationSnapshot;
-use crate::artifacts::presentation::diff::PresentationDiff;
-use crate::artifacts::presentation::mutations::PresentationMutation;
+use crate::PresentationSnapshot;
+use crate::diff::PresentationDiff;
+use crate::mutations::PresentationMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔹Payload

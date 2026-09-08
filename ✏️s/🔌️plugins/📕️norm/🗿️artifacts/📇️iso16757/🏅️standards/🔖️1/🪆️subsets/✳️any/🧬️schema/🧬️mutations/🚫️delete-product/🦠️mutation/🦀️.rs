@@ -1,6 +1,6 @@
 //! 🗑️ `delete-product` — removes an id-keyed catalogue product.
 
-use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
+use crate::{Iso16757Mutation, Iso16757Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

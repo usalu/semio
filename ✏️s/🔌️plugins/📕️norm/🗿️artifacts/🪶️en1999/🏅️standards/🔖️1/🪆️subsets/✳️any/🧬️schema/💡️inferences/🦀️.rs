@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::en1999::En1999Snapshot;
-use schema::ArtifactSchema;
+use crate::En1999Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::En1999Outline;
@@ -44,7 +44,7 @@ impl protocol::InferenceSpec<En1999Snapshot> for En1999Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::en1999::standards::v1::subsets::any::schema::En1999Builder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1999Builder {
     type Snapshot = En1999Snapshot;
     type Inference = En1999Inference;
 }
@@ -53,10 +53,10 @@ impl ArtifactInferrer for crate::artifacts::en1999::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1999.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1999_artifact_schema_descriptor`'s registration.
-pub fn en1999_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn en1999_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1999.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -87,7 +87,7 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::en1999::standards::v1::subsets::any::schema::{check_aluminium_member, na_de, part_1_1, part_1_2, part_1_3, part_1_4, part_1_5};
+use crate::standards::v1::subsets::any::schema::{check_aluminium_member, na_de, part_1_1, part_1_2, part_1_3, part_1_4, part_1_5};
 /// 📋️ Full EN 1999 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1999Snapshot -> CheckReport` projection; everything it composes

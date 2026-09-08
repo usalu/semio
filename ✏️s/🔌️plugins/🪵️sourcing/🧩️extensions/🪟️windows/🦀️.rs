@@ -1,7 +1,7 @@
 //! 🧩️ Sourcing windows module — contributes the windows typology and demo catalogue kinds to the sourcing app.
 
 use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
-use sourcing_curation::artifacts::curation::schema::{windows::WindowsModule, SourcingModule};
+use semio_s_artifact_sourcing_curation::schema::{windows::WindowsModule, SourcingModule};
 
 //#region 🔖️Bundle
 const EXTENSION_ID: &str = "sourcing-module-windows";
@@ -51,8 +51,8 @@ mod tests {
         assert_eq!(topic.payload["moduleId"].as_str(), Some("windows"));
         let typology_json = topic.payload["typologyJson"].as_str().unwrap();
         let kinds_json = topic.payload["kindsJson"].as_str().unwrap();
-        assert!(semio_framework_os_kernel::json::from_json_str::<sourcing_curation::artifacts::curation::schema::TypologyNode>(typology_json).is_ok());
-        assert!(semio_framework_os_kernel::json::from_json_str::<Vec<sourcing_curation::artifacts::curation::ObjectKind>>(kinds_json).is_ok());
+        assert!(semio_framework_os_kernel::json::from_json_str::<semio_s_artifact_sourcing_curation::schema::TypologyNode>(typology_json).is_ok());
+        assert!(semio_framework_os_kernel::json::from_json_str::<Vec<semio_s_artifact_sourcing_curation::ObjectKind>>(kinds_json).is_ok());
     }
 }
 //#endregion 🔖️Tests

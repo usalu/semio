@@ -5,7 +5,7 @@
 //! via `en1990_qk_child_from_entries`, exactly `➗️mathematical`'s equivalent per-mutation pattern.
 
 use super::InsertVariableAction;
-use crate::artifacts::en1990::{en1990_qk, en1990_qk_child_from_entries, En1990Diff, En1990QkEntry, En1990Snapshot};
+use crate::{en1990_qk, en1990_qk_child_from_entries, En1990Diff, En1990QkEntry, En1990Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &InsertVariableAction, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {

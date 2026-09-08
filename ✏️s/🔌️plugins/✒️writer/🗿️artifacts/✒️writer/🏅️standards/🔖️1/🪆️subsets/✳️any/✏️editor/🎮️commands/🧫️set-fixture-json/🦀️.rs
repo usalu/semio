@@ -1,7 +1,7 @@
 //! ✍️ ✍️ Writer play app commands command — `set-fixture-json`.
 
-use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::WriterSnapshot;
+use crate::op::WriterMutation;
+use crate::WriterSnapshot;
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::editor::writer::reset_document_effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

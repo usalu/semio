@@ -42,12 +42,12 @@ pub(crate) mod testkit {
     }
 
     /// 🗂️ Board kind-catalog JSON for a compile-time manifest id — the catalogs live in the manifest
-    /// registry (`graph::manifest`), not in fixture `meta.kindCatalogs`, so tests that
+    /// registry (`semio_framework_graph::manifest`), not in fixture `meta.kindCatalogs`, so tests that
     /// need real node/handle kinds read them from there. Each catalog row is the manifest row's
     /// `id`/`name` merged with its flattened `presentation` object.
     pub fn catalogs_json_from_manifest_id(manifest_id: &str) -> String {
-        let manifest = graph::manifest::manifest_by_id(manifest_id).unwrap_or_else(|| panic!("unknown manifest id {manifest_id}"));
-        let rows = |kinds: &[graph::manifest::KindDef]| -> Vec<serde_json::Value> {
+        let manifest = semio_framework_graph::manifest::manifest_by_id(manifest_id).unwrap_or_else(|| panic!("unknown manifest id {manifest_id}"));
+        let rows = |kinds: &[semio_framework_graph::manifest::KindDef]| -> Vec<serde_json::Value> {
             kinds
                 .iter()
                 .map(|kind| {
@@ -63,7 +63,7 @@ pub(crate) mod testkit {
                 })
                 .collect()
         };
-        let visual_port_kinds: Vec<graph::manifest::KindDef> = manifest.port_kinds.iter().filter(|kind| kind.presentation.as_ref().is_some_and(|p| p.get("color").is_some())).cloned().collect();
+        let visual_port_kinds: Vec<semio_framework_graph::manifest::KindDef> = manifest.port_kinds.iter().filter(|kind| kind.presentation.as_ref().is_some_and(|p| p.get("color").is_some())).cloned().collect();
         json!({ "handleKinds": rows(&visual_port_kinds), "nodeKinds": rows(&manifest.node_kinds) }).to_string()
     }
 

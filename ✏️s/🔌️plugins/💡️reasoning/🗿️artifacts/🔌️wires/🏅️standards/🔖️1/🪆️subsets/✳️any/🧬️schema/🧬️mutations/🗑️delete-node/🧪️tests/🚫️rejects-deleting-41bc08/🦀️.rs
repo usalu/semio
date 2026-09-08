@@ -16,9 +16,9 @@
 //! 🗑️ The board here is NOT empty: it really holds `node-anchor`. The miss is therefore a genuine
 //! scan of a populated node list, not the vacuous "nothing is resolved" case.
 
-use crate::artifacts::wires::mutations::WiresMutation;
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::{materialize_wires_content, wires_working_scene, WiresDiff, WiresSnapshot};
+use crate::mutations::WiresMutation;
+use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::{materialize_wires_content, wires_working_scene, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

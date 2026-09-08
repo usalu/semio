@@ -9,36 +9,36 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyErr
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for all fifteen norm-family editor/viewer pairs.
     pub enum NormApps: PluginApp {
-        Din4108Editor(VcsArtifactApp<EditorApp<crate::editor::din4108::Din4108PlayApp>>),
-        Din4108Viewer(VcsArtifactApp<ViewerApp<crate::viewer::din4108::Din4108Viewer>>),
-        Din16798Editor(VcsArtifactApp<EditorApp<crate::editor::din16798::Din16798PlayApp>>),
-        Din16798Viewer(VcsArtifactApp<ViewerApp<crate::viewer::din16798::Din16798Viewer>>),
-        Din18599Editor(VcsArtifactApp<EditorApp<crate::editor::din18599::Din18599PlayApp>>),
-        Din18599Viewer(VcsArtifactApp<ViewerApp<crate::viewer::din18599::Din18599Viewer>>),
-        En1990Editor(VcsArtifactApp<EditorApp<crate::editor::en1990::En1990PlayApp>>),
-        En1990Viewer(VcsArtifactApp<ViewerApp<crate::viewer::en1990::En1990Viewer>>),
-        En1991Editor(VcsArtifactApp<EditorApp<crate::editor::en1991::En1991PlayApp>>),
-        En1991Viewer(VcsArtifactApp<ViewerApp<crate::viewer::en1991::En1991Viewer>>),
-        En1992Editor(VcsArtifactApp<EditorApp<crate::editor::en1992::En1992PlayApp>>),
-        En1992Viewer(VcsArtifactApp<ViewerApp<crate::viewer::en1992::En1992Viewer>>),
-        En1993Editor(VcsArtifactApp<EditorApp<crate::editor::en1993::En1993PlayApp>>),
-        En1993Viewer(VcsArtifactApp<ViewerApp<crate::viewer::en1993::En1993Viewer>>),
-        En1994Editor(VcsArtifactApp<EditorApp<crate::editor::en1994::En1994PlayApp>>),
-        En1994Viewer(VcsArtifactApp<ViewerApp<crate::viewer::en1994::En1994Viewer>>),
-        En1995Editor(VcsArtifactApp<EditorApp<crate::editor::en1995::En1995PlayApp>>),
-        En1995Viewer(VcsArtifactApp<ViewerApp<crate::viewer::en1995::En1995Viewer>>),
-        En1996Editor(VcsArtifactApp<EditorApp<crate::editor::en1996::En1996PlayApp>>),
-        En1996Viewer(VcsArtifactApp<ViewerApp<crate::viewer::en1996::En1996Viewer>>),
-        En1997Editor(VcsArtifactApp<EditorApp<crate::editor::en1997::En1997PlayApp>>),
-        En1997Viewer(VcsArtifactApp<ViewerApp<crate::viewer::en1997::En1997Viewer>>),
-        En1998Editor(VcsArtifactApp<EditorApp<crate::editor::en1998::En1998PlayApp>>),
-        En1998Viewer(VcsArtifactApp<ViewerApp<crate::viewer::en1998::En1998Viewer>>),
-        En1999Editor(VcsArtifactApp<EditorApp<crate::editor::en1999::En1999PlayApp>>),
-        En1999Viewer(VcsArtifactApp<ViewerApp<crate::viewer::en1999::En1999Viewer>>),
-        Iso16757Editor(VcsArtifactApp<EditorApp<crate::editor::iso16757::Iso16757PlayApp>>),
-        Iso16757Viewer(VcsArtifactApp<ViewerApp<crate::viewer::iso16757::Iso16757Viewer>>),
-        Vdi3805Editor(VcsArtifactApp<EditorApp<crate::editor::vdi3805::Vdi3805PlayApp>>),
-        Vdi3805Viewer(VcsArtifactApp<ViewerApp<crate::viewer::vdi3805::Vdi3805Viewer>>),
+        Din4108Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din4108::editor::din4108::Din4108PlayApp>>),
+        Din4108Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din4108::viewer::din4108::Din4108Viewer>>),
+        Din16798Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din16798::editor::din16798::Din16798PlayApp>>),
+        Din16798Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din16798::viewer::din16798::Din16798Viewer>>),
+        Din18599Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_din18599::editor::din18599::Din18599PlayApp>>),
+        Din18599Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_din18599::viewer::din18599::Din18599Viewer>>),
+        En1990Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp>>),
+        En1990Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1990::viewer::en1990::En1990Viewer>>),
+        En1991Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp>>),
+        En1991Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1991::viewer::en1991::En1991Viewer>>),
+        En1992Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp>>),
+        En1992Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer>>),
+        En1993Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1993::editor::en1993::En1993PlayApp>>),
+        En1993Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1993::viewer::en1993::En1993Viewer>>),
+        En1994Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp>>),
+        En1994Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1994::viewer::en1994::En1994Viewer>>),
+        En1995Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp>>),
+        En1995Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1995::viewer::en1995::En1995Viewer>>),
+        En1996Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp>>),
+        En1996Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1996::viewer::en1996::En1996Viewer>>),
+        En1997Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1997::editor::en1997::En1997PlayApp>>),
+        En1997Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1997::viewer::en1997::En1997Viewer>>),
+        En1998Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1998::editor::en1998::En1998PlayApp>>),
+        En1998Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1998::viewer::en1998::En1998Viewer>>),
+        En1999Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1999::editor::en1999::En1999PlayApp>>),
+        En1999Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1999::viewer::en1999::En1999Viewer>>),
+        Iso16757Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_iso16757::editor::iso16757::Iso16757PlayApp>>),
+        Iso16757Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_iso16757::viewer::iso16757::Iso16757Viewer>>),
+        Vdi3805Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_vdi3805::editor::vdi3805::Vdi3805PlayApp>>),
+        Vdi3805Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_vdi3805::viewer::vdi3805::Vdi3805Viewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -56,21 +56,21 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// family's own `artifact_kind().id` (never hardcoded, same standard `🗄️stdio`'s 36-kind migration
 /// set), `Isolated` execution, one `documents.write` ask covering all fifteen editors.
 pub fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
-    let din4108 = crate::artifacts::din4108::declaration(crate::artifacts::din4108::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let din16798 = crate::artifacts::din16798::declaration(crate::artifacts::din16798::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let din18599 = crate::artifacts::din18599::declaration(crate::artifacts::din18599::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let en1990 = crate::artifacts::en1990::declaration(crate::artifacts::en1990::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let en1991 = crate::artifacts::en1991::declaration(crate::artifacts::en1991::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let en1992 = crate::artifacts::en1992::declaration(crate::artifacts::en1992::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let en1993 = crate::artifacts::en1993::declaration(crate::artifacts::en1993::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let en1994 = crate::artifacts::en1994::declaration(crate::artifacts::en1994::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let en1995 = crate::artifacts::en1995::declaration(crate::artifacts::en1995::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let en1996 = crate::artifacts::en1996::declaration(crate::artifacts::en1996::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let en1997 = crate::artifacts::en1997::declaration(crate::artifacts::en1997::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let en1998 = crate::artifacts::en1998::declaration(crate::artifacts::en1998::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let en1999 = crate::artifacts::en1999::declaration(crate::artifacts::en1999::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let iso16757 = crate::artifacts::iso16757::declaration(crate::artifacts::iso16757::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    let vdi3805 = crate::artifacts::vdi3805::declaration(crate::artifacts::vdi3805::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let din4108 = semio_s_artifact_norm_din4108::declaration(semio_s_artifact_norm_din4108::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let din16798 = semio_s_artifact_norm_din16798::declaration(semio_s_artifact_norm_din16798::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let din18599 = semio_s_artifact_norm_din18599::declaration(semio_s_artifact_norm_din18599::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1990 = semio_s_artifact_norm_en1990::declaration(semio_s_artifact_norm_en1990::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1991 = semio_s_artifact_norm_en1991::declaration(semio_s_artifact_norm_en1991::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1992 = semio_s_artifact_norm_en1992::declaration(semio_s_artifact_norm_en1992::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1993 = semio_s_artifact_norm_en1993::declaration(semio_s_artifact_norm_en1993::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1994 = semio_s_artifact_norm_en1994::declaration(semio_s_artifact_norm_en1994::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1995 = semio_s_artifact_norm_en1995::declaration(semio_s_artifact_norm_en1995::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1996 = semio_s_artifact_norm_en1996::declaration(semio_s_artifact_norm_en1996::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1997 = semio_s_artifact_norm_en1997::declaration(semio_s_artifact_norm_en1997::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1998 = semio_s_artifact_norm_en1998::declaration(semio_s_artifact_norm_en1998::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let en1999 = semio_s_artifact_norm_en1999::declaration(semio_s_artifact_norm_en1999::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let iso16757 = semio_s_artifact_norm_iso16757::declaration(semio_s_artifact_norm_iso16757::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
+    let vdi3805 = semio_s_artifact_norm_vdi3805::declaration(semio_s_artifact_norm_vdi3805::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     Plugin::<NormApps>::builder("norm")
         .label("Norm")
         .version("0.1.0")
@@ -90,81 +90,81 @@ pub fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
         .artifact(en1999)
         .artifact(iso16757)
         .artifact(vdi3805)
-        .editor::<crate::editor::din4108::Din4108PlayApp>(crate::editor::din4108::create_din4108_app())
-        .editor_mutation_roster::<crate::editor::din4108::Din4108PlayApp>()
-        .viewer::<crate::viewer::din4108::Din4108Viewer>(crate::viewer::din4108::create_din4108_viewer())
-        .viewer_mutation_roster::<crate::viewer::din4108::Din4108Viewer>()
-        .editor::<crate::editor::din16798::Din16798PlayApp>(crate::editor::din16798::create_din16798_app())
-        .editor_mutation_roster::<crate::editor::din16798::Din16798PlayApp>()
-        .viewer::<crate::viewer::din16798::Din16798Viewer>(crate::viewer::din16798::create_din16798_viewer())
-        .viewer_mutation_roster::<crate::viewer::din16798::Din16798Viewer>()
-        .editor::<crate::editor::din18599::Din18599PlayApp>(crate::editor::din18599::create_din18599_app())
-        .editor_mutation_roster::<crate::editor::din18599::Din18599PlayApp>()
-        .viewer::<crate::viewer::din18599::Din18599Viewer>(crate::viewer::din18599::create_din18599_viewer())
-        .viewer_mutation_roster::<crate::viewer::din18599::Din18599Viewer>()
-        .editor::<crate::editor::en1990::En1990PlayApp>(crate::editor::en1990::create_en1990_app())
-        .editor_mutation_roster::<crate::editor::en1990::En1990PlayApp>()
-        .viewer::<crate::viewer::en1990::En1990Viewer>(crate::viewer::en1990::create_en1990_viewer())
-        .viewer_mutation_roster::<crate::viewer::en1990::En1990Viewer>()
-        .editor::<crate::editor::en1991::En1991PlayApp>(crate::editor::en1991::create_en1991_app())
-        .editor_mutation_roster::<crate::editor::en1991::En1991PlayApp>()
-        .viewer::<crate::viewer::en1991::En1991Viewer>(crate::viewer::en1991::create_en1991_viewer())
-        .viewer_mutation_roster::<crate::viewer::en1991::En1991Viewer>()
-        .editor::<crate::editor::en1992::En1992PlayApp>(crate::editor::en1992::create_en1992_app())
-        .editor_mutation_roster::<crate::editor::en1992::En1992PlayApp>()
-        .viewer::<crate::viewer::en1992::En1992Viewer>(crate::viewer::en1992::create_en1992_viewer())
-        .viewer_mutation_roster::<crate::viewer::en1992::En1992Viewer>()
-        .editor::<crate::editor::en1993::En1993PlayApp>(crate::editor::en1993::create_en1993_app())
-        .editor_mutation_roster::<crate::editor::en1993::En1993PlayApp>()
-        .viewer::<crate::viewer::en1993::En1993Viewer>(crate::viewer::en1993::create_en1993_viewer())
-        .viewer_mutation_roster::<crate::viewer::en1993::En1993Viewer>()
-        .editor::<crate::editor::en1994::En1994PlayApp>(crate::editor::en1994::create_en1994_app())
-        .editor_mutation_roster::<crate::editor::en1994::En1994PlayApp>()
-        .viewer::<crate::viewer::en1994::En1994Viewer>(crate::viewer::en1994::create_en1994_viewer())
-        .viewer_mutation_roster::<crate::viewer::en1994::En1994Viewer>()
-        .editor::<crate::editor::en1995::En1995PlayApp>(crate::editor::en1995::create_en1995_app())
-        .editor_mutation_roster::<crate::editor::en1995::En1995PlayApp>()
-        .viewer::<crate::viewer::en1995::En1995Viewer>(crate::viewer::en1995::create_en1995_viewer())
-        .viewer_mutation_roster::<crate::viewer::en1995::En1995Viewer>()
-        .editor::<crate::editor::en1996::En1996PlayApp>(crate::editor::en1996::create_en1996_app())
-        .editor_mutation_roster::<crate::editor::en1996::En1996PlayApp>()
-        .viewer::<crate::viewer::en1996::En1996Viewer>(crate::viewer::en1996::create_en1996_viewer())
-        .viewer_mutation_roster::<crate::viewer::en1996::En1996Viewer>()
-        .editor::<crate::editor::en1997::En1997PlayApp>(crate::editor::en1997::create_en1997_app())
-        .editor_mutation_roster::<crate::editor::en1997::En1997PlayApp>()
-        .viewer::<crate::viewer::en1997::En1997Viewer>(crate::viewer::en1997::create_en1997_viewer())
-        .viewer_mutation_roster::<crate::viewer::en1997::En1997Viewer>()
-        .editor::<crate::editor::en1998::En1998PlayApp>(crate::editor::en1998::create_en1998_app())
-        .editor_mutation_roster::<crate::editor::en1998::En1998PlayApp>()
-        .viewer::<crate::viewer::en1998::En1998Viewer>(crate::viewer::en1998::create_en1998_viewer())
-        .viewer_mutation_roster::<crate::viewer::en1998::En1998Viewer>()
-        .editor::<crate::editor::en1999::En1999PlayApp>(crate::editor::en1999::create_en1999_app())
-        .editor_mutation_roster::<crate::editor::en1999::En1999PlayApp>()
-        .viewer::<crate::viewer::en1999::En1999Viewer>(crate::viewer::en1999::create_en1999_viewer())
-        .viewer_mutation_roster::<crate::viewer::en1999::En1999Viewer>()
-        .editor::<crate::editor::iso16757::Iso16757PlayApp>(crate::editor::iso16757::create_iso16757_app())
-        .editor_mutation_roster::<crate::editor::iso16757::Iso16757PlayApp>()
-        .viewer::<crate::viewer::iso16757::Iso16757Viewer>(crate::viewer::iso16757::create_iso16757_viewer())
-        .viewer_mutation_roster::<crate::viewer::iso16757::Iso16757Viewer>()
-        .editor::<crate::editor::vdi3805::Vdi3805PlayApp>(crate::editor::vdi3805::create_vdi3805_app())
-        .editor_mutation_roster::<crate::editor::vdi3805::Vdi3805PlayApp>()
-        .viewer::<crate::viewer::vdi3805::Vdi3805Viewer>(crate::viewer::vdi3805::create_vdi3805_viewer())
-        .viewer_mutation_roster::<crate::viewer::vdi3805::Vdi3805Viewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::din4108::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::din16798::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::din18599::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1990::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1991::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1992::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1993::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1994::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1995::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1996::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1997::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1998::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::en1999::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::iso16757::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::vdi3805::artifact_kind().id })
+        .editor::<semio_s_artifact_norm_din4108::editor::din4108::Din4108PlayApp>(semio_s_artifact_norm_din4108::editor::din4108::create_din4108_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_din4108::editor::din4108::Din4108PlayApp>()
+        .viewer::<semio_s_artifact_norm_din4108::viewer::din4108::Din4108Viewer>(semio_s_artifact_norm_din4108::viewer::din4108::create_din4108_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_din4108::viewer::din4108::Din4108Viewer>()
+        .editor::<semio_s_artifact_norm_din16798::editor::din16798::Din16798PlayApp>(semio_s_artifact_norm_din16798::editor::din16798::create_din16798_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_din16798::editor::din16798::Din16798PlayApp>()
+        .viewer::<semio_s_artifact_norm_din16798::viewer::din16798::Din16798Viewer>(semio_s_artifact_norm_din16798::viewer::din16798::create_din16798_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_din16798::viewer::din16798::Din16798Viewer>()
+        .editor::<semio_s_artifact_norm_din18599::editor::din18599::Din18599PlayApp>(semio_s_artifact_norm_din18599::editor::din18599::create_din18599_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_din18599::editor::din18599::Din18599PlayApp>()
+        .viewer::<semio_s_artifact_norm_din18599::viewer::din18599::Din18599Viewer>(semio_s_artifact_norm_din18599::viewer::din18599::create_din18599_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_din18599::viewer::din18599::Din18599Viewer>()
+        .editor::<semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp>(semio_s_artifact_norm_en1990::editor::en1990::create_en1990_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1990::viewer::en1990::En1990Viewer>(semio_s_artifact_norm_en1990::viewer::en1990::create_en1990_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1990::viewer::en1990::En1990Viewer>()
+        .editor::<semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp>(semio_s_artifact_norm_en1991::editor::en1991::create_en1991_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1991::viewer::en1991::En1991Viewer>(semio_s_artifact_norm_en1991::viewer::en1991::create_en1991_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1991::viewer::en1991::En1991Viewer>()
+        .editor::<semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp>(semio_s_artifact_norm_en1992::editor::en1992::create_en1992_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer>(semio_s_artifact_norm_en1992::viewer::en1992::create_en1992_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer>()
+        .editor::<semio_s_artifact_norm_en1993::editor::en1993::En1993PlayApp>(semio_s_artifact_norm_en1993::editor::en1993::create_en1993_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1993::editor::en1993::En1993PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1993::viewer::en1993::En1993Viewer>(semio_s_artifact_norm_en1993::viewer::en1993::create_en1993_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1993::viewer::en1993::En1993Viewer>()
+        .editor::<semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp>(semio_s_artifact_norm_en1994::editor::en1994::create_en1994_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1994::viewer::en1994::En1994Viewer>(semio_s_artifact_norm_en1994::viewer::en1994::create_en1994_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1994::viewer::en1994::En1994Viewer>()
+        .editor::<semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp>(semio_s_artifact_norm_en1995::editor::en1995::create_en1995_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1995::viewer::en1995::En1995Viewer>(semio_s_artifact_norm_en1995::viewer::en1995::create_en1995_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1995::viewer::en1995::En1995Viewer>()
+        .editor::<semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp>(semio_s_artifact_norm_en1996::editor::en1996::create_en1996_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1996::viewer::en1996::En1996Viewer>(semio_s_artifact_norm_en1996::viewer::en1996::create_en1996_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1996::viewer::en1996::En1996Viewer>()
+        .editor::<semio_s_artifact_norm_en1997::editor::en1997::En1997PlayApp>(semio_s_artifact_norm_en1997::editor::en1997::create_en1997_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1997::editor::en1997::En1997PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1997::viewer::en1997::En1997Viewer>(semio_s_artifact_norm_en1997::viewer::en1997::create_en1997_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1997::viewer::en1997::En1997Viewer>()
+        .editor::<semio_s_artifact_norm_en1998::editor::en1998::En1998PlayApp>(semio_s_artifact_norm_en1998::editor::en1998::create_en1998_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1998::editor::en1998::En1998PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1998::viewer::en1998::En1998Viewer>(semio_s_artifact_norm_en1998::viewer::en1998::create_en1998_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1998::viewer::en1998::En1998Viewer>()
+        .editor::<semio_s_artifact_norm_en1999::editor::en1999::En1999PlayApp>(semio_s_artifact_norm_en1999::editor::en1999::create_en1999_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1999::editor::en1999::En1999PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1999::viewer::en1999::En1999Viewer>(semio_s_artifact_norm_en1999::viewer::en1999::create_en1999_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1999::viewer::en1999::En1999Viewer>()
+        .editor::<semio_s_artifact_norm_iso16757::editor::iso16757::Iso16757PlayApp>(semio_s_artifact_norm_iso16757::editor::iso16757::create_iso16757_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_iso16757::editor::iso16757::Iso16757PlayApp>()
+        .viewer::<semio_s_artifact_norm_iso16757::viewer::iso16757::Iso16757Viewer>(semio_s_artifact_norm_iso16757::viewer::iso16757::create_iso16757_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_iso16757::viewer::iso16757::Iso16757Viewer>()
+        .editor::<semio_s_artifact_norm_vdi3805::editor::vdi3805::Vdi3805PlayApp>(semio_s_artifact_norm_vdi3805::editor::vdi3805::create_vdi3805_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_vdi3805::editor::vdi3805::Vdi3805PlayApp>()
+        .viewer::<semio_s_artifact_norm_vdi3805::viewer::vdi3805::Vdi3805Viewer>(semio_s_artifact_norm_vdi3805::viewer::vdi3805::create_vdi3805_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_vdi3805::viewer::vdi3805::Vdi3805Viewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_din4108::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_din16798::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_din18599::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1990::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1991::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1992::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1993::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1994::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1995::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1996::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1997::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1998::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1999::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_iso16757::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_vdi3805::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("documents.write".into()), scope: "plugin".into(), reason: "persist norm family edits to the open document".into(), optional: false })
         .try_build()
@@ -189,20 +189,20 @@ mod surface_tests {
         };
     }
 
-    surface_law!(din4108_surface_laws_hold, crate::editor::din4108::Din4108PlayApp, crate::viewer::din4108::Din4108Viewer);
-    surface_law!(din16798_surface_laws_hold, crate::editor::din16798::Din16798PlayApp, crate::viewer::din16798::Din16798Viewer);
-    surface_law!(din18599_surface_laws_hold, crate::editor::din18599::Din18599PlayApp, crate::viewer::din18599::Din18599Viewer);
-    surface_law!(en1990_surface_laws_hold, crate::editor::en1990::En1990PlayApp, crate::viewer::en1990::En1990Viewer);
-    surface_law!(en1991_surface_laws_hold, crate::editor::en1991::En1991PlayApp, crate::viewer::en1991::En1991Viewer);
-    surface_law!(en1992_surface_laws_hold, crate::editor::en1992::En1992PlayApp, crate::viewer::en1992::En1992Viewer);
-    surface_law!(en1993_surface_laws_hold, crate::editor::en1993::En1993PlayApp, crate::viewer::en1993::En1993Viewer);
-    surface_law!(en1994_surface_laws_hold, crate::editor::en1994::En1994PlayApp, crate::viewer::en1994::En1994Viewer);
-    surface_law!(en1995_surface_laws_hold, crate::editor::en1995::En1995PlayApp, crate::viewer::en1995::En1995Viewer);
-    surface_law!(en1996_surface_laws_hold, crate::editor::en1996::En1996PlayApp, crate::viewer::en1996::En1996Viewer);
-    surface_law!(en1997_surface_laws_hold, crate::editor::en1997::En1997PlayApp, crate::viewer::en1997::En1997Viewer);
-    surface_law!(en1998_surface_laws_hold, crate::editor::en1998::En1998PlayApp, crate::viewer::en1998::En1998Viewer);
-    surface_law!(en1999_surface_laws_hold, crate::editor::en1999::En1999PlayApp, crate::viewer::en1999::En1999Viewer);
-    surface_law!(iso16757_surface_laws_hold, crate::editor::iso16757::Iso16757PlayApp, crate::viewer::iso16757::Iso16757Viewer);
-    surface_law!(vdi3805_surface_laws_hold, crate::editor::vdi3805::Vdi3805PlayApp, crate::viewer::vdi3805::Vdi3805Viewer);
+    surface_law!(din4108_surface_laws_hold, semio_s_artifact_norm_din4108::editor::din4108::Din4108PlayApp, semio_s_artifact_norm_din4108::viewer::din4108::Din4108Viewer);
+    surface_law!(din16798_surface_laws_hold, semio_s_artifact_norm_din16798::editor::din16798::Din16798PlayApp, semio_s_artifact_norm_din16798::viewer::din16798::Din16798Viewer);
+    surface_law!(din18599_surface_laws_hold, semio_s_artifact_norm_din18599::editor::din18599::Din18599PlayApp, semio_s_artifact_norm_din18599::viewer::din18599::Din18599Viewer);
+    surface_law!(en1990_surface_laws_hold, semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp, semio_s_artifact_norm_en1990::viewer::en1990::En1990Viewer);
+    surface_law!(en1991_surface_laws_hold, semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp, semio_s_artifact_norm_en1991::viewer::en1991::En1991Viewer);
+    surface_law!(en1992_surface_laws_hold, semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp, semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer);
+    surface_law!(en1993_surface_laws_hold, semio_s_artifact_norm_en1993::editor::en1993::En1993PlayApp, semio_s_artifact_norm_en1993::viewer::en1993::En1993Viewer);
+    surface_law!(en1994_surface_laws_hold, semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp, semio_s_artifact_norm_en1994::viewer::en1994::En1994Viewer);
+    surface_law!(en1995_surface_laws_hold, semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp, semio_s_artifact_norm_en1995::viewer::en1995::En1995Viewer);
+    surface_law!(en1996_surface_laws_hold, semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp, semio_s_artifact_norm_en1996::viewer::en1996::En1996Viewer);
+    surface_law!(en1997_surface_laws_hold, semio_s_artifact_norm_en1997::editor::en1997::En1997PlayApp, semio_s_artifact_norm_en1997::viewer::en1997::En1997Viewer);
+    surface_law!(en1998_surface_laws_hold, semio_s_artifact_norm_en1998::editor::en1998::En1998PlayApp, semio_s_artifact_norm_en1998::viewer::en1998::En1998Viewer);
+    surface_law!(en1999_surface_laws_hold, semio_s_artifact_norm_en1999::editor::en1999::En1999PlayApp, semio_s_artifact_norm_en1999::viewer::en1999::En1999Viewer);
+    surface_law!(iso16757_surface_laws_hold, semio_s_artifact_norm_iso16757::editor::iso16757::Iso16757PlayApp, semio_s_artifact_norm_iso16757::viewer::iso16757::Iso16757Viewer);
+    surface_law!(vdi3805_surface_laws_hold, semio_s_artifact_norm_vdi3805::editor::vdi3805::Vdi3805PlayApp, semio_s_artifact_norm_vdi3805::viewer::vdi3805::Vdi3805Viewer);
 }
 //#endregion 🧪️SurfaceTests

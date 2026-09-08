@@ -168,7 +168,6 @@ struct ActiveFrameBuild {
     handle: crate::AppHandle,
     operation: OperationId,
     generation: Generation,
-    dpr: f32,
     cancel: CancelToken,
     preview_sequence: u64,
     phase: ActiveFramePhase,
@@ -203,7 +202,7 @@ fn retire_active_phase(phase: &mut ActiveFramePhase) -> bool {
 }
 
 impl ActiveFrameBuild {
-    fn new(runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, dpr: f32, cancel: CancelToken) -> Self {
+    fn new(runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, cancel: CancelToken) -> Self {
         let handle = runtime.downgrade();
         let phase = match BatchJobSession::try_new(FrameBuildJob::new(inputs), batch_params(operation, generation, cancel.clone())) {
             Ok(session) => ActiveFramePhase::Deadlines(session),
@@ -212,7 +211,7 @@ impl ActiveFrameBuild {
                 ActiveFramePhase::DeadlineAdmissionRejected(rejected)
             }
         };
-        Self { runtime, handle, operation, generation, dpr, cancel, preview_sequence: 0, phase, completed: None, closing: false }
+        Self { runtime, handle, operation, generation, cancel, preview_sequence: 0, phase, completed: None, closing: false }
     }
 
     fn cancel(&self) {
@@ -288,7 +287,7 @@ impl ActiveFrameBuild {
                 if applied {
                     return ActiveFrameStep::Pending;
                 }
-                self.phase = ActiveFramePhase::Build(crate::FrameTransaction::new(std::mem::take(directives), self.operation, self.generation, self.dpr));
+                self.phase = ActiveFramePhase::Build(crate::FrameTransaction::new(std::mem::take(directives), self.operation, self.generation));
                 ActiveFrameStep::Pending
             }
             ActiveFramePhase::Build(transaction) => {
@@ -435,7 +434,7 @@ impl FrameBuildHandle {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, dpr: f32) -> Option<crate::AppFramePresentation> {
+    pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation) -> Option<crate::AppFramePresentation> {
         if self.closing {
             return None;
         }
@@ -517,14 +516,14 @@ impl FrameBuildHandle {
         }
         if self.last_submitted_generation != Some(generation) {
             self.cancel = root_cancel_token();
-            self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, dpr, self.cancel.clone()));
+            self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone()));
             self.last_submitted_generation = Some(generation);
         }
         None
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, dpr: f32) -> Option<crate::AppFramePresentation> {
+    pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation) -> Option<crate::AppFramePresentation> {
         if self.closing || web_sys::window().is_some() {
             return None;
         }
@@ -596,7 +595,7 @@ impl FrameBuildHandle {
         }
         if self.last_submitted_generation != Some(generation) {
             self.cancel = root_cancel_token();
-            self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, dpr, self.cancel.clone()));
+            self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone()));
             self.last_submitted_generation = Some(generation);
         }
         None

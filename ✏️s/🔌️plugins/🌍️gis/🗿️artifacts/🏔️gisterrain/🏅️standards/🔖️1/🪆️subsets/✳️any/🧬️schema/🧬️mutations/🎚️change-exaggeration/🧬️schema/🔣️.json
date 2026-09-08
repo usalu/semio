@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/gis/gisterrain/1/any/mutation/change-exaggeration.json",
+  "$id": "https://semio.tech/schema/s/gis/gisterrain/1/any/mutation/change-exaggeration/schema.json",
   "title": "ChangeExaggeration",
   "type": "object",
   "additionalProperties": false,

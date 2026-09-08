@@ -4,7 +4,7 @@
 //! hand-rolled channel took an already-typed `&ZipSnapshot`; this leaf additionally decodes the
 //! foreign payload's own pack bytes first, as the `FROM: ZIP_DIALECT` coordinate requires.
 
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::VcsSnapshot;
 use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};

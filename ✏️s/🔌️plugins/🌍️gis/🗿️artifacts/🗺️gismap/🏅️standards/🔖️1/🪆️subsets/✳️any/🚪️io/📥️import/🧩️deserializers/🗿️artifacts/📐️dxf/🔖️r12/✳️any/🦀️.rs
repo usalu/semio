@@ -1,5 +1,5 @@
 //! gismap <- dxf
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::GisMapSnapshot;
 use semio_s_artifact_stdio_dxf::{DxfSnapshot, STDIO_DXF_DOCUMENT_SCHEMA};
 
 pub fn register() {}

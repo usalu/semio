@@ -3,13 +3,13 @@
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the World3d
 //! viewport in `🎭️modes/👁️view/🪟️windows/🏔️terrain`, view state in `🦀️config.rs`, fixture-scenery
-//! compute in `crate::artifacts::gisterrain::schema::inferences` (`parse_descriptor`), and this app's
+//! compute in `crate::schema::inferences` (`parse_descriptor`), and this app's
 //! typed media I/O surface (`map:in` overlay, ports, scene media) below in `🔖️Io` — relocated from
 //! the artifact's `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 
-use crate::artifacts::gisterrain::op::GisTerrainMutation;
-use crate::artifacts::gisterrain::schema::default_terrain_document;
-use crate::artifacts::gisterrain::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
+use crate::op::GisTerrainMutation;
+use crate::schema::default_terrain_document;
+use crate::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 use crate::editor::gis3d::commands::{exaggeration, locale, view};
 use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation, SetCamera, SetLocale};
 use crate::editor::gis3d::modes::view as view_mode;
@@ -45,7 +45,7 @@ pub fn gis3d_io() -> AppIo {
         ports: vec![gis3d_map_in_port(), gis3d_scene_out_port()],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
-        artifact: semio_framework_plugin::ArtifactPresentation { id: crate::artifacts::gisterrain::GISTERRAIN_DIALECT.artifact_kind.into(), name: "GIS Terrain".into(), dimension: "3d".into(), component_kind: "gisterrain".into() },
+        artifact: semio_framework_plugin::ArtifactPresentation { id: crate::GISTERRAIN_DIALECT.artifact_kind.into(), name: "GIS Terrain".into(), dimension: "3d".into(), component_kind: "gisterrain".into() },
     }
 }
 
@@ -58,7 +58,7 @@ pub fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
         label: "Map".into(),
         direction: semio_framework_plugin::MediaPortDirection::In,
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-        kind_id: Some(crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind.into()),
+        kind_id: Some(semio_s_artifact_gis_gismap::GISMAP_DIALECT.artifact_kind.into()),
         required: false,
         multiplicity: semio_framework::PortMultiplicity::One,
     }
@@ -454,7 +454,7 @@ impl ArtifactEditor for Gis3dPlayApp {
 
     type Command = Gis3dCommand;
 
-    const DIALECT: Dialect = crate::artifacts::gisterrain::GISTERRAIN_DIALECT;
+    const DIALECT: Dialect = crate::GISTERRAIN_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -554,7 +554,7 @@ impl ArtifactEditor for Gis3dPlayApp {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "map:in only accepts a Structured JSON payload".into()));
                 };
-                use crate::artifacts::gisterrain::mutations::change_imported_features::ChangeImportedFeatures;
+                use crate::mutations::change_imported_features::ChangeImportedFeatures;
                 Ok(Emit::mutations(vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: json.clone() })]))
             }
             _ => Err(MediaError::NotImplemented),
@@ -623,12 +623,12 @@ impl ArtifactEditor for Gis3dPlayApp {
 
 //#region 🔖️Manifest
 pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::gisterrain::GISTERRAIN_DIALECT)
+    Editor::builder(crate::GISTERRAIN_DIALECT)
             .document(["semio", "gis", "3d"])
             // 🔌️ Declared for clarity on both sides of the `map:in` edge (WORKFLOWS-END-TO-END-TYPED-PORTS
             // Wave 2 port recipe) — the canonical declaration is the gismap artifact's;
             // identical-shape duplicates are harmless (registry dedupes by id).
-            .artifact_kind(crate::artifacts::gismap::artifact_kind())
+            .artifact_kind(semio_s_artifact_gis_gismap::artifact_kind())
             // 🧱️ `.artifact_kind(mesh_artifact_kind())` REMOVED — `3d.mesh` duplicate kind deleted
             // repo-wide (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`); mesh is now
             // canonically `s.stdio.semio@v1/mesh`, composed via `GisTerrainSnapshot.mesh`.
@@ -811,10 +811,10 @@ mod tests {
         assert!(definition.window_kinds.iter().flat_map(|window| &window.actions).all(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated));
         // 🧷️ gis3d declares no app panel tabs of its own; whatever is present comes from the framework.
         assert!(!definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref().is_some_and(|key| key.starts_with("gis3d.play."))), "gis3d declares no app panels");
-        assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind));
+        assert!(definition.artifact_kinds.iter().any(|kind| kind.id == semio_s_artifact_gis_gismap::GISMAP_DIALECT.artifact_kind));
         // 🧱️ `3d.mesh` is NO LONGER independently registered here (ticket
         // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` — duplicate `ArtifactKindSpec` deleted, see
-        // `crate::artifacts::gisterrain::🦀️.rs`'s removal comment). `scene:out`'s
+        // `crate::🦀️.rs`'s removal comment). `scene:out`'s
         // `kind_id: Some("3d.mesh".into())` media-port tag (asserted separately below) still
         // references the canonical kind by id; this manifest just no longer redundantly declares it.
         assert!(!definition.artifact_kinds.iter().any(|kind| kind.id == "3d.mesh"), "3d.mesh is composed via GisTerrainSnapshot.mesh now, never a standalone ArtifactKindSpec");
@@ -856,7 +856,7 @@ mod tests {
         let incoming = json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.map".into(), json: incoming.clone() } };
         let emit = Gis3dPlayApp::import_media("map:in", &media, &doc).expect("map:in import");
-        use crate::artifacts::gisterrain::mutations::change_imported_features::ChangeImportedFeatures;
+        use crate::mutations::change_imported_features::ChangeImportedFeatures;
         assert_eq!(emit.artifact_mutations, vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: incoming })]);
     }
 
@@ -876,7 +876,7 @@ mod tests {
         let ports = io.all_ports().await;
         let map_in = ports.iter().find(|port| port.id == "map:in").expect("map:in declared");
         assert_eq!(map_in.direction, semio_framework_plugin::MediaPortDirection::In);
-        assert_eq!(map_in.kind_id.as_deref(), Some(crate::artifacts::gismap::GISMAP_DIALECT.artifact_kind));
+        assert_eq!(map_in.kind_id.as_deref(), Some(semio_s_artifact_gis_gismap::GISMAP_DIALECT.artifact_kind));
         let scene_out = ports.iter().find(|port| port.id == "scene:out").expect("scene:out declared");
         assert_eq!(scene_out.direction, semio_framework_plugin::MediaPortDirection::Out);
         assert_eq!(scene_out.kind_id.as_deref(), Some("3d.mesh"));

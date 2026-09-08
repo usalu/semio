@@ -1,8 +1,8 @@
 //! ↩ Inverse constructor for `ChangeShotFormat` — reconstructed from BASE state.
 
 use super::ChangeShotFormat;
-use crate::artifacts::shooting::mutations::ShootingMutation;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 
 pub fn inverse(payload: &ChangeShotFormat, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
     match base.shots.iter().find(|shot| shot.id == payload.id) {

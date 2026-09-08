@@ -1,8 +1,8 @@
 //! 🔺️ Forms artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::forms::schema::diff::{FormsDiff, FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
-use crate::artifacts::forms::schema::FormsArtifact;
-use crate::artifacts::forms::{forms_children_from_steps, forms_steps, FormStep, FormsSnapshot};
+use crate::schema::diff::{FormsDiff, FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
+use crate::schema::FormsArtifact;
+use crate::{forms_children_from_steps, forms_steps, FormStep, FormsSnapshot};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -222,8 +222,8 @@ pub fn steps_collection_delta(before: &[FormStep], after: &[FormStep]) -> FormsS
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::forms::mutations::create_step;
-    use crate::artifacts::forms::{mutations::FormMutation, FormStep, FORMS_DOCUMENT_SCHEMA};
+    use crate::mutations::create_step;
+    use crate::{mutations::FormMutation, FormStep, FORMS_DOCUMENT_SCHEMA};
     use protocol::Mutation;
 
     #[semio_framework_async_macros::async_test]
@@ -235,7 +235,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn create_step_diff_applies_onto_the_base_snapshot() {
-        let base = crate::artifacts::forms::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, Vec::new());
+        let base = crate::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, Vec::new());
         let step = FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() };
         let operation = FormMutation::CreateStep(create_step::mutation::CreateStep { step, index: None });
         let diff: FormsDiff = operation.diff(&base).into_parts().0;

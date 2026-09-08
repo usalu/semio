@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/neural/engine/retirement/component.json",
+  "title": "OS Neural Engine Retirement Contracts",
+  "$defs": {
+    "ValueRetirementV1": {
+      "title": "Nested Value Retirement V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "grants", "cases", "ownership"],
+      "properties": {
+        "schema": { "const": "semio.neural.value-retirement" },
+        "grants": { "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": { "type": "integer", "minimum": 0, "maximum": 4096 } },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "json", "expandedText", "expectedBytes"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "json": { "type": "string", "minLength": 1 },
+              "expandedText": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["text", "repetitions"],
+                "properties": {
+                  "text": { "type": "string", "minLength": 1 },
+                  "repetitions": { "type": "integer", "minimum": 0 }
+                }
+              },
+              "expectedBytes": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "ownership": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["finalDrop", "sharedDrop", "coldBuilderDrop", "terminalOwners"],
+          "properties": {
+            "finalDrop": { "enum": ["reject-without-recursive-destruction"] },
+            "sharedDrop": { "enum": ["atomic-release"] },
+            "coldBuilderDrop": { "enum": ["explicit-domain-drain"] },
+            "terminalOwners": { "const": 0 }
+          }
+        }
+      }
+    },
+    "CacheRetirementV1": {
+      "title": "Cache Retirement V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "grants", "key", "operations", "expected"],
+      "properties": {
+        "schema": { "const": "semio.neural.cache-retirement" },
+        "grants": { "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": { "type": "integer", "minimum": 0, "maximum": 4096 } },
+        "key": { "type": "integer", "minimum": 0 },
+        "operations": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["op", "field", "text", "repeat"],
+                "properties": {
+                  "op": { "const": "seed" },
+                  "field": { "type": "string", "minLength": 1 },
+                  "text": { "type": "string", "minLength": 1 },
+                  "repeat": { "type": "integer", "minimum": 1 }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["op"],
+                "properties": { "op": { "enum": ["release-shared", "release-final"] } }
+              }
+            ]
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["liveEntriesBeforeFinal", "sharedReleasedBytes", "finalReleasedBytes", "finalJson", "terminalOwners"],
+          "properties": {
+            "liveEntriesBeforeFinal": { "type": "integer", "minimum": 0 },
+            "sharedReleasedBytes": { "const": 0 },
+            "finalReleasedBytes": { "type": "integer", "minimum": 0 },
+            "finalJson": { "type": "string", "minLength": 1 },
+            "terminalOwners": { "const": 0 }
+          }
+        }
+      }
+    },
+    "EvaluationOwnersV1": {
+      "title": "Evaluation Owner Retirement V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "grants", "node", "payload", "expectedBytes"],
+      "properties": {
+        "schema": { "const": "semio.neural.evaluation-retirement" },
+        "grants": { "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": { "type": "integer", "minimum": 0, "maximum": 4096 } },
+        "node": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "repeat"],
+          "properties": {
+            "text": { "type": "string", "minLength": 1 },
+            "repeat": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "repeat"],
+          "properties": {
+            "text": { "type": "string", "minLength": 1 },
+            "repeat": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "expectedBytes": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

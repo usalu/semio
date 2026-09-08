@@ -1,11 +1,11 @@
 //! 🔺️ `rename-step` sparse diff construction — sets an id-keyed [`ProcessStep`]'s `label` in the
 //! durable `step_payloads` timeline and re-mints `steps`/`tool_solids` via
-//! [`process3d_step_timeline_diff`](crate::artifacts::process3d::process3d_step_timeline_diff).
+//! [`process3d_step_timeline_diff`](crate::process3d_step_timeline_diff).
 //! Error `target-missing` when the step is absent, Warning `no-op` when the new label equals the
 //! old (step `label` is a display string, not a key, so no `duplicate-id` case applies here).
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::{process3d_step_timeline_diff, Process3dSnapshot};
+use crate::diff::Process3dDiff;
+use crate::{process3d_step_timeline_diff, Process3dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameStep, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {

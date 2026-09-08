@@ -13,9 +13,9 @@
 //! the cascade — the committed `content` handle is left unseeded, so the scene is empty, the target
 //! guard fires first, and no cascade note is emitted at all.
 
-use crate::artifacts::sequence::diff::SequenceDiff;
-use crate::artifacts::sequence::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
-use crate::artifacts::sequence::SequenceSnapshot;
+use crate::diff::SequenceDiff;
+use crate::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
+use crate::SequenceSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

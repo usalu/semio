@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `ChangeSnapGridSpacing`.
 use super::ChangeSnapGridSpacing;
-use crate::artifacts::note::NoteDiff;
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteDiff;
+use crate::NoteSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeSnapGridSpacing, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

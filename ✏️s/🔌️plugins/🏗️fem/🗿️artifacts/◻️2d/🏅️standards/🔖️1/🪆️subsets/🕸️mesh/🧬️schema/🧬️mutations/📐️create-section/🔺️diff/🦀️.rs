@@ -3,9 +3,9 @@
 //! Guards, in the order they run: `mutation.duplicate-id` (Fatal), then the shared
 //! `guards::section_plausibility` positivity bounds (`mutation.invariant`, Fatal).
 use super::CreateSection;
-use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dSectionsDelta};
-use crate::artifacts::fem2d::mutations::guards;
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::diff::{Fem2dDiff, Fem2dSectionsDelta};
+use crate::mutations::guards;
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateSection, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

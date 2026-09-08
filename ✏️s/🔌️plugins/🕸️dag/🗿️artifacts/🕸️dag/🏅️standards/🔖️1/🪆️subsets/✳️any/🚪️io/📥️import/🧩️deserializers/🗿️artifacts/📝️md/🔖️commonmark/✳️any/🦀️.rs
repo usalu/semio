@@ -4,7 +4,7 @@
 //! lossless only for text that already round-trips through `stdio.md`'s block model, so this hop
 //! is `IoFidelity::Canonical`, not `Exact`.
 
-use crate::artifacts::dag::DagSnapshot;
+use crate::DagSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

@@ -1,5 +1,5 @@
 //! gismap <- pdf
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::GisMapSnapshot;
 use semio_s_artifact_stdio_pdf::{PdfSnapshot, STDIO_PDF_DOCUMENT_SCHEMA};
 
 pub fn register() {}

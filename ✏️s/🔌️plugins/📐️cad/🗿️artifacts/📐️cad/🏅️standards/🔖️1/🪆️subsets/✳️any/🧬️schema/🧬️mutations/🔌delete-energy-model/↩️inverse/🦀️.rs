@@ -2,8 +2,8 @@
 //! empty (`Vec::new()`) when the slot was already absent (nothing to undo).
 
 use super::DeleteEnergyModel;
-use crate::artifacts::cad::mutations::{create_energy_model, CadMutation};
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::{create_energy_model, CadMutation};
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &DeleteEnergyModel, base: &CadSnapshot) -> Vec<CadMutation> {

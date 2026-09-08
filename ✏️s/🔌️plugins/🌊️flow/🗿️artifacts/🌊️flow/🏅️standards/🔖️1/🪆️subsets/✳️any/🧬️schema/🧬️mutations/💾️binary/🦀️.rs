@@ -14,7 +14,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::flow::op::FlowMutation;
+use crate::op::FlowMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `FlowMutation` to its binary state-patch form.
@@ -31,11 +31,11 @@ pub fn decode_op(bytes: &[u8]) -> Result<FlowMutation, protocol::ProtocolError> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::flow::FlowSnapshot;
+    use crate::FlowSnapshot;
     use protocol::Identified;
 
     fn sample_move_widgets_operation() -> FlowMutation {
-        FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::MoveWidgets { entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 1.0, y: 2.0 }) }] })
+        FlowMutation::MoveWidgets(crate::schema::mutations::move_widgets::MoveWidgets { entries: vec![semio_framework_artifact_flow_flow::FlowLayoutEntry { id: "slider".into(), layout: Some(semio_framework_artifact_flow_flow::WidgetLayout { x: 1.0, y: 2.0 }) }] })
     }
 
     #[semio_framework_async_macros::async_test]
@@ -61,9 +61,9 @@ mod tests {
     /// would still fail here.
     #[semio_framework_async_macros::async_test]
     async fn duplicate_widget_composite_round_trips_through_op_codecs_and_a_real_store_dispatch() {
-        let widget = flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
-        let create = FlowMutation::CreateWidget(crate::artifacts::flow::schema::mutations::create_widget::CreateWidget { index: 0, widget });
-        let duplicate = FlowMutation::DuplicateWidget(crate::artifacts::flow::schema::mutations::duplicate_widget::mutation::DuplicateWidget {
+        let widget = semio_framework_artifact_flow_flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
+        let create = FlowMutation::CreateWidget(crate::schema::mutations::create_widget::CreateWidget { index: 0, widget });
+        let duplicate = FlowMutation::DuplicateWidget(crate::schema::mutations::duplicate_widget::mutation::DuplicateWidget {
             source_id: "note-1".into(),
             new_id: "note-2".into(),
             synapse_id: "note-1-to-note-2".into(),

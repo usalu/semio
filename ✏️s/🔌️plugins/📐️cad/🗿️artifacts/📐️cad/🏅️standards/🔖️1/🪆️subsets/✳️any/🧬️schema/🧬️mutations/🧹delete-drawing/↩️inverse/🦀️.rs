@@ -2,8 +2,8 @@
 //! absent.
 
 use super::DeleteDrawing;
-use crate::artifacts::cad::mutations::{create_drawing, CadMutation};
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::{create_drawing, CadMutation};
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteDrawing, base: &CadSnapshot) -> Vec<CadMutation> {

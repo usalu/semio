@@ -1,8 +1,8 @@
 //! ↩ Inverse constructor for `ReorderShots` — reconstructed from BASE state.
 
 use super::ReorderShots;
-use crate::artifacts::shooting::mutations::ShootingMutation;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
 
 pub fn inverse(payload: &ReorderShots, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
     match base.shots.iter().position(|shot| shot.id == payload.id) {

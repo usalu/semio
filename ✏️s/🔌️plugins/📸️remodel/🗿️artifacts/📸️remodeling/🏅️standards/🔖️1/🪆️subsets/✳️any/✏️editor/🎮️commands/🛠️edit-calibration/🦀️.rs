@@ -1,8 +1,8 @@
 //! 🎯️ 🎯️ Remodeling play app commands command — `edit-calibration`.
 
-use crate::artifacts::remodeling::mutations::{create_camera_calibration, update_camera_calibration};
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::{CameraCalibration, RemodelingSnapshot};
+use crate::mutations::{create_camera_calibration, update_camera_calibration};
+use crate::op::RemodelingMutation;
+use crate::{CameraCalibration, RemodelingSnapshot};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

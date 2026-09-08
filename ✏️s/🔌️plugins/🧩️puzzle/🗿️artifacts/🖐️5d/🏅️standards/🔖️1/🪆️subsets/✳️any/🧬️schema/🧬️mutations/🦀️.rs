@@ -9,8 +9,8 @@
 //! newtype (`🔖️PlaySnapshot`) live here too, same shape as `puzzle2d`'s: the bridge round-trips
 //! through the typed `Puzzle5dSnapshot` instead of hand-splicing JSON per mutation kind.
 
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::Puzzle5dDiff;
+use crate::Puzzle5dSnapshot;
 use protocol::{Mutation, MutationDiff};
 use serde_json::Value;
 
@@ -118,9 +118,9 @@ pub use super::move_part_2d::{move_part_2d, MovePart2d};
 pub use super::move_part_3d::{move_part_3d, MovePart3d};
 pub use super::remove_part_grip::{remove_part_grip, RemovePartGrip};
 pub use super::rename_puzzle5d::{rename_puzzle5d, RenamePuzzle5d};
-pub use super::replace_fastener_geometry::{replace_fastener_geometry, ReplaceFastenerGeometry};
+pub use super::replace_fastener_semio_framework_geometry::{replace_fastener_geometry, ReplaceFastenerGeometry};
 pub use super::replace_kind_catalogs::{replace_kind_catalogs, ReplaceKindCatalogs};
-pub use super::replace_part_2d_geometry::{replace_part_2d_geometry, ReplacePart2dGeometry};
+pub use super::replace_part_2d_semio_framework_geometry::{replace_part_2d_geometry, ReplacePart2dGeometry};
 pub use super::replace_part_grip::{replace_part_grip, ReplacePartGrip};
 pub use super::rotate_part_3d::{rotate_part_3d, RotatePart3d};
 pub use super::scale_part_3d::{scale_part_3d, ScalePart3d};
@@ -241,7 +241,7 @@ pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSn
                     || prior.x != fastener.x
                     || prior.y != fastener.y
                 {
-                    mutations.push(replace_fastener_geometry(fastener.id.clone(), fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y));
+                    mutations.push(replace_fastener_geometry(crate::mutations::ReplaceFastenerGeometry { id: fastener.id.clone(), new_gap: fastener.gap, new_shift: fastener.shift, new_rise: fastener.rise, new_rotation: fastener.rotation, new_turn: fastener.turn, new_tilt: fastener.tilt, new_x: fastener.x, new_y: fastener.y }));
                 }
                 if prior.fastener_kind != fastener.fastener_kind {
                     mutations.push(change_fastener_kind(fastener.id.clone(), fastener.fastener_kind.clone()));
@@ -274,7 +274,7 @@ pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSn
         }
     }
     if before.kind_catalogs != after.kind_catalogs || before.kind_catalogs_extra != after.kind_catalogs_extra {
-        mutations.push(replace_kind_catalogs(crate::artifacts::puzzle5d::kind_catalogs_of(&after.kind_catalogs, &after.kind_catalogs_extra)));
+        mutations.push(replace_kind_catalogs(crate::kind_catalogs_of(&after.kind_catalogs, &after.kind_catalogs_extra)));
     }
     mutations
 }
@@ -323,8 +323,8 @@ fn normalize_kind_catalogs_for_snapshot_value(value: &Value) -> Value {
     // `serde_json::from_value`/`to_value` on `Puzzle5dKindCatalogs`/`Puzzle5dKindCatalogsExtra` —
     // both only derive `Serialize`/`Deserialize` under `#[cfg(test)]` now. `Value` (this bridge's
     // own boundary type) is untouched.
-    let catalogs: crate::artifacts::puzzle5d::Puzzle5dKindCatalogs = dsl::FromValue::from_value(dsl::DslValue::from(&catalogs_value)).unwrap_or_default();
-    let (handle, extra) = crate::artifacts::puzzle5d::split_and_seed_kind_catalogs(Some(catalogs));
+    let catalogs: crate::Puzzle5dKindCatalogs = dsl::FromValue::from_value(dsl::DslValue::from(&catalogs_value)).unwrap_or_default();
+    let (handle, extra) = crate::split_and_seed_kind_catalogs(Some(catalogs));
     object.insert("kindCatalogs".into(), Value::from(&dsl::ToValue::to_value(&handle)));
     object.insert("kindCatalogsExtra".into(), Value::from(&dsl::ToValue::to_value(&extra)));
     value
@@ -518,7 +518,7 @@ mod tests {
     #[test]
     fn puzzle5d_delta_ops_round_trip_and_stay_granular() {
         let before = serde_json::json!({
-            "schema": crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA, "domain": "architecture",
+            "schema": crate::PUZZLE_5D_SCHEMA, "domain": "architecture",
             "meta": { "description": "" },
             "parts": [
                 { "id": "p1", "2d": { "x": 0.0, "y": 0.0 }, "3d": { "origin": [0.0,0.0,0.0] }, "grips": [] },
@@ -527,7 +527,7 @@ mod tests {
             "fasteners": [],
         });
         let after = serde_json::json!({
-            "schema": crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA, "domain": "architecture",
+            "schema": crate::PUZZLE_5D_SCHEMA, "domain": "architecture",
             "meta": { "description": "" },
             "parts": [
                 { "id": "p2", "2d": { "x": 9.0, "y": 0.0 }, "3d": { "origin": [9.0,0.0,0.0] }, "grips": [] },
@@ -562,7 +562,7 @@ mod tests {
 
     #[test]
     fn move_part_2d_diff_absorb_law() {
-        use crate::artifacts::puzzle5d::Puzzle5dPart;
+        use crate::Puzzle5dPart;
         let base = empty();
         let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
         let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(create_part(part, None).diff(&base).diff(), &base).expect("valid mutation diff");
@@ -578,7 +578,7 @@ mod tests {
 
     #[test]
     fn create_delete_part_inverse_law() {
-        use crate::artifacts::puzzle5d::Puzzle5dPart;
+        use crate::Puzzle5dPart;
         let base = empty();
         let part = Puzzle5dPart { id: "p1".into(), ..Default::default() };
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &create_part(part.clone(), None)));
@@ -588,7 +588,7 @@ mod tests {
 
     #[test]
     fn part_field_mutations_inverse_law() {
-        use crate::artifacts::puzzle5d::{Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale};
+        use crate::{Puzzle5dGrip, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dScale};
         let base = empty();
         let part = Puzzle5dPart { id: "p1".into(), grips: vec![Puzzle5dGrip { id: "g1".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
         let with_part = MutationDiff::<Puzzle5dSnapshot>::apply(create_part(part, None).diff(&base).diff(), &base).expect("valid mutation diff");
@@ -615,7 +615,7 @@ mod tests {
 
     #[test]
     fn connect_disconnect_grips_inverse_law_and_cascade() {
-        use crate::artifacts::puzzle5d::{Puzzle5dGrip, Puzzle5dPart};
+        use crate::{Puzzle5dGrip, Puzzle5dPart};
         let base = empty();
         let part_a = Puzzle5dPart { id: "a".into(), grips: vec![Puzzle5dGrip { id: "ga".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
         let part_b = Puzzle5dPart { id: "b".into(), grips: vec![Puzzle5dGrip { id: "gb".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Default::default() }], ..Default::default() };
@@ -625,7 +625,7 @@ mod tests {
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&projection, &connect_grips("f1".into(), "a:ga".into(), "b:gb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)));
         let connected = MutationDiff::<Puzzle5dSnapshot>::apply(connect_grips("f1".into(), "a:ga".into(), "b:gb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0).diff(&projection).diff(), &projection).expect("valid mutation diff");
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_grips("f1".into())));
-        semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &replace_fastener_geometry("f1".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)));
+        semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &replace_fastener_geometry(crate::mutations::ReplaceFastenerGeometry { id: "f1".into(), new_gap: 1.0, new_shift: 2.0, new_rise: 3.0, new_rotation: 4.0, new_turn: 5.0, new_tilt: 6.0, new_x: 7.0, new_y: 8.0 })));
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &change_fastener_kind("f1".into(), Some("core.link".into()))));
         let deleted = delete_part("a".into());
         let after_delete = MutationDiff::<Puzzle5dSnapshot>::apply(deleted.diff(&connected).diff(), &connected).expect("valid mutation diff");
@@ -635,7 +635,7 @@ mod tests {
 
     #[test]
     fn document_scalar_mutations_inverse_law() {
-        use crate::artifacts::puzzle5d::{Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs};
+        use crate::{Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs};
         let base = empty();
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &rename_puzzle5d(Some("Nakagin".into()))));
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &change_domain("mechanical".into())));
@@ -675,7 +675,7 @@ mod tests {
 
     #[test]
     fn create_duplicate_id_is_fatal_and_never_applies() {
-        use crate::artifacts::puzzle5d::Puzzle5dPart;
+        use crate::Puzzle5dPart;
         let mut base = empty();
         let part = Puzzle5dPart { id: "p0".into(), ..Default::default() };
         base.parts.push(part.clone());

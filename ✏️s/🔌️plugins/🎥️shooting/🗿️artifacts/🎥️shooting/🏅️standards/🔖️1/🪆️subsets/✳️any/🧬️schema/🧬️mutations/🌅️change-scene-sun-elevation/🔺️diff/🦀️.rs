@@ -1,8 +1,8 @@
 //! 🔺 Diff constructor for `ChangeSceneSunElevation`.
 
 use super::ChangeSceneSunElevation;
-use crate::artifacts::shooting::diff::ShootingDiff;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::ShootingDiff;
+use crate::ShootingSnapshot;
 
 pub fn diff(payload: &ChangeSceneSunElevation, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !payload.new_elevation.is_finite() || !(-90.0..=90.0).contains(&payload.new_elevation) {

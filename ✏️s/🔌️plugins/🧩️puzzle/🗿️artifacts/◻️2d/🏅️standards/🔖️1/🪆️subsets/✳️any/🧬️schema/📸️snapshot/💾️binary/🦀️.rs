@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::Puzzle2dSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Puzzle2dSnapshot` to its binary pack form.
@@ -24,7 +24,7 @@ pub fn decode(bytes: &[u8]) -> Result<Puzzle2dSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle2d::dsl;
+    use crate::dsl;
 
     #[test]
     fn pack_round_trips_and_agrees_with_dsl() {
@@ -41,15 +41,15 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
     #[test]
     fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        use crate::artifacts::puzzle2d::op::Puzzle2dMutation;
-        use crate::artifacts::puzzle2d::spr::Puzzle2dStore;
-        use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
+        use crate::op::Puzzle2dMutation;
+        use crate::spr::Puzzle2dStore;
+        use crate::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = semio_framework::io::resolve_ready(Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None))).expect("store");
         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
-        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle2d::mutations::create_node(node, None)], description: None })).expect("apply");
+        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::create_node(node, None)], description: None })).expect("apply");
         let envelope = store.envelope();
         let edit: &Edit<Puzzle2dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
         semio_framework::io::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));

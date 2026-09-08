@@ -3,8 +3,8 @@
 //! 🔗️ No `mutation.target-referenced` guard: a combination is a LEAF of the reference graph — it
 //! weights load cases and nothing in `Fem3dSnapshot` points back at it. Same for `delete-support`.
 use super::DeleteCombination;
-use crate::artifacts::fem3d::diff::{Fem3dCombinationsDelta, Fem3dDiff};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::diff::{Fem3dCombinationsDelta, Fem3dDiff};
+use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteCombination, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

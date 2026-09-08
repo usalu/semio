@@ -1,5 +1,5 @@
 //! Serialize layout to stdio.dxf.
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::LayoutSnapshot;
 use semio_s_artifact_stdio_dxf::DxfSnapshot;
 
 pub fn register() {}

@@ -4,8 +4,8 @@
 //! kind rather than rewriting it — a stream's provenance is fixed when the stream is created, and a
 //! verb that silently rewrote it had no inverse in this vocabulary. The frame lands at its canonical
 //! `(index, asset_id)` position so `remove-stream-frame` puts it back exactly where it was.
-use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingMediaStreamList};
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::{RemodelingDiff, RemodelingMediaStreamList};
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddStreamFrame, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
@@ -20,7 +20,7 @@ pub fn diff(payload: &super::AddStreamFrame, base: &RemodelingSnapshot) -> proto
     }
     let mut streams = base.streams.clone();
     if let Some(stream) = streams.iter_mut().find(|stream| stream.id == payload.id) {
-        let at = crate::artifacts::remodeling::mutations::ordered_index(&stream.frames, &(payload.frame.index, payload.frame.asset_id.clone()), |frame| (frame.index, frame.asset_id.clone()));
+        let at = crate::mutations::ordered_index(&stream.frames, &(payload.frame.index, payload.frame.asset_id.clone()), |frame| (frame.index, frame.asset_id.clone()));
         stream.frames.insert(at, payload.frame.clone());
     }
     protocol::MutationOutcome::new(RemodelingDiff { streams: Some(RemodelingMediaStreamList { values: streams }), ..Default::default() })

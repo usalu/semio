@@ -1,8 +1,8 @@
 //! 🔍️ Drawing play app panel — the inspector (constitutional: was `ui`'s `Panels` region,
 //! properties/inspector half).
 
-use crate::artifacts::drawing::schema::flatten_drawing_layers;
-use crate::artifacts::drawing::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
+use crate::schema::flatten_drawing_layers;
+use crate::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{built_text_node, BuiltNode, Label, PanelGroup, PanelTabDefinition, PanelTabKind, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 pub const DRAWING_PLAY_BODY_PROPERTIES: &str = "drawing.play.properties";

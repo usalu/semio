@@ -4,7 +4,7 @@
 fn dsl_asset_parses_and_round_trips() {
     let text = include_str!("../🖼️assets/🌙️dream/🗣️.dsl.semio");
     assert!(text.len() > 64, "dsl fixture must carry real payload");
-    let projection = crate::artifacts::puzzle5d::dsl::parse_dsl(text).expect("example dsl parses");
+    let projection = crate::dsl::parse_dsl(text).expect("example dsl parses");
     assert_eq!(projection.parts.len(), 2880);
     assert_eq!(projection.fasteners.len(), 2864);
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
@@ -13,8 +13,8 @@ fn dsl_asset_parses_and_round_trips() {
 #[test]
 fn flatten_matches_golden_poses_to_1e4() {
     let text = include_str!("../🖼️assets/🌙️dream/🗣️.dsl.semio");
-    let mut projection = crate::artifacts::puzzle5d::dsl::parse_dsl(text).expect("example dsl parses");
-    crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot_inplace(&mut projection);
+    let mut projection = crate::dsl::parse_dsl(text).expect("example dsl parses");
+    crate::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot_inplace(&mut projection);
     let golden: serde_json::Map<String, serde_json::Value> = serde_json::from_str(include_str!("../🖼️assets/🔣️.json")).expect("golden json");
     assert_eq!(golden.len(), 2880);
     let mut center_mismatches = 0usize;
@@ -47,16 +47,16 @@ fn op_pack_and_spr_assets_are_nonempty() {
 
 #[test]
 fn inference_default_law() {
-    use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::Puzzle5dInference;
+    use crate::standards::v1::subsets::any::schema::inferences::Puzzle5dInference;
     use protocol::Inference;
-    assert_eq!(Puzzle5dInference::infer(&crate::artifacts::puzzle5d::Puzzle5dSnapshot::default()), Puzzle5dInference::default());
+    assert_eq!(Puzzle5dInference::infer(&crate::Puzzle5dSnapshot::default()), Puzzle5dInference::default());
 }
 
 #[test]
 fn inference_determinism_law() {
-    use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::Puzzle5dInference;
+    use crate::standards::v1::subsets::any::schema::inferences::Puzzle5dInference;
     use protocol::Inference;
     let text = include_str!("../🖼️assets/🌙️dream/🗣️.dsl.semio");
-    let projection = crate::artifacts::puzzle5d::dsl::parse_dsl(text).expect("example dsl parses");
+    let projection = crate::dsl::parse_dsl(text).expect("example dsl parses");
     assert_eq!(Puzzle5dInference::infer(&projection), Puzzle5dInference::infer(&projection));
 }

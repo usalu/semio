@@ -1,5 +1,6 @@
-import schema from "./📐️directory.schema.json";
+import contracts from "./🧬️schema/🔣️.json";
 
+const schema = contracts.$defs.InstallationDirectoryV1;
 const pattern = new RegExp(schema.pattern, "u");
 const segmenter = new Intl.Segmenter("und", { granularity: "grapheme" });
 

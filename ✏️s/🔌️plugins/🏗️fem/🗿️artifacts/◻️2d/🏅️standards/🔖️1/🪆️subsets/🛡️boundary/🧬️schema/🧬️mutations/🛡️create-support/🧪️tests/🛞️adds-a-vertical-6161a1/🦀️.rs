@@ -7,9 +7,9 @@
 //!
 //! The pin at `n1` is joined by a single-DOF roller at `n2`, completing a statically determinate beam.
 
-use crate::artifacts::fem2d::mutations::Fem2dMutation;
-use crate::artifacts::fem2d::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::mutations::Fem2dMutation;
+use crate::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};
+use crate::Fem2dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -34,7 +34,7 @@ fn applies_to_committed_after() {
     apply_fem2d_mutation(&mut snapshot, &mutation()).expect("create-support applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "create-support/adds-a-vertical-6161a1: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.supports.len(), 2, "create-support/adds-a-vertical-6161a1: the roller must be appended behind the pin");
-    assert_eq!(snapshot.supports[1].fixed, vec![crate::artifacts::fem2d::FemDof::Ty], "create-support/adds-a-vertical-6161a1: a roller restrains Ty and nothing else");
+    assert_eq!(snapshot.supports[1].fixed, vec![crate::FemDof::Ty], "create-support/adds-a-vertical-6161a1: a roller restrains Ty and nothing else");
     assert_eq!(snapshot.nodes, before().nodes, "create-support/adds-a-vertical-6161a1: restraining n2 must not rewrite the node table");
 }
 
@@ -99,7 +99,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-support/adds-a-vertical-6161a1: committed diff JSON is not canonical");
@@ -108,7 +108,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `supports.added` entry on `before` must reproduce pin-then-roller.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-support/adds-a-vertical-6161a1: committed diff did not carry before to after");
 }

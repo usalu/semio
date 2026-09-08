@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::Generation2dSnapshot;
 #[cfg(test)]
 use store::PackError;
 
@@ -26,8 +26,8 @@ pub fn decode(bytes: &[u8]) -> Result<Generation2dSnapshot, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::generation2d::dsl as generation2d_dsl;
-    use flow::Widget;
+    use crate::dsl as generation2d_dsl;
+    use semio_framework_artifact_flow_semio_framework_os_flow::Widget;
     use semio_framework_os_kernel::os_store::test_support;
 
     #[test]
@@ -44,12 +44,12 @@ mod tests {
     #[test]
     fn dsl_pack_equivalence_with_generation_state() {
         let mut projection = Generation2dSnapshot::default();
-        let mut values: flow::playbook::PlaybookValues = std::collections::HashMap::new();
+        let mut values: semio_framework_artifact_playbook_playbook::PlaybookValues = std::collections::HashMap::new();
         // 🌱️ Fractional (not whole-number) so `dsl::from_dsl_value`'s int-normalization of whole
         // `DslValue::Number`s (an engine-owned behavior, see the sibling dsl test) doesn't make this
         // round trip spuriously unequal.
         values.insert("count".into(), dsl::DslValue::float(3.5));
-        projection.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(flow::playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
+        projection.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(semio_framework_artifact_playbook_playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
         projection.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("generation-1".into());
         projection.generation.cold_builder_mut().expect("unique cold generation owner").preview_text = Some("42".into());
         test_support::assert_dsl_pack_equivalence(&projection);
@@ -97,7 +97,7 @@ struct Generation2dMountedWidgetOwner {
     numbers: [f64; 4],
     boolean: bool,
     lists: [Vec<String>; 2],
-    dictionaries: [flow::neural::Dictionary; 2],
+    dictionaries: [semio_framework_artifact_flow_semio_framework_os_flow::neural::Dictionary; 2],
     dynamic: [Option<dsl::DslValue>; 2],
 }
 
@@ -120,7 +120,7 @@ struct Generation2dMountedGenerationOwner {
 #[derive(Default)]
 struct Generation2dMountedDictionaryEntryOwner {
     key: String,
-    value: Option<flow::neural::Value>,
+    value: Option<semio_framework_artifact_flow_semio_framework_os_flow::neural::Value>,
 }
 
 #[derive(Clone, Copy)]
@@ -131,10 +131,10 @@ enum Generation2dMountedDictionaryDestination {
 
 enum Generation2dMountedRecordOwner {
     Root,
-    Camera(flow::CameraJson),
-    Layout { key: String, value: flow::WidgetLayout },
+    Camera(semio_framework_artifact_flow_semio_framework_os_flow::CameraJson),
+    Layout { key: String, value: semio_framework_artifact_flow_semio_framework_os_flow::WidgetLayout },
     Widget(Generation2dMountedWidgetOwner),
-    NeuralValue { table: usize, row: usize, value: Option<flow::neural::Value> },
+    NeuralValue { table: usize, row: usize, value: Option<semio_framework_artifact_flow_semio_framework_os_flow::neural::Value> },
     Structural,
 }
 
@@ -210,8 +210,8 @@ impl Generation2dMountedTypedSnapshotOwner {
         let mut dsl_stack = Vec::new();
         dsl_stack.try_reserve_exact(GENERATION2D_MOUNTED_TYPED_DEPTH).map_err(|_| "generation2d-mounted.dsl-stack-preflight")?;
         let candidate = Generation2dSnapshot {
-            fixture: flow::FlowFixture { schema: String::new(), camera: flow::CameraJson::default(), widgets: Vec::new(), synapses: Vec::new(), layout: flow::OrderedMap::new() },
-            generation: flow::playbook::GenerationPlayRoot::default(),
+            fixture: semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture { schema: String::new(), camera: semio_framework_artifact_flow_semio_framework_os_flow::CameraJson::default(), widgets: Vec::new(), synapses: Vec::new(), layout: semio_framework_artifact_flow_semio_framework_os_flow::OrderedMap::new() },
+            generation: semio_framework_artifact_playbook_playbook::GenerationPlayRoot::default(),
         };
         Ok(Self { candidate: std::mem::ManuallyDrop::new(Some(candidate)), stack, string: None, pending_table_rows: None, json_stack, json_destination: None, dsl_stack, dsl_destination: None, complete: false, handed_back: false })
     }
@@ -377,7 +377,7 @@ impl Generation2dMountedTypedSnapshotOwner {
             },
             Generation2dMountedStringTarget::NeuralText(index) => match self.stack.get_mut(index) {
                 Some(Generation2dMountedContainerOwner::Record { owner: Generation2dMountedRecordOwner::NeuralValue { value, .. }, field, .. }) if *field == Some(4) && value.is_none() => {
-                    *value = Some(flow::neural::Value::Atom(flow::neural::Atom::String(owner.value)));
+                    *value = Some(semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Atom(semio_framework_artifact_flow_semio_framework_os_flow::neural::Atom::String(owner.value)));
                     *field = None;
                 }
                 _ => return Err("generation2d-mounted.neural-text-owner"),
@@ -482,7 +482,7 @@ impl Generation2dMountedTypedSnapshotOwner {
     fn assign_f64(&mut self, value: f64) -> Result<(), &'static str> {
         match self.stack.last_mut() {
             Some(Generation2dMountedContainerOwner::Record { owner: Generation2dMountedRecordOwner::NeuralValue { value: target, .. }, field, .. }) if *field == Some(3) && target.is_none() => {
-                *target = Some(flow::neural::Value::Atom(flow::neural::Atom::Decimal(value)));
+                *target = Some(semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Atom(semio_framework_artifact_flow_semio_framework_os_flow::neural::Atom::Decimal(value)));
                 *field = None;
             }
             Some(Generation2dMountedContainerOwner::Record { owner: Generation2dMountedRecordOwner::Camera(camera), field, .. }) => match field.take() {
@@ -512,7 +512,7 @@ impl Generation2dMountedTypedSnapshotOwner {
                 *field = None;
             }
             Some(Generation2dMountedContainerOwner::Record { owner: Generation2dMountedRecordOwner::NeuralValue { value: target, .. }, field, .. }) if matches!(*field, Some(0 | 1)) && target.is_none() => {
-                *target = Some(if *field == Some(0) { flow::neural::Value::Atom(flow::neural::Atom::Null) } else { flow::neural::Value::Atom(flow::neural::Atom::Boolean(value)) });
+                *target = Some(if *field == Some(0) { semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Atom(semio_framework_artifact_flow_semio_framework_os_flow::neural::Atom::Null) } else { semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Atom(semio_framework_artifact_flow_semio_framework_os_flow::neural::Atom::Boolean(value)) });
                 *field = None;
             }
             _ => {}
@@ -548,7 +548,7 @@ impl Generation2dMountedTypedSnapshotOwner {
     }
 
     fn finish_dictionary(&mut self, destination: Generation2dMountedDictionaryDestination, rows: Vec<Generation2dMountedDictionaryEntryOwner>) -> Result<(), &'static str> {
-        let mut dictionary = flow::neural::Dictionary::new();
+        let mut dictionary = semio_framework_artifact_flow_semio_framework_os_flow::neural::Dictionary::new();
         for row in rows {
             dictionary = dictionary.insert(row.key, row.value.ok_or("generation2d-mounted.dictionary-value")?);
         }
@@ -562,7 +562,7 @@ impl Generation2dMountedTypedSnapshotOwner {
             },
             Generation2dMountedDictionaryDestination::Value { parent } => match self.stack.get_mut(parent) {
                 Some(Generation2dMountedContainerOwner::Record { owner: Generation2dMountedRecordOwner::NeuralValue { value, .. }, field, .. }) if *field == Some(5) && value.is_none() => {
-                    *value = Some(flow::neural::Value::Dictionary(dictionary));
+                    *value = Some(semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Dictionary(dictionary));
                     *field = None;
                 }
                 _ => return Err("generation2d-mounted.dictionary-value-owner"),
@@ -586,7 +586,7 @@ impl Generation2dMountedTypedSnapshotOwner {
         let owner = if self.stack.is_empty() {
             Generation2dMountedRecordOwner::Root
         } else if root_field == Some(1) {
-            Generation2dMountedRecordOwner::Camera(flow::CameraJson::default())
+            Generation2dMountedRecordOwner::Camera(semio_framework_artifact_flow_semio_framework_os_flow::CameraJson::default())
         } else if root_field == Some(2) {
             let keyword = match self.stack.last_mut() {
                 Some(Generation2dMountedContainerOwner::Statements { keyword, .. }) => keyword.take().ok_or("generation2d-mounted.widget-keyword")?,
@@ -598,7 +598,7 @@ impl Generation2dMountedTypedSnapshotOwner {
                 Some(Generation2dMountedContainerOwner::LayoutMap { key }) => key.take().ok_or("generation2d-mounted.layout-key")?,
                 _ => return Err("generation2d-mounted.layout-map-owner"),
             };
-            Generation2dMountedRecordOwner::Layout { key, value: flow::WidgetLayout { x: 0.0, y: 0.0 } }
+            Generation2dMountedRecordOwner::Layout { key, value: semio_framework_artifact_flow_semio_framework_os_flow::WidgetLayout { x: 0.0, y: 0.0 } }
         } else {
             Generation2dMountedRecordOwner::Structural
         };
@@ -678,28 +678,28 @@ impl Generation2dMountedTypedSnapshotOwner {
         }
     }
 
-    fn finish_widget(owner: Generation2dMountedWidgetOwner) -> Result<flow::Widget, &'static str> {
+    fn finish_widget(owner: Generation2dMountedWidgetOwner) -> Result<semio_framework_artifact_flow_semio_framework_os_flow::Widget, &'static str> {
         let [id, second, third, _fourth] = owner.strings;
         let [value, min, max, step] = owner.numbers;
         let [first_list, second_list] = owner.lists;
         let [first_dictionary, second_dictionary] = owner.dictionaries;
         let [first_dynamic, second_dynamic] = owner.dynamic;
         Ok(match owner.keyword.as_str() {
-            "neuron" => flow::Widget::Neuron { id, neuron_kind: second, params: first_dictionary, input_ports: first_list, output_ports: second_list, preview: owner.boolean },
-            "input-slider" => flow::Widget::InputSlider { id, label: second, value, min, max, step },
-            "input-note" => flow::Widget::InputNote { id, text: second },
-            "input-image" => flow::Widget::InputImage { id, src: second },
-            "variable" => flow::Widget::Variable { id, name: second, schema: third },
+            "neuron" => semio_framework_artifact_flow_semio_framework_os_flow::Widget::Neuron { id, neuron_kind: second, params: first_dictionary, input_ports: first_list, output_ports: second_list, preview: owner.boolean },
+            "input-slider" => semio_framework_artifact_flow_semio_framework_os_flow::Widget::InputSlider { id, label: second, value, min, max, step },
+            "input-note" => semio_framework_artifact_flow_semio_framework_os_flow::Widget::InputNote { id, text: second },
+            "input-image" => semio_framework_artifact_flow_semio_framework_os_flow::Widget::InputImage { id, src: second },
+            "variable" => semio_framework_artifact_flow_semio_framework_os_flow::Widget::Variable { id, name: second, schema: third },
             "output-preview" => {
-                let mut expanded = flow::OrderedSet::new();
+                let mut expanded = semio_framework_artifact_flow_semio_framework_os_flow::OrderedSet::new();
                 for entry in first_list {
                     expanded.insert(entry);
                 }
-                flow::Widget::OutputPreview { id, preview: second_dictionary, expanded }
+                semio_framework_artifact_flow_semio_framework_os_flow::Widget::OutputPreview { id, preview: second_dictionary, expanded }
             }
-            "output-action" => flow::Widget::OutputAction { id, action: second },
-            "output-export" => flow::Widget::OutputExport { id, format: second },
-            "cluster" => flow::Widget::Cluster {
+            "output-action" => semio_framework_artifact_flow_semio_framework_os_flow::Widget::OutputAction { id, action: second },
+            "output-export" => semio_framework_artifact_flow_semio_framework_os_flow::Widget::OutputExport { id, format: second },
+            "cluster" => semio_framework_artifact_flow_semio_framework_os_flow::Widget::Cluster {
                 id,
                 name: second,
                 tree: dsl::from_dsl_value(first_dynamic.ok_or("generation2d-mounted.cluster-tree")?).map_err(|_| "generation2d-mounted.cluster-tree-shape")?,
@@ -739,7 +739,7 @@ impl Generation2dMountedTypedSnapshotOwner {
             Generation2dMountedContainerOwner::Synapses { rows, .. } if kind == mounted::RetainedValueContainer::Table => {
                 let target = &mut self.candidate.as_mut().ok_or("generation2d-mounted.snapshot-owner")?.fixture.synapses;
                 for row in rows {
-                    target.push(flow::SynapseSpec { id: row.id, from: row.from, to: row.to, from_port: row.from_port, to_port: row.to_port });
+                    target.push(semio_framework_artifact_flow_semio_framework_os_flow::SynapseSpec { id: row.id, from: row.from, to: row.to, from_port: row.from_port, to_port: row.to_port });
                 }
                 if let Some(Generation2dMountedContainerOwner::Record { field, .. }) = self.stack.last_mut() {
                     *field = None;
@@ -753,7 +753,7 @@ impl Generation2dMountedTypedSnapshotOwner {
             Generation2dMountedContainerOwner::Generations { rows, .. } if kind == mounted::RetainedValueContainer::Table => {
                 let target = &mut self.candidate.as_mut().ok_or("generation2d-mounted.snapshot-owner")?.generation.cold_builder_mut()?.generations;
                 for row in rows {
-                    target.push(flow::playbook::FormGeneration { id: row.id, name: row.name, values: row.values.into_iter().collect() });
+                    target.push(semio_framework_artifact_playbook_playbook::FormGeneration { id: row.id, name: row.name, values: row.values.into_iter().collect() });
                 }
                 if let Some(Generation2dMountedContainerOwner::Record { field, .. }) = self.stack.last_mut() {
                     *field = None;
@@ -870,7 +870,7 @@ impl Generation2dMountedTypedSnapshotOwner {
             Token::Signed(value) if self.json_destination.is_some() => self.assign_json(dsl::DslValue::int(value))?,
             Token::Signed(value) => match self.stack.last_mut() {
                 Some(Generation2dMountedContainerOwner::Record { owner: Generation2dMountedRecordOwner::NeuralValue { value: target, .. }, field, .. }) if *field == Some(2) && target.is_none() => {
-                    *target = Some(flow::neural::Value::Atom(flow::neural::Atom::Integer(value)));
+                    *target = Some(semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Atom(semio_framework_artifact_flow_semio_framework_os_flow::neural::Atom::Integer(value)));
                     *field = None;
                 }
                 _ => return Err("generation2d-mounted.integer-owner"),
@@ -1287,7 +1287,7 @@ impl Drop for Generation2dMountedPackSession {
 mod retained_mounted_laws {
     use super::*;
 
-    fn synapse_digest(synapse: &flow::SynapseSpec) -> u64 {
+    fn synapse_digest(synapse: &semio_framework_artifact_flow_semio_framework_os_flow::SynapseSpec) -> u64 {
         let mut digest = 0xcbf2_9ce4_8422_2325u64;
         for field in [&synapse.id, &synapse.from, &synapse.from_port, &synapse.to, &synapse.to_port] {
             digest ^= field.len() as u64;
@@ -1314,21 +1314,21 @@ mod retained_mounted_laws {
     #[test]
     fn non_empty_canonical_snapshot_round_trips_one_grant_at_a_time() {
         let mut expected = Generation2dSnapshot::default();
-        let nested = flow::neural::Dictionary::new().insert("enabled", flow::neural::Value::Atom(flow::neural::Atom::Boolean(true)));
-        let params = flow::neural::Dictionary::new().insert("gain", flow::neural::Value::Atom(flow::neural::Atom::Decimal(2.5))).insert("nested", flow::neural::Value::Dictionary(nested));
-        expected.fixture.widgets.push(flow::Widget::Neuron { id: "retained-neuron".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true });
-        let mut expanded = flow::OrderedSet::new();
+        let nested = semio_framework_artifact_flow_semio_framework_os_flow::neural::Dictionary::new().insert("enabled", semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Atom(semio_framework_artifact_flow_semio_framework_os_flow::neural::Atom::Boolean(true)));
+        let params = semio_framework_artifact_flow_semio_framework_os_flow::neural::Dictionary::new().insert("gain", semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Atom(semio_framework_artifact_flow_semio_framework_os_flow::neural::Atom::Decimal(2.5))).insert("nested", semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Dictionary(nested));
+        expected.fixture.widgets.push(semio_framework_artifact_flow_semio_framework_os_flow::Widget::Neuron { id: "retained-neuron".into(), neuron_kind: "law".into(), params, input_ports: vec!["in".into()], output_ports: vec!["out".into()], preview: true });
+        let mut expanded = semio_framework_artifact_flow_semio_framework_os_flow::OrderedSet::new();
         expanded.insert("answer".into());
-        let preview = flow::neural::Dictionary::new().insert("answer", flow::neural::Value::Atom(flow::neural::Atom::String("visible".into())));
-        expected.fixture.widgets.push(flow::Widget::OutputPreview { id: "retained-preview".into(), preview, expanded });
-        expected.fixture.widgets.push(flow::Widget::Cluster { id: "retained-cluster".into(), name: "Cluster".into(), tree: Default::default(), flow: Default::default() });
-        expected.fixture.synapses.push(flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-neuron".into(), to: "retained-preview".into(), from_port: "out".into(), to_port: String::new() });
-        let mut values: flow::playbook::PlaybookValues = std::collections::HashMap::new();
+        let preview = semio_framework_artifact_flow_semio_framework_os_flow::neural::Dictionary::new().insert("answer", semio_framework_artifact_flow_semio_framework_os_flow::neural::Value::Atom(semio_framework_artifact_flow_semio_framework_os_flow::neural::Atom::String("visible".into())));
+        expected.fixture.widgets.push(semio_framework_artifact_flow_semio_framework_os_flow::Widget::OutputPreview { id: "retained-preview".into(), preview, expanded });
+        expected.fixture.widgets.push(semio_framework_artifact_flow_semio_framework_os_flow::Widget::Cluster { id: "retained-cluster".into(), name: "Cluster".into(), tree: Default::default(), flow: Default::default() });
+        expected.fixture.synapses.push(semio_framework_artifact_flow_semio_framework_os_flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-neuron".into(), to: "retained-preview".into(), from_port: "out".into(), to_port: String::new() });
+        let mut values: semio_framework_artifact_playbook_playbook::PlaybookValues = std::collections::HashMap::new();
         values.insert(
             "nested".into(),
             dsl::DslValue::object([("array".to_string(), dsl::DslValue::Array(vec![dsl::DslValue::Bool(true), dsl::DslValue::Null, dsl::DslValue::float(3.5)])), ("text".to_string(), dsl::DslValue::String("retained".to_string()))]),
         );
-        expected.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(flow::playbook::FormGeneration { id: "retained-generation".into(), name: "Generation".into(), values });
+        expected.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(semio_framework_artifact_playbook_playbook::FormGeneration { id: "retained-generation".into(), name: "Generation".into(), values });
         expected.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("retained-generation".into());
         expected.generation.cold_builder_mut().expect("unique cold generation owner").preview_text = Some("preview".into());
         assert!(!expected.fixture.widgets.is_empty());

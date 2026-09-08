@@ -1,7 +1,7 @@
 //! 🧬️ Sequence artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceContentChild, SequenceMutation, SequenceSnapshot, SEQUENCE_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::{default_snapshot, SequenceCamera, SequenceContentChild, SequenceMutation, SequenceSnapshot, SEQUENCE_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 use store::ArtifactDsl;
 
 //#region 🔖️Artifact
@@ -34,7 +34,7 @@ impl Default for SequenceArtifact {
     fn default() -> Self {
         Self {
             schema: SEQUENCE_DOCUMENT_SCHEMA.into(),
-            content: crate::artifacts::sequence::sequence_content_child_with_owner(Vec::new(), Vec::new()),
+            content: crate::sequence_content_child_with_owner(Vec::new(), Vec::new()),
             last_run_json: String::new(),
             orientation: "leftRight".into(),
             camera: SequenceCamera::default(),
@@ -64,31 +64,31 @@ impl SequenceArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.sequence.sequence` — twenty handcrafted schema leaves.
-pub fn sequence_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn sequence_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.sequence.sequence",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -101,7 +101,7 @@ pub fn sequence_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor
 
 //#region 🔖️Example
 /// 📄️ JSON re-serialization of `default_snapshot()`, round-tripped through its own `.sequence` DSL
-/// first (see `crate::artifacts::sequence::dsl`), to prove the fixture is fully expressible in text —
+/// first (see `crate::dsl`), to prove the fixture is fully expressible in text —
 /// for the framework-generic call site that contractually requires JSON (`App::example`'s manifest
 /// `document_json` is loaded via `serde_json::from_str` by `ArtifactApp::load_document`'s default impl)
 /// — out of scope to change, since both are defined in `framework/plugin`.

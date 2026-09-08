@@ -12,8 +12,8 @@
 //! `📷set-shot-camera`→`📷replace-shot-camera`) and the orphan `🟤️set-snapshot` scaffold were
 //! retired.
 
-use crate::artifacts::shooting::diff::ShootingDiff;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::ShootingDiff;
+use crate::ShootingSnapshot;
 
 //#region 🔖️Operations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<ShootingSnapshot, ShootingMutation>`
@@ -158,7 +158,7 @@ pub fn encode_shooting_projection_json(snapshot: &ShootingSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::shooting::{ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
+    use crate::{ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
     use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
     use protocol::{Mutation, MutationDiff};
 
@@ -193,12 +193,12 @@ mod tests {
                 ShootingAsset { id: "a2".into(), name: "Plain".into(), url: "/mesh/a2.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None },
             ],
             saved_cameras: vec![ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera { position: [9.0, 9.0, 9.0], ..Default::default() } }],
-            scene: crate::artifacts::shooting::ShootingSceneLighting {
+            scene: crate::ShootingSceneLighting {
                 background: "#111111".into(),
-                sun: crate::artifacts::shooting::ShootingSun { enabled: true, azimuth: 12.5, elevation: 33.0, intensity: 3.0, color: "#ff00ff".into() },
-                ambient: crate::artifacts::shooting::ShootingAmbient { intensity: 0.9, color: "#00ffff".into() },
-                shadow: crate::artifacts::shooting::ShootingShadow { enabled: false, opacity: 0.5, softness: 0.2 },
-                material: crate::artifacts::shooting::ShootingMaterial { color: "#abcdef".into(), metalness: 0.3, roughness: 0.7, emissive: "#123456".into(), emissive_intensity: 0.1 },
+                sun: crate::ShootingSun { enabled: true, azimuth: 12.5, elevation: 33.0, intensity: 3.0, color: "#ff00ff".into() },
+                ambient: crate::ShootingAmbient { intensity: 0.9, color: "#00ffff".into() },
+                shadow: crate::ShootingShadow { enabled: false, opacity: 0.5, softness: 0.2 },
+                material: crate::ShootingMaterial { color: "#abcdef".into(), metalness: 0.3, roughness: 0.7, emissive: "#123456".into(), emissive_intensity: 0.1 },
             },
             shots: vec![
                 ShootingShot { id: "s1".into(), label: "Overview".into(), width: 256, height: 256, format: "svg".into(), shape: "rectangle".into(), background: Some("#ffffff".into()), camera_id: Some("cam1".into()) },
@@ -206,14 +206,14 @@ mod tests {
             ],
             active_shot_id: "s1".into(),
             active_asset_id: "a1".into(),
-            emblem: Some(crate::artifacts::shooting::shooting_emblem_child_handle(&crate::artifacts::shooting::shooting_emblem_image_from_bytes(vec![137, 80, 78, 71]))),
+            emblem: Some(crate::shooting_emblem_child_handle(&crate::shooting_emblem_image_from_bytes(vec![137, 80, 78, 71]))),
         }
     }
 
     //#region 📦assets
     #[semio_framework_async_macros::async_test]
     async fn assets_create_rename_change_url_delete_round_trip() {
-        let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
+        let snapshot = crate::empty_shooting_snapshot();
         let create = ShootingMutation::CreateAsset(super::super::create_asset::CreateAsset { asset: sample_asset("a1"), index: Some(0) });
         let with_asset = round_trip(&snapshot, &create);
         assert_eq!(with_asset.assets.len(), 1);
@@ -233,7 +233,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn reorder_assets_round_trips() {
-        let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
+        let mut snapshot = crate::empty_shooting_snapshot();
         snapshot.assets = vec![sample_asset("a1"), sample_asset("a2"), sample_asset("a3")];
         let reorder = ShootingMutation::ReorderAssets(super::super::reorder_assets::ReorderAssets { id: "a1".into(), to_index: 2 });
         let reordered = round_trip(&snapshot, &reorder);
@@ -242,7 +242,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn delete_asset_of_a_missing_id_has_an_empty_inverse() {
-        let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
+        let snapshot = crate::empty_shooting_snapshot();
         let delete = ShootingMutation::DeleteAsset(super::super::delete_asset::DeleteAsset { id: "nope".into() });
         assert!(delete.inverse(&snapshot).is_empty(), "deleting an absent id has nothing to undo");
     }
@@ -251,7 +251,7 @@ mod tests {
     //#region ↔️🔄↕️transforms
     #[semio_framework_async_macros::async_test]
     async fn drag_rotate_scale_assets_round_trip() {
-        let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
+        let mut snapshot = crate::empty_shooting_snapshot();
         let mut asset = sample_asset("a1");
         // `ScaleAssets` always writes an explicit `Some([..])` scale, so backwards() restoring an
         // originally-`None` scale lands on `Some([1,1,1])` — the same effective scale (see
@@ -269,14 +269,14 @@ mod tests {
 
         let scale = ShootingMutation::ScaleAssets(super::super::scale_assets::ScaleAssets { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 });
         let scaled = round_trip(&rotated, &scale);
-        assert_eq!(crate::artifacts::shooting::shooting_asset_scale(&scaled.assets[0]), [2.0, 2.0, 2.0]);
+        assert_eq!(crate::shooting_asset_scale(&scaled.assets[0]), [2.0, 2.0, 2.0]);
     }
     //#endregion ↔️🔄↕️transforms
 
     //#region 📸shots
     #[semio_framework_async_macros::async_test]
     async fn shots_create_rename_resize_reformat_reshape_delete_round_trip() {
-        let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
+        let snapshot = crate::empty_shooting_snapshot();
         let create = ShootingMutation::CreateShot(super::super::create_shot::CreateShot { shot: sample_shot("s1"), index: Some(0) });
         let with_shot = round_trip(&snapshot, &create);
         assert_eq!(with_shot.shots.len(), 1);
@@ -308,7 +308,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn reorder_shots_round_trips() {
-        let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
+        let mut snapshot = crate::empty_shooting_snapshot();
         snapshot.shots = vec![sample_shot("s1"), sample_shot("s2")];
         let reorder = ShootingMutation::ReorderShots(super::super::reorder_shots::ReorderShots { id: "s2".into(), to_index: 0 });
         let reordered = round_trip(&snapshot, &reorder);
@@ -319,7 +319,7 @@ mod tests {
     //#region 🎥saved-cameras / 📷shot-camera
     #[semio_framework_async_macros::async_test]
     async fn saved_cameras_create_rename_replace_view_reorder_delete_round_trip() {
-        let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
+        let snapshot = crate::empty_shooting_snapshot();
         let create =
             ShootingMutation::CreateSavedCamera(super::super::create_saved_camera::CreateSavedCamera { saved_camera: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() }, index: Some(0) });
         let with_camera = round_trip(&snapshot, &create);
@@ -342,7 +342,7 @@ mod tests {
     async fn replace_shot_camera_is_a_no_op_when_shot_has_no_saved_camera() {
         // 🎥️ The free/live viewport camera is session-only runtime state now (never a document
         // field) — `ReplaceShotCamera` against a shot with no saved-camera reference has nothing to patch.
-        let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
+        let mut snapshot = crate::empty_shooting_snapshot();
         snapshot.shots.push(sample_shot("s1"));
         let camera = ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() };
         let operation = ShootingMutation::ReplaceShotCamera(super::super::replace_shot_camera::ReplaceShotCamera { shot_id: "s1".into(), new_camera: camera });
@@ -352,7 +352,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn replace_shot_camera_patches_the_saved_camera_it_references() {
-        let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
+        let mut snapshot = crate::empty_shooting_snapshot();
         snapshot.saved_cameras.push(ShootingSavedCamera { id: "cam1".into(), label: "A".into(), camera: ShootingCamera::default() });
         let mut shot = sample_shot("s1");
         shot.camera_id = Some("cam1".into());
@@ -368,7 +368,7 @@ mod tests {
     //#region 🎯📌active-selection
     #[semio_framework_async_macros::async_test]
     async fn set_active_shot_and_asset_round_trip() {
-        let mut snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
+        let mut snapshot = crate::empty_shooting_snapshot();
         snapshot.shots.push(sample_shot("s1"));
         snapshot.assets.push(sample_asset("a1"));
         let operation = ShootingMutation::SetActiveShot(super::super::set_active_shot::SetActiveShot { shot_id: Some("s1".into()) });
@@ -383,7 +383,7 @@ mod tests {
     //#region ☀️scene
     #[semio_framework_async_macros::async_test]
     async fn scene_field_mutations_round_trip() {
-        let snapshot = crate::artifacts::shooting::empty_shooting_snapshot();
+        let snapshot = crate::empty_shooting_snapshot();
         let next = round_trip(&snapshot, &ShootingMutation::ChangeSceneSunEnabled(super::super::change_scene_sun_enabled::ChangeSceneSunEnabled { new_enabled: true }));
         assert!(next.scene.sun.enabled);
         let next = round_trip(&next, &ShootingMutation::ChangeSceneSunAzimuth(super::super::change_scene_sun_azimuth::ChangeSceneSunAzimuth { new_azimuth: 90.0 }));

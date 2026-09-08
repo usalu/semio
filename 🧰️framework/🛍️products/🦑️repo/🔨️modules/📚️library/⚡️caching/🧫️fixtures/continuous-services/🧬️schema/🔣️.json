@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/caching/continuous-services/fixtures.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "metadata",
+    "runs",
+    "expectedServices",
+    "preservesOtherService",
+    "cases",
+    "cancellationExitCode"
+  ],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "semio"
+      ],
+      "properties": {
+        "semio": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "continuousSharing"
+          ],
+          "properties": {
+            "continuousSharing": {
+              "const": false
+            }
+          }
+        }
+      }
+    },
+    "runs": {
+      "const": [
+        "first",
+        "second"
+      ]
+    },
+    "expectedServices": {
+      "const": 2
+    },
+    "preservesOtherService": {
+      "const": true
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "sharing",
+          "cancelFirst",
+          "services"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "sharing": {
+            "type": "boolean"
+          },
+          "cancelFirst": {
+            "type": "boolean"
+          },
+          "services": {
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "vite": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "cancellationExitCode": {
+      "const": 130
+    }
+  }
+}

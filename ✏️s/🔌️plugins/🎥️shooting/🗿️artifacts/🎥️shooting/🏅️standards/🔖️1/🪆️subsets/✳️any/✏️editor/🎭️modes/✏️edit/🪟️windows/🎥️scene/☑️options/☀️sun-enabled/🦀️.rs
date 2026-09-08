@@ -1,7 +1,7 @@
 //! ☀️ Scene-window option — the sun-enabled toggle.
 //! Its command handler lives in `🎮️commands/☀️scene::toggle_sun`.
 
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::ShootingSnapshot;
 use crate::editor::shooting::terminology::ShootingLabels;
 use semio_framework_plugin::WindowMeasure;
 
@@ -27,7 +27,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn sun_enabled_measure_mirrors_the_fixture_default_off() {
-        let snapshot = crate::artifacts::shooting::schema::default_snapshot();
+        let snapshot = crate::schema::default_snapshot();
         let labels = shooting_play_labels(&ShootingConfig::default());
         match measure(&snapshot, labels) {
             WindowMeasure::Toggle { pressed, .. } => assert!(!pressed),

@@ -1,7 +1,7 @@
 //! 🔺️ `delete-curve` — sparse diff construction.
 
 use super::DeleteCurve;
-use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
+use crate::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteCurve, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {

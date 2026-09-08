@@ -1,8 +1,8 @@
 //! 🔺️ `change-d-mm` sparse diff construction — writes only `En1992Diff.d_mm` from the payload.
 
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::change_d_mm::ChangeDMm;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::change_d_mm::ChangeDMm;
+use crate::En1992Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeDMm, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {

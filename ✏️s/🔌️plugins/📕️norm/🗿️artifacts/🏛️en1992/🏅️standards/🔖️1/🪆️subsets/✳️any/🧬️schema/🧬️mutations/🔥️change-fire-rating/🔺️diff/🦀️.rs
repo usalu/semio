@@ -1,8 +1,8 @@
 //! 🔺️ `change-fire-rating` sparse diff construction — writes only `En1992Diff.fire_rating` from the payload.
 
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::change_fire_rating::ChangeFireRating;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::change_fire_rating::ChangeFireRating;
+use crate::En1992Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeFireRating, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {

@@ -1,6 +1,6 @@
 //! ➡️ Trinity Rewriting app — After window (read-only node-graph over the rule-applied result graph).
 
-use crate::artifacts::rewriting::RewritingSnapshot;
+use crate::RewritingSnapshot;
 use crate::editor::rewriting::config::RewritingConfig;
 pub(crate) fn render(state: &RewritingSnapshot, cfg: &RewritingConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let fixture_json = crate::editor::rewriting::after_fixture_json(state);

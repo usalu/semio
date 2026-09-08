@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🧱elements` per Wave C.
 
 use super::DeleteProgramElement;
-use crate::artifacts::program::diff::ProgramElementsDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramElementsDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteProgramElement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

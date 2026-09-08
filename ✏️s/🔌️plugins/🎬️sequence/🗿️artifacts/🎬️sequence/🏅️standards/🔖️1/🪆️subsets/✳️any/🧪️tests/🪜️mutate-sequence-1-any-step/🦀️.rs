@@ -38,9 +38,9 @@ const BASE_SCENE: &str = "local://🎬️base-scene.json";
 mod subject {
     use super::{BASE_SCENE, SEQUENCE_ASSET};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_plugin_sequence::artifacts::sequence::dsl::parse_dsl;
-    use semio_s_plugin_sequence::artifacts::sequence::mutations::{apply_sequence_mutation, decode_sequence_mutation_json, decode_sequence_scene_json, encode_sequence_projection_json, inverse_sequence_mutation, SequenceMutation};
-    use semio_s_plugin_sequence::artifacts::sequence::{sequence_content_child_with_owner, SequenceSnapshot};
+    use semio_s_artifact_sequence_sequence::document_dsl::parse_dsl;
+    use semio_s_artifact_sequence_sequence::mutations::{apply_sequence_mutation, decode_sequence_mutation_json, decode_sequence_scene_json, encode_sequence_projection_json, inverse_sequence_mutation, SequenceMutation};
+    use semio_s_artifact_sequence_sequence::{sequence_content_child_with_owner, SequenceSnapshot};
     use semio_s_plugin_stdio_test_oracle::law::{inverse_restores, mutation_is_observable};
 
     //#region 🔖️CommittedInput

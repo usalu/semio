@@ -1,5 +1,5 @@
 //! gisterrain <- stl
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::GisTerrainSnapshot;
 use semio_s_artifact_stdio_stl::{StlSnapshot, STDIO_STL_DOCUMENT_SCHEMA};
 
 pub fn register() {}

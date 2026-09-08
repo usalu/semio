@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::home::schema::mutations::text::SHomeMutation;
+use crate::schema::mutations::text::SHomeMutation;
 use protocol::OpBinary;
 
 pub const BINARY_TAGS: &[(&str, u8)] = &[("ChangeCatalogGeneration", super::change_catalog_generation::binary::BINARY_TAG)];
@@ -25,7 +25,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<SHomeMutation, protocol::ProtocolError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::home::mutations::change_catalog_generation;
+    use crate::mutations::change_catalog_generation;
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
@@ -37,7 +37,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn home_document_text_round_trips_through_the_store() {
-        use crate::artifacts::home::SHomeSnapshot;
+        use crate::SHomeSnapshot;
         let projection = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
         let envelope = store::create_document_envelope::<SHomeSnapshot, SHomeMutation>("s.home", "home", projection, None);
         let mut store: store::ArtifactStore<SHomeSnapshot, SHomeMutation> = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");

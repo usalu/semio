@@ -1,23 +1,29 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-page-media-box.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-page-media-box/schema.json",
   "title": "SetPageMediaBox",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "index",
     "mediaBox"
   ],
   "properties": {
-    "mutation": {
-      "const": "setPageMediaBox"
-    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0
     },
     "mediaBox": {
-      "type": "array"
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "mutation": {
+      "const": "setPageMediaBox",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     }
   }
 }

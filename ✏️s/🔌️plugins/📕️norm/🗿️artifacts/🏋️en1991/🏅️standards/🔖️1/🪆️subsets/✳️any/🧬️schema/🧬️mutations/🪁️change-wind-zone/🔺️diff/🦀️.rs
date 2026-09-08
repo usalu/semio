@@ -1,7 +1,7 @@
 //! 🔺️ `change-wind-zone` — sparse diff construction.
 
 use super::ChangeWindZone;
-use crate::artifacts::en1991::{En1991Diff, En1991Snapshot};
+use crate::{En1991Diff, En1991Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeWindZone, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {

@@ -10,7 +10,7 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
-use crate::artifacts::wires::{wires_working_scene, WiresSnapshot};
+use crate::{wires_working_scene, WiresSnapshot};
 use dsl::DslValue;
 
 //#region 🔖️BinaryPrimitives
@@ -60,7 +60,7 @@ fn decode_wires_snapshot_binary(bytes: &[u8]) -> Result<WiresSnapshot, String> {
     let edges = read_dsl_list(&mut reader)?;
     let camera = read_dsl(&mut reader)?;
     let meta = read_dsl(&mut reader)?;
-    let content = crate::artifacts::wires::wires_content_child_with_owner(nodes, edges);
+    let content = crate::wires_content_child_with_owner(nodes, edges);
     Ok(WiresSnapshot { wires_fixture, content, camera, meta })
 }
 //#endregion 🔖️BinaryPrimitives
@@ -90,7 +90,7 @@ impl store::ArtifactPack for WiresSnapshot {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::wires::{empty_wires_snapshot, wires_working_board};
+    use crate::{empty_wires_snapshot, wires_working_board};
 
     #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_empty() {

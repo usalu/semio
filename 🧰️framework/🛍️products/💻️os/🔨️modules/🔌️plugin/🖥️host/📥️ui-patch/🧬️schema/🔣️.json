@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/host/ui-patch/component.json",
+  "title": "Semio OS Plugin Host Ui Patch",
+  "$defs": {
+    "NativeUiPatchMarshallingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "expectedInstance", "maximumWireBytes", "operationKinds", "componentCases", "cases"],
+      "properties": {
+        "schema": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*\\.v[0-9]+$" },
+        "expectedInstance": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "maximumWireBytes": { "type": "integer", "minimum": 1, "maximum": 268435456 },
+        "operationKinds": {
+          "type": "array",
+          "minItems": 11,
+          "maxItems": 11,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/UiPatchOperationKind" }
+        },
+        "componentCases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "config", "first", "second", "root", "channel"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "config": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["profile"],
+                "properties": {
+                  "profile": { "enum": ["ui", "headless"] },
+                  "uiImportSink": { "type": "boolean" },
+                  "uiReturnWithImport": { "type": "boolean" },
+                  "uiMalformedFirst": { "type": "boolean" }
+                }
+              },
+              "first": { "$ref": "#/$defs/UiPatchVerdict" },
+              "second": { "$ref": "#/$defs/UiPatchVerdict" },
+              "root": { "type": ["integer", "null"], "minimum": 1 },
+              "channel": { "enum": ["emitted", "returned", "both"] }
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "emitted", "returned", "receipt", "expected"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "emitted": { "type": "integer", "minimum": 0, "maximum": 2 },
+              "returned": { "type": "integer", "minimum": 0, "maximum": 2 },
+              "receipt": { "type": "boolean" },
+              "expected": { "$ref": "#/$defs/UiPatchVerdict" }
+            }
+          }
+        }
+      }
+    },
+    "UiPatchOperationKind": { "enum": ["upsert", "setComponent", "setLayout", "setActivity", "setChildren", "setStyle", "setAccessibility", "setBindings", "setMenu", "remove", "setRoot"] },
+    "UiPatchVerdict": { "enum": ["accepted", "rejected"] }
+  }
+}

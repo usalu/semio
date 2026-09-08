@@ -7,8 +7,8 @@
 //! `⚙️engine/📐️geometry/🎛flatten`, ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES);
 //! this leaf holds the `InferredField` chains that drive incremental per-entity caching over that math.
 
-use crate::artifacts::puzzle3d::standards::v1::subsets::any::schema::inferences::flatten::{compute_child_plane, diagram_center, find_vortex, flatten_objects_with_assignment, orientation_to_plane, vortex_geom, FlattenParent, FlattenPlane};
-use crate::artifacts::puzzle3d::{Puzzle3dObjectAnchor, Puzzle3dSnapshot};
+use crate::standards::v1::subsets::any::schema::inferences::flatten::{compute_child_plane, diagram_center, find_vortex, flatten_objects_with_assignment, orientation_to_plane, vortex_geom, FlattenParent, FlattenPlane};
+use crate::{Puzzle3dObjectAnchor, Puzzle3dSnapshot};
 use std::collections::HashMap;
 
 //#region 🔖️DependencyHashChains
@@ -175,7 +175,7 @@ impl store::InferredField<Puzzle3dSnapshot> for Puzzle3dFlatCenter {
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle3d::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dVortex};
+    use crate::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dVortex};
     use store::{InferenceCache, InferenceCacheConfig};
 
     //#region 🧸️Fixtures
@@ -196,7 +196,7 @@ mod tests {
         let attraction_a = Puzzle3dAttraction { id: "a1".into(), attracting: "root:top".into(), attracted: "mid:bottom".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 1.0, y: 0.0 };
         let attraction_b = Puzzle3dAttraction { id: "a2".into(), attracting: "mid:top".into(), attracted: "leaf:bottom".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 1.0 };
         Puzzle3dSnapshot {
-            schema: crate::artifacts::puzzle3d::PUZZLE_3D_SCHEMA.to_string(),
+            schema: crate::PUZZLE_3D_SCHEMA.to_string(),
             domain: "architecture".into(),
             meta: Default::default(),
             objects: vec![root, mid, leaf],

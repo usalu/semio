@@ -8,7 +8,7 @@
 //! `FormsSnapshot` and `CsvSnapshot`) compiled but could not have round-tripped real content either
 //! — this stub is honest about the same limitation instead of silently miscompiling on real input.
 
-use crate::artifacts::forms::FormsSnapshot;
+use crate::FormsSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

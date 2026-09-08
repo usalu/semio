@@ -8,7 +8,7 @@
 //! sub-operation enum for `nodeGraphEdit`) moved with it, into `🎮️commands/🕸️set-algorithm/🦀️.rs`
 //! alongside the command it's a field of.
 
-use crate::artifacts::dag::op::DagMutation;
+use crate::op::DagMutation;
 use protocol::OpBinary;
 
 //#region 📡️SemioProtocol
@@ -34,7 +34,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = crate::artifacts::dag::mutations::delete_node("node-1".into());
+        let operation = crate::mutations::delete_node("node-1".into());
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -56,7 +56,7 @@ mod semio_protocol_conformance {
 
     #[semio_framework_async_macros::async_test]
     async fn verify_protocol_bytes_against_encoded_spr() {
-        let operation = crate::artifacts::dag::mutations::delete_node("node-1".into());
+        let operation = crate::mutations::delete_node("node-1".into());
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");
         ::dsl::verify_protocol_bytes(&g, &bytes).expect("protocol recognizes spr bytes");

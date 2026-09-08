@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/object/mutation/rotate-object.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/object/mutation/rotate-object/schema.json",
   "title": "RotateObject",
   "type": "object",
   "additionalProperties": false,
@@ -9,14 +9,18 @@
   ],
   "properties": {
     "rotation": {
-      "title": "SemioQuaternion",
+      "$ref": "#/$defs/SemioQuaternion"
+    }
+  },
+  "$defs": {
+    "SemioQuaternion": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "w",
         "x",
         "y",
-        "z"
+        "z",
+        "w"
       ],
       "properties": {
         "x": {

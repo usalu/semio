@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/reactor/pending/component.json",
+  "title": "Semio OS Plugin Reactor Pending",
+  "$defs": {
+    "PendingAuthorityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "current", "feedback", "kinds", "reservation", "retirementGrants", "liveGuestReceiverProven", "semanticPublicationProven"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "current": { "$ref": "#/$defs/PendingPatchIdentity" },
+        "feedback": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "changes", "accepted"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "changes": { "$ref": "#/$defs/PendingPatchIdentityChanges" },
+              "accepted": { "type": "boolean" }
+            }
+          }
+        },
+        "kinds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["ack", "rejected"] } },
+        "reservation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["zeroBytesPreservesSequence", "occupiedTargetPreservesSource", "sequenceExhaustionCapturesSources", "maximumSequence", "maximumPlacementBytes"],
+          "properties": {
+            "zeroBytesPreservesSequence": { "type": "boolean" },
+            "occupiedTargetPreservesSource": { "type": "boolean" },
+            "sequenceExhaustionCapturesSources": { "type": "integer", "minimum": 0, "maximum": 65536 },
+            "maximumSequence": { "$ref": "#/$defs/ReactorU64" },
+            "maximumPlacementBytes": { "type": "integer", "minimum": 1, "maximum": 16777216 }
+          }
+        },
+        "retirementGrants": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "integer", "minimum": 0, "maximum": 16777216 } },
+        "liveGuestReceiverProven": { "type": "boolean" },
+        "semanticPublicationProven": { "type": "boolean" }
+      }
+    },
+    "PendingPatchIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["activationGeneration", "instanceId", "guestLifetime", "patchSequence", "surface", "revision"],
+      "properties": {
+        "activationGeneration": { "$ref": "#/$defs/ReactorU64" },
+        "instanceId": { "$ref": "#/$defs/ReactorInstanceId" },
+        "guestLifetime": { "$ref": "#/$defs/ReactorU64" },
+        "patchSequence": { "$ref": "#/$defs/ReactorU64" },
+        "surface": { "$ref": "#/$defs/ReactorSurfaceKey" },
+        "revision": { "$ref": "#/$defs/ReactorU64" }
+      }
+    },
+    "PendingPatchIdentityChanges": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "activationGeneration": { "$ref": "#/$defs/ReactorU64" },
+        "instanceId": { "$ref": "#/$defs/ReactorInstanceId" },
+        "guestLifetime": { "$ref": "#/$defs/ReactorU64" },
+        "patchSequence": { "$ref": "#/$defs/ReactorU64" },
+        "surface": { "$ref": "#/$defs/ReactorSurfaceKey" },
+        "revision": { "$ref": "#/$defs/ReactorU64" }
+      }
+    },
+    "PendingPatchReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "issued", "cases", "retirementCycles"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "issued": { "$ref": "#/$defs/PendingPatchAcknowledgement" },
+        "cases": {
+          "type": "array",
+          "minItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "ack", "committed", "pending", "live", "accepted"],
+            "properties": {
+              "id": { "type": "string" },
+              "ack": { "$ref": "#/$defs/PendingPatchAcknowledgement" },
+              "committed": { "type": "boolean" },
+              "pending": { "type": "boolean" },
+              "live": { "type": "boolean" },
+              "accepted": { "type": "boolean" }
+            }
+          }
+        },
+        "retirementCycles": { "type": "integer", "minimum": 1, "maximum": 65536 }
+      }
+    },
+    "PendingPatchAcknowledgement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["activation", "instance", "guest", "sequence", "surface", "revision"],
+      "properties": {
+        "activation": { "type": "integer", "minimum": 1 },
+        "instance": { "type": "integer", "minimum": 0 },
+        "guest": { "type": "integer", "minimum": 1 },
+        "sequence": { "type": "integer", "minimum": 1 },
+        "surface": { "$ref": "#/$defs/ReactorSurfaceKey" },
+        "revision": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "ReactorInstanceId": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "ReactorSurfaceKey": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "ReactorU64": { "type": "string", "pattern": "^(?:0|[1-9][0-9]*)$", "maxLength": 20 }
+  }
+}

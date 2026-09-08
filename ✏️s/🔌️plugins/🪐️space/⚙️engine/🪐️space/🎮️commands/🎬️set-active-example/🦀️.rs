@@ -39,7 +39,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn open_studio_loads_created_empty_catalog_studio() {
-        use semio_framework_os::{create_os_space, MemoryBackbonePort, OsBackbonePorts, SpaceKind, SpaceRole, SpaceUser, SpaceVisibility};
+        use semio_framework_artifact_space_space::{SpaceKind, SpaceRole, SpaceUser, SpaceVisibility};
+        use semio_framework_os::{create_os_space, MemoryBackbonePort, OsBackbonePorts};
         use std::sync::Arc;
         let port = Arc::new(OsBackbonePorts::Store(store::BackbonePorts::Memory(MemoryBackbonePort::default())));
         let owner = SpaceUser { id: "tester".into(), name: "Tester".into(), avatar: None, role: SpaceRole::Author };

@@ -1,8 +1,9 @@
 //! 🧬️ Flow artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::flow::{FlowContentChild, FlowSnapshot};
-use flow::{CameraJson, Widget, FLOW_LOD_MODE_AUTOMATIC};
-use schema::ArtifactSchema;
+use crate::{FlowContentChild, FlowSnapshot};
+use flow::{FLOW_LOD_MODE_AUTOMATIC};
+use semio_framework_artifact_flow_flow::{CameraJson, Widget};
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Constants
 /// 🖱️ Default proximity-select distance — also `FlowConfig`'s own default (`crate::editor::flow::config`),
@@ -165,31 +166,31 @@ impl FlowArtifact {
 
 //#region 🔹Descriptor
 /// 🧬️ Descriptor for `s.flow.flow` — twenty handcrafted schema leaves.
-pub fn flow_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn flow_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.flow.flow",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -201,7 +202,7 @@ pub fn flow_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔹Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::flow::{FlowDiff, FlowMutation, FlowSnapshot};
+    use crate::{FlowDiff, FlowMutation, FlowSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -253,7 +254,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::flow::FlowSnapshot;
+    use crate::FlowSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]

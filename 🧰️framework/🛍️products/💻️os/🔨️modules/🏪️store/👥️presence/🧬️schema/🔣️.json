@@ -1,0 +1,524 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/store/presence/component.json",
+  "title": "Store Presence",
+  "description": "Presence-owned contracts: peer commit and admission records, presence retirement, and the exact document-scoped runtime keys and surface routes presence is projected through. Renderer elements and the backbone worker are consumers.",
+  "$defs": {
+    "PresencePeerCommitV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumBytes",
+        "candidate",
+        "winner",
+        "cases"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumBytes": {
+          "const": 4096
+        },
+        "candidate": {
+          "const": {
+            "actor": "candidate",
+            "value": 47
+          }
+        },
+        "winner": {
+          "const": {
+            "actor": "winner",
+            "value": 31
+          }
+        },
+        "cases": {
+          "const": [
+            {
+              "name": "foreign-factory",
+              "sameStore": false,
+              "sameFactory": false,
+              "stale": false,
+              "accepted": false,
+              "expectedSnapshots": 3
+            },
+            {
+              "name": "same-factory-different-store",
+              "sameStore": false,
+              "sameFactory": true,
+              "stale": false,
+              "accepted": false,
+              "expectedSnapshots": 3
+            },
+            {
+              "name": "stale-concurrent-candidate",
+              "sameStore": true,
+              "sameFactory": true,
+              "stale": true,
+              "accepted": false,
+              "expectedSnapshots": 4
+            },
+            {
+              "name": "fresh-successful-handoff",
+              "sameStore": true,
+              "sameFactory": true,
+              "stale": false,
+              "accepted": true,
+              "expectedSnapshots": 3
+            }
+          ]
+        }
+      }
+    },
+    "PresencePeerAdmissionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumBytes",
+        "cases",
+        "expectedRejectedOwnerPreserved",
+        "expectedSnapshotRetirements",
+        "factoryBinding",
+        "requiresCapacitySizedByteGrant"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumBytes": {
+          "const": 4096
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "actor",
+              "state",
+              "accepted",
+              "expectedActorBytes"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "actor": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "unit",
+                  "repeat",
+                  "minimumCapacity"
+                ],
+                "properties": {
+                  "unit": {
+                    "type": "string"
+                  },
+                  "repeat": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 65
+                  },
+                  "minimumCapacity": {
+                    "const": 65536
+                  }
+                }
+              },
+              "state": {
+                "enum": [
+                  "ready",
+                  "pruning",
+                  "full",
+                  "created-full",
+                  "transferred"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "expectedActorBytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 260
+              }
+            }
+          }
+        },
+        "expectedRejectedOwnerPreserved": {
+          "const": true
+        },
+        "expectedSnapshotRetirements": {
+          "const": 1
+        },
+        "factoryBinding": {
+          "const": {
+            "samePresenceType": true,
+            "sourceClosedBeforeRetirement": true,
+            "expectedOriginalRetirements": 1,
+            "expectedForeignRetirements": 0
+          }
+        },
+        "requiresCapacitySizedByteGrant": {
+          "const": false
+        }
+      }
+    },
+    "PresenceRetirementPeer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor",
+        "value"
+      ],
+      "properties": {
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "integer"
+        }
+      }
+    },
+    "PresenceRetirementV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumBytes",
+        "cases",
+        "overlap",
+        "localCapture",
+        "localReplacements",
+        "closeFactoryBinding",
+        "readerReturn"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumBytes": {
+          "const": 4096
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "local",
+              "peers",
+              "sharedReaders",
+              "expectedSnapshots",
+              "expectedActorBytes"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "local": {
+                "type": "integer"
+              },
+              "peers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/PresenceRetirementPeer"
+                }
+              },
+              "sharedReaders": {
+                "type": "boolean"
+              },
+              "expectedSnapshots": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "expectedActorBytes": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "overlap": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "first",
+            "second",
+            "capturedFirstReader",
+            "workers",
+            "expectedPeerSnapshots",
+            "expectedActorBytes",
+            "storeRemainsOpen"
+          ],
+          "properties": {
+            "first": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PresenceRetirementPeer"
+              }
+            },
+            "second": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PresenceRetirementPeer"
+              }
+            },
+            "capturedFirstReader": {
+              "const": true
+            },
+            "workers": {
+              "const": 2
+            },
+            "expectedPeerSnapshots": {
+              "const": 2
+            },
+            "expectedActorBytes": {
+              "const": 8
+            },
+            "storeRemainsOpen": {
+              "const": true
+            }
+          }
+        },
+        "localCapture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "value",
+            "cancelBeforeStoreClose",
+            "expectedWorkerTerminal",
+            "expectedValueWhileOpen",
+            "expectedFinalSnapshots"
+          ],
+          "properties": {
+            "value": {
+              "const": 23
+            },
+            "cancelBeforeStoreClose": {
+              "const": true
+            },
+            "expectedWorkerTerminal": {
+              "const": true
+            },
+            "expectedValueWhileOpen": {
+              "const": 23
+            },
+            "expectedFinalSnapshots": {
+              "const": 1
+            }
+          }
+        },
+        "localReplacements": {
+          "const": {
+            "values": [
+              23,
+              31,
+              47
+            ],
+            "capturedValues": [
+              23,
+              31
+            ],
+            "expectedRetiredWhileOpen": 2,
+            "expectedFinalSnapshots": 3,
+            "workers": 2
+          }
+        },
+        "closeFactoryBinding": {
+          "const": {
+            "local": 23,
+            "peer": {
+              "actor": "peer",
+              "value": 31
+            },
+            "returnReadAfterDetach": true,
+            "expectedLocal": 1,
+            "expectedPeer": 1,
+            "expectedForeign": 0
+          }
+        },
+        "readerReturn": {
+          "const": {
+            "text": "aä🧵",
+            "variants": [
+              "typed-drop",
+              "erased-drop",
+              "explicit-return",
+              "witness-return"
+            ],
+            "eventOrder": [
+              "reader-alias-released",
+              "return-published",
+              "registry-owner-taken",
+              "final-owner-retired"
+            ],
+            "returnedAtAliasBarrier": false,
+            "uniqueAfterReturn": true,
+            "contendedTransferPreservesUnreturned": true,
+            "transferPublishesReturn": false,
+            "workers": 2
+          }
+        }
+      }
+    },
+    "PresenceScopeV1": {
+      "description": "📍️ The exact (space, document) pair a presence session is scoped to. Two sessions on the same document in different spaces are different scopes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spaceId",
+        "documentId"
+      ],
+      "properties": {
+        "spaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "PresenceRuntimeKeyV1": {
+      "description": "🔑️ The runtime key a presence scope derives to: `v1:<spaceId utf8 bytes>:<documentId utf8 bytes>:<spaceId><documentId>`. The byte lengths make the concatenation unambiguous.",
+      "type": "string",
+      "pattern": "^v1:[0-9]+:[0-9]+:",
+      "maxLength": 1280
+    },
+    "PresenceActorRouteV1": {
+      "description": "📡️ The actor URI a scoped presence session is routed through. Always `actor://` plus the scope's runtime key.",
+      "type": "string",
+      "pattern": "^actor://v1:[0-9]+:[0-9]+:",
+      "maxLength": 1288
+    },
+    "PresenceSurfaceRoleV1": {
+      "enum": [
+        "owner",
+        "member",
+        "viewer"
+      ]
+    },
+    "PresencePeerV1": {
+      "description": "👥️ One peer projected into a scoped presence surface. `views` is empty until the peer publishes a view; `surface` must equal the verified surface the peer was admitted on.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor",
+        "userId",
+        "label",
+        "role",
+        "connectedAtMs",
+        "color",
+        "surface",
+        "views"
+      ],
+      "properties": {
+        "actor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "role": {
+          "$ref": "#/$defs/PresenceSurfaceRoleV1"
+        },
+        "connectedAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "color": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "surface": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "views": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "ScopedPresenceBindingV1": {
+      "description": "👥️ One scoped presence binding: the scope, the runtime key it derives to, the surface it is verified on, and the peer projected there.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "runtimeKey",
+        "surface",
+        "peer"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/PresenceScopeV1"
+        },
+        "runtimeKey": {
+          "$ref": "#/$defs/PresenceRuntimeKeyV1"
+        },
+        "surface": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "peer": {
+          "$ref": "#/$defs/PresencePeerV1"
+        }
+      }
+    },
+    "ScopedPresenceRejectionV1": {
+      "description": "⛔️ Every reason a presence message is refused. A message that names no scope or surface, or names a different one than the session was admitted on, is dropped rather than projected.",
+      "enum": [
+        "missing-scope",
+        "mismatched-scope",
+        "missing-surface",
+        "mismatched-surface"
+      ]
+    },
+    "ScopedPresenceCloseV1": {
+      "description": "🚪️ A scoped presence close: it clears exactly the runtime key it names and preserves every other one.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clearsRuntimeKey",
+        "preservesRuntimeKey"
+      ],
+      "properties": {
+        "clearsRuntimeKey": {
+          "$ref": "#/$defs/PresenceRuntimeKeyV1"
+        },
+        "preservesRuntimeKey": {
+          "$ref": "#/$defs/PresenceRuntimeKeyV1"
+        }
+      }
+    }
+  }
+}

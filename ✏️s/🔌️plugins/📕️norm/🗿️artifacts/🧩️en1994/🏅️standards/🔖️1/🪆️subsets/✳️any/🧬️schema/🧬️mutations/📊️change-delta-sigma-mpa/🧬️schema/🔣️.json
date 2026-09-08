@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1994/1/any/mutation/change-delta-sigma-mpa.json",
+  "$id": "https://semio.tech/schema/s/norm/en1994/1/any/mutation/change-delta-sigma-mpa/schema.json",
   "title": "ChangeDeltaSigmaMpa",
   "type": "object",
   "additionalProperties": false,

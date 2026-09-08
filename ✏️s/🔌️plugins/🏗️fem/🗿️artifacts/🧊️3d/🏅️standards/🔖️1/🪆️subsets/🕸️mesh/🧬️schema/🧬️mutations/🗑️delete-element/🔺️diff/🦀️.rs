@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `DeleteElement`.
 use super::DeleteElement;
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dElementsDelta};
-use crate::artifacts::fem3d::mutations::{element_referrers, target_referenced};
-use crate::artifacts::fem3d::{element_id, Fem3dSnapshot};
+use crate::diff::{Fem3dDiff, Fem3dElementsDelta};
+use crate::mutations::{element_referrers, target_referenced};
+use crate::{element_id, Fem3dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteElement, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {

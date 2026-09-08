@@ -44,3 +44,13 @@ The current Rust/TypeScript/schema source inventory identifies 93 artifact roots
 ## Wider Language Inventory Check
 
 A second repository-wide ripgrep inventory included Rust, TypeScript/TSX, Python, C#, C, C++, and artifact-definition JSON sources under visible first-party trees. It found 93 artifact roots. Additional roots outside the initially inventoried owner prefixes: none.
+
+## Schema Ownership Follow-up
+
+The 93 count above is specifically the existing plural `🗿️artifacts` directory roots. A subsequent consumer audit found framework document schemas outside that naming convention: `os.workflow`, `os.space`, `os.collection`, and the framework playbook model. Framework Flow and Dag serialization also exist outside those roots but appear to provide implementations reused by corresponding plugin artifacts. These must be assessed by actual schema ownership, rather than treating a filename-based count as proof that every artifact has a package. Store-internal durable decision records and test-only DslArtifact types are protocol/test support, not automatically separate product artifacts. This follow-up remains open until ownership is verified.
+
+## Semantic Framework Followup
+
+The plural-directory inventory alone did not cover OS builtins. Additional independently persisted production documents were identified through `ArtifactDsl` implementations: workflow, run, shared playbook, space, collection, Flow fixture, and DAG snapshot. All now have dedicated artifact ownership (the original run root was already included in the directory count). Durable Store outcome/history records stay within the existing kernel persistence mechanism; they are private infrastructure serialization, not registered app artifacts. Test-only Demo/Probe/NoConfig/NoPresence/NoTransient and DSL derive fixture types are test infrastructure, not additional package units.
+
+The standalone Flow extraction removes document ownership from the OS Flow host. The DAG extraction removes data ownership from Infinite. Both preserve host orchestration at the existing host layers and expose direct data APIs for downstream artifact composition. Final metadata, source, and runtime audits remain pending.

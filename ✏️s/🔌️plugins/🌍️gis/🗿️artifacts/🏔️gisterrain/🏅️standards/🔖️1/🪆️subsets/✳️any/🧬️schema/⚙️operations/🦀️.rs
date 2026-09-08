@@ -6,8 +6,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("../🧬️mutations/📖
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::gisterrain::schema::mutations::GisTerrainMutation;
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::schema::mutations::GisTerrainMutation;
+use crate::GisTerrainSnapshot;
 use dsl::ToValue;
 use protocol::Mutation;
 use store::{ArtifactEnvelope, ArtifactStore};
@@ -19,7 +19,7 @@ pub type GisTerrainStore = ArtifactStore<GisTerrainSnapshot, GisTerrainMutation>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::gisterrain::schema::mutations::{ChangeExaggeration, ChangeImportedFeatures};
+    use crate::schema::mutations::{ChangeExaggeration, ChangeImportedFeatures};
     
 
     #[semio_framework_async_macros::async_test]
@@ -34,7 +34,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn change_exaggeration_obeys_the_inverse_and_diff_absorb_laws() {
-        let base = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into(), ..Default::default() });
+        let base = crate::gis_terrain_snapshot_with_derived_mesh(GisTerrainSnapshot { exaggeration: 1.5, imported_features_json: "null".into(), ..Default::default() });
         let mutation = GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 4.0 });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).into_parts().0;
@@ -44,7 +44,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn change_imported_features_obeys_the_inverse_law() {
-        let base = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: "null".into(), ..Default::default() });
+        let base = crate::gis_terrain_snapshot_with_derived_mesh(GisTerrainSnapshot { exaggeration: 1.0, imported_features_json: "null".into(), ..Default::default() });
         let mutation = GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_features_json: "{}".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
     }
@@ -56,7 +56,7 @@ pub fn apply_gis_terrain_mutation(snapshot: &mut GisTerrainSnapshot, mutation: &
     // 🕸️ `mesh` is a pure function of `(exaggeration, imported_features_json)` — re-derive it after
     // every mutation so the composed child handle never drifts from what
     // `gis_terrain_mesh_from_snapshot` would actually build (see `GisTerrainSnapshot.mesh`'s doc).
-    *snapshot = crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(next);
+    *snapshot = crate::gis_terrain_snapshot_with_derived_mesh(next);
     Ok(())
 }
 
@@ -97,7 +97,7 @@ pub const KINDS: &[&str] = &["change-exaggeration", "change-imported-features"];
 pub fn gis_terrain_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<GisTerrainSnapshot, String> {
         let decoded: GisTerrainSnapshot = dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())?;
-        Ok(crate::artifacts::gisterrain::gis_terrain_snapshot_with_derived_mesh(decoded))
+        Ok(crate::gis_terrain_snapshot_with_derived_mesh(decoded))
     };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;

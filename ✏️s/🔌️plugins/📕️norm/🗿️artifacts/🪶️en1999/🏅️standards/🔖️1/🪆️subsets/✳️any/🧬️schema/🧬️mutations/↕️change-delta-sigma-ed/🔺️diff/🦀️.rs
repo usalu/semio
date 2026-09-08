@@ -1,8 +1,8 @@
 //! 🔺️ `change-delta-sigma-ed` sparse diff construction — writes only `En1999Diff.delta_sigma_ed` from the payload.
 
-use crate::artifacts::en1999::diff::En1999Diff;
-use crate::artifacts::en1999::mutations::change_delta_sigma_ed::ChangeDeltaSigmaEd;
-use crate::artifacts::en1999::En1999Snapshot;
+use crate::diff::En1999Diff;
+use crate::mutations::change_delta_sigma_ed::ChangeDeltaSigmaEd;
+use crate::En1999Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeDeltaSigmaEd, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {

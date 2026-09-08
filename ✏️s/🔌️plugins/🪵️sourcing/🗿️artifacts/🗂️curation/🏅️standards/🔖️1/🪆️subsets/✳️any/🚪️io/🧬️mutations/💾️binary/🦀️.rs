@@ -11,7 +11,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::curation::schema::mutations::SourcingMutation;
+use crate::schema::mutations::SourcingMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `SourcingMutation` to its binary state-patch form.
@@ -27,12 +27,12 @@ pub fn decode_op(bytes: &[u8]) -> Result<SourcingMutation, protocol::ProtocolErr
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    use crate::artifacts::curation::CurationSnapshot;
+    use crate::CurationSnapshot;
     use super::*;
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = crate::artifacts::curation::schema::mutations::create_curated_item(crate::artifacts::curation::CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 });
+        let operation = crate::schema::mutations::create_curated_item(crate::CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -40,12 +40,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn curation_document_text_round_trips_through_a_vcs_store() {
-        let document = crate::artifacts::curation::curation_snapshot_from_stock(crate::artifacts::curation::schema::demo_stock(), Vec::new());
-        let envelope = store::create_document_envelope(crate::artifacts::curation::SOURCING_CURATION_SCHEMA, "sourcing-curation-test", document, None);
+        let document = crate::curation_snapshot_from_stock(&crate::schema::demo_stock(), Vec::new());
+        let envelope = store::create_document_envelope(crate::SOURCING_CURATION_SCHEMA, "sourcing-curation-test", document, None);
         let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         doc_store.install_member_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<CurationSnapshot, SourcingMutation>());
-        let object_id = crate::artifacts::curation::stock_of(&doc_store.snapshot().expect("snapshot"))[0].id.clone();
-        let mutation = crate::artifacts::curation::schema::mutations::create_curated_item(crate::artifacts::curation::CuratedItem { object_id, count: 3 });
+        let object_id = crate::stock_of(&doc_store.snapshot().expect("snapshot"))[0].id.clone();
+        let mutation = crate::schema::mutations::create_curated_item(crate::CuratedItem { object_id, count: 3 });
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], description: None }).await.expect("apply");
         store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
         store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;

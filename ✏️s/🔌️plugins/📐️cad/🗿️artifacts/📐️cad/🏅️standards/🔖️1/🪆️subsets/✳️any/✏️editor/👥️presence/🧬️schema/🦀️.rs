@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]

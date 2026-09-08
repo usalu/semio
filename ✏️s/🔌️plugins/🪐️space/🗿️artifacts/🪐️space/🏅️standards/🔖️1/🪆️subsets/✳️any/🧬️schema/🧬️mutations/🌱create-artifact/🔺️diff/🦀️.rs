@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateArtifact` — a real append-only insert (never a whole-snapshot
 //! capture).
-use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDiff;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateArtifact, base: &SSpaceSnapshot) -> protocol::MutationOutcome<SSpaceDiff> {

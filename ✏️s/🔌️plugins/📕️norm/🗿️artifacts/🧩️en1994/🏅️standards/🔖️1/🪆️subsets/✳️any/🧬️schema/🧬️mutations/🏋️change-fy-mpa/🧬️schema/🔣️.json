@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1994/1/any/mutation/change-fy-mpa.json",
+  "$id": "https://semio.tech/schema/s/norm/en1994/1/any/mutation/change-fy-mpa/schema.json",
   "title": "ChangeFYMpa",
   "type": "object",
   "additionalProperties": false,

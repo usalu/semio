@@ -1,8 +1,8 @@
 //! 📤️ Exports note text onto one PDF 1.4 page.
 
-use crate::artifacts::note::io::note_document_bounds;
-use crate::artifacts::note::schema::flatten_blocks;
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
+use crate::io::note_document_bounds;
+use crate::schema::flatten_blocks;
+use crate::{NoteBlockNode, NoteSnapshot};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -26,7 +26,7 @@ impl Serializer<NoteSnapshot> for NoteIntoPdf {
         }
         for block in flatten_blocks(&from.blocks) {
             if let NoteBlockNode::Text { content, .. } = block {
-                for paragraph in crate::artifacts::note::note_block_text(content) {
+                for paragraph in crate::note_block_text(content) {
                     for run in &paragraph.runs {
                         text.push_str(&run.text);
                         text.push(' ');

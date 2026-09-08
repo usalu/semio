@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/procedural/assembly/1/any/mutation/change-seed.json",
+  "$id": "https://semio.tech/schema/s/procedural/assembly/1/any/mutation/change-seed/schema.json",
   "title": "ChangeSeed",
   "type": "object",
   "additionalProperties": false,

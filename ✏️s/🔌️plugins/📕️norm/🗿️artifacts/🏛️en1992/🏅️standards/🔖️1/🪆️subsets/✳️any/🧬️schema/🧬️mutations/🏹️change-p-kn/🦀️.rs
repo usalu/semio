@@ -1,9 +1,9 @@
 //! 🔧 `change-p-kn` payload — changes the En1992 document's `p_kn` (EN 1992 input).
 
 
-use crate::artifacts::en1992::En1992Snapshot;
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::En1992Mutation;
+use crate::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::En1992Mutation;
 //#region 🔖️ChangePKn
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

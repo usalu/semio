@@ -1,6 +1,6 @@
 //! 🗑️ VCS mutation — `RemoveTag`: detaches a set-like tag member from the document.
-use crate::artifacts::vcs::mutations::VcsDemoMutation;
-use crate::artifacts::vcs::{VcsDiff, VcsSnapshot};
+use crate::mutations::VcsDemoMutation;
+use crate::{VcsDiff, VcsSnapshot};
 
 //#region 🔖️Mutation
 /// 🗑️ `remove-tag` payload.

@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ConnectKindCompatibility` — patches `meta.kindCompatibility`.
-use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
-use crate::artifacts::puzzle2d::{Puzzle2dKindCompatibility, Puzzle2dSnapshot};
+use crate::diff::Puzzle2dDiff;
+use crate::{Puzzle2dKindCompatibility, Puzzle2dSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ConnectKindCompatibility, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {

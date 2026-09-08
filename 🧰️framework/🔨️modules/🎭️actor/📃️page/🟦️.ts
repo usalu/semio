@@ -58,7 +58,6 @@ if (import.meta.vitest) {
   it("ActorBytePage matches shared vectors and Node Buffer for every fixed word", async () => {
     const { default: fixture } = await import("./🧫️fixture/🔣️.json");
     const { default: schema } = await import("./🧬️schema/🔣️.json");
-    const fixtureSchema = schema;
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(schema);
     expect(ajv.getSchema(`${schema.$id}#/$defs/PageFixture`)!(fixture)).toBe(true);

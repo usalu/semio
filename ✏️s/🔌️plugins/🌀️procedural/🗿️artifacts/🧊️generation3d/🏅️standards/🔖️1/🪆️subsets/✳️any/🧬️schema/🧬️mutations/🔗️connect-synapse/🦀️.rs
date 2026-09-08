@@ -2,10 +2,10 @@
 //! widget ports (relationship collection, per `📓️derivation-rules.md` rule 4:
 //! `connect-<nouns>{endpoints,payload}` ↔ `disconnect-<noun>{id}`).
 
-use crate::artifacts::generation3d::diff::Generation3dDiff;
-use crate::artifacts::generation3d::mutations::Generation3dMutation;
-use crate::artifacts::generation3d::Generation3dSnapshot;
-use flow::SynapseSpec;
+use crate::diff::Generation3dDiff;
+use crate::mutations::Generation3dMutation;
+use crate::Generation3dSnapshot;
+use semio_framework_artifact_flow_semio_framework_os_flow::SynapseSpec;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️ConnectSynapse
 /// 🔗 Full initial payload for a new synapse edge, placed at `index` (FINAL-state) if no edge with
@@ -22,11 +22,11 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Conn
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "synapse", kind: "connect-synapse", record: "ConnectedSynapse" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::artifacts::generation3d::mutations::connect_synapse::diff::diff(self, base)
+        crate::mutations::connect_synapse::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        crate::artifacts::generation3d::mutations::connect_synapse::inverse::inverse(self, base)
+        crate::mutations::connect_synapse::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {

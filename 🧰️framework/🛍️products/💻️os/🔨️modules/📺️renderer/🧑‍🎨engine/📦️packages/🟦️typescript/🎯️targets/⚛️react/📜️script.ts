@@ -4,13 +4,27 @@ import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv, { type ValidateFunction } from "ajv";
 import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runBunx, runVitest } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+
+const MODULE_SCHEMAS = {
+  renderer: "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
+  directory: "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json",
+  presence: "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧬️schema/🔣️.json",
+} as const;
+
+/** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
+function ownedExport(repoRoot: string, scope: keyof typeof MODULE_SCHEMAS, exportId: string): ValidateFunction {
+  const doc = JSON.parse(readFileSync(join(repoRoot, MODULE_SCHEMAS[scope]), "utf8")) as { $id: string };
+  const compiled = new Ajv({ strict: true, allErrors: true }).addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
+  if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
+  return compiled as ValidateFunction;
+}
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "🧪️tests/🟦️.ts");
+    runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 
@@ -19,7 +33,7 @@ class DocumentOpeningScopeCheckScript extends BundleScript {
   run(segments: string[]): void {
     if (segments.length !== 0) throw new Error("document-opening-scope-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["🚪️opening.test.ts", "--silent=false", "--reporter=verbose"], "🧪️tests/🟦️.ts");
+    runVitest(this.root, ["../../../../🧪️tests/🚪️opening/🟦️.ts", "--silent=false", "--reporter=verbose"], "vitest.config.ts");
   }
 }
 
@@ -29,7 +43,7 @@ class AgentBridgeCheckScript extends BundleScript {
     if (segments.length !== 0) throw new Error("agent-bridge-check accepts no arguments");
     process.env.SEMIO_TEST_LEVEL = "long";
     process.env.SEMIO_INCLUDE_AGENT_BRIDGE = "1";
-    await runVitest(this.root, ["--run", "--silent=false"], "🧪️tests/🟦️.ts");
+    await runVitest(this.root, ["--run", "--silent=false"], "vitest.config.ts");
   }
 }
 
@@ -47,12 +61,12 @@ class TutorialInteractionCheckScript extends BundleScript {
     runVitest(
       this.root,
       [
-        "🔬️index.test.ts",
+        "../../../../🧪️tests/🔬️index/🟦️.ts",
         "--silent=false",
         "--reporter=verbose",
         "--testNamePattern=interaction recording|decodes the bounded actor interaction capture|captures the observed typed interaction|plays full and sparse typed selections|projects tutorial selection playback|records comma-bearing selection|APPLY_TUTORIAL_UI_SNAPSHOT restores",
       ],
-      "🧪️tests/🟦️.ts",
+      "vitest.config.ts",
     );
   }
 }
@@ -65,12 +79,12 @@ class FlowBrowserRuntimeCheckScript extends BundleScript {
     runVitest(
       this.root,
       [
-        "🔬️index.test.ts",
+        "../../../../🧪️tests/🔬️index/🟦️.ts",
         "--silent=false",
         "--reporter=verbose",
         "--testNamePattern=retains one shared Flow browser runtime|retires a graph host unmounted before its open reply",
       ],
-      "🧪️tests/🟦️.ts",
+      "vitest.config.ts",
     );
   }
 }
@@ -82,30 +96,35 @@ class ArtifactCreationProgressCheckScript extends BundleScript {
     process.env.SEMIO_TEST_LEVEL = "long";
     runVitest(
       this.root,
-      ["🔬️index.test.ts", "--silent=false", "--reporter=verbose", "--testNamePattern=Space artifact creation host owner"],
-      "🧪️tests/🟦️.ts",
+      ["../../../../🧪️tests/🔬️artifact-creation-ready-opening/🟦️.ts", "--silent=false", "--reporter=verbose"],
+      "vitest.config.ts",
     );
     process.env.SEMIO_INCLUDE_BACKBONE_WORKER = "1";
     runVitest(
       this.root,
       [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "--silent=false", "--reporter=verbose", "--testNamePattern=space artifact creation owner"],
-      "🧪️tests/🟦️.ts",
+      "vitest.config.ts",
     );
   }
 }
 
 /** 📇️ Proves the visible retained Home identity/ACK bridge and language-neutral boundaries. */
 export function directoryHomeBootstrapOracle(repoRoot: string): number {
-  const contractRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap");
+  const contractRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📇️directory-bootstrap");
   const fixture = JSON.parse(readFileSync(join(contractRoot, "🔣️.json"), "utf8")) as {
     receipt: Readonly<Record<string, unknown>>;
     identities: Readonly<Record<"a" | "b", Readonly<{ userId: string; displayName: string }>>>;
     hostile: readonly { readonly id: string; readonly patch: Readonly<Record<string, unknown>> }[];
     labels: Readonly<Record<"en" | "de", readonly string[]>>;
   };
-  const schema = JSON.parse(readFileSync(join(contractRoot, "🧬️.schema.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  const receiptExport = ownedExport(repoRoot, "directory", "DirectoryProjectionReceiptV1");
+  const identityExport = ownedExport(repoRoot, "directory", "DirectoryHomeIdentityV1");
+  const stepExport = ownedExport(repoRoot, "directory", "DirectoryHomeBootstrapStepV1");
+  const labelsExport = ownedExport(repoRoot, "directory", "DirectoryHomeBootstrapLabelsV1");
+  assert(receiptExport(fixture.receipt), JSON.stringify(receiptExport.errors));
+  for (const identity of Object.values(fixture.identities)) assert(identityExport(identity), JSON.stringify(identityExport.errors));
+  for (const step of fixture.lifecycle) assert(stepExport(step), JSON.stringify(stepExport.errors));
+  assert(labelsExport(fixture.labels), JSON.stringify(labelsExport.errors));
   const receiptKeys = ["schema", "sessionBindingSha256", "authorizationGeneration", "throughSeqInclusive", "receiptSha256"].sort();
   const receipt = (value: unknown): boolean => {
     if (!value || typeof value !== "object" || Array.isArray(value) || JSON.stringify(Object.keys(value).sort()) !== JSON.stringify(receiptKeys)) return false;
@@ -125,8 +144,8 @@ export function directoryHomeBootstrapOracle(repoRoot: string): number {
   assert(receipt(fixture.receipt));
   for (const row of fixture.hostile) assert.equal(receipt({ ...structuredClone(fixture.receipt), ...row.patch }), false, row.id);
   const owner = readFileSync(join(contractRoot, "🟦️.tsx"), "utf8");
-  const shell = readFileSync(join(contractRoot, "../../🟦️.tsx"), "utf8");
-  const runtime = readFileSync(join(contractRoot, "../../../🔌️PluginRuntime/🟦️.tsx"), "utf8");
+  const shell = readFileSync(join(contractRoot, "../🟦️.tsx"), "utf8");
+  const runtime = readFileSync(join(contractRoot, "../../🔌️PluginRuntime/🟦️.tsx"), "utf8");
   assert(owner.includes("await owner.plugin.handleAction") && owner.includes("parseDirectoryProjectionReceiptV1(response.output)"));
   assert(owner.indexOf("await owner.plugin.handleAction") < owner.indexOf('kind: "directory-bootstrap-ack"'));
   assert(owner.indexOf('directoryActionInvocation(owner, "setClient"') < owner.indexOf('kind: "directory-bootstrap-open"'));
@@ -151,14 +170,14 @@ class DirectoryHomeBootstrapCheckScript extends BundleScript {
     if (segments.length !== 0) throw new Error("directory-home-bootstrap-check accepts no arguments");
     console.log(`directory-home-bootstrap-oracle: checks=${directoryHomeBootstrapOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["📇️directory-home-bootstrap.test.tsx"], "🧪️tests/🟦️.ts");
-    runVitest(this.root, ["../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx", "--testNamePattern=validates fixed result page authority and preserves document and download effects"], "🧪️tests/🟦️.ts");
+    runVitest(this.root, ["../../../../🧪️tests/📇️directory-home-bootstrap/🟦️.tsx"], "vitest.config.ts");
+    runVitest(this.root, ["../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx", "--testNamePattern=validates fixed result page authority and preserves document and download effects"], "vitest.config.ts");
   }
 }
 
 /** 🎟️ Proves the language-neutral invite transfer machine and its typed browser/worker bridge. */
 export function directoryInviteCapabilityOracle(repoRoot: string): number {
-  const contractRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🎟️invite-capability");
+  const contractRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎟️invite-capability");
   const fixture = JSON.parse(readFileSync(join(contractRoot, "🔣️.json"), "utf8")) as {
     states: readonly string[];
     transitions: readonly { readonly from: string; readonly input: string; readonly to: string; readonly discloses: boolean; readonly erases: boolean }[];
@@ -168,9 +187,8 @@ export function directoryInviteCapabilityOracle(repoRoot: string): number {
     focusPhases: readonly string[];
     labels: Readonly<Record<"en" | "de", readonly string[]>>;
   };
-  const schema = JSON.parse(readFileSync(join(contractRoot, "🧬️.schema.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  const transferExport = ownedExport(repoRoot, "directory", "InviteCapabilityTransferV1");
+  assert(transferExport(fixture), JSON.stringify(transferExport.errors));
   assert.deepEqual(fixture.states, ["available", "copying", "failed", "copied", "closed"]);
   assert.deepEqual(
     fixture.transitions.filter((row) => row.discloses).map((row) => [row.from, row.input, row.to]),
@@ -187,8 +205,8 @@ export function directoryInviteCapabilityOracle(repoRoot: string): number {
   assert.deepEqual(Object.keys(fixture.labels).sort(), ["de", "en"]);
   assert(Object.values(fixture.labels).every((labels) => labels.length === 3 && labels.every((label) => label.length > 0)));
   const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
-  const shell = readFileSync(join(contractRoot, "../../🟦️.tsx"), "utf8");
-  const pane = readFileSync(join(contractRoot, "../../../🛂️SpaceAdministration/🟦️.tsx"), "utf8");
+  const shell = readFileSync(join(contractRoot, "../🟦️.tsx"), "utf8");
+  const pane = readFileSync(join(contractRoot, "../../🛂️SpaceAdministration/🟦️.tsx"), "utf8");
   const request = worker.slice(worker.indexOf("function requestDirectoryAdministrationCapability"), worker.indexOf("function settleDirectoryAdministrationCapability"));
   const settle = worker.slice(worker.indexOf("function settleDirectoryAdministrationCapability"), worker.indexOf("function closeDirectoryAdministration"));
   assert(request.includes('inviteCapabilityStatus = "copying"') && request.includes('kind: "directory-administration-capability"'));
@@ -208,15 +226,15 @@ class DirectoryInviteCapabilityCheckScript extends BundleScript {
     if (segments.length !== 0) throw new Error("directory-invite-capability-check accepts no arguments");
     console.log(`directory-invite-capability-oracle: checks=${directoryInviteCapabilityOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["🏛️space-administration.test.tsx"], "🧪️tests/🟦️.ts");
+    runVitest(this.root, ["../../../../🧪️tests/🏛️space-administration/🟦️.tsx"], "vitest.config.ts");
     process.env.SEMIO_INCLUDE_BACKBONE_WORKER = "1";
-    runVitest(this.root, [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "--testNamePattern=backbone-worker space administration"], "🧪️tests/🟦️.ts");
+    runVitest(this.root, [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "--testNamePattern=backbone-worker space administration"], "vitest.config.ts");
   }
 }
 
 /** 👥️ Proves exact-scope lifecycle keys and worker-verified host-only presence projection. */
 export function scopedPresenceOracle(repoRoot: string): number {
-  const contractRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/👥️presence-scope");
+  const contractRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/👥️presence-scope");
   const fixture = JSON.parse(readFileSync(join(contractRoot, "🔣️.json"), "utf8")) as {
     documentId: string;
     cases: readonly { readonly scope: { readonly spaceId: string; readonly documentId: string }; readonly runtimeKey: string; readonly surface: string }[];
@@ -224,9 +242,14 @@ export function scopedPresenceOracle(repoRoot: string): number {
     routes: readonly string[];
     rejected: readonly string[];
   };
-  const schema = JSON.parse(readFileSync(join(contractRoot, "🧬️.schema.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  const bindingExport = ownedExport(repoRoot, "presence", "ScopedPresenceBindingV1");
+  const closeExport = ownedExport(repoRoot, "presence", "ScopedPresenceCloseV1");
+  const routeExport = ownedExport(repoRoot, "presence", "PresenceActorRouteV1");
+  const rejectionExport = ownedExport(repoRoot, "presence", "ScopedPresenceRejectionV1");
+  for (const row of fixture.cases) assert(bindingExport(row), JSON.stringify(bindingExport.errors));
+  assert(closeExport(fixture.close), JSON.stringify(closeExport.errors));
+  for (const route of fixture.routes) assert(routeExport(route), JSON.stringify(routeExport.errors));
+  for (const rejected of fixture.rejected) assert(rejectionExport(rejected), JSON.stringify(rejectionExport.errors));
   const runtimeKey = (scope: { readonly spaceId: string; readonly documentId: string }): string => {
     const spaceBytes = new TextEncoder().encode(scope.spaceId).length;
     const documentBytes = new TextEncoder().encode(scope.documentId).length;
@@ -240,7 +263,7 @@ export function scopedPresenceOracle(repoRoot: string): number {
   );
   assert.notEqual(fixture.close.clearsRuntimeKey, fixture.close.preservesRuntimeKey);
   assert.deepEqual(fixture.rejected, ["missing-scope", "mismatched-scope", "missing-surface", "mismatched-surface"]);
-  const shell = readFileSync(join(contractRoot, "../../🟦️.tsx"), "utf8");
+  const shell = readFileSync(join(contractRoot, "../🟦️.tsx"), "utf8");
   const hostBootstrap = readFileSync(join(contractRoot, "../🪪️host-bootstrap/🟦️.tsx"), "utf8");
   const projection = readFileSync(join(contractRoot, "🟦️.ts"), "utf8");
   const browser = readFileSync(join(contractRoot, "🌐️browser/🟦️.tsx"), "utf8");
@@ -251,7 +274,7 @@ export function scopedPresenceOracle(repoRoot: string): number {
   assert(shell.includes("inferencePortOwnerRef") && shell.includes("owners.length === 1"));
   assert(shell.includes("inferencePortStatusRuntimeKeyV1(inferencePortOwnerRef.current") && hostBootstrap.includes("message.scope.spaceId !== owner.scope.spaceId") && hostBootstrap.includes("message.scope.documentId !== owner.scope.documentId"));
   assert(shell.includes("retainInferencePortOwnerAfterCloseV1(inferenceOwner, runtimeKey)") && worker.includes('documentRuntimeKeyV1({ kind: "hub", ...inferencePort.scope }) === runtimeKey'));
-  assert(shell.includes('from "./🧬️contracts/👥️presence-scope/🟦️.ts"'));
+  assert(shell.includes('from "./👥️presence-scope/🟦️.ts"'));
   assert(!shell.includes("presencePeersJson"));
   assert(shell.includes("registerPluginBackboneRoute(runtimeKey, relayPluginBackboneMessage)"));
   assert(shell.includes("documentId: entry.documentId") && shell.includes("spaceId: entry.scope.spaceId"));
@@ -274,9 +297,9 @@ class ScopedPresenceCheckScript extends BundleScript {
     if (segments.length !== 0) throw new Error("scoped-presence-check accepts no arguments");
     console.log(`scoped-presence-oracle: checks=${scopedPresenceOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
-    runVitest(this.root, ["👥️scoped-presence.test.tsx"], "🧪️tests/🟦️.ts");
+    runVitest(this.root, ["../../../../🧪️tests/👥️scoped-presence/🟦️.tsx"], "vitest.config.ts");
     process.env.SEMIO_INCLUDE_BACKBONE_WORKER = "1";
-    runVitest(this.root, [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "--testNamePattern=backbone-worker scope-safe presence"], "🧪️tests/🟦️.ts");
+    runVitest(this.root, [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "--testNamePattern=backbone-worker scope-safe presence"], "vitest.config.ts");
   }
 }
 

@@ -1,8 +1,8 @@
 //! ↩️ `delete-property-definition` — undo re-`create`s the definition from BASE state, at its
 //! original index; missing id ⇒ `Vec::new()`.
 
-use crate::artifacts::iso16757::mutations::create_property_definition;
-use crate::artifacts::iso16757::{Iso16757Mutation, Iso16757Snapshot};
+use crate::mutations::create_property_definition;
+use crate::{Iso16757Mutation, Iso16757Snapshot};
 
 use super::mutation::DeletePropertyDefinition;
 

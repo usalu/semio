@@ -15,7 +15,7 @@
 //! available to a synchronous `&LowpolySnapshot -> …` function. Left as an HONEST stub (never a
 //! silent pack-envelope lie) pending that architecture work -- see this ticket's
 //! `📝️io-implementation-result.md` handoff section.
-use crate::artifacts::lowpoly::schema::snapshot::LowpolySnapshot;
+use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_stl::StlSnapshot;
 
 pub fn register() {}

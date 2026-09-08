@@ -1,8 +1,8 @@
 //! 🧱️ 🧱️ Playbook play app commands command — `add-block`.
 
-use crate::artifacts::playbook::op::{add_block_operation, PlaybookMutation};
-use crate::artifacts::playbook::schema::default_block;
-use crate::artifacts::playbook::PlaybookSnapshot;
+use crate::op::{add_block_operation, PlaybookMutation};
+use crate::schema::default_block;
+use crate::PlaybookSnapshot;
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

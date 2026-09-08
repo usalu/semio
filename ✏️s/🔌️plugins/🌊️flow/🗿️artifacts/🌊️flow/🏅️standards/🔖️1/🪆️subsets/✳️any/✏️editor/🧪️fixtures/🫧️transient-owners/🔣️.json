@@ -1,5 +1,5 @@
 {
-  "$schema": "./🧬️.schema.json", "contract": "semio.flow.transient-owners/v1", "payloadBytes": 0,
+"contract": "semio.flow.transient-owners/v1", "payloadBytes": 0,
   "trace": [
     { "id": "zero-items", "items": 0, "bytes": 64, "status": "pending", "retired": false },
     { "id": "zero-bytes", "items": 1, "bytes": 0, "status": "pending", "retired": false },

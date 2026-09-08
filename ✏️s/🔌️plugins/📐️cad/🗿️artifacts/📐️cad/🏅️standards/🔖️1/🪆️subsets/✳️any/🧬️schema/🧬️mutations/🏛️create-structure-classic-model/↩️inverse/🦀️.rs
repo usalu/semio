@@ -3,8 +3,8 @@
 //! bare "delete", since `create-structure-classic-model` may have OVERWRITTEN an existing handle.
 
 use super::CreateStructureClassicModel;
-use crate::artifacts::cad::mutations::{delete_structure_classic_model, CadMutation};
-use crate::artifacts::cad::CadSnapshot;
+use crate::mutations::{delete_structure_classic_model, CadMutation};
+use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &CreateStructureClassicModel, base: &CadSnapshot) -> Vec<CadMutation> {

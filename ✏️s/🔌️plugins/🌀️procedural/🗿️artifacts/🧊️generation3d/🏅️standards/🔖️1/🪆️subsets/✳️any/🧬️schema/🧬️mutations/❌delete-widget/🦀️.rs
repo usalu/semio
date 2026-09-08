@@ -4,9 +4,9 @@
 //! exact file; renaming the directory needs a glue.rs edit outside this facet's writable
 //! boundary — see the migration report's `sharedFileRequests`).
 
-use crate::artifacts::generation3d::diff::Generation3dDiff;
-use crate::artifacts::generation3d::mutations::Generation3dMutation;
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::diff::Generation3dDiff;
+use crate::mutations::Generation3dMutation;
+use crate::Generation3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️DeleteWidget
 /// 🗑️ Removes the widget with `id`; the diff/inverse leaves capture the full removed payload from
@@ -22,11 +22,11 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Dele
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "widget", kind: "delete-widget", record: "DeletedWidget" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::artifacts::generation3d::mutations::delete_widget::diff::diff(self, base)
+        crate::mutations::delete_widget::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Vec<Generation3dMutation> {
-        crate::artifacts::generation3d::mutations::delete_widget::inverse::inverse(self, base)
+        crate::mutations::delete_widget::inverse::inverse(self, base)
     }
 
     fn label(&self) -> String {

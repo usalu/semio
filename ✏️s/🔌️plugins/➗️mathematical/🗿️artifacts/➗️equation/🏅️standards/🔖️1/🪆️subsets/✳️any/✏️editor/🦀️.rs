@@ -17,8 +17,8 @@
 //! The sibling read-only surface (`👁️viewer/🦀️.rs`) never imports from this module — see
 //! that file's own doc header.
 
-use crate::artifacts::equation::op::EquationMutation;
-use crate::artifacts::equation::{EquationGeometry, EquationGraph, EquationSnapshot, EQUATION_DIALECT, MATH_DOCUMENT_SCHEMA};
+use crate::op::EquationMutation;
+use crate::{EquationGeometry, EquationGraph, EquationSnapshot, EQUATION_DIALECT, MATH_DOCUMENT_SCHEMA};
 use crate::editor::equation::commands::set_artifact;
 use crate::editor::equation::commands::set_locale;
 use crate::editor::equation::commands::set_points;
@@ -270,7 +270,7 @@ fn equation_edit_preflight(payload: &node_graph_edit::NodeGraphEdit) -> Option<u
 }
 
 fn equation_command_extent(command: &EquationCommand, snapshot: &EquationSnapshot) -> Option<usize> {
-    let scene = crate::artifacts::equation::equation_scene_owner(snapshot)?;
+    let scene = crate::equation_scene_owner(snapshot)?;
     if !equation_graph_shape_admitted(&scene.graph) || scene.geometry.points.len() > EQUATION_MAX_POINTS {
         return None;
     }
@@ -404,12 +404,12 @@ struct EquationRetainedCommandWork {
     digest: u64,
     replay_target: Option<(usize, u64)>,
     graph: Option<EquationGraph>,
-    points: Vec<crate::artifacts::equation::EquationPoint>,
+    points: Vec<crate::EquationPoint>,
     operations: Vec<EquationEditOperation>,
     operation_phase: EquationOperationPhase,
     operation_cursor: usize,
-    rewrite_nodes: Vec<crate::artifacts::equation::EquationNode>,
-    rewrite_edges: Vec<crate::artifacts::equation::EquationEdge>,
+    rewrite_nodes: Vec<crate::EquationNode>,
+    rewrite_edges: Vec<crate::EquationEdge>,
     delete_ids: BTreeSet<String>,
     graph_changed: bool,
     geometry_changed: bool,
@@ -465,8 +465,8 @@ impl EquationRetainedCommandWork {
         Ok(ArtifactCommandWorkStep::Progress { stage, preview: br#"{"en":"Preparing Equation command","de":"Gleichungs-Befehl wird vorbereitet"}"# })
     }
 
-    fn source_scene(snapshot: &EquationSnapshot) -> Result<Arc<crate::artifacts::equation::EquationWorkingScene>, Fault> {
-        crate::artifacts::equation::equation_scene_owner(snapshot).ok_or_else(|| Fault::from("equation-command-scene-unresolved"))
+    fn source_scene(snapshot: &EquationSnapshot) -> Result<Arc<crate::EquationWorkingScene>, Fault> {
+        crate::equation_scene_owner(snapshot).ok_or_else(|| Fault::from("equation-command-scene-unresolved"))
     }
 
     fn initialize(&mut self, command: &EquationCommand, snapshot: &EquationSnapshot) -> Result<(), Fault> {
@@ -518,8 +518,8 @@ impl EquationRetainedCommandWork {
     }
 
     fn finish(&mut self, command: &EquationCommand) -> Result<Emit<EquationMutation, EquationConfigMutation>, Fault> {
-        use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
-        use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
+        use crate::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
+        use crate::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
         Ok(match command {
             EquationCommand::SetAlgorithm(_) => Emit::commit(vec![EquationMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("equation-command-graph-owner"))? })], "setAlgorithm"),
             EquationCommand::SetDirected(_) => Emit::mutations(vec![EquationMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("equation-command-graph-owner"))? })]),
@@ -700,7 +700,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
                         EquationEditOperation::AddNode { x, y } => {
                             let graph = self.graph.as_mut().ok_or_else(|| Fault::from("equation-command-graph-owner"))?;
                             let id = format!("n{}", graph.nodes.len());
-                            graph.nodes.push(crate::artifacts::equation::EquationNode { label: id.to_uppercase(), id, x: *x, y: *y });
+                            graph.nodes.push(crate::EquationNode { label: id.to_uppercase(), id, x: *x, y: *y });
                             self.graph_changed = true;
                             self.advance_operation();
                         }
@@ -708,7 +708,7 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
                         EquationEditOperation::Connect { source, target } => {
                             let graph = self.graph.as_mut().ok_or_else(|| Fault::from("equation-command-graph-owner"))?;
                             let id = format!("e{}", graph.edges.len());
-                            graph.edges.push(crate::artifacts::equation::EquationEdge { id, source: source.clone(), target: target.clone() });
+                            graph.edges.push(crate::EquationEdge { id, source: source.clone(), target: target.clone() });
                             self.graph_changed = true;
                             self.advance_operation();
                         }
@@ -1230,7 +1230,7 @@ impl ArtifactEditor for EquationPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::equation::config::schema::app_schema_descriptor())
     }
 
@@ -1267,7 +1267,7 @@ impl ArtifactEditor for EquationPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, EquationSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
-                let graph = crate::artifacts::equation::equation_graph(doc.snapshot);
+                let graph = crate::equation_graph(doc.snapshot);
                 let overlay = algorithm_overlay(&graph);
                 let overlay_json = json::object(overlay.iter().map(|(id, suffix)| (id.clone(), Value::from(suffix.as_str()))));
                 let json = json::to_string(&json::object([("algorithm".to_string(), Value::from(graph.algorithm.as_str())), ("overlay".to_string(), overlay_json)]));
@@ -1284,8 +1284,8 @@ impl ArtifactEditor for EquationPlayApp {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, EquationSnapshot>, cfg: &ConfigView<'_, EquationConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
-            MATH_PLAY_BODY_GRAPH => graph_window::render(&crate::artifacts::equation::equation_graph(doc.snapshot), &cfg.snapshot.camera),
-            MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&crate::artifacts::equation::equation_geometry(doc.snapshot)),
+            MATH_PLAY_BODY_GRAPH => graph_window::render(&crate::equation_graph(doc.snapshot), &cfg.snapshot.camera),
+            MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&crate::equation_geometry(doc.snapshot)),
             _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -1300,15 +1300,15 @@ impl ArtifactEditor for EquationPlayApp {
 ///
 /// 🚧️ SDK GAP (contract §2.4): `EditorBuilder` has no `.example(...)`/`.workflow(...)` —
 /// `PluginBuilder::editor::<E>(def: AppDefinition)` only takes the bare definition, so the old
-/// `.example_source(crate::artifacts::equation::examples::demo::source())` and
+/// `.example_source(crate::examples::demo::source())` and
 /// `.workflow("equation", "Equation", "graph")` calls are dropped here (not silently: noted
 /// in the migration report). The subset's own `📚️examples/🎬️demo` facet
-/// (`crate::artifacts::equation::examples::...`, real content, pre-existing) is the modern,
+/// (`crate::examples::...`, real content, pre-existing) is the modern,
 /// role-agnostic replacement surface for example registration.
 pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(EQUATION_DIALECT)
         .document(["semio", "equation"])
-        .artifact_kind(crate::artifacts::equation::artifact_kind())
+        .artifact_kind(crate::artifact_kind())
         .icon_id("math-app")
         .mode_def(edit::definition())
         .default_mode_id(edit::MATH_PLAY_MODE_EDIT)
@@ -1407,8 +1407,8 @@ mod tests {
     }
 
     fn graph_with_shape(node_count: usize, edge_count: usize) -> EquationGraph {
-        let nodes = (0..node_count).map(|index| crate::artifacts::equation::EquationNode { id: format!("n{index}"), label: format!("N{index}"), x: index as f64, y: -(index as f64) }).collect();
-        let edges = (0..edge_count).map(|index| crate::artifacts::equation::EquationEdge { id: format!("e{index}"), source: format!("n{}", index % node_count.max(1)), target: format!("n{}", (index + 1) % node_count.max(1)) }).collect();
+        let nodes = (0..node_count).map(|index| crate::EquationNode { id: format!("n{index}"), label: format!("N{index}"), x: index as f64, y: -(index as f64) }).collect();
+        let edges = (0..edge_count).map(|index| crate::EquationEdge { id: format!("e{index}"), source: format!("n{}", index % node_count.max(1)), target: format!("n{}", (index + 1) % node_count.max(1)) }).collect();
         EquationGraph { directed: true, nodes, edges, algorithm: "bfs".into(), algorithm_seed: Some("n0".into()) }
     }
 
@@ -1449,17 +1449,17 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn retained_semantic_maxima_accept_exact_and_reject_maximum_plus_one() {
         let command = EquationCommand::SetDirected(set_directed::SetDirected { directed: false });
-        let maximum_nodes = crate::artifacts::equation::equation_snapshot_with_state(graph_with_shape(EQUATION_MAX_NODES, 0), EquationGeometry::default());
-        let excessive_nodes = crate::artifacts::equation::equation_snapshot_with_state(graph_with_shape(EQUATION_MAX_NODES + 1, 0), EquationGeometry::default());
+        let maximum_nodes = crate::equation_snapshot_with_state(graph_with_shape(EQUATION_MAX_NODES, 0), EquationGeometry::default());
+        let excessive_nodes = crate::equation_snapshot_with_state(graph_with_shape(EQUATION_MAX_NODES + 1, 0), EquationGeometry::default());
         assert!(equation_command_extent(&command, &maximum_nodes).is_some());
         assert!(equation_command_extent(&command, &excessive_nodes).is_none());
-        let maximum_edges = crate::artifacts::equation::equation_snapshot_with_state(graph_with_shape(2, EQUATION_MAX_EDGES), EquationGeometry::default());
-        let excessive_edges = crate::artifacts::equation::equation_snapshot_with_state(graph_with_shape(2, EQUATION_MAX_EDGES + 1), EquationGeometry::default());
+        let maximum_edges = crate::equation_snapshot_with_state(graph_with_shape(2, EQUATION_MAX_EDGES), EquationGeometry::default());
+        let excessive_edges = crate::equation_snapshot_with_state(graph_with_shape(2, EQUATION_MAX_EDGES + 1), EquationGeometry::default());
         assert!(equation_command_extent(&command, &maximum_edges).is_some());
         assert!(equation_command_extent(&command, &excessive_edges).is_none());
 
-        let snapshot = crate::artifacts::equation::equation_snapshot_with_state(EquationGraph::default(), EquationGeometry::default());
-        let point = crate::artifacts::equation::EquationPoint { x: 1.0, y: 2.0 };
+        let snapshot = crate::equation_snapshot_with_state(EquationGraph::default(), EquationGeometry::default());
+        let point = crate::EquationPoint { x: 1.0, y: 2.0 };
         let maximum_points = EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry { points: vec![point.clone(); EQUATION_MAX_POINTS] } });
         let excessive_points = EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry { points: vec![point; EQUATION_MAX_POINTS + 1] } });
         assert!(equation_command_extent(&maximum_points, &snapshot).is_some());
@@ -1493,7 +1493,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() {
         let graph = graph_with_shape(8, 12);
-        let snapshot = crate::artifacts::equation::equation_snapshot_with_state(graph, EquationGeometry::default());
+        let snapshot = crate::equation_snapshot_with_state(graph, EquationGeometry::default());
         let command = EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
             operations_json: json::to_string(&json::array([
                 json::object([("operation".to_string(), Value::from("move")), ("nodeId".to_string(), Value::from("n7")), ("x".to_string(), Value::from(41.0)), ("y".to_string(), Value::from(42.0))]),
@@ -1545,7 +1545,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
         let graph = graph_with_shape(EQUATION_MAX_NODES, EQUATION_MAX_EDGES);
-        let snapshot = crate::artifacts::equation::equation_snapshot_with_state(graph, EquationGeometry::default());
+        let snapshot = crate::equation_snapshot_with_state(graph, EquationGeometry::default());
         let ids = (0..EQUATION_MAX_DELETE_IDS).map(|index| format!("n{index}")).collect::<Vec<_>>();
         let mut operations = vec![json::object([("operation".to_string(), Value::from("deleteSelection")), ("nodeIds".to_string(), json::array(ids.iter().map(|id| Value::from(id.as_str()))))])];
         operations.resize(EQUATION_MAX_EDIT_OPERATIONS, json::object([]));
@@ -1626,13 +1626,13 @@ mod tests {
     pub(super) fn every_command() -> Vec<EquationCommand> {
         vec![
             EquationCommand::SetArtifact(set_artifact::SetArtifact {
-                graph: crate::artifacts::equation::dsl::math_graph_to_dsl(&EquationGraph::default()),
+                graph: crate::document_dsl::math_graph_to_dsl(&EquationGraph::default()),
                 geometry: EquationGeometry::default(),
             }),
             EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
             EquationCommand::SetDirected(set_directed::SetDirected { directed: true }),
             EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"addNode","x":12.0,"y":34.0}]"#.into() }),
-            EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: crate::artifacts::equation::EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 } }),
+            EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: crate::EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 } }),
             EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry::default() }),
             EquationCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         ]
@@ -1731,7 +1731,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn components_algorithm_overlay_groups_disconnected_node() {
-        use crate::artifacts::equation::EquationNode;
+        use crate::EquationNode;
         let mut graph = EquationGraph { algorithm: "components".into(), ..EquationGraph::default() };
         graph.nodes.push(EquationNode { id: "z".into(), label: "Z".into(), x: 0.0, y: 0.0 });
         let overlay = algorithm_overlay(&graph);

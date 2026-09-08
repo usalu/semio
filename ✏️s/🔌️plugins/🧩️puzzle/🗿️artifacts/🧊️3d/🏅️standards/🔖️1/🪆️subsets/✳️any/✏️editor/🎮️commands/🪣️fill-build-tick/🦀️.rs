@@ -1,6 +1,6 @@
 //! 🪣️ `fill-build-tick` command.
 
-use crate::artifacts::puzzle3d::Puzzle3dMutation;
+use crate::Puzzle3dMutation;
 use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dConfigMutation};
 use crate::editor::puzzle3d::precompute::FILL_JOB_KIND;
 use crate::editor::puzzle3d::puzzle3d_fill_build_scope;

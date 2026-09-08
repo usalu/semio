@@ -1,0 +1,105 @@
+{
+  "schema": "semio.hub.gis-map-two-author-composition-fixture/v1",
+  "version": 1,
+  "socketRetirement": { "maximumMs": 5000, "hostileDeadlineMs": 15, "cases": ["closed-at-entry", "await-close-event", "timeout-refused", "bun-websocket-close", "ws-websocket-close"] },
+  "selection": {
+    "closure": [
+      "stdio",
+      "gis"
+    ],
+    "executionProtocol": 14,
+    "receiptIdentity": [
+      "generationId",
+      "bundleSha256",
+      "profileId",
+      "publicationRevision",
+      "currentSha256"
+    ],
+    "browserHostReceipt": [
+      "moduleSetSha256",
+      "activationReceiptSha256",
+      "spaceComponentByteLength",
+      "spaceComponentSha256",
+      "spaceCoreSha256",
+      "spaceDescriptorSha256",
+      "selectedGisGenerationId",
+      "selectedGisCurrentSha256"
+    ],
+    "sameDataRoot": true
+  },
+  "authors": [
+    "author-a",
+    "author-b"
+  ],
+  "locales": {
+    "author-a": "en",
+    "author-b": "de"
+  },
+  "steps": [
+    "materialize-and-validate-current",
+    "stage-ticket-owned-space-and-selected-gis-browser-host",
+    "start-hub-with-receipt-data-root",
+    "create-shared-map-and-admit-author-b",
+    "open-two-authenticated-mcp-clients",
+    "open-two-authenticated-document-sockets",
+    "mount-author-a-real-shell-worker-map",
+    "mount-author-b-real-shell-worker-map",
+    "author-b-submit-running-inference",
+    "checkpoint-gate-entered",
+    "author-b-cancel-and-release",
+    "author-a-shell-submit-and-approve-create-region",
+    "both-peers-rebootstrap-and-observe-region",
+    "author-a-shell-ordinary-undo",
+    "both-peers-rebootstrap-and-observe-region-removed",
+    "restart-hub-same-data-root",
+    "reopen-two-authenticated-maps-and-compare-durable-frontier"
+  ],
+  "observations": {
+    "mapSurface": [
+      "actual-ui-document-store",
+      "tiled-map",
+      "actual-worker-ui-patch-ack"
+    ],
+    "cancel": [
+      "running-receipt-before-compute",
+      "fd4-entered",
+      "author-b-own-private-mcp-cancel",
+      "cancelled-without-offer"
+    ],
+    "approval": [
+      "author-a-shell-worker-approval",
+      "one-server-stamped-create-region",
+      "same-peer-rebootstrap-control",
+      "same-pair-and-frontier",
+      "author-b-private-job-denied"
+    ],
+    "undo": [
+      "ordinary-shell-undo-action",
+      "private-worker-handle",
+      "durable-undo-receipt",
+      "region-absent-on-both-maps"
+    ],
+    "restart": [
+      "same-current-receipt",
+      "no-retained-running-job",
+      "same-durable-post-undo-frontier"
+    ]
+  },
+  "hostiles": [
+    "different-data-root",
+    "current-token-changed",
+    "descriptor-or-actor-digest-mismatch",
+    "controlled-scene-substituted-for-worker-patch",
+    "cancel-before-entered-or-before-release",
+    "author-b-private-job-or-undo-access",
+    "mcp-approval-private-handle-forwarded-to-shell",
+    "direct-http-undo-substituted-for-shell-action",
+    "restart-without-post-undo-pair-revalidation",
+    "global-browser-host-fallback"
+  ],
+  "nonclaims": [
+    "external-model-provider",
+    "browser-qualified-current-publication",
+    "durable-collaborative-redo"
+  ]
+}

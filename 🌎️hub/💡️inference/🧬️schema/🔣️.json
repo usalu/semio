@@ -81,8 +81,10 @@
         "headEditId": { "type": "string", "maxLength": 96, "pattern": "^[A-Za-z0-9._:-]*$" },
         "lastCommitSeq": { "$ref": "#/$defs/safeInteger" }
       },
-      "if": { "properties": { "headEditId": { "const": "" } }, "required": ["headEditId"] },
-      "then": { "properties": { "headOrdinal": { "const": 0 } } }
+      "anyOf": [
+        { "properties": { "headEditId": { "$ref": "#/$defs/serverId" } } },
+        { "properties": { "headEditId": { "const": "" }, "headOrdinal": { "const": 0 } } }
+      ]
     },
 
     "InferenceJobStateV1": { "enum": ["accepted", "running", "succeeded", "failed", "cancelled"] },
@@ -187,6 +189,22 @@
         "targetId": { "$ref": "#/$defs/id" },
         "idempotencyKey": { "$ref": "#/$defs/id" },
         "expectedCurrent": { "$ref": "#/$defs/GisMapDocumentFrontierV1" }
+      }
+    },
+
+    "GisMapApprovalUndoReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "targetId", "originalJobId", "mutationId", "commandHash", "applied", "replayed", "frontier"],
+      "properties": {
+        "schema": { "const": "semio.hub.gis-map-approval-undo-receipt/v1" },
+        "targetId": { "$ref": "#/$defs/id" },
+        "originalJobId": { "$ref": "#/$defs/id" },
+        "mutationId": { "$ref": "#/$defs/id" },
+        "commandHash": { "$ref": "#/$defs/hash" },
+        "applied": { "type": "boolean" },
+        "replayed": { "type": "boolean" },
+        "frontier": { "$ref": "#/$defs/GisMapDocumentFrontierV1" }
       }
     },
 

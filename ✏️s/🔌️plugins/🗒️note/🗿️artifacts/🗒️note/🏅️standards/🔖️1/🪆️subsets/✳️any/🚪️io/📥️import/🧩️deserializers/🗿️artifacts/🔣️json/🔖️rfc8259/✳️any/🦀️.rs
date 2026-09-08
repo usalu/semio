@@ -4,7 +4,7 @@
 //! `IoFidelity::Exact`, matching the sibling export leaf and the sequence pilot's identical
 //! json-bridge precedent (`📓️w4-sequence-report.md`).
 
-use crate::artifacts::note::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
+use crate::{NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

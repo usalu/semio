@@ -1,23 +1,26 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-page-rotation.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-page-rotation/schema.json",
   "title": "SetPageRotation",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "index",
     "rotation"
   ],
   "properties": {
-    "mutation": {
-      "const": "setPageRotation"
-    },
     "index": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0
     },
     "rotation": {
-      "type": "integer"
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "mutation": {
+      "const": "setPageRotation",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     }
   }
 }

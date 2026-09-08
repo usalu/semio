@@ -1,5 +1,5 @@
 //! generation3d <- obj
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::Generation3dSnapshot;
 use semio_s_artifact_stdio_obj::{ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEMA};
 
 pub fn register() {}

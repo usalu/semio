@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateHumidistat` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateHumidistat, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -26,6 +26,6 @@ pub fn diff(payload: &super::CreateHumidistat, base: &EnergyModelSnapshot) -> pr
     }
     let mut model = base.model.clone();
     model.humidistats.push(crate::model::Humidistat { id: payload.id, zone_id: payload.zone_id, humidifying_setpoint_schedule_id: payload.humidifying_setpoint_schedule_id, dehumidifying_setpoint_schedule_id: payload.dehumidifying_setpoint_schedule_id, humidifying_throttle_range: payload.humidifying_throttle_range, dehumidifying_throttle_range: payload.dehumidifying_throttle_range });
-    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

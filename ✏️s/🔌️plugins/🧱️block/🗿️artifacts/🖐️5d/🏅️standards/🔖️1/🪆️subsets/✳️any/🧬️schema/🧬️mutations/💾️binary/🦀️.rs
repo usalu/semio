@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::block5d::schema::mutations::text::Block5dMutation;
+use crate::schema::mutations::text::Block5dMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `Block5dMutation` to its binary command form.
@@ -24,12 +24,12 @@ pub fn decode_op(bytes: &[u8]) -> Result<Block5dMutation, protocol::ProtocolErro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block5d::{Block5dSnapshot, BLOCK_5D_SCHEMA};
+    use crate::{Block5dSnapshot, BLOCK_5D_SCHEMA};
     use store::{create_document_envelope, ArtifactCommand};
 
     #[semio_framework_async_macros::async_test]
     async fn block5d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::block5d::schema::mutations::{self as m, Block5dStore};
+        use crate::schema::mutations::{self as m, Block5dStore};
 
         let mut store = Block5dStore::new(create_document_envelope(BLOCK_5D_SCHEMA, "block5d", Block5dSnapshot::default(), None)).await.expect("valid initial state");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![m::rename_part_kind("p1".into())], description: None }).await.expect("apply");
@@ -39,7 +39,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn block5d_operation_binary_round_trips() {
-        let operation = crate::artifacts::block5d::schema::mutations::delete_grip("g0".into());
+        let operation = crate::schema::mutations::delete_grip("g0".into());
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
     }

@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::artifacts::en1996::En1996Snapshot;
-use schema::ArtifactSchema;
+use crate::En1996Snapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::outline::En1996Outline;
@@ -44,7 +44,7 @@ impl protocol::InferenceSpec<En1996Snapshot> for En1996Inference {
 //#endregion 🔖️Inference
 
 //#region 🔖️ArtifactInferrer
-impl ArtifactInferrer for crate::artifacts::en1996::standards::v1::subsets::any::schema::En1996Builder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::En1996Builder {
     type Snapshot = En1996Snapshot;
     type Inference = En1996Inference;
 }
@@ -53,10 +53,10 @@ impl ArtifactInferrer for crate::artifacts::en1996::standards::v1::subsets::any:
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.norm.en1996.inference`'s facet leaves into the OS-wide inference catalog — call once at
 /// plugin init, alongside `en1996_artifact_schema_descriptor`'s registration.
-pub fn en1996_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn en1996_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.norm.en1996.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -87,7 +87,7 @@ mod tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::artifacts::en1996::standards::v1::subsets::any::schema::{part_1_1, part_1_2, part_2, part_3, AnnexParams, MasonryUnit};
+use crate::standards::v1::subsets::any::schema::{part_1_1, part_1_2, part_2, part_3, AnnexParams, MasonryUnit};
 /// 📋️ Full EN 1996 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1996Snapshot -> CheckReport` projection; everything it composes
@@ -105,7 +105,7 @@ fn parse_masonry_unit(value: &str) -> MasonryUnit {
 /// ⚖️ Derive the resolved γ_M annex parameters from a document's annex/class/situation inputs. Moved
 /// here (from an inherent `En1996Snapshot::annex_params()` method in the pre-split monolith) because it
 /// constructs the compute-layer `AnnexParams`, which cannot be an inherent impl on the foreign
-/// `crate::artifacts::en1996::En1996Snapshot` type across the crate boundary (Rust's orphan rule).
+/// `crate::En1996Snapshot` type across the crate boundary (Rust's orphan rule).
 pub fn annex_params(document: &En1996Snapshot) -> AnnexParams {
     AnnexParams { annex: document.annex, masonry_class: document.masonry_class, accidental: document.design_situation == DesignSituation::Accidental }
 }

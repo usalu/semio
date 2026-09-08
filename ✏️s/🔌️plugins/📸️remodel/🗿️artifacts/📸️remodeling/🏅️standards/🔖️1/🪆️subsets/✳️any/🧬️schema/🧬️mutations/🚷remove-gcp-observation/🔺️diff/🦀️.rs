@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `RemoveGcpObservation`. A missing GCP or an out-of-range index ⇒
 //! Error `mutation.target-missing`.
-use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingGcpList};
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::{RemodelingDiff, RemodelingGcpList};
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveGcpObservation, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

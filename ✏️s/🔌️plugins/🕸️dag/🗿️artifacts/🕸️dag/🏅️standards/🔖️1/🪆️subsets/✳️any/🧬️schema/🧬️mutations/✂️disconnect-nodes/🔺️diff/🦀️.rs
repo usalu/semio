@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DisconnectNodes`.
-use crate::artifacts::dag::diff::text::diff_replace_content;
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::{dag_working_scene, DagSnapshot};
+use crate::diff::text::diff_replace_content;
+use crate::diff::DagDiff;
+use crate::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::DisconnectNodes, base: &DagSnapshot) -> protocol::MutationOutcome<DagDiff> {

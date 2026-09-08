@@ -1,7 +1,7 @@
 //! Puzzle5d mutation — `ChangeFastenerKind`: changes a fastener's `fastener_kind` catalog reference.
-use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
-use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
-use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
+use crate::diff::Puzzle5dDiff;
+use crate::mutations::Puzzle5dMutation;
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
 /// `change-fastener-kind` payload.

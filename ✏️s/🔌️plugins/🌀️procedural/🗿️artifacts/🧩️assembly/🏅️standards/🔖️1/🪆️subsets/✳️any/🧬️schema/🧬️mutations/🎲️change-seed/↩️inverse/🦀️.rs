@@ -1,8 +1,8 @@
 //! ↩️ Inverse for `ChangeSeed` — restores the PRIOR seed from a real BASE lookup (the seed field
 //! always exists, so this is never a no-op).
 
-use crate::artifacts::assembly::mutations::{change_seed, AssemblyMutation};
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::mutations::{change_seed, AssemblyMutation};
+use crate::schema::snapshot::AssemblySnapshot;
 
 pub fn inverse(_payload: &super::ChangeSeed, base: &AssemblySnapshot) -> Vec<AssemblyMutation> {
     vec![change_seed(base.seed)]

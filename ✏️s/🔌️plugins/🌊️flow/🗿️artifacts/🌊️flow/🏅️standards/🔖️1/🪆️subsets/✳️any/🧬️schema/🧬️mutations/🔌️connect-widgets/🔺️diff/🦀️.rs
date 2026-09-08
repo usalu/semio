@@ -1,8 +1,8 @@
 //! 🔺️ Sparse `FlowDiff` construction for `connect-widgets` — a real append-only synapse insert
 //! against the current working scene (never a whole-snapshot capture).
-use crate::artifacts::flow::schema::diff::text::{diff_replace_content, FlowDiff};
-use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
-use flow::SynapseSpec;
+use crate::schema::diff::text::{diff_replace_content, FlowDiff};
+use crate::{flow_working_scene, FlowSnapshot};
+use semio_framework_artifact_flow_flow::SynapseSpec;
 use protocol::Identified;
 
 use super::ConnectWidgets;

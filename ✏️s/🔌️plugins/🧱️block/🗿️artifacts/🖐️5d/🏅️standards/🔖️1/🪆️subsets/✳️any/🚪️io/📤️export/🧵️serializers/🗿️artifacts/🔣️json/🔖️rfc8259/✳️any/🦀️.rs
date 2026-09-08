@@ -2,7 +2,7 @@
 //! channel. The snapshot is a pure `dsl::ToValue` record tree, so its rfc8259 rendition carries every
 //! field and the sibling `📥️import` leaf reconstructs the snapshot exactly: `IoFidelity::Exact`.
 
-use crate::artifacts::block5d::Block5dSnapshot;
+use crate::Block5dSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

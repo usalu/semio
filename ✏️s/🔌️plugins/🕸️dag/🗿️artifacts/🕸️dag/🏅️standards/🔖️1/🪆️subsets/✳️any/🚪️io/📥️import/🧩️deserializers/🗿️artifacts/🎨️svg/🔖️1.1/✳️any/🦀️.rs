@@ -4,7 +4,7 @@
 //! svg-shape import; the sibling `Serializer` does NOT invert this (best-effort structural
 //! reinterpretation instead), so the round trip is not lossless: `IoFidelity::Lossy`.
 
-use crate::artifacts::dag::DagSnapshot;
+use crate::DagSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

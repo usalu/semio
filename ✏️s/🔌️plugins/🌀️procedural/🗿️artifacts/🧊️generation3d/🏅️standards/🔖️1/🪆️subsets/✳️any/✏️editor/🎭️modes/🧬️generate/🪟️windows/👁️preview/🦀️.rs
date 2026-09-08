@@ -1,14 +1,14 @@
 //! 👁️ Generation3d play app — the generation output-preview window (generate mode): a tessellated
 //! preview of the patched fixture's evaluated geometry.
 
-use crate::artifacts::generation3d::schema::generation_fixture_for;
+use crate::schema::generation_fixture_for;
 use crate::editor::generation3d::config::Generation3dConfig;
 use crate::editor::generation3d::modes::edit::windows::preview::show_mode_measure;
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_selection_json, PreviewInteractionMarks, PreviewPayload, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
-use flow::playbook::{selected_generation, GenerationPlayState};
-use flow::FlowFixture;
+use semio_framework_artifact_playbook_playbook::{selected_generation, GenerationPlayState};
+use semio_framework_artifact_flow_semio_framework_os_flow::FlowFixture;
 use semio_framework_plugin::{world3d_scene, world3d_sun_measures, BuiltNode, LocalizedLabel, SurfaceKind, TextEditorScene, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
@@ -65,7 +65,7 @@ pub fn render(fixture: &FlowFixture, generation: &GenerationPlayState, cfg: &Gen
     crate::scene_surface(
         GENERATION_3D_PLAY_SURFACE_GENERATE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
-        &ui_wgpu::wgpu::World3dScene {
+        &semio_framework_ui::wgpu::World3dScene {
             domain_id: Some(GENERATION_3D_INTERACTION_DOMAIN.into()),
             domain_granularity_id: Some(GENERATION_3D_INTERACTION_GRANULARITY.into()),
             ..world3d_scene(preview_camera_json(cfg), payload.meshes_json, payload.instances_json, selection_json, &sun)

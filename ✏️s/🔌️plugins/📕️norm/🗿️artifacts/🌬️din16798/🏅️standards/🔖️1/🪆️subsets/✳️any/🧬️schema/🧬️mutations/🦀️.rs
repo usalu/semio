@@ -20,8 +20,8 @@
 //! this file ARE self-wired with `#[path = "."]`, because `🦀️.rs` is shared with the agents
 //! migrating the other thirteen norm artifacts and must not absorb this artifact's test mounts.
 
-use crate::artifacts::din16798::diff::Din16798Diff;
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::diff::Din16798Diff;
+use crate::Din16798Snapshot;
 
 //#region 🔖️Leaves
 use super::change_air_speed_m_s;

@@ -16,8 +16,8 @@
 //! are mounted directly as `mutations`-sibling modules in `🦀️.rs` (this lane's agent owns
 //! `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed here).
 
-use crate::artifacts::en1990::diff::En1990Diff;
-use crate::artifacts::en1990::En1990Snapshot;
+use crate::diff::En1990Diff;
+use crate::En1990Snapshot;
 
 //#region 🔖️Mutations
 use super::change_consequence_class;
@@ -82,8 +82,8 @@ impl En1990Mutation {
     /// indices stay valid mid-sequence) before `target`'s entries are re-inserted in order — a plain
     /// per-field decomposition can't express "replace the whole table" on its own.
     pub fn from_snapshot(base: &En1990Snapshot, target: &En1990Snapshot) -> Vec<En1990Mutation> {
-        let base_q_k = crate::artifacts::en1990::en1990_qk(base);
-        let target_q_k = crate::artifacts::en1990::en1990_qk(target);
+        let base_q_k = crate::en1990_qk(base);
+        let target_q_k = crate::en1990_qk(target);
         let mut mutations = Vec::with_capacity(5 + base_q_k.len() + target_q_k.len());
         mutations.push(En1990Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: target.annex }));
         mutations.push(En1990Mutation::ChangePermanentAction(change_permanent_action::ChangePermanentAction { new_g_k: target.g_k }));
@@ -155,8 +155,8 @@ mod tests {
 
     /// 🔎 `q_k` is a composed `s.stdio.semio.table` child slot — every assertion below reads
     /// through the `en1990_qk` working-scene accessor instead of indexing the field directly.
-    fn qk(snapshot: &En1990Snapshot) -> Vec<crate::artifacts::en1990::En1990QkEntry> {
-        crate::artifacts::en1990::en1990_qk(snapshot)
+    fn qk(snapshot: &En1990Snapshot) -> Vec<crate::En1990QkEntry> {
+        crate::en1990_qk(snapshot)
     }
 
     #[semio_framework_async_macros::async_test]

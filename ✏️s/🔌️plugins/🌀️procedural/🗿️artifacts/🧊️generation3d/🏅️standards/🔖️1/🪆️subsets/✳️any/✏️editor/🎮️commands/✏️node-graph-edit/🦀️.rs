@@ -1,10 +1,11 @@
 //! 🕸️ 🕸️ Generation3d play app commands command — `node-graph-edit`.
 
-use crate::artifacts::generation3d::op::Generation3dMutation;
-use crate::artifacts::generation3d::schema::{commit_fixture, host_from_fixture};
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::op::Generation3dMutation;
+use crate::schema::{commit_fixture, host_from_fixture};
+use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use flow::{FlowEvalSession, FlowFixture};
+use semio_framework_os_flow::{FlowEvalSession};
+use semio_framework_artifact_flow_semio_framework_os_flow::{FlowFixture};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -25,7 +26,7 @@ fn apply_operations(fixture: &FlowFixture, sub_operations: &[dsl::json::Value], 
     for operation in sub_operations {
         match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
             "setFixture" => {
-                if let Some(new_fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| flow::os_pack::json::from_json_str::<FlowFixture>(json).ok()) {
+                if let Some(new_fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| semio_framework_os_flow::os_pack::json::from_json_str::<FlowFixture>(json).ok()) {
                     host.replace_fixture(new_fixture);
                 }
             }

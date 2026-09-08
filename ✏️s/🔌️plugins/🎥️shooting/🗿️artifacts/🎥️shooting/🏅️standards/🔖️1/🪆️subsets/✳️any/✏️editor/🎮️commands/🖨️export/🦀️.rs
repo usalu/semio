@@ -6,9 +6,9 @@
 //! `crate::editor::shooting::ShootingPlayApp::command_id`'s override, since `app_commands!`'s generated
 //! `command_id()` is a static 1:1 row→literal mapping with no payload-conditional escape hatch.
 
-use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::schema::shooting_icon_render_request_json;
-use crate::artifacts::shooting::{ShootingShot, ShootingSnapshot};
+use crate::op::ShootingMutation;
+use crate::schema::shooting_icon_render_request_json;
+use crate::{ShootingShot, ShootingSnapshot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, DslValue, Effect, Emit, Fault, IconRenderExportItem};
@@ -27,8 +27,8 @@ pub mod export_shots {
     pub fn handle(payload: &ExportShots, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
-        if let Some(asset) = crate::artifacts::shooting::schema::active_asset(doc.snapshot) {
-            let shots: Vec<&ShootingShot> = if payload.all { snapshot.shots.iter().collect() } else { crate::artifacts::shooting::schema::active_shot(doc.snapshot).into_iter().collect() };
+        if let Some(asset) = crate::schema::active_asset(doc.snapshot) {
+            let shots: Vec<&ShootingShot> = if payload.all { snapshot.shots.iter().collect() } else { crate::schema::active_shot(doc.snapshot).into_iter().collect() };
             let items: Vec<IconRenderExportItem> = shots
                 .iter()
                 .map(|shot| IconRenderExportItem {

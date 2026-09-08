@@ -1,5 +1,5 @@
 //! Deserialize flow via stdio.md.
-use crate::artifacts::flow::FlowSnapshot;
+use crate::FlowSnapshot;
 use semio_s_artifact_stdio_md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 
 pub fn register() {}

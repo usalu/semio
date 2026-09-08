@@ -1,7 +1,7 @@
 //! 📄️ Flow play app panel — the document tree: widgets and synapses of the current fixture.
 
-use crate::artifacts::flow::schema::{widget_id, widget_kind_label, widget_tree_label};
-use crate::artifacts::flow::FlowSnapshot;
+use crate::schema::{widget_id, widget_kind_label, widget_tree_label};
+use crate::FlowSnapshot;
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::editor::flow::{flow_graph_edge_target_id, flow_graph_node_target_id, FLOW_INTERACTION_GRAPH};
 use semio_framework_plugin::plugin_app_close_prelude::Label;

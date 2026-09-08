@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateNode` — a real append-only insert (never a whole-snapshot
 //! capture). No-op when the id already exists in `base`.
-use crate::artifacts::puzzle2d::diff::{Puzzle2dDiff, Puzzle2dNodesDelta};
-use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
+use crate::diff::{Puzzle2dDiff, Puzzle2dNodesDelta};
+use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateNode, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {

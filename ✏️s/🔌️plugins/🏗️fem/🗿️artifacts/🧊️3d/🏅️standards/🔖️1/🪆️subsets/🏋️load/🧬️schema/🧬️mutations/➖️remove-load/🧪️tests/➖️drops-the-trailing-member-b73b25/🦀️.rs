@@ -7,9 +7,9 @@
 //!
 //! The payload names only ids; the removed three-component UDL is recovered from `base` by the inverse, never carried in the mutation.
 
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
-use crate::artifacts::fem3d::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::Fem3dMutation;
+use crate::mutations::{apply_fem3d_mutation, inverse_fem3d_mutation};
+use crate::Fem3dSnapshot;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -34,7 +34,7 @@ fn applies_to_committed_after() {
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("remove-load applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "remove-load/drops-the-trailing-member-b73b25: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.load_cases[0].loads.len(), 1, "remove-load/drops-the-trailing-member-b73b25: only the nodal load may remain");
-    assert_eq!(crate::artifacts::fem3d::load_id(&snapshot.load_cases[0].loads[0]), "g1", "remove-load/drops-the-trailing-member-b73b25: the surviving load is the nodal one");
+    assert_eq!(crate::load_id(&snapshot.load_cases[0].loads[0]), "g1", "remove-load/drops-the-trailing-member-b73b25: the surviving load is the nodal one");
     assert_eq!(snapshot.elements, before().elements, "remove-load/drops-the-trailing-member-b73b25: the frame the UDL sat on must stay");
 }
 
@@ -84,7 +84,7 @@ fn declared_outcome_holds() {
         "applied" => assert!(!refused, "remove-load/drops-the-trailing-member-b73b25: declared applied but the diff builder refused with {:?}", produced.messages()),
         "rejected" => {
             assert!(refused, "remove-load/drops-the-trailing-member-b73b25: declared rejected but the diff builder raised no Error or Fatal, only {:?}", produced.messages());
-            assert_eq!(produced.diff(), &crate::artifacts::fem3d::diff::Fem3dDiff::default(), "remove-load/drops-the-trailing-member-b73b25: a refused mutation must carry the empty diff");
+            assert_eq!(produced.diff(), &crate::diff::Fem3dDiff::default(), "remove-load/drops-the-trailing-member-b73b25: a refused mutation must carry the empty diff");
             assert_eq!(snapshot, before(), "remove-load/drops-the-trailing-member-b73b25: a refused mutation must leave the snapshot untouched");
         }
         other => panic!("remove-load/drops-the-trailing-member-b73b25: unknown outcome status {other:?}"),
@@ -106,7 +106,7 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = dsl::ToValue::to_value(&decoded);
     let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "remove-load/drops-the-trailing-member-b73b25: committed diff JSON is not canonical");
@@ -115,7 +115,7 @@ fn committed_diff_is_canonical() {
 /// 🩹 Replaying the committed `loadCases.patched` entry on `before` must yield the single-load case.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let decoded: crate::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let produced = <crate::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-load/drops-the-trailing-member-b73b25: committed diff did not carry before to after");
 }

@@ -1,6 +1,6 @@
 //! 🛍️ Flow play app panel — the catalogue: draggable widget/operator palette plus the extension sections.
 
-use crate::artifacts::flow::FlowSnapshot;
+use crate::FlowSnapshot;
 use crate::editor::flow::commands::run_extension_action::FLOW_AUTOMATIONS;
 use crate::editor::flow::config::FlowConfig;
 use crate::editor::flow::{flow_action, ui_node_list, ui_value_bool, ui_value_map, ui_value_text};

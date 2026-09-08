@@ -1,0 +1,41 @@
+[package]
+name = "semio-s-artifact-dag-dag"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "dag dag artifact"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-infinite-dag = { workspace = true }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-md = { workspace = true }
+semio-s-artifact-stdio-png = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-svg = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-job.workspace = true
+infinite_canvas = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+ui_wgpu = {path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
+semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
+semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+graph = { path = "../../../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
+
+[dev-dependencies]
+semio-framework-ui-scene = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
+serde.workspace = true
+serde_json.workspace = true
+semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

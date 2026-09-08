@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeSnapGridSpacing`.
 use super::ChangeSnapGridSpacing;
-use crate::artifacts::note::schema::mutations::NoteMutation;
-use crate::artifacts::note::NoteSnapshot;
+use crate::schema::mutations::NoteMutation;
+use crate::NoteSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeSnapGridSpacing, base: &NoteSnapshot) -> Vec<NoteMutation> {

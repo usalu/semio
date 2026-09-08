@@ -9,13 +9,13 @@
 //! replacement is `replace-step-measure`: a large structured sub-payload (`ProcessMeasure`, the
 //! tool/pose geometry a step performs) swapped wholesale on one addressed step.
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::{Process3dSnapshot, ProcessMeasure};
+use crate::diff::Process3dDiff;
+use crate::mutations::Process3dMutation;
+use crate::{Process3dSnapshot, ProcessMeasure};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ReplaceStepMeasure
-/// 📄 Whole-value swap of one [`ProcessStep`](crate::artifacts::process3d::ProcessStep)'s
+/// 📄 Whole-value swap of one [`ProcessStep`](crate::ProcessStep)'s
 /// `measure` — the cut/drill/attach tool geometry and pose the step performs.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]

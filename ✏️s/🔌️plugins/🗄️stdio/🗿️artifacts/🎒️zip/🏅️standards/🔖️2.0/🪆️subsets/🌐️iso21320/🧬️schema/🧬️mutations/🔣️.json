@@ -1,92 +1,134 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/zip/2.0/iso21320/mutations.json",
-  "title": "ZipIso21320Method",
-  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "title": "ZipIso21320Mutation",
+  "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "addDeflatedEntry"
-      ],
-      "properties": {
-        "addDeflatedEntry": {
+      "allOf": [
+        {
           "$ref": "./🗜️add-deflated-entry/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "addDeflatedEntry"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "addStoredEntry"
-      ],
-      "properties": {
-        "addStoredEntry": {
+      "allOf": [
+        {
           "$ref": "./📦add-stored-entry/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "addStoredEntry"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "removeEntry"
-      ],
-      "properties": {
-        "removeEntry": {
+      "allOf": [
+        {
           "$ref": "./➖remove-entry/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "removeEntry"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "renameEntry"
-      ],
-      "properties": {
-        "renameEntry": {
+      "allOf": [
+        {
           "$ref": "./🏷️rename-entry/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "renameEntry"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "setArchiveComment"
-      ],
-      "properties": {
-        "setArchiveComment": {
+      "allOf": [
+        {
           "$ref": "./💬set-archive-comment/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setArchiveComment"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "setEntryData"
-      ],
-      "properties": {
-        "setEntryData": {
+      "allOf": [
+        {
           "$ref": "./✍️set-entry-data/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setEntryData"
+            }
+          }
         }
-      }
+      ]
     },
     {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "setSnapshot"
-      ],
-      "properties": {
-        "setSnapshot": {
+      "allOf": [
+        {
           "$ref": "./📸️set-snapshot/🧬️schema/🔣️.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "setSnapshot"
+            }
+          }
         }
-      }
+      ]
     }
   ]
 }

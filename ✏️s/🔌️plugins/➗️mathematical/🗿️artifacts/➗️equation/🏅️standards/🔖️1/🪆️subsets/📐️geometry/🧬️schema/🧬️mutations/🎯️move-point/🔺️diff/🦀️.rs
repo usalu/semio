@@ -1,6 +1,6 @@
 //! 🔺️ `move-point` — sparse diff construction.
 
-use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationSnapshot};
+use crate::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::MovePoint, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {

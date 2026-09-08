@@ -1,14 +1,14 @@
 //! 🔺️ Din18599 artifact — sparse field diff runtime.
 
-use crate::artifacts::din18599::schema::diff::*;
+use crate::document_schema::diff::*;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::din18599::schema::Din18599Artifact;
-use crate::artifacts::din18599::Din18599Snapshot;
+use crate::document_schema::Din18599Artifact;
+use crate::Din18599Snapshot;
 use protocol::MutationDiff;
 
 //#region 🔖️Apply

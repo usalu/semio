@@ -3,8 +3,8 @@
 //! restructuring (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️fanout-brief.md`
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
-use crate::artifacts::program::kernel::EntityId;
-use crate::artifacts::program::{ProgramDiff, ProgramMutation, ProgramSnapshot};
+use crate::kernel::EntityId;
+use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🗑️ Removes a conflict row by id (captures the removed row for undo via `↩️inverse`).

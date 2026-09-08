@@ -2,9 +2,9 @@
 //! view record (`Block3dWindowView`) and transient brush-preview pose (`Block3dBrushPreview`) nested
 //! inside it. Session-only but real, undoable config: it round-trips through the config `ArtifactStore`
 //! exactly like document content, with a true `backwards` per operation. Nothing here is document
-//! state — the object kind's identity/representations/vortices live in `crate::artifacts::block3d`.
+//! state — the object kind's identity/representations/vortices live in `crate`.
 
-use crate::artifacts::block3d::{Block3dBrushPreview, Block3dWindowView};
+use crate::{Block3dBrushPreview, Block3dWindowView};
 use crate::BlockCamera3d;
 use protocol::Mutation;
 

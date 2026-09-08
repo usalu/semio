@@ -6,9 +6,9 @@
 //! `RemodelingMutation`'s own doc), so the whole load stays inside the retained bounded-first-step
 //! envelope every other route uses.
 
-use crate::artifacts::remodeling::mutations::{create_asset, create_camera_calibration, create_gcp, create_stream, delete_camera_calibration, delete_gcp, delete_stream, replace_job, update_dense_params, update_feature_params, update_geo_params, update_ingest_params, update_match_params, update_mesh_params, update_motion_params, update_sfm_params};
-use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::{ImageAsset, RemodelingSnapshot};
+use crate::mutations::{create_asset, create_camera_calibration, create_gcp, create_stream, delete_camera_calibration, delete_gcp, delete_stream, replace_job, update_dense_params, update_feature_params, update_geo_params, update_ingest_params, update_match_params, update_mesh_params, update_motion_params, update_sfm_params};
+use crate::op::RemodelingMutation;
+use crate::{ImageAsset, RemodelingSnapshot};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::editor::remodeling::decode_still_image;
 use crate::editor::remodeling::examples::example_text;
@@ -30,7 +30,7 @@ pub struct SetActiveExample {
 /// affordance, not a destructive verb.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
     let Some(text) = example_text(&payload.example_id) else { return Ok(Emit::default()) };
-    let Ok(next) = crate::artifacts::remodeling::snapshot::text::parse_dsl(text) else { return Ok(Emit::default()) };
+    let Ok(next) = crate::snapshot::text::parse_dsl(text) else { return Ok(Emit::default()) };
     let mut mutations = example_media_operations(&payload.example_id, doc.snapshot);
     mutations.extend(replace_document_operations(doc.snapshot, &next));
     match mutations.is_empty() {
@@ -46,7 +46,7 @@ pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RemodelingSnaps
 /// examples declare no media and answer with an empty set. Assets already in the document are skipped,
 /// so re-selecting the same example is not a stream of rejected duplicate creates.
 fn example_media_operations(example_id: &str, current: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
-    use crate::artifacts::remodeling::examples::synthetic_orbit;
+    use crate::examples::synthetic_orbit;
     if example_id != synthetic_orbit::ID {
         return Vec::new();
     }

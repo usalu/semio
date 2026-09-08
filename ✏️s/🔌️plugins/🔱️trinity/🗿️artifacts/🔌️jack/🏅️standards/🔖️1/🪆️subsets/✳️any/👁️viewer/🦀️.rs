@@ -4,8 +4,8 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::jack::op::TrinityGraphMutation;
-use crate::artifacts::jack::{empty_trinity_graph_fixture, JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
+use crate::op::TrinityGraphMutation;
+use crate::{empty_trinity_graph_fixture, JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use crate::viewer::jack::modes::view;
 use crate::viewer::jack::modes::view::windows::graph;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -69,7 +69,7 @@ impl ArtifactViewer for TrinityJackViewer {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            graph::BODY_KEY => graph::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            semio_framework_graph::BODY_KEY => semio_framework_graph::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -83,7 +83,7 @@ pub fn create_trinity_jack_viewer() -> semio_framework_plugin::AppDefinition {
         .icon_id("trinity")
         .mode_def(view::definition())
         .default_mode_id(view::TRINITY_JACK_VIEW_MODE_VIEW)
-        .window_kind_def(graph::definition())
+        .window_kind_def(semio_framework_graph::definition())
         .default_layout(view::layout())
         .build_definition()
 }

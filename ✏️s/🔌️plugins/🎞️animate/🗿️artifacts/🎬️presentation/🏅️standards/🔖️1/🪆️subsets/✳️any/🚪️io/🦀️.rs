@@ -17,9 +17,9 @@
 
 //#region 🔖️IoDeclaration
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::artifacts::presentation::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::artifacts::presentation::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use crate::artifacts::presentation::{PresentationMutation, PresentationSnapshot, ANIMATE_DIALECT, PRESENTATION_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+    use crate::{PresentationMutation, PresentationSnapshot, ANIMATE_DIALECT, PRESENTATION_DOCUMENT_SCHEMA};
     use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
@@ -81,10 +81,10 @@ pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_artifact_st
     let (svg, width, height) = semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::dwg_drawing_to_svg(drawing)?;
     let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?);
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&validated_svg, width, height)?;
-    let frame = crate::artifacts::presentation::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
-    let source = crate::artifacts::presentation::FigureTileSource { src: format!("data:image/png;base64,{png_base64}"), kind: "image".into(), frame: frame.clone(), source_aspect: Some(width as f64 / height.max(1) as f64), pdf_page: None };
-    let tiles = vec![crate::artifacts::presentation::FigureTileDraft { id: "imported-drawing".into(), name: "Imported Drawing".into(), crop: frame }];
-    let deck = crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &tiles);
+    let frame = crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
+    let source = crate::FigureTileSource { src: format!("data:image/png;base64,{png_base64}"), kind: "image".into(), frame: frame.clone(), source_aspect: Some(width as f64 / height.max(1) as f64), pdf_page: None };
+    let tiles = vec![crate::FigureTileDraft { id: "imported-drawing".into(), name: "Imported Drawing".into(), crop: frame }];
+    let deck = crate::presentation_snapshot_with_tiles(&source, &tiles);
     Ok(dsl::ToValue::to_value(&deck))
 }
 
@@ -141,9 +141,9 @@ mod tests {
             extmax: [10.0, 10.0, 0.0],
         };
         let document = animate_presentation_document_json_from_dwg(&drawing).expect("from_dwg");
-        let deck: crate::artifacts::presentation::PresentationSnapshot = dsl::FromValue::from_value(document).expect("deck");
-        assert_eq!(deck.schema, crate::artifacts::presentation::PRESENTATION_DOCUMENT_SCHEMA);
-        let (source, tiles) = crate::artifacts::presentation::presentation_working_scene(&deck);
+        let deck: crate::PresentationSnapshot = dsl::FromValue::from_value(document).expect("deck");
+        assert_eq!(deck.schema, crate::PRESENTATION_DOCUMENT_SCHEMA);
+        let (source, tiles) = crate::presentation_working_scene(&deck);
         assert_eq!(tiles.len(), 1);
         assert_eq!(tiles[0].name, "Imported Drawing");
         assert!(source.src.starts_with("data:image/png;base64,"));
@@ -154,8 +154,8 @@ mod tests {
     fn from_dwg_never_errors_on_empty_drawing() {
         let drawing = semio_s_artifact_stdio_dwg::DwgDrawing::default();
         let document = animate_presentation_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");
-        let deck: crate::artifacts::presentation::PresentationSnapshot = dsl::FromValue::from_value(document).expect("deck");
-        let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(&deck);
+        let deck: crate::PresentationSnapshot = dsl::FromValue::from_value(document).expect("deck");
+        let (_, tiles) = crate::presentation_working_scene(&deck);
         assert_eq!(tiles.len(), 1);
     }
 }

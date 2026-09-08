@@ -69,7 +69,7 @@ impl store::ArtifactPack for ImperativeConfig {
 //#endregion 🔖️ArtifactCodec
 
 fn default_contributions_json() -> String {
-    crate::artifacts::procedure::io::default_imperative_contributions_json()
+    crate::io::default_imperative_contributions_json()
 }
 
 impl Default for ImperativeConfig {

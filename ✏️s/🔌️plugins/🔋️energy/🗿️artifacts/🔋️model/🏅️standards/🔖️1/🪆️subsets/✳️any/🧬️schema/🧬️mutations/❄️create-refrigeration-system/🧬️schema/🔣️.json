@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-refrigeration-system.json",
+  "$id": "https://semio.tech/schema/s/energy/model/1/any/mutation/create-refrigeration-system/schema.json",
   "title": "CreateRefrigerationSystem",
   "type": "object",
   "additionalProperties": false,

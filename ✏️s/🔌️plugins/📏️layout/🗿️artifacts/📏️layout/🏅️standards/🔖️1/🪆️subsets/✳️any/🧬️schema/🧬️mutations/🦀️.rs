@@ -12,7 +12,7 @@
 //! `patch-frame`) and their glue mounts were deleted. This file `use super::*`-reaches those
 //! glue-mounted siblings.
 
-use crate::artifacts::layout::{LayoutDiff, LayoutSnapshot};
+use crate::{LayoutDiff, LayoutSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::{
@@ -60,7 +60,7 @@ pub enum LayoutMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::layout::{Frame, LayoutBounds, LayoutRect, TextStory};
+    use crate::{Frame, LayoutBounds, LayoutRect, TextStory};
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     const SAMPLE: &str = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[{"id":"story-1","content":"Hello","styleRuns":[]}],"links":[{"id":"link-1","path":"a.png","hash":"h","width":10,"height":10,"dpi":300}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}],"printTarget":null}"#;
@@ -195,7 +195,7 @@ mod tests {
     async fn links_create_change_path_delete_round_trip() {
         let doc = sample_doc();
         let create = LayoutMutation::CreateLink(create_link::CreateLink {
-            link: crate::artifacts::layout::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None },
+            link: crate::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None },
             index: Some(1),
         });
         let with_link = round_trip(&doc, &create);
@@ -384,7 +384,7 @@ mod tests {
         let edit = LayoutMutation::EditStory(edit_story::EditStory { id: "story-1".into(), new_content: "Edited.".into() });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &edit).await;
         let link = LayoutMutation::CreateLink(create_link::CreateLink {
-            link: crate::artifacts::layout::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None },
+            link: crate::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None },
             index: None,
         });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &link).await;

@@ -260,7 +260,7 @@ impl store::ErasedSnapshotRetirement for SnapshotRetirement {
 enum Node<'a> {
     Scalar(Json<'a>),
     Config(&'a FlowConfig),
-    Camera(&'a flow::CameraJson),
+    Camera(&'a semio_framework_artifact_flow_flow::CameraJson),
     Strings(&'a [String]),
     Mutation(&'a FlowConfigMutation),
     Payload(&'a FlowConfigMutation),
@@ -462,7 +462,7 @@ mod tests {
             FlowConfigMutation::Snapshot { config: FlowConfig::default() },
             FlowConfigMutation::SetContributions { json: text.clone() },
             FlowConfigMutation::SetPreviewOff { node_ids: vec![text.clone(), "next".into()] },
-            FlowConfigMutation::SetCamera { camera: flow::CameraJson { x: 1.0, y: -0.0, zoom: 2.0 } },
+            FlowConfigMutation::SetCamera { camera: semio_framework_artifact_flow_flow::CameraJson { x: 1.0, y: -0.0, zoom: 2.0 } },
             FlowConfigMutation::SetLodMode { value: text.clone() },
             FlowConfigMutation::SetProximityDistance { value: 3.0 },
             FlowConfigMutation::SetGridVisible { value: true },

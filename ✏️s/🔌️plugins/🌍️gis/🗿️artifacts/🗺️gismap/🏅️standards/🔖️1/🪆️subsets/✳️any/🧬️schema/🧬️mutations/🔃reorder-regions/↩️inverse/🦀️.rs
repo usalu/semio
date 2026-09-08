@@ -1,7 +1,7 @@
 //! ↩️ Inverse reconstruction for `reorder-regions` — reads the BASE position, never the diff.
 use super::ReorderRegions;
-use crate::artifacts::gismap::mutations::GisMapMutation;
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::mutations::GisMapMutation;
+use crate::GisMapSnapshot;
 
 //#region 🔹Inverse
 /// ↩️ Undo moves the feature back to its pre-reorder index, captured from `base` — missing target

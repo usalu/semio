@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateWeeklySchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateWeeklySchedule, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -20,6 +20,6 @@ pub fn diff(payload: &super::CreateWeeklySchedule, base: &EnergyModelSnapshot) -
     }
     let mut model = base.model.clone();
     model.schedules.weekly.insert(payload.index as usize, crate::schedule::WeeklySchedule { id: payload.id, daily_schedule_ids: { let mut ids = [crate::model::ScheduleId(0); 7]; ids.copy_from_slice(&payload.daily_schedule_ids); ids } });
-    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

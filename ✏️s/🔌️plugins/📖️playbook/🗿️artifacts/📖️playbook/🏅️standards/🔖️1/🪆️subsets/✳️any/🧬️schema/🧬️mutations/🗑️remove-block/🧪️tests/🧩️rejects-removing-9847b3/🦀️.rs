@@ -12,8 +12,8 @@
 //! reach: the owning step really is present (the seeded scene holds it, with no blocks), so the
 //! block lookup is what fails and the diagnostic carries BOTH address segments.
 
-use crate::artifacts::playbook::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
-use crate::artifacts::playbook::{attach_playbook_steps, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
+use crate::mutations::{apply_playbook_mutation, inverse_playbook_mutation, PlaybookMutation};
+use crate::{attach_playbook_steps, PlaybookDiff, PlaybookSnapshot, PlaybookStep};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

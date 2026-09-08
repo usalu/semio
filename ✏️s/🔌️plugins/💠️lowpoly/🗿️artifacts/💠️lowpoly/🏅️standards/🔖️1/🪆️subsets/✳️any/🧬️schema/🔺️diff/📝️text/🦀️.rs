@@ -1,8 +1,8 @@
 //! 🔺️ Lowpoly artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::lowpoly::schema::diff::{LowpolyDiff, LowpolyObjectPatchEntry, LowpolyObjectsDelta, LowpolyPaintLayersDelta, LowpolyPaintStrokeAt, PixelRun as SchemaPixelRun};
-use crate::artifacts::lowpoly::schema::LowpolyArtifact;
-use crate::artifacts::lowpoly::{apply_paint_layers_delta, LowpolySnapshot};
+use crate::schema::diff::{LowpolyDiff, LowpolyObjectPatchEntry, LowpolyObjectsDelta, LowpolyPaintLayersDelta, LowpolyPaintStrokeAt, PixelRun as SchemaPixelRun};
+use crate::schema::LowpolyArtifact;
+use crate::{apply_paint_layers_delta, LowpolySnapshot};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -137,7 +137,7 @@ impl LowpolyDiff {
 }
 
 /// 🧩 Applies an identified-collection delta to a snapshot object list.
-pub fn apply_objects_delta(objects: &[crate::artifacts::lowpoly::LowpolyObject], delta: &LowpolyObjectsDelta) -> protocol::MutationApplyResult<Vec<crate::artifacts::lowpoly::LowpolyObject>> {
+pub fn apply_objects_delta(objects: &[crate::LowpolyObject], delta: &LowpolyObjectsDelta) -> protocol::MutationApplyResult<Vec<crate::LowpolyObject>> {
     let mut removed = std::collections::BTreeSet::new();
     for (index, id) in delta.removed.iter().enumerate() {
         if !removed.insert(id.as_str()) {
@@ -279,7 +279,7 @@ impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
 
 //#region 🔖️Constructors
 /// 🏗️ Objects-add field delta.
-pub fn diff_objects_add(index: usize, item: crate::artifacts::lowpoly::LowpolyObject, base: &LowpolySnapshot) -> LowpolyDiff {
+pub fn diff_objects_add(index: usize, item: crate::LowpolyObject, base: &LowpolySnapshot) -> LowpolyDiff {
     let mut order: Vec<String> = base.objects.iter().map(|object| object.id.clone()).collect();
     let id = item.id.clone();
     let at = index.min(order.len());
@@ -304,18 +304,18 @@ pub fn diff_objects_move(id: &str, to_index: usize, base: &LowpolySnapshot) -> L
 }
 
 /// 🏗️ Objects-patch field delta.
-pub fn diff_objects_patch(id: String, patch: crate::artifacts::lowpoly::LowpolyObjectPatch) -> LowpolyDiff {
+pub fn diff_objects_patch(id: String, patch: crate::LowpolyObjectPatch) -> LowpolyDiff {
     LowpolyDiff { objects: Some(LowpolyObjectsDelta { added: Vec::new(), removed: Vec::new(), patched: vec![LowpolyObjectPatchEntry { id, patch, paint_layers: None }], reordered: None }), ..LowpolyDiff::default() }
 }
 
 /// 🏗️ Add-paint-layer field delta.
-pub fn diff_add_paint_layer(object_id: String, index: usize, layer: crate::artifacts::lowpoly::LowpolyPaintLayer) -> LowpolyDiff {
+pub fn diff_add_paint_layer(object_id: String, index: usize, layer: crate::LowpolyPaintLayer) -> LowpolyDiff {
     LowpolyDiff {
         objects: Some(LowpolyObjectsDelta {
             patched: vec![LowpolyObjectPatchEntry {
                 id: object_id,
-                patch: crate::artifacts::lowpoly::LowpolyObjectPatch::default(),
-                paint_layers: Some(LowpolyPaintLayersDelta { added: vec![crate::artifacts::lowpoly::schema::diff::LowpolyIndexedPaintLayer { index: index as u32, layer }], ..LowpolyPaintLayersDelta::default() }),
+                patch: crate::LowpolyObjectPatch::default(),
+                paint_layers: Some(LowpolyPaintLayersDelta { added: vec![crate::schema::diff::LowpolyIndexedPaintLayer { index: index as u32, layer }], ..LowpolyPaintLayersDelta::default() }),
             }],
             ..LowpolyObjectsDelta::default()
         }),
@@ -327,7 +327,7 @@ pub fn diff_add_paint_layer(object_id: String, index: usize, layer: crate::artif
 pub fn diff_remove_paint_layer(object_id: String, index: usize) -> LowpolyDiff {
     LowpolyDiff {
         objects: Some(LowpolyObjectsDelta {
-            patched: vec![LowpolyObjectPatchEntry { id: object_id, patch: crate::artifacts::lowpoly::LowpolyObjectPatch::default(), paint_layers: Some(LowpolyPaintLayersDelta { removed: vec![index as u32], ..LowpolyPaintLayersDelta::default() }) }],
+            patched: vec![LowpolyObjectPatchEntry { id: object_id, patch: crate::LowpolyObjectPatch::default(), paint_layers: Some(LowpolyPaintLayersDelta { removed: vec![index as u32], ..LowpolyPaintLayersDelta::default() }) }],
             ..LowpolyObjectsDelta::default()
         }),
         ..LowpolyDiff::default()
@@ -335,13 +335,13 @@ pub fn diff_remove_paint_layer(object_id: String, index: usize) -> LowpolyDiff {
 }
 
 /// 🏗️ Patch-paint-layer field delta.
-pub fn diff_patch_paint_layer(object_id: String, index: usize, patch: crate::artifacts::lowpoly::schema::diff::LowpolyPaintLayerPatch) -> LowpolyDiff {
+pub fn diff_patch_paint_layer(object_id: String, index: usize, patch: crate::schema::diff::LowpolyPaintLayerPatch) -> LowpolyDiff {
     LowpolyDiff {
         objects: Some(LowpolyObjectsDelta {
             patched: vec![LowpolyObjectPatchEntry {
                 id: object_id,
-                patch: crate::artifacts::lowpoly::LowpolyObjectPatch::default(),
-                paint_layers: Some(LowpolyPaintLayersDelta { patched: vec![crate::artifacts::lowpoly::schema::diff::LowpolyIndexedPaintLayerPatch { index: index as u32, patch }], ..LowpolyPaintLayersDelta::default() }),
+                patch: crate::LowpolyObjectPatch::default(),
+                paint_layers: Some(LowpolyPaintLayersDelta { patched: vec![crate::schema::diff::LowpolyIndexedPaintLayerPatch { index: index as u32, patch }], ..LowpolyPaintLayersDelta::default() }),
             }],
             ..LowpolyObjectsDelta::default()
         }),
@@ -355,7 +355,7 @@ pub fn diff_paint_stroke(object_id: String, layer_index: usize, runs: Vec<Schema
         objects: Some(LowpolyObjectsDelta {
             patched: vec![LowpolyObjectPatchEntry {
                 id: object_id,
-                patch: crate::artifacts::lowpoly::LowpolyObjectPatch::default(),
+                patch: crate::LowpolyObjectPatch::default(),
                 paint_layers: Some(LowpolyPaintLayersDelta { strokes: vec![LowpolyPaintStrokeAt { layer_index: layer_index as u32, runs }], ..LowpolyPaintLayersDelta::default() }),
             }],
             ..LowpolyObjectsDelta::default()

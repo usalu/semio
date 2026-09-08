@@ -12,10 +12,22 @@ import { testFixtureProjectionRetirement } from "../../../../../../../../../../.
 testBuiltTreeRetirementFixture();
 testFixtureProjectionRetirement();
 
+//#region 🧬️OwnedSchemaExports
+/** 🧬️ The subset scope's own schema module — every law this file validates is one of its named exports. */
+const flowSchemaModule = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
+/** 🧬️ Compiles one `schema://s.flow.flow/<export>` contract with the module registered under its own `$id`. */
+function flowExport(name: string) {
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addKeyword({ keyword: "x-semio-state", metaSchema: { type: "string" } });
+  for (const numeric of ["double", "float", "int32", "int64", "uint32", "uint64"]) ajv.addFormat(numeric, true);
+  ajv.addSchema(flowSchemaModule);
+  return ajv.compile({ $ref: `${flowSchemaModule.$id}#/$defs/${name}` });
+}
+//#endregion 🧬️OwnedSchemaExports
+
 //#region 🧒️ChildAddWidget
 const childAddWidget = await Bun.file(new URL("./🧒️child-add-widget/🔣️.json", import.meta.url)).json();
-const childAddWidgetSchema = await Bun.file(new URL("./🧒️child-add-widget/🧬️.schema.json", import.meta.url)).json();
-const validateChildAddWidget = new Ajv({ strict: true, allErrors: true }).compile(childAddWidgetSchema);
+const validateChildAddWidget = flowExport("FlowChildAddWidget");
 assert(validateChildAddWidget(childAddWidget), JSON.stringify(validateChildAddWidget.errors));
 assert.equal(childAddWidget.parentContent.childId, childAddWidget.parentContent.target.artifactId);
 assert.equal(new Set(childAddWidget.cases.map((row: any) => row.id)).size, 2);
@@ -57,8 +69,7 @@ console.log("[DEBUG] Flow child add-widget contract: 2 typed node rows, 1 recons
 //#endregion 🧒️ChildAddWidget
 
 const treeProjection = await Bun.file(new URL("./🖼️tree-projection/🔣️.json", import.meta.url)).json();
-const treeProjectionSchema = await Bun.file(new URL("./🖼️tree-projection/🧬️.schema.json", import.meta.url)).json();
-const validateTreeProjection = new Ajv({ strict: true, allErrors: true }).compile(treeProjectionSchema);
+const validateTreeProjection = flowExport("FlowTreeProjection");
 assert(validateTreeProjection(treeProjection), JSON.stringify(validateTreeProjection.errors));
 assert.equal(new Set(treeProjection.cases.map((row: any) => row.id)).size, 4);
 const retirementProbe = treeProjection.retirementProbe;
@@ -85,8 +96,7 @@ console.log("[DEBUG] Retained UI tree projection: 2 trees, 2 structural denials,
 
 //#region 🔎️ActualHostWire
 const hostWire = await Bun.file(new URL("./📡️host-wire/🔣️.json", import.meta.url)).json();
-const hostWireSchema = await Bun.file(new URL("./📡️host-wire/🧬️.schema.json", import.meta.url)).json();
-const validateHostWire = new Ajv({ strict: true, allErrors: true }).compile(hostWireSchema);
+const validateHostWire = flowExport("FlowHostWire");
 assert(validateHostWire(hostWire), JSON.stringify(validateHostWire.errors));
 const hostCommandSource = await Bun.file(new URL("../🦀️.rs", import.meta.url)).text();
 const hostCommandRows = [...hostCommandSource.slice(hostCommandSource.indexOf("pub enum FlowCommand"), hostCommandSource.indexOf("// 🧷️ `app_commands!")).matchAll(/"([^"]+)" as "[^"]+" =>/g)].map(match => match[1]);
@@ -103,8 +113,7 @@ console.log("[DEBUG] Flow actual operation-wire source: 6 binary shapes, 3 hosti
 
 //#region 🧬️ArtifactRecipes
 const recipes = await Bun.file(new URL("./🧬️artifact-recipes.json", import.meta.url)).json();
-const recipeSchema = await Bun.file(new URL("./🧩️artifact-recipes.schema.json", import.meta.url)).json();
-const validateRecipes = new Ajv({ strict: true, allErrors: true }).compile(recipeSchema);
+const validateRecipes = flowExport("FlowArtifactRecipes");
 assert(validateRecipes(recipes), JSON.stringify(validateRecipes.errors));
 assert.equal(new Set(recipes.cases.map((row: any) => row.id)).size, 4);
 const recipeLabel = recipes.label.unit.repeat(recipes.label.repetitions);
@@ -171,8 +180,7 @@ console.log("[DEBUG] Shared parameter retirement byteOracles=2 hostileFixtureRej
 
 //#region 🔣️Contract
 const fixture = await Bun.file(new URL("./🧫️grant-frontier/🔣️.json", import.meta.url)).json();
-const schema = await Bun.file(new URL("./🧫️grant-frontier/🧬️.schema.json", import.meta.url)).json();
-const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+const validate = flowExport("FlowGrantFrontier");
 function semantic(value: typeof fixture): boolean {
   return new Set(value.cases.map((row: any) => row.id)).size === value.cases.length
     && value.cases.every((row: any) => Buffer.byteLength(row.unit.repeat(row.repetitions)) === row.expectedTextBytes);
@@ -227,8 +235,7 @@ for (const row of fixture.cases) {
 //#endregion ⚖️IndependentByteOracle
 //#region 🏷️AuthoredSliderLabels
 const labels = await Bun.file(new URL("./🏷️slider-labels.json", import.meta.url)).json();
-const labelSchema = await Bun.file(new URL("./📝️slider-labels.schema.json", import.meta.url)).json();
-const validateLabels = new Ajv({ strict: true, allErrors: true }).compile(labelSchema);
+const validateLabels = flowExport("FlowSliderLabels");
 assert(validateLabels(labels), JSON.stringify(validateLabels.errors));
 for (const row of labels.cases) {
   assert.equal(row.widget.label, row.expectedDagName);
@@ -250,8 +257,7 @@ assert.match(artifactSource, /Widget::InputSlider \{ label, \.\. \} => \(label\.
 //#endregion 🏷️AuthoredSliderLabels
 //#region 🧾️ArtifactCanonicalShapes
 const artifact = await Bun.file(new URL("./🧾️artifact-canonical.json", import.meta.url)).json();
-const artifactSchema = await Bun.file(new URL("./📐️artifact-canonical.schema.json", import.meta.url)).json();
-const validateArtifact = new Ajv({ strict: true, allErrors: true }).compile(artifactSchema);
+const validateArtifact = flowExport("FlowArtifactCanonical");
 assert(validateArtifact(artifact), JSON.stringify(validateArtifact.errors));
 assert.equal(new Set(artifact.widgets.map((value: any) => value.kind)).size, 9);
 assert.equal(new Set(artifact.mutations.map((value: any) => value.mutation)).size, 10);
@@ -271,8 +277,7 @@ for (const mutate of [
 //#endregion 🧾️ArtifactCanonicalShapes
 //#region ↩️DeleteCascadeOracle
 const cascade = await Bun.file(new URL("./🧹️delete-cascade/🔣️.json", import.meta.url)).json();
-const cascadeSchema = await Bun.file(new URL("./🧹️delete-cascade/🧬️.schema.json", import.meta.url)).json();
-const validateCascade = new Ajv({ strict: true, allErrors: true }).addSchema(artifactSchema).compile(cascadeSchema);
+const validateCascade = flowExport("FlowDeleteCascade");
 assert(validateCascade(cascade), JSON.stringify(validateCascade.errors));
 const cascadeBase = structuredClone(cascade.scene);
 cascadeBase.widgets[1].label = cascade.label.unit.repeat(cascade.label.repetitions);
@@ -306,8 +311,7 @@ console.log("[DEBUG] Flow delete-cascade oracle=immer semanticLabelBytes=4800 in
 //#endregion ↩️DeleteCascadeOracle
 //#region 🪪️ContentIdentityOracle
 const identity = await Bun.file(new URL("./🪪️content-identity/🔣️.json", import.meta.url)).json();
-const identitySchema = await Bun.file(new URL("./🪪️content-identity/🧬️.schema.json", import.meta.url)).json();
-const validateIdentity = new Ajv({ strict: true, allErrors: true }).compile(identitySchema);
+const validateIdentity = flowExport("FlowContentIdentity");
 assert(validateIdentity(identity), JSON.stringify(validateIdentity.errors));
 assert.equal(new Set(identity.cases.map((row: any) => row.id)).size, 5);
 const digests = identity.cases.map((row: any) => createHash("sha256").update(identity.domain, "utf8").update(row.canonicalJson, "utf8").digest("hex"));
@@ -366,9 +370,9 @@ assert(retainedIdentitySource.includes("derived.child_id"));
 assert.equal((retainedIdentitySource.match(/take_local_owner::<FlowWorkingScene>/g) ?? []).length >= 2, true);
 const duplicateRoot = new URL("../../🧬️schema/🧬️mutations/👯️duplicate-widget/", import.meta.url);
 const duplicateSource = await Bun.file(new URL("🦀️.rs", duplicateRoot)).text();
-const duplicateFixture = await Bun.file(new URL("🧪️tests/🚫️rejects-duplicating-onto-a-taken-id/🦠️mutation/🔣️.json", duplicateRoot)).json();
-const duplicateSchema = await Bun.file(new URL("🧬️.schema.json", duplicateRoot)).json();
-const validateDuplicate = new Ajv({ strict: true, allErrors: true }).compile(duplicateSchema);
+const duplicateFixture = await Bun.file(new URL("🧪️tests/🚫️rejects-duplicating-6d209e/🦠️mutation/🔣️.json", duplicateRoot)).json();
+const duplicateModule = await Bun.file(new URL("🧬️schema/🔣️.json", duplicateRoot)).json();
+const validateDuplicate = new Ajv({ strict: true, allErrors: true }).addSchema(duplicateModule).compile({ $ref: `${duplicateModule.$id}#` });
 const { mutation: duplicateMutation, ...duplicatePayload } = duplicateFixture;
 assert(duplicateSource.includes('#[value(rename_all = "camelCase")]'));
 assert.equal(duplicateMutation, "duplicateWidget");
@@ -379,8 +383,7 @@ assert(!validateDuplicate({ ...duplicatePayload, sourceId: undefined, source_id:
 //#endregion 🪪️ContentIdentityOracle
 //#region 🧹️StoreOwnerOracle
 const storeOwners = await Bun.file(new URL("./🏪️store-owners/🔣️.json", import.meta.url)).json();
-const storeOwnerSchema = await Bun.file(new URL("./🏪️store-owners/🧬️.schema.json", import.meta.url)).json();
-const validateStoreOwners = new Ajv({ strict: true, allErrors: true }).compile(storeOwnerSchema);
+const validateStoreOwners = flowExport("FlowStoreOwners");
 assert(validateStoreOwners(storeOwners), JSON.stringify(validateStoreOwners.errors));
 assert.equal(new Set(storeOwners.cases.map((row: any) => row.lane)).size, 3);
 for (const row of storeOwners.cases) {
@@ -403,8 +406,7 @@ console.log("[DEBUG] Flow store-owner oracle: 3 lanes, 3 grants, independent UTF
 //#endregion 🧹️StoreOwnerOracle
 //#region 👥️PresenceOwnerOracle
 const presenceOwners = await Bun.file(new URL("./👥️presence-owners/🔣️.json", import.meta.url)).json();
-const presenceOwnerSchema = await Bun.file(new URL("./👥️presence-owners/🧬️.schema.json", import.meta.url)).json();
-const validatePresenceOwners = new Ajv({ strict: true, allErrors: true }).compile(presenceOwnerSchema);
+const validatePresenceOwners = flowExport("FlowPresenceOwners");
 assert(validatePresenceOwners(presenceOwners), JSON.stringify(validatePresenceOwners.errors));
 for (const row of presenceOwners.cases) {
   const payloads = [row.local.unit.repeat(row.local.repeat), ...row.peers.flatMap((peer: any) => [peer.actor, peer.unit.repeat(peer.repeat)])];
@@ -423,8 +425,7 @@ console.log("[DEBUG] Flow presence-owner oracle: 3 rosters, 3 grants, UTF-8 coun
 //#endregion 👥️PresenceOwnerOracle
 //#region 🫧️TransientOwnerOracle
 const transientOwners = await Bun.file(new URL("./🫧️transient-owners/🔣️.json", import.meta.url)).json();
-const transientOwnerSchema = await Bun.file(new URL("./🫧️transient-owners/🧬️.schema.json", import.meta.url)).json();
-const validateTransientOwners = new Ajv({ strict: true, allErrors: true }).compile(transientOwnerSchema);
+const validateTransientOwners = flowExport("FlowTransientOwners");
 assert(validateTransientOwners(transientOwners), JSON.stringify(validateTransientOwners.errors));
 let transientRetired = false;
 for (const row of transientOwners.trace) {
@@ -448,8 +449,7 @@ assert(editorOwnerSource.includes("crate::artifacts::flow::retirement::store_own
 //#endregion 🗃️SharedDocumentOwnerAuthority
 //#region 👁️ViewerOwnerAuthority
 const viewerOwners = await Bun.file(new URL("../../👁️viewer/🧪️fixtures/🧹️owners/🔣️.json", import.meta.url)).json();
-const viewerOwnerSchema = await Bun.file(new URL("../../👁️viewer/🧪️fixtures/🧹️owners/🧬️.schema.json", import.meta.url)).json();
-const validateViewerOwners = new Ajv({ strict: true, allErrors: true }).compile(viewerOwnerSchema);
+const validateViewerOwners = flowExport("FlowViewerOwners");
 assert(validateViewerOwners(viewerOwners), JSON.stringify(validateViewerOwners.errors));
 assert(!validateViewerOwners({ ...viewerOwners, documentRights: ["read", "write"] }));
 const viewerOwnerSource = await Bun.file(new URL("../../👁️viewer/🦀️.rs", import.meta.url)).text();
@@ -464,8 +464,8 @@ console.log("[DEBUG] Flow viewer five-lane contract rejects write authority; nat
 //#endregion 👁️ViewerOwnerAuthority
 //#region 🏭️PublicSurfaceOwners
 const surfaceOwners = await Bun.file(new URL("../../../../../../../../🧪️fixtures/🧹️surface-owners/🔣️.json", import.meta.url)).json();
-const surfaceOwnerSchema = await Bun.file(new URL("../../../../../../../../🧪️fixtures/🧹️surface-owners/🧬️.schema.json", import.meta.url)).json();
-const validateSurfaceOwners = new Ajv({ strict: true, allErrors: true }).compile(surfaceOwnerSchema);
+const flowPluginSchemaModule = await Bun.file(new URL("../../../../../../../../🧬️schema/🔣️.json", import.meta.url)).json();
+const validateSurfaceOwners = new Ajv({ strict: true, allErrors: true }).addSchema(flowPluginSchemaModule).compile({ $ref: `${flowPluginSchemaModule.$id}#/$defs/FlowSurfaceOwners` });
 assert(validateSurfaceOwners(surfaceOwners), JSON.stringify(validateSurfaceOwners.errors));
 assert.deepEqual(JSON.parse(stableStringify(surfaceOwners)), surfaceOwners);
 assert(flowPluginSource.includes(`.package_id("${surfaceOwners.package}")`));

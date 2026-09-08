@@ -45,6 +45,7 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-framework-artifact-playbook-playbook = { workspace = true }
 # 🚦️ O1 de-dyn: `#[dyn_enum]`/`dyn_enum_close!` generate `Constraints` (⛓️constraint), replacing
 # the crate's 12 `Box<dyn Constraint>`/`&dyn SoftConstraint` seams — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME.
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }

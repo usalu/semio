@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Trinity Jack app command — `editor-engagement-input`.
 
-use crate::artifacts::jack::op::TrinityGraphMutation;
+use crate::op::TrinityGraphMutation;
 use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::Emit;
 

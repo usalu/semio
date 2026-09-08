@@ -1,7 +1,7 @@
 //! 🔺️ `change-annex` — sparse diff construction.
 
 use super::ChangeAnnex;
-use crate::artifacts::en1993::{En1993Diff, En1993Snapshot};
+use crate::{En1993Diff, En1993Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeAnnex, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {

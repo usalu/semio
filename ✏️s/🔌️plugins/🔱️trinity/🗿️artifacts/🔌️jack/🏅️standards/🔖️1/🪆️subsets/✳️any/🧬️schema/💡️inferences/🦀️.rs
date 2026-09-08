@@ -11,7 +11,7 @@
 //! honestly re-derivable from `nodes`/`edges`/`root_node_id` alone, so it moved out of the manifest's
 //! former `flatPosition` `"derived"` node property into this family instead).
 
-use crate::artifacts::jack::JackSnapshot;
+use crate::JackSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
@@ -55,7 +55,7 @@ impl protocol::InferenceSpec<JackSnapshot> for JackInference {
 /// 🧠️ Uncached: Kahn's algorithm re-runs in one BFS pass over the whole graph — the default
 /// `infer_cached` passthrough (just calls `infer`) is exactly right here, no `InferredField` chain
 /// needed (there is no honest per-node incremental decomposition of a global topological sort).
-impl ArtifactInferrer for crate::artifacts::jack::standards::v1::subsets::any::schema::JackBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::JackBuilder {
     type Snapshot = JackSnapshot;
     type Inference = JackInference;
 }
@@ -82,7 +82,7 @@ pub fn jack_artifact_inference_descriptor() -> schema::ArtifactInferenceDescript
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::jack::{Edge, Node, Port, PortDirection, PropertyBag};
+    use crate::{Edge, Node, Port, PortDirection, PropertyBag};
     use protocol::Inference;
 
     //#region 🧸️Fixtures

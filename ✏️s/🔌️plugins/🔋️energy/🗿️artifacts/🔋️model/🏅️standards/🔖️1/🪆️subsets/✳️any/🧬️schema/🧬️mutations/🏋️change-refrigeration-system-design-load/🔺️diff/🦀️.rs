@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ChangeRefrigerationSystemDesignLoad` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeRefrigerationSystemDesignLoad, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeRefrigerationSystemDesignLoad, base: &EnergyM
     if let Some(item) = model.refrigeration_systems.iter_mut().find(|item| item.id == payload.id) {
         item.design_load_w = payload.new_design_load_w;
     }
-    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

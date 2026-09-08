@@ -81,16 +81,15 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly brep_invoke: (a: number, b: number, c: number, d: number) => [number, number];
-    readonly dispose: (a: number, b: number) => void;
-    readonly tessellate: (a: number, b: number, c: number) => [number, number];
     readonly flow_bridge_allocate: (a: number) => number;
     readonly flow_bridge_begin_close: () => void;
     readonly flow_bridge_poll: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
     readonly flow_bridge_release: (a: number, b: number) => void;
     readonly flow_bridge_send: (a: number, b: number, c: number, d: bigint, e: bigint) => number;
     readonly flow_bridge_terminal_is_empty: () => number;
-    readonly semio_plugin_bundle_installer_link_shim: () => void;
+    readonly brep_invoke: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly dispose: (a: number, b: number) => void;
+    readonly tessellate: (a: number, b: number, c: number) => [number, number];
     readonly __wbg_dagsession_free: (a: number, b: number) => void;
     readonly dagsession_attachCanvas: (a: number, b: any, c: number, d: number, e: number) => any;
     readonly dagsession_drawLodLabel: (a: number) => [number, number];

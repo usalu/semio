@@ -1,19 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/create-properties.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/create-properties/schema.json",
   "title": "CreateProperties",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "childId",
+    "child_id",
     "target"
   ],
   "properties": {
-    "childId": {
+    "child_id": {
       "type": "string"
     },
     "target": {
-      "title": "ArtifactRef",
+      "$ref": "#/$defs/ArtifactRef"
+    }
+  },
+  "$defs": {
+    "ArtifactRef": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -25,25 +29,27 @@
           "type": "string"
         },
         "dialect": {
-          "title": "ArtifactDialect",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "artifactKind",
-            "standard",
-            "subset"
-          ],
-          "properties": {
-            "artifactKind": {
-              "type": "string"
-            },
-            "standard": {
-              "type": "string"
-            },
-            "subset": {
-              "type": "string"
-            }
-          }
+          "$ref": "#/$defs/ArtifactDialect"
+        }
+      }
+    },
+    "ArtifactDialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
         }
       }
     }

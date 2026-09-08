@@ -1,9 +1,9 @@
 //! 🔗 DAG mutation — `ConnectNodes`: creates a port-to-port edge relationship between two nodes.
-use crate::artifacts::dag::diff::DagDiff;
-use crate::artifacts::dag::mutations::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::diff::DagDiff;
+use crate::mutations::DagMutation;
+use crate::DagSnapshot;
 use graph::manifest::PropertyBag;
-use infinite_board_port_directed_dag::EdgeRouteStyle;
+use semio_framework_artifact_infinite_dag::EdgeRouteStyle;
 
 //#region 🔖️Mutation
 /// 🔗 `connect-nodes` payload — edge `id` plus both endpoint strings (`"<nodeId>@<portId>"`) and

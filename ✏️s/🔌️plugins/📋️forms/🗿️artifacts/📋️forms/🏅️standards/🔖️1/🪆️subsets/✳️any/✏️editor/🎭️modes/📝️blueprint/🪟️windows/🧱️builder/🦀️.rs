@@ -1,6 +1,6 @@
 //! 🧱️ Forms play app — the blueprint window: the drag/drop playbook builder authoring the form.
 
-use crate::artifacts::forms::FormsSnapshot;
+use crate::FormsSnapshot;
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
 use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
@@ -41,7 +41,7 @@ pub fn definition() -> WindowKindDefinition {
 pub fn render(spec: &FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let contributions = crate::editor::forms::parse_contributions(config);
     let palette: Vec<BlockPaletteEntry> = crate::editor::forms::catalogue_kinds(&contributions, labels).into_iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: kind, label, icon_id }).collect();
-    semio_framework_plugin::scene_surface(FORMS_PLAY_SURFACE_BLUEPRINT, semio_framework_ui_contract::SurfaceKind::BlockList, &crate::playbook::build_playbook_list_scene(&crate::artifacts::forms::mutations::as_playbook_spec(spec), &palette, None))
+    semio_framework_plugin::scene_surface(FORMS_PLAY_SURFACE_BLUEPRINT, semio_framework_ui_contract::SurfaceKind::BlockList, &crate::playbook::build_playbook_list_scene(&crate::mutations::as_playbook_spec(spec), &palette, None))
 }
 //#endregion 🔖️Render
 
@@ -58,7 +58,7 @@ mod tests {
         let node = render(&spec, &config, labels).expect("blueprint surface");
         let semio_framework_ui_contract::Component::Surface(props) = node.component else { panic!("blueprint must render a semantic surface") };
         let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).expect("block-list payload");
-        let expected = crate::artifacts::forms::mutations::as_playbook_spec(&spec);
+        let expected = crate::mutations::as_playbook_spec(&spec);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.steps_json).unwrap(), serde_json::to_value(&expected.steps).unwrap());
         assert!(scene.selected_id.is_none());
     }

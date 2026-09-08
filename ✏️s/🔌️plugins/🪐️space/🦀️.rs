@@ -20,11 +20,12 @@ type SharedStudioPorts = Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>;
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 use crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
+use semio_framework_artifact_space_collection::{artifact_backbone_uri, collection_backbone_uri, ArtifactBody, CollectionEntry, CollectionMutation, CollectionSnapshot, S_COLLECTION_SCHEMA};
+use semio_framework_artifact_space_space::{empty_space_snapshot, space_backbone_uri, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, S_SPACE_SCHEMA};
 use semio_framework_os::{
-    artifact_backbone_uri, collection_backbone_uri, create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_space_snapshot, empty_workflow_snapshot, encode_backbone_payload, export_backbone_pack, export_os_space_pack,
-    list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, register_os_fixture_json, seed_os_space_catalog_if_empty, ArtifactBody, CollectionEntry, CollectionMutation, CollectionSnapshot, DraftCatalog,
-    MemoryBackbonePort, OsBackbonePort, OsBackbonePorts, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, WorkflowMutation, WorkflowSnapshot, space_backbone_uri, OS_SPACE_SCHEMA,
-    S_COLLECTION_SCHEMA, S_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
+    create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_workflow_snapshot, encode_backbone_payload, export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document,
+    materialize_backbone_snapshot, register_os_fixture_json, seed_os_space_catalog_if_empty, DraftCatalog, MemoryBackbonePort, OsBackbonePort, OsBackbonePorts, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort,
+    WorkflowMutation, WorkflowSnapshot, OS_SPACE_SCHEMA, S_WORKFLOW_SCHEMA,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::{document_backbone_ref, VcsError};

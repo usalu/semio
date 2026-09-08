@@ -1,8 +1,8 @@
 //! 🔺 Diff constructor for `DeleteSavedCamera`. Error `target-missing` when absent.
 
 use super::DeleteSavedCamera;
-use crate::artifacts::shooting::diff::{ShootingDiff, ShootingSavedCamerasDelta};
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::diff::{ShootingDiff, ShootingSavedCamerasDelta};
+use crate::ShootingSnapshot;
 
 pub fn diff(payload: &DeleteSavedCamera, base: &ShootingSnapshot) -> protocol::MutationOutcome<ShootingDiff> {
     if !base.saved_cameras.iter().any(|camera| camera.id == payload.id) {

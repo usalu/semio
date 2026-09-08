@@ -1,8 +1,8 @@
 //! 🪪 Shooting mutation payload — `RenameSavedCamera`. Changes a saved camera's identity `label` field.
 
-use crate::artifacts::shooting::ShootingSnapshot;
-use crate::artifacts::shooting::diff::ShootingDiff;
-use crate::artifacts::shooting::mutations::ShootingMutation;
+use crate::ShootingSnapshot;
+use crate::diff::ShootingDiff;
+use crate::mutations::ShootingMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]

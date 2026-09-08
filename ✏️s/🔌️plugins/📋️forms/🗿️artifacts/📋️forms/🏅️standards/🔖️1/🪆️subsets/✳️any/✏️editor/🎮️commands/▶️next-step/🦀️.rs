@@ -1,7 +1,7 @@
 //! 🧪️ 🧪️ Forms play app commands command — `next-step`.
 
-use crate::artifacts::forms::schema::can_advance;
-use crate::artifacts::forms::{forms_steps, op::FormMutation, FormsSnapshot};
+use crate::schema::can_advance;
+use crate::{forms_steps, op::FormMutation, FormsSnapshot};
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::effective_try_values;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -18,7 +18,7 @@ pub fn handle(_payload: &NextStep, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &
     let steps = forms_steps(spec);
     if index + 1 < steps.len() {
         let step = &steps[index];
-        let values = effective_try_values(spec, config).iter().map(|(key, value)| (key.to_owned(), crate::artifacts::forms::schema::value_to_dsl(value))).collect();
+        let values = effective_try_values(spec, config).iter().map(|(key, value)| (key.to_owned(), crate::schema::value_to_dsl(value))).collect();
         if can_advance(step, &values) {
             return Ok(Emit::config(vec![FormsConfigMutation::SetStepIndex(crate::editor::forms::config::SetStepIndex { index: config.current_step_index + 1 })]));
         }

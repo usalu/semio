@@ -7,7 +7,7 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -102,7 +102,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
-    assert_eq!(raised_diff.correction_as_of, Some(crate::artifacts::vdi3805::EditionId { year: 2025, month: 3 }), "change-correction-as-of/advances-the-correction-cut-off-to-2025-03: the diff must publish correctionAsOf 2025-03");
+    assert_eq!(raised_diff.correction_as_of, Some(crate::EditionId { year: 2025, month: 3 }), "change-correction-as-of/advances-the-correction-cut-off-to-2025-03: the diff must publish correctionAsOf 2025-03");
     assert!(raised_diff.edition_profile.is_none(), "change-correction-as-of/advances-the-correction-cut-off-to-2025-03: the correction cut-off must not touch the per-sheet edition profile map");
     let produced = serde_json::to_value(raised_diff).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");

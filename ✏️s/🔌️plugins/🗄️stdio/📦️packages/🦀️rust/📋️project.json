@@ -41,13 +41,6 @@
         "forwardAllArgs": true
       }
     },
-    "build-wasm-release": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build-wasm-release"
-      }
-    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

@@ -2,8 +2,8 @@
 //! `target-missing` when `payload.label` doesn't resolve to a numeric leaf in `base` — a stale or
 //! foreign label, or a label that resolves to a non-numeric node, cannot be changed.
 
-use crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::EquationNodeKind;
-use crate::artifacts::equation::{EquationDiff, EquationSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::EquationNodeKind;
+use crate::{EquationDiff, EquationSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeCoefficient, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {

@@ -2,8 +2,8 @@
 //! captured pre-state (`base`), never by structurally inverting the diff. Split from
 //! `🧵traces` per Wave C.
 
-use crate::artifacts::program::ProgramMutation;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::ProgramMutation;
+use crate::ProgramSnapshot;
 
 /// ↩️ If the id already existed, undo restores its prior full value; otherwise undo disconnects
 /// the newly-added edge.

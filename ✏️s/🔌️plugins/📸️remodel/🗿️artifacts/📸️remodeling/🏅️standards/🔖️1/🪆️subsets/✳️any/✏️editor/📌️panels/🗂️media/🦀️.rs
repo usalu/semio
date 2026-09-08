@@ -1,7 +1,7 @@
 //! 🗂️ Remodeling play app panel — the Media tab: an import drop zone plus a summary line per imported
 //! stream/asset.
 
-use crate::artifacts::remodeling::{MediaKind, RemodelingSnapshot};
+use crate::{MediaKind, RemodelingSnapshot};
 use crate::editor::remodeling::commands::import_frames::REMODELING_MEDIA_ACCEPT;
 use crate::editor::remodeling::remodeling_action;
 use crate::editor::remodeling::terminology::RemodelingLabels;

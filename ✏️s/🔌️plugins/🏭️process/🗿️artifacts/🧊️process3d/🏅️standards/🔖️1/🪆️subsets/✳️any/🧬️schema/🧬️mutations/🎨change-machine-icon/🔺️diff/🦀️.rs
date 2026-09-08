@@ -2,8 +2,8 @@
 //! directly from `base` + payload, never a snapshot clone. Error `target-missing` when the machine
 //! is absent, Warning `no-op` when the icon is unchanged.
 
-use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::{Process3dSnapshot, Workshop};
+use crate::diff::Process3dDiff;
+use crate::{Process3dSnapshot, Workshop};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeMachineIcon, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {

@@ -147,10 +147,10 @@ if (import.meta.vitest) {
   const { it, expect } = import.meta.vitest;
   it("cold pair WIT status codec agrees with the neutral schema and rejects every hostile authority", async () => {
     const { readFileSync } = await import("node:fs");
-    const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+    const { default: Ajv } = await import("ajv");
     const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", import.meta.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
-    const validate = new Ajv2020({ strict: true }).compile(schema);
+    const validate = new Ajv({ strict: true }).compile(schema);
     const authority = (value: Record<string, unknown>): Record<string, unknown> => ({
       ...value,
       ...(Object.hasOwn(value, "activationGeneration") ? { activationGeneration: BigInt(value.activationGeneration as number) } : {}),

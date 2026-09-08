@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📒audit-events` per Wave C.
 
 use super::RenameAuditEvent;
-use crate::artifacts::program::diff::{ProgramAuditEventsDelta, ProgramAuditEventsPatchEntry};
-use crate::artifacts::program::registers::AuditEventPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramAuditEventsDelta, ProgramAuditEventsPatchEntry};
+use crate::registers::AuditEventPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameAuditEvent, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

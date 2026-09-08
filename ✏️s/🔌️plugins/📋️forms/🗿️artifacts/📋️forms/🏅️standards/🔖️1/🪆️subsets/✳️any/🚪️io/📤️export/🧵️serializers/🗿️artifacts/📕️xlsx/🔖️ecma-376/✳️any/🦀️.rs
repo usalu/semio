@@ -2,7 +2,7 @@
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Honest not-yet-implemented
 //! stub, `IoFidelity::Lossy` — see the twin import leaf's doc for why a real bridge is deferred.
 
-use crate::artifacts::forms::FormsSnapshot;
+use crate::FormsSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

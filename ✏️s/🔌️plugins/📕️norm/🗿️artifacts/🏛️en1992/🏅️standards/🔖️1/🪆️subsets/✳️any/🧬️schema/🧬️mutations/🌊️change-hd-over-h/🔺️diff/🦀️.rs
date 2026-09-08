@@ -1,8 +1,8 @@
 //! 🔺️ `change-hd-over-h` sparse diff construction — writes only `En1992Diff.hd_over_h` from the payload.
 
-use crate::artifacts::en1992::diff::En1992Diff;
-use crate::artifacts::en1992::mutations::change_hd_over_h::ChangeHdOverH;
-use crate::artifacts::en1992::En1992Snapshot;
+use crate::diff::En1992Diff;
+use crate::mutations::change_hd_over_h::ChangeHdOverH;
+use crate::En1992Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeHdOverH, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {

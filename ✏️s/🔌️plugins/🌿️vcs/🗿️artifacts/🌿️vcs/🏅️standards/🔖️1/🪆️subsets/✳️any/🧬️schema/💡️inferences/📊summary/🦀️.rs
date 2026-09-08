@@ -3,7 +3,7 @@
 //! function rather than an `InferredField` chain — the family root's
 //! `impl protocol::Inference<VcsSnapshot>` calls it directly.
 
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::VcsSnapshot;
 
 //#region 🔖️Summary
 /// 📊️ Scalar summary of the tags/notes free-form fields.

@@ -44,6 +44,7 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-s-artifact-sourcing-curation = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }

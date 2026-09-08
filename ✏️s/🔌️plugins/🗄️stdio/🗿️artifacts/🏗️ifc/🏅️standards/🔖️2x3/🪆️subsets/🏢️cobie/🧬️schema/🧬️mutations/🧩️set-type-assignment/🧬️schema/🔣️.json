@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/cobie/mutation/set-type-assignment.json",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/cobie/mutation/set-type-assignment/schema.json",
   "title": "SetTypeAssignment",
   "type": "object",
   "additionalProperties": false,

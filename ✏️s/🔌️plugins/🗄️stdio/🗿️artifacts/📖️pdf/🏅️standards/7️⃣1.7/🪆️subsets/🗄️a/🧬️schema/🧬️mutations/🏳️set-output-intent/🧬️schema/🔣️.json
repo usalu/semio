@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/a/mutation/set-output-intent.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/a/mutation/set-output-intent/schema.json",
   "title": "SetOutputIntent",
   "type": "object",
   "additionalProperties": false,

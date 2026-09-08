@@ -1,7 +1,7 @@
 //! 🖼️ Remodeling play app — the Frames window: a Canvas2d view of the currently cursored frame, with any
 //! ground control point observations planted on it.
 
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::RemodelingSnapshot;
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingFrameCursor};
 use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
@@ -57,7 +57,7 @@ fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrameCursor
     let Some(stream) = scene.streams.iter().find(|stream| &stream.id == stream_id) else { return "[]".into() };
     let mut origin = (0.0_f64, 0.0_f64);
     if let Some(frame) = stream.frames.iter().find(|frame| frame.index == cursor.frame_index) {
-        if let Some(asset) = crate::artifacts::remodeling::remodeling_asset(scene, &frame.asset_id) {
+        if let Some(asset) = crate::remodeling_asset(scene, &frame.asset_id) {
             let width = f64::from(asset.width);
             let height = f64::from(asset.height);
             origin = (-width / 2.0, -height / 2.0);
@@ -102,7 +102,7 @@ pub fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> semio_fr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::remodeling::default_remodeling_scene;
+    use crate::default_remodeling_scene;
     use crate::editor::remodeling::testkit::{app, render as render_body};
 
     #[semio_framework_async_macros::async_test]

@@ -1,6 +1,6 @@
 //! 🏛️ CAD play app — the Structure Classic window: the `aec.building.structure.classic` pane's world-3d viewport.
 
-use crate::artifacts::cad::CadPaneId;
+use crate::CadPaneId;
 use crate::editor::cad::config::CadDislocateOptions;
 use crate::editor::cad::modes::edit;
 use crate::editor::cad::modes::edit::options;

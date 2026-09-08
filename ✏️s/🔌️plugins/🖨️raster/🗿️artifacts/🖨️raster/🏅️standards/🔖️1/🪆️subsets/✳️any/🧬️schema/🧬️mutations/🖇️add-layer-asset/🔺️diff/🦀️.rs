@@ -1,7 +1,7 @@
 //! 🔺️ `add-layer-asset` sparse diff — a single `assets.entries` insertion.
 
-use crate::artifacts::raster::diff::{diff_add_asset, RasterDiff};
-use crate::artifacts::raster::RasterSnapshot;
+use crate::diff::{diff_add_asset, RasterDiff};
+use crate::RasterSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddLayerAsset, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {

@@ -1,5 +1,5 @@
 //! ⚡️ Flow artifact — Op facet re-exports `FlowMutation`.
-pub use crate::artifacts::flow::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
+pub use crate::schema::mutations::{apply_flow_mutation, inverse_flow_mutation, FlowMutation};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -10,15 +10,15 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::flow::FlowSnapshot;
+    use crate::FlowSnapshot;
     use protocol::{Identified, Mutation, MutationDiff};
 
     #[semio_framework_async_macros::async_test]
     async fn move_widgets_inverse_restores_base() {
         let base = FlowSnapshot::default();
-        let mutation = FlowMutation::MoveWidgets(crate::artifacts::flow::schema::mutations::move_widgets::MoveWidgets { entries: vec![flow::FlowLayoutEntry { id: "slider".into(), layout: Some(flow::WidgetLayout { x: 10.0, y: 20.0 }) }] });
+        let mutation = FlowMutation::MoveWidgets(crate::schema::mutations::move_widgets::MoveWidgets { entries: vec![semio_framework_artifact_flow_flow::FlowLayoutEntry { id: "slider".into(), layout: Some(semio_framework_artifact_flow_flow::WidgetLayout { x: 10.0, y: 20.0 }) }] });
         let forward = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
-        assert_eq!(forward.to_fixture().layout.get("slider"), Some(&flow::WidgetLayout { x: 10.0, y: 20.0 }));
+        assert_eq!(forward.to_fixture().layout.get("slider"), Some(&semio_framework_artifact_flow_flow::WidgetLayout { x: 10.0, y: 20.0 }));
         let restored = mutation.inverse(&base).iter().fold(forward, |snapshot, inverse| inverse.diff(&snapshot).diff().apply(&snapshot).expect("valid mutation diff"));
         assert_eq!(restored, base);
     }
@@ -26,12 +26,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn create_widget_then_delete_widget_round_trips_to_base() {
         let base = FlowSnapshot::default();
-        let widget = flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
-        let create = FlowMutation::CreateWidget(crate::artifacts::flow::schema::mutations::create_widget::CreateWidget { index: base.to_fixture().widgets.len(), widget });
+        let widget = semio_framework_artifact_flow_flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
+        let create = FlowMutation::CreateWidget(crate::schema::mutations::create_widget::CreateWidget { index: base.to_fixture().widgets.len(), widget });
         let after_create = create.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert!(after_create.to_fixture().widgets.iter().any(|widget| widget.id() == "note-1"));
 
-        let delete = FlowMutation::DeleteWidget(crate::artifacts::flow::schema::mutations::delete_widget::DeleteWidget { id: "note-1".into() });
+        let delete = FlowMutation::DeleteWidget(crate::schema::mutations::delete_widget::DeleteWidget { id: "note-1".into() });
         let after_delete = delete.diff(&after_create).diff().apply(&after_create).expect("valid mutation diff");
         assert_eq!(after_delete, base);
 
@@ -42,7 +42,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn connect_widgets_then_disconnect_widgets_round_trips_to_base() {
         let base = FlowSnapshot::default();
-        let connect = FlowMutation::ConnectWidgets(crate::artifacts::flow::schema::mutations::connect_widgets::ConnectWidgets {
+        let connect = FlowMutation::ConnectWidgets(crate::schema::mutations::connect_widgets::ConnectWidgets {
             index: base.to_fixture().synapses.len(),
             id: "s3".into(),
             from: "slider".into(),
@@ -53,7 +53,7 @@ mod tests {
         let after_connect = connect.diff(&base).diff().apply(&base).expect("valid mutation diff");
         assert!(after_connect.to_fixture().synapses.iter().any(|synapse| synapse.id == "s3"));
 
-        let disconnect = FlowMutation::DisconnectWidgets(crate::artifacts::flow::schema::mutations::disconnect_widgets::DisconnectWidgets { id: "s3".into() });
+        let disconnect = FlowMutation::DisconnectWidgets(crate::schema::mutations::disconnect_widgets::DisconnectWidgets { id: "s3".into() });
         let after_disconnect = disconnect.diff(&after_connect).diff().apply(&after_connect).expect("valid mutation diff");
         assert_eq!(after_disconnect, base);
 
@@ -67,11 +67,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn duplicate_widget_composite_round_trips_to_base() {
         let base = FlowSnapshot::default();
-        let widget = flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
-        let create = FlowMutation::CreateWidget(crate::artifacts::flow::schema::mutations::create_widget::CreateWidget { index: base.to_fixture().widgets.len(), widget });
+        let widget = semio_framework_artifact_flow_flow::Widget::InputNote { id: "note-1".into(), text: "hello".into() };
+        let create = FlowMutation::CreateWidget(crate::schema::mutations::create_widget::CreateWidget { index: base.to_fixture().widgets.len(), widget });
         let after_create = create.diff(&base).diff().apply(&base).expect("valid mutation diff");
 
-        let duplicate = FlowMutation::DuplicateWidget(crate::artifacts::flow::schema::mutations::duplicate_widget::mutation::DuplicateWidget {
+        let duplicate = FlowMutation::DuplicateWidget(crate::schema::mutations::duplicate_widget::mutation::DuplicateWidget {
             source_id: "note-1".into(),
             new_id: "note-2".into(),
             synapse_id: "note-1-to-note-2".into(),

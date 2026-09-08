@@ -1,7 +1,7 @@
 //! 🧊️ Remodeling play app — the Model window: the World3d scene carrying the reconstructed mesh, the
 //! sparse/dense clouds, the recovered camera positions and the ground control points.
 
-use crate::artifacts::remodeling::{PackedF32, RemodelingSnapshot};
+use crate::{PackedF32, RemodelingSnapshot};
 use crate::editor::remodeling::config::RemodelingConfig;
 use crate::editor::remodeling::modes::model::windows::model::options::layers;
 use crate::editor::remodeling::terminology::RemodelingLabels;
@@ -52,7 +52,7 @@ pub fn window_measures(config: &RemodelingConfig, labels: &RemodelingLabels) -> 
 /// reconstruction content inside the production 512/512 mesh envelope; unavailable content renders
 /// no mesh entity rather than treating the handle's opaque address as geometry.
 fn world_meshes_json(scene: &RemodelingSnapshot) -> String {
-    let Some(mesh) = crate::artifacts::remodeling::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) else {
+    let Some(mesh) = crate::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) else {
         return "[]".into();
     };
     serde_json::to_string(&vec![json!({ "id": REMODELING_MESH_ID, "data": mesh_data_json(&mesh) })]).unwrap_or_else(|_| "[]".into())
@@ -166,7 +166,7 @@ pub fn render(scene: &RemodelingSnapshot, config: &RemodelingConfig) -> semio_fr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::remodeling::default_remodeling_scene;
+    use crate::default_remodeling_scene;
     use crate::editor::remodeling::testkit::{app, render as render_body};
 
     #[semio_framework_async_macros::async_test]

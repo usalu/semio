@@ -4,7 +4,7 @@
 //! (`policyViewerPurityBreaches` forbids it outright). No selection, no drawing utilities, no
 //! engagement input: a viewer has none of those and emits no mutations by construction (`ViewEmit`).
 
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteSnapshot;
 use semio_framework_plugin::{InkCanvasScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -42,8 +42,8 @@ pub fn definition() -> WindowKindDefinition {
 /// simplification the cad pilot's viewer documented for its own camera/environment defaults), no
 /// active drawing utility (nothing is drawable), `InkCanvasScene.interactive: false`.
 pub fn render(document: &NoteSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let camera = crate::artifacts::note::NoteCamera::default();
-    let document_json = crate::artifacts::note::note_canvas_document_json(document, &camera);
+    let camera = crate::NoteCamera::default();
+    let document_json = crate::note_canvas_document_json(document, &camera);
     semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, String::new(), "composite".into(), false))
 }
 //#endregion 🔖️Render
@@ -62,7 +62,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_read_only_ink_canvas_scene_for_the_empty_document() {
-        let document = crate::artifacts::note::schema::empty_note_snapshot();
+        let document = crate::schema::empty_note_snapshot();
         let node = render(&document).expect("viewer canvas");
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("semantic canvas") };
         let scene: InkCanvasScene = semio_framework_ui_scene::decode(props).expect("packed viewer scene");

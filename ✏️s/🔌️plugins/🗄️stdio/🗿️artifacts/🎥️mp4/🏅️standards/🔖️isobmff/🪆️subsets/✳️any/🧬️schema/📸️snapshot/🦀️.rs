@@ -400,7 +400,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn exact_fixture_survives_pack_and_dsl_codecs() {
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
         let snapshot = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 

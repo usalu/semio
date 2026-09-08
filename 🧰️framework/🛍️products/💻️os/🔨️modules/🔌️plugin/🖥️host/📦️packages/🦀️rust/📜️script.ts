@@ -3,7 +3,6 @@
 import { SCALE_COMPONENT_ARTIFACT } from "../../../../../🧫️fixtures/⚖️scale/🟦️.ts";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
 import findIndex from "lodash-es/findIndex.js";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -96,13 +95,21 @@ class LifecycleCheckScript extends BundleScript {
   }
 }
 
+/** 🧬️ Resolves one named export of a schema module document through the repository draft-07 dialect. */
+function moduleExportValidator(ajv: Ajv, modulePath: string, exportId: string) {
+  const document = JSON.parse(readFileSync(modulePath, "utf8"));
+  ajv.addSchema(document);
+  const validate = ajv.getSchema(`${document.$id}#/$defs/${exportId}`);
+  if (!validate) throw new Error(`schema module ${modulePath}: unknown export ${exportId}`);
+  return validate;
+}
+
 /** 🪪️ Pins typed guest-fault transport and independently checks lifecycle replay eligibility. */
 function guestFaultOracle(): number {
   const hostRoot = join(import.meta.dir, "..", "..");
   const fixture = JSON.parse(readFileSync(join(hostRoot, "🔁️lifecycle", "🧫️fixture", "🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(hostRoot, "🔁️lifecycle", "🧬️schema.json"), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
-  const validate = ajv.compile(schema);
+  const validate = moduleExportValidator(ajv, join(hostRoot, "🔁️lifecycle", "🧬️schema", "🔣️.json"), "ReactorTurnLifecycleV1");
   assert(validate(fixture), JSON.stringify(validate.errors));
   const eligible = ajv.compile({
     type: "object",
@@ -128,8 +135,7 @@ function guestFaultOracle(): number {
 function retainedLifecycleOracle(): number {
   const root = join(import.meta.dir, "..", "..", "🧵️shard", "🔁️lifecycle");
   const fixture = JSON.parse(readFileSync(join(root, "🧫️fixture", "🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(root, "🧬️schema.json"), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  const validate = moduleExportValidator(new Ajv({ strict: true, allErrors: true }), join(root, "🧬️schema", "🔣️.json"), "ShardLifecycleV1");
   assert(validate(fixture), JSON.stringify(validate.errors));
   for (const trace of fixture.traces) {
     const pending = [...trace.queued] as string[];
@@ -159,7 +165,7 @@ function activationOwnershipOracle(): number {
   const root = join(import.meta.dir, "..", "..", "🎠️activation");
   const fixture = JSON.parse(readFileSync(join(root, "🧫️fixture", "🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
-  const validate = ajv.compile(JSON.parse(readFileSync(join(root, "🧬️schema.json"), "utf8")));
+  const validate = moduleExportValidator(ajv, join(root, "🧬️schema", "🔣️.json"), "ActivationAdmissionV1");
   assert(validate(fixture), JSON.stringify(validate.errors));
   for (const row of fixture.cases) {
     const actual = { actorRetained: row.stage === "complete", instantiations: ["instantiate", "register", "complete"].includes(row.stage) ? 1 : 0, drops: row.stage === "register" ? 1 : 0, admitted: row.stage === "complete" };
@@ -180,7 +186,7 @@ function activationOwnershipOracle(): number {
 function kernelReservationOracle(): number {
   const root = join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..", "🔨️modules", "🎭️actor", "🎠️activation");
   const fixture = JSON.parse(readFileSync(join(root, "🧫️fixture", "🔣️.json"), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema.json"), "utf8")));
+  const validate = moduleExportValidator(new Ajv({ strict: true, allErrors: true }), join(root, "🧬️schema", "🔣️.json"), "ActivationReservation");
   assert(validate(fixture), JSON.stringify(validate.errors));
   for (const row of fixture.traces) {
     let live = false,
@@ -273,7 +279,7 @@ class UiPatchMarshallingCheckScript extends BundleScript {
     const hostRoot = join(import.meta.dir, "..", "..");
     const owner = join(hostRoot, "📥️ui-patch");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture", "🔣️.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🧬️schema.json"), "utf8")));
+    const validate = moduleExportValidator(new Ajv({ strict: true, allErrors: true }), join(owner, "🧬️schema", "🔣️.json"), "NativeUiPatchMarshallingV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
     assert.equal(new Set(fixture.operationKinds).size, 11);
     for (const row of fixture.cases) {

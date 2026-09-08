@@ -13,7 +13,7 @@
 //! `builder_kit`'s rendering half stay in the framework kernel (`crate::playbook::*`) — only the
 //! mutation vocabulary moved.
 
-use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
+use crate::{PlaybookDiff, PlaybookSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 // 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle — committed
 // `🧪️tests/<fixture>/🦀️.rs` fixture vectors decode/re-encode through them — never a production
@@ -120,9 +120,9 @@ pub fn encode_playbook_snapshot_json(snapshot: &PlaybookSnapshot) -> String {
 /// it was read from cited there. The right long-term fix is to commit the scene beside the snapshot
 /// as a fixture file of its own; until then this is the seam that makes the vectors runnable.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn seed_playbook_scene_json(snapshot: &mut PlaybookSnapshot, steps_json: &str) -> Result<Vec<crate::artifacts::playbook::PlaybookStep>, String> {
-    let steps: Vec<crate::artifacts::playbook::PlaybookStep> = protocol::json::from_json_str(steps_json).map_err(|error| error.to_string())?;
-    crate::artifacts::playbook::attach_playbook_steps(&mut snapshot.flow, steps.clone());
+pub fn seed_playbook_scene_json(snapshot: &mut PlaybookSnapshot, steps_json: &str) -> Result<Vec<crate::PlaybookStep>, String> {
+    let steps: Vec<crate::PlaybookStep> = protocol::json::from_json_str(steps_json).map_err(|error| error.to_string())?;
+    crate::attach_playbook_steps(&mut snapshot.flow, steps.clone());
     Ok(steps)
 }
 //#endregion 🔖️Kinds
@@ -156,7 +156,7 @@ mod kinds_catalog {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::playbook::{PlaybookBlock, PlaybookStep};
+    use crate::{PlaybookBlock, PlaybookStep};
     use protocol::os_spr::testkit::{assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::MutationKind;
     use protocol::SemanticMutation;
@@ -190,7 +190,7 @@ mod tests {
         let base = PlaybookSnapshot::default();
         let mut steps = base.steps();
         steps.push(PlaybookStep { id: "s2".into(), title: "Review".into(), description: None, blocks: vec![sample_block("b1", "number", "Team size")] });
-        crate::artifacts::playbook::playbook_snapshot_with_steps(&base.schema, &base.id, &base.version, base.title.clone(), steps)
+        crate::playbook_snapshot_with_steps(&base.schema, &base.id, &base.version, base.title.clone(), steps)
     }
 
     //#region 🔖️MutationLaws
@@ -231,7 +231,7 @@ mod tests {
         let base = sample_snapshot();
         let mut steps = base.steps();
         steps[1].blocks.push(sample_block("b2", "text", "Other"));
-        let base = crate::artifacts::playbook::playbook_snapshot_with_steps(&base.schema, &base.id, &base.version, base.title.clone(), steps);
+        let base = crate::playbook_snapshot_with_steps(&base.schema, &base.id, &base.version, base.title.clone(), steps);
         assert_mutation_inverse_law(&base, &PlaybookMutation::MoveBlock(MoveBlock { block_id: "b1".into(), from_step_id: "s2".into(), to_step_id: "s2".into(), index: 1 })).await;
     }
 

@@ -10,8 +10,8 @@
 //! `.window_kind(..)` calls stay inline — fem3d builds neither a `ModeDefinition` nor a
 //! `WindowKindDefinition` object anywhere, see `modes::edit`'s and the window nodes' own doc comments).
 
-use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::op::Fem3dMutation;
+use crate::Fem3dSnapshot;
 use crate::editor::fem3d::commands::{
     add_area_load, add_bar, add_combination, add_frame, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_section, add_solid, add_support, remove_selection, set_active_example, set_analysis_settings, set_camera,
     set_result_display, set_self_weight,
@@ -246,7 +246,7 @@ impl ToolJobFactory for Fem3dRetainedCommandJobFactory {
 impl ArtifactOwnedToolJobFactory for Fem3dRetainedCommandJobFactory {
     type Owner = EditorApp<Fem3dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FEM3D_RETAINED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem3d::FEM_3D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::FEM_3D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = FEM3D_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
@@ -585,11 +585,11 @@ fn fem3d_results_map_json(results: &HashMap<String, crate::model::StaticResult>)
 /// (`fem.3d` × 3D-Any) plus `geometry:in` (importing an externally authored extruded-footprint outline
 /// as a new `FemSolid` — see `import_media` above) and `results:out` (every load case/combination's
 /// solved `crate::model::StaticResult`, pinned to the `computation.fem3d` artifact kind declared in
-/// `crate::artifacts::fem3d::computation_artifact_kind` — see `export_media` above). Moved out of the
+/// `crate::computation_artifact_kind` — see `export_media` above). Moved out of the
 /// (now deleted) artifact `⚙️engine`: it returns `AppIo`, an app type, so it belongs here.
 pub fn fem3d_io() -> AppIo {
     AppIo {
-        document_schema: crate::artifacts::fem3d::FEM_3D_SCHEMA.into(),
+        document_schema: crate::FEM_3D_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Any },
         ports: vec![fem3d_geometry_in_port(), fem3d_results_out_port()],
         export_formats: vec![],
@@ -697,14 +697,14 @@ const NODE_SIZE_3D: f64 = 0.05;
 const MEMBER_THICKNESS_3D: f64 = 0.05;
 
 #[cfg(test)]
-fn find_node_3d<'a>(nodes: &'a [crate::artifacts::fem3d::FemNode], id: &str) -> Option<&'a crate::artifacts::fem3d::FemNode> {
+fn find_node_3d<'a>(nodes: &'a [crate::FemNode], id: &str) -> Option<&'a crate::FemNode> {
     nodes.iter().find(|n| n.id == id)
 }
 
 #[cfg(test)]
-fn fem3d_element_endpoints(element: &crate::artifacts::fem3d::FemElement) -> (&str, &str) {
+fn fem3d_element_endpoints(element: &crate::FemElement) -> (&str, &str) {
     match element {
-        crate::artifacts::fem3d::FemElement::Bar { start, end, .. } | crate::artifacts::fem3d::FemElement::Frame { start, end, .. } => (start.as_str(), end.as_str()),
+        crate::FemElement::Bar { start, end, .. } | crate::FemElement::Frame { start, end, .. } => (start.as_str(), end.as_str()),
     }
 }
 
@@ -714,7 +714,7 @@ fn fem3d_element_endpoints(element: &crate::artifacts::fem3d::FemElement) -> (&s
 /// (composed with a `Frame`'s own `roll` about its own axis; `Bar`s have no roll).
 #[cfg(test)]
 fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
-    let node_pos = |node: &crate::artifacts::fem3d::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
+    let node_pos = |node: &crate::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
 
     let mut instances: Vec<Value> = Vec::new();
     for node in &doc.nodes {
@@ -737,12 +737,12 @@ fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMa
         let length = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt().max(1e-9);
         let dir = [d[0] / length, d[1] / length, d[2] / length];
         let roll = match element {
-            crate::artifacts::fem3d::FemElement::Frame { roll, .. } => *roll,
-            crate::artifacts::fem3d::FemElement::Bar { .. } => 0.0,
+            crate::FemElement::Frame { roll, .. } => *roll,
+            crate::FemElement::Bar { .. } => 0.0,
         };
         let rotation = quat_mul(quat_z_to(dir), quat_roll_z(roll));
         let mid = [(p1[0] + p2[0]) / 2.0, (p1[1] + p2[1]) / 2.0, (p1[2] + p2[2]) / 2.0];
-        let id = crate::artifacts::fem3d::element_id(element);
+        let id = crate::element_id(element);
         instances.push(dsl::json!({
             "id": format!("el-{id}"),
             "meshId": "box",
@@ -835,7 +835,7 @@ pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<Str
 
 /// 🎥️ Resolves a `FemCamera` to its JSON string, falling back to the framework's default 3D camera when
 /// the document/config still carries the sentinel empty-object placeholder.
-pub fn fem3d_camera_json(camera: &crate::artifacts::fem3d::FemCamera) -> String {
+pub fn fem3d_camera_json(camera: &crate::FemCamera) -> String {
     if camera.json == "{}" {
         semio_framework_plugin::world3d_default_camera()
     } else {
@@ -872,9 +872,9 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// 🪪️ W2 packet P7: the canonical `ArtifactEditor::DIALECT`, derived from the artifact-level
     /// `FEM3D_DIALECT` constant (`🗿️artifacts/🧊️3d/🦀️.rs`) so the sibling `👁️viewer` surface
     /// can read the very same value without ever importing through this `editor` module.
-    const DIALECT: Dialect = crate::artifacts::fem3d::FEM3D_DIALECT;
+    const DIALECT: Dialect = crate::FEM3D_DIALECT;
 
-    const DOCUMENT_SCHEMA: &'static str = crate::artifacts::fem3d::FEM_3D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = crate::FEM_3D_SCHEMA;
 
     /// 📬️ Required by the Artifact publication lane — see `Fem3dArtifactPreparationFactory`.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -953,9 +953,9 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// `World3d` surface fed by `live_visual`, and an empty boot document meshes to nothing, so the very
     /// first paint was a blank scene until a client dispatched `setActiveExample`. Mirrors the sibling
     /// `Fem3dViewer::initial_snapshot` (and block3d's `block3d_boot_snapshot`) so editor and viewer boot
-    /// the same geometry. See `crate::artifacts::fem3d::dsl::fem3d_boot_snapshot`.
+    /// the same geometry. See `crate::dsl::fem3d_boot_snapshot`.
     fn initial_snapshot() -> Fem3dSnapshot {
-        let snapshot = crate::artifacts::fem3d::dsl::fem3d_boot_snapshot();
+        let snapshot = crate::dsl::fem3d_boot_snapshot();
         eprintln!(
             "[DEBUG] fem3d editor boot snapshot: nodes={} elements={} solids={} materials={} loadCases={}",
             snapshot.nodes.len(),
@@ -972,19 +972,19 @@ impl ArtifactEditor for Fem3dPlayApp {
     }
 
     fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        Ok(crate::artifacts::fem3d::live_visual::maintenance_step(instance_id, maximum_items, maximum_bytes))
+        Ok(crate::live_visual::maintenance_step(instance_id, maximum_items, maximum_bytes))
     }
 
     fn mounted_job_close_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        Ok(crate::artifacts::fem3d::live_visual::close_step(instance_id, maximum_items, maximum_bytes))
+        Ok(crate::live_visual::close_step(instance_id, maximum_items, maximum_bytes))
     }
 
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
-        crate::artifacts::fem3d::live_visual::terminal_is_empty(instance_id)
+        crate::live_visual::terminal_is_empty(instance_id)
     }
 
     fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
-        crate::artifacts::fem3d::live_visual::prepare_snapshot_read(operation, snapshot)
+        crate::live_visual::prepare_snapshot_read(operation, snapshot)
     }
 
     /// 🎞️ `"document:out"` reproduces the trait's default whole-document pack (overriding
@@ -1047,8 +1047,8 @@ impl ArtifactEditor for Fem3dPlayApp {
                 let layers = value.get("layers").and_then(Value::as_u64).map_or(1, |v| v as usize);
                 let material_id = doc.snapshot.materials.first().map_or_else(|| "unassigned".into(), |material| material.id.clone());
                 let id = crate::app_surface::next_id(doc.snapshot.solids.iter().map(|s| s.id.clone()), "sol");
-                let solid = crate::artifacts::fem3d::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id };
-                Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::CreateSolid { solid })]))
+                let solid = crate::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id };
+                Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::mutations::create_solid::CreateSolid { solid })]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -1077,14 +1077,14 @@ impl ArtifactEditor for Fem3dPlayApp {
     }
 
     fn pending_effects(doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Vec<semio_framework::kernel::Effect> {
-        crate::artifacts::fem3d::live_visual::reconcile(doc)
+        crate::live_visual::reconcile(doc)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, Fem3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let camera = &cfg.snapshot.camera;
         match body_key {
-            window_model::FEM3D_BODY_MODEL => crate::artifacts::fem3d::live_visual::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(camera, visual)),
-            window_results::FEM3D_BODY_RESULTS => crate::artifacts::fem3d::live_visual::with_live_visual(doc.render_operation(), |visual| window_results::render_with_progress(camera, visual)),
+            window_model::FEM3D_BODY_MODEL => crate::live_visual::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(camera, visual)),
+            window_results::FEM3D_BODY_RESULTS => crate::live_visual::with_live_visual(doc.render_operation(), |visual| window_results::render_with_progress(camera, visual)),
             _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem3d unknown-body label admission failed")),
         }
         .map(semio_framework_plugin::built_to_component_tree)
@@ -1102,7 +1102,7 @@ impl ArtifactEditor for Fem3dPlayApp {
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &Fem3dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Fem3dSnapshot as store::ArtifactPack>::encode_pack(scene);
-    let envelope = store::create_document_envelope::<Fem3dSnapshot, Fem3dMutation>(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", scene.clone(), None);
+    let envelope = store::create_document_envelope::<Fem3dSnapshot, Fem3dMutation>(crate::FEM_3D_SCHEMA, "fem3d", scene.clone(), None);
     let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("fem3d document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
@@ -1116,13 +1116,13 @@ pub fn reset_document_effect(scene: &Fem3dSnapshot) -> semio_framework::kernel::
 /// 🚧️ SDK GAP (contract §2.4, `App { definition, examples }` split): `EditorBuilder` has no
 /// `.example(...)`/`.workflow(...)` methods — the pre-migration chain's trailing
 /// `.example(examples::demo::ID, LocalizedLabel::native("Family House", "Einfamilienhaus"),
-/// crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT, "file")` and `.workflow("fem3d", "FEM 3D",
+/// crate::dsl::FEM3D_EXAMPLE_TEXT, "file")` and `.workflow("fem3d", "FEM 3D",
 /// "structure")` calls are dropped here, not ported. `setActiveExample`'s handler loads the same
 /// `FEM3D_EXAMPLE_TEXT` fixture directly.
 pub fn create_fem3d_app() -> AppDefinition {
-    Editor::builder(crate::artifacts::fem3d::FEM3D_DIALECT)
+    Editor::builder(crate::FEM3D_DIALECT)
             .document(["semio", "fem", "fem3d"])
-            .artifact_kind(crate::artifacts::fem3d::computation_artifact_kind())
+            .artifact_kind(crate::computation_artifact_kind())
             .icon_id("fem-app")
             .mode(edit::MODE_ID, LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id(edit::MODE_ID)
@@ -1192,7 +1192,7 @@ pub fn create_fem3d_app() -> AppDefinition {
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .action_args("setActiveExample", vec![
-                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::artifacts::fem3d::examples::demo::ID, LocalizedLabel::native("Default", "Standard"))]).default_value(&crate::artifacts::fem3d::examples::demo::ID),
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::examples::demo::ID, LocalizedLabel::native("Default", "Standard"))]).default_value(&crate::examples::demo::ID),
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
@@ -1312,7 +1312,7 @@ mod tests {
         let factory = Fem3dConfigPreparationFactory;
         for case in fixture["boundaryCases"].as_array().expect("boundary cases") {
             let value = "x".repeat(case["bytes"].as_u64().expect("byte count") as usize);
-            let mutation = Fem3dConfigMutation::SetCamera { camera: crate::artifacts::fem3d::FemCamera { json: value } };
+            let mutation = Fem3dConfigMutation::SetCamera { camera: crate::FemCamera { json: value } };
             let encoded = dsl::json::to_json_string(&mutation);
             let decoded: Fem3dConfigMutation = dsl::json::from_json_str(&encoded).expect("first-party JSON decode");
             assert_eq!(decoded, mutation);
@@ -1326,7 +1326,7 @@ mod tests {
         use store::ArtifactStoreOneItemPreparation as _;
         let value = "x".repeat(FEM3D_CONFIG_VALUE_BYTES);
         let mut preparation = Fem3dConfigPreparation {
-            base: None, mutation: Some(Fem3dConfigMutation::SetCamera { camera: crate::artifacts::fem3d::FemCamera { json: value } }), description: None, authority: None, candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
+            base: None, mutation: Some(Fem3dConfigMutation::SetCamera { camera: crate::FemCamera { json: value } }), description: None, authority: None, candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
         };
         let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 };
@@ -1393,17 +1393,17 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
         use store::ArtifactStoreOneItemPreparationFactory as _;
-        let boot = crate::artifacts::fem3d::dsl::fem3d_boot_snapshot();
+        let boot = crate::dsl::fem3d_boot_snapshot();
         let factory = Fem3dArtifactPreparationFactory;
         for solid in &boot.solids {
-            let mutation = Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::CreateSolid { solid: solid.clone() });
+            let mutation = Fem3dMutation::CreateSolid(crate::mutations::create_solid::CreateSolid { solid: solid.clone() });
             assert!(factory.preflight(&mutation, None, store::HistoryLane::Document).is_ok(), "solid {} exceeds the artifact one-item envelope", solid.id);
         }
         for node in &boot.nodes {
-            let mutation = Fem3dMutation::CreateNode(crate::artifacts::fem3d::mutations::create_node::CreateNode { node: node.clone() });
+            let mutation = Fem3dMutation::CreateNode(crate::mutations::create_node::CreateNode { node: node.clone() });
             assert!(factory.preflight(&mutation, None, store::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id);
         }
-        assert!(factory.preflight(&Fem3dMutation::CreateNode(crate::artifacts::fem3d::mutations::create_node::CreateNode { node: crate::artifacts::fem3d::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 } }), None, store::HistoryLane::Interaction).is_err());
+        assert!(factory.preflight(&Fem3dMutation::CreateNode(crate::mutations::create_node::CreateNode { node: crate::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 } }), None, store::HistoryLane::Interaction).is_err());
     }
 
     /// 🚀️ LAW: the editor boots with real geometry, so the `World3d` Model window has something to mesh
@@ -1429,8 +1429,8 @@ mod tests {
             Fem3dCommand::AddFrame(add_frame::AddFrame { start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.5 }),
             Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11, g: 8.077e10 }),
             Fem3dCommand::AddSection(add_section::AddSection { name: "HEA200".into(), area: 0.00538, iy: 0.0000369, iz: 0.0000133, j: 0.0000006 }),
-            Fem3dCommand::AddSupport(add_support::AddSupport { node_id: "n1".into(), fixed: crate::artifacts::fem3d::FemDof::ALL.to_vec() }),
-            Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: Some("live".into()) }),
+            Fem3dCommand::AddSupport(add_support::AddSupport { node_id: "n1".into(), fixed: crate::FemDof::ALL.to_vec() }),
+            Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: crate::FemDof::Tz, value: -5000.0, case_id: Some("live".into()) }),
             Fem3dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -500.0, case_id: None }),
             Fem3dCommand::AddAreaLoad(add_area_load::AddAreaLoad { solid_id: "sol1".into(), pressure: 5000.0, case_id: Some("dead".into()) }),
             Fem3dCommand::AddSolid(add_solid::AddSolid { x: 0.0, y: 0.0, width: 4.0, depth: 2.0, height: 0.5, material_id: "concrete".into(), base_z: Some(0.0), layers: Some(2), mesh_size: None }),
@@ -1439,7 +1439,7 @@ mod tests {
             Fem3dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true }),
             Fem3dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0) }),
             Fem3dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["n1".into(), "e1".into()] }),
-            Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::artifacts::fem3d::examples::demo::ID.into() }),
+            Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
             Fem3dCommand::SetCamera(set_camera::SetCamera { json: "{\"x\":1}".into() }),
             Fem3dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 }),
         ]
@@ -1501,7 +1501,7 @@ mod tests {
             let bytes = command.encode_op().expect("encode");
             assert_eq!(bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), expected, "wire bytes changed for {}", command.command_id());
         }
-        let nodal_load_without_case = Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: None });
+        let nodal_load_without_case = Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: crate::FemDof::Tz, value: -5000.0, case_id: None });
         assert_eq!(nodal_load_without_case.encode_op().expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>(), "010601026e3103000600010a020205000000000088b3c0");
     }
 
@@ -1584,7 +1584,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn export_media_results_out_returns_solved_json_for_every_case_3d() {
         let mut app: Fem3dApp = fem3d_app();
-        dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::artifacts::fem3d::examples::demo::ID.into() })).await;
+        dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
         let snapshot = app.snapshot().expect("snapshot");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
@@ -1602,7 +1602,7 @@ mod tests {
     /// empty payload.
     #[semio_framework_async_macros::async_test]
     async fn export_media_results_out_errors_without_load_cases_3d() {
-        let snapshot = crate::artifacts::fem3d::schema::empty_fem3d_snapshot();
+        let snapshot = crate::schema::empty_fem3d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
         let err = Fem3dPlayApp::export_media("results:out", &doc).expect_err("no load cases should error");
@@ -1629,7 +1629,7 @@ mod tests {
         let emit = Fem3dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
         assert_eq!(emit.artifact_mutations.len(), 1);
         match &emit.artifact_mutations[0] {
-            Fem3dMutation::CreateSolid(crate::artifacts::fem3d::mutations::create_solid::CreateSolid { solid }) => {
+            Fem3dMutation::CreateSolid(crate::mutations::create_solid::CreateSolid { solid }) => {
                 assert_eq!(solid.outline, vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
                 assert_eq!(solid.base_z, 0.5);
                 assert_eq!(solid.height, 3.0);
@@ -1654,7 +1654,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn fem3d_io_declares_geometry_in_and_results_out_ports() {
         let io = fem3d_io();
-        assert_eq!(io.document_schema, crate::artifacts::fem3d::FEM_3D_SCHEMA);
+        assert_eq!(io.document_schema, crate::FEM_3D_SCHEMA);
         assert_eq!(io.document_media_type.class, MediaClass::ThreeD);
         assert_eq!(io.document_media_type.form, MediaForm::Any);
         assert_eq!(io.artifact.id, "3d.fem");
@@ -1689,15 +1689,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fem3d_camera_json_falls_back_to_world3d_default_for_empty_object() {
-        let camera = crate::artifacts::fem3d::FemCamera::default();
+        let camera = crate::FemCamera::default();
         assert_eq!(fem3d_camera_json(&camera), semio_framework_plugin::world3d_default_camera());
-        let custom = crate::artifacts::fem3d::FemCamera { json: "{\"x\":1}".into() };
+        let custom = crate::FemCamera { json: "{\"x\":1}".into() };
         assert_eq!(fem3d_camera_json(&custom), "{\"x\":1}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn fem3d_scene_parts_include_solid_mesh_and_oriented_member_instances() {
-        let doc: Fem3dSnapshot = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
+        let doc: Fem3dSnapshot = crate::dsl::parse_dsl(crate::dsl::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
         let (meshes_json, instances_json) = fem3d_scene_parts(&doc, None, doc.analysis.deformation_scale, None);
         assert!(meshes_json.contains("solid-sol1"), "expected a solid- mesh id for the example fixture's solid: {meshes_json}");
         assert!(instances_json.contains("el-e1"), "expected a single oriented box instance per member (no -{{i}} sphere chain): {instances_json}");

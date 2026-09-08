@@ -4,7 +4,7 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::Fem3dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -45,7 +45,7 @@ impl protocol::InferenceSpec<Fem3dSnapshot> for Fem3dInference {
 /// 💡️ `bounds` is a whole-snapshot scalar (see `📦bounds/🦀️.rs`), so the default
 /// `ArtifactInferrer::infer_cached` passthrough (plain `infer`, no `InferenceCache`/`InferenceSession`
 /// involvement) is exactly right — nothing here benefits from per-entity incremental caching.
-impl ArtifactInferrer for crate::artifacts::fem3d::standards::v1::subsets::any::schema::Fem3dBuilder {
+impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Fem3dBuilder {
     type Snapshot = Fem3dSnapshot;
     type Inference = Fem3dInference;
 }
@@ -72,7 +72,7 @@ pub fn fem3d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescrip
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::fem3d::FemNode;
+    use crate::FemNode;
     use protocol::Inference;
 
     //#region 🧸️Fixtures

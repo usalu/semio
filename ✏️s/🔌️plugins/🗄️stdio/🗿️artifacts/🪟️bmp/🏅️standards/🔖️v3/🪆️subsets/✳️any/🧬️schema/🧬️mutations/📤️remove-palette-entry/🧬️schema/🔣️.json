@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/bmp/v3/any/mutation/remove-palette-entry.json",
+  "$id": "https://semio.tech/schema/s/stdio/bmp/v3/any/mutation/remove-palette-entry/schema.json",
   "title": "RemovePaletteEntryMutation",
   "type": "object",
   "additionalProperties": false,
@@ -11,47 +11,6 @@
     "index": {
       "type": "integer",
       "minimum": 0
-    }
-  },
-  "$defs": {
-    "BmpRowOrder": {
-      "type": "string",
-      "enum": [
-        "bottomUp",
-        "topDown"
-      ]
-    },
-    "BmpPaletteEntry": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "b",
-        "g",
-        "r",
-        "reserved"
-      ],
-      "properties": {
-        "b": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 255
-        },
-        "g": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 255
-        },
-        "r": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 255
-        },
-        "reserved": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 255
-        }
-      }
     }
   }
 }

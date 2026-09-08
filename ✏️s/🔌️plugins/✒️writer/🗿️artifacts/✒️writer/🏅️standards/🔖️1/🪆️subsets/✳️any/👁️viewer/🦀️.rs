@@ -5,7 +5,7 @@
 //! artifact or draft mutation. MUST NOT import anything from the sibling editor module
 //! (`policyViewerPurityBreaches`).
 
-use crate::artifacts::writer::{WriterSnapshot, WRITER_DIALECT, WRITER_DOCUMENT_SCHEMA};
+use crate::{WriterSnapshot, WRITER_DIALECT, WRITER_DOCUMENT_SCHEMA};
 use crate::viewer::writer::modes::view;
 use crate::viewer::writer::modes::view::windows::main;
 use semio_framework_plugin::app::{ArtifactViewer, ViewEmit, Viewer};
@@ -38,7 +38,7 @@ pub struct WriterViewer;
 
 impl ArtifactViewer for WriterViewer {
     type Snapshot = WriterSnapshot;
-    type Mutation = crate::artifacts::writer::op::WriterMutation;
+    type Mutation = crate::op::WriterMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -51,7 +51,7 @@ impl ArtifactViewer for WriterViewer {
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> WriterSnapshot {
-        crate::artifacts::writer::schema::empty_writer_snapshot()
+        crate::schema::empty_writer_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `WriterViewCommand::Noop` variant never carries a config
@@ -103,7 +103,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-        let document = crate::artifacts::writer::schema::empty_writer_snapshot();
+        let document = crate::schema::empty_writer_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
         let config = NoConfig::default();

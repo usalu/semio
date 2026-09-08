@@ -1,27 +1,62 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/set-snapshot.json",
+  "$id": "https://semio.tech/schema/s/stdio/stl/ascii/any/mutation/set-snapshot/schema.json",
   "title": "SetSnapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema",
-    "solidName",
-    "triangles"
+    "snapshot"
   ],
   "properties": {
-    "schema": {
-      "type": "string"
+    "snapshot": {
+      "$ref": "#/$defs/StlSnapshot"
     },
-    "solidName": {
-      "type": "string"
+    "mutation": {
+      "const": "setSnapshot",
+      "description": "Aggregate discriminator spliced in by StlMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "StlSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "solidName": {
+          "type": "string"
+        },
+        "triangles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StlTriangle"
+          }
+        }
+      }
     },
-    "triangles": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "normal": {
+    "StlTriangle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "normal",
+        "vertices"
+      ],
+      "properties": {
+        "normal": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "vertices": {
+          "type": "array",
+          "items": {
             "type": "array",
             "items": {
               "type": "number"
@@ -29,30 +64,10 @@
             "minItems": 3,
             "maxItems": 3
           },
-          "vertices": {
-            "type": "array",
-            "items": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 3,
-              "maxItems": 3
-            },
-            "minItems": 3,
-            "maxItems": 3
-          }
-        },
-        "required": [
-          "normal",
-          "vertices"
-        ],
-        "additionalProperties": false
+          "minItems": 3,
+          "maxItems": 3
+        }
       }
-    },
-    "mutation": {
-      "const": "setSnapshot",
-      "description": "Aggregate discriminator spliced in by StlMutation; absent when the payload stands alone."
     }
   }
 }

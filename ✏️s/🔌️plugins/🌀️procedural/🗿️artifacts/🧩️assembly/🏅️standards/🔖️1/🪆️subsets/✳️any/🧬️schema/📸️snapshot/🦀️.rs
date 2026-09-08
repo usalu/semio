@@ -32,7 +32,7 @@ pub struct AssemblySlot {
 }
 
 /// 🔗 One adjacency EDGE between two slots — the generic graph topology WFC propagates constraints
-/// over (`graph_core::GraphView`), independent of any regular-grid assumption.
+/// over (`semio_framework_graph::GraphView`), independent of any regular-grid assumption.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, Default)]
 #[value(rename_all = "camelCase")]
 pub struct AssemblySlotEdge {

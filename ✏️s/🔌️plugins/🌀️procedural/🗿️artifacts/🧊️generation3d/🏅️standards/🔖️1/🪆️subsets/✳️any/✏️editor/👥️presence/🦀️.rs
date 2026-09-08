@@ -6,7 +6,7 @@
 //! `.interaction(...)` declaration.
 
 use crate::editor::generation3d::config::Generation3dPreviewCamera;
-use flow::CameraJson;
+use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;

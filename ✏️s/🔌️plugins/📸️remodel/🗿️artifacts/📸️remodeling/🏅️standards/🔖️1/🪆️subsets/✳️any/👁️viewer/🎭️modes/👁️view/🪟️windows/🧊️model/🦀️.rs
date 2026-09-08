@@ -14,7 +14,7 @@
 //! `world3d_*` helpers (the same escape hatch the `📐️cad` pilot's own viewer used, for the identical
 //! reason) is the honest fit here, not `MeshWindowKit`.
 
-use crate::artifacts::remodeling::{PackedF32, RemodelingSnapshot};
+use crate::{PackedF32, RemodelingSnapshot};
 use semio_framework_plugin::{world3d_camera_json, world3d_scene, world3d_selection_json, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions, WorldSunConfig};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
@@ -63,7 +63,7 @@ pub fn definition() -> WindowKindDefinition {
 /// `s.stdio.semio/v1/mesh` CHILD's real geometry through the same production bounded resolver. An
 /// unavailable durable handle renders no mesh entity, matching the editor's behavior.
 fn world_meshes_json(scene: &RemodelingSnapshot) -> String {
-    let Some(mesh) = crate::artifacts::remodeling::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) else {
+    let Some(mesh) = crate::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) else {
         return "[]".into();
     };
     serde_json::to_string(&vec![json!({ "id": REMODELING_VIEW_MESH_ID, "data": mesh_data_json(&mesh) })]).unwrap_or_else(|_| "[]".into())
@@ -182,13 +182,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
-        let scene = crate::artifacts::remodeling::default_remodeling_scene();
+        let scene = crate::default_remodeling_scene();
         let _node = render(&scene);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn world_meshes_json_renders_the_real_placeholder_mesh_when_the_cache_is_warm() {
-        let scene = crate::artifacts::remodeling::default_remodeling_scene();
+        let scene = crate::default_remodeling_scene();
         assert!(world_meshes_json(&scene).contains(REMODELING_VIEW_MESH_ID));
     }
 

@@ -1,6 +1,6 @@
 //! 🔧 Writer artifact — OpText/OpBinary codecs + grammar for serializing `WriterMutation`.
 
-pub use crate::artifacts::writer::schema::mutations::{apply_writer_mutation, change_language, change_uri, edit_text, inverse_writer_mutation, rename_writer, ChangeLanguage, ChangeUri, EditText, RenameWriter, WriterMutation};
+pub use crate::schema::mutations::{apply_writer_mutation, change_language, change_uri, edit_text, inverse_writer_mutation, rename_writer, ChangeLanguage, ChangeUri, EditText, RenameWriter, WriterMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -46,8 +46,8 @@ mod tests {
     use super::*;
 
     /// ✍️ Hand-built representative document — used across the artifact's own component tests.
-    fn jack_snapshot() -> crate::artifacts::writer::WriterSnapshot {
-        crate::artifacts::writer::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
+    fn jack_snapshot() -> crate::WriterSnapshot {
+        crate::writer_snapshot_with_text("writer.document", "jack", "jack", "writer://jack", "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name")
     }
 
     #[semio_framework_async_macros::async_test]

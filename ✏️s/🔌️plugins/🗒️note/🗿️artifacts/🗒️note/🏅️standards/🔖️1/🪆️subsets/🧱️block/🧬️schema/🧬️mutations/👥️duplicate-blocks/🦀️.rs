@@ -1,7 +1,7 @@
 //! 👥 Note mutation — `DuplicateBlocks`: copies several blocks at once (multi-select duplicate).
 
-use crate::artifacts::note::{NoteDiff, NoteSnapshot};
-use crate::artifacts::note::schema::mutations::NoteMutation;
+use crate::{NoteDiff, NoteSnapshot};
+use crate::schema::mutations::NoteMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -14,11 +14,11 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct DuplicateBlocks {
     pub source_ids: Vec<String>,
     #[dsl(statements, block)]
-    pub blocks: Vec<crate::artifacts::note::NoteBlockNode>,
+    pub blocks: Vec<crate::NoteBlockNode>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn duplicate_blocks(source_ids: Vec<String>, blocks: Vec<crate::artifacts::note::NoteBlockNode>) -> NoteMutation {
+pub fn duplicate_blocks(source_ids: Vec<String>, blocks: Vec<crate::NoteBlockNode>) -> NoteMutation {
     NoteMutation::DuplicateBlocks(DuplicateBlocks { source_ids, blocks })
 }
 

@@ -1,50 +1,61 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/mutation/set-snapshot.json",
+  "$id": "https://semio.tech/schema/s/stdio/csv/rfc4180/any/mutation/set-snapshot/schema.json",
   "title": "SetSnapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema",
-    "hasHeader",
-    "records"
+    "snapshot"
   ],
   "properties": {
-    "schema": {
-      "type": "string"
-    },
-    "hasHeader": {
-      "type": "boolean"
-    },
-    "records": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "fields": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "value": {
-                  "type": "string"
-                },
-                "quoted": {
-                  "type": "boolean"
-                }
-              },
-              "required": [
-                "value",
-                "quoted"
-              ],
-              "additionalProperties": false
-            }
-          }
+    "snapshot": {
+      "$ref": "#/$defs/CsvSnapshot"
+    }
+  },
+  "$defs": {
+    "CsvSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
         },
-        "required": [
-          "fields"
-        ],
-        "additionalProperties": false
+        "hasHeader": {
+          "type": "boolean"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CsvRecord"
+          }
+        }
+      }
+    },
+    "CsvRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CsvField"
+          }
+        }
+      }
+    },
+    "CsvField": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "quoted": {
+          "type": "boolean"
+        }
       }
     }
   }

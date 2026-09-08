@@ -18,8 +18,8 @@
 //! `mutation.target-missing`; and this verb's own second guard, a colliding block id, is Fatal
 //! `mutation.duplicate-id` with a TWO-segment address. This case pins the first of those three.
 
-use crate::artifacts::forms::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
-use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
+use crate::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
+use crate::{forms_steps, FormsDiff, FormsSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

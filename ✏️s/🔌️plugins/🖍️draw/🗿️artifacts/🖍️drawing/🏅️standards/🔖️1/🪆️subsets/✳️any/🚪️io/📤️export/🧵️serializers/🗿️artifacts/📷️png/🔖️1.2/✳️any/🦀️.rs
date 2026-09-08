@@ -3,7 +3,7 @@
 //! and mislabeled it as PNG bytes — a real correctness bug. Fixed here by refusing honestly instead
 //! of perpetuating the mislabeled payload; real raster rendering is out of scope for this cutover.
 
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::DrawingSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

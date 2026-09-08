@@ -1,9 +1,9 @@
 //! 🔺️ Block 2D artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::block2d::schema::diff::*;
+use crate::schema::diff::*;
 
-use crate::artifacts::block2d::schema::Block2dArtifact;
-use crate::artifacts::block2d::{Block2dHandleKind, Block2dHandleTemplate, Block2dSnapshot};
+use crate::schema::Block2dArtifact;
+use crate::{Block2dHandleKind, Block2dHandleTemplate, Block2dSnapshot};
 use crate::{BlockAttribute, BlockCompatibilityRule};
 use protocol::MutationDiff;
 
@@ -276,13 +276,15 @@ pub(crate) fn block2d_index_of<T: Block2dHasId>(items: &[T], id: &str) -> Option
 
 /// 📍 Builds a handle-kinds set delta, preserving insert index via `reordered` when the id is new.
 pub fn diff_set_handle_kind(index: usize, handle_kind: Block2dHandleKind, base: &Block2dSnapshot) -> Block2dDiff {
-    let mut delta = Block2dHandleKindsDelta { added: vec![handle_kind.clone()], ..Default::default() };
-    if block2d_index_of(&base.handle_kinds, &handle_kind.id).is_none() {
+    let reordered = if block2d_index_of(&base.handle_kinds, &handle_kind.id).is_none() {
         let mut order: Vec<String> = base.handle_kinds.iter().map(|e| e.id.clone()).collect();
         let at = index.min(order.len());
-        order.insert(at, handle_kind.id);
-        delta.reordered = Some(order);
-    }
+        order.insert(at, handle_kind.id.clone());
+        Some(order)
+    } else {
+        None
+    };
+    let delta = Block2dHandleKindsDelta { added: vec![handle_kind], reordered, ..Default::default() };
     Block2dDiff { handle_kinds: Some(delta), ..Default::default() }
 }
 

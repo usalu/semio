@@ -1,8 +1,8 @@
 //! 🔺️ `move-layer` sparse diff — writes only the layer's `transform.x`/`.y`.
 
-use crate::artifacts::raster::diff::{diff_patch_layer, RasterDiff};
-use crate::artifacts::raster::schema::find_layer;
-use crate::artifacts::raster::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
+use crate::diff::{diff_patch_layer, RasterDiff};
+use crate::schema::find_layer;
+use crate::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::MoveLayer, base: &RasterSnapshot) -> protocol::MutationOutcome<RasterDiff> {

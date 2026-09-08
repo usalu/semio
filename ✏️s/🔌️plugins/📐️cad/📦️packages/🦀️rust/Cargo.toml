@@ -53,6 +53,7 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-s-artifact-cad-cad = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }

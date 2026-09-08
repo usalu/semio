@@ -1,7 +1,7 @@
 //! ↩️ Undo mutation for `connect-widgets`: `disconnect-widgets` by the created synapse's own id.
-use crate::artifacts::flow::schema::mutations::disconnect_widgets::DisconnectWidgets;
-use crate::artifacts::flow::schema::mutations::FlowMutation;
-use crate::artifacts::flow::FlowSnapshot;
+use crate::schema::mutations::disconnect_widgets::DisconnectWidgets;
+use crate::schema::mutations::FlowMutation;
+use crate::FlowSnapshot;
 
 use super::ConnectWidgets;
 

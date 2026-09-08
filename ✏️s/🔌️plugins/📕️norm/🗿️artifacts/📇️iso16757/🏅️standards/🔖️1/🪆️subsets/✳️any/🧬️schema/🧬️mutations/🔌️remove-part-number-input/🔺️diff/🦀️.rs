@@ -1,7 +1,7 @@
 //! 🔺️ `remove-part-number-input` — sparse diff construction.
 
 use super::mutation::RemovePartNumberInput;
-use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
+use crate::{Iso16757Diff, Iso16757Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &RemovePartNumberInput, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {

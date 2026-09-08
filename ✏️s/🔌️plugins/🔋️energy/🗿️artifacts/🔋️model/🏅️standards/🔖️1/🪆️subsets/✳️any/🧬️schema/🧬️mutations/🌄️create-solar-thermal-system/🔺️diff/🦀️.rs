@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `CreateSolarThermalSystem` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyModelDiff;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateSolarThermalSystem, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -14,6 +14,6 @@ pub fn diff(payload: &super::CreateSolarThermalSystem, base: &EnergyModelSnapsho
     }
     let mut model = base.model.clone();
     model.solar_thermal_systems.insert(payload.index as usize, crate::model::SolarThermalConfig { id: payload.id, collector_area_m2: payload.collector_area_m2, efficiency: payload.efficiency, storage_volume_m3: payload.storage_volume_m3, tilt_deg: payload.tilt_deg, azimuth_deg: payload.azimuth_deg });
-    protocol::MutationOutcome::new(crate::artifacts::model::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
 }
 //#endregion 🔖️Diff

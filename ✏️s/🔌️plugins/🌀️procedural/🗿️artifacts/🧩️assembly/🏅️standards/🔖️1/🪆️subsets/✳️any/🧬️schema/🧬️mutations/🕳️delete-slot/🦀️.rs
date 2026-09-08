@@ -1,9 +1,9 @@
 //! 🗑️ Assembly mutation — `DeleteSlot`: removes an id-addressed WFC slot and cascades to any
 //! incident edges (a slot cannot be referenced by a dangling edge).
 
-use crate::artifacts::assembly::diff::AssemblyDiff;
-use crate::artifacts::assembly::mutations::AssemblyMutation;
-use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+use crate::diff::AssemblyDiff;
+use crate::mutations::AssemblyMutation;
+use crate::schema::snapshot::AssemblySnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️DeleteSlot

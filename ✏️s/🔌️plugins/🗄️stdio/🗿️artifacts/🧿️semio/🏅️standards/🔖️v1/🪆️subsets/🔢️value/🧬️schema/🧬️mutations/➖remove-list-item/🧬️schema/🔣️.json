@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/value/mutation/remove-list-item.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/value/mutation/remove-list-item/schema.json",
   "title": "RemoveListItem",
   "type": "object",
   "additionalProperties": false,
@@ -19,9 +19,9 @@
       "type": "integer",
       "minimum": 0
     },
-    "kind": {
+    "mutation": {
       "const": "removeListItem",
-      "description": "Aggregate discriminator spliced in by SemioValuePathSegment; absent when the payload stands alone."
+      "description": "Aggregate discriminator spliced in by SemioValueMutation; absent when the payload stands alone."
     }
   },
   "$defs": {

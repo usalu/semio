@@ -6443,8 +6443,8 @@ export const TutorialGhostPointer: React.FC<TutorialGhostPointerProps> = ({ cue,
 // #endregion 🎥️Tutorial
 
 // #region 🗨️Dialog
-import { UIDialog, type UIDialogProps } from "../../../../🧱️elements/📨️UIDialog/🟦️.tsx";
-export { UIDialog, type UIDialogProps };
+import { UIDialog, type UIDialogProps, type UIDialogFieldBinding } from "../../../../🧱️elements/📨️UIDialog/🟦️.tsx";
+export { UIDialog, type UIDialogProps, type UIDialogFieldBinding };
 // #endregion 🗨️Dialog
 
 // #region 🎈️Level Context
@@ -7434,20 +7434,11 @@ export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled =
 /** @emoji 📏️ Tab/gap/controls cells stay transparent; glass lives on chip (+ controls) cells only so the U-gap punches through to the base floor. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
 export const windowCapFrameClass = "relative z-[2] border-0 bg-transparent";
 
-/** @emoji 📏️ Active stack reuses the same transparent cell; outline color comes from the silhouette SVG. */
-export const windowCapFrameActiveClass = windowCapFrameClass;
-
 /** @emoji 🪟️ Gap cutout stays clear — never glass — so the base/canvas floor shows through the U-notch. */
 export const windowGapFrameClass = "border-0 bg-transparent";
 
-/** @emoji 🪟️ Active gap — same transparent cell; silhouette SVG paints the notch baseline. */
-export const windowGapFrameActiveClass = windowGapFrameClass;
-
 /** @emoji 📏️ Body fill only — outer stroke is the stack silhouette SVG (tabs + cutout + controls + body); base level (mode body / floor windows float on) — host element must also carry `data-level="base"`. */
 export const windowBodyFrameClass = cn("relative border-0", surfaceClass);
-
-/** @emoji 📏️ Active body fill — outline via silhouette SVG `data-kind="active"`. */
-export const windowBodyFrameActiveClass = windowBodyFrameClass;
 
 /** @emoji 📐️ Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
 export interface ModeDockChromeGrid {
@@ -7510,9 +7501,6 @@ export const modeDockActiveTabClass = cn("relative z-20 box-border min-h-medium 
 
 /** @emoji 📏️ Maximize/controls glass cell — host stamps {@link glassClass}; fill must not span the U-gap. */
 export const windowControlsCapClass = "pointer-events-auto relative z-[2] flex shrink-0 items-stretch border-0 bg-transparent text-element";
-
-/** @emoji 📏️ Active controls cap — same transparent cell; silhouette SVG carries the active stroke. */
-export const windowControlsCapActiveClass = windowControlsCapClass;
 
 /** @emoji 📏️ Multi-tab controls cap — chip glass only; U-gap stays a clear punch-through. */
 export const windowControlsCapActiveSplitClass = "relative flex shrink-0 items-stretch border-0 bg-transparent text-element";
@@ -7927,9 +7915,6 @@ export const windowEngagementMaxWidthPx = domSizePx("layoutEngagementMaxUiSpacin
 
 /** @emoji 📐️ Merged top-left Actions body beside the engagement chrome toggle: the active engagement's status/control (when present) stacked above the categorized ad-hoc actions tree; scrolls once content exceeds the window body. */
 export const windowEngagementBodyClass = "flex min-h-medium min-w-0 max-h-full flex-auto flex-col gap-half overflow-y-auto px-single";
-
-/** @emoji 📐️ Search input body beside the search chrome toggle: matches the chrome's height for a bare input. */
-export const windowSearchBodyClass = windowEngagementBodyClass;
 
 /** @emoji 📐️ Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
 export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto overflow-y-auto px-single";
@@ -21884,7 +21869,7 @@ if (treeVitest) {
       const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../🛂️manifest/🧪️fixtures/🖱️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../../../🛂️manifest/🧬️schema/🔣️.json"); const { default: localSchema } = await import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv"); const { produce, enableMapSet } = await import("immer"); const assert: typeof import("node:assert") = (await import("node:assert")).default;
       type State = import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionState; type Change = import("../../../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts").TutorialLocalInteractionChange;
-      const validate = new Ajv({ strict: true, allErrors: true }).addSchema(localSchema).addSchema(schema).getSchema(`${schema.$id}#/$defs/TutorialLocalInteractionFixture`)!; expect(validate(fixture)).toBe(true); if (!validate(fixture)) throw new Error("Invalid tutorial local interaction fixture"); enableMapSet();
+      const validate = new Ajv({ strict: true, allErrors: true }).addSchema(localSchema).addSchema(schema).compile<{ cases: Array<{ name: string; before: State; after: State; changes: Change[] }> }>({ $ref: `${schema.$id}#/$defs/TutorialLocalInteractionFixture` }); expect(validate(fixture)).toBe(true); if (!validate(fixture)) throw new Error("Invalid tutorial local interaction fixture"); enableMapSet();
       expect(typeof source.diffTutorialLocalInteractionCold).toBe("function"); expect(typeof source.applyTutorialLocalInteractionCold).toBe("function");
       for (const row of fixture.cases) {
         const before = JSON.stringify(row.before); const changes = source.diffTutorialLocalInteractionCold(row.before, row.after); assert.deepStrictEqual(changes, row.changes, row.name);

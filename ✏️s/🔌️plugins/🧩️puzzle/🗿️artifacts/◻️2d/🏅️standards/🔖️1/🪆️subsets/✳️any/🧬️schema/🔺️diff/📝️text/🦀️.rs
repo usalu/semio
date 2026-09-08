@@ -1,8 +1,8 @@
 //! 🔺️ Puzzle 2d artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::puzzle2d::schema::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta, Puzzle2dNodesDelta};
-use crate::artifacts::puzzle2d::schema::Puzzle2dArtifact;
-use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot};
+use crate::schema::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta, Puzzle2dNodesDelta};
+use crate::schema::Puzzle2dArtifact;
+use crate::{Puzzle2dEdge, Puzzle2dNode, Puzzle2dSnapshot};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar

@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle2d snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::puzzle2d::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, PUZZLE_2D_SCHEMA};
+use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, PUZZLE_2D_SCHEMA};
 use artifact_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot

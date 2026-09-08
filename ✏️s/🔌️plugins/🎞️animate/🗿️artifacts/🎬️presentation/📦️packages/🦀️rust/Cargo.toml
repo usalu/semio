@@ -1,0 +1,71 @@
+[package]
+name = "semio-s-artifact-animate-presentation"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "animate presentation artifact"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-stdio-dwg = { workspace = true }
+semio-s-artifact-stdio-gif = { workspace = true }
+semio-s-artifact-stdio-html = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-md = { workspace = true }
+semio-s-artifact-stdio-mp4 = { workspace = true }
+semio-s-artifact-stdio-pdf = { workspace = true }
+semio-s-artifact-stdio-png = { workspace = true }
+semio-s-artifact-stdio-pptx = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-svg = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+geometry = { path = "../../../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-job.workspace = true
+semio-framework-async.workspace = true
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-ui-contract = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-scene = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+framework_hash = { package = "semio-framework-hash", path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+
+# 🎬️ animate engine topic file
+semio-framework-typeset = { path = "../../../../../../../🧰️framework/🔨️modules/🔤️typeset/📦️packages/🦀️rust", package = "semio-framework-typeset" }
+
+# 🎥️ animate_video engine topic file
+semio-framework-raster = { path = "../../../../../../../🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust", package = "semio-framework-raster" }
+semio-framework-pixels = { path = "../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+
+[features]
+default = []
+preview-window = ["winit"]
+
+[dependencies.winit]
+version = "0.30.12"
+default-features = false
+features = ["rwh_06"]
+optional = true
+
+[dev-dependencies]
+roxmltree = "0.20.0"
+serde.workspace = true
+serde_json.workspace = true
+semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+
+# 🖥️ The NATIVE host crate. Excluded from `wasm32-wasip2` because a WASI guest component never
+# hosts anything — and because `target_arch = "wasm32"` is TRUE for wasip2, a bare arch gate
+# would not exclude it. Leaving it unconditional linked the host's `resvg`/`usvg`/`rustybuzz`/
+# `fontdb`/`png`/`gif` tail into the shipped component. Mirrors 🧩️puzzle's existing split.
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }

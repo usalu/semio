@@ -1,7 +1,7 @@
 //! 🔄️ CAD play app commands — rigid transforms on the current selection plus the declarative model-definition transformations.
 
-use crate::artifacts::cad::op::CadMutation;
-use crate::artifacts::cad::CadSnapshot;
+use crate::op::CadMutation;
+use crate::CadSnapshot;
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{apply_transformation_mutations, ids_or_selection};

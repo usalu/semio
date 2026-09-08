@@ -7,8 +7,8 @@
 //! channel via `ArtifactEditor::handle`, which fans out to `🎮️commands/<group>/component.rs` (the
 //! command enum stays hand-rolled — see its own doc comment — only the match body is decomposed).
 
-use crate::artifacts::jack::op::TrinityGraphMutation;
-use crate::artifacts::jack::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
+use crate::op::TrinityGraphMutation;
+use crate::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use crate::editor::jack::config::{JackConfig, JackConfigMutation};
 use crate::editor::jack::presence::{JackPresence, JackPresenceMutation};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -52,7 +52,7 @@ pub(crate) const TRINITY_JACK_DEFAULT_QUERY: &str = "MATCH (a:Piece)-[r:Connecti
 //#region 🔖️DocumentHelpers
 /// 📦️ The default trinity graph fixture (Nakagin capsule tower) — the initial document projection.
 pub(crate) fn default_fixture() -> JackSnapshot {
-    JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap_or_else(|_| crate::artifacts::jack::empty_trinity_graph_fixture())
+    JackSnapshot::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap_or_else(|_| crate::empty_trinity_graph_fixture())
 }
 
 /// 🌱️ Seeds the initial config with the default query and its result table so the Results window is
@@ -129,18 +129,18 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
     Ok(nodes)
 }
 
-pub(crate) fn graph_from_fixture_or_default(fixture: &JackSnapshot) -> crate::artifacts::jack::Graph {
-    crate::artifacts::jack::Graph::from_fixture(fixture.clone()).unwrap_or_else(|_| crate::artifacts::jack::Graph::from_fixture(default_fixture()).expect("nakagin graph"))
+pub(crate) fn graph_from_fixture_or_default(fixture: &JackSnapshot) -> crate::Graph {
+    crate::Graph::from_fixture(fixture.clone()).unwrap_or_else(|_| crate::Graph::from_fixture(default_fixture()).expect("nakagin graph"))
 }
 
-/// 🩹️ Delegates to `crate::artifacts::jack::parse_port_key` (the one place the `nodeId@portId`
+/// 🩹️ Delegates to `crate::parse_port_key` (the one place the `nodeId@portId`
 /// convention is owned) instead of hand-rolling a second splitter here.
 pub(crate) fn split_endpoint(endpoint: &str) -> (String, String) {
-    crate::artifacts::jack::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
+    crate::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
 }
 
 pub(crate) fn fixture_to_workflow(fixture: &JackSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>, NodeGraphViewport) {
-    let scene = crate::artifacts::jack::jack_working_scene(fixture);
+    let scene = crate::jack_working_scene(fixture);
     let nodes: Vec<NodeGraphNodeRecord> = scene.nodes.iter().map(node_to_workflow_record).collect();
     let edges: Vec<NodeGraphEdgeRecord> = scene
         .edges
@@ -165,8 +165,8 @@ fn node_to_workflow_record(node: &Node) -> NodeGraphNodeRecord {
         y: node.y,
         width,
         height,
-        inputs: node.ports.iter().filter(|port| port.direction == PortDirection::In).map(|port| NodeGraphPortRecord { id: crate::artifacts::jack::port_key(&node.id, &port.id), label: Some(port.id.clone()), ..Default::default() }).collect(),
-        outputs: node.ports.iter().filter(|port| port.direction == PortDirection::Out).map(|port| NodeGraphPortRecord { id: crate::artifacts::jack::port_key(&node.id, &port.id), label: Some(port.id.clone()), ..Default::default() }).collect(),
+        inputs: node.ports.iter().filter(|port| port.direction == PortDirection::In).map(|port| NodeGraphPortRecord { id: crate::port_key(&node.id, &port.id), label: Some(port.id.clone()), ..Default::default() }).collect(),
+        outputs: node.ports.iter().filter(|port| port.direction == PortDirection::Out).map(|port| NodeGraphPortRecord { id: crate::port_key(&node.id, &port.id), label: Some(port.id.clone()), ..Default::default() }).collect(),
         ..Default::default()
     }
 }
@@ -538,11 +538,11 @@ impl ArtifactEditor for TrinityJackPlayApp {
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::jack::spr::jack_envelope_decode_owner_bundle())
+        Some(crate::spr::jack_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::artifacts::jack::spr::jack_document_store_owners())
+        Some(crate::spr::jack_document_store_owners())
     }
 
     fn build_document_store_initialization_job(
@@ -550,7 +550,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::artifacts::jack::spr::jack_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::spr::jack_document_store_initialization_job(envelope, operation, generation))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -651,7 +651,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         let fixture = doc.snapshot;
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::jack::terminology::TrinityJackLabels>(&cfg.snapshot.locale);
         let root = match body_key {
-            TRINITY_JACK_PLAY_BODY_GRAPH => edit::windows::graph::render(TRINITY_JACK_PLAY_SURFACE_GRAPH, TRINITY_JACK_PLAY_CONTROLLER_ID, TRINITY_JACK_PLAY_WINDOW_GRAPH, fixture, cfg.snapshot),
+            TRINITY_JACK_PLAY_BODY_GRAPH => edit::windows::semio_framework_graph::render(TRINITY_JACK_PLAY_SURFACE_GRAPH, TRINITY_JACK_PLAY_CONTROLLER_ID, TRINITY_JACK_PLAY_WINDOW_GRAPH, fixture, cfg.snapshot),
             TRINITY_JACK_PLAY_BODY_EDITOR => edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, fixture, cfg.snapshot),
             TRINITY_JACK_PLAY_BODY_RESULTS => edit::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, cfg.snapshot),
             TRINITY_JACK_PLAY_BODY_DOCUMENT => crate::editor::jack::panels::document::render(fixture, cfg.snapshot, labels),
@@ -663,8 +663,8 @@ impl ArtifactEditor for TrinityJackPlayApp {
     }
 
     fn window_measures(_doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let mode = cfg.snapshot.lod_mode_by_window.get(TRINITY_JACK_PLAY_WINDOW_GRAPH).map_or(edit::windows::graph::TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
-        HashMap::from([(TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(), vec![edit::windows::graph::trinity_lod_measure(TRINITY_JACK_PLAY_WINDOW_GRAPH, mode, jack_window_action)])])
+        let mode = cfg.snapshot.lod_mode_by_window.get(TRINITY_JACK_PLAY_WINDOW_GRAPH).map_or(edit::windows::semio_framework_graph::TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
+        HashMap::from([(TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(), vec![edit::windows::semio_framework_graph::trinity_lod_measure(TRINITY_JACK_PLAY_WINDOW_GRAPH, mode, jack_window_action)])])
     }
 
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
@@ -692,8 +692,8 @@ impl ArtifactEditor for TrinityJackPlayApp {
         let fixture = doc.snapshot;
         let mut parent_of: std::collections::BTreeMap<String, String> = std::collections::BTreeMap::new();
         for edge in fixture.edges() {
-            let source = crate::artifacts::jack::port_node_id(&edge.source).unwrap_or(&edge.source).to_string();
-            let target = crate::artifacts::jack::port_node_id(&edge.target).unwrap_or(&edge.target).to_string();
+            let source = crate::port_node_id(&edge.source).unwrap_or(&edge.source).to_string();
+            let target = crate::port_node_id(&edge.target).unwrap_or(&edge.target).to_string();
             parent_of.entry(target).or_insert(source);
         }
         let ordered = fixture.nodes().iter().map(|node| TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: parent_of.get(&node.id).cloned() }).collect();
@@ -872,7 +872,7 @@ mod tests {
     fn jack_envelope_wire() -> Vec<u8> {
         use store::ArtifactPack;
 
-        let snapshot = crate::artifacts::jack::empty_trinity_graph_fixture();
+        let snapshot = crate::empty_trinity_graph_fixture();
         let snapshot_pack = snapshot.encode_pack();
         let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         let wire = pack::json_to_string(&pack::json!({
@@ -890,7 +890,7 @@ mod tests {
         }))
         .into_bytes();
         let envelope = store::create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-live-load", snapshot, None);
-        let mut retirement = crate::artifacts::jack::spr::jack_envelope_decode_owner_bundle().retire_envelope(envelope);
+        let mut retirement = crate::spr::jack_envelope_decode_owner_bundle().retire_envelope(envelope);
         for _ in 0..100_000 {
             match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Jack fixture envelope retirement") {
                 store::SnapshotRetirementStep::Complete => {
@@ -1001,7 +1001,7 @@ mod tests {
         // no longer surfaces node property data directly (ticket
         // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`); inspect through the working-scene
         // accessor instead of the raw derived JSON serialization.
-        assert!(projection.nodes().iter().any(|node| node.properties.get("label") == Some(&crate::artifacts::jack::PropertyValue::String("ran-label".into()))));
+        assert!(projection.nodes().iter().any(|node| node.properties.get("label") == Some(&crate::PropertyValue::String("ran-label".into()))));
     }
 
     #[semio_framework_async_macros::async_test]

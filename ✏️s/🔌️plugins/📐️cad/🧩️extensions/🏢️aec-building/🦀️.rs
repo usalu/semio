@@ -8,7 +8,7 @@ use pack::json::{self, Value as JsonValue};
 use semio_framework_plugin::app::ArtifactContribution;
 use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
 use semio_framework_os_kernel::{pack_rt, DslValue, FromValue, ToValue};
-use semio_s_plugin_cad::artifacts::cad::{CadMutation, CadSnapshot, CAD_DOCUMENT_SCHEMA};
+use semio_s_artifact_cad_cad::{CadMutation, CadSnapshot, CAD_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;
 
 //#region 🔖️Manifest
@@ -185,9 +185,9 @@ fn building_storey_contribution() -> ArtifactContribution {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_s_plugin_cad::artifacts::cad::mutations::change_active_model_definition::ChangeActiveModelDefinition;
-    use semio_s_plugin_cad::artifacts::cad::mutations::create_node::CreateNode;
-    use semio_s_plugin_cad::artifacts::cad::CadNode;
+    use semio_s_artifact_cad_cad::mutations::change_active_model_definition::ChangeActiveModelDefinition;
+    use semio_s_artifact_cad_cad::mutations::create_node::CreateNode;
+    use semio_s_artifact_cad_cad::CadNode;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
     use semio_framework_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 
@@ -269,7 +269,7 @@ mod tests {
     /// applying `create-node` then `change-active-model-definition` directly.
     #[semio_framework_async_macros::async_test]
     async fn plan_folds_to_the_same_snapshot_as_applying_cads_leaf_mutations_by_hand() {
-        let base = semio_s_plugin_cad::artifacts::cad::empty_cad_snapshot();
+        let base = semio_s_artifact_cad_cad::empty_cad_snapshot();
         let kind = CreateBuildingStorey { storey_id: "storey-1".into(), level_index: 2, storey_name: "Level Two".into() };
 
         let folded = MutationDiff::apply(protocol::fold_plan_diff(&kind, &base).diff(), &base).expect("valid folded plan diff");
@@ -286,7 +286,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn contributed_inference_computes_a_real_building_summary() {
-        let mut base = semio_s_plugin_cad::artifacts::cad::empty_cad_snapshot();
+        let mut base = semio_s_artifact_cad_cad::empty_cad_snapshot();
         base.nodes.push(CadNode { id: "storey-1".into(), label: "Level One".into(), kind: "building-storey".into() });
         let pack = <CadSnapshot as store::ArtifactPack>::encode_pack(&base);
         let budgets = WireArtifactInferenceBudget { allocation_bytes: 1_000_000, work_units: 1, recursion_depth: 1 };

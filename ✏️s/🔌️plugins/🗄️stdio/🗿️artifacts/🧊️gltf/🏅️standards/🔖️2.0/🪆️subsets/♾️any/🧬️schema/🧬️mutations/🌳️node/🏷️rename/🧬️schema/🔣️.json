@@ -1,99 +1,101 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/node/rename.json",
-  "title": "GltfChangeNodeNameMutation",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/any/mutation/change-node-name/schema.json",
+  "title": "ChangeNodeNameMutation",
   "oneOf": [
     {
       "type": "object",
-      "required": [
-        "phase",
-        "value"
-      ],
       "additionalProperties": false,
       "properties": {
         "phase": {
           "const": "apply"
         },
         "value": {
-          "type": "object",
-          "required": [
-            "node",
-            "value"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "node": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 4294967295
-            },
-            "value": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "type": "string",
-                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
-                }
-              ]
-            }
-          }
+          "$ref": "#/$defs/GltfChangeNodeNamePayload"
         }
-      }
-    },
-    {
-      "type": "object",
+      },
       "required": [
         "phase",
         "value"
-      ],
+      ]
+    },
+    {
+      "type": "object",
       "additionalProperties": false,
       "properties": {
         "phase": {
           "const": "restore"
         },
         "value": {
-          "type": "object",
-          "required": [
-            "node",
-            "before",
-            "after"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "node": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 4294967295
+          "$ref": "#/$defs/GltfChangeNodeNameRestore"
+        }
+      },
+      "required": [
+        "phase",
+        "value"
+      ]
+    }
+  ],
+  "$defs": {
+    "GltfChangeNodeNamePayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node"
+      ],
+      "properties": {
+        "node": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
             },
-            "before": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "type": "string",
-                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
-                }
-              ]
-            },
-            "after": {
-              "oneOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "type": "string",
-                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
-                }
-              ]
+            {
+              "type": "null"
             }
-          }
+          ]
+        }
+      }
+    },
+    "GltfChangeNodeNameRestore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node"
+      ],
+      "properties": {
+        "node": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "before": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     }
-  ],
+  },
   "x-semio": {
     "id": "s.stdio.gltf.mutation.change-node-name.v1",
     "version": 1,

@@ -3,7 +3,7 @@
 //! a separate mutation per taxonomy's "Bulk/plural mutations" rule, never a bare `Vec` bolted onto
 //! the singular `delete-node`.
 
-use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
+use crate::{EquationMutation, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Payload

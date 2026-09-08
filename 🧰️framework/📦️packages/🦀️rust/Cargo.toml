@@ -26,6 +26,9 @@ semio-framework-mesh-engine = { path = "../../🔨️modules/🏗️mesh-engine/
 # 🎯️ OS kernel owns spr/dsl types — aliases avoid dual trees / cycle with old implementations.
 semio-framework-os-kernel = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+# 🧬️ `register_scope_schema_exports`/`resolve_schema_export` — the `(scope id, export id, format id)`
+# registry this crate's mounted `interaction::schema` leaf declares its named exports into.
+semio-framework-schema = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -9,7 +9,7 @@
 //! `null`; the two nested states `None` and `Some(None)` are NOT distinguishable in this file's
 //! committed diff, and nothing here asserts that they are.
 
-use crate::artifacts::en1996::{En1996Diff, En1996Mutation, En1996Snapshot};
+use crate::{En1996Diff, En1996Mutation, En1996Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -37,7 +37,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 async fn downgrades_manufacturing_control_to_class_4() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-masonry-class applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-masonry-class/downgrades-manufacturing-control-to-class-4: the applied state differs from the committed after-snapshot");
-    assert_eq!(applied.masonry_class, crate::artifacts::en1996::MasonryClass::Class4, "change-masonry-class/downgrades-manufacturing-control-to-class-4: masonry_class must read `MasonryClass::Class4` once the change lands");
+    assert_eq!(applied.masonry_class, crate::MasonryClass::Class4, "change-masonry-class/downgrades-manufacturing-control-to-class-4: masonry_class must read `MasonryClass::Class4` once the change lands");
     assert_eq!(applied.annex, before().annex, "change-masonry-class/downgrades-manufacturing-control-to-class-4: the annex decides WHETHER the class-dependent γ_M table is consulted at all and must not change with the class");
 }
 
@@ -100,7 +100,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-masonry-class diff decodes");
-    assert_eq!(decoded.masonry_class, Some(crate::artifacts::en1996::MasonryClass::Class4), "change-masonry-class/downgrades-manufacturing-control-to-class-4: the committed diff must carry masonryClass = `MasonryClass::Class4`");
+    assert_eq!(decoded.masonry_class, Some(crate::MasonryClass::Class4), "change-masonry-class/downgrades-manufacturing-control-to-class-4: the committed diff must carry masonryClass = `MasonryClass::Class4`");
     assert!(decoded.annex.is_none(), "change-masonry-class/downgrades-manufacturing-control-to-class-4: change-masonry-class writes masonryClass and must leave `annex` untouched");
     assert!(decoded.f_k_mpa.is_none(), "change-masonry-class/downgrades-manufacturing-control-to-class-4: change-masonry-class writes masonryClass and must leave `f_k_mpa` untouched");
     assert!(decoded.artifact.is_none(), "change-masonry-class/downgrades-manufacturing-control-to-class-4: a field-scoped change must never fall back to a whole-artifact replacement");
@@ -116,5 +116,5 @@ async fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-masonry-class diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-masonry-class/downgrades-manufacturing-control-to-class-4: the committed diff did not carry before to after");
-    assert_eq!(produced.masonry_class, crate::artifacts::en1996::MasonryClass::Class4, "change-masonry-class/downgrades-manufacturing-control-to-class-4: applying the committed diff must land masonry_class on `MasonryClass::Class4`");
+    assert_eq!(produced.masonry_class, crate::MasonryClass::Class4, "change-masonry-class/downgrades-manufacturing-control-to-class-4: applying the committed diff must land masonry_class on `MasonryClass::Class4`");
 }

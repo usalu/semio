@@ -1,12 +1,12 @@
 //! 🧬️ Exact retained recipes for the live delete, disconnect, move, and widget replacement lanes.
 
 use super::SceneCopy;
-use crate::artifacts::flow::retirement::MutationRetirementFactory;
+use crate::retirement::MutationRetirementFactory;
 use super::super::{bytes::{Equality, TextCopy}, Owner, Retirement};
 use super::super::super::{flow_widget_id, FlowMutation, FlowWorkingScene};
-use crate::artifacts::flow::schema::mutations::{connect_widgets::ConnectWidgets, create_widget::CreateWidget, move_widgets::MoveWidgets, replace_widget::ReplaceWidget};
-use flow::{FlowLayoutEntry, Widget, WidgetLayout};
-use flow::retained::{FlowCopyAllocationBudget, FlowWidgetCopy};
+use crate::schema::mutations::{connect_widgets::ConnectWidgets, create_widget::CreateWidget, move_widgets::MoveWidgets, replace_widget::ReplaceWidget};
+use semio_framework_artifact_flow_flow::{FlowLayoutEntry, Widget, WidgetLayout};
+use semio_framework_artifact_flow_flow::retained::{FlowCopyAllocationBudget, FlowWidgetCopy};
 use std::{mem::ManuallyDrop, sync::Arc};
 use store::os_dsl::schema::ordered::{Grant, RetirementStep, Step, UpdateCursor};
 
@@ -302,7 +302,7 @@ pub(super) mod tests {
     pub(in super::super) fn source(label: &str) -> FlowWorkingScene {
         FlowWorkingScene {
             widgets: ["a", "b", "c"].into_iter().map(|id| Widget::InputSlider { id: id.into(), label: if id == "b" { label.into() } else { id.into() }, value: 1.0, min: 0.0, max: 10.0, step: 1.0 }).collect(),
-            synapses: [("ab", "a", "b"), ("bc", "b", "c"), ("ac", "a", "c")].into_iter().map(|(id, from, to)| flow::SynapseSpec { id: id.into(), from: from.into(), from_port: "value".into(), to: to.into(), to_port: "value".into() }).collect(),
+            synapses: [("ab", "a", "b"), ("bc", "b", "c"), ("ac", "a", "c")].into_iter().map(|(id, from, to)| semio_framework_artifact_flow_flow::SynapseSpec { id: id.into(), from: from.into(), from_port: "value".into(), to: to.into(), to_port: "value".into() }).collect(),
             layout: [("b".to_owned(), WidgetLayout { x: 1.0, y: 2.0 })].into_iter().collect(),
         }
     }

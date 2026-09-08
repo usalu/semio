@@ -1,9 +1,9 @@
 //! ↩️ `change-t-ef-mm` inverse — restores the pre-change `t_ef_mm` from BASE state; `change` is its own
 //! inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::en1996::mutations::change_t_ef_mm::ChangeTEfMm;
-use crate::artifacts::en1996::mutations::En1996Mutation;
-use crate::artifacts::en1996::En1996Snapshot;
+use crate::mutations::change_t_ef_mm::ChangeTEfMm;
+use crate::mutations::En1996Mutation;
+use crate::En1996Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeTEfMm, base: &En1996Snapshot) -> Vec<En1996Mutation> {

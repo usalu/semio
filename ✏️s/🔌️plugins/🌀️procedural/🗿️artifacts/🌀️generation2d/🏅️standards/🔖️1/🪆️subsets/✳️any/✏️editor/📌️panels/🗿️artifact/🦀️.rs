@@ -1,6 +1,6 @@
 //! 📄️ Generation2d play app panel — the document tree: widgets of the current fixture.
 
-use crate::artifacts::generation2d::{widget_id, Generation2dSnapshot};
+use crate::{widget_id, Generation2dSnapshot};
 use crate::editor::generation2d::config::Generation2dConfig;
 use crate::editor::generation2d::terminology::Generation2dLabels;
 use semio_framework_plugin::{tree_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};

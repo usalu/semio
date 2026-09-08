@@ -1,7 +1,7 @@
 //! ↩️ `rotate-object` — undo restores the base-state rotation; missing id ⇒ `Vec::new()`.
 
 use super::RotateObject;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &RotateObject, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

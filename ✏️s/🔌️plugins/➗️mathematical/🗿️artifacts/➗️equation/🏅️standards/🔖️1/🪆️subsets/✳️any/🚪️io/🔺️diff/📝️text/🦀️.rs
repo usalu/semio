@@ -1,7 +1,7 @@
 //! 🔺️ Equation artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::artifacts::equation::schema::EquationArtifact;
-use crate::artifacts::equation::{equation_children_from_state, EquationGeometry, EquationGraph, EquationSnapshot};
+use crate::schema::EquationArtifact;
+use crate::{equation_children_from_state, EquationGeometry, EquationGraph, EquationSnapshot};
 use protocol::MutationDiff;
 
 //#region 📖️SemioGrammar
@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-pub use crate::artifacts::equation::schema::diff::*;
+pub use crate::schema::diff::*;
 
 //#region 🔖️Apply
 impl EquationDiff {
@@ -103,8 +103,8 @@ impl MutationDiff<EquationSnapshot> for EquationDiff {
 /// geometry-scoped mutation always regenerates all three co-derived children together (text/table/
 /// value are three projections of the SAME `(graph, geometry)` state, not independently-editable
 /// slots).
-pub fn diff_from_state(graph: EquationGraph, geometry: EquationGeometry) -> EquationDiff {
-    let (notation, results, computed) = equation_children_from_state(&graph, &geometry);
+pub fn diff_from_state(graph: &EquationGraph, geometry: &EquationGeometry) -> EquationDiff {
+    let (notation, results, computed) = equation_children_from_state(graph, geometry);
     EquationDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() }
 }
 //#endregion 🔖️Builders
@@ -120,13 +120,13 @@ mod tests {
         // `(graph, geometry)` pair — a graph-scoped change regenerates all three handles, unlike the
         // old per-slot ("graph slot only") isolation this test named before the migration.
         let base = EquationSnapshot::default();
-        let mut graph = crate::artifacts::equation::equation_graph(&base);
+        let mut graph = crate::equation_graph(&base);
         graph.algorithm = "components".into();
-        let geometry = crate::artifacts::equation::equation_geometry(&base);
-        let diff = diff_from_state(graph, geometry.clone());
+        let geometry = crate::equation_geometry(&base);
+        let diff = diff_from_state(&graph, &geometry);
         let applied = diff.apply(&base).expect("valid mutation diff");
-        assert_eq!(crate::artifacts::equation::equation_graph(&applied).algorithm, "components");
-        assert_eq!(crate::artifacts::equation::equation_geometry(&applied), geometry);
+        assert_eq!(crate::equation_graph(&applied).algorithm, "components");
+        assert_eq!(crate::equation_geometry(&applied), geometry);
     }
 
     #[semio_framework_async_macros::async_test]

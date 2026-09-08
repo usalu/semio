@@ -8,7 +8,7 @@
 //! `SequenceSnapshot` pack directly instead of as a `CsvSnapshot` pack — this impl's `deserialize`
 //! decodes the foreign `CsvSnapshot` first, as the coordinate (`CSV_DIALECT`) requires.
 
-use crate::artifacts::sequence::{SequenceFixture, SequenceSnapshot, SequenceStep, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::{SequenceFixture, SequenceSnapshot, SequenceStep, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

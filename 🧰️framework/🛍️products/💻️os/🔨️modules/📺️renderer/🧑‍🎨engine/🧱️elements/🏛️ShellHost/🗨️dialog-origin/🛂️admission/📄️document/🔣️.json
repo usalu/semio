@@ -1,0 +1,103 @@
+{
+  "admissions": [
+    { "background": true, "runtimeKey": "document-a", "instanceId": 2, "admitted": false, "closed": [] },
+    { "background": true, "runtimeKey": "document-b", "instanceId": 1, "admitted": false, "closed": [] },
+    { "background": true, "runtimeKey": "document-b", "instanceId": 2, "admitted": true, "closed": [] },
+    { "background": false, "runtimeKey": "document-a", "instanceId": 2, "admitted": true, "closed": ["document-a:owner-a"] },
+    { "background": false, "runtimeKey": "document-b", "instanceId": 1, "admitted": true, "closed": ["document-a:owner-a"] },
+    { "background": false, "runtimeKey": "document-b", "instanceId": 2, "admitted": true, "closed": [] }
+  ],
+  "cases": [
+    {
+      "id": "socket-rejected",
+      "fail": "socket",
+      "replace": "none",
+      "outcome": "failed",
+      "sequence": [
+        "socket",
+        "close",
+        "retire"
+      ],
+      "timers": 0
+    },
+    {
+      "id": "attach-rejected",
+      "fail": "attach",
+      "replace": "none",
+      "outcome": "failed",
+      "sequence": [
+        "socket",
+        "attach",
+        "close",
+        "detach",
+        "retire"
+      ],
+      "timers": 0
+    },
+    {
+      "id": "socket-deadline",
+      "fail": "deadline",
+      "replace": "none",
+      "outcome": "failed",
+      "sequence": [
+        "socket",
+        "close",
+        "retire"
+      ],
+      "timers": 0
+    },
+    {
+      "id": "replaced-before-attach",
+      "fail": "none",
+      "replace": "socket",
+      "outcome": "retired",
+      "sequence": [
+        "socket",
+        "close",
+        "retire"
+      ],
+      "timers": 0
+    },
+    {
+      "id": "replaced-during-attach",
+      "fail": "none",
+      "replace": "attach",
+      "outcome": "retired",
+      "sequence": [
+        "socket",
+        "attach",
+        "close",
+        "detach",
+        "retire"
+      ],
+      "timers": 0
+    },
+    {
+      "id": "attached",
+      "fail": "none",
+      "replace": "none",
+      "outcome": "ready",
+      "sequence": [
+        "socket",
+        "attach",
+        "commit",
+        "retire"
+      ],
+      "timers": 0
+    }
+  ],
+  "lateAttachment": ["attach-a", "attached-a", "detach", "attach-b"],
+  "successorAttachment": ["attach-a", "detach", "attach-b"],
+  "backgroundSessions": {
+    "reuse": ["create-1", "visit-1", "visit-1", "release-1"],
+    "replacement": ["create-1", "visit-1", "release-1", "create-2", "visit-2", "release-2"],
+    "explicitRetirement": ["create-1", "visit-1", "release-1", "create-2", "visit-2", "release-2"],
+    "authorityChanged": ["create-1", "visit-1", "release-1", "create-2", "visit-2", "release-2"],
+    "closedDuringCreate": ["create-1", "release-1"],
+    "retry": ["create-failed", "create-1", "visit-1", "release-1"]
+  },
+  "closeFailures": [
+    { "attached": false, "sequence": ["socket", "close", "retire"] },
+    { "attached": true, "sequence": ["socket", "attach", "close", "detach", "retire"] }
+  ]
+}

@@ -1,6 +1,6 @@
 //! 🧬️ Playground snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::playground::PLAYGROUND_DOCUMENT_SCHEMA;
+use crate::PLAYGROUND_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 
 //#region 🔖️Snapshot

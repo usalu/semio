@@ -1,6 +1,6 @@
 //! 🔺️ `remove-point` — sparse diff construction.
 
-use crate::artifacts::equation::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationSnapshot};
+use crate::{equation_children_from_state, equation_geometry, equation_graph, EquationDiff, EquationSnapshot};
 
 //#region 🔖️Diff
 /// 🔺️ Out-of-range `index` is Error `target-missing`.

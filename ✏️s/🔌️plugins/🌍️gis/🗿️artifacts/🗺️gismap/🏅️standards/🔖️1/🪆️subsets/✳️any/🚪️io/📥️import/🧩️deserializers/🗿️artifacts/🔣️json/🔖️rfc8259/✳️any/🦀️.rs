@@ -1,5 +1,5 @@
 //! gismap <- json
-use crate::artifacts::gismap::GisMapSnapshot;
+use crate::GisMapSnapshot;
 use dsl::FromValue;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 

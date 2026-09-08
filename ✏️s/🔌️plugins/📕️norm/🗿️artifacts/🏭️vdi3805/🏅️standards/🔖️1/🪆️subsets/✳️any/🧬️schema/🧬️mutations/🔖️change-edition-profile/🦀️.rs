@@ -1,9 +1,9 @@
 //! 🔁️ `change-edition-profile` — upserts one sheet's edition-profile override, addressed by sheet
-//! number (the format's native key — `crate::artifacts::vdi3805::edition_profile` is name/code-keyed,
+//! number (the format's native key — `crate::edition_profile` is name/code-keyed,
 //! not id-keyed).
 
 
-use crate::artifacts::vdi3805::{EditionProfileChoice, Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{EditionProfileChoice, Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]

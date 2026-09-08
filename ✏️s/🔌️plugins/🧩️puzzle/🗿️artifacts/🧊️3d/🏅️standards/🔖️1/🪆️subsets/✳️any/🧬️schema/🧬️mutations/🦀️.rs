@@ -9,8 +9,8 @@
 //! newtype (`🔖️PlaySnapshot`) live here too, same shape as `puzzle2d`/`puzzle5d`'s: the bridge
 //! round-trips through the typed `Puzzle3dSnapshot` instead of hand-splicing JSON per mutation kind.
 
-use crate::artifacts::puzzle3d::diff::Puzzle3dDiff;
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::diff::Puzzle3dDiff;
+use crate::Puzzle3dSnapshot;
 use protocol::{Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -137,7 +137,7 @@ pub use super::move_object::mutation::{move_object, MoveObject};
 pub use super::move_reference::mutation::{move_reference, MoveReference};
 pub use super::move_target_volume::mutation::{move_target_volume, MoveTargetVolume};
 pub use super::remove_object_vortex::mutation::{remove_object_vortex, RemoveObjectVortex};
-pub use super::replace_attraction_geometry::mutation::{replace_attraction_geometry, ReplaceAttractionGeometry};
+pub use super::replace_attraction_semio_framework_geometry::mutation::{replace_attraction_geometry, ReplaceAttractionGeometry};
 pub use super::replace_kind_catalogs::mutation::{replace_kind_catalogs, ReplaceKindCatalogs};
 pub use super::replace_object_vortex::mutation::{replace_object_vortex, ReplaceObjectVortex};
 pub use super::replace_reference_source::mutation::{replace_reference_source, ReplaceReferenceSource};
@@ -249,7 +249,7 @@ pub fn puzzle3d_snapshot_mutations(before: &Puzzle3dSnapshot, after: &Puzzle3dSn
                     || prior.x != attraction.x
                     || prior.y != attraction.y
                 {
-                    mutations.push(replace_attraction_geometry(attraction.id.clone(), attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y));
+                    mutations.push(replace_attraction_geometry(crate::mutations::ReplaceAttractionGeometry { id: attraction.id.clone(), new_gap: attraction.gap, new_shift: attraction.shift, new_rise: attraction.rise, new_rotation: attraction.rotation, new_turn: attraction.turn, new_tilt: attraction.tilt, new_x: attraction.x, new_y: attraction.y }));
                 }
             }
         }
@@ -589,7 +589,7 @@ mod tests {
     #[test]
     fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
         let before = serde_json::json!({
-            "schema": crate::artifacts::puzzle3d::PUZZLE_3D_SCHEMA, "domain": "architecture",
+            "schema": crate::PUZZLE_3D_SCHEMA, "domain": "architecture",
             "meta": {},
             "objects": [
                 { "id": "o1", "anchor": "fixed", "origin": [0.0,0.0,0.0], "vortices": [] },
@@ -598,7 +598,7 @@ mod tests {
             "attractions": [], "targetVolumes": [], "references": [],
         });
         let after = serde_json::json!({
-            "schema": crate::artifacts::puzzle3d::PUZZLE_3D_SCHEMA, "domain": "architecture",
+            "schema": crate::PUZZLE_3D_SCHEMA, "domain": "architecture",
             "meta": {},
             "objects": [
                 { "id": "o2", "anchor": "fixed", "origin": [9.0,0.0,0.0], "vortices": [] },
@@ -630,7 +630,7 @@ mod tests {
 
     #[test]
     fn move_object_diff_absorb_law() {
-        use crate::artifacts::puzzle3d::Puzzle3dObject;
+        use crate::Puzzle3dObject;
         let base = empty();
         let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
         let with_object = MutationDiff::<Puzzle3dSnapshot>::apply(create_object(object, None).diff(&base).diff(), &base).expect("valid mutation diff");
@@ -646,7 +646,7 @@ mod tests {
 
     #[test]
     fn create_delete_object_inverse_law() {
-        use crate::artifacts::puzzle3d::Puzzle3dObject;
+        use crate::Puzzle3dObject;
         let base = empty();
         let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &create_object(object.clone(), None)));
@@ -656,7 +656,7 @@ mod tests {
 
     #[test]
     fn object_field_mutations_inverse_law() {
-        use crate::artifacts::puzzle3d::{Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dScale, Puzzle3dVortex};
+        use crate::{Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dScale, Puzzle3dVortex};
         let base = empty();
         let object = Puzzle3dObject {
             id: "o1".into(),
@@ -694,7 +694,7 @@ mod tests {
 
     #[test]
     fn connect_disconnect_vortices_inverse_law_and_cascade() {
-        use crate::artifacts::puzzle3d::{Puzzle3dObject, Puzzle3dVortex};
+        use crate::{Puzzle3dObject, Puzzle3dVortex};
         let base = empty();
         let object_a = Puzzle3dObject {
             id: "a".into(),
@@ -728,7 +728,7 @@ mod tests {
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&projection, &connect_vortices("t1".into(), "a:va".into(), "b:vb".into(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)));
         let connected = MutationDiff::<Puzzle3dSnapshot>::apply(connect_vortices("t1".into(), "a:va".into(), "b:vb".into(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0).diff(&projection).diff(), &projection).expect("valid mutation diff");
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_vortices("t1".into())));
-        semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &replace_attraction_geometry("t1".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)));
+        semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &replace_attraction_geometry(crate::mutations::ReplaceAttractionGeometry { id: "t1".into(), new_gap: 1.0, new_shift: 2.0, new_rise: 3.0, new_rotation: 4.0, new_turn: 5.0, new_tilt: 6.0, new_x: 7.0, new_y: 8.0 })));
         let deleted = delete_object("a".into());
         let after_delete = MutationDiff::<Puzzle3dSnapshot>::apply(deleted.diff(&connected).diff(), &connected).expect("valid mutation diff");
         assert!(!after_delete.attractions.iter().any(|attraction| attraction.id == "t1"), "delete-object must sever attractions touching its vortices");
@@ -737,7 +737,7 @@ mod tests {
 
     #[test]
     fn target_volume_and_reference_inverse_law() {
-        use crate::artifacts::puzzle3d::{Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dTargetVolume};
+        use crate::{Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dTargetVolume};
         let base = empty();
         let volume = Puzzle3dTargetVolume { id: "tv1".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: false, locked: false };
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &create_target_volume(volume.clone(), None)));
@@ -762,7 +762,7 @@ mod tests {
 
     #[test]
     fn document_scalar_mutations_inverse_law() {
-        use crate::artifacts::puzzle3d::{Puzzle3dCompatSpecificity, Puzzle3dKindCatalogs};
+        use crate::{Puzzle3dCompatSpecificity, Puzzle3dKindCatalogs};
         let base = empty();
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &change_domain("mechanical".into())));
         semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle3dCompatSpecificity::Vortex)));
@@ -800,7 +800,7 @@ mod tests {
 
     #[test]
     fn create_duplicate_id_is_fatal_and_never_applies() {
-        use crate::artifacts::puzzle3d::Puzzle3dObject;
+        use crate::Puzzle3dObject;
         let mut base = empty();
         let object = Puzzle3dObject { id: "o0".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
         base.objects.push(object.clone());

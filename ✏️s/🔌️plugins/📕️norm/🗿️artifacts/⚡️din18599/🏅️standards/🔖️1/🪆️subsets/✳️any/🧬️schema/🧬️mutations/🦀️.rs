@@ -18,8 +18,8 @@
 //! All triads are mounted directly as `mutations`-sibling modules in `🦀️.rs` (this lane's agent
 //! owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed here).
 
-use crate::artifacts::din18599::diff::Din18599Diff;
-use crate::artifacts::din18599::Din18599Snapshot;
+use crate::diff::Din18599Diff;
+use crate::Din18599Snapshot;
 
 //#region 🔖️Leaves
 use super::change_annual_limit_kwh;
@@ -105,7 +105,7 @@ impl Din18599Mutation {
         mutations.push(Din18599Mutation::ChangeAnnualLimitKwh(change_annual_limit_kwh::ChangeAnnualLimitKwh { new_annual_limit_kwh: snapshot.annual_limit_kwh }));
         mutations.push(Din18599Mutation::ChangeEnergyCarrier(change_energy_carrier::ChangeEnergyCarrier { new_energy_carrier: snapshot.energy_carrier.clone() }));
         mutations.push(Din18599Mutation::ChangeReferenceQPKwh(change_reference_q_p_kwh::ChangeReferenceQPKwh { new_reference_q_p_kwh: snapshot.reference_q_p_kwh }));
-        mutations.push(Din18599Mutation::UpdateClimate(update_climate::UpdateClimate { new_climate: crate::artifacts::din18599::din18599_climate(snapshot) }));
+        mutations.push(Din18599Mutation::UpdateClimate(update_climate::UpdateClimate { new_climate: crate::din18599_climate(snapshot) }));
         mutations
     }
 }
@@ -120,7 +120,7 @@ mod tests {
 
     fn every_mutation() -> Vec<Din18599Mutation> {
         vec![
-            Din18599Mutation::ChangeUseClass(change_use_class::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office }),
+            Din18599Mutation::ChangeUseClass(change_use_class::ChangeUseClass { new_use_class: crate::UseClass::Office }),
             Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 }),
             Din18599Mutation::ChangeOccupants(change_occupants::ChangeOccupants { new_occupants: 5 }),
             Din18599Mutation::ChangeHT(change_h_t::ChangeHT { new_h_t: 95.0 }),
@@ -133,7 +133,7 @@ mod tests {
             Din18599Mutation::ChangeEnergyCarrier(change_energy_carrier::ChangeEnergyCarrier { new_energy_carrier: "district_heat".to_string() }),
             Din18599Mutation::ChangeReferenceQPKwh(change_reference_q_p_kwh::ChangeReferenceQPKwh { new_reference_q_p_kwh: 10500.0 }),
             Din18599Mutation::UpdateClimate(update_climate::UpdateClimate {
-                new_climate: crate::artifacts::din18599::MonthlyClimate { theta_e_c: [-12.0, -9.0, -2.0, 6.0, 15.0, 22.0, 25.0, 24.0, 18.0, 9.0, -1.0, -8.0], g_h_w_m2: [25.0, 55.0, 95.0, 135.0, 175.0, 195.0, 205.0, 185.0, 135.0, 85.0, 35.0, 18.0] },
+                new_climate: crate::MonthlyClimate { theta_e_c: [-12.0, -9.0, -2.0, 6.0, 15.0, 22.0, 25.0, 24.0, 18.0, 9.0, -1.0, -8.0], g_h_w_m2: [25.0, 55.0, 95.0, 135.0, 175.0, 195.0, 205.0, 185.0, 135.0, 85.0, 35.0, 18.0] },
             }),
         ]
     }
@@ -185,17 +185,17 @@ mod tests {
     async fn update_climate_satisfies_the_inverse_and_absorb_laws() {
         let base = Din18599Snapshot::default();
         let mutation = Din18599Mutation::UpdateClimate(update_climate::UpdateClimate {
-            new_climate: crate::artifacts::din18599::MonthlyClimate { theta_e_c: [-12.0, -9.0, -2.0, 6.0, 15.0, 22.0, 25.0, 24.0, 18.0, 9.0, -1.0, -8.0], g_h_w_m2: [25.0, 55.0, 95.0, 135.0, 175.0, 195.0, 205.0, 185.0, 135.0, 85.0, 35.0, 18.0] },
+            new_climate: crate::MonthlyClimate { theta_e_c: [-12.0, -9.0, -2.0, 6.0, 15.0, 22.0, 25.0, 24.0, 18.0, 9.0, -1.0, -8.0], g_h_w_m2: [25.0, 55.0, 95.0, 135.0, 175.0, 195.0, 205.0, 185.0, 135.0, 85.0, 35.0, 18.0] },
         });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
-        let d2 = Din18599Mutation::ChangeUseClass(change_use_class::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office }).diff(&base).diff().clone();
+        let d2 = Din18599Mutation::ChangeUseClass(change_use_class::ChangeUseClass { new_use_class: crate::UseClass::Office }).diff(&base).diff().clone();
         protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     #[semio_framework_async_macros::async_test]
     async fn change_use_class_satisfies_the_inverse_and_absorb_laws() {
         let base = Din18599Snapshot::default();
-        let mutation = Din18599Mutation::ChangeUseClass(change_use_class::ChangeUseClass { new_use_class: crate::artifacts::din18599::UseClass::Office });
+        let mutation = Din18599Mutation::ChangeUseClass(change_use_class::ChangeUseClass { new_use_class: crate::UseClass::Office });
         protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = Din18599Mutation::ChangeHeatedAreaM2(change_heated_area_m2::ChangeHeatedAreaM2 { new_heated_area_m2: 120.0 }).diff(&base).diff().clone();

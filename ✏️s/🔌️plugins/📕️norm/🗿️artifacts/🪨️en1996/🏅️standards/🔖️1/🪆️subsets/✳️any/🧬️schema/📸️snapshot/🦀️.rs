@@ -1,8 +1,8 @@
 //! 🧱️ EN 1996 snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::en1996::{part_2, MasonryClass};
+use crate::{part_2, MasonryClass};
 use crate::document::{AnnexChoice, DesignSituation};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1996 document snapshot.

@@ -7,8 +7,8 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::mutations::LayoutMutation;
+use crate::LayoutSnapshot;
 use protocol::{Mutation, MutationDiff};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
@@ -37,7 +37,7 @@ async fn repaints_the_rect_fill_without_touching_the_stroke() {
     let after = applied();
     let page = &after.pages[0];
     let frame = page.frames.iter().find(|frame| frame.id() == "frame-rect").expect("the rect frame survives");
-    let crate::artifacts::layout::Frame::Rect { fill, stroke, bounds, .. } = frame else { panic!("change-frame-fill targets the rect frame") };
+    let crate::Frame::Rect { fill, stroke, bounds, .. } = frame else { panic!("change-frame-fill targets the rect frame") };
     assert_eq!(*fill, Some([0.5, 0.25, 0.75, 1.0]), "change-frame-fill must write the payload RGBA into the rect's fill");
     assert_eq!(*stroke, None, "change-frame-fill must leave the stroke cleared as BASE had it");
     assert_eq!((bounds.x, bounds.width), (20.0, 60.0), "change-frame-fill must not move or resize the frame");
@@ -109,7 +109,7 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::layout::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
+    let decoded: crate::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
     let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-frame-fill/repaints-the-rect-frame-fill: committed diff JSON is not canonical");
@@ -119,7 +119,7 @@ async fn committed_diff_is_canonical() {
 /// description of the change `change-frame-fill` makes, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::layout::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
+    let decoded: crate::LayoutDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes into the artifact's diff type");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-frame-fill/repaints-the-rect-frame-fill: committed diff did not carry before to after");
 }

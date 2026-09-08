@@ -1,7 +1,7 @@
 //! 🔺️ `create-subject` — sparse diff construction.
 
 use super::mutation::CreateSubject;
-use crate::artifacts::iso16757::{Iso16757Diff, Iso16757Snapshot};
+use crate::{Iso16757Diff, Iso16757Snapshot};
 
 //#region 🔖️Diff
 /// 🔺️ A duplicate `id` is `mutation.duplicate-id`; an out-of-range explicit index clamps to the

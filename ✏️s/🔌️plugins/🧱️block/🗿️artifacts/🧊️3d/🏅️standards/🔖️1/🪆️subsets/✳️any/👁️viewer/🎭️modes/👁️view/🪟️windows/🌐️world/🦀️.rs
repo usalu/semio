@@ -7,7 +7,7 @@
 //! `framework.window.mesh`) but writes its own extended render — `MeshWindowKit::render` alone has no
 //! vortex slot, and this window's whole point is representations AND rim vortices together.
 
-use crate::artifacts::block3d::{vortex_kinds_of, Block3dSnapshot};
+use crate::{vortex_kinds_of, Block3dSnapshot};
 use crate::BlockRepresentation;
 use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, World3dScene, world3d_selection_json, BuiltNode, UiAssemblyResult, WindowKindDefinition, WorldProjectionConfig};
 use semio_framework_ui_contract::SurfaceKind;
@@ -127,7 +127,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_empty_document() {
-        let document = crate::artifacts::block3d::schema::empty_block3d_snapshot();
+        let document = crate::schema::empty_block3d_snapshot();
         let node = render(&document).expect("the empty document must still assemble a scene surface");
         assert!(matches!(node.component, semio_framework_plugin::Component::Surface(_)));
     }

@@ -1,8 +1,8 @@
 //! 🔺️ `change-area-mm2` sparse diff construction — writes only `En1996Diff.area_mm2` from the payload.
 
-use crate::artifacts::en1996::diff::En1996Diff;
-use crate::artifacts::en1996::mutations::change_area_mm2::ChangeAreaMm2;
-use crate::artifacts::en1996::En1996Snapshot;
+use crate::diff::En1996Diff;
+use crate::mutations::change_area_mm2::ChangeAreaMm2;
+use crate::En1996Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeAreaMm2, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {

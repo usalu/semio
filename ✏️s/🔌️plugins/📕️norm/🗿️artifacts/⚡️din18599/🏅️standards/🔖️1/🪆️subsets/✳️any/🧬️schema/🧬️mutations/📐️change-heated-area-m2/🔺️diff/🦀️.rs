@@ -1,8 +1,8 @@
 //! 🔺️ `change-heated-area-m2` sparse diff construction — writes only `Din18599Diff.heated_area_m2` from the payload.
 
-use crate::artifacts::din18599::diff::Din18599Diff;
-use crate::artifacts::din18599::mutations::change_heated_area_m2::ChangeHeatedAreaM2;
-use crate::artifacts::din18599::Din18599Snapshot;
+use crate::diff::Din18599Diff;
+use crate::mutations::change_heated_area_m2::ChangeHeatedAreaM2;
+use crate::Din18599Snapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeHeatedAreaM2, base: &Din18599Snapshot) -> protocol::MutationOutcome<Din18599Diff> {

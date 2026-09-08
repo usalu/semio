@@ -11,7 +11,7 @@
 //! `Puzzle2dFillRuntime` in `Config` (count, seed, accepted count, lifecycle) plus the placements
 //! already committed to the document, which is exactly what `brushFillSessionStep` resumes from.
 
-use crate::artifacts::puzzle2d::op::{Puzzle2dMutation, Puzzle2dPlaySnapshot};
+use crate::op::{Puzzle2dMutation, Puzzle2dPlaySnapshot};
 use crate::editor::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dFillLifecycle, Puzzle2dFillRuntime, Puzzle2dFillText};
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::Puzzle2dPlayApp;
@@ -383,7 +383,7 @@ impl<'a> FillPlacementPublishView<'a> {
 }
 
 /// 📤️ Pre-credits the final event destination before materializing the fixed terminal owner.
-fn publish_fixed_placement(placement: FillPlacementPublishView<'_>, mutations: &mut Vec<Puzzle2dMutation>) -> Result<(), &'static str> {
+fn publish_fixed_placement(placement: &FillPlacementPublishView<'_>, mutations: &mut Vec<Puzzle2dMutation>) -> Result<(), &'static str> {
     if placement.handle_count > infinite_canvas::BOARD_FILL_KIND_HANDLE_CAPACITY {
         return Err("puzzle2d-fill-apply-handle-capacity");
     }
@@ -393,7 +393,7 @@ fn publish_fixed_placement(placement: FillPlacementPublishView<'_>, mutations: &
     };
     let mut required_bytes = size_of::<Puzzle2dMutation>()
         .checked_mul(2)
-        .and_then(|bytes| bytes.checked_add(size_of::<crate::artifacts::puzzle2d::Puzzle2dHandle>().checked_mul(placement.handle_count)?))
+        .and_then(|bytes| bytes.checked_add(size_of::<crate::Puzzle2dHandle>().checked_mul(placement.handle_count)?))
         .and_then(|bytes| bytes.checked_add(placement.node_id.as_str().len().checked_mul(2)?))
         .and_then(|bytes| bytes.checked_add(placement.edge_id.as_str().len()))
         .and_then(|bytes| bytes.checked_add(placement.edge_kind.as_str().len()))
@@ -415,9 +415,9 @@ fn publish_fixed_placement(placement: FillPlacementPublishView<'_>, mutations: &
     handles.try_reserve_exact(placement.handle_count).map_err(|_| "puzzle2d-fill-apply-backing")?;
     for index in 0..placement.handle_count {
         let handle = placement.handle(index).ok_or("puzzle2d-fill-apply-handle-owner")?;
-        handles.push(crate::artifacts::puzzle2d::Puzzle2dHandle { id: try_document_text(handle.id)?, handle_kind: Some(try_document_text(handle.handle_kind)?), angle: handle.angle, radius: handle.radius, ..Default::default() });
+        handles.push(crate::Puzzle2dHandle { id: try_document_text(handle.id)?, handle_kind: Some(try_document_text(handle.handle_kind)?), angle: handle.angle, radius: handle.radius, ..Default::default() });
     }
-    let node = crate::artifacts::puzzle2d::Puzzle2dNode {
+    let node = crate::Puzzle2dNode {
         id: try_document_text(*placement.node_id)?,
         node_kind: Some(try_document_text(*placement.node_kind)?),
         shape: Some(try_document_str(shape)?),
@@ -428,11 +428,11 @@ fn publish_fixed_placement(placement: FillPlacementPublishView<'_>, mutations: &
         height: matches!(placement.shape, infinite_canvas::BoardFillCommitShape::Rectangle).then_some(placement.height),
         text: Some(try_document_text(*placement.node_id)?),
         icon_kind: placement.icon_kind.copied().map(try_document_text).transpose()?,
-        anchor: crate::artifacts::puzzle2d::Puzzle2dNodeAnchor::Fixed,
+        anchor: crate::Puzzle2dNodeAnchor::Fixed,
         handles,
         ..Default::default()
     };
-    let edge = crate::artifacts::puzzle2d::mutations::connect_handles(
+    let edge = crate::mutations::connect_handles(
         try_document_text(*placement.edge_id)?,
         try_document_text(*placement.source_handle_id)?,
         try_document_text(*placement.target_handle_id)?,
@@ -448,7 +448,7 @@ fn publish_fixed_placement(placement: FillPlacementPublishView<'_>, mutations: &
         None,
         None,
     );
-    mutations.push(crate::artifacts::puzzle2d::mutations::create_node(node, None));
+    mutations.push(crate::mutations::create_node(node, None));
     mutations.push(edge);
     Ok(())
 }
@@ -456,7 +456,7 @@ fn publish_fixed_placement(placement: FillPlacementPublishView<'_>, mutations: &
 fn publish_commit_candidate(candidate: &semio_framework_job::CommitCandidate, mutations: &mut Vec<Puzzle2dMutation>) -> Option<Result<infinite_canvas::BoardFillResult, &'static str>> {
     let candidate = infinite_canvas::BoardFillCommitCandidate::from_commit_candidate(candidate)?;
     if let Some(placement) = candidate.placement.as_ref() {
-        if let Err(code) = publish_fixed_placement(FillPlacementPublishView::from_commit(placement), mutations) {
+        if let Err(code) = publish_fixed_placement(&FillPlacementPublishView::from_commit(placement), mutations) {
             return Some(Err(code));
         }
     }
@@ -624,7 +624,7 @@ impl FillPlacementApplyCursor {
             FillPlacementApplyStage::Publish => {
                 let node = self.node.as_ref().ok_or("puzzle2d-fill-node-owner")?;
                 let edge = self.edge.as_ref().ok_or("puzzle2d-fill-edge-owner")?;
-                publish_fixed_placement(FillPlacementPublishView::from_cursor(node, edge, &self.handles, self.handle_cursor), mutations)?;
+                publish_fixed_placement(&FillPlacementPublishView::from_cursor(node, edge, &self.handles, self.handle_cursor), mutations)?;
                 self.node = None;
                 self.edge = None;
                 self.handles = std::array::from_fn(|_| None);
@@ -1461,7 +1461,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
         if !is_fill_search_action(self.tool_id) {
             return Some(PUZZLE2D_FILL_CONTROL_CHUNKS);
         }
-        if snapshot.0.get("schema").and_then(Value::as_str) != Some(crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA) {
+        if snapshot.0.get("schema").and_then(Value::as_str) != Some(crate::PUZZLE_2D_SCHEMA) {
             return None;
         }
         if requested_fill_count(self.tool_id, command.args()).is_some_and(|count| count > fill::PUZZLE2D_FILL_COUNT_MAX) {
@@ -1748,7 +1748,7 @@ mod tests {
         let publish = &production[start..start + end];
         publish.contains("BoardFillCommitCandidate::from_commit_candidate(candidate)")
             && publish.contains("if let Some(placement) = candidate.placement.as_ref()")
-            && publish.contains("publish_fixed_placement(FillPlacementPublishView::from_commit(placement), mutations)")
+            && publish.contains("publish_fixed_placement(&FillPlacementPublishView::from_commit(placement), mutations)")
             && publish.contains("Some(Ok(candidate.result))")
             && !publish.contains("BoardFillResult::from_commit_candidate")
             && !publish.contains("take_result")
@@ -1783,7 +1783,7 @@ mod tests {
         let publish = &production[start..start + end];
         let Some(reserve) = publish.find("mutations.try_reserve_exact(2)") else { return false };
         let Some(handles) = publish.find("let mut handles = Vec::new()") else { return false };
-        let Some(node) = publish.find("let node = crate::artifacts::puzzle2d::Puzzle2dNode") else { return false };
+        let Some(node) = publish.find("let node = crate::Puzzle2dNode") else { return false };
         reserve < handles && handles < node && publish.contains("Some(try_document_text(*placement.edge_kind)?)") && publish.matches("mutations.push(").count() == 2 && !production.contains("ReserveMutations")
     }
 
@@ -1931,7 +1931,7 @@ mod tests {
     #[test]
     fn fill_session_extent_is_the_enforced_budget() {
         use crate::retained_command::PuzzleCommandWork;
-        let snapshot = Puzzle2dPlaySnapshot(serde_json::json!({ "schema": crate::artifacts::puzzle2d::PUZZLE_2D_SCHEMA, "nodes": [], "edges": [] }));
+        let snapshot = Puzzle2dPlaySnapshot(serde_json::json!({ "schema": crate::PUZZLE_2D_SCHEMA, "nodes": [], "edges": [] }));
         let interaction = protocol::InteractionState::default();
         let search_budget = PUZZLE2D_FILL_CAPTURE_CHUNKS + PUZZLE2D_FILL_SEARCH_CHUNKS + PUZZLE2D_FILL_APPLY_CHUNKS + PUZZLE2D_FILL_CONTROL_CHUNKS;
         assert!(search_budget <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);

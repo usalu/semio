@@ -4,7 +4,7 @@
 //! are never written (a flat grid has no edge/point-cloud/expression-tree concept), so this hop is
 //! `IoFidelity::Lossy`.
 
-use crate::artifacts::equation::{require_equation_scene, EquationSnapshot};
+use crate::{require_equation_scene, EquationSnapshot};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

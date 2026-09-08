@@ -11,9 +11,9 @@
 //! `✂️remove-edge`, `➕add-relationship`, `🖼️set-snapshot`, `🩹patch-node`) and their `🦀️.rs`
 //! mounts were deleted as part of that same trueing pass.
 
-use crate::artifacts::wires::diff::WiresDiff;
-use crate::artifacts::wires::schema::{array_mut, entity_id};
-use crate::artifacts::wires::WiresSnapshot;
+use crate::diff::WiresDiff;
+use crate::schema::{array_mut, entity_id};
+use crate::WiresSnapshot;
 use dsl::DslValue;
 
 //#region 📖️SemioGrammar
@@ -116,8 +116,8 @@ pub fn inverse_wires_mutation_steps(mutation: &WiresMutation, base: &WiresSnapsh
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::wires::empty_wires_snapshot;
-    use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
+    use crate::empty_wires_snapshot;
+    use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
     use protocol::{Mutation, SemanticMutation};
     use store::apply_mutation;
 
@@ -159,9 +159,9 @@ mod tests {
     async fn create_delete_node_round_trip() {
         let snapshot = empty_wires_snapshot();
         let with_node = round_trip(&snapshot, &create_node(node("node-1", "Alpha")));
-        assert_eq!(crate::artifacts::wires::wires_working_board(&with_node).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
+        assert_eq!(crate::wires_working_board(&with_node).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
         let removed = round_trip(&with_node, &delete_node("node-1".into()));
-        assert!(crate::artifacts::wires::wires_working_board(&removed).get("nodes").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
+        assert!(crate::wires_working_board(&removed).get("nodes").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -216,10 +216,10 @@ mod tests {
         let edge = dsl::to_dsl_value(&dsl::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
         let relationship = dsl::to_dsl_value(&dsl::json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
         let with_edge = round_trip(&snapshot, &connect_nodes(edge, relationship));
-        assert_eq!(crate::artifacts::wires::wires_working_board(&with_edge).get("edges").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
+        assert_eq!(crate::wires_working_board(&with_edge).get("edges").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
         assert_eq!(with_edge.wires_fixture.get("relationships").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
         let removed = round_trip(&with_edge, &disconnect_nodes("edge-1".into()));
-        assert!(crate::artifacts::wires::wires_working_board(&removed).get("edges").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
+        assert!(crate::wires_working_board(&removed).get("edges").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
         assert!(removed.wires_fixture.get("relationships").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
     }
 

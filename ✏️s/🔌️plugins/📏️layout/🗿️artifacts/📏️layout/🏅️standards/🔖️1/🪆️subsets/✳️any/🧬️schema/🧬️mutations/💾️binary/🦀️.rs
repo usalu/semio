@@ -16,7 +16,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::layout::schema::mutations::text::LayoutMutation;
+use crate::schema::mutations::text::LayoutMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `LayoutMutation` to its binary state-patch form.
@@ -33,8 +33,8 @@ pub fn decode_op(bytes: &[u8]) -> Result<LayoutMutation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::layout::mutations::rename_layout;
-    use crate::artifacts::layout::LayoutSnapshot;
+    use crate::mutations::rename_layout;
+    use crate::LayoutSnapshot;
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
@@ -46,9 +46,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_binary_round_trips_a_store_with_applied_operations() {
-        use crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA;
+        use crate::LAYOUT_DOCUMENT_SCHEMA;
 
-        let initial = crate::artifacts::layout::schema::default_document();
+        let initial = crate::schema::default_document();
         let envelope = store::create_document_envelope(LAYOUT_DOCUMENT_SCHEMA, "layout-doc-binary-test", initial, None);
         let mut doc_store: store::ArtifactStore<LayoutSnapshot, LayoutMutation> = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![LayoutMutation::RenameLayout(rename_layout::RenameLayout { new_name: "Renamed".into() })], description: Some("rename document".into()) }).await.expect("apply rename");

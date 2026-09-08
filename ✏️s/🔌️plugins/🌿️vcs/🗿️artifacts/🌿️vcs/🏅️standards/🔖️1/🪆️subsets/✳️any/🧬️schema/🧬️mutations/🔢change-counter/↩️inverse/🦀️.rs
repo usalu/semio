@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `ChangeCounter` — the OLD counter value looked up from BASE.
-use crate::artifacts::vcs::mutations::VcsDemoMutation;
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::mutations::VcsDemoMutation;
+use crate::VcsSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::ChangeCounter, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {

@@ -1,8 +1,8 @@
 //! ↩️ Undo mutation for `disconnect-widgets`: re-`connect-widgets` at the base-state index, carrying
 //! the full removed payload (taxonomy `## Addressing convention` §5).
-use crate::artifacts::flow::schema::mutations::connect_widgets::ConnectWidgets;
-use crate::artifacts::flow::schema::mutations::FlowMutation;
-use crate::artifacts::flow::{flow_working_scene, FlowSnapshot};
+use crate::schema::mutations::connect_widgets::ConnectWidgets;
+use crate::schema::mutations::FlowMutation;
+use crate::{flow_working_scene, FlowSnapshot};
 
 use super::DisconnectWidgets;
 

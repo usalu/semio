@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/vdi3805/1/any/mutation/delete-geometry.json",
+  "$id": "https://semio.tech/schema/s/norm/vdi3805/1/any/mutation/delete-geometry/schema.json",
   "title": "DeleteGeometry",
   "type": "object",
   "additionalProperties": false,

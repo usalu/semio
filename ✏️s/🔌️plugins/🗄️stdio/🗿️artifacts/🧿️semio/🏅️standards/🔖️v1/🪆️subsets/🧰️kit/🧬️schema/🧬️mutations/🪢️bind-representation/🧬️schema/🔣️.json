@@ -1,17 +1,27 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/bind-representation.json",
+  "$id": "https://semio.tech/schema/s/stdio/semio/v1/kit/mutation/bind-representation/schema.json",
   "title": "BindRepresentation",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "target",
     "pin",
-    "role",
-    "target"
+    "role"
   ],
   "properties": {
     "target": {
-      "title": "ArtifactRef",
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "pin": {
+      "$ref": "#/$defs/LinkPin"
+    },
+    "role": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "ArtifactRef": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -23,58 +33,98 @@
           "type": "string"
         },
         "dialect": {
-          "title": "ArtifactDialect",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "artifactKind",
-            "standard",
-            "subset"
-          ],
-          "properties": {
-            "artifactKind": {
-              "type": "string"
-            },
-            "standard": {
-              "type": "string"
-            },
-            "subset": {
-              "type": "string"
-            }
-          }
+          "$ref": "#/$defs/ArtifactDialect"
         }
       }
     },
-    "pin": {
+    "ArtifactDialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
+        }
+      }
+    },
+    "LinkPin": {
       "oneOf": [
         {
           "type": "object",
-          "properties": {
-            "kind": {
-              "const": "Checkpoint"
-            }
-          },
+          "additionalProperties": false,
           "required": [
             "kind"
           ],
-          "additionalProperties": false
+          "properties": {
+            "kind": {
+              "const": "head"
+            }
+          }
         },
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
           "properties": {
             "kind": {
-              "const": "Snapshot"
+              "const": "checkpoint"
+            },
+            "id": {
+              "type": "string"
             }
-          },
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
           "required": [
-            "kind"
+            "kind",
+            "blob"
           ],
-          "additionalProperties": false
+          "properties": {
+            "kind": {
+              "const": "snapshot"
+            },
+            "blob": {
+              "$ref": "#/$defs/BlobRef"
+            }
+          }
         }
       ]
     },
-    "role": {
-      "type": "string"
+    "BlobRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hash",
+        "size",
+        "mediaType"
+      ],
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mediaType": {
+          "type": "string"
+        }
+      }
     }
   }
 }

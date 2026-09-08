@@ -1,7 +1,7 @@
 //! 🏅️ Standard root — `standard() -> StandardDeclaration` (design.md §1/§2 recipe step 6). Mounts
 //! subset `any` for `s.animate.presentation@1`.
 
-use crate::artifacts::presentation::standards::v1::subsets;
+use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 

@@ -1,10 +1,10 @@
 //! 🔺️ Sparse diff builder for `ConnectReferencedModel` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::artifacts::model::EnergyModelSnapshot;
-use crate::artifacts::model::diff::EnergyLinkSlotDelta;
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations as vocabulary;
+use crate::EnergyModelSnapshot;
+use crate::diff::EnergyLinkSlotDelta;
+use crate::diff::EnergyModelDiff;
+use crate::mutations as vocabulary;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ConnectReferencedModel, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

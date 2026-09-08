@@ -1,7 +1,7 @@
 //! 📄️ Architect document panel — program meta, per-register counts and the element list.
 
-use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::status_summary;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::status_summary;
+use crate::ProgramSnapshot;
 use crate::editor::architect::catalog::register_len;
 use crate::editor::architect::config::{active_register, ArchitectConfig};
 use crate::editor::architect::ARCHITECT_INTERACTION_PROGRAM;
@@ -76,7 +76,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framewo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::{empty_plugin, sample_plugin};
+    use crate::{empty_plugin, sample_plugin};
 
     #[semio_framework_async_macros::async_test]
     async fn the_tab_is_the_framework_document_tab_bound_to_this_apps_body_key() {

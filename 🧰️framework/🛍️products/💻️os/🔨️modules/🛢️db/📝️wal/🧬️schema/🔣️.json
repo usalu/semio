@@ -1,0 +1,335 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/db/wal/component.json",
+  "title": "OS Database Write-Ahead Log Contracts",
+  "$defs": {
+    "SegmentCapacityV1": {
+      "title": "Readable Segment Capacity V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "maxSegmentBytes", "payloadBytes", "exactPayloadBytes", "oversizedPayloadBytes", "cases"],
+      "properties": {
+        "schema": { "const": "wal-readable-segment-capacity-v1" },
+        "maxSegmentBytes": { "type": "integer", "minimum": 1 },
+        "payloadBytes": { "type": "integer", "minimum": 0 },
+        "exactPayloadBytes": { "type": "integer", "minimum": 0 },
+        "oversizedPayloadBytes": { "type": "integer", "minimum": 1 },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["durability", "segments", "lengths"],
+            "properties": {
+              "durability": { "enum": ["fsync", "memory"] },
+              "segments": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 } },
+              "lengths": { "type": "array", "minItems": 2, "items": { "type": "integer", "minimum": 1 } }
+            }
+          }
+        }
+      }
+    },
+    "RetainedDecoderV1": {
+      "title": "Retained Varint Decoder V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "varints"],
+      "properties": {
+        "schema": { "const": "semio.db.wal.retained-decoder/v1" },
+        "varints": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "hex", "value", "consumed"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "hex": { "type": "string", "pattern": "^(?:[0-9a-f]{2}){0,11}$" },
+              "value": { "type": ["string", "null"], "pattern": "^(0|[1-9][0-9]{0,19})$" },
+              "consumed": { "type": ["integer", "null"], "minimum": 1, "maximum": 10 }
+            }
+          }
+        }
+      }
+    },
+    "TailOnlyRecoveryV1": {
+      "title": "Tail Only Recovery V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "document", "commands", "commitEnds", "cuts", "lifecycle", "fragmentCopies"],
+      "properties": {
+        "schema": { "const": "wal-tail-only-recovery-v1" },
+        "document": { "type": "string", "minLength": 1 },
+        "commands": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "commitEnds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "integer", "minimum": 0 } },
+        "fragmentCopies": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["offset", "length", "crc32c"],
+            "properties": {
+              "offset": { "type": "integer", "minimum": 0 },
+              "length": { "type": "integer", "minimum": 1 },
+              "crc32c": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+            }
+          }
+        },
+        "cuts": {
+          "type": "array",
+          "minItems": 18,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["cut", "trustedEnd", "recoveredEnd", "nextTxId"],
+            "properties": {
+              "cut": { "type": "integer", "minimum": 0 },
+              "trustedEnd": { "type": "integer", "minimum": 0 },
+              "recoveredEnd": { "type": "integer", "minimum": 0 },
+              "nextTxId": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "lifecycle": {
+          "type": "array",
+          "minItems": 18,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "accepted"],
+            "properties": {
+              "name": { "enum": ["missing", "highest-sealed", "successor-empty", "successor-partial", "successor-header", "compacted-clean", "compacted-empty", "compacted-header", "sealed-torn", "sealed-empty", "earlier-active", "corrupt-crc", "partial-header-mismatch", "wrong-document", "wrong-chain", "index-gap", "exhausted-tx", "exhausted-segment"] },
+              "accepted": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "OpenRejectionV1": {
+      "title": "Writer Open Rejection V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "acquisition", "explicitClose", "droppedRejection", "enginePropagation"],
+      "properties": {
+        "schema": { "const": "semio.db.wal.open-rejection/v1" },
+        "acquisition": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["stage", "cause", "owner", "sameDocumentAcquire"],
+            "properties": {
+              "stage": { "enum": ["before-acquire", "caller-acquired-open-failure", "self-acquiring-open-failure"] },
+              "cause": { "enum": ["original-open-error"] },
+              "owner": { "enum": ["none", "exact-writer-permit", "exact-writer-release", "same-exact-writer-release"] },
+              "releaseActivation": { "enum": ["first-explicit-close-poll"] },
+              "sameDocumentAcquire": { "enum": ["available", "conflict"] }
+            }
+          }
+        },
+        "explicitClose": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["attempt", "outcome", "openCause", "owner", "sameDocumentAcquire"],
+            "properties": {
+              "attempt": { "type": "integer", "minimum": 1 },
+              "outcome": { "enum": ["fault", "terminal"] },
+              "openCause": { "enum": ["original-open-error"] },
+              "closeCause": { "enum": ["writer-close-error"] },
+              "owner": { "enum": ["none", "exact-writer-permit", "exact-writer-release", "same-exact-writer-release"] },
+              "sameDocumentAcquire": { "enum": ["available", "conflict"] }
+            }
+          }
+        },
+        "droppedRejection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["behavior", "location", "panics", "guard", "sameDocumentAcquire", "terminalClaim"],
+          "properties": {
+            "behavior": { "enum": ["transfer", "discard"] },
+            "location": { "enum": ["backend-release-cell"] },
+            "panics": { "const": false },
+            "guard": { "enum": ["backend-retained", "backend-released"] },
+            "sameDocumentAcquire": { "enum": ["available", "conflict"] },
+            "terminalClaim": { "type": "boolean" }
+          }
+        },
+        "enginePropagation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["variants", "flattenedToDbError", "authorityReadyOwnsRejection", "databaseMountOwnsRejection"],
+          "properties": {
+            "variants": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["before-wal", "wal-open-rejected", "wal-close-rejected"] } },
+            "flattenedToDbError": { "const": false },
+            "authorityReadyOwnsRejection": { "const": true },
+            "databaseMountOwnsRejection": { "const": true }
+          }
+        }
+      }
+    },
+    "FailStopV1": {
+      "title": "WAL Fail-Stop Corpus V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "cases", "expectedSecondError"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "fault", "expectedError", "expectedPhysicalSuffix"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "fault": { "enum": ["shortAppend", "appendError", "syncError", "successorAppendError"] },
+              "keepBytes": { "type": "integer", "minimum": 1 },
+              "expectedError": { "enum": ["Corrupt", "Io"] },
+              "expectedPhysicalSuffix": { "enum": ["torn", "absent", "complete"] }
+            }
+          }
+        },
+        "expectedSecondError": { "const": "Closed" }
+      }
+    },
+    "CommittedTransactionsV1": {
+      "title": "Committed Transactions V1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "maximumRecords", "cases", "historyProjection"],
+      "properties": {
+        "schema": { "const": "semio.db.wal.committed-transactions/v1" },
+        "maximumRecords": { "type": "integer", "minimum": 1 },
+        "historyProjection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["commands", "expected", "rejections"],
+          "properties": {
+            "rejections": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "records", "accepted"],
+                "properties": {
+                  "name": { "type": "string", "minLength": 1 },
+                  "accepted": { "const": false },
+                  "records": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["kind", "document"],
+                      "properties": {
+                        "kind": { "enum": ["command", "frontier"] },
+                        "document": { "enum": ["current", "foreign"] }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "commands": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "path", "value"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1 },
+                  "path": { "type": "string", "minLength": 1 },
+                  "value": { "type": "string" }
+                }
+              }
+            },
+            "expected": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["entries", "operationIds", "headSeq", "commitSeq"],
+              "properties": {
+                "entries": { "type": "integer", "minimum": 0 },
+                "operationIds": { "type": "array", "minItems": 2, "items": { "type": "string", "minLength": 1 } },
+                "headSeq": { "type": "integer", "minimum": 0 },
+                "commitSeq": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 24,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "segments", "expected"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "segments": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["state", "frames", "physicalCommitsAfter"],
+                  "properties": {
+                    "state": { "enum": ["active", "sealed"] },
+                    "frames": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["kind"],
+                        "properties": {
+                          "kind": { "enum": ["header", "begin", "commit", "abort", "command", "frontier", "snapshot", "cas"] },
+                          "id": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$" },
+                          "count": { "type": "integer", "minimum": 0 }
+                        }
+                      }
+                    },
+                    "physicalCommitsAfter": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "integer", "minimum": 0 } }
+                  }
+                }
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["accepted", "transactions", "nextTxId", "recoverAbort", "error"],
+                "properties": {
+                  "accepted": { "type": "boolean" },
+                  "transactions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["id", "kinds"],
+                      "properties": {
+                        "id": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,19})$" },
+                        "kinds": { "type": "array", "items": { "enum": ["command", "frontier", "snapshot", "cas"] } }
+                      }
+                    }
+                  },
+                  "nextTxId": { "type": ["string", "null"], "pattern": "^(0|[1-9][0-9]{0,19})$" },
+                  "recoverAbort": { "type": ["string", "null"], "pattern": "^(0|[1-9][0-9]{0,19})$" },
+                  "error": { "enum": ["corrupt", "capacity", "sequence", null] }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

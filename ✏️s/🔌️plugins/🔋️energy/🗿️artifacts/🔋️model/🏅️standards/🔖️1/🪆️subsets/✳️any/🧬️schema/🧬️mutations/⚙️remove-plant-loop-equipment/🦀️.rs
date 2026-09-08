@@ -1,8 +1,8 @@
 //! ⚙️ Energy model mutation — `RemovePlantLoopEquipment`: Takes one central-plant equipment id off a plant loop — the repair a document that arrived with a dangling `equipment_ids` entry needs, since no collection backs those ids (vocabulary §5.4). Refused when the loop does not list the id.
 
-use crate::artifacts::model::diff::EnergyModelDiff;
-use crate::artifacts::model::mutations::EnergyModelMutation;
-use crate::artifacts::model::EnergyModelSnapshot;
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation

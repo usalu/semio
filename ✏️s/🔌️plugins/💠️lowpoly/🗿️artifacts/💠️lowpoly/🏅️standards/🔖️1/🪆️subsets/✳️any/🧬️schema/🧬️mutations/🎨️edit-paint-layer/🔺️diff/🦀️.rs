@@ -3,9 +3,9 @@
 //! when there are no pixel runs to paint.
 
 use super::EditPaintLayer;
-use crate::artifacts::lowpoly::diff::diff_paint_stroke;
-use crate::artifacts::lowpoly::diff::schema::PixelRun as SchemaPixelRun;
-use crate::artifacts::lowpoly::{LowpolyDiff, LowpolySnapshot};
+use crate::diff::diff_paint_stroke;
+use crate::diff::schema::PixelRun as SchemaPixelRun;
+use crate::{LowpolyDiff, LowpolySnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &EditPaintLayer, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

@@ -1,7 +1,7 @@
 //! 🗃️ Shooting play app commands — whole-fixture load/reset/save/import shell effects.
 
-use crate::artifacts::shooting::op::ShootingMutation;
-use crate::artifacts::shooting::ShootingSnapshot;
+use crate::op::ShootingMutation;
+use crate::ShootingSnapshot;
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
@@ -45,9 +45,9 @@ pub mod set_active_example {
 
     pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let next = if payload.example_id.is_empty() {
-            Some(crate::artifacts::shooting::empty_shooting_snapshot())
+            Some(crate::empty_shooting_snapshot())
         } else if payload.example_id == SHOOTING_EXAMPLE_DEFAULT_ID || payload.example_id == "base" {
-            Some(crate::artifacts::shooting::schema::default_snapshot())
+            Some(crate::schema::default_snapshot())
         } else {
             None
         };
@@ -68,7 +68,7 @@ pub mod reset_snapshot {
     pub struct ResetSnapshot {}
 
     pub fn handle(_payload: &ResetSnapshot, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit { effects: vec![crate::editor::shooting::reset_document_effect(&crate::artifacts::shooting::schema::default_snapshot())], ..Default::default() })
+        Ok(Emit { effects: vec![crate::editor::shooting::reset_document_effect(&crate::schema::default_snapshot())], ..Default::default() })
     }
 }
 //#endregion 🔖️ResetSnapshot

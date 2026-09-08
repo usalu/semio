@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::sequence::{SequenceContentChild, SequenceSnapshot};
+use crate::{SequenceContentChild, SequenceSnapshot};
 
 //#region 🔖️ChildCodecPrimitives
 /// 🧪️ Real hex/bracket child-handle codec (mirrors `📐️cad`/`✒️writer`'s own `enc_child`/`dec_child`)
@@ -119,7 +119,7 @@ pub fn print_dsl(snapshot: &SequenceSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::sequence::{default_snapshot, SequenceStep, SlotRef, StepParams};
+    use crate::{default_snapshot, SequenceStep, SlotRef, StepParams};
 
     #[semio_framework_async_macros::async_test]
     async fn dsl_round_trips_default_snapshot() {

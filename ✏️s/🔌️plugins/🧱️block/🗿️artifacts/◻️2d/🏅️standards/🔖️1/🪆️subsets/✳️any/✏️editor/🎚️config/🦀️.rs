@@ -2,7 +2,7 @@
 //!
 //! Session-only but real, undoable config: it round-trips through the config `ArtifactStore` exactly
 //! like document content, with a true `backwards` per operation. Nothing here is document state — the
-//! node kind's identity/presentation/handles live in `crate::artifacts::block2d`.
+//! node kind's identity/presentation/handles live in `crate`.
 
 use protocol::Mutation;
 

@@ -1,9 +1,9 @@
 //! 🔧 `change-sfp-wm3-s` payload — changes the Din16798 document's `sfp_w_m3_s` (specific fan power).
 
 
-use crate::artifacts::din16798::Din16798Snapshot;
-use crate::artifacts::din16798::diff::Din16798Diff;
-use crate::artifacts::din16798::mutations::Din16798Mutation;
+use crate::Din16798Snapshot;
+use crate::diff::Din16798Diff;
+use crate::mutations::Din16798Mutation;
 //#region 🔖️ChangeSfpWM3S
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

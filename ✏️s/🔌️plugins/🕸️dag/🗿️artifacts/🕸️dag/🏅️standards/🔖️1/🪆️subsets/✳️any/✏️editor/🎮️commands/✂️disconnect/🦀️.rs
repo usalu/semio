@@ -1,8 +1,8 @@
 //! 🕸️ 🕸️ DAG play app commands command — `disconnect`.
 
-use crate::artifacts::dag::mutations::disconnect_nodes;
-use crate::artifacts::dag::op::DagMutation;
-use crate::artifacts::dag::DagSnapshot;
+use crate::mutations::disconnect_nodes;
+use crate::op::DagMutation;
+use crate::DagSnapshot;
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 

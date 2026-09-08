@@ -15,7 +15,7 @@
 pub mod compiler {
     //! 🌐️ Headless static-site compiler for animate presentation decks.
 
-    use crate::artifacts::presentation::PresentationSnapshot;
+    use crate::PresentationSnapshot;
     use crate::editor::animate::engine::config::config::{AnimateConfig, QualityPreset};
     use crate::editor::animate::engine::video::{render_scene, scene_for_hash, OutputFormat};
     use std::fs;
@@ -85,7 +85,7 @@ pub mod compiler {
     }
 
     fn site_manifest(deck: &PresentationSnapshot) -> dsl::os_pack::json::Value {
-        let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(deck);
+        let (_, tiles) = crate::presentation_working_scene(deck);
         dsl::os_pack::json::object([
             ("schema".to_string(), dsl::os_pack::json::Value::from("animate.presentation.site")),
             ("deckSchema".to_string(), dsl::os_pack::json::Value::from(deck.schema.clone())),
@@ -246,15 +246,15 @@ pub mod compiler {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::presentation::default_presentation_snapshot;
-        use crate::artifacts::presentation::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+        use crate::default_presentation_snapshot;
+        use crate::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 
         #[semio_framework_async_macros::async_test]
         async fn compile_presentation_site_writes_static_bundle() {
             let deck = default_presentation_snapshot();
-            let (source, _) = crate::artifacts::presentation::presentation_working_scene(&deck);
+            let (source, _) = crate::presentation_working_scene(&deck);
             let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-            let deck = crate::artifacts::presentation::presentation_snapshot_with_tiles(&source, &tiles);
+            let deck = crate::presentation_snapshot_with_tiles(&source, &tiles);
             let output = std::env::temp_dir().join(format!("animate-presentation-{}", std::process::id()));
             let _ = fs::remove_dir_all(&output);
             compile_presentation_site(&deck, &output).expect("compile site");
@@ -268,7 +268,7 @@ pub mod compiler {
             assert_eq!(manifest.pointer("/player/wasm").and_then(|v| v.as_str()), Some("/animate/plugin/wasm/animate_plugin_bg.wasm"));
             let deck_value = dsl::os_pack::json::parse(&fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("json");
             let deck_file: PresentationSnapshot = dsl::FromValue::from_value(dsl::os_pack::json::to_dsl_value(&deck_value)).expect("deck");
-            assert_eq!(crate::artifacts::presentation::presentation_working_scene(&deck_file).1.len(), 4);
+            assert_eq!(crate::presentation_working_scene(&deck_file).1.len(), 4);
             let _ = fs::remove_dir_all(&output);
         }
 
@@ -291,7 +291,7 @@ pub mod compiler {
 pub mod slide {
     //! 🎭️ Scene-based presentation document types for slide/section timelines.
 
-    use crate::artifacts::presentation::PresentationSnapshot;
+    use crate::PresentationSnapshot;
     use crate::editor::animate::engine::scene::section::Section;
 
     pub const PRESENTATION_SCENE_SCHEMA: &str = "animate.presentation.scene";
@@ -384,7 +384,7 @@ pub use slide::{PresentationScene, PresentationSection, PresentationSlide, PRESE
 //#region 🔖️Error
 /// 🎬️ Errors from headless video export (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES:
 /// split from the former engine-tree `PresentationError`, which mixed this app-tier video-export concern
-/// with a schema-tier envelope-replay concern — see `crate::artifacts::presentation::schema::PresentationError`
+/// with a schema-tier envelope-replay concern — see `crate::schema::PresentationError`
 /// for that half, kept where the artifact's own `materialize_presentation_projection_json` can reach it
 /// without an artifact-depends-on-app violation).
 #[derive(Debug)]

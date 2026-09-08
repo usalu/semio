@@ -1,5 +1,5 @@
 {
-  "$schema": "../🧬️schema/🪫️budget.json",
+  "$schema": "https://semio.tech/schema/framework/job/budget/schema.json#/$defs/Budget",
   "unit": "microseconds",
   "cases": [
     { "id": "one", "start": "1000", "grant": 1, "fuel": 1, "deadline": "1001", "samples": ["1000", "1001", "1002"], "expired": [false, true, true], "yielded": [false, true, true] },

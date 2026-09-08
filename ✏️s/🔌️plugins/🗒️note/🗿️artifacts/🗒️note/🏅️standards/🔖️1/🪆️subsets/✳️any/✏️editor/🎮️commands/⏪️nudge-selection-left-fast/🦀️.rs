@@ -1,8 +1,8 @@
 //! 🕹️ 🕹️ Note play app commands command — `nudge-selection-left-fast`.
 
-use crate::artifacts::note::op::NoteMutation;
-use crate::artifacts::note::schema::{block_id, flatten_blocks};
-use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
+use crate::op::NoteMutation;
+use crate::schema::{block_id, flatten_blocks};
+use crate::{NoteBlockNode, NoteSnapshot};
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use std::collections::HashSet;
@@ -38,7 +38,7 @@ fn nudge(document: &NoteSnapshot, selected_ids: &[String], dx: f64, dy: f64) -> 
     if ids.is_empty() {
         return Emit::default();
     }
-    Emit::mutations(vec![crate::artifacts::note::schema::mutations::drag_blocks(ids, dx, dy)])
+    Emit::mutations(vec![crate::schema::mutations::drag_blocks(ids, dx, dy)])
 }
 //#endregion 🔖️Helpers
 

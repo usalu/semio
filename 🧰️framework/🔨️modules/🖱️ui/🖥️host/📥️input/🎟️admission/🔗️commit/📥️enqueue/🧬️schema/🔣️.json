@@ -1,61 +1,8 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Single Runtime Enqueue Publication",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "format",
-    "scope",
-    "fields",
-    "source",
-    "old",
-    "half",
-    "committed",
-    "invariants"
-  ],
-  "properties": {
-    "format": {
-      "const": "semio.runtime-single-enqueue-publication.v1"
-    },
-    "scope": {
-      "const": "one-runtime-completion-enqueue-and-its-scene-invalidation"
-    },
-    "fields": {
-      "const": [
-        "completionReadyCount",
-        "sceneRevision",
-        "observedBuildInputGeneration"
-      ]
-    },
-    "source": {
-      "const": {
-        "key": "window-metrics",
-        "revision": "11",
-        "width": 640,
-        "height": 480,
-        "dpr": 1
-      }
-    },
-    "old": {
-      "$ref": "#/$defs/state"
-    },
-    "half": {
-      "$ref": "#/$defs/state"
-    },
-    "committed": {
-      "$ref": "#/$defs/state"
-    },
-    "invariants": {
-      "const": {
-        "halfOfOneEnqueueAccepted": false,
-        "observedBuildInputChanges": false,
-        "metricsThreeReceiverAcceptance": false,
-        "sourceFundingProven": false,
-        "readerBlocks": false
-      }
-    }
-  },
-  "$defs": {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/ui/host/input/admission/commit/enqueue/schema.json",
+  "title": "Ui Host Input Admission Commit Enqueue Schema Module",
+  "definitions": {
     "state": {
       "type": "object",
       "additionalProperties": false,
@@ -84,5 +31,69 @@
         }
       }
     }
-  }
+  },
+  "$defs": {
+    "EnqueueFixture": {
+      "title": "Single Runtime Enqueue Publication",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "scope",
+        "fields",
+        "source",
+        "old",
+        "half",
+        "committed",
+        "invariants"
+      ],
+      "properties": {
+        "format": {
+          "const": "semio.runtime-single-enqueue-publication.v1"
+        },
+        "scope": {
+          "const": "one-runtime-completion-enqueue-and-its-scene-invalidation"
+        },
+        "fields": {
+          "const": [
+            "completionReadyCount",
+            "sceneRevision",
+            "observedBuildInputGeneration"
+          ]
+        },
+        "source": {
+          "const": {
+            "key": "window-metrics",
+            "revision": "11",
+            "width": 640,
+            "height": 480,
+            "dpr": 1
+          }
+        },
+        "old": {
+          "$ref": "#/definitions/state"
+        },
+        "half": {
+          "$ref": "#/definitions/state"
+        },
+        "committed": {
+          "$ref": "#/definitions/state"
+        },
+        "invariants": {
+          "const": {
+            "halfOfOneEnqueueAccepted": false,
+            "observedBuildInputChanges": false,
+            "metricsThreeReceiverAcceptance": false,
+            "sourceFundingProven": false,
+            "readerBlocks": false
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/EnqueueFixture"
+    }
+  ]
 }

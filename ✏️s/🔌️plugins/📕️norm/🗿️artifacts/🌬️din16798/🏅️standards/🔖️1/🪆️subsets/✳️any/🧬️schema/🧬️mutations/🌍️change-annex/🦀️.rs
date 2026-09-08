@@ -6,9 +6,9 @@
 //! `🦀️.rs`.
 
 
-use crate::artifacts::din16798::Din16798Snapshot;
-use crate::artifacts::din16798::diff::Din16798Diff;
-use crate::artifacts::din16798::mutations::Din16798Mutation;
+use crate::Din16798Snapshot;
+use crate::diff::Din16798Diff;
+use crate::mutations::Din16798Mutation;
 use crate::document::AnnexChoice;
 
 //#region 🔖️ChangeAnnex

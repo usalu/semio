@@ -1,1 +1,29 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","$defs":{"payload":{"type":"object","required":["nodeId"],"properties":{"nodeId":{"type":"string"}}}},"allOf":[{"$ref":"#/$defs/payload"}],"unevaluatedProperties":false}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/workflow/run/mutation/start-run-node/schema.json",
+  "title": "StartRunNode",
+  "type": "object",
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": [
+        "nodeId"
+      ],
+      "properties": {
+        "nodeId": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/payload"
+    }
+  ],
+  "propertyNames": {
+    "enum": [
+      "nodeId"
+    ]
+  }
+}

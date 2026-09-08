@@ -1,5 +1,5 @@
 //! process3d -> json
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::Process3dSnapshot;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}

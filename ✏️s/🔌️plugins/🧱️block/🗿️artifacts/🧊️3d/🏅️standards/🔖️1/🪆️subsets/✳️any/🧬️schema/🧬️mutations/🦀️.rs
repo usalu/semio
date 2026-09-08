@@ -7,8 +7,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::block3d::diff::Block3dDiff;
-use crate::artifacts::block3d::Block3dSnapshot;
+use crate::diff::Block3dDiff;
+use crate::Block3dSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Store
@@ -170,8 +170,8 @@ pub fn inverse_block3d_mutation(projection: &Block3dSnapshot, mutation: &Block3d
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block3d::schema::empty_block3d_snapshot;
-    use crate::artifacts::block3d::{Block3dVortexKind, Block3dVortexTemplate};
+    use crate::schema::empty_block3d_snapshot;
+    use crate::{Block3dVortexKind, Block3dVortexTemplate};
     use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
     use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::MutationDiff;
@@ -200,7 +200,7 @@ mod tests {
             description: String::new(),
             attributes: vec![BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None }],
         });
-        crate::artifacts::block3d::set_vortex_kinds(&mut base, vec![Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() }]);
+        crate::set_vortex_kinds(&mut base, vec![Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() }]);
         base.vortices.push(Block3dVortexTemplate { id: "v0".into(), vortex_kind: "vk0".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.3, label: None });
         base.compatibility.push(BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true });
         base.attributes.push(BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None });
@@ -241,11 +241,11 @@ mod tests {
         let base = empty_block3d_snapshot();
         let vortex_kind = Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.link".into() };
         let created = round_trip(&base, &create_vortex_kind(vortex_kind));
-        assert_eq!(crate::artifacts::block3d::vortex_kinds_of(&created).len(), 1);
+        assert_eq!(crate::vortex_kinds_of(&created).len(), 1);
         let renamed = round_trip(&created, &rename_vortex_kind("vk0".into(), "renamed".into()));
-        assert_eq!(crate::artifacts::block3d::vortex_kinds_of(&renamed)[0].name, "renamed");
+        assert_eq!(crate::vortex_kinds_of(&renamed)[0].name, "renamed");
         let deleted = round_trip(&renamed, &delete_vortex_kind("vk0".into()));
-        assert!(crate::artifacts::block3d::vortex_kinds_of(&deleted).is_empty());
+        assert!(crate::vortex_kinds_of(&deleted).is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -400,7 +400,7 @@ mod tests {
     async fn create_duplicate_id_is_fatal_and_never_applies() {
         let mut base = empty_block3d_snapshot();
         let vortex_kind = Block3dVortexKind { id: "vk0".into(), name: "vk0".into(), label: "VK0".into(), color: "#888".into(), default_cable_kind: "cable.power".into() };
-        crate::artifacts::block3d::set_vortex_kinds(&mut base, vec![vortex_kind.clone()]);
+        crate::set_vortex_kinds(&mut base, vec![vortex_kind.clone()]);
         let outcome = create_vortex_kind(vortex_kind).diff(&base);
         assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(dsl::Severity::Fatal));

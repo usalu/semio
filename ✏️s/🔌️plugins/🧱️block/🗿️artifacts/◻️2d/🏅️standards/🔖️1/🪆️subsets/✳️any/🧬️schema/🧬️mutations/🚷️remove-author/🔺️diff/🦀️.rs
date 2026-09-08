@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `RemoveAuthor`.
 
 use crate::BlockAuthor;
-use crate::artifacts::block2d::Block2dSnapshot;
-use crate::artifacts::block2d::diff::{Block2dAuthorList, Block2dDiff};
+use crate::Block2dSnapshot;
+use crate::diff::{Block2dAuthorList, Block2dDiff};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveAuthor, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {

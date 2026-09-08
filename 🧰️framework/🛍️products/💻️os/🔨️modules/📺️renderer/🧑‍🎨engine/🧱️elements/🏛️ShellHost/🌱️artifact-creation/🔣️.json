@@ -1,0 +1,70 @@
+{
+  "schema": "semio.os.artifact-creation-progress-ui/v1",
+  "locales": {
+    "en": {
+      "heading": "Creating artifact",
+      "cancel": "Cancel creation",
+      "cancelling": "Cancellation requested…",
+      "opening": {
+        "active": "Opening the artifact…",
+        "failed": "The artifact was created, but it could not be opened. You can safely try opening it again.",
+        "retry": "Open artifact"
+      },
+      "catalog": {
+        "loading": "Loading the available artifact kinds…",
+        "ready": "The available artifact kinds are current.",
+        "unavailable": "Artifact kinds are unavailable. Reopen the space before creating an artifact."
+      },
+      "phases": {
+        "accepted": "The creation request was accepted.",
+        "preparing": "The artifact is being created…",
+        "ready": "The artifact is ready.",
+        "indeterminate": "The creation outcome is unknown. Refresh the space before trying again.",
+        "failed": "Artifact creation failed.",
+        "cancelled": "Artifact creation was cancelled."
+      }
+    },
+    "de": {
+      "heading": "Artefakt wird erstellt",
+      "cancel": "Erstellung abbrechen",
+      "cancelling": "Abbruch angefordert…",
+      "opening": {
+        "active": "Artefakt wird geöffnet…",
+        "failed": "Das Artefakt wurde erstellt, konnte aber nicht geöffnet werden. Du kannst das Öffnen sicher erneut versuchen.",
+        "retry": "Artefakt öffnen"
+      },
+      "catalog": {
+        "loading": "Verfügbare Artefaktarten werden geladen…",
+        "ready": "Die verfügbaren Artefaktarten sind aktuell.",
+        "unavailable": "Artefaktarten sind nicht verfügbar. Öffne den Space erneut, bevor du ein Artefakt erstellst."
+      },
+      "phases": {
+        "accepted": "Die Erstellungsanfrage wurde angenommen.",
+        "preparing": "Das Artefakt wird erstellt…",
+        "ready": "Das Artefakt ist bereit.",
+        "indeterminate": "Das Ergebnis der Erstellung ist unbekannt. Aktualisiere den Space vor einem neuen Versuch.",
+        "failed": "Die Artefakterstellung ist fehlgeschlagen.",
+        "cancelled": "Die Artefakterstellung wurde abgebrochen."
+      }
+    }
+  },
+  "cases": [
+    { "id": "accepted-en", "locale": "en", "phase": "accepted", "cancelRequested": false, "openingDisposition": "idle", "role": "status", "live": "polite", "cancellable": true, "opens": false, "retryable": false },
+    { "id": "preparing-de", "locale": "de", "phase": "preparing", "cancelRequested": false, "openingDisposition": "idle", "role": "status", "live": "polite", "cancellable": true, "opens": false, "retryable": false },
+    { "id": "cancel-pending-en", "locale": "en", "phase": "preparing", "cancelRequested": true, "openingDisposition": "idle", "role": "status", "live": "polite", "cancellable": false, "opens": false, "retryable": false },
+    { "id": "ready-after-cancel-de", "locale": "de", "phase": "ready", "cancelRequested": true, "openingDisposition": "opening", "role": "status", "live": "polite", "cancellable": false, "opens": true, "retryable": false },
+    { "id": "ready-open-failed-en", "locale": "en", "phase": "ready", "cancelRequested": false, "openingDisposition": "failed", "role": "alert", "live": "assertive", "cancellable": false, "opens": false, "retryable": true },
+    { "id": "ready-open-failed-de", "locale": "de", "phase": "ready", "cancelRequested": false, "openingDisposition": "failed", "role": "alert", "live": "assertive", "cancellable": false, "opens": false, "retryable": true },
+    { "id": "indeterminate-en", "locale": "en", "phase": "indeterminate", "cancelRequested": false, "openingDisposition": "idle", "role": "alert", "live": "assertive", "cancellable": false, "opens": false, "retryable": false },
+    { "id": "failed-de", "locale": "de", "phase": "failed", "cancelRequested": false, "openingDisposition": "idle", "role": "alert", "live": "assertive", "cancellable": false, "opens": false, "retryable": false },
+    { "id": "cancelled-en", "locale": "en", "phase": "cancelled", "cancelRequested": true, "openingDisposition": "idle", "role": "alert", "live": "assertive", "cancellable": false, "opens": false, "retryable": false }
+  ],
+  "catalogCases": [
+    { "id": "catalog-loading-en", "locale": "en", "phase": "loading", "effectivePhase": "loading", "role": "status", "live": "polite", "hasChoices": false },
+    { "id": "catalog-ready-de", "locale": "de", "phase": "ready", "effectivePhase": "ready", "role": "status", "live": "polite", "hasChoices": true },
+    { "id": "catalog-unavailable-en", "locale": "en", "phase": "unavailable", "effectivePhase": "unavailable", "role": "alert", "live": "assertive", "hasChoices": false },
+    { "id": "catalog-empty-invalid-en", "locale": "en", "phase": "ready", "effectivePhase": "unavailable", "role": "alert", "live": "assertive", "hasChoices": false },
+    { "id": "catalog-empty-invalid-de", "locale": "de", "phase": "ready", "effectivePhase": "unavailable", "role": "alert", "live": "assertive", "hasChoices": false }
+  ],
+  "unsupportedLocales": ["fr", "it-IT", "und"]
+}

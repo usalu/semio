@@ -5,7 +5,7 @@
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see `create_generation2d_app`'s
 //! `.interaction(...)` declaration.
 
-use flow::CameraJson;
+use semio_framework_artifact_flow_semio_framework_os_flow::CameraJson;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;

@@ -1029,7 +1029,7 @@ mod codec_tests {
         use protocol::{DiffCodec, Mutation, OpBinary, OpText};
         use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
 
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
         let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");
         assert_eq!(encode_mp4(&snapshot), bytes);

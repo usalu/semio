@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📦resources` per Wave C.
 
 use super::DeleteResource;
-use crate::artifacts::program::diff::ProgramResourcesDelta;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::ProgramResourcesDelta;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
 pub fn diff(payload: &DeleteResource, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

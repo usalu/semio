@@ -6,8 +6,8 @@
 //! the sibling command/panel/window nodes moved here too, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
-use crate::artifacts::din16798::op::Din16798Mutation;
-use crate::artifacts::din16798::Din16798Snapshot;
+use crate::op::Din16798Mutation;
+use crate::Din16798Snapshot;
 use crate::config::{NormConfig, NormConfigMutation, NormHost};
 use crate::editor::din16798::commands::{evaluate, selected_check, set_snapshot};
 use crate::editor::din16798::modes::edit as edit_mode;
@@ -66,7 +66,7 @@ impl ArtifactEditor for Din16798PlayApp {
 
     type Command = Din16798Command;
 
-    const DIALECT: Dialect = crate::artifacts::din16798::DIN16798_DIALECT;
+    const DIALECT: Dialect = crate::DIN16798_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.norm.din16798/v1";
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -105,7 +105,7 @@ impl ArtifactEditor for Din16798PlayApp {
 
     /// 📎️ All fifteen norm apps share NormConfig (see crate::config::schema doc) — one
     /// AppSchemaDescriptor for all fifteen, registered idempotently by whichever app binds first.
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::config::schema::app_schema_descriptor())
     }
 
@@ -185,7 +185,7 @@ impl crate::document::NormFamily for DinEn16798Family {
     }
 
     fn evaluate(document: &Din16798Snapshot) -> crate::document::CheckReport {
-        crate::artifacts::din16798::standards::v1::subsets::any::schema::inferences::evaluate(document)
+        crate::standards::v1::subsets::any::schema::inferences::evaluate(document)
     }
 }
 
@@ -194,9 +194,9 @@ pub type Host = NormHost<DinEn16798Family>;
 
 //#region ðï¸Manifest
 pub fn create_din16798_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::artifacts::din16798::DIN16798_DIALECT)
+    Editor::builder(crate::DIN16798_DIALECT)
             .document(["semio", "norm", VARIANT])
-            .artifact_kind(crate::artifacts::din16798::artifact_kind())
+            .artifact_kind(crate::artifact_kind())
             .io(crate::app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))
             .mode_def(edit_mode::definition())
             .default_mode_id(crate::app_surface::MODE_EDIT)

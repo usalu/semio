@@ -28,7 +28,7 @@ const GOOGLE_FONTS_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/5
 const fontCatalogPath = join(elementsAssetsRoot, "🔤️fonts/📇️catalog.json");
 
 export interface FontCatalog {
-  readonly $schema: "./🧬️catalog.schema.json";
+  readonly $schema: "./🧬️schema/🔣️.json";
   readonly version: 1;
   readonly encodings: Readonly<Record<"ttf" | "woff" | "woff2", string>>;
   readonly weights: Readonly<Record<string, number>>;
@@ -52,7 +52,7 @@ export function parseFontCatalog(value: unknown): FontCatalog {
   const directory = (input: unknown): input is string => typeof input === "string" && /^\p{Extended_Pictographic}\uFE0F[a-z]+(?:-[a-z]+)*$/u.test(input);
   const unique = (items: readonly unknown[]): boolean => new Set(items).size === items.length;
   const root = record(value, ["$schema", "version", "encodings", "weights", "families"]);
-  if (root.$schema !== "./🧬️catalog.schema.json" || root.version !== 1) throw new Error("Unknown font catalog version");
+  if (root.$schema !== "./🧬️schema/🔣️.json" || root.version !== 1) throw new Error("Unknown font catalog version");
   const encodings = record(root.encodings, ["ttf", "woff", "woff2"]);
   if (encodings.ttf !== "🔤️outline.ttf" || encodings.woff !== "🌐️web.woff" || encodings.woff2 !== "🗜️compressed.woff2") throw new Error("Invalid font encoding identities");
   if (!root.weights || typeof root.weights !== "object" || Array.isArray(root.weights)) throw new Error("Invalid font weights");

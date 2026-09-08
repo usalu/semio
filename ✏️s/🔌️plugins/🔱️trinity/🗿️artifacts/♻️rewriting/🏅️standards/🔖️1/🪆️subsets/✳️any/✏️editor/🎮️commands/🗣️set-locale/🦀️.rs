@@ -1,6 +1,6 @@
 //! 👁️ 👁️ Trinity Rewriting app command — `set-locale`.
 
-use crate::artifacts::rewriting::op::RewriteRuleMutation;
+use crate::op::RewriteRuleMutation;
 use crate::editor::rewriting::config::RewritingConfigMutation;
 use semio_framework_plugin::Emit;
 

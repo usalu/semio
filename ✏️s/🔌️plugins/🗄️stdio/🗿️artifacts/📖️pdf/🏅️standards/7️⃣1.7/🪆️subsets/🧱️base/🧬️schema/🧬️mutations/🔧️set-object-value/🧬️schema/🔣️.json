@@ -1,23 +1,385 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-object-value.json",
+  "$id": "https://semio.tech/schema/s/stdio/pdf/1.7/base/mutation/set-object-value/schema.json",
   "title": "SetObjectValue",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mutation",
     "id",
     "value"
   ],
   "properties": {
-    "mutation": {
-      "const": "setObjectValue"
-    },
     "id": {
-      "type": "object"
+      "$ref": "#/$defs/ObjRef"
     },
     "value": {
-      "type": "object"
+      "$ref": "#/$defs/PdfObject"
+    },
+    "mutation": {
+      "const": "setObjectValue",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    }
+  },
+  "$defs": {
+    "ObjRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "num",
+        "gen"
+      ],
+      "properties": {
+        "num": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "gen": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "PdfObject": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "null"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bool"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "int"
+            },
+            "value": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "negative",
+            "coefficient",
+            "scale"
+          ],
+          "properties": {
+            "kind": {
+              "const": "real"
+            },
+            "negative": {
+              "type": "boolean"
+            },
+            "coefficient": {
+              "type": "string"
+            },
+            "scale": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "str"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "name"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "array"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfObject"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "dict"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "num",
+            "gen"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ref"
+            },
+            "num": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "gen": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "dict",
+            "data",
+            "filters"
+          ],
+          "properties": {
+            "kind": {
+              "const": "stream"
+            },
+            "dict": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfDictEntry"
+              }
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            },
+            "filters": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PdfStreamFilter"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PdfDecimal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "negative",
+        "coefficient",
+        "scale"
+      ],
+      "properties": {
+        "negative": {
+          "type": "boolean"
+        },
+        "coefficient": {
+          "type": "string"
+        },
+        "scale": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "PdfDictEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/PdfObject"
+        }
+      }
+    },
+    "PdfStreamFilter": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "flate"
+            },
+            "predictor": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/PdfPredictor"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "asciiHex"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ascii85"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "runLength"
+            }
+          }
+        }
+      ]
+    },
+    "PdfPredictor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "predictor",
+        "colors",
+        "bitsPerComponent",
+        "columns"
+      ],
+      "properties": {
+        "predictor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "colors": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "bitsPerComponent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
     }
   }
 }

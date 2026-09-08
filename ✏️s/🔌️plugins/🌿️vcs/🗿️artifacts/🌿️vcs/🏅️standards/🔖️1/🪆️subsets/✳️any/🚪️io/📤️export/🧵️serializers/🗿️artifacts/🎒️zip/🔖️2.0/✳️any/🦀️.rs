@@ -4,7 +4,7 @@
 //! counterpart in `ZipSnapshot`'s `{schema,entries,comment}` shape, so only `schema` survives,
 //! hence `IoFidelity::Lossy`.
 
-use crate::artifacts::vcs::VcsSnapshot;
+use crate::VcsSnapshot;
 use dsl::{FromValue, ToValue};
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};

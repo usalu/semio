@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `ChangeGridSubdivisions`.
 use super::ChangeGridSubdivisions;
-use crate::artifacts::note::NoteDiff;
-use crate::artifacts::note::NoteSnapshot;
+use crate::NoteDiff;
+use crate::NoteSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeGridSubdivisions, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {

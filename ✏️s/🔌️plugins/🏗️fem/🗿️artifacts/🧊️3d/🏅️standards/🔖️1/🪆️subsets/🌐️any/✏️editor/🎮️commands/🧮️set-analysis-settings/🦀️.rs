@@ -1,8 +1,8 @@
 //! 🧮️ 🧮️ FEM 3D app commands command — `set-analysis-settings`.
 
-use crate::artifacts::fem3d::mutations::update_analysis_settings;
-use crate::artifacts::fem3d::op::Fem3dMutation;
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::mutations::update_analysis_settings;
+use crate::op::Fem3dMutation;
+use crate::Fem3dSnapshot;
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -20,7 +20,7 @@ pub struct SetAnalysisSettings {
 /// partial update, not a whole-record replace.
 pub fn handle(payload: &SetAnalysisSettings, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let current = &doc.snapshot.analysis;
-    let settings = crate::artifacts::fem3d::FemAnalysisSettings {
+    let settings = crate::FemAnalysisSettings {
         modal_count: payload.modal_count.map_or(current.modal_count, |value| value as usize),
         buckling_count: payload.buckling_count.map_or(current.buckling_count, |value| value as usize),
         deformation_scale: payload.deformation_scale.unwrap_or(current.deformation_scale),

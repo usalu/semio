@@ -1,10 +1,10 @@
 //! 👁️ Generation2d play app — the preview window: the evaluated 2D canvas.
 
-use crate::artifacts::generation2d::schema::{collect_drawing_handles_from_eval, scene_layers_from_drawing_handle};
-use crate::artifacts::generation2d::Generation2dSnapshot;
+use crate::schema::{collect_drawing_handles_from_eval, scene_layers_from_drawing_handle};
+use crate::Generation2dSnapshot;
 use crate::editor::generation2d::config::Generation2dConfig;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use flow::FlowEvalSession;
+use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -56,7 +56,7 @@ pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, sess
     // selected" fallback), rather than filtering to a selection it can no longer read.
     if config.show_mode == "wire" {
         for widget in &fixture.widgets {
-            let id = crate::artifacts::generation2d::widget_id(widget).to_string();
+            let id = crate::widget_id(widget).to_string();
             let (x, y) = fixture.layout.get(&id).map_or((48.0, 240.0), |layout| (layout.x, layout.y));
             layers.push(dsl::json::Value::Object(
                 [

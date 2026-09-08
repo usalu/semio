@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `CreateNode` — always a `delete-node` of the created id.
 use super::CreateNode;
-use crate::artifacts::fem2d::mutations::{delete_node, Fem2dMutation};
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::mutations::{delete_node, Fem2dMutation};
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &CreateNode, _base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {

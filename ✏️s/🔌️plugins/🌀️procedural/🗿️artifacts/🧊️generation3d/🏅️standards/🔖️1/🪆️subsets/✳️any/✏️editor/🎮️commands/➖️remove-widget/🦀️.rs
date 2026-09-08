@@ -1,10 +1,10 @@
 //! 🧩️ 🧩️ Generation3d play app commands command — `remove-widget`.
 
-use crate::artifacts::generation3d::op::Generation3dMutation;
-use crate::artifacts::generation3d::schema::{commit_fixture, host_from_fixture};
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::op::Generation3dMutation;
+use crate::schema::{commit_fixture, host_from_fixture};
+use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use flow::FlowEvalSession;
+use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -35,7 +35,7 @@ mod tests {
     use crate::editor::generation3d::commands::{add_widget, patch_flow_widgets};
     use crate::editor::generation3d::testkit::{app, dispatch};
     use crate::editor::generation3d::Generation3dCommand;
-    use flow::Widget;
+    use semio_framework_artifact_flow_semio_framework_os_flow::Widget;
 
     #[semio_framework_async_macros::async_test]
     async fn add_widget_action_appends_widget() {
@@ -64,7 +64,7 @@ mod tests {
         let mut app = app().await;
         let before_fixture = app.snapshot().expect("snapshot").fixture.clone();
         let mut before_session = FlowEvalSession::new();
-        let mut before_host = flow::flow_host_with_session(&before_fixture, &before_session);
+        let mut before_host = semio_framework_os_flow::flow_host_with_session(&before_fixture, &before_session);
         before_session.sync(&before_host);
         while before_session.tick(&mut before_host) {}
         let before_eval = before_session.eval_json().to_string();
@@ -73,7 +73,7 @@ mod tests {
         dispatch(&mut app, Generation3dCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["height".into()], field: "value".into(), value: Some(9.5) })).await;
         let after_fixture = app.snapshot().expect("snapshot").fixture.clone();
         let mut after_session = FlowEvalSession::new();
-        let mut after_host = flow::flow_host_with_session(&after_fixture, &after_session);
+        let mut after_host = semio_framework_os_flow::flow_host_with_session(&after_fixture, &after_session);
         after_session.sync(&after_host);
         while after_session.tick(&mut after_host) {}
         let after_eval = after_session.eval_json().to_string();
@@ -87,9 +87,9 @@ mod tests {
     async fn remove_widget_action_deletes_by_id() {
         let _serial = crate::editor::generation3d::test_support::lock();
         let mut app = app().await;
-        assert!(app.snapshot().expect("snapshot").fixture.widgets.iter().any(|widget| crate::artifacts::generation3d::widget_id(widget) == "sides"));
+        assert!(app.snapshot().expect("snapshot").fixture.widgets.iter().any(|widget| crate::widget_id(widget) == "sides"));
         dispatch(&mut app, Generation3dCommand::RemoveWidget(RemoveWidget { widget_id: "sides".into() })).await;
-        assert!(!app.snapshot().expect("snapshot").fixture.widgets.iter().any(|widget| crate::artifacts::generation3d::widget_id(widget) == "sides"));
+        assert!(!app.snapshot().expect("snapshot").fixture.widgets.iter().any(|widget| crate::widget_id(widget) == "sides"));
     }
 }
 //#endregion 🧪️Tests

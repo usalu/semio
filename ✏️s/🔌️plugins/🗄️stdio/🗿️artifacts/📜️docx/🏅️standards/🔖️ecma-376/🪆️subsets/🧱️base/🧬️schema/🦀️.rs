@@ -588,7 +588,7 @@ mod tests {
         async fn zzz_write_native_docx_fixture() {
             let demo = demo_docx_snapshot().await;
             let native = encode_docx(&demo).expect("encode");
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/📜️example.docx");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/📜️example.docx");
             std::fs::write(path, native).expect("write 📜️example.docx");
         }
     }

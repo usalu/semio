@@ -1,8 +1,8 @@
 //! 🗑️ Direct Imperative mutation — `DeleteStep` removes an id-keyed step (its `bodies` cascade goes
 //! with it — no separate reconnection logic needed).
-use crate::artifacts::procedure::diff::ProcedureDiff;
-use crate::artifacts::procedure::mutations::ProcedureMutation;
-use crate::artifacts::procedure::{ProcedureSnapshot, PathRef};
+use crate::diff::ProcedureDiff;
+use crate::mutations::ProcedureMutation;
+use crate::{ProcedureSnapshot, PathRef};
 
 //#region 🔖️Mutation
 /// 🗑️ `delete-step` payload.

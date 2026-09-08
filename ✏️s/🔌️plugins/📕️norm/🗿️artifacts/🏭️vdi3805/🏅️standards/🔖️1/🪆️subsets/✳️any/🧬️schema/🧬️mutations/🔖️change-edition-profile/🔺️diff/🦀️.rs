@@ -1,7 +1,7 @@
 //! 🔺️ `change-edition-profile` — sparse diff construction.
 
 use super::ChangeEditionProfile;
-use crate::artifacts::vdi3805::{Vdi3805Diff, Vdi3805Snapshot};
+use crate::{Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ChangeEditionProfile, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {

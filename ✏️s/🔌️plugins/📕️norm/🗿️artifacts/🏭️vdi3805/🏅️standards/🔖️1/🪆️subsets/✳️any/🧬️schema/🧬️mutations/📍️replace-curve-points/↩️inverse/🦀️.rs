@@ -1,7 +1,7 @@
 //! ↩️ `replace-curve-points` — undo restores BASE's points; missing id ⇒ `Vec::new()`.
 
 use super::ReplaceCurvePoints;
-use crate::artifacts::vdi3805::{Vdi3805Mutation, Vdi3805Snapshot};
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceCurvePoints, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {

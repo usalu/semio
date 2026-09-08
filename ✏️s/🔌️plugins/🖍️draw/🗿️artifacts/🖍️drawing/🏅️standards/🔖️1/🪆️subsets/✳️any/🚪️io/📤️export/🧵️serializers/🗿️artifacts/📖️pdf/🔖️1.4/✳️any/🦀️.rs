@@ -5,7 +5,7 @@
 //! honestly instead of perpetuating the mislabeled payload; real PDF export is out of scope for
 //! this cutover. `IoFidelity::Lossy` (would-be, once implemented) is moot while the hop always errors.
 
-use crate::artifacts::drawing::DrawingSnapshot;
+use crate::DrawingSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

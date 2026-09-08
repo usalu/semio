@@ -1,7 +1,7 @@
 //! ✍️ ✍️ Writer play app commands command — `open-document`.
 
-use crate::artifacts::writer::op::WriterMutation;
-use crate::artifacts::writer::{writer_snapshot_with_text, WriterSnapshot};
+use crate::op::WriterMutation;
+use crate::{writer_snapshot_with_text, WriterSnapshot};
 use crate::editor::writer::config::{WriterConfig, WriterConfigMutation};
 use crate::editor::writer::reset_document_effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -19,7 +19,7 @@ pub(crate) fn emit(payload: &OpenDocument) -> Emit<WriterMutation, WriterConfigM
     let ext = payload.uri.rsplit('.').next().filter(|s| *s != &id);
     let language_id = dsl::language_for_semio_content(payload.text.as_bytes()).or_else(|| ext.and_then(|e| dsl::language_for_extension(e))).map(|spec| spec.id.to_string()).unwrap_or_else(|| "plaintext".to_string());
     eprintln!("[DEBUG] writer.open_document uri={} language_id={} text_len={}", payload.uri, language_id, payload.text.len());
-    let document = writer_snapshot_with_text(crate::artifacts::writer::WRITER_DOCUMENT_SCHEMA, &id, &language_id, &payload.uri, &payload.text);
+    let document = writer_snapshot_with_text(crate::WRITER_DOCUMENT_SCHEMA, &id, &language_id, &payload.uri, &payload.text);
     Emit { effects: vec![reset_document_effect(&document)], ..Default::default() }
 }
 

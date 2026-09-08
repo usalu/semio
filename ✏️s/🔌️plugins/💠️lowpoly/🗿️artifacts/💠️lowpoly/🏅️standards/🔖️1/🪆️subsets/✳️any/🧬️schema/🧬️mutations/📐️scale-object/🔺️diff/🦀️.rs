@@ -3,8 +3,8 @@
 //! when a scale component is non-finite or non-positive.
 
 use super::ScaleObject;
-use crate::artifacts::lowpoly::diff::diff_objects_patch;
-use crate::artifacts::lowpoly::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot, LowpolyTransform};
+use crate::diff::diff_objects_patch;
+use crate::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot, LowpolyTransform};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ScaleObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {

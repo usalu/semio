@@ -7,8 +7,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::artifacts::block5d::diff::Block5dDiff;
-use crate::artifacts::block5d::Block5dSnapshot;
+use crate::diff::Block5dDiff;
+use crate::Block5dSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Store
@@ -183,8 +183,8 @@ pub fn inverse_block5d_mutation(projection: &Block5dSnapshot, mutation: &Block5d
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::block5d::schema::empty_block5d_snapshot;
-    use crate::artifacts::block5d::{Block5dGripKind, Block5dGripTemplate};
+    use crate::schema::empty_block5d_snapshot;
+    use crate::{Block5dGripKind, Block5dGripTemplate};
     use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
     use semio_framework_os_kernel::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::MutationDiff;

@@ -12,9 +12,9 @@
 //! treated as an authored content body rather than a bare scalar rename, which is why it does not
 //! share `change`'s verb with `change-node-kind`/`change-node-shape`.
 
-use crate::artifacts::wires::mutations::{EditNodeText, WiresMutation};
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::{materialize_wires_content, WiresDiff, WiresSnapshot};
+use crate::mutations::{EditNodeText, WiresMutation};
+use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::{materialize_wires_content, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

@@ -22,23 +22,23 @@ pub struct SHomeArtifact {
 //#region 🔖️Conversions
 impl Default for SHomeArtifact {
     fn default() -> Self {
-        Self { schema: crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA.into(), catalog_generation: 0, active_panel_tab: String::new(), locale: "en-US".into() }
+        Self { schema: crate::S_HOME_DOCUMENT_SCHEMA.into(), catalog_generation: 0, active_panel_tab: String::new(), locale: "en-US".into() }
     }
 }
 
 impl SHomeArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::home::SHomeSnapshot {
-        crate::artifacts::home::SHomeSnapshot { schema: self.schema.clone(), catalog_generation: self.catalog_generation }
+    pub fn to_snapshot(&self) -> crate::SHomeSnapshot {
+        crate::SHomeSnapshot { schema: self.schema.clone(), catalog_generation: self.catalog_generation }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::home::SHomeSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::SHomeSnapshot) -> Self {
         Self { schema: snapshot.schema, catalog_generation: snapshot.catalog_generation, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::home::SHomeSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::SHomeSnapshot) {
         self.schema = snapshot.schema;
         self.catalog_generation = snapshot.catalog_generation;
     }
@@ -83,9 +83,9 @@ pub fn home_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::home::schema::diff::SHomeDiff;
-    use crate::artifacts::home::schema::mutations::SHomeMutation;
-    use crate::artifacts::home::schema::snapshot::SHomeSnapshot;
+    use crate::schema::diff::SHomeDiff;
+    use crate::schema::mutations::SHomeMutation;
+    use crate::schema::snapshot::SHomeSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -137,7 +137,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::home::SHomeSnapshot;
+    use crate::SHomeSnapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -200,8 +200,8 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️DocumentHelpers
 /// 🌱️ Relocated from `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 3:
 /// pure helpers over document types live in `🧬️schema/`).
-pub fn empty_shome_snapshot() -> crate::artifacts::home::SHomeSnapshot {
-    crate::artifacts::home::SHomeSnapshot::default()
+pub fn empty_shome_snapshot() -> crate::SHomeSnapshot {
+    crate::SHomeSnapshot::default()
 }
 
 /// 🔎 Returns whether `s.space.home` is present in the process-local schema registry. Relocated from
@@ -226,7 +226,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_uses_home_schema() {
         let snapshot = empty_shome_snapshot();
-        assert_eq!(snapshot.schema, crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA);
+        assert_eq!(snapshot.schema, crate::S_HOME_DOCUMENT_SCHEMA);
     }
 }
 //#endregion 🧪️Tests

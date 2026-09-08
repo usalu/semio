@@ -1,17 +1,17 @@
 //! ⚙️ S Space mutation bridge, laws, and behavior tests.
 
 #[cfg(test)]
-use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDiff;
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
+use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 #[cfg(test)]
-use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::{create_artifact, delete_artifact, register_s_space_mutation_descriptors, rename_artifact, touch_artifact};
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::{create_artifact, delete_artifact, register_s_space_mutation_descriptors, rename_artifact, touch_artifact};
+use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{empty_space_index_snapshot, SpaceArtifactDialect, SpaceArtifactRow};
+    use crate::standards::v1::subsets::any::schema::snapshot::{empty_space_index_snapshot, SpaceArtifactDialect, SpaceArtifactRow};
     use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::Mutation;
 

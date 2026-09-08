@@ -1,5 +1,5 @@
 //! generation3d -> dwg
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::Generation3dSnapshot;
 
 pub fn register() {}
 

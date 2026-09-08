@@ -198,5 +198,5 @@ impl<'a> Cursor<'a> {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

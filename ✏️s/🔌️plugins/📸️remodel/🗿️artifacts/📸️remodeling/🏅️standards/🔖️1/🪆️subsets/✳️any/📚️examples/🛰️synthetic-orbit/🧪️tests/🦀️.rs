@@ -9,7 +9,7 @@
 //! decoded rasters do not, and that equality is what these tests assert.
 
 use super::{CAMERA_ID, FRAMES, FRAME_MIME, GROUND_TRUTH_JSON, ID, PRIMARY_TEXT, STREAM_ID};
-use crate::artifacts::remodeling::{CameraCalibration, FrameRef, MediaKind, MediaStream, RemodelingSnapshot};
+use crate::{CameraCalibration, FrameRef, MediaKind, MediaStream, RemodelingSnapshot};
 use crate::editor::remodeling::commands::cancel_reconstruction::CancelReconstruction;
 use crate::editor::remodeling::commands::import_frame_payload::ImportFramePayload;
 use crate::editor::remodeling::commands::run_reconstruction::{AdvanceReconstruction, RunReconstruction, ADVANCE_RECONSTRUCTION_ACTION_ID};
@@ -555,7 +555,7 @@ async fn reconstructs_the_synthetic_orbit_against_ground_truth() {
     let (scene, progress, ticks) = drive(&mut app, None).await;
     assert!(ticks > 0, "a populated document must not short-circuit the way every other shipped example does");
     assert!(progress.windows(2).all(|pair| pair[1] >= pair[0]), "reported progress must never move backwards: {progress:?}");
-    assert_ne!(scene.job.stage, crate::artifacts::remodeling::ReconstructionStage::Failed, "reconstruction failed: {:?}", scene.job.error);
+    assert_ne!(scene.job.stage, crate::ReconstructionStage::Failed, "reconstruction failed: {:?}", scene.job.error);
 
     let sparse = scene.results.sparse.as_ref().expect("commit-reconstruction must carry a sparse cloud");
     let recovered_points = sparse.points.to_f32_vec_from(&scene.durable_artifacts).len() / 3;
@@ -577,7 +577,7 @@ async fn reconstructs_the_synthetic_orbit_against_ground_truth() {
     assert!(translation_ratio < MAX_TRANSLATION_RMSE_RATIO * UNCALIBRATED_GAUGE_SLACK, "aligned translation RMSE {:.3}% of scene scale exceeds the gauge-slackened bound", translation_ratio * 100.0);
 
     let mesh = &scene.results.mesh;
-    assert_ne!(mesh.source, crate::artifacts::remodeling::MeshSource::Placeholder, "a completed run must replace the seeded placeholder mesh");
+    assert_ne!(mesh.source, crate::MeshSource::Placeholder, "a completed run must replace the seeded placeholder mesh");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -589,7 +589,7 @@ async fn cancel_requested_mid_run_terminates_the_synthetic_orbit_reconstruction(
     assert!(progress.windows(2).all(|pair| pair[1] >= pair[0]), "progress must stay monotonic through cancellation: {progress:?}");
     assert!(scene.job.cancel_requested, "cancel-reconstruction must record the request on the job");
     assert!(scene.results.sparse.is_none(), "a cancelled run must not commit reconstruction results");
-    assert_eq!(scene.results.mesh.source, crate::artifacts::remodeling::MeshSource::Placeholder, "a cancelled run must leave the seeded placeholder mesh in place");
+    assert_eq!(scene.results.mesh.source, crate::MeshSource::Placeholder, "a cancelled run must leave the seeded placeholder mesh in place");
 }
 //#endregion 🧪️EndToEnd
 
@@ -647,7 +647,7 @@ fn regenerates_the_synthetic_orbit_example() {
 /// 🗣️ The committed document: the engine-tuning params this fixture reconstructs under, the rendering
 /// camera's true calibration, and the stream whose frame table the loader binds pixels to.
 fn fixture_document() -> RemodelingSnapshot {
-    let mut scene = crate::artifacts::remodeling::default_remodeling_scene();
+    let mut scene = crate::default_remodeling_scene();
     scene.calibration.cameras = vec![CameraCalibration {
         id: CAMERA_ID.into(),
         label: "Synthetic Orbit Camera".into(),
@@ -665,13 +665,13 @@ fn fixture_document() -> RemodelingSnapshot {
     scene.params.ingest.max_frames = 32;
     scene.params.ingest.downscale_long_edge_px = WIDTH;
     scene.params.ingest.min_sharpness = 0.0;
-    scene.params.feature.detector = crate::artifacts::remodeling::FeatureDetector::Akaze;
+    scene.params.feature.detector = crate::FeatureDetector::Akaze;
     scene.params.feature.target_count = 600;
     scene.params.matching.ratio_test = 0.85;
     scene.params.matching.sequential_window = 6;
     scene.params.sfm.min_track_length = 2;
     scene.params.sfm.ba_max_iterations = 25;
-    scene.params.dense.resolution = crate::artifacts::remodeling::DenseResolution::Low;
+    scene.params.dense.resolution = crate::DenseResolution::Low;
     scene.params.dense.window_radius_px = 2;
     scene.params.dense.max_points = 50_000;
     scene.params.mesh.tsdf_voxel_size_mm = 100.0;

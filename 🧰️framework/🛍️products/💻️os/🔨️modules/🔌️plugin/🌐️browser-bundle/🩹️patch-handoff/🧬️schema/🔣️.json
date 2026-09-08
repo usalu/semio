@@ -1,19 +1,208 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/plugin/browser-bundle/patch-handoff/component.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["offer", "acknowledged", "rejected", "hostileResults"],
+  "required": [
+    "offer",
+    "acknowledged",
+    "rejected",
+    "hostileResults"
+  ],
   "$defs": {
-    "scope": { "type": "object", "additionalProperties": false, "required": ["spaceId", "documentId"], "properties": { "spaceId": { "type": "string", "minLength": 1 }, "documentId": { "type": "string", "minLength": 1 } } },
-    "receipt": { "type": "array", "minItems": 4, "maxItems": 35, "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
-    "patch": { "type": "object", "additionalProperties": false, "required": ["surface", "baseRevision", "revision", "ops"], "properties": { "surface": { "const": "map" }, "baseRevision": { "type": "integer", "minimum": 0 }, "revision": { "type": "integer", "minimum": 1 }, "ops": { "type": "array", "maxItems": 4096 } } },
-    "offer": { "type": "object", "additionalProperties": false, "required": ["kind", "scope", "verifiedSurfaceId", "activationGeneration", "instanceId", "patch", "receipt"], "properties": { "kind": { "const": "browser-actor-ui-patch" }, "scope": { "$ref": "#/$defs/scope" }, "verifiedSurfaceId": { "const": "s.gis.gismap@1/viewer" }, "activationGeneration": { "type": "string", "pattern": "^[1-9][0-9]{0,19}$" }, "instanceId": { "type": "integer", "minimum": 0 }, "patch": { "$ref": "#/$defs/patch" }, "receipt": { "$ref": "#/$defs/receipt" } } },
-    "result": { "type": "object", "additionalProperties": false, "required": ["kind", "scope", "verifiedSurfaceId", "activationGeneration", "instanceId", "receipt", "outcome", "revision"], "properties": { "kind": { "const": "browser-actor-ui-patch-result" }, "scope": { "$ref": "#/$defs/scope" }, "verifiedSurfaceId": { "type": "string", "minLength": 1 }, "activationGeneration": { "type": "string", "pattern": "^[1-9][0-9]{0,19}$" }, "instanceId": { "type": "integer", "minimum": 0 }, "receipt": { "$ref": "#/$defs/receipt" }, "outcome": { "enum": ["acknowledged", "rejected"] }, "revision": { "type": "integer", "minimum": 0 }, "reason": { "type": "string", "minLength": 1 } }, "allOf": [{ "if": { "properties": { "outcome": { "const": "rejected" } }, "required": ["outcome"] }, "then": { "properties": { "reason": { "type": "string", "minLength": 1 } }, "required": ["reason"] }, "else": { "not": { "required": ["reason"] } } }] }
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spaceId",
+        "documentId"
+      ],
+      "properties": {
+        "spaceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "receipt": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 35,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "patch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surface",
+        "baseRevision",
+        "revision",
+        "ops"
+      ],
+      "properties": {
+        "surface": {
+          "const": "map"
+        },
+        "baseRevision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ops": {
+          "type": "array",
+          "maxItems": 4096
+        }
+      }
+    },
+    "offer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "scope",
+        "verifiedSurfaceId",
+        "activationGeneration",
+        "instanceId",
+        "patch",
+        "receipt"
+      ],
+      "properties": {
+        "kind": {
+          "const": "browser-actor-ui-patch"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "verifiedSurfaceId": {
+          "const": "s.gis.gismap@1/viewer"
+        },
+        "activationGeneration": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,19}$"
+        },
+        "instanceId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "patch": {
+          "$ref": "#/$defs/patch"
+        },
+        "receipt": {
+          "$ref": "#/$defs/receipt"
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "scope",
+        "verifiedSurfaceId",
+        "activationGeneration",
+        "instanceId",
+        "receipt",
+        "outcome",
+        "revision"
+      ],
+      "properties": {
+        "kind": {
+          "const": "browser-actor-ui-patch-result"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "verifiedSurfaceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "activationGeneration": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,19}$"
+        },
+        "instanceId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "receipt": {
+          "$ref": "#/$defs/receipt"
+        },
+        "outcome": {
+          "enum": [
+            "acknowledged",
+            "rejected"
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "rejected"
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "reason"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        }
+      ]
+    }
   },
   "properties": {
-    "offer": { "$ref": "#/$defs/offer" },
-    "acknowledged": { "$ref": "#/$defs/result" },
-    "rejected": { "$ref": "#/$defs/result" },
-    "hostileResults": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/result" } }
+    "offer": {
+      "$ref": "#/$defs/offer"
+    },
+    "acknowledged": {
+      "$ref": "#/$defs/result"
+    },
+    "rejected": {
+      "$ref": "#/$defs/result"
+    },
+    "hostileResults": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "$ref": "#/$defs/result"
+      }
+    }
   }
 }

@@ -1,7 +1,7 @@
 //! 🧱️ 🧱️ Playbook play app commands command — `remove-block`.
 
-use crate::artifacts::playbook::op::{remove_block_operation, PlaybookMutation};
-use crate::artifacts::playbook::PlaybookSnapshot;
+use crate::op::{remove_block_operation, PlaybookMutation};
+use crate::PlaybookSnapshot;
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

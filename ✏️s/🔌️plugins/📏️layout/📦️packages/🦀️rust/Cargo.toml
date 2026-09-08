@@ -23,6 +23,7 @@ crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-layout-layout = { workspace = true }
 semio-framework-ui-contract.workspace = true
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }

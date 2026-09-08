@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { buildClosedBrowserActorArtifactV1 } from "../../📜️script.ts";
 import { runExactCargoLawProcess } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
@@ -35,7 +35,10 @@ function targetRoot(): string {
 export async function testCanonicalActorAsyncImport(repoRoot: string, closeFactory?: ActorImportFactoryPort, closeActorBundle?: ActorImportFactoryPort, pendingHostClose = true): Promise<void> {
   const fixtureRoot = import.meta.dir;
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as Fixture;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  const schemaDocument = JSON.parse(readFileSync(resolve(fixtureRoot, "../../🧬️schema/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(schemaDocument);
+  const validate = ajv.getSchema(`${schemaDocument.$id}#/$defs/ActorImportV1`)!;
   assert(validate(fixture), JSON.stringify(validate.errors));
   assert.equal(new Set(fixture.actors.map(actor => actor.actorId)).size, fixture.limits.actors);
   const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;

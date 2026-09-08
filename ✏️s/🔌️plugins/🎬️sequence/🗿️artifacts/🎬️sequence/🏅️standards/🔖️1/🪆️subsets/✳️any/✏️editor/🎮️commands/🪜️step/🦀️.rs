@@ -1,8 +1,8 @@
 //! 🪜️ Sequence play app commands — step CRUD: add/remove/move/patch/collapse a step, delete the
 //! current selection.
 
-use crate::artifacts::sequence::mutations::SequenceMutation;
-use crate::artifacts::sequence::{SequenceSnapshot, SlotRef};
+use crate::mutations::SequenceMutation;
+use crate::{SequenceSnapshot, SlotRef};
 use crate::editor::sequence::config::{SequenceConfig, SequenceConfigMutation};
 use crate::editor::sequence::{host_from_snapshot, ops_from_host_mutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -27,7 +27,7 @@ pub mod add_step {
         let fixture = doc.snapshot;
         let mut host = host_from_snapshot(fixture);
         let _id = host.add_step(&payload.kind, payload.x, payload.y);
-        Ok(Emit::mutations(crate::artifacts::sequence::op::sequence_snapshot_mutations(&fixture.to_fixture(), &host.snapshot)))
+        Ok(Emit::mutations(crate::op::sequence_snapshot_mutations(&fixture.to_fixture(), &host.snapshot)))
     }
 }
 
@@ -51,7 +51,7 @@ pub mod add_step_to_slot {
         let fixture = doc.snapshot;
         let mut host = host_from_snapshot(fixture);
         let _id = host.add_step_in_slot(&payload.kind, payload.x, payload.y, Some(SlotRef { owner: payload.owner.clone(), name: payload.slot_name.clone() }));
-        Ok(Emit::mutations(crate::artifacts::sequence::op::sequence_snapshot_mutations(&fixture.to_fixture(), &host.snapshot)))
+        Ok(Emit::mutations(crate::op::sequence_snapshot_mutations(&fixture.to_fixture(), &host.snapshot)))
     }
 }
 
@@ -74,7 +74,7 @@ pub mod add_step_dropped {
         let fixture = doc.snapshot;
         let mut host = host_from_snapshot(fixture);
         let _id = host.add_step_dropped(&payload.kind, payload.x, payload.y, payload.picked_step_id.as_deref());
-        Ok(Emit::mutations(crate::artifacts::sequence::op::sequence_snapshot_mutations(&fixture.to_fixture(), &host.snapshot)))
+        Ok(Emit::mutations(crate::op::sequence_snapshot_mutations(&fixture.to_fixture(), &host.snapshot)))
     }
 }
 //#endregion 🔖️AddStep

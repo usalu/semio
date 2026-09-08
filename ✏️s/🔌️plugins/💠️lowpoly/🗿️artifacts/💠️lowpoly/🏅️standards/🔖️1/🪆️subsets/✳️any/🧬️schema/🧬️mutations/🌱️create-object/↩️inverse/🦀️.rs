@@ -2,8 +2,8 @@
 //! was a no-op and there's nothing to undo).
 
 use super::CreateObject;
-use crate::artifacts::lowpoly::mutations::delete_object;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::mutations::delete_object;
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &CreateObject, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

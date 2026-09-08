@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceReferences`.
 use super::ReplaceReferences;
-use crate::artifacts::cad::diff::CadDiff;
-use crate::artifacts::cad::CadSnapshot;
+use crate::diff::CadDiff;
+use crate::CadSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff

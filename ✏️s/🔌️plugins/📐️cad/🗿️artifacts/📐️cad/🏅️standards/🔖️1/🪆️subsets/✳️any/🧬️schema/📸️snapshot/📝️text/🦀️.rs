@@ -1,7 +1,7 @@
 //! 🗣️ CAD artifact — the textual `.cad` document grammar surface: `parse_dsl`/`print_dsl` over the
 //! derive-generated `store::ArtifactDsl`, plus the handcrafted `default` example the app registers.
 
-use crate::artifacts::cad::CadSnapshot;
+use crate::CadSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -28,7 +28,7 @@ pub fn print_dsl(document: &CadSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::cad::testkit::sample_scene;
+    use crate::testkit::sample_scene;
 
     /// 🧪️ `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` predates this wave's snapshot-schema
     /// rewrite (`schema=`/`shapeModel=`/… lines replace the old `objects=`/`shapeGeometry=` shape)

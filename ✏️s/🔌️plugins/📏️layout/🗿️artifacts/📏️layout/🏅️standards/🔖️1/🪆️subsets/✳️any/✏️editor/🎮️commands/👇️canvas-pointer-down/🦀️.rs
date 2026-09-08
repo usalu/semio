@@ -1,9 +1,9 @@
 //! 🖱️ 🖱️ Layout play app commands command — `canvas-pointer-down`.
 
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::LayoutSnapshot;
+use crate::mutations::LayoutMutation;
+use crate::LayoutSnapshot;
 #[cfg(test)]
-use crate::artifacts::layout::LayoutCamera;
+use crate::LayoutCamera;
 use crate::editor::layout::canvas::active_page;
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::config::LayoutConfigMutation;

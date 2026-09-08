@@ -1,7 +1,7 @@
 //! 🌱️ Fem3d mutation — `CreateCombination` payload + `MutationKind` impl.
 
-use crate::artifacts::fem3d::{Fem3dSnapshot, FemCombination};
-use crate::artifacts::fem3d::mutations::Fem3dMutation;
+use crate::{Fem3dSnapshot, FemCombination};
+use crate::mutations::Fem3dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,7 +18,7 @@ pub struct CreateCombination {
 impl MutationKind<Fem3dSnapshot, Fem3dMutation> for CreateCombination {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "combination", kind: "create-combination", record: "CreatedCombination" };
 
-    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem3d::diff::Fem3dDiff> {
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {

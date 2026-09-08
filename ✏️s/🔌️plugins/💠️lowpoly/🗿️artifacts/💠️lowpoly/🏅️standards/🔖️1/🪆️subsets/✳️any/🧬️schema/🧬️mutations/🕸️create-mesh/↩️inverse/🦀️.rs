@@ -12,8 +12,8 @@
 //! resync it, `store::os_store::ArtifactStore::dispatch_inner`'s `Undo`/`Redo` arms call no app code)
 //! and needs real child-document resolution to close, same open gap flagged throughout this ticket.
 use super::CreateMesh;
-use crate::artifacts::lowpoly::mutations::delete_mesh;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::mutations::delete_mesh;
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &CreateMesh, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

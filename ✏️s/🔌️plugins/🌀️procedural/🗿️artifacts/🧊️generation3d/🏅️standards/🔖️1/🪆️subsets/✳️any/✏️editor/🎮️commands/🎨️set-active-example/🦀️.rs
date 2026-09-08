@@ -1,11 +1,12 @@
 //! 🎨️ 🎨️ Generation3d play app commands command — `set-active-example`.
 
-use crate::artifacts::generation3d::op::{generation_mutation_to_generation3d, generation3d_fixture_operations, Generation3dMutation};
-use crate::artifacts::generation3d::schema::{default_snapshot, example_snapshot, is_generation3d_example_id};
-use crate::artifacts::generation3d::Generation3dSnapshot;
+use crate::op::{generation_mutation_to_generation3d, generation3d_fixture_operations, Generation3dMutation};
+use crate::schema::{default_snapshot, example_snapshot, is_generation3d_example_id};
+use crate::Generation3dSnapshot;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use flow::playbook::GenerationMutation;
-use flow::{CameraJson, FlowEvalSession};
+use semio_framework_artifact_playbook_playbook::GenerationMutation;
+use semio_framework_os_flow::{FlowEvalSession};
+use semio_framework_artifact_flow_semio_framework_os_flow::{CameraJson};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -56,10 +57,10 @@ pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSna
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::generation3d::schema::PROCEDURAL_EXAMPLE_BOX_FILLET;
+    use crate::schema::PROCEDURAL_EXAMPLE_BOX_FILLET;
     use crate::editor::generation3d::testkit::{app, app_with_registry, dispatch};
     use crate::editor::generation3d::Generation3dCommand;
-    use flow::Widget;
+    use semio_framework_artifact_flow_semio_framework_os_flow::Widget;
     use semio_framework_plugin::PluginApp;
 
     #[semio_framework_async_macros::async_test]
@@ -72,7 +73,7 @@ mod tests {
             .fixture
             .widgets
             .iter()
-            .any(|widget| crate::artifacts::generation3d::widget_id(widget).contains("fillet") || matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind.contains("fillet") || neuron_kind.contains("box"))));
+            .any(|widget| crate::widget_id(widget).contains("fillet") || matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind.contains("fillet") || neuron_kind.contains("box"))));
     }
 
     #[semio_framework_async_macros::async_test]

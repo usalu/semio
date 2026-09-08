@@ -4,8 +4,8 @@
 //! dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::artifacts::forms::{forms_steps, FormsSnapshot};
-use schema::ArtifactSchema;
+use crate::{forms_steps, FormsSnapshot};
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::topology::{compute_forms_topology, FormsTopology};
@@ -63,10 +63,10 @@ impl ArtifactInferrer for FormsInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.forms.forms.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `forms_artifact_schema_descriptor`'s registration.
-pub fn forms_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn forms_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.forms.forms.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
@@ -86,7 +86,7 @@ mod tests {
     //#region 🧸️Fixtures
     /// 🩹️ `FormsSnapshot` composes `structure`/`results` handles (ticket
     /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM) so it no longer deserializes raw step/block JSON
-    /// directly — `flow::playbook::PlaybookSpec` is the SAME `{schema,id,version,title,steps}`
+    /// directly — `semio_framework_artifact_playbook_playbook::PlaybookSpec` is the SAME `{schema,id,version,title,steps}`
     /// camelCase shape, so this fixture deserializes through it instead.
     fn step_with_conditional_block() -> FormsSnapshot {
         let json = r#"{
@@ -110,8 +110,8 @@ mod tests {
                 }
             ]
         }"#;
-        let spec = dsl::os_pack::json::from_json_str::<flow::playbook::PlaybookSpec>(json).expect("valid playbook spec json");
-        crate::artifacts::forms::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, spec.steps)
+        let spec = dsl::os_pack::json::from_json_str::<semio_framework_artifact_playbook_playbook::PlaybookSpec>(json).expect("valid playbook spec json");
+        crate::forms_snapshot_with_state(spec.schema, spec.id, spec.version, spec.title, spec.steps)
     }
     //#endregion 🧸️Fixtures
 

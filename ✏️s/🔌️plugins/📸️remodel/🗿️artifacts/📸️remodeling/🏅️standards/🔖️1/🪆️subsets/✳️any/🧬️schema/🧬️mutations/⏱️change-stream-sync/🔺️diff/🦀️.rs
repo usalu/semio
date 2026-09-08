@@ -2,8 +2,8 @@
 //! target-missing ⇒ Error, then the invariant (a non-finite offset) ⇒ Fatal, then the identical
 //! resubmission ⇒ Warning: a malformed argument is a fault whether or not it happens to match what is
 //! already stored.
-use crate::artifacts::remodeling::diff::{RemodelingDiff, RemodelingMediaStreamList};
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::{RemodelingDiff, RemodelingMediaStreamList};
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeStreamSync, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

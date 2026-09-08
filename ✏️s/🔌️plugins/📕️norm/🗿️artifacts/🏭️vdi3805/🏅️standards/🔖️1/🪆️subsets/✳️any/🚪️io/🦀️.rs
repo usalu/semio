@@ -13,8 +13,8 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::vdi3805::standards::v1::subsets::any::schema::Vdi3805Analyzer;
-    use crate::artifacts::vdi3805::Vdi3805Snapshot;
+    use crate::standards::v1::subsets::any::schema::Vdi3805Analyzer;
+    use crate::Vdi3805Snapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.vdi3805", standard: StandardId("1"), subset: SubsetId("*") };
@@ -52,7 +52,7 @@ pub use derived_composition::*;
 //#region 🚪️JsonSerializers
 /// 🚪️ Whole-artifact JSON (de)serializers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — relocated verbatim from the deleted `⚙️engine`; serialization is exactly what `🚪️io` is for.
-use crate::artifacts::vdi3805::{ManufacturerCatalog, Vdi3805Snapshot};
+use crate::{ManufacturerCatalog, Vdi3805Snapshot};
 use crate::document::NormError;
 
 /// 📤️ JSON round-trip for manufacturer catalogues.
@@ -78,7 +78,7 @@ pub fn document_from_json(json: &str) -> Result<Vdi3805Snapshot, NormError> {
 /// 🚪️ Composer registry — relocated verbatim from the deleted `⚙️engine`; io is exactly where
 /// composer dispatch belongs.
 pub mod io_registry {
-    use crate::artifacts::vdi3805::standards::v1::subsets::any::schema::Vdi3805Composer as Vdi3805AnyComposer;
+    use crate::standards::v1::subsets::any::schema::Vdi3805Composer as Vdi3805AnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 

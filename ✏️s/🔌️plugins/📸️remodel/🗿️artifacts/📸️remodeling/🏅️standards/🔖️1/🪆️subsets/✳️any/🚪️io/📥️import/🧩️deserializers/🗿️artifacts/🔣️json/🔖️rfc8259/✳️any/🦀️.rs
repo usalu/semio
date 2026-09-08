@@ -1,5 +1,5 @@
-use crate::artifacts::remodeling::RemodelingSnapshot;
-use crate::artifacts::remodeling::REMODELING_DOCUMENT_SCHEMA;
+use crate::RemodelingSnapshot;
+use crate::REMODELING_DOCUMENT_SCHEMA;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

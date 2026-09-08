@@ -1,6 +1,6 @@
 //! 🧮️ Trinity Jack app — view-state config + config operations.
 
-use crate::artifacts::jack::Camera;
+use crate::Camera;
 use std::collections::BTreeMap;
 
 /// 🎯️ Ephemeral editor selection range (offsets into the jack query text).

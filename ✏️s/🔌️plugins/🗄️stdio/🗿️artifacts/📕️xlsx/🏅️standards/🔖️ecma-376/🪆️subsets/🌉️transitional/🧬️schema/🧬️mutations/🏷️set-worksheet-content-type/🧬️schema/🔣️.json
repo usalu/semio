@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/transitional/mutation/set-worksheet-content-type.json",
+  "$id": "https://semio.tech/schema/s/stdio/xlsx/ecma-376/transitional/mutation/set-worksheet-content-type/schema.json",
   "title": "SetWorksheetContentType",
   "type": "object",
   "additionalProperties": false,

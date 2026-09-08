@@ -15,9 +15,9 @@
 //! `node`); only `kind`/`record` tell them apart, and this fixture pins that this leaf is the
 //! `nodeKind` one.
 
-use crate::artifacts::wires::mutations::{ChangeNodeKind, WiresMutation};
-use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
-use crate::artifacts::wires::{materialize_wires_content, WiresDiff, WiresSnapshot};
+use crate::mutations::{ChangeNodeKind, WiresMutation};
+use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
+use crate::{materialize_wires_content, WiresDiff, WiresSnapshot};
 use dsl::DslValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

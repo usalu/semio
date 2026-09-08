@@ -1,7 +1,7 @@
 //! ↩️ `change-paint-layer-opacity` — undo restores the base-state opacity; missing object/index ⇒ `Vec::new()`.
 
 use super::ChangePaintLayerOpacity;
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangePaintLayerOpacity, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {

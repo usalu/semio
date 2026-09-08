@@ -4,8 +4,8 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::vdi3805::Vdi3805Snapshot;
-use crate::artifacts::vdi3805::{VDI3805_DIALECT, VDI3805_DOCUMENT_SCHEMA};
+use crate::Vdi3805Snapshot;
+use crate::{VDI3805_DIALECT, VDI3805_DOCUMENT_SCHEMA};
 use crate::viewer::vdi3805::modes::view;
 use crate::viewer::vdi3805::modes::view::windows::report;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
@@ -41,7 +41,7 @@ pub struct Vdi3805Viewer;
 
 impl ArtifactViewer for Vdi3805Viewer {
     type Snapshot = Vdi3805Snapshot;
-    type Mutation = crate::artifacts::vdi3805::op::Vdi3805Mutation;
+    type Mutation = crate::op::Vdi3805Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

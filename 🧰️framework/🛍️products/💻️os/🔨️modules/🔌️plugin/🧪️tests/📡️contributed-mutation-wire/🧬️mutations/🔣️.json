@@ -1,13 +1,26 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semio.dev/schema/plugin/contributed-mutation-wire/mutations",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/os/plugin/tests/contributed-mutation-wire/mutations.json",
   "type": "object",
   "allOf": [
-    { "$ref": "https://semio.dev/schema/plugin/contributed-mutation-wire/add-value#/$defs/payload" },
     {
-      "properties": { "operation": { "const": "addValue" } },
-      "required": ["operation"]
+      "$ref": "./➕️add-value/🧬️schema/🔣️.json#/$defs/payload"
+    },
+    {
+      "properties": {
+        "operation": {
+          "const": "addValue"
+        }
+      },
+      "required": [
+        "operation"
+      ]
     }
   ],
-  "unevaluatedProperties": false
+  "propertyNames": {
+    "enum": [
+      "delta",
+      "operation"
+    ]
+  }
 }

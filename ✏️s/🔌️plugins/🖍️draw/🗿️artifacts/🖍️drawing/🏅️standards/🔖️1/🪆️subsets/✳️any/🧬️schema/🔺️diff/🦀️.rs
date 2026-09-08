@@ -3,10 +3,10 @@
 //! asset moved to `🚪️io/🔺️diff/📝️text/🦀️.rs`, but `apply`/`absorb` are not a byte-boundary
 //! codec — they transform already-decoded `DrawingDiff`/`DrawingSnapshot` values — so they stayed here).
 
-use crate::artifacts::drawing::schema::{insert_layer, layer_base_mut, remove_layer_from_tree, update_layer_in_tree, DrawingArtifact};
-use crate::artifacts::drawing::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
+use crate::schema::{insert_layer, layer_base_mut, remove_layer_from_tree, update_layer_in_tree, DrawingArtifact};
+use crate::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
 use protocol::MutationDiff;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
@@ -209,7 +209,7 @@ pub fn apply_layers_delta(layers: &[DrawingLayerNode], delta: &DrawingLayersDelt
         remove_layer_from_tree(&mut next, id);
     }
     for (position, item) in delta.added.iter().enumerate() {
-        if contains_layer(&next, crate::artifacts::drawing::schema::layer_id(&item.layer)) {
+        if contains_layer(&next, crate::schema::layer_id(&item.layer)) {
             return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added layer identity already exists").at(["added".to_string(), position.to_string()]));
         }
         let container_len = layer_container_len(&next, item.parent_id.as_deref())
@@ -223,10 +223,10 @@ pub fn apply_layers_delta(layers: &[DrawingLayerNode], delta: &DrawingLayersDelt
         apply_layer_patch_entry(&mut next, entry).map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
     }
     if let Some(order) = &delta.reordered {
-        if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|layer| crate::artifacts::drawing::schema::layer_id(layer) == id)) {
+        if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|layer| crate::schema::layer_id(layer) == id)) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "root layer reorder must be a complete unique permutation").at(["reordered"]));
         }
-        let mut by_id: BTreeMap<_, _> = next.into_iter().map(|layer| (crate::artifacts::drawing::schema::layer_id(&layer).to_string(), layer)).collect();
+        let mut by_id: BTreeMap<_, _> = next.into_iter().map(|layer| (crate::schema::layer_id(&layer).to_string(), layer)).collect();
         let mut ordered = Vec::with_capacity(order.len());
         for id in order {
             ordered.push(by_id.remove(id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "reordered root layer does not exist").at(["reordered".to_string(), id.clone()]))?);
@@ -238,13 +238,13 @@ pub fn apply_layers_delta(layers: &[DrawingLayerNode], delta: &DrawingLayersDelt
 }
 
 fn contains_layer(layers: &[DrawingLayerNode], id: &str) -> bool {
-    layers.iter().any(|layer| crate::artifacts::drawing::schema::layer_id(layer) == id || matches!(layer, DrawingLayerNode::Group(group) if contains_layer(&group.children, id)))
+    layers.iter().any(|layer| crate::schema::layer_id(layer) == id || matches!(layer, DrawingLayerNode::Group(group) if contains_layer(&group.children, id)))
 }
 
 fn validate_unique_layer_ids(layers: &[DrawingLayerNode]) -> protocol::MutationApplyResult<()> {
     fn visit<'a>(layers: &'a [DrawingLayerNode], ids: &mut std::collections::BTreeSet<&'a str>) -> bool {
         for layer in layers {
-            if !ids.insert(crate::artifacts::drawing::schema::layer_id(layer)) {
+            if !ids.insert(crate::schema::layer_id(layer)) {
                 return false;
             }
             if let DrawingLayerNode::Group(group) = layer {
@@ -285,7 +285,7 @@ fn apply_layer_patch_entry(layers: &mut [DrawingLayerNode], entry: &DrawingLayer
 fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) -> protocol::MutationApplyResult<()> {
     if let Some(layer_json) = &patch.layer_json {
         let replacement = dsl::json::from_json_str::<DrawingLayerNode>(layer_json).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("layer patch is not valid JSON: {error}")).at(["layerJson"]))?;
-        if crate::artifacts::drawing::schema::layer_id(&replacement) != crate::artifacts::drawing::schema::layer_id(layer) {
+        if crate::schema::layer_id(&replacement) != crate::schema::layer_id(layer) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer patch cannot change the target identity").at(["layerJson"]));
         }
         *layer = replacement;
@@ -494,7 +494,7 @@ pub fn diff_set_layer_blend_mode(layer_id: &str, blend_mode: &str) -> DrawingDif
 }
 
 /// ↔️ Layer transform patch.
-pub fn diff_set_layer_transform(layer_id: &str, transform: &crate::artifacts::drawing::DrawingTransform) -> DrawingDiff {
+pub fn diff_set_layer_transform(layer_id: &str, transform: &crate::DrawingTransform) -> DrawingDiff {
     layer_base_patch(layer_id, DrawingLayerPatch { transform_json: Some(dsl::json::to_json_string(transform)), ..Default::default() })
 }
 
@@ -514,7 +514,7 @@ pub fn diff_set_boolean_operation(layer_id: &str, boolean_operation: &str) -> Dr
 }
 
 /// 🖼️ Trace params patch.
-pub fn diff_set_trace_params(layer_id: &str, params: &crate::artifacts::drawing::DrawingTraceParams) -> DrawingDiff {
+pub fn diff_set_trace_params(layer_id: &str, params: &crate::DrawingTraceParams) -> DrawingDiff {
     layer_base_patch(layer_id, DrawingLayerPatch { trace_params_json: Some(dsl::json::to_json_string(params)), ..Default::default() })
 }
 

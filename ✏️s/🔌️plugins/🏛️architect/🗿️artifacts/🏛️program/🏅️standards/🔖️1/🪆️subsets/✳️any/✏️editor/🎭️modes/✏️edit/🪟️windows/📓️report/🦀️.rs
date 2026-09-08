@@ -64,9 +64,9 @@ pub(crate) fn render(cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssembl
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::program::registers::ReportKind;
-    use crate::artifacts::program::sample_plugin;
-    use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::build_report;
+    use crate::registers::ReportKind;
+    use crate::sample_plugin;
+    use crate::standards::v1::subsets::any::schema::inferences::build_report;
 
     #[semio_framework_async_macros::async_test]
     async fn definition_declares_the_text_editor_surface_and_body_key() {

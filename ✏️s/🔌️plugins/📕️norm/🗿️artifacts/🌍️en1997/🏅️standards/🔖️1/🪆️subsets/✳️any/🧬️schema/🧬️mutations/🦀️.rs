@@ -13,8 +13,8 @@
 //! All triads are mounted directly as `mutations`-sibling modules in `🦀️.rs` (this lane's agent
 //! owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed for the TRIADS).
 
-use crate::artifacts::en1997::diff::En1997Diff;
-use crate::artifacts::en1997::En1997Snapshot;
+use crate::diff::En1997Diff;
+use crate::En1997Snapshot;
 
 //#region 🔖️Leaves
 use super::change_alpha_s;

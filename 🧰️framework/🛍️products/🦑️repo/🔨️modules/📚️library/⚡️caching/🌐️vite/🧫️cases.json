@@ -1,0 +1,15 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "path": "/",
+    "expected": "Artifact fixture"
+  },
+  "hmr": {
+    "clientPath": "/@vite/client",
+    "protocol": "vite-hmr",
+    "connected": "connected",
+    "update": "full-reload",
+    "changedFile": "index.html",
+    "contents": "<!doctype html><title>Updated artifact fixture</title>"
+  }
+}

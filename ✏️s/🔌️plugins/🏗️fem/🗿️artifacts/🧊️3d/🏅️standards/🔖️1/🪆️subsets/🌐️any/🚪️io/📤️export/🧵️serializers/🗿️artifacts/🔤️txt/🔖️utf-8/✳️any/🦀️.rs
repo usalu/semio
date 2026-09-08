@@ -9,7 +9,7 @@
 //! import-direction function inside the export tree, left behind by a copy-paste of stdio's own
 //! json↔txt bridge. Both are gone.
 
-use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::Fem3dSnapshot;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

@@ -1,9 +1,9 @@
 //! ↩️ `change-tower-m-ed-knm` inverse — restores the pre-change `tower_m_ed_knm` from BASE state; `change` is its own
 //! inverse partner (per `📓️taxonomy.md`).
 
-use crate::artifacts::en1998::mutations::change_tower_m_ed_knm::ChangeTowerMEdKnm;
-use crate::artifacts::en1998::mutations::En1998Mutation;
-use crate::artifacts::en1998::En1998Snapshot;
+use crate::mutations::change_tower_m_ed_knm::ChangeTowerMEdKnm;
+use crate::mutations::En1998Mutation;
+use crate::En1998Snapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ChangeTowerMEdKnm, base: &En1998Snapshot) -> Vec<En1998Mutation> {

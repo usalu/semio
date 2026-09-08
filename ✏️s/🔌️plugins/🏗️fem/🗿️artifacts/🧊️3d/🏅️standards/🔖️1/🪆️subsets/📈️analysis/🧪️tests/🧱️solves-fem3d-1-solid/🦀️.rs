@@ -83,7 +83,7 @@ fn significant(value: f64) -> Json {
 mod decode {
     use super::{flag, number, numbers};
     use semio_repo_test_host::Json;
-    use semio_s_plugin_fem::artifacts::fem3d::{Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use semio_s_artifact_fem_3d::{Fem3dSnapshot, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use std::collections::BTreeMap;
 
     /// 🔒️ One degree-of-freedom tag, as this artifact spells it on the wire.
@@ -280,7 +280,7 @@ mod subject {
                 .iter()
                 .flat_map(|case| case.loads.iter())
                 .filter_map(|load| match load {
-                    semio_s_plugin_fem::artifacts::fem3d::FemLoad::Area { pressure, .. } => Some(*pressure),
+                    semio_s_artifact_fem_3d::FemLoad::Area { pressure, .. } => Some(*pressure),
                     _ => None,
                 })
                 .sum();

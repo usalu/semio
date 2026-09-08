@@ -1,9 +1,9 @@
 //! ↩️ `change-layer-blend-mode` inverse — the old `blend_mode` value from `base`. Missing target ⇒
 //! `Vec::new()`.
 
-use crate::artifacts::raster::mutations::RasterMutation;
-use crate::artifacts::raster::schema::{find_layer, layer_blend_mode};
-use crate::artifacts::raster::RasterSnapshot;
+use crate::mutations::RasterMutation;
+use crate::schema::{find_layer, layer_blend_mode};
+use crate::RasterSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::ChangeLayerBlendMode, base: &RasterSnapshot) -> Vec<RasterMutation> {

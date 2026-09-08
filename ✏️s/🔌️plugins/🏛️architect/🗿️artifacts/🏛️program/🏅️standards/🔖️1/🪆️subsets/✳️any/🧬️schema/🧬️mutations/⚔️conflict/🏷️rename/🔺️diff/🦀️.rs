@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `⚔️conflicts` per Wave C.
 
 use super::RenameConflict;
-use crate::artifacts::program::diff::{ProgramConflictsDelta, ProgramConflictsPatchEntry};
-use crate::artifacts::program::registers::ConflictPatch;
-use crate::artifacts::program::ProgramDiff;
-use crate::artifacts::program::ProgramSnapshot;
+use crate::diff::{ProgramConflictsDelta, ProgramConflictsPatchEntry};
+use crate::registers::ConflictPatch;
+use crate::ProgramDiff;
+use crate::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `patched = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameConflict, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

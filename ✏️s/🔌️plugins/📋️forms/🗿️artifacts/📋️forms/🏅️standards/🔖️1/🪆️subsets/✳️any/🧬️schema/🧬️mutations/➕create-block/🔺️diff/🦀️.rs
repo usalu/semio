@@ -2,9 +2,9 @@
 //! (bounded, single-step scope — never the whole document).
 
 use super::mutation::CreateBlock;
-use crate::artifacts::forms::diff::text::forms_diff_from_delta;
-use crate::artifacts::forms::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
-use crate::artifacts::forms::{forms_steps, FormsDiff, FormsSnapshot};
+use crate::diff::text::forms_diff_from_delta;
+use crate::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
+use crate::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
 pub fn diff_create_block(payload: &CreateBlock, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {

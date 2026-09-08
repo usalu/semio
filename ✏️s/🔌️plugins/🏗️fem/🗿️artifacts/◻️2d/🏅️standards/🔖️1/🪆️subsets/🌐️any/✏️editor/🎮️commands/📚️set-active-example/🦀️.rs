@@ -1,12 +1,12 @@
 //! 📚️ 📚️ Fem2d play app commands command — `set-active-example`.
 
-use crate::artifacts::fem2d::op::Fem2dMutation;
+use crate::op::Fem2dMutation;
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactDsl;
 
-type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
+type Fem2dSnapshot = crate::Fem2dSnapshot;
 
 //#region 🔖️SetActiveExample
 //#endregion 🔖️SetActiveExample
@@ -27,10 +27,10 @@ pub struct SetActiveExample {
 /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `editor::fem2d::reset_document_effect`
 /// (a `Effect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
-    let document = if payload.example_id == crate::artifacts::fem2d::examples::demo::ID {
-        Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| crate::artifacts::fem2d::schema::empty_fem2d_snapshot())
+    let document = if payload.example_id == crate::examples::demo::ID {
+        Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| crate::schema::empty_fem2d_snapshot())
     } else {
-        crate::artifacts::fem2d::schema::empty_fem2d_snapshot()
+        crate::schema::empty_fem2d_snapshot()
     };
     eprintln!("[DEBUG] fem2d setActiveExample '{}': loading nodes={} elements={} regions={} loadCases={}", payload.example_id, document.nodes.len(), document.elements.len(), document.regions.len(), document.load_cases.len());
     let defaults = Fem2dConfig::default();
@@ -55,36 +55,36 @@ mod tests {
     /// itself, the same shape `commands::set_active_example`'s fem3d sibling tests use.
     #[test]
     fn set_active_example_loads_the_demo_fixture_2d() {
-        let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
+        let snapshot = crate::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = Fem2dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let emit = handle(&SetActiveExample { example_id: crate::artifacts::fem2d::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
+        let emit = handle(&SetActiveExample { example_id: crate::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
         assert!(emit.artifact_mutations.is_empty());
         let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
-        let loaded = <crate::artifacts::fem2d::Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        let loaded = <crate::Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
         assert!(!loaded.nodes.is_empty(), "expected the default fixture's nodes");
     }
 
     /// 🗣️ The reset must leave `locale` alone: a German session switching examples stays German.
     #[test]
     fn set_active_example_keeps_the_session_locale_2d() {
-        let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
+        let snapshot = crate::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = Fem2dConfig { locale: "de-DE".into(), ..Fem2dConfig::default() };
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let emit = handle(&SetActiveExample { example_id: crate::artifacts::fem2d::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
+        let emit = handle(&SetActiveExample { example_id: crate::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
         assert_eq!(emit.config_mutations.len(), 2);
         assert!(emit.config_mutations.iter().all(|row| !matches!(row, Fem2dConfigMutation::Snapshot { .. } | Fem2dConfigMutation::SetLocale { .. })));
     }
 
     #[test]
     fn set_active_example_unknown_id_resets_to_empty_document_2d() {
-        let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
+        let snapshot = crate::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = Fem2dConfig::default();
@@ -93,8 +93,8 @@ mod tests {
         let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
-        let loaded = <crate::artifacts::fem2d::Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-        assert_eq!(loaded, crate::artifacts::fem2d::schema::empty_fem2d_snapshot());
+        let loaded = <crate::Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        assert_eq!(loaded, crate::schema::empty_fem2d_snapshot());
     }
 
     /// 🧬️ `setActiveExample` replaces document content via a `Effect::LoadDocument`, so it MUST be
@@ -119,11 +119,11 @@ mod tests {
         match example.control() {
             semio_framework::ActionArgControl::Select { options } => {
                 assert_eq!(options.len(), 1);
-                assert_eq!(options[0].value, crate::artifacts::fem2d::examples::demo::ID);
+                assert_eq!(options[0].value, crate::examples::demo::ID);
             }
             other => panic!("expected a select control for exampleId, got {other:?}"),
         }
-        assert_eq!(crate::artifacts::fem2d::examples::demo::source().id(), crate::artifacts::fem2d::examples::demo::ID);
+        assert_eq!(crate::examples::demo::source().id(), crate::examples::demo::ID);
     }
 }
 //#endregion 🧪️Tests

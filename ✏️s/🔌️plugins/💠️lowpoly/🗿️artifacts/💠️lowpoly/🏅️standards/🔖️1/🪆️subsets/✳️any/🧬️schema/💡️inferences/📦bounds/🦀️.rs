@@ -5,7 +5,7 @@
 //! round-trip law fix); this facet reads only the typed `transform.position` field every object
 //! already carries. Simple whole-snapshot scalar: no `InferredField` caching.
 
-use crate::artifacts::lowpoly::{LowpolyObject, LowpolySnapshot};
+use crate::{LowpolyObject, LowpolySnapshot};
 
 //#region 📦Bounds
 /// 📦 Axis-aligned 3d bounding box.
@@ -33,7 +33,7 @@ pub(crate) fn scene_bounds(snapshot: &LowpolySnapshot) -> Option<LowpolyBounds> 
 //#region 🧪️Tests
 mod tests {
     use super::*;
-    use crate::artifacts::lowpoly::{LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
+    use crate::{LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT_SCHEMA};
 
     fn object(id: &str, position: [f32; 3]) -> LowpolyObject {
         LowpolyObject { id: id.into(), name: id.into(), transform: LowpolyTransform { position, ..LowpolyTransform::default() }, smooth_shading: false, mesh: None, paint_layers: vec![LowpolyPaintLayer::new("Base")] }

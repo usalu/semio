@@ -1,7 +1,7 @@
 //! ↩️ Inverse reconstruction for `change-exaggeration` — reads the BASE value, never the diff.
 use super::ChangeExaggeration;
-use crate::artifacts::gisterrain::mutations::GisTerrainMutation;
-use crate::artifacts::gisterrain::GisTerrainSnapshot;
+use crate::mutations::GisTerrainMutation;
+use crate::GisTerrainSnapshot;
 
 //#region 🔹Inverse
 /// ↩️ Undo restores `base.exaggeration` — captured from pre-state, never from the applied diff.

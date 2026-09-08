@@ -2,9 +2,9 @@
 //! (`📓️taxonomy.md`'s `move` verb). Replaces the old generic `PatchNode{x,y}` call sites
 //! (force-layout, canvas drag).
 
-use crate::artifacts::wires::diff::WiresDiff;
-use crate::artifacts::wires::mutations::WiresMutation;
-use crate::artifacts::wires::WiresSnapshot;
+use crate::diff::WiresDiff;
+use crate::mutations::WiresMutation;
+use crate::WiresSnapshot;
 
 //#region 🔖️Mutation
 /// 🧭️ `move-node` payload — the node's new absolute board position.

@@ -70,9 +70,9 @@ pub(crate) struct SizingBuilder {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) enum SizingFault {
-    ZoneResultBacking,
-    EquipmentResultBacking,
-    NameBacking,
+    ZoneResults,
+    EquipmentResults,
+    Name,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
@@ -161,7 +161,7 @@ impl SizingBuilder {
         match self.stage {
             SizingStage::ReserveZoneResults => {
                 if self.tables.zone_loads.try_reserve_exact(model.zones.len().saturating_mul(2)).is_err() {
-                    self.fault = Some(SizingFault::ZoneResultBacking);
+                    self.fault = Some(SizingFault::ZoneResults);
                     self.stage = SizingStage::Complete;
                 } else {
                     self.stage = SizingStage::ReserveEquipmentResults;
@@ -169,7 +169,7 @@ impl SizingBuilder {
             }
             SizingStage::ReserveEquipmentResults => {
                 if self.tables.equipment.try_reserve_exact(model.ideal_loads.len()).is_err() {
-                    self.fault = Some(SizingFault::EquipmentResultBacking);
+                    self.fault = Some(SizingFault::EquipmentResults);
                     self.stage = SizingStage::Complete;
                 } else {
                     self.stage = SizingStage::ScanZoneSurface;
@@ -260,7 +260,7 @@ impl SizingBuilder {
 
     fn reserve_name(&mut self, bytes: usize, next: SizingStage) {
         if self.pending_name.try_reserve_exact(bytes).is_err() {
-            self.fault = Some(SizingFault::NameBacking);
+            self.fault = Some(SizingFault::Name);
             self.stage = SizingStage::Complete;
         } else {
             self.name_cursor = 0;

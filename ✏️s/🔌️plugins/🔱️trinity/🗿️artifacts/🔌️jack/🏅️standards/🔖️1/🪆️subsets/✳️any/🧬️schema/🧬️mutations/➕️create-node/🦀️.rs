@@ -1,7 +1,7 @@
 //! 🌱️ TrinityGraph mutation — `CreateNode`: brings a new id-keyed node into existence.
-use crate::artifacts::jack::diff::JackDiff;
-use crate::artifacts::jack::mutations::TrinityGraphMutation;
-use crate::artifacts::jack::{JackSnapshot, Node};
+use crate::diff::JackDiff;
+use crate::mutations::TrinityGraphMutation;
+use crate::{JackSnapshot, Node};
 
 //#region 🔖️Mutation
 /// 🌱️ `create-node` payload — full initial node payload (id/kind/name/geometry/ports fixed at

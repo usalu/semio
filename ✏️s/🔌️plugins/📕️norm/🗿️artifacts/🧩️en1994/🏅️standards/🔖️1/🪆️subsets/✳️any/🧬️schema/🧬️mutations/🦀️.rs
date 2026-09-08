@@ -16,7 +16,7 @@
 //! comments) because `🦀️.rs` still `#[path]`-wires it — cleanup tracked as a `sharedFileRequests`
 //! entry in this ticket's wave2 report.
 
-use crate::artifacts::en1994::{En1994Diff, En1994Snapshot};
+use crate::{En1994Diff, En1994Snapshot};
 
 //#region 🔖️LeafWiring
 //#endregion 🔖️LeafWiring

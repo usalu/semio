@@ -1,8 +1,8 @@
 //! ✂️ Remodeling mutation — `DeleteRigExtrinsic`: removes a camera-id-keyed rig pose.
 
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::mutations::RemodelingMutation;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::RemodelingDiff;
+use crate::mutations::RemodelingMutation;
+use crate::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 

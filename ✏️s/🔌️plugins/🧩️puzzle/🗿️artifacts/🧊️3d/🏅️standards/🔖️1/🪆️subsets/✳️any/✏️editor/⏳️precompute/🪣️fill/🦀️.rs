@@ -6,7 +6,7 @@
 //! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this is interactive fill-tool session state,
 //! so it lives with the app, not the artifact.
 
-use crate::artifacts::puzzle3d::schema::{
+use crate::schema::{
     puzzle3d_vortex_full_id, AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, FillBuildPreview, FillBuildProgress, Fixture, FixtureObject, KindCompatEntry, ObjectKind, SceneConfig,
     VortexKindCatalog, VortexProps, WorldVolumeProps,
 };
@@ -14,7 +14,7 @@ use crate::editor::puzzle3d::precompute::brush::{
     brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, brush_stack_mate_pair, fill_candidate_diversity_score, fill_rng, resolve_object_kind_mesh_url, vortex_world_from_object, AttractionVortexContext, BrushCatalogView,
     BrushFillVortexTarget, BrushFixtureView, TargetVortexWorld,
 };
-use crate::editor::puzzle3d::precompute::geometry::{
+use crate::editor::puzzle3d::precompute::semio_framework_geometry::{
     pose_isometry, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionIndexOwner, CollisionIndexOwnerCensusCursor, CollisionIndexOwnerCensusStep, CollisionIndexRejectedOwner,
     CollisionMutationStep, CollisionOverlapState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec, Pose3d,
     FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS,
@@ -648,10 +648,8 @@ impl FillPreviewJsonCursor {
         let result = match self.phase {
             FillPreviewJsonPhase::Idle => self.begin(identity, color, status_label),
             FillPreviewJsonPhase::RetireSuperseded => {
-                if self.retiring_bytes.take().is_none() {
-                    if self.retiring_color.take().is_none() {
-                        self.retiring_status_label.take();
-                    }
+                if self.retiring_bytes.take().is_none() && self.retiring_color.take().is_none() {
+                    self.retiring_status_label.take();
                 }
                 if self.retiring_bytes.is_none() && self.retiring_color.is_none() && self.retiring_status_label.is_none() {
                     self.phase = FillPreviewJsonPhase::Census;
@@ -1182,6 +1180,7 @@ pub(crate) struct FillBuilderOwnerCensusCursor {
 }
 
 
+#[derive(Clone, Copy)]
 enum FillOwnerCensusUnit {
     Credit(FillBuilderOwnerCredit),
     Advance,
@@ -1716,7 +1715,7 @@ impl FillBuilderOwnerCensusCursor {
                     }
                     2 => {
                         self.phase = 3;
-                        Self::credit(fill_owner_vec::<crate::artifacts::puzzle3d::schema::ObjectKindRepresentation>(value.representations.capacity()))
+                        Self::credit(fill_owner_vec::<crate::schema::ObjectKindRepresentation>(value.representations.capacity()))
                     }
                     3 => match value.representations.get(self.inner) {
                         Some(representation) if self.leaf == 0 => {
@@ -1747,7 +1746,7 @@ impl FillBuilderOwnerCensusCursor {
                     },
                     4 => {
                         self.phase = 5;
-                        Self::credit(fill_owner_vec::<crate::artifacts::puzzle3d::schema::ObjectKindVortexTemplate>(value.vortices.capacity()))
+                        Self::credit(fill_owner_vec::<crate::schema::ObjectKindVortexTemplate>(value.vortices.capacity()))
                     }
                     _ => match value.vortices.get(self.inner) {
                         Some(vortex) => {
@@ -4263,8 +4262,8 @@ impl InteractiveJob for FillBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::puzzle3d::schema::{BrushKindWeights, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
-    use crate::editor::puzzle3d::precompute::geometry::collision_body_from_buffers;
+    use crate::schema::{BrushKindWeights, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
+    use crate::editor::puzzle3d::precompute::semio_framework_geometry::collision_body_from_buffers;
     use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
     use std::time::{Duration, Instant};
 
@@ -4490,15 +4489,18 @@ mod tests {
 
     #[test]
     fn retained_preview_json_matches_language_neutral_fixture_and_test_only_serde_oracle() {
-        let schema: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️.schema.json")).expect("schema-first preview fixture");
+        let module: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/🔣️.json")).expect("s.puzzle3d owner schema module");
+        let schema = &module["$defs"]["Puzzle3dFillPreviewJson"];
+        let diagnostic = &module["$defs"]["Puzzle3dFillPreviewDiagnostic"];
+        let ghost = &module["$defs"]["Puzzle3dFillPreviewGhost"];
         let law: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("language-neutral law fixture");
-        assert!(schema["$defs"]["diagnostic"]["required"].as_array().is_some_and(|fields| fields.iter().any(|field| field.as_str() == Some("statusLabel"))));
+        assert!(diagnostic["required"].as_array().is_some_and(|fields| fields.iter().any(|field| field.as_str() == Some("statusLabel"))));
         assert_eq!(schema["properties"]["sourceVortexIndex"]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));
-        assert_eq!(schema["$defs"]["ghost"]["properties"]["sourceVortexIndex"]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));
+        assert_eq!(ghost["properties"]["sourceVortexIndex"]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));
         assert_eq!(schema["properties"]["color"]["maxLength"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_COLOR_BYTES as u64));
         assert_eq!(schema["properties"]["color"]["x-semio-maxUtf8Bytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_COLOR_BYTES as u64));
         assert_eq!(schema["x-semio-maxEncodedUtf8Bytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_BYTES as u64));
-        assert_eq!(schema["$defs"]["diagnostic"]["properties"]["statusLabel"]["x-semio-maxUtf8Bytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES as u64));
+        assert_eq!(diagnostic["properties"]["statusLabel"]["x-semio-maxUtf8Bytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_STATUS_LABEL_BYTES as u64));
         assert_eq!(law["limits"]["maximumSourceVortexIndex"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_SOURCE_VORTEX_INDEX));
         assert_eq!(law["limits"]["maximumDiagnosticInteger"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER));
         assert_eq!(law["limits"]["maximumColorBytes"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_COLOR_BYTES as u64));
@@ -4508,8 +4510,8 @@ mod tests {
         assert_eq!(numeric_fields.len(), 14);
         for field in numeric_fields {
             let name = field["field"].as_str().expect("numeric field");
-            assert_eq!(schema["$defs"]["diagnostic"]["properties"][name]["minimum"], field["minimum"]);
-            assert_eq!(schema["$defs"]["diagnostic"]["properties"][name]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER));
+            assert_eq!(diagnostic["properties"][name]["minimum"], field["minimum"]);
+            assert_eq!(diagnostic["properties"][name]["maximum"].as_u64(), Some(FILL_PREVIEW_JSON_MAX_DIAGNOSTIC_INTEGER));
         }
         let (preview, color, english, german, expected_english, expected_german) = fixture_preview();
         assert_eq!(oracle_json(&preview, &color, &english), expected_english, "English fixture and third-party oracle are byte-identical");

@@ -7,10 +7,17 @@
     "skipLibCheck": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "rootDir": "../../../../../../..",
     "resolveJsonModule": true
   },
-  "include": ["🟦️.ts"],
-  "exclude": ["🧪️index.test.ts"]
+  "include": [
+    "🟦️.ts"
+  ],
+  "exclude": [
+    "🧪️index.test.ts",
+    "🧬️invariants.test.ts"
+  ]
 }

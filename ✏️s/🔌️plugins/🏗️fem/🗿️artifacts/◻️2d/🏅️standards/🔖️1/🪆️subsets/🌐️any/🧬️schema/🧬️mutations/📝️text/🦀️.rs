@@ -1,6 +1,6 @@
 //! ⚡️ Fem2d artifact — OpText/OpBinary codecs + grammar for `Fem2dMutation`.
 
-pub use crate::artifacts::fem2d::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation, Fem2dMutation};
+pub use crate::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation, Fem2dMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

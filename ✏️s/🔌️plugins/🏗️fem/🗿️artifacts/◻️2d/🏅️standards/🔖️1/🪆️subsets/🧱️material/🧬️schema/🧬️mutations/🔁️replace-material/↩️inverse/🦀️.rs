@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ReplaceMaterial` — recovers the pre-mutation material from `base`.
 use super::ReplaceMaterial;
-use crate::artifacts::fem2d::mutations::Fem2dMutation;
-use crate::artifacts::fem2d::Fem2dSnapshot;
+use crate::mutations::Fem2dMutation;
+use crate::Fem2dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ReplaceMaterial, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {

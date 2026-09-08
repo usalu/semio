@@ -1,6 +1,6 @@
 //! 🧬️ Writer diff schema — sparse field delta over the artifact.
 
-use crate::artifacts::writer::{WriterDocumentChild, WriterEditorSelection, WriterEditorSettings};
+use crate::{WriterDocumentChild, WriterEditorSelection, WriterEditorSettings};
 use schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -14,7 +14,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.writer.writer")]
 pub struct WriterDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::artifacts::writer::schema::WriterArtifact>>,
+    pub artifact: Option<Box<crate::schema::WriterArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

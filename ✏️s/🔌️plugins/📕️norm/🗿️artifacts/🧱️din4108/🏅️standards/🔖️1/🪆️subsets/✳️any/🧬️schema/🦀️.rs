@@ -1,6 +1,6 @@
 //! 🧬️ Din4108 artifact schema — every field of the artifact with its state class.
 
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ Full Din4108 artifact state across the artifact and presence lanes.
@@ -13,7 +13,7 @@ pub struct Din4108Artifact {
     #[state(artifact)]
     pub category: String,
     #[state(artifact)]
-    pub layers: Vec<crate::artifacts::din4108::LayerDocument>,
+    pub layers: Vec<crate::LayerDocument>,
     #[state(artifact)]
     pub climate: ClimateZoneDe,
     #[state(artifact)]
@@ -54,8 +54,8 @@ pub struct Din4108Artifact {
 //#region 🔖️Conversions
 impl Din4108Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::artifacts::din4108::Din4108Snapshot {
-        crate::artifacts::din4108::Din4108Snapshot {
+    pub fn to_snapshot(&self) -> crate::Din4108Snapshot {
+        crate::Din4108Snapshot {
             category: self.category.clone(),
             layers: self.layers.clone(),
             climate: self.climate,
@@ -78,17 +78,17 @@ impl Din4108Artifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub fn from_snapshot(snapshot: crate::artifacts::din4108::Din4108Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::Din4108Snapshot) -> Self {
         Self {
-            category: snapshot.category.clone(),
-            layers: snapshot.layers.clone(),
+            category: snapshot.category,
+            layers: snapshot.layers,
             climate: snapshot.climate,
             airtightness_n50: snapshot.airtightness_n50,
             psi_times_l_sum: snapshot.psi_times_l_sum,
             rh_int: snapshot.rh_int,
-            catalog_id: snapshot.catalog_id.clone(),
-            material_id: snapshot.material_id.clone(),
-            airtightness_class: snapshot.airtightness_class.clone(),
+            catalog_id: snapshot.catalog_id,
+            material_id: snapshot.material_id,
+            airtightness_class: snapshot.airtightness_class,
             t_int_c: snapshot.t_int_c,
             solar_absorptance: snapshot.solar_absorptance,
             irradiance_w_m2: snapshot.irradiance_w_m2,
@@ -96,13 +96,13 @@ impl Din4108Artifact {
             moisture_mu_interior: snapshot.moisture_mu_interior,
             envelope_area_m2: snapshot.envelope_area_m2,
             bb2_details_conform: snapshot.bb2_details_conform,
-            application_type: snapshot.application_type.clone(),
+            application_type: snapshot.application_type,
             declared_application_class: snapshot.declared_application_class,
             selected_check_index: None,
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
-    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::din4108::Din4108Snapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::Din4108Snapshot) {
         let selected = self.selected_check_index;
         *self = Self::from_snapshot(snapshot);
         self.selected_check_index = selected;
@@ -113,31 +113,31 @@ impl Din4108Artifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.din4108` — twenty handcrafted schema leaves.
-pub fn din4108_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn din4108_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.norm.din4108",
-        artifact: schema::FacetLeaves {
+        artifact: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),
             json_schema: include_str!("🔣️.json"),
             proto: include_str!("🛰️.proto"),
         },
-        snapshot: schema::FacetLeaves {
+        snapshot: framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
             typescript: include_str!("📸️snapshot/🟦️.ts"),
             graphql: include_str!("📸️snapshot/🔗️.graphql"),
             json_schema: include_str!("📸️snapshot/🔣️.json"),
             proto: include_str!("📸️snapshot/🛰️.proto"),
         },
-        diff: schema::FacetLeaves {
+        diff: framework_schema::FacetLeaves {
             rust: include_str!("🔺️diff/🦀️.rs"),
             typescript: include_str!("🔺️diff/🟦️.ts"),
             graphql: include_str!("🔺️diff/🔗️.graphql"),
             json_schema: include_str!("🔺️diff/🔣️.json"),
             proto: include_str!("🔺️diff/🛰️.proto"),
         },
-        mutations: schema::FacetLeaves {
+        mutations: framework_schema::FacetLeaves {
             rust: include_str!("🧬️mutations/🦀️.rs"),
             typescript: include_str!("🧬️mutations/🟦️.ts"),
             graphql: include_str!("🧬️mutations/🔗️.graphql"),
@@ -149,7 +149,7 @@ pub fn din4108_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::artifacts::din4108::{Din4108Diff, Din4108Mutation, Din4108Snapshot};
+    use crate::{Din4108Diff, Din4108Mutation, Din4108Snapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -201,7 +201,7 @@ pub use derived_construction::*;
 
 //#region 🧐️DerivedAnalysis
 pub mod derived_analysis {
-    use crate::artifacts::din4108::Din4108Snapshot;
+    use crate::Din4108Snapshot;
     use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -637,7 +637,7 @@ pub mod part_4 {
 // #region 🔖️Part5
 pub mod part_5 {
     use super::*;
-    use crate::artifacts::din4108::standards::v1::subsets::any::schema::part_2::{total_resistance, u_value_from_resistance, Layer};
+    use crate::standards::v1::subsets::any::schema::part_2::{total_resistance, u_value_from_resistance, Layer};
 
     /// ☀️ Peak summer heat flux through opaque element [W/m²].
     pub fn peak_summer_heat_flux_w_m2(layers: &[Layer], climate: ClimateZoneDe, t_int_c: f64, solar_absorptance: f64, irradiance_w_m2: f64) -> f64 {
@@ -668,7 +668,7 @@ pub mod part_5 {
 // #region 🔖️Part6
 pub mod part_6 {
     use super::*;
-    use crate::artifacts::din4108::standards::v1::subsets::any::schema::part_2::{total_resistance, u_value_from_resistance, Layer};
+    use crate::standards::v1::subsets::any::schema::part_2::{total_resistance, u_value_from_resistance, Layer};
 
     /// 🔗️ U-value including linear thermal bridge correction U' = U + Σ(ψ·l) [W/(m²K)].
     pub fn u_value_with_thermal_bridges(u_element: f64, psi_times_l_sum: f64) -> f64 {

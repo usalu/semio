@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/norm/en1998/1/any/mutation/change-tower-mass-t.json",
+  "$id": "https://semio.tech/schema/s/norm/en1998/1/any/mutation/change-tower-mass-t/schema.json",
   "title": "ChangeTowerMassT",
   "type": "object",
   "additionalProperties": false,

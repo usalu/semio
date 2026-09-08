@@ -9,8 +9,8 @@
 //! free-form fields (`tags`, `notes`), so this uses the plain `protocol::Inference<P>` shape (no
 //! `InferredField`/caching machinery — nothing here is per-entity or incremental).
 
-use crate::artifacts::vcs::VcsSnapshot;
-use schema::ArtifactSchema;
+use crate::VcsSnapshot;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
 use super::summary::compute_vcs_summary;
@@ -77,10 +77,10 @@ impl ArtifactInferrer for VcsInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.vcs.vcs.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `vcs_artifact_schema_descriptor`'s registration.
-pub fn vcs_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn vcs_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.vcs.vcs.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

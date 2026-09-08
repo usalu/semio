@@ -1,11 +1,11 @@
 //! 🔺️ `update-widget` sparse diff construction.
 
-use crate::artifacts::generation3d::diff::Generation3dDiff;
-use crate::artifacts::generation3d::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
-use crate::artifacts::generation3d::mutations::update_widget::UpdateWidget;
-use crate::artifacts::generation3d::mutations::widget_index;
-use crate::artifacts::generation3d::{widget_id, Generation3dSnapshot};
-use flow::Widget;
+use crate::diff::Generation3dDiff;
+use crate::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::mutations::update_widget::UpdateWidget;
+use crate::mutations::widget_index;
+use crate::{widget_id, Generation3dSnapshot};
+use semio_framework_artifact_flow_semio_framework_os_flow::Widget;
 
 /// 🏗️ Builds the sparse fixture delta replacing one existing widget's body. The index is
 /// irrelevant here — `apply_widgets_diff` resolves an existing entry by id before ever consulting

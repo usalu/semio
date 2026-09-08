@@ -1,6 +1,6 @@
 //! 🔄️ `rotate-object` — sets an object's absolute Euler rotation.
 
-use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+use crate::{LowpolyMutation, LowpolySnapshot};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 

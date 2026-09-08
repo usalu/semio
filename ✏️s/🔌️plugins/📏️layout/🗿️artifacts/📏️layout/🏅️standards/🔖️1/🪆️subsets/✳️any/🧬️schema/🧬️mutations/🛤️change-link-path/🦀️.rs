@@ -1,9 +1,9 @@
 //! 🔗 `change-link-path` — sets an {@link ImageLink}'s file `path`.
 
 
-use crate::artifacts::layout::{ImageLinkPatch, LayoutDiff, LayoutSnapshot};
-use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::schema::diff::{LayoutLinkPatchEntry, LayoutLinksDelta};
+use crate::{ImageLinkPatch, LayoutDiff, LayoutSnapshot};
+use crate::mutations::LayoutMutation;
+use crate::schema::diff::{LayoutLinkPatchEntry, LayoutLinksDelta};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

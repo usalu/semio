@@ -1,44 +1,46 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:semio:store:tests:rejected-page-close",
-  "title": "Rejected Page Close Grant Laws",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "version",
-    "pageBytes",
-    "inputState",
-    "fieldOwner",
-    "cases"
-  ],
-  "properties": {
-    "version": {
-      "const": 1
-    },
-    "pageBytes": {
-      "const": 4096
-    },
-    "inputState": {
-      "const": "unstarted-record"
-    },
-    "fieldOwner": {
-      "$ref": "#/$defs/fieldOwner"
-    },
-    "cases": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "$ref": "#/$defs/case"
-      }
-    }
-  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/store/tests/rejected-page-close/schema.json",
+  "title": "Store Rejected Page Close Grant Laws",
   "$defs": {
-    "integer": {
+    "RejectedPageCloseGrantLaws": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "pageBytes",
+        "inputState",
+        "fieldOwner",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "pageBytes": {
+          "const": 4096
+        },
+        "inputState": {
+          "const": "unstarted-record"
+        },
+        "fieldOwner": {
+          "$ref": "#/$defs/FieldOwner"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Case"
+          }
+        }
+      }
+    },
+    "Integer": {
       "type": "integer",
       "minimum": 0,
       "maximum": 4294967295
     },
-    "grant": {
+    "Grant": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -58,7 +60,7 @@
         }
       }
     },
-    "page": {
+    "Page": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -77,7 +79,7 @@
         }
       }
     },
-    "step": {
+    "Step": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -124,7 +126,7 @@
         }
       }
     },
-    "close": {
+    "Close": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -133,14 +135,14 @@
       ],
       "properties": {
         "grant": {
-          "$ref": "#/$defs/grant"
+          "$ref": "#/$defs/Grant"
         },
         "expected": {
-          "$ref": "#/$defs/step"
+          "$ref": "#/$defs/Step"
         }
       }
     },
-    "fieldOwner": {
+    "FieldOwner": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -151,7 +153,7 @@
       ],
       "properties": {
         "tokenId": {
-          "$ref": "#/$defs/integer"
+          "$ref": "#/$defs/Integer"
         },
         "payload": {
           "type": "array",
@@ -164,7 +166,7 @@
           }
         },
         "closeGrant": {
-          "$ref": "#/$defs/grant"
+          "$ref": "#/$defs/Grant"
         },
         "expected": {
           "type": "object",
@@ -200,7 +202,7 @@
         }
       }
     },
-    "json": {
+    "Json": {
       "anyOf": [
         {
           "type": "null"
@@ -217,18 +219,18 @@
         {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/json"
+            "$ref": "#/$defs/Json"
           }
         },
         {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/json"
+            "$ref": "#/$defs/Json"
           }
         }
       ]
     },
-    "case": {
+    "Case": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -247,17 +249,17 @@
           "minItems": 1,
           "maxItems": 3,
           "items": {
-            "$ref": "#/$defs/page"
+            "$ref": "#/$defs/Page"
           }
         },
         "expectedDocument": {
-          "$ref": "#/$defs/json"
+          "$ref": "#/$defs/Json"
         },
         "closes": {
           "type": "array",
           "minItems": 1,
           "items": {
-            "$ref": "#/$defs/close"
+            "$ref": "#/$defs/Close"
           }
         }
       }

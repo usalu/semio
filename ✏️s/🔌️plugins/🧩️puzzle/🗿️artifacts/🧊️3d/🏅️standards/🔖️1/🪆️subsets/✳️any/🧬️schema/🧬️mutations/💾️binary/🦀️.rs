@@ -10,8 +10,8 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::artifacts::puzzle3d::schema::mutations::text::Puzzle3dMutation;
-use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
+use crate::schema::mutations::text::Puzzle3dMutation;
+use crate::Puzzle3dSnapshot;
 use protocol::OpBinary;
 use store::{ArtifactEnvelope, ArtifactStore};
 
@@ -39,7 +39,7 @@ pub type Puzzle3dStore = ArtifactStore<Puzzle3dSnapshot, Puzzle3dMutation>;
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — the stateful session that dispatches this
 /// envelope now lives app-side, at `crate::editor::puzzle3d::precompute`, but the envelope itself is
 /// pure data and stays schema-side.
-pub use crate::artifacts::puzzle3d::schema::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
+pub use crate::schema::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
 
 /// 📦️ Encodes a `Puzzle3dEngineCommand` to its binary command form.
 pub fn encode_engine_command(command: &Puzzle3dEngineCommand) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -59,13 +59,13 @@ mod tests {
 
     #[test]
     fn puzzle3d_document_vcs_replays_granular_operations() {
-        use crate::artifacts::puzzle3d::schema::empty_puzzle3d_snapshot;
-        use crate::artifacts::puzzle3d::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
+        use crate::schema::empty_puzzle3d_snapshot;
+        use crate::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};
 
         let mut store = semio_framework::io::resolve_ready(Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None))).expect("store");
         semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply {
-            mutations: vec![crate::artifacts::puzzle3d::mutations::create_object(
+            mutations: vec![crate::mutations::create_object(
                 Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },
                 None,
             )],
@@ -83,7 +83,7 @@ mod tests {
     /// fields, to carry it inside `Puzzle3dEngineCommand::SetScene`). A byte-identical copy of this
     /// helper also lives in `crate::editor::puzzle3d::precompute`'s own test module, for the two
     /// dispatch tests that moved there (a schema test file must not depend on the app).
-    pub(crate) fn sample_scene_config() -> crate::artifacts::puzzle3d::schema::SceneConfig {
+    pub(crate) fn sample_scene_config() -> crate::schema::SceneConfig {
         let json = r#"{
             "fixture": {
                 "objects": [{"id": "host", "objectKind": "Host", "meshUrl": "/test/host.glb", "origin": [0,0,0], "orientation": [0,0,0,1], "vortices": [{"id": "v0", "vortexKind": "port-a", "position": [0,0,0], "direction": [0,0,-1]}]}],
@@ -143,8 +143,8 @@ mod wire_format_guard {
     //! half now asserts the NEW operations' `OpText`/`OpBinary` round-trip instead of pinning byte
     //! literals for a wire shape this ticket deliberately changed.
     use super::*;
-    use crate::artifacts::puzzle3d as puzzle_3d;
-    use crate::artifacts::puzzle3d::mutations::{change_object_anchor, connect_vortices, create_object, delete_object};
+    use crate as puzzle_3d;
+    use crate::mutations::{change_object_anchor, connect_vortices, create_object, delete_object};
     use protocol::OpText;
 
     fn ops() -> Vec<Puzzle3dMutation> {

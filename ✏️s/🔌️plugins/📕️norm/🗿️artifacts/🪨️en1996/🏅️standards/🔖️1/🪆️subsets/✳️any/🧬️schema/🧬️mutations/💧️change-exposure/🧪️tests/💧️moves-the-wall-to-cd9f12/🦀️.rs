@@ -9,7 +9,7 @@
 //! `null`; the two nested states `None` and `Some(None)` are NOT distinguishable in this file's
 //! committed diff, and nothing here asserts that they are.
 
-use crate::artifacts::en1996::{En1996Diff, En1996Mutation, En1996Snapshot};
+use crate::{En1996Diff, En1996Mutation, En1996Snapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");
@@ -37,7 +37,7 @@ fn built_outcome() -> protocol::MutationOutcome<En1996Diff> {
 async fn moves_the_wall_to_exposure_class_mx3() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-exposure applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-exposure/moves-the-wall-to-exposure-class-mx3: the applied state differs from the committed after-snapshot");
-    assert_eq!(applied.exposure, crate::artifacts::en1996::part_2::ExposureClass::Mx3, "change-exposure/moves-the-wall-to-exposure-class-mx3: exposure must read `ExposureClass::Mx3` once the change lands");
+    assert_eq!(applied.exposure, crate::part_2::ExposureClass::Mx3, "change-exposure/moves-the-wall-to-exposure-class-mx3: exposure must read `ExposureClass::Mx3` once the change lands");
     assert_eq!(applied.mortar, before().mortar, "change-exposure/moves-the-wall-to-exposure-class-mx3: M5 must survive the move to MX3 so the durability check can report the failure instead of the mutation hiding it");
 }
 
@@ -100,7 +100,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-exposure diff decodes");
-    assert_eq!(decoded.exposure, Some(crate::artifacts::en1996::part_2::ExposureClass::Mx3), "change-exposure/moves-the-wall-to-exposure-class-mx3: the committed diff must carry exposure = `ExposureClass::Mx3`");
+    assert_eq!(decoded.exposure, Some(crate::part_2::ExposureClass::Mx3), "change-exposure/moves-the-wall-to-exposure-class-mx3: the committed diff must carry exposure = `ExposureClass::Mx3`");
     assert!(decoded.mortar.is_none(), "change-exposure/moves-the-wall-to-exposure-class-mx3: change-exposure writes exposure and must leave `mortar` untouched");
     assert!(decoded.unit.is_none(), "change-exposure/moves-the-wall-to-exposure-class-mx3: change-exposure writes exposure and must leave `unit` untouched");
     assert!(decoded.artifact.is_none(), "change-exposure/moves-the-wall-to-exposure-class-mx3: a field-scoped change must never fall back to a whole-artifact replacement");
@@ -116,5 +116,5 @@ async fn committed_diff_applies_to_after() {
     let decoded: En1996Diff = serde_json::from_str(DIFF).expect("the committed change-exposure diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-exposure/moves-the-wall-to-exposure-class-mx3: the committed diff did not carry before to after");
-    assert_eq!(produced.exposure, crate::artifacts::en1996::part_2::ExposureClass::Mx3, "change-exposure/moves-the-wall-to-exposure-class-mx3: applying the committed diff must land exposure on `ExposureClass::Mx3`");
+    assert_eq!(produced.exposure, crate::part_2::ExposureClass::Mx3, "change-exposure/moves-the-wall-to-exposure-class-mx3: applying the committed diff must land exposure on `ExposureClass::Mx3`");
 }

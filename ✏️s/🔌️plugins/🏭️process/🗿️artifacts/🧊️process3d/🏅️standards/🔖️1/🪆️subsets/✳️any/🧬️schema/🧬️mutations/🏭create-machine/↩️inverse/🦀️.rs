@@ -1,8 +1,8 @@
 //! ↩️ `create-machine` inverse — undo of a create is always a `delete-machine` by the created id.
 
-use crate::artifacts::process3d::mutations::delete_machine::DeleteMachine;
-use crate::artifacts::process3d::mutations::Process3dMutation;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::mutations::delete_machine::DeleteMachine;
+use crate::mutations::Process3dMutation;
+use crate::Process3dSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ Undoing a create is deleting the same machine back out, by its own id.

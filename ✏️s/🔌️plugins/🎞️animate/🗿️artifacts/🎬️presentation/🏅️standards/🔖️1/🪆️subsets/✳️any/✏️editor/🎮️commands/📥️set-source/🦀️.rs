@@ -2,10 +2,10 @@
 
 #![allow(clippy::result_large_err)]
 
-use crate::artifacts::presentation::mutations::replace_source::ReplaceSource;
-use crate::artifacts::presentation::mutations::replace_tiles::ReplaceTiles;
-use crate::artifacts::presentation::op::PresentationMutation;
-use crate::artifacts::presentation::{FigureTileSource, PresentationSnapshot};
+use crate::mutations::replace_source::ReplaceSource;
+use crate::mutations::replace_tiles::ReplaceTiles;
+use crate::op::PresentationMutation;
+use crate::{FigureTileSource, PresentationSnapshot};
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
 use crate::editor::animate::{interaction_select_effect, PresentationDispatchCtx};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -20,7 +20,7 @@ pub struct SetSource {
 
 pub fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentationSnapshot>, _cfg: &ConfigView<'_, PresentationConfig>, _ctx: &mut PresentationDispatchCtx) -> Result<Emit<PresentationMutation, PresentationConfigMutation>, Fault> {
     let deck = doc.snapshot;
-    let (deck_source, _) = crate::artifacts::presentation::presentation_working_scene(deck);
+    let (deck_source, _) = crate::presentation_working_scene(deck);
     let replaced = payload.source.src != deck_source.src;
     let mut operations = vec![PresentationMutation::ReplaceSource(ReplaceSource { new_source: payload.source.clone() })];
     let mut emit_effects = Vec::new();
@@ -35,7 +35,7 @@ pub fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentationSnapshot>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::presentation::{default_presentation_snapshot, FigureTileFrame};
+    use crate::{default_presentation_snapshot, FigureTileFrame};
     use crate::editor::animate::commands::{set_active_example, set_frame};
     use crate::editor::animate::testkit::{dispatch, presentation_app};
     use crate::editor::animate::PresentationCommand;
@@ -44,13 +44,13 @@ mod tests {
     async fn set_source_replaces_source_and_clears_tiles_when_src_changes() {
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
-        let mut source = crate::artifacts::presentation::default_figure_tile_source();
+        assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
+        let mut source = crate::default_figure_tile_source();
         source.src = "/new-figure.png".into();
         source.kind = "image".into();
         dispatch(&mut app, PresentationCommand::SetSource(SetSource { source })).await;
         let deck = app.snapshot().expect("projection");
-        let (deck_source, deck_tiles) = crate::artifacts::presentation::presentation_working_scene(&deck);
+        let (deck_source, deck_tiles) = crate::presentation_working_scene(&deck);
         assert_eq!(deck_source.src, "/new-figure.png");
         assert_eq!(deck_source.kind, "image");
         assert!(deck_tiles.is_empty(), "changing the source src clears stale tiles");
@@ -60,17 +60,17 @@ mod tests {
     async fn set_source_with_same_src_keeps_existing_tiles() {
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
-        let (mut source, _) = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection"));
+        let (mut source, _) = crate::presentation_working_scene(&app.snapshot().expect("projection"));
         source.kind = "figure".into();
         dispatch(&mut app, PresentationCommand::SetSource(SetSource { source })).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4, "unchanged src does not clear tiles");
+        assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4, "unchanged src does not clear tiles");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_frame_updates_source_frame() {
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::SetFrame(set_frame::SetFrame { frame: FigureTileFrame { x: 0.1, y: 0.2, width: 0.3, height: 0.4 } })).await;
-        let frame = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).0.frame;
+        let frame = crate::presentation_working_scene(&app.snapshot().expect("projection")).0.frame;
         assert_eq!(frame.x, 0.1);
         assert_eq!(frame.y, 0.2);
         assert_eq!(frame.width, 0.3);
@@ -98,7 +98,7 @@ mod tests {
             panic!("expected a LoadDocument effect");
         };
         let loaded = <PresentationSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-        assert!(crate::artifacts::presentation::presentation_working_scene(&loaded).1.is_empty(), "resetting to demo loads the default deck, which has no tiles");
+        assert!(crate::presentation_working_scene(&loaded).1.is_empty(), "resetting to demo loads the default deck, which has no tiles");
     }
 
     #[semio_framework_async_macros::async_test]

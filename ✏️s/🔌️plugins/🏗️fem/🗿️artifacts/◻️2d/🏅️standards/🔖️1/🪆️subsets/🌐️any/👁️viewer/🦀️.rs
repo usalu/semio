@@ -4,7 +4,7 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::fem2d::{Fem2dSnapshot, FEM2D_DIALECT, FEM_2D_SCHEMA};
+use crate::{Fem2dSnapshot, FEM2D_DIALECT, FEM_2D_SCHEMA};
 use crate::viewer::fem2d::modes::view;
 use crate::viewer::fem2d::modes::view::windows::model;
 use semio_framework_plugin::app::{Dialect, InteractionView};
@@ -37,7 +37,7 @@ pub struct Fem2dViewer;
 
 impl ArtifactViewer for Fem2dViewer {
     type Snapshot = Fem2dSnapshot;
-    type Mutation = crate::artifacts::fem2d::op::Fem2dMutation;
+    type Mutation = crate::op::Fem2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -51,9 +51,9 @@ impl ArtifactViewer for Fem2dViewer {
 
     /// 🌱️ A real, non-empty default scene: the artifact-side boot document (the bundled `fem2d`
     /// example DSL, falling back to the empty document on a parse error) the sibling editor boots on
-    /// too — no editor import, this is `crate::artifacts::fem2d::schema`.
+    /// too — no editor import, this is `crate::schema`.
     fn initial_snapshot() -> Fem2dSnapshot {
-        crate::artifacts::fem2d::schema::default_fem2d_snapshot()
+        crate::schema::default_fem2d_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Fem2dViewCommand::Noop` variant never carries a config

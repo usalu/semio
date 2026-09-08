@@ -1,5 +1,5 @@
 //! jack <- json
-use crate::artifacts::jack::JackSnapshot;
+use crate::JackSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 

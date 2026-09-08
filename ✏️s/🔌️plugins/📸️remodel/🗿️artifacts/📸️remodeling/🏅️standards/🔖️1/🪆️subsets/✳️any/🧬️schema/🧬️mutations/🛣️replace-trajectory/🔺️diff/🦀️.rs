@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ReplaceTrajectory`. Clearing an already-absent trajectory ⇒ Error;
 //! identical resubmission ⇒ Warning.
-use crate::artifacts::remodeling::diff::RemodelingDiff;
-use crate::artifacts::remodeling::RemodelingSnapshot;
+use crate::diff::RemodelingDiff;
+use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceTrajectory, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

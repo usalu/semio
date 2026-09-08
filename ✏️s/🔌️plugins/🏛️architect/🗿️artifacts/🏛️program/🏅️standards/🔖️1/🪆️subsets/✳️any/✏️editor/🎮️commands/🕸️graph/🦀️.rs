@@ -2,10 +2,10 @@
 
 pub mod node_graph_edit {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::registers::AdjacencyKind;
-    use crate::artifacts::program::schema::mutations as leaves;
-    use crate::artifacts::program::{EntityId, ProgramSnapshot};
+    use crate::op::ProgramMutation;
+    use crate::registers::AdjacencyKind;
+    use crate::schema::mutations as leaves;
+    use crate::{EntityId, ProgramSnapshot};
     use crate::editor::architect::catalog::{find_adjacency, new_adjacency};
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -56,8 +56,8 @@ pub mod node_graph_edit {
 
 pub mod node_graph_viewport {
     use dsl::{FromValue, ToValue};
-    use crate::artifacts::program::op::ProgramMutation;
-    use crate::artifacts::program::ProgramSnapshot;
+    use crate::op::ProgramMutation;
+    use crate::ProgramSnapshot;
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::editor::architect::modes::edit::windows::graph::GraphCamera;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
