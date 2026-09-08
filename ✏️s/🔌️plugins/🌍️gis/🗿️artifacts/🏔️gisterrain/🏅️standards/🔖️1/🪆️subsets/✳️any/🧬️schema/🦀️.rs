@@ -25,8 +25,6 @@ pub struct GisTerrainArtifact {
     pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
     #[state(config)]
     pub camera_json: String,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -38,7 +36,6 @@ impl Default for GisTerrainArtifact {
             imported_features_json: String::new(),
             mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(0.0, ""))),
             camera_json: serde_json::json!({ "position": [800.0, -800.0, 600.0], "target": [0.0, 0.0, 0.0], "up": [0.0, 0.0, 1.0], "fov": 45.0 }).to_string(),
-            locale: "en-US".into(),
         }
     }
 }

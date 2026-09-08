@@ -1,10 +1,9 @@
-
 use super::*;
 use store::SpaceMember;
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_artifact_prepare_publish_retry_cancel_and_close_use_production_and_one_byte_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️fixtures/🧬️artifact-recipes.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️artifact-recipes.json")).unwrap();
     let label = fixture["label"]["unit"].as_str().unwrap().repeat(fixture["label"]["repetitions"].as_u64().unwrap() as usize);
     for bytes in fixture["grants"].as_array().unwrap() {
         let grant = Grant { maximum_items: 1, maximum_bytes: bytes.as_u64().unwrap() as usize };

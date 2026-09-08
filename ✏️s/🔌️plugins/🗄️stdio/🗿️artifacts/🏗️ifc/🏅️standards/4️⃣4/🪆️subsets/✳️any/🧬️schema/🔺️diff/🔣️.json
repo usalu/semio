@@ -16,7 +16,7 @@
           "minimum": 0
         },
         "value": {
-          "$ref": "snapshot.json#/definitions/IfcValue"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/4/any/snapshot.json#/$defs/IfcValue"
         }
       }
     },
@@ -32,7 +32,7 @@
           "minimum": 0
         },
         "value": {
-          "$ref": "snapshot.json#/definitions/IfcValue"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/4/any/snapshot.json#/$defs/IfcValue"
         }
       }
     },
@@ -72,7 +72,7 @@
         "complex": {
           "type": "array",
           "items": {
-            "$ref": "snapshot.json#/definitions/IfcComplexType"
+            "$ref": "https://semio.tech/schema/s/stdio/ifc/4/any/snapshot.json#/$defs/IfcComplexType"
           }
         }
       }
@@ -105,7 +105,7 @@
           "minimum": 0
         },
         "entity": {
-          "$ref": "snapshot.json#/definitions/IfcEntity"
+          "$ref": "https://semio.tech/schema/s/stdio/ifc/4/any/snapshot.json#/$defs/IfcEntity"
         }
       }
     },
@@ -138,19 +138,19 @@
     "fileDescription": {
       "type": "array",
       "items": {
-        "$ref": "snapshot.json#/definitions/IfcValue"
+        "$ref": "https://semio.tech/schema/s/stdio/ifc/4/any/snapshot.json#/$defs/IfcValue"
       }
     },
     "fileName": {
       "type": "array",
       "items": {
-        "$ref": "snapshot.json#/definitions/IfcValue"
+        "$ref": "https://semio.tech/schema/s/stdio/ifc/4/any/snapshot.json#/$defs/IfcValue"
       }
     },
     "fileSchema": {
       "type": "array",
       "items": {
-        "$ref": "snapshot.json#/definitions/IfcValue"
+        "$ref": "https://semio.tech/schema/s/stdio/ifc/4/any/snapshot.json#/$defs/IfcValue"
       }
     },
     "entities": {

@@ -1,6 +1,6 @@
 //! 🧬️ Generation2d diff schema — sparse field delta over the artifact.
 
-use crate::standards::v1::subsets::any::schema::Generation2dArtifact;
+
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_artifact_flow_flow::FlowFixture;
@@ -29,8 +29,6 @@ pub struct Generation2dDiff {
     pub selected_generation_id: Option<Option<String>>,
     #[state(artifact)]
     pub generation_preview_text: Option<Option<String>>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Generation2dDiff
 
@@ -42,3 +40,8 @@ pub struct Generation2dStringList {
     pub values: Vec<String>,
 }
 //#endregion 🔖️Helpers
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::standards::v1::subsets::any::schema::Generation2dArtifact;
+//#endregion 🔁️Re-exports

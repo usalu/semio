@@ -2,7 +2,7 @@
 
 import Ajv, { type ValidateFunction } from "ajv";
 import { applyPatch } from "fast-json-patch";
-import openingScopeFixture from "../../🧱️elements/🏛️ShellHost/🧭️opening/🧪️fixtures/📍️scope/🔣️.json";
+import openingScopeFixture from "../../🧱️elements/🏛️ShellHost/🧭️opening/🧫️fixtures/📍️scope/🔣️.json";
 import { AppRouter, type AppRouterManifest, type OpeningPreferences } from "@semio-tech/framework";
 import { resolveArtifactOpeningRelay } from "@semio-tech/framework-os";
 import { describe, expect, it } from "vitest";
@@ -10,7 +10,7 @@ import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget } from "..
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import artifactOpeningFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🚪️open-artifact/🔣️.json";
 
-const ownedExports = new Ajv({ strict: true, allErrors: true }).addKeyword("discriminator").addKeyword("x-semio-note").addSchema(rendererSchema);
+const ownedExports = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(rendererSchema);
 /** 🧬️ Compiles one named `$defs` export of the `os.renderer` schema module. */
 const rendererExport = (exportId: string): ValidateFunction =>
   ownedExports.getSchema(`${rendererSchema.$id}#/$defs/${exportId}`) as ValidateFunction;

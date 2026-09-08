@@ -39,9 +39,7 @@ message Puzzle2dArtifact {
   // @state config
   string brush_candidate_source_handle_id = 17;
   // @state config
-  string locale = 18;
   // @state config
-  string terminology = 19;
   // @state config
   string lod_mode_by_pane_json = 20;
   // @state config
@@ -237,3 +235,10 @@ message Puzzle2dMeta {
   optional Puzzle2dKindCatalogs kind_catalogs = 3;
 }
 
+message Puzzle2dNodeAnchor {
+  string value = 1;
+}
+
+message Puzzle2dCompatSpecificity {
+  string value = 1;
+}

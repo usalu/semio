@@ -26,7 +26,7 @@ export default defineConfig({
     include: [resolve(dir, "../../../🧪️tests/🛡️admin/🟦️.tsx")],
     includeSource: ["../../🧱️elements/📚️I18n/🟦️.tsx"],
     coverage: { include: [resolve(dir, "../../../🧪️tests/🛡️admin/🟦️.tsx"), "../../🧱️elements/**/🟦️.tsx"] },
-    setupFiles: [resolve(dir, "🟦️.ts")],
+    setupFiles: [resolve(dir, "../../../🧪️tests/🧹️environment/🟦️.ts")],
     passWithNoTests: false,
   },
 });

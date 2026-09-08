@@ -28,10 +28,6 @@
       "$ref": "#/$defs/ProcedureStringList",
       "x-semio-state": "presence"
     },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "contributionsJson": {
       "type": "string",
       "x-semio-state": "config"
@@ -98,7 +94,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ProcedureStep"
+            "$ref": "https://semio.tech/schema/s/imperative/imperative/artifact.json#/$defs/ProcedureStep"
           }
         },
         "removed": {
@@ -136,49 +132,6 @@
         "patch": {
           "type": "object",
           "additionalProperties": true
-        }
-      }
-    },
-    "ProcedurePath": {
-      "title": "ProcedurePath",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "steps"
-      ],
-      "properties": {
-        "steps": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ProcedureStep"
-          }
-        }
-      }
-    },
-    "ProcedureStep": {
-      "title": "ProcedureStep",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "kind"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string"
-        },
-        "params": {
-          "type": "object",
-          "additionalProperties": true
-        },
-        "bodies": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/ProcedurePath"
-          }
         }
       }
     }

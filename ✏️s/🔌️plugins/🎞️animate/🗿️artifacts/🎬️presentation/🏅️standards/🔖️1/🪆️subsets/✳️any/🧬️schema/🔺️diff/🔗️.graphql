@@ -6,7 +6,6 @@ type PresentationDiff {
   tiles: PresentationTilesDelta @state(class: ARTIFACT)
   selectedIds: PresentationStringList @state(class: PRESENCE)
   engagementInput: String @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
 }
 type PresentationStringList { values: [String!]! }
 type PresentationTilesDelta { added: [FigureTileDraft!]! removed: [String!]! patched: [PresentationTilePatchEntry!]! reordered: [String!] }
@@ -21,5 +20,4 @@ type PresentationArtifact {
   tiles: [FigureTileDraft!]!
   selectedIds: [String!]!
   engagementInput: String!
-  locale: String!
 }

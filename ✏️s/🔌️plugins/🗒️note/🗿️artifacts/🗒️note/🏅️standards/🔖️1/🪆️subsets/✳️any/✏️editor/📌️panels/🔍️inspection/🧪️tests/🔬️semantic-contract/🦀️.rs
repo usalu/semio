@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn note_semantic_panels_match_the_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️summary.json")).expect("neutral UI vectors");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️summary.json")).expect("neutral UI vectors");
     let mut snapshot = crate::schema::empty_note_snapshot();
     snapshot.snap_enabled = Some(false);
     for row in fixture["cases"].as_array().expect("locale cases") {
@@ -24,7 +24,7 @@ fn note_semantic_panels_match_the_json_oracle() {
 
 #[test]
 fn note_ink_canvas_payload_matches_the_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️summary.json")).expect("neutral canvas vectors");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️summary.json")).expect("neutral canvas vectors");
     let snapshot = crate::schema::empty_note_snapshot();
     let camera = serde_json::from_value(fixture["camera"].clone()).expect("camera oracle");
     for mode in ["composite", "navigator"] {

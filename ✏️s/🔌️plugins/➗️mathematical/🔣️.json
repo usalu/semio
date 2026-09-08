@@ -422,50 +422,6 @@
                 }
               },
               {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  },
-                  "reuse": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive"
-                  }
-                }
-              },
-              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -1635,50 +1591,6 @@
                 }
               },
               {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  },
-                  "reuse": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive"
-                  }
-                }
-              },
-              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -2546,7 +2458,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 60.0,
+                "size": 60,
                 "children": [
                   {
                     "kind": "window",
@@ -2557,7 +2469,7 @@
               },
               {
                 "kind": "stack",
-                "size": 40.0,
+                "size": 40,
                 "children": [
                   {
                     "kind": "window",

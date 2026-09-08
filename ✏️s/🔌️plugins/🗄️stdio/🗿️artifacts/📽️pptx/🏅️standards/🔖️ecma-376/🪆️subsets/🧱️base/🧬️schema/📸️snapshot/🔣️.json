@@ -9,18 +9,18 @@
       "x-semio-state": "artifact"
     },
     "opc": {
-      "$ref": "#/$defs/opcPackage",
+      "$ref": "#/$defs/OpcPackage",
       "x-semio-state": "artifact"
     },
     "xmlParts": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/xmlPart"
+        "$ref": "#/definitions/xmlPart"
       },
       "x-semio-state": "artifact"
     },
     "presentation": {
-      "$ref": "#/$defs/presentation",
+      "$ref": "#/definitions/presentation",
       "x-semio-state": "artifact"
     }
   },
@@ -31,7 +31,7 @@
     "presentation"
   ],
   "$defs": {
-    "nameValue": {
+    "NameValue": {
       "type": "array",
       "items": [
         {
@@ -44,33 +44,53 @@
       "minItems": 2,
       "maxItems": 2
     },
-    "relationship": {
+    "OpcPackage": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "relType": {
-          "type": "string"
-        },
-        "target": {
-          "type": "string"
-        },
-        "targetMode": {
-          "enum": [
-            "internal",
-            "external"
+        "contentTypes": {
+          "type": "object",
+          "properties": {
+            "defaults": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/NameValue"
+              }
+            },
+            "overrides": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/NameValue"
+              }
+            }
+          },
+          "required": [
+            "defaults",
+            "overrides"
           ]
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpcPart"
+          }
+        },
+        "relationships": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/relationship"
+            }
+          }
         }
       },
       "required": [
-        "id",
-        "relType",
-        "target",
-        "targetMode"
+        "contentTypes",
+        "parts",
+        "relationships"
       ]
     },
-    "opcPart": {
+    "OpcPart": {
       "type": "object",
       "properties": {
         "path": {
@@ -94,53 +114,41 @@
         "bytes"
       ]
     },
-    "opcPackage": {
+    "XmlDocument": {
       "type": "object",
       "properties": {
-        "contentTypes": {
+        "declaration": {
           "type": "object",
           "properties": {
-            "defaults": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/nameValue"
-              }
+            "version": {
+              "type": "string"
             },
-            "overrides": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/nameValue"
-              }
+            "encoding": {
+              "type": "string"
+            },
+            "standalone": {
+              "type": "boolean"
             }
           },
           "required": [
-            "defaults",
-            "overrides"
+            "version"
           ]
         },
-        "parts": {
+        "prolog": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/opcPart"
+            "$ref": "#/$defs/XmlNode"
           }
         },
-        "relationships": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "array",
-            "items": {
-              "$ref": "#/$defs/relationship"
-            }
-          }
+        "root": {
+          "$ref": "#/$defs/XmlNode"
         }
       },
       "required": [
-        "contentTypes",
-        "parts",
-        "relationships"
+        "prolog"
       ]
     },
-    "xmlNode": {
+    "XmlNode": {
       "type": "object",
       "properties": {
         "kind": {
@@ -176,7 +184,7 @@
         "children": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/xmlNode"
+            "$ref": "#/$defs/XmlNode"
           }
         },
         "text": {
@@ -192,39 +200,33 @@
       "required": [
         "kind"
       ]
-    },
-    "xmlDocument": {
+    }
+  },
+  "definitions": {
+    "relationship": {
       "type": "object",
       "properties": {
-        "declaration": {
-          "type": "object",
-          "properties": {
-            "version": {
-              "type": "string"
-            },
-            "encoding": {
-              "type": "string"
-            },
-            "standalone": {
-              "type": "boolean"
-            }
-          },
-          "required": [
-            "version"
+        "id": {
+          "type": "string"
+        },
+        "relType": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "targetMode": {
+          "enum": [
+            "internal",
+            "external"
           ]
-        },
-        "prolog": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/xmlNode"
-          }
-        },
-        "root": {
-          "$ref": "#/$defs/xmlNode"
         }
       },
       "required": [
-        "prolog"
+        "id",
+        "relType",
+        "target",
+        "targetMode"
       ]
     },
     "xmlPart": {
@@ -237,7 +239,7 @@
           "type": "string"
         },
         "document": {
-          "$ref": "#/$defs/xmlDocument"
+          "$ref": "#/$defs/XmlDocument"
         }
       },
       "required": [
@@ -298,7 +300,7 @@
         "runs": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/run"
+            "$ref": "#/definitions/run"
           }
         }
       },
@@ -320,11 +322,11 @@
         "textFrame": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/paragraph"
+            "$ref": "#/definitions/paragraph"
           }
         },
         "position": {
-          "$ref": "#/$defs/transform"
+          "$ref": "#/definitions/transform"
         },
         "blipRelId": {
           "type": "string"
@@ -333,7 +335,7 @@
           "type": "string"
         },
         "node": {
-          "$ref": "#/$defs/xmlNode"
+          "$ref": "#/$defs/XmlNode"
         }
       },
       "required": [
@@ -351,7 +353,7 @@
               "shapes": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/$defs/shape"
+                  "$ref": "#/definitions/shape"
                 }
               }
             },

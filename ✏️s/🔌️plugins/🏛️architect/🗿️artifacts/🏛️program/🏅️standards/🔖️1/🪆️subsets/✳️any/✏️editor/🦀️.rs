@@ -1121,14 +1121,14 @@ impl ArtifactEditor for ArchitectPlayApp {
         command: &ArchitectCommand,
         doc: &ArtifactView<'_, ProgramSnapshot>,
         cfg: &ConfigView<'_, ArchitectConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<ProgramMutation, ArchitectConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ProgramSnapshot>, cfg: &ConfigView<'_, ArchitectConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let program = doc.snapshot;
         let config = cfg.snapshot;
         match body_key {

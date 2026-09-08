@@ -10,22 +10,21 @@
   "authors": null,
   "camera3d": {
     "position": [
-      5.0,
-      5.0,
-      5.0
+      5,
+      5,
+      5
     ],
     "target": [
-      0.0,
-      1.0,
-      0.0
+      0,
+      1,
+      0
     ],
-    "zoom": 1.0
+    "zoom": 1
   },
   "meta": null,
   "selectedIds": null,
   "activeRepresentationId": null,
   "wantedTags": null,
-  "locale": null,
   "windows": null,
   "brushVortexKindId": null,
   "brushRadius": null,

@@ -2,6 +2,127 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+    {
+      "name": "🧪️test🪟️context-menu-view-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-context-menu-view-context",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.11
+      }
+    },
+    {
+      "name": "⚖️gate🏛️abstraction-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-abstraction-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.1
+      }
+    },
+    {
+      "name": "🧪️test🏛️abstraction-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-abstraction-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.101
+      }
+    },
+    {
+      "name": "🧪️test🪟️window-view-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-window-view-context",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10200000000003
+      }
+    },
+    {
+      "name": "🧪️test🪟️window-view-context🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-window-view-context-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.103
+      }
+    },
+    {
+      "name": "🧪️test🪟️surface-view-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-surface-view-context",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10400000000004
+      }
+    },
+    {
+      "name": "🧪️test🌐️resolved-host-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-resolved-host-context",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.105
+      }
+    },
+    {
+      "name": "🧪️test🌐️browser-actor-host-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-browser-actor-host-context",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.106
+      }
+    },
+    {
+      "name": "🧪️test🌐️browser-actor-host-context⚙️worker",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-browser-actor-host-context-worker",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107
+      }
+    },
+    {
+      "name": "🔎️check⚙️os-config",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-config:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.108
+      }
+    },
+    {
+      "name": "🧪️test⚙️os-config",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-config:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10900000000004
+      }
+    },
     // #region ⚡️Nx Lifecycle and Cache
     {
       "name": "🧪️test print compiler",
@@ -10368,6 +10489,28 @@
       }
     },
     {
+      "name": "📦️test🧬️schema🧩️compile",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-compile",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.8
+      }
+    },
+    {
+      "name": "📦️generate🧬️schema📤️entries",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-entries",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.9
+      }
+    },
+    {
       "name": "📦️verify🧩️taxonomy📋️report",
       "type": "node-terminal",
       "request": "launch",
@@ -10398,17 +10541,6 @@
       "presentation": {
         "group": "4_build",
         "order": 209.15
-      }
-    },
-    {
-      "name": "📦️verify🧬️mutations🚦️semantic-vocabulary",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:semantic-vocabulary",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 209.16
       }
     },
     {
@@ -13481,6 +13613,22 @@
       }
     },
     {
+      "name": "📦️build🦀️os-hub",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 502.42 }
+    },
+    {
+      "name": "📦️build🟦️os-hub-admin",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-admin:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 502.4205 }
+    },
+    {
       "name": "🔎️check🦀️os-hub",
       "type": "node-terminal",
       "request": "launch",
@@ -15183,6 +15331,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 503.932
+      }
+    },
+    {
+      "name": "🧪️test🟦️sequence-browser",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/sequence-tests:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 503.933
       }
     },
     {
@@ -19863,6 +20022,17 @@
       }
     },
 {
+      "name": "🎮️build inputs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-inputs",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 349
+      }
+    },
+{
       "name": "🎮️generate🧩️aggregator session",
       "type": "node-terminal",
       "request": "launch",
@@ -19893,6 +20063,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.001
+      }
+    },
+{
+      "name": "🎮️build🧩️aggregator⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-aggregator-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362
       }
     },
 {
@@ -20032,6 +20213,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️animate⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-animate-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.001
+      }
+    },
+{
       "name": "🎮️activate🧩️animate⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -20131,6 +20323,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️architect⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-architect-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.002
+      }
+    },
+{
       "name": "🎮️activate🧩️architect⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -20227,6 +20430,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.031
+      }
+    },
+{
+      "name": "🎮️build🧩️aussuchen⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-aussuchen-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.003
       }
     },
 {
@@ -20366,6 +20580,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️bearbeiten⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-bearbeiten-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.004
+      }
+    },
+{
       "name": "🎮️activate🧩️bearbeiten⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -20502,6 +20727,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️block2d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-block2d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.005
+      }
+    },
+{
       "name": "🎮️activate🧩️block2d⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -20598,6 +20834,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.061
+      }
+    },
+{
+      "name": "🎮️build🧩️block3d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-block3d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.006
       }
     },
 {
@@ -20700,6 +20947,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️block5d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-block5d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.007
+      }
+    },
+{
       "name": "🎮️activate🧩️block5d⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -20796,6 +21054,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.081
+      }
+    },
+{
+      "name": "🎮️build🧩️cad⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-cad-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.008
       }
     },
 {
@@ -20898,6 +21167,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️dag⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-dag-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.009
+      }
+    },
+{
       "name": "🎮️activate🧩️dag⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -20994,6 +21274,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.101
+      }
+    },
+{
+      "name": "🎮️build🧩️demonstrator⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-demonstrator-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.01
       }
     },
 {
@@ -21155,6 +21446,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️din16798⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-din16798-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.011
+      }
+    },
+{
       "name": "🎮️activate🧩️din16798⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -21310,6 +21612,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.121
+      }
+    },
+{
+      "name": "🎮️build🧩️din18599⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-din18599-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.012
       }
     },
 {
@@ -21471,6 +21784,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️din4108⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-din4108-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.013
+      }
+    },
+{
       "name": "🎮️activate🧩️din4108⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -21629,6 +21953,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️draw⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-draw-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.014
+      }
+    },
+{
       "name": "🎮️activate🧩️draw⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -21725,6 +22060,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.151
+      }
+    },
+{
+      "name": "🎮️build🧩️en1990⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-en1990-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.015
       }
     },
 {
@@ -21886,6 +22232,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️en1991⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-en1991-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.016
+      }
+    },
+{
       "name": "🎮️activate🧩️en1991⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -22041,6 +22398,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.171
+      }
+    },
+{
+      "name": "🎮️build🧩️en1992⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-en1992-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.017
       }
     },
 {
@@ -22202,6 +22570,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️en1993⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-en1993-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.018
+      }
+    },
+{
       "name": "🎮️activate🧩️en1993⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -22357,6 +22736,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.191
+      }
+    },
+{
+      "name": "🎮️build🧩️en1994⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-en1994-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.019
       }
     },
 {
@@ -22518,6 +22908,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️en1995⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-en1995-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.02
+      }
+    },
+{
       "name": "🎮️activate🧩️en1995⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -22673,6 +23074,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.211
+      }
+    },
+{
+      "name": "🎮️build🧩️en1996⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-en1996-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.021
       }
     },
 {
@@ -22834,6 +23246,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️en1997⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-en1997-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.022
+      }
+    },
+{
       "name": "🎮️activate🧩️en1997⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -22989,6 +23412,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.231
+      }
+    },
+{
+      "name": "🎮️build🧩️en1998⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-en1998-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.023
       }
     },
 {
@@ -23150,6 +23584,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️en1999⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-en1999-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.024
+      }
+    },
+{
       "name": "🎮️activate🧩️en1999⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -23305,6 +23750,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.251
+      }
+    },
+{
+      "name": "🎮️build🧩️energy⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-energy-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.025
       }
     },
 {
@@ -23466,6 +23922,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️fem2d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-fem2d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.026
+      }
+    },
+{
       "name": "🎮️activate🧩️fem2d⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -23562,6 +24029,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.271
+      }
+    },
+{
+      "name": "🎮️build🧩️fem3d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-fem3d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.027
       }
     },
 {
@@ -23664,6 +24142,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️flow⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-flow-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.028
+      }
+    },
+{
       "name": "🎮️activate🧩️flow⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -23760,6 +24249,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.291
+      }
+    },
+{
+      "name": "🎮️build🧩️forms⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-forms-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.029
       }
     },
 {
@@ -23862,6 +24362,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️generation2d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-generation2d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.03
+      }
+    },
+{
       "name": "🎮️activate🧩️generation2d⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -23961,6 +24472,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️generation3d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-generation3d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.031
+      }
+    },
+{
       "name": "🎮️activate🧩️generation3d⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -24057,6 +24579,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.321
+      }
+    },
+{
+      "name": "🎮️build🧩️generator⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-generator-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.032
       }
     },
 {
@@ -24196,6 +24729,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️gis2d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-gis2d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.033
+      }
+    },
+{
       "name": "🎮️activate🧩️gis2d⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -24292,6 +24836,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.341
+      }
+    },
+{
+      "name": "🎮️build🧩️gis3d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-gis3d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.034
       }
     },
 {
@@ -24394,6 +24949,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️imperative⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-imperative-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.035
+      }
+    },
+{
       "name": "🎮️activate🧩️imperative⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -24490,6 +25056,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.361
+      }
+    },
+{
+      "name": "🎮️build🧩️iso16757⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-iso16757-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.036
       }
     },
 {
@@ -24651,6 +25228,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️koordinator⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-koordinator-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.037
+      }
+    },
+{
       "name": "🎮️activate🧩️koordinator⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -24787,6 +25375,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️layout⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-layout-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.038
+      }
+    },
+{
       "name": "🎮️activate🧩️layout⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -24883,6 +25482,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.391
+      }
+    },
+{
+      "name": "🎮️build🧩️lowpoly⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-lowpoly-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.039
       }
     },
 {
@@ -24985,6 +25595,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️mathematical⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-mathematical-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.04
+      }
+    },
+{
       "name": "🎮️activate🧩️mathematical⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -25081,6 +25702,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.411
+      }
+    },
+{
+      "name": "🎮️build🧩️note⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-note-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.041
       }
     },
 {
@@ -25183,6 +25815,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️playbook⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-playbook-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.042
+      }
+    },
+{
       "name": "🎮️activate🧩️playbook⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -25279,6 +25922,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.431
+      }
+    },
+{
+      "name": "🎮️build🧩️process3d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-process3d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.043
       }
     },
 {
@@ -25381,6 +26035,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️puzzle2d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-puzzle2d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.044
+      }
+    },
+{
       "name": "🎮️activate🧩️puzzle2d⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -25477,6 +26142,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.451
+      }
+    },
+{
+      "name": "🎮️build🧩️puzzle3d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-puzzle3d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.045
       }
     },
 {
@@ -25579,6 +26255,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️puzzle5d⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-puzzle5d-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.046
+      }
+    },
+{
       "name": "🎮️activate🧩️puzzle5d⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -25675,6 +26362,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.471
+      }
+    },
+{
+      "name": "🎮️build🧩️raster⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-raster-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.047
       }
     },
 {
@@ -25777,6 +26475,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️reasoning-wires⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-reasoning-wires-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.048
+      }
+    },
+{
       "name": "🎮️activate🧩️reasoning-wires⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -25873,6 +26582,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.491
+      }
+    },
+{
+      "name": "🎮️build🧩️remodel⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-remodel-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.049
       }
     },
 {
@@ -25975,6 +26695,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️s⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-s-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.05
+      }
+    },
+{
       "name": "🎮️activate🧩️s⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -26071,6 +26802,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.511
+      }
+    },
+{
+      "name": "🎮️build🧩️sequence⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-sequence-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.051
       }
     },
 {
@@ -26173,6 +26915,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️shooting⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-shooting-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.052
+      }
+    },
+{
       "name": "🎮️activate🧩️shooting⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -26269,6 +27022,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.531
+      }
+    },
+{
+      "name": "🎮️build🧩️sourcing⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-sourcing-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.053
       }
     },
 {
@@ -26371,6 +27135,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️trinity-jack⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-trinity-jack-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.054
+      }
+    },
+{
       "name": "🎮️activate🧩️trinity-jack⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -26467,6 +27242,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.551
+      }
+    },
+{
+      "name": "🎮️build🧩️trinity-rewriting⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-trinity-rewriting-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.055
       }
     },
 {
@@ -26569,6 +27355,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️vcs⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-vcs-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.056
+      }
+    },
+{
       "name": "🎮️activate🧩️vcs⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -26665,6 +27462,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.571
+      }
+    },
+{
+      "name": "🎮️build🧩️vdi3805⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-vdi3805-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.057
       }
     },
 {
@@ -26826,6 +27634,17 @@
       }
     },
 {
+      "name": "🎮️build🧩️verfolgen⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-verfolgen-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.058
+      }
+    },
+{
       "name": "🎮️activate🧩️verfolgen⚛️react dev",
       "type": "node-terminal",
       "request": "launch",
@@ -26959,6 +27778,17 @@
       "presentation": {
         "group": "4_build",
         "order": 360.591
+      }
+    },
+{
+      "name": "🎮️build🧩️writer⚛️react release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-writer-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 362.059
       }
     },
 {

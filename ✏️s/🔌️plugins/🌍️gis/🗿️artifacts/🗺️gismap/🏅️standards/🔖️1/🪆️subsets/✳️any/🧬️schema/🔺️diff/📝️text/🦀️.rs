@@ -134,9 +134,6 @@ impl GisMapDiff {
             if let Some(value) = &self.lod_mode {
                 next.lod_mode = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -183,7 +180,6 @@ impl MutationDiff<GisMapSnapshot> for GisMapDiff {
         take!(render_mode);
         take!(vector_style);
         take!(lod_mode);
-        take!(locale);
         match (&mut self.layer_visibility, other.layer_visibility) {
             (Some(dst), Some(src)) => dst.entries.extend(src.entries),
             (None, Some(src)) => self.layer_visibility = Some(src),
@@ -209,3 +205,8 @@ pub fn diff_set_snapshot(snapshot: &GisMapSnapshot) -> GisMapDiff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔹Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type GisMapDiffText = String;
+//#endregion 🚚️Carrier

@@ -38,14 +38,5 @@ mod viewer { pub use semio_s_artifact_flow_flow::viewer::*; }
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::FlowApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_flow_demo_session;
-    #[path = "../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_flow_demo;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

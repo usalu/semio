@@ -1,359 +1,120 @@
-//! 🧭️ Full-fleet example laws; public kernel APIs and production providers only.
+//! 🧭️ Kernel-only M5 grammar, protocol and fixture-discovery conformance.
+//! Fleet-owned real-example laws live in the dedicated fixture-sweep test package.
 
+//#region 🔖️ExampleAssetDiscovery
+/// @emoji 🖼️ Path-agnostic example-asset discovery for M5 pilots: prefers
+/// `📚️examples/<slug>/🖼️assets/*.<kind>.semio`, soft-falls back to legacy plural kind dirs.
 #[cfg(test)]
-mod tests {
-    use std::path::{Path, PathBuf};
+#[path = "../🔬️example-asset-discovery/🦀️.rs"]
+mod example_asset_discovery;
+//#endregion 🔖️ExampleAssetDiscovery
 
-    //#region 🔖️AppTypes
-    // One `use` per registered app kind — aliased where the app's own type is plainly named
-    // `Document` (every norm sub-app) to avoid a name collision in this one aggregating module.
-    use semio_s_artifact_block_2d::Block2dSnapshot as Block2dDefinition;
-    use semio_s_artifact_block_3d::Block3dSnapshot as Block3dDefinition;
-    use semio_s_artifact_block_5d::Block5dSnapshot as Block5dDefinition;
-    use semio_s_artifact_cad_cad::CadSnapshot;
-    use semio_s_artifact_dag_dag::DagSnapshot;
-    use semio_s_artifact_draw_drawing::DrawingSnapshot;
-    use semio_s_artifact_fem_2d::Fem2dSnapshot as Fem2dDocument;
-    use semio_s_artifact_fem_3d::Fem3dSnapshot as Fem3dDocument;
-    use semio_framework_artifact_flow_flow::FlowFixture;
-    use semio_s_artifact_norm_din16798::Din16798Snapshot as Din16798Document;
-    use semio_s_artifact_norm_din18599::Din18599Snapshot as Din18599Document;
-    use semio_s_artifact_norm_din4108::Din4108Snapshot as Din4108Document;
-    use semio_s_artifact_norm_en1990::En1990Snapshot as En1990Document;
-    use semio_s_artifact_norm_en1991::En1991Snapshot as En1991Document;
-    use semio_s_artifact_norm_en1992::En1992Snapshot as En1992Document;
-    use semio_s_artifact_norm_en1993::En1993Snapshot as En1993Document;
-    use semio_s_artifact_norm_en1994::En1994Snapshot as En1994Document;
-    use semio_s_artifact_norm_en1995::En1995Snapshot as En1995Document;
-    use semio_s_artifact_norm_en1996::En1996Snapshot as En1996Document;
-    use semio_s_artifact_norm_en1997::En1997Snapshot as En1997Document;
-    use semio_s_artifact_norm_en1998::En1998Snapshot as En1998Document;
-    use semio_s_artifact_norm_en1999::En1999Snapshot as En1999Document;
-    // 🌱️ 26/08/05/FORMS-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION: the old `forms` app facade
-    // crate is gone (merged into `semio-s-plugin-forms`); `FormSpec` was always a bare `pub use` alias of
-    // `playbook::PlaybookSpec` (forms never overrode `#[dsl(extension = ...)]`) so this repoints straight
-    // at the real owner of the type — no `lib.rs` ripple beyond this import line (see TEMPLATE.md §8.2).
-    use semio_s_artifact_gis_gismap::GisMapSnapshot as GisMapDocument;
-    use semio_s_artifact_gis_gisterrain::GisTerrainSnapshot as Gis3dTerrainDocument;
-    use semio_s_artifact_space_home::SHomeSnapshot as SHomeDocument;
-    use semio_s_artifact_imperative_procedure::ProcedureSnapshot as ImperativeDocument;
-    use semio_s_artifact_layout_layout::LayoutSnapshot as LayoutDocument;
-    use semio_s_artifact_lowpoly_lowpoly::LowpolySnapshot;
-    use semio_s_artifact_mathematical_equation::EquationSnapshot;
-    use semio_s_artifact_norm_iso16757::Iso16757Snapshot as Iso16757Document;
-    use semio_s_artifact_norm_vdi3805::Vdi3805Snapshot as Vdi3805Document;
-    use semio_s_artifact_note_note::NoteSnapshot as NoteDocument;
-    // 📖️ `playbook::PlaybookSpec` is the FRAMEWORK kernel's playbook domain type, mounted inside
-    // `flow_app` (`🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust`'s glue re-exports
-    // `../../../📖️playbook/🦀️.rs` as `flow_app::playbook`) — not a standalone `playbook` crate.
-    use semio_framework_artifact_playbook_playbook::PlaybookSpec as FormSpec;
-    use semio_framework_artifact_playbook_playbook::PlaybookSpec;
-    use semio_s_artifact_animate_presentation::PresentationSnapshot as PresentationDeck;
-    use semio_s_artifact_procedural_generation2d::Generation2dSnapshot as Generation2dDocument;
-    use semio_s_artifact_procedural_generation3d::Generation3dSnapshot as Generation3dDocument;
-    use semio_s_artifact_process_process3d::Process3dSnapshot as Process3dDocument;
-    use semio_s_artifact_puzzle_2d::Puzzle2dSnapshot;
-    use semio_s_artifact_puzzle_3d::Puzzle3dSnapshot;
-    use semio_s_artifact_puzzle_5d::Puzzle5dSnapshot;
-    use semio_s_artifact_raster_raster::RasterSnapshot;
-    use semio_s_artifact_reasoning_wires::WiresSnapshot as MindmapWiresDocument;
-    use semio_s_artifact_remodel_remodeling::RemodelingSnapshot;
-    use semio_framework_os::WorkflowSnapshot;
-    use semio_s_artifact_sequence_sequence::SequenceFixture;
-    use semio_s_artifact_shooting_shooting::ShootingSnapshot as ShootingFixture;
-    use semio_s_artifact_sourcing_curation::CurationSnapshot as CurationDocument;
-    use semio_framework_artifact_space_collection::CollectionSnapshot;
-    use semio_framework_artifact_space_space::SpaceSnapshot;
-    use semio_s_artifact_trinity_jack::JackSnapshot as GraphFixture;
-    use semio_s_artifact_trinity_rewriting::RewritingSnapshot as RewriteRuleModel;
-    use semio_s_artifact_vcs_vcs::VcsSnapshot;
-    use semio_s_artifact_writer_writer::WriterSnapshot;
-    //#endregion 🔖️AppTypes
+//#region 🧭️PilotResolve
+/// 🧭️ Path-agnostic example-asset resolution for M5 pilots.
+/// Prefers `📚️examples/<slug>/🖼️assets/*.<kind>.semio`; falls back to any `.semio` under the
+/// slug tree (legacy `🗣️dsls`/`🎒️packs`/…) so mid-migration does not break compile-time includes.
+#[cfg(test)]
+#[path = "../🔬️pilot-resolve/🦀️.rs"]
+mod pilot_resolve;
+//#endregion 🧭️PilotResolve
 
-    //#region 🔖️Registry
-    /// @emoji 🧭️ `(app label, envelope_id, check fn)` — dispatch is by sniffed `plugin.artifact` from `.semio` content.
-    type CheckFn = fn(&str) -> Result<(), String>;
+//#region 🔖️M5AutoDiscovery
+/// @emoji 🧭️ P2-M3: auto-discovers m5 grammar/protocol conformance pilots by walking the repo's
+/// plugin tree at test time (see `discovery_roots` below for exactly which roots — NOT a blind
+/// `✏️s/🔌️plugins/**`, a scoping decision made empirically during this wave, see `p2-m3-report.md`),
+/// replacing the pre-P2-M3 hardcoded one-`#[test]`-per-pilot list (6 `include_str!` grammar tests +
+/// 7 `include_str!` protocol tests, hand-added one at a time). This is the ownership keystone for
+/// every future STDIO fan-out wave (P1-P3/FG1-FG4 per the plan — the only kind of fan-out wave this
+/// program ever dispatches): a new stdio standard lands its own `🧬️schema/📸️snapshot/📝️text/
+/// 📖️.grammar.semio` + sibling `.dsl.semio` fixture (or `🧬️schema/📸️snapshot/💾️binary/
+/// 📡️.protocol.semio` + `.pack.semio`, or `🧬️schema/🧬️mutations/💾️binary/
+/// 📡️.protocol.semio` + `.spr.semio`, matching dag's pre-existing 7th hardcoded pilot
+/// check) and is enrolled automatically — ZERO edits to this framework file for discovery itself.
+/// The one thing an FG-wave DOES still touch here is the shrink-only stdio exemption list below,
+/// and only to graduate its OWN standard, once.
+#[cfg(test)]
+#[path = "../🔬️m5-auto-discovery/🦀️.rs"]
+mod m5_auto_discovery;
+//#endregion 🔖️M5AutoDiscovery
 
-    fn registry() -> Vec<(&'static str, &'static str, CheckFn)> {
-        vec![
-            ("writer", <WriterSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<WriterSnapshot>),
-            ("equation", <EquationSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<EquationSnapshot>),
-            ("generation_2d", <Generation2dDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Generation2dDocument>),
-            ("generation_3d", <Generation3dDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Generation3dDocument>),
-            ("flow_app", <FlowFixture as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<FlowFixture>),
-            ("gis2d", "gis.gismap", semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<GisMapDocument>),
-            ("gis3d", "gis.gisterrain", semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Gis3dTerrainDocument>),
-            ("vcs_app", <VcsSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<VcsSnapshot>),
-            ("presentation", <PresentationDeck as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<PresentationDeck>),
-            ("shooting", <ShootingFixture as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<ShootingFixture>),
-            ("sequence", <SequenceFixture as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<SequenceFixture>),
-            ("fem2d", <Fem2dDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Fem2dDocument>),
-            ("fem3d", <Fem3dDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Fem3dDocument>),
-            ("process_3d", <Process3dDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Process3dDocument>),
-            ("lowpoly", <LowpolySnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<LowpolySnapshot>),
-            ("reasoning_wires", <MindmapWiresDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<MindmapWiresDocument>),
-            ("layout", <LayoutDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<LayoutDocument>),
-            ("cad_document", <CadSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<CadSnapshot>),
-            ("iso16757", <Iso16757Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Iso16757Document>),
-            ("vdi3805", <Vdi3805Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Vdi3805Document>),
-            ("din4108", <Din4108Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Din4108Document>),
-            ("din16798", <Din16798Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Din16798Document>),
-            ("en1990", <En1990Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<En1990Document>),
-            ("en1991", <En1991Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<En1991Document>),
-            ("en1992", <En1992Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<En1992Document>),
-            ("en1993", <En1993Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<En1993Document>),
-            ("en1994", <En1994Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<En1994Document>),
-            ("en1995", <En1995Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<En1995Document>),
-            ("en1996", <En1996Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<En1996Document>),
-            ("en1997", <En1997Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<En1997Document>),
-            ("en1998", <En1998Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<En1998Document>),
-            ("en1999", <En1999Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<En1999Document>),
-            ("din18599", <Din18599Document as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Din18599Document>),
-            ("playbook", <PlaybookSpec as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<PlaybookSpec>),
-            ("imperative", <ImperativeDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<ImperativeDocument>),
-            ("remodel", <RemodelingSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<RemodelingSnapshot>),
-            ("rewrite", <RewriteRuleModel as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<RewriteRuleModel>),
-            ("trinity_ram", <GraphFixture as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<GraphFixture>),
-            ("dag_app", <DagSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<DagSnapshot>),
-            ("draw", <DrawingSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<DrawingSnapshot>),
-            ("raster", <RasterSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<RasterSnapshot>),
-            ("note_app", <NoteDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<NoteDocument>),
-            ("puzzle_2d", <Puzzle2dSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle2dSnapshot>),
-            ("puzzle_5d", <Puzzle5dSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle5dSnapshot>),
-            ("puzzle_3d", <Puzzle3dSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Puzzle3dSnapshot>),
-            ("block_2d", <Block2dDefinition as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Block2dDefinition>),
-            ("block_5d", <Block5dDefinition as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Block5dDefinition>),
-            ("block_3d", <Block3dDefinition as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<Block3dDefinition>),
-            ("home", <SHomeDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<SHomeDocument>),
-            ("semio_framework_os", <WorkflowSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<WorkflowSnapshot>),
-            ("sourcing", <CurationDocument as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<CurationDocument>),
-            // 🌱️ `forms` app fixtures ship as `*.forms`, but `FormSpec` is a bare `pub use` alias of
-            // `playbook::PlaybookSpec` (forms never overrode `#[dsl(extension = ...)]`), so
-            // `<FormSpec as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id()` is actually `"playbook"`, not `"forms"` —
-            // registered here under the file's real suffix too since `parse_dsl`/`print_dsl` only
-            // care about the grammar's field shape, never the extension string.
-            ("forms", "forms", semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<FormSpec>),
-            ("space", <SpaceSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<SpaceSnapshot>),
-            ("space", <CollectionSnapshot as semio_framework_os_kernel::os_store::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<CollectionSnapshot>),
-        ]
-    }
-    //#endregion 🔖️Registry
+//#region 🔖️M5SoftSkip
+/// @emoji 🛟 Soft-skip helpers for M5 pilot laws when a facet has not exported a usable
+/// `COMPONENT_GRAMMAR_SEMIO` / `COMPONENT_PROTOCOL_SEMIO` yet (empty or stub text). Keeps the
+/// fixture-sweep compiling without plugin crate fan-in; example payloads are FS-discovered.
+#[cfg(test)]
+#[path = "../🔬️m5-soft-skip/🦀️.rs"]
+mod m5_soft_skip;
+//#endregion 🔖️M5SoftSkip
 
-    //#region 🔖️Walk
-    /// @emoji 🏠️ Ascends from `CARGO_MANIFEST_DIR` looking for `nx.json` (a repo-root-only marker)
-    /// rather than hardcoding a `../..` depth — robust to this crate ever moving.
-    fn repo_root() -> PathBuf {
-        let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        loop {
-            if dir.join("nx.json").is_file() {
-                return dir;
-            }
-            if !dir.pop() {
-                panic!("could not locate repo root (nx.json) ascending from {}", env!("CARGO_MANIFEST_DIR"));
-            }
-        }
-    }
+//#region 🔖️M5HandcraftedGrammar
+/// @emoji 📖️ P2-M3: m5 grammar conformance over EVERY auto-discovered `🧬️schema/📸️snapshot/📝️text/
+/// 📖️.grammar.semio` under `✏️s/🔌️plugins` (see [`super::m5_auto_discovery`]) — replaces the
+/// pre-P2-M3 hardcoded 6-pilot `include_str!` list. One `#[test]` fn iterates every discovered pair
+/// and asserts each individually with a labeled failure message (chosen over N generated `#[test]`
+/// fns — this dialect's test infra has no `#[test_case]`-style macro, and one aggregating fn keeps
+/// per-artifact failures legible without inventing a codegen mechanism this wave doesn't need).
+/// stdio standards still on [`super::m5_auto_discovery::STDIO_CONFORMANCE_GRADUATED`]'s exempt side
+/// fail SOFT (logged, not asserted); every non-stdio artifact (today: lowpoly/dag/cad/en1992/note/
+/// fem2d — the plan's own 6 pilots) and any graduated stdio standard fails HARD.
+#[cfg(test)]
+#[path = "../🔬️m5-handcrafted-grammar-conformance/🦀️.rs"]
+mod m5_handcrafted_grammar_conformance;
+//#endregion 🔖️M5HandcraftedGrammar
 
-    const EXAMPLES_DIR_NAME: &str = "📚️examples";
-    const ASSETS_DIR_NAME: &str = "🖼️assets";
-    const LEGACY_KIND_DIRS: &[&str] = &["🗣️dsls", "🎒️packs", "🔧️ops", "📡️sprs"];
+//#region 🔖️M5HandcraftedProtocol
+/// @emoji 📡️ P2-M3: m5 protocol conformance over EVERY auto-discovered pack/spr protocol facet
+/// (see [`super::m5_auto_discovery`]) via [`verify_protocol_source`]/[`walk_protocol`] — replaces
+/// the pre-P2-M3 hardcoded 7-pilot `include_str!` list (6 pack + dag's 1 spr). Same hard/soft split
+/// as [`super::m5_handcrafted_grammar_conformance`]: stdio standards still on
+/// `STDIO_CONFORMANCE_GRADUATED`'s exempt side fail soft; every non-stdio artifact and any graduated
+/// stdio standard fails hard.
+#[cfg(test)]
+#[path = "../🔬️m5-handcrafted-protocol-conformance/🦀️.rs"]
+mod m5_handcrafted_protocol_conformance;
+//#endregion 🔖️M5HandcraftedProtocol
 
-    fn skip_dir_name(name: &str) -> bool {
-        name == "node_modules" || name == "target" || name.starts_with('.') || name == "🦑️repo"
-    }
+//#region 🔖️M5CrossArtifactRejection
+/// @emoji ⚔️ P2-M3: cross-artifact anti-genericness generalized over EVERY auto-discovered non-stdio
+/// grammar+fixture pair (previously hardcoded to exactly one pair, lowpoly-vs-dag) — every distinct
+/// pair's grammar must reject the other's shipped fixture body, both directions. stdio is excluded
+/// entirely here (not merely soft): most stdio grammars are still ABNF-dialect/placeholder stubs per
+/// the P2-W0 recon, so a stub-vs-stub non-rejection is not a meaningful anti-genericness signal yet
+/// — stdio standards join this check the same way they join hard conformance, by graduating on
+/// `STDIO_CONFORMANCE_GRADUATED`.
+#[cfg(test)]
+#[path = "../🔬️m5-cross-artifact-rejection/🦀️.rs"]
+mod m5_cross_artifact_rejection;
+//#endregion 🔖️M5CrossArtifactRejection
 
-    /// @emoji 📚️ Recursively finds every directory literally named `📚️examples` under `root`,
-    /// skipping `node_modules`/`target`/hidden/ticket-scratch directories.
-    fn example_dirs(root: &Path) -> Vec<PathBuf> {
-        fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
-            let entries = match std::fs::read_dir(dir) {
-                Ok(entries) => entries,
-                Err(_) => return,
-            };
-            for entry in entries.flatten() {
-                let path = entry.path();
-                if !path.is_dir() {
-                    continue;
-                }
-                let name = entry.file_name();
-                let name = name.to_string_lossy();
-                if skip_dir_name(&name) {
-                    continue;
-                }
-                if name == EXAMPLES_DIR_NAME {
-                    out.push(path.clone());
-                }
-                walk(&path, out);
-            }
-        }
-        let mut out = Vec::new();
-        walk(root, &mut out);
-        out
-    }
+//#region 🔖️M5ProductionCoverage
+/// @emoji 📊️ P2-M3: production coverage ([`Recognizer::uncovered_productions`]) over EVERY
+/// auto-discovered snapshot grammar+fixture pair — previously hardcoded to 4 of the 6 non-stdio
+/// pilots (lowpoly/dag/cad/en1992; note/fem2d were never enrolled here, a pre-P2-M3 gap discovery
+/// closes for free). Soft-skips missing/stub specs and unparseable grammars (parse failures are
+/// grammar_conformance's failure to surface, not this diagnostic's); logs uncovered names without
+/// failing the gate hard on THEM (advisory, per the original design). The recognize-must-succeed
+/// assertion mirrors `m5_handcrafted_grammar_conformance`'s own hard/soft split — note/fem2d joining
+/// this check means fem2d's pre-existing grammar_conformance failure now also surfaces here (same
+/// underlying bug, not a new one; documented in `p2-m3-report.md`).
+#[cfg(test)]
+#[path = "../🔬️m5-production-coverage/🦀️.rs"]
+mod m5_production_coverage;
+//#endregion 🔖️M5ProductionCoverage
 
-    /// @emoji 🏷️ Direct child directories of a `📚️examples` root — one per example slug.
-    fn example_slug_dirs(examples_dir: &Path) -> Vec<PathBuf> {
-        let mut out = Vec::new();
-        let entries = match std::fs::read_dir(examples_dir) {
-            Ok(entries) => entries,
-            Err(_) => return out,
-        };
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                out.push(path);
-            }
-        }
-        out.sort();
-        out
-    }
-
-    /// @emoji 📄️ Recursively collects every FILE under `dir`.
-    fn collect_files(dir: &Path, out: &mut Vec<PathBuf>) {
-        let entries = match std::fs::read_dir(dir) {
-            Ok(entries) => entries,
-            Err(_) => return,
-        };
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                collect_files(&path, out);
-            } else {
-                out.push(path);
-            }
-        }
-    }
-
-    /// @emoji 🖼️ Collects `.semio` assets for one example slug.
-    /// Prefers `🖼️assets/` (new layout); soft-migrates by walking the slug tree when assets are absent.
-    fn collect_slug_semio_files(slug_dir: &Path) -> Vec<PathBuf> {
-        let assets = slug_dir.join(ASSETS_DIR_NAME);
-        let mut files = Vec::new();
-        if assets.is_dir() {
-            collect_files(&assets, &mut files);
-        } else {
-            collect_files(slug_dir, &mut files);
-        }
-        files.retain(|path| path.extension().and_then(|e| e.to_str()) == Some("semio"));
-        files.sort();
-        files
-    }
-
-    /// @emoji 📚️ Repo-wide `.semio` example assets under every `📚️examples/<slug>/` (assets-first).
-    fn collect_example_semio_files(root: &Path) -> Vec<PathBuf> {
-        let mut out = Vec::new();
-        for examples in example_dirs(root) {
-            for slug in example_slug_dirs(&examples) {
-                out.extend(collect_slug_semio_files(&slug));
-            }
-        }
-        out
-    }
-
-    fn has_semio_under(dir: &Path) -> bool {
-        let mut files = Vec::new();
-        collect_files(dir, &mut files);
-        files.iter().any(|path| path.extension().and_then(|e| e.to_str()) == Some("semio"))
-    }
-
-    fn slug_has_legacy_kind_dirs(slug_dir: &Path) -> bool {
-        LEGACY_KIND_DIRS.iter().any(|kind| slug_dir.join(kind).is_dir())
-    }
-    //#endregion 🔖️Walk
-
-    //#region 🔖️Sweep
-    #[semio_framework_async_macros::async_test]
-    async fn repo_wide_dsl_fixture_law_sweep() {
-        let root = repo_root();
-        let dirs = example_dirs(&root);
-        assert!(!dirs.is_empty(), "found zero 📚️examples directories under {root:?} — sweep would vacuously pass");
-
-        let fixture_files = collect_example_semio_files(&root);
-        assert!(!fixture_files.is_empty(), "found {} 📚️examples dir(s) but zero .semio fixture files under {root:?}", dirs.len());
-
-        let registry = registry();
-        let mut walked = 0usize;
-        let mut unmapped: Vec<String> = Vec::new();
-        let mut failures: Vec<String> = Vec::new();
-
-        for file in &fixture_files {
-            let bytes = std::fs::read(file).unwrap_or_else(|error| panic!("read {}: {error}", file.display()));
-            let envelope = match semio_framework_os_kernel::os_store::semio_format::sniff(&bytes) {
-                Ok(envelope) => envelope,
-                Err(detail) => {
-                    unmapped.push(format!("{} (semio sniff failed: {detail})", file.display()));
-                    continue;
-                }
-            };
-            if envelope.component != semio_framework_os_kernel::os_store::semio_format::Component::Dsl {
-                continue;
-            }
-            let key = envelope.envelope_id();
-            let matching: Vec<&(&str, &str, CheckFn)> = registry.iter().filter(|(_, ext, _)| *ext == key).collect();
-            if matching.is_empty() {
-                unmapped.push(format!("{} (envelope {key} — no registered ArtifactDsl)", file.display()));
-                continue;
-            }
-            let text = std::str::from_utf8(&bytes).unwrap_or_else(|_| panic!("{} is not valid utf-8", file.display()));
-            for (label, _, check) in &matching {
-                walked += 1;
-                if let Err(detail) = check(text) {
-                    failures.push(format!("[{label}] {}: {detail}", file.display()));
-                }
-            }
-        }
-
-        eprintln!("[dsl-fixture-sweep] {} example dir(s), {} .semio fixture file(s) found, {} law-check(s) run across {} registered app kind(s), {} unmapped fixture(s)", dirs.len(), fixture_files.len(), walked, registry.len(), unmapped.len());
-        if !unmapped.is_empty() {
-            eprintln!("[dsl-fixture-sweep] unmapped fixtures (no registered ArtifactDsl app matches this extension — not counted as a failure):");
-            for entry in &unmapped {
-                eprintln!("  {entry}");
-            }
-        }
-
-        assert!(failures.is_empty(), "dsl fixture law sweep failed for {} check(s) across {} fixture file(s):\n\n{}", failures.len(), fixture_files.len(), failures.join("\n\n"));
-    }
-
-    #[semio_framework_async_macros::async_test]
-    async fn repo_wide_semio_example_kind_coverage() {
-        // Target: each artifact `📚️examples/<slug>/` has `🖼️assets/` with ≥1 `.semio`.
-        // Mid-migration (W1b→W3): soft-skip slugs that still lack `🖼️assets/` with a clear message.
-        // Empty `🖼️assets/` after the dir exists is a hard gap.
-        let root = repo_root();
-        let plugins = root.join("✏️s").join("🔌️plugins");
-        let mut gaps: Vec<String> = Vec::new();
-        let mut migrated = 0usize;
-        let mut soft_skipped = 0usize;
-        let read_dir = |p: &Path| std::fs::read_dir(p).ok().map(|d| d.filter_map(|e| e.ok()).collect::<Vec<_>>()).unwrap_or_default();
-        for plugin in read_dir(&plugins) {
-            let artifacts = plugin.path().join("🗿️artifacts");
-            for artifact in read_dir(&artifacts) {
-                let artifact_path = artifact.path();
-                if !artifact_path.is_dir() {
-                    continue;
-                }
-                let examples = artifact_path.join(EXAMPLES_DIR_NAME);
-                if !examples.is_dir() {
-                    continue;
-                }
-                for slug in example_slug_dirs(&examples) {
-                    let assets = slug.join(ASSETS_DIR_NAME);
-                    if assets.is_dir() {
-                        if has_semio_under(&assets) {
-                            migrated += 1;
-                        } else {
-                            gaps.push(format!("{}: {}/ present but has zero .semio files", slug.display(), ASSETS_DIR_NAME));
-                        }
-                    } else {
-                        soft_skipped += 1;
-                        let legacy_hint = if slug_has_legacy_kind_dirs(&slug) { "legacy plural kind dirs still present" } else { "no legacy kind dirs either" };
-                        eprintln!("[DEBUG] soft-skip example coverage {}: missing {}/ with ≥1 .semio — mid-migration ({})", slug.display(), ASSETS_DIR_NAME, legacy_hint);
-                    }
-                }
-            }
-        }
-        eprintln!("[dsl-fixture-sweep] example asset coverage: {migrated} slug(s) on new 🖼️assets layout, {soft_skipped} soft-skipped mid-migration");
-        assert!(gaps.is_empty(), "semio example asset gaps:\n{}", gaps.join("\n"));
-    }
-    //#endregion 🔖️Sweep
-}
+//#region 🔖️M5SemioEnvelopeProtocol
+/// @emoji 🧬️ P2-M3 deliverable 3: the `wrap_binary` SEMIO envelope (`0x89 'S' 'E' 'M' 0D 0A 1A 0A`
+/// magic + u32le token-length + token + payload — real byte layout confirmed by reading
+/// `wrap_binary`/`unwrap_binary`/`BINARY_MAGIC` directly, `🧰️framework/🛍️products/💻️os/🔨️modules/
+/// 🧬️semio/🦀️.rs:120-134`) is uniform across every artifact and described ONCE here — a
+/// framework-level `.protocol.semio` file, colocated with the real `wrap_binary` implementation it
+/// describes (`🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/📡️protocol/📡️.protocol.semio`),
+/// per the plan's target architecture table. Per-artifact protocol files describe only the
+/// post-unwrap payload (`chain bytes` below stops at "the rest," honestly — an artifact-specific
+/// protocol file is meant to walk exactly that trailing region on its own, once cross-artifact `use`
+/// resolution is real; confirmed STILL non-functional on the protocol side today, see the M3 report
+/// — so this file is NOT `use`d by anything yet, it stands alone as a real, parseable, walkable
+/// artifact with its own conformance proof below, matching the mission's explicit fallback).
+#[cfg(test)]
+#[path = "../🔬️m5-semio-envelope-protocol/🦀️.rs"]
+mod m5_semio_envelope_protocol;
+//#endregion 🔖️M5SemioEnvelopeProtocol

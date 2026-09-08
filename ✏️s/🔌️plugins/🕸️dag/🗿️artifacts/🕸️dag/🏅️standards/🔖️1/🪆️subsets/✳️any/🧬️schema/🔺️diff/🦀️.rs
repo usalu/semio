@@ -32,8 +32,6 @@ pub struct DagDiff {
     pub selected_node_ids: Option<DagStringList>,
     #[state(config)]
     pub camera: Option<DagCamera>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
 

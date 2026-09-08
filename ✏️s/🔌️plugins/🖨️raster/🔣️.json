@@ -739,50 +739,6 @@
                 }
               },
               {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  },
-                  "reuse": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive"
-                  }
-                }
-              },
-              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -2947,50 +2903,6 @@
                 }
               },
               {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  },
-                  "reuse": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive"
-                  }
-                }
-              },
-              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -4730,7 +4642,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 72.0,
+                "size": 72,
                 "children": [
                   {
                     "kind": "window",
@@ -4741,7 +4653,7 @@
               },
               {
                 "kind": "stack",
-                "size": 28.0,
+                "size": 28,
                 "children": [
                   {
                     "kind": "window",
@@ -6570,7 +6482,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 72.0,
+                "size": 72,
                 "children": [
                   {
                     "kind": "window",
@@ -6581,7 +6493,7 @@
               },
               {
                 "kind": "stack",
-                "size": 28.0,
+                "size": 28,
                 "children": [
                   {
                     "kind": "window",

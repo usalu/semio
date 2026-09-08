@@ -14,9 +14,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const api = await import("../../🟦️.ts");
     const { default: schema } = await import("../../🌿️framing/🧬️schema/🔣️.json"); const { default: framing } = await import("../../🌿️framing/🧪️fixture/🔣️.json");
     const { default: fixture } = await import("../../🧪️fixture/🔣️.json"); const { default: returned } = await import("../../../🧫️fixture/🔣️.json");
-    const { default: returnedSchema } = await import("../../../🧬️schema/🔣️.json"); const { default: lifetime } = await import("../../../../🚪️lifetime/🧬️schema/🔣️.json"); const { default: page } = await import("../../../../📃️page/🧬️schema/🔣️.json");
+    const { default: returnedSchema } = await import("../../../🧬️schema/🔣️.json"); const { default: value } = await import("../../../../../🌱️value/🧬️schema/🔣️.json"); const { default: lifetime } = await import("../../../../🚪️lifetime/🧬️schema/🔣️.json"); const { default: page } = await import("../../../../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const uint = await oracle();
-    const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returnedSchema).addSchema(schema);
+    const ajv = new Ajv({ strict: true }).addSchema(value).addSchema(lifetime).addSchema(page).addSchema(returnedSchema).addSchema(schema);
     expect(ajv.validate(schema, framing)).toBe(true);
     const cases = fixture.vectors.map(row => ({ bytes: Buffer.from(row.hex, "hex"), expected: hydrate(row.value) }));
     for (const row of returned.pageResultVectors) {
@@ -226,11 +226,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: schema } = await import("../../🧬️schema/🔣️.json");
     const { default: fixture } = await import("../../🧪️fixture/🔣️.json");
     const fixtureSchema = schema;
-    const { default: lifetime } = await import("../../../../🚪️lifetime/🧬️schema/🔣️.json");
+    const { default: value } = await import("../../../../../🌱️value/🧬️schema/🔣️.json"); const { default: lifetime } = await import("../../../../🚪️lifetime/🧬️schema/🔣️.json");
     const { default: page } = await import("../../../../📃️page/🧬️schema/🔣️.json");
     const { default: returned } = await import("../../../🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
-    const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(schema);
+    const ajv = new Ajv({ strict: true }).addSchema(value).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(schema);
     expect(ajv.getSchema(`${schema.$id}#/$defs/ResponseFixture`)!(fixture)).toBe(true);
     const uint = await oracle();
     for (const row of fixture.vectors) {
@@ -248,11 +248,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: fixture } = await import("../../🎟️credit/🧪️fixture/🔣️.json");
     const fixtureSchema = schema;
     const { default: response } = await import("../../🧬️schema/🔣️.json");
-    const { default: lifetime } = await import("../../../../🚪️lifetime/🧬️schema/🔣️.json");
+    const { default: value } = await import("../../../../../🌱️value/🧬️schema/🔣️.json"); const { default: lifetime } = await import("../../../../🚪️lifetime/🧬️schema/🔣️.json");
     const { default: page } = await import("../../../../📃️page/🧬️schema/🔣️.json");
     const { default: returned } = await import("../../../🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
-    const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(response).addSchema(schema);
+    const ajv = new Ajv({ strict: true }).addSchema(value).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(response).addSchema(schema);
     const validate = ajv.getSchema(`${schema.$id}#/$defs/CreditFixture`)!; expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     for (const row of fixture.receiverCases) {
       let state = fixture.receiverInitial;

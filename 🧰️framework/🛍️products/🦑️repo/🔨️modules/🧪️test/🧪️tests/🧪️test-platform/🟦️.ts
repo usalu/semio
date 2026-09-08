@@ -22,11 +22,25 @@ import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPack
 
 const repoRoot = repoRootFromHere();
 
+/**
+ * 🧩️ The repository-wide contribution scan and the registry built on it, taken ONCE for this file.
+ *
+ * `discoverTestContributions` walks every directory in the repository — six figures of them — and two
+ * cases below point discovery at a synthetic root and then clear its memo, so a per-process cache alone
+ * leaves every later reader paying the walk again. Reading both here, at module scope, means the walk
+ * happens once and never inside a test's own time budget: a `30_000` ms budget then measures the
+ * assertion it was written for instead of measuring a filesystem walk under whatever load the machine
+ * is carrying. Nothing in this file writes into the real repository, so one scan stays the truth for
+ * the whole run.
+ */
+const repoContributions = discoverTestContributions(repoRoot);
+const repoRegistry = loadOracleRegistry(repoRoot);
+
 /** 🖥️ This module's own committed case — the one discovery must always find, named as it sits on disk. */
 const HOST_PROTOCOL_PARITY_CASE_DIR = `${testTaxonomy(repoRoot).testDomainPath}/${testTaxonomy(repoRoot).testsDirName}/🖥️host-protocol-parity`;
 
 /** ⚖️ The effective profile table: framework profiles plus every one an owner contributes. */
-const contributed = (): ReadonlyMap<string, import("../../📦️packages/🟦️typescript/🟦️.ts").ComparisonProfileSpec> => profileTable(loadOracleRegistry(repoRoot));
+const contributed = (): ReadonlyMap<string, import("../../📦️packages/🟦️typescript/🟦️.ts").ComparisonProfileSpec> => profileTable(repoRegistry);
 
 /** 🔣️ The taxonomy's own area vocabulary — these tests name no area of their own. */
 const taxonomyAreas = (): Record<string, string> => JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")).areas as Record<string, string>;
@@ -170,7 +184,7 @@ describe("⚖️ comparison profiles", () => {
   });
 
   test("every profile — core and contributed — is applicable and produces a stable projection hash", () => {
-    const profiles = profileTable(loadOracleRegistry(repoRoot));
+    const profiles = profileTable(repoRegistry);
     expect(profiles.size).toBeGreaterThan(CORE_COMPARISON_PROFILES.length);
     for (const [id] of profiles) {
       expect(compareProjections(id, { a: 1 }, { a: 1 }, profiles).equal).toBe(true);
@@ -209,7 +223,7 @@ describe("📤️ results", () => {
 
 describe("📇️ oracle registry", () => {
   test("every registered oracle is test-only and declares its license and capabilities", () => {
-    const registry = loadOracleRegistry(repoRoot);
+    const registry = repoRegistry;
     expect(registry.oracles.length).toBeGreaterThan(0);
     for (const oracle of registry.oracles) {
       expect(oracle.testOnly).toBe(true);
@@ -220,7 +234,7 @@ describe("📇️ oracle registry", () => {
   });
 
   test("every recorded no-oracle decision names its rationale and its substitutes", () => {
-    for (const decision of loadOracleRegistry(repoRoot).noOracleDecisions) {
+    for (const decision of repoRegistry.noOracleDecisions) {
       expect(decision.rationale.length).toBeGreaterThan(20);
       expect(decision.substitutes.length).toBeGreaterThan(0);
     }
@@ -349,7 +363,7 @@ describe("🔒️ dependency ratchet", () => {
     // 🧩️EVERY package an oracle links, not only the one its id is named after: a composed reference
     // (reader + writer, archive + XML) that declared just its primary package would leave the others
     // linked into the host and absent from the ratchet, which is a gate that cannot see its subject.
-    for (const oracle of loadOracleRegistry(repoRoot).oracles) {
+    for (const oracle of repoRegistry.oracles) {
       for (const linked of oracleLinkedPackages(oracle)) {
         const entry = baseline.entries.find((candidate) => candidate.name === linked.package);
         // 🔒️A package present in the baseline at all is the invariant; being absent is what makes the
@@ -600,7 +614,7 @@ describe("🌱️ native second implementation", () => {
   test("every registered verified-native-second-implementation entry in the live registry is earned", () => {
     // 🔍️The real gate: whatever this shard (or a later one) actually registers under the new kind must
     // pass its own checks — a regression here means a promoted entry in the committed registry is lying.
-    const registry = loadOracleRegistry(repoRoot);
+    const registry = repoRegistry;
     const live = registry.oracles.filter((oracle) => oracle.kind === "verified-native-second-implementation");
     expect(live.length).toBeGreaterThan(0);
     expect(nativeSecondImplementationBreaches(registry).filter((b) => live.some((oracle) => b.scope.endsWith(`#${oracle.id}`)))).toEqual([]);
@@ -652,7 +666,7 @@ describe("🪆️ case above subset", () => {
   // NEW case was left above its subset, or this named debt was finally paid off and the assertion
   // below needs updating to match.
   test("the only live case-above-subset violation is the one C4 documented as deliberately blocked", () => {
-    const liveRegistry = loadOracleRegistry(repoRoot);
+    const liveRegistry = repoRegistry;
     const scopes = discoverTestCases(repoRoot)
       .flatMap((discovered) => caseAboveSubsetBreaches(discovered, parseFeature(readFileSync(join(repoRoot, discovered.featurePath), "utf8")), liveRegistry))
       .map((entry) => entry.scope);
@@ -731,7 +745,7 @@ describe("🧫️ mutation without fixture", () => {
   });
 
   test("the live registry retains the independent Stdio declaration census and has no declared fixture debt", () => {
-    const liveRegistry = loadOracleRegistry(repoRoot), taxonomy = testTaxonomy(repoRoot), owner = "✏️s/🔌️plugins/🗄️stdio";
+    const liveRegistry = repoRegistry, taxonomy = testTaxonomy(repoRoot), owner = "✏️s/🔌️plugins/🗄️stdio";
     const physical: { path: string; value: Record<string, any> }[] = [];
     const walk = (path: string): void => {
       for (const entry of readdirSync(join(repoRoot, path), { withFileTypes: true })) {
@@ -789,7 +803,7 @@ describe("🚫️ oracle purity", () => {
 
 describe("🧩️ cross-language oracle hosts", () => {
   test("a contributed host package is selected for whichever implementation declares it, not for Rust alone", () => {
-    const registry = loadOracleRegistry(repoRoot);
+    const registry = repoRegistry;
     const owners = new Set(discoverTestCases(repoRoot).map((entry) => entry.owner));
     const selected = [...owners].flatMap((owner) => (["rust", "typescript", "python", "go", "dotnet"] as const).flatMap((implementation) => oracleHostPackagesFor(registry, owner, implementation).map((entry) => entry.implementation)));
     // 🧩️Every implementation an owner declared must be reachable through the selector; a value that
@@ -799,7 +813,7 @@ describe("🧩️ cross-language oracle hosts", () => {
   }, 60_000);
 
   test("a host package carrying a path is local source; one without a path is an external distribution", () => {
-    const registry = loadOracleRegistry(repoRoot);
+    const registry = repoRegistry;
     const external = externalOracleHostPackages(registry);
     const declared = registry.contributions.flatMap((entry) => entry.oracleHostPackages);
     const taxonomy = testTaxonomy(repoRoot);
@@ -849,7 +863,7 @@ describe("🧩️ cross-language oracle hosts", () => {
 
   test("the committed baseline classifies every external host package as a test-only dependency", () => {
     const baseline = JSON.parse(readFileSync(join(repoRoot, "🔒️dependencies.json"), "utf8")) as { entries: { ecosystem: string; name: string; kinds: string[]; productionReachable: boolean }[] };
-    for (const host of externalOracleHostPackages(loadOracleRegistry(repoRoot))) {
+    for (const host of externalOracleHostPackages(repoRegistry)) {
       const entry = baseline.entries.find((candidate) => candidate.ecosystem === host.ecosystem && candidate.name === host.name);
       expect(entry, `${host.ecosystem}:${host.name} is on a generated host's import path but is absent from the dependency baseline`).toBeDefined();
       expect(entry!.kinds).toEqual(["test-oracle"]);
@@ -860,7 +874,7 @@ describe("🧩️ cross-language oracle hosts", () => {
 
 describe("🔒️ recorded production debt", () => {
   test("an oracle claiming testOnly while already production-reachable must record the debt, not hide it", () => {
-    const registry = loadOracleRegistry(repoRoot);
+    const registry = repoRegistry;
     const baseline = JSON.parse(readFileSync(join(repoRoot, "🔒️dependencies.json"), "utf8")) as { entries: { name: string; productionReachable: boolean }[] };
     for (const oracle of registry.oracles) {
       const entry = baseline.entries.find((candidate) => candidate.name === oracle.package);
@@ -872,13 +886,13 @@ describe("🔒️ recorded production debt", () => {
   });
 
   test("only the recorded paths are excused — any other production import is still a breach", () => {
-    const recorded = new Set(loadOracleRegistry(repoRoot).oracles.flatMap((oracle) => oracle.productionDebt?.reachableFrom ?? []));
+    const recorded = new Set(repoRegistry.oracles.flatMap((oracle) => oracle.productionDebt?.reachableFrom ?? []));
     for (const hit of oracleImportsInProduction(repoRoot)) expect(recorded.has(hit.path), `unrecorded oracle import at ${hit.path}`).toBe(true);
   }, 60_000);
 
   test("every registered oracle names its capabilities, comparison profiles and a rationale that scopes it", () => {
     const known = contributed();
-    for (const oracle of loadOracleRegistry(repoRoot).oracles) {
+    for (const oracle of repoRegistry.oracles) {
       expect(oracle.capabilities.length).toBeGreaterThan(0);
       expect(oracle.comparisonProfiles.every((profile) => known.has(profile)), `${oracle.id} names a profile nobody defines`).toBe(true);
       expect((oracle.rationale ?? "").length).toBeGreaterThan(80);
@@ -1048,12 +1062,12 @@ describe("🧭️ contribution directory ownership", () => {
       for (const candidate of candidates) expect(dependencies.find(({ name }) => name === candidate.dependency)?.productionReachable).toBe(!candidate.owned);
       expect([...new Set(oracleImportsInProduction(root).map(({ path }) => path))].sort()).toEqual(candidates.filter(({ owned }) => !owned).map(({ owner, directory }) => `${owner}/${directory}/🟦️.ts`).sort());
       writeFileSync(join(root, "🎠️kernel/🔮️oracle/🔣️.json"), "{ malformed");
-      clearContributionCache();
+      clearContributionCache(root);
       expect(discoverTestContributions(root).map(({ owner }) => owner)).toEqual(["🧩️other"]);
       expect(scanDeclaredDependencies(root).find(({ name }) => name === "selected-reference")?.productionReachable).toBe(false);
       expect(oracleImportsInProduction(root).some(({ path }) => path.startsWith("🎠️kernel/🔮️oracle/"))).toBe(false);
     } finally {
-      clearContributionCache();
+      clearContributionCache(root);
       rmSync(root, { recursive: true, force: true });
     }
   });
@@ -1092,7 +1106,7 @@ describe("🧭️ contribution directory ownership", () => {
   });
 
   test("the handpicked kernel oracle remains discoverable at runtime", () => {
-    const contribution = discoverTestContributions(repoRoot).find(({ owner }) => owner === "🧰️framework/🔨️modules/🎠️kernel");
+    const contribution = repoContributions.find(({ owner }) => owner === "🧰️framework/🔨️modules/🎠️kernel");
     expect(contribution?.manifestPath).toBe("🧰️framework/🔨️modules/🎠️kernel/🔮️oracle/🔣️.json");
     expect(contribution?.oracles.map(({ id }) => id)).toContain("semver");
   }, 60_000);
@@ -1108,9 +1122,9 @@ describe("🧩️ open/closed", () => {
   });
 
   test("every oracle and every format-specific profile arrives as an owner contribution", () => {
-    const contributions = discoverTestContributions(repoRoot);
+    const contributions = repoContributions;
     expect(contributions.length).toBeGreaterThan(0);
-    const registry = loadOracleRegistry(repoRoot);
+    const registry = repoRegistry;
     const contributedOracleIds = new Set(contributions.flatMap((entry) => entry.oracles.map((oracle) => oracle.id)));
     for (const oracle of registry.oracles) expect(contributedOracleIds.has(oracle.id), `${oracle.id} is not contributed by any owner`).toBe(true);
     const coreIds = new Set(CORE_COMPARISON_PROFILES.map((spec) => spec.id));
@@ -1248,7 +1262,7 @@ describe("🧬️ physical mutation vector registry", () => {
   });
 
   test("all governed catalogs register the physical tree exactly once", () => {
-    const registry = loadOracleRegistry(repoRoot);
+    const registry = repoRegistry;
     const vectors = registry.mutationCatalogs.flatMap((entry) => entry.vectors);
 
     // 🧬️STRUCTURAL invariants, not frozen counts. This test used to pin `144` catalogs and `1_555`

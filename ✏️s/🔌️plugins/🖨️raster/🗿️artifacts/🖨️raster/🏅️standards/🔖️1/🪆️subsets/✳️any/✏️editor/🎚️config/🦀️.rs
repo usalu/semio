@@ -36,7 +36,6 @@ pub struct RasterConfig {
     /// (host-pushed `ViewModel`, deleted by B1). Default mirrors the app's `RASTER_DEFAULT_UTILITY`.
     pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -87,7 +86,7 @@ pub type RasterConfigViewportSize = crate::RasterViewportSize;
 
 impl Default for RasterConfig {
     fn default() -> Self {
-        Self { brush_size: 24.0, brush_opacity: 1.0, composite_viewport: None, camera: RasterCamera::default(), active_utility_id: "selectMarquee".into(), locale: "en-US".into() }
+        Self { brush_size: 24.0, brush_opacity: 1.0, composite_viewport: None, camera: RasterCamera::default(), active_utility_id: "selectMarquee".into(), }
     }
 }
 
@@ -121,8 +120,6 @@ pub enum RasterConfigMutation {
     },
     #[dsl(key = "active-utility")]
     SetActiveUtility { utility_id: String },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
@@ -192,7 +189,6 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🖼️composite-viewport", semantic_kind: "set-composite-viewport", display_name: "Set Composite Viewport", emoji: "🖼️", aggregate_variant: "SetCompositeViewport", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎥️camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🛠️active-utility", semantic_kind: "set-active-utility", display_name: "Set Active Utility", emoji: "🛠️", aggregate_variant: "SetActiveUtility", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🗣️locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "🗣️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -203,7 +199,6 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             Self::SetCompositeViewport { .. } => &Self::DESCRIPTORS[3],
             Self::SetCamera { .. } => &Self::DESCRIPTORS[4],
             Self::SetActiveUtility { .. } => &Self::DESCRIPTORS[5],
-            Self::SetLocale { .. } => &Self::DESCRIPTORS[6],
         }
     }
 
@@ -216,7 +211,6 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             RasterConfigMutation::SetCompositeViewport { viewport } => next.composite_viewport = viewport.clone(),
             RasterConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
             RasterConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
-            RasterConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         protocol::MutationOutcome::new(next)
     }

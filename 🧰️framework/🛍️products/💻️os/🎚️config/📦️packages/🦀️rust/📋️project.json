@@ -1,0 +1,22 @@
+{
+  "name": "@semio-tech/framework-os-config",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust",
+  "targets": {
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -14,8 +14,7 @@ use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::census::{compute_semio_value_census, SemioValueCensus};
-
+use super::census::{compute_semio_value_census};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio value snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `census`, backed by the `🌳census/` slug dir).
@@ -91,3 +90,8 @@ pub fn semio_value_artifact_inference_descriptor() -> framework_schema::Artifact
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::census::SemioValueCensus;
+//#endregion 🔁️Re-exports

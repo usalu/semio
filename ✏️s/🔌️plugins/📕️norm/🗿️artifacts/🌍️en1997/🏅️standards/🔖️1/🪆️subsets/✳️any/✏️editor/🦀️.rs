@@ -125,14 +125,14 @@ impl ArtifactEditor for En1997PlayApp {
         command: &En1997Command,
         doc: &ArtifactView<'_, En1997Snapshot>,
         cfg: &ConfigView<'_, NormConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<En1997Mutation, NormConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, En1997Snapshot>, cfg: &ConfigView<'_, NormConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, En1997Snapshot>, cfg: &ConfigView<'_, NormConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let host = NormHost::<En1997Family>::from_document(doc.snapshot.clone());
         match body_key {
             inputs::BODY_INPUTS => inputs::render(doc.snapshot),

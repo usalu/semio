@@ -19,9 +19,6 @@ pub use set_report_table::SetReportTable;
 #[path = "🧰️set-active-utility/🦀️.rs"]
 mod set_active_utility;
 pub use set_active_utility::SetActiveUtility;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::ToValue, dsl::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = RemodelingConfig, diff = RemodelingConfig, schema = "remodeling.config")]
@@ -38,8 +35,6 @@ pub enum RemodelingConfigMutation {
     SetReportTable(SetReportTable),
     #[dsl(key = "set-active-utility")]
     SetActiveUtility(SetActiveUtility),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
 }
 
 impl protocol::OpText for RemodelingConfigMutation {

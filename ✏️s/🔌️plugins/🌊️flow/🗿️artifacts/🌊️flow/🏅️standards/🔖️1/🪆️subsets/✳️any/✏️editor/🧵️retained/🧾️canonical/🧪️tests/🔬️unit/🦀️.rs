@@ -43,7 +43,7 @@ fn encode(value: Value<'_>, bytes: &mut Vec<u8>) {
 
 #[test]
 fn every_artifact_variant_matches_serde_bytes_including_nested_chrome() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🧾️artifact-canonical.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧾️artifact-canonical.json")).unwrap();
     for row in fixture["widgets"].as_array().unwrap() {
         let value: Widget = dsl::FromValue::from_value(dsl::DslValue::from(row.clone())).unwrap();
         if let Widget::Neuron { input_ports, output_ports, .. } = &value {

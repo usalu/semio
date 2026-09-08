@@ -7,7 +7,7 @@ import { WORKSPACE_ROOT, toolJobOwnerSourceEvidence } from "../../../../../../..
 export function toolJobScalarConfigCohortSelfTests(): { routes: number; migrated: number; batchOnly: number; forbidden: number; mutationOracles: number; hostileCases: number } {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
   const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🎚️scalar-config-cohort.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🎚️scalar-config-cohort.json"), "utf8"));
   const requireTest = createRequire(import.meta.url);
   const Ajv = requireTest("ajv");
   const { produceWithPatches, applyPatches, enablePatches } = requireTest("immer");

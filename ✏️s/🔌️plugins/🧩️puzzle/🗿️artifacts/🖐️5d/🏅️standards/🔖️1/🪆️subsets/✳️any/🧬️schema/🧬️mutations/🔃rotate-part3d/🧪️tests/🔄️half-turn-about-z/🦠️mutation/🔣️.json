@@ -2,9 +2,9 @@
   "mutation": "rotatePart3d",
   "id": "part-a",
   "newOrientation": [
-    0.0,
-    0.0,
-    1.0,
-    0.0
+    0,
+    0,
+    1,
+    0
   ]
 }

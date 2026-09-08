@@ -2,12 +2,11 @@
 
 use crate::mutations::delete_node;
 use crate::op::DagMutation;
-use crate::{DagCamera, DagContentChild, DagFixtureEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, DagSnapshot, IoPortSpec};
+use crate::{DagContentChild, DagNodeKind, DagNodePatch, DagPreviewContent, DagSnapshot, IoPortSpec};
 use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle};
 use framework_schema::ArtifactSchema;
 use std::collections::BTreeSet;
 use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
-
 //#region 🔖️Artifact
 /// 🧬️ Full DAG artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
@@ -24,8 +23,6 @@ pub struct DagArtifact {
     pub selected_node_ids: Vec<String>,
     #[state(config)]
     pub camera: DagCamera,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -44,7 +41,7 @@ impl DagArtifact {
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub fn from_snapshot(snapshot: DagSnapshot) -> Self {
-        Self { schema: snapshot.schema, content: snapshot.content, selected_node_ids: Vec::new(), camera: DagCamera::default(), locale: "en-US".into() }
+        Self { schema: snapshot.schema, content: snapshot.content, selected_node_ids: Vec::new(), camera: DagCamera::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -298,3 +295,10 @@ pub fn remove_nodes_operations(document: &DagSnapshot, node_ids: &[String]) -> V
 #[path = "🧪️tests/🔬️document-helpers/🦀️.rs"]
 mod document_helpers_tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::DagNodeSpec;
+pub use crate::DagFixtureEdge;
+pub use crate::DagCamera;
+//#endregion 🔁️Re-exports

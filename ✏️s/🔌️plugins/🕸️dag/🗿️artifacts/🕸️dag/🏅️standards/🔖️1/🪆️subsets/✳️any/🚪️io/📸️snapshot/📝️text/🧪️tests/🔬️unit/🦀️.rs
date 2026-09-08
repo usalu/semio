@@ -18,7 +18,7 @@ async fn dump_example_dsl_when_requested() {
 fn demo_graph_matches_the_language_neutral_json_oracle() {
     let snapshot = parse_dsl(DAG_EXAMPLE_TEXT).expect("demo DSL");
     let graph = semio_framework_artifact_infinite_dag::DagSnapshot::from(&snapshot);
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../📚️examples/🎬️demo/🧪️fixtures/🧾️scene.json")).expect("demo JSON oracle");
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../📚️examples/🎬️demo/🧫️fixtures/🧾️scene.json")).expect("demo JSON oracle");
     let observed = serde_json::json!({
         "nodes": graph.nodes.iter().map(|node| (&node.id, &node.name, node.x, node.y)).collect::<Vec<_>>(),
         "edges": graph.edges.iter().map(|edge| (&edge.id, &edge.source, &edge.target)).collect::<Vec<_>>(),

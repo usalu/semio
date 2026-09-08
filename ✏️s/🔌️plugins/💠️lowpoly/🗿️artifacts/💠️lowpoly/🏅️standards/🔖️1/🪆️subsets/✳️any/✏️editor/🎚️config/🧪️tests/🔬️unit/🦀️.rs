@@ -9,7 +9,7 @@ async fn lowpoly_config_dsl_round_trips_default() {
 
 #[semio_framework_async_macros::async_test]
 async fn lowpoly_config_dsl_round_trips_non_default() {
-    let config = LowpolyConfig { active_object_id: "obj-2".into(), locale: "de-DE".into(), ..LowpolyConfig::default() };
+    let config = LowpolyConfig { active_object_id: "obj-2".into(), engagement_input: "extrude".into(), ..LowpolyConfig::default() };
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&config);
 }
 

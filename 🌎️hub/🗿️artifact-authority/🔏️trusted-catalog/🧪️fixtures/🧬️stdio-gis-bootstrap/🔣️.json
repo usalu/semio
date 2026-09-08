@@ -60,7 +60,7 @@
     "generationId": "9d010f1a012a471c7ceaae923472b3687018b02c4aff475db7db4ee6142a2565"
   },
   "sources": {
-    "stdioReceipts": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json",
+    "stdioReceipts": "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
     "gisReceipts": "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json"
   },
   "limits": {

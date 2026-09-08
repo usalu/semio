@@ -1,7 +1,6 @@
-
 use super::*;
 
-const MEMORY_COPY_RANGES_JSON: &str = include_str!("../../🧪️fixtures/🔣️.json");
+const MEMORY_COPY_RANGES_JSON: &str = include_str!("../../🧫️fixtures/🔣️.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

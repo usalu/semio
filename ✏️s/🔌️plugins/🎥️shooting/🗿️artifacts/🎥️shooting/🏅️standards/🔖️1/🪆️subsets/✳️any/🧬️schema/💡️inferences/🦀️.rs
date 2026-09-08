@@ -8,8 +8,7 @@ use crate::ShootingSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::topology::{compute_shooting_topology, ShootingTopology};
-
+use super::topology::{compute_shooting_topology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a shooting snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir) — the ONLY
@@ -81,3 +80,8 @@ pub fn shooting_artifact_inference_descriptor() -> schema::ArtifactInferenceDesc
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::topology::ShootingTopology;
+//#endregion 🔁️Re-exports

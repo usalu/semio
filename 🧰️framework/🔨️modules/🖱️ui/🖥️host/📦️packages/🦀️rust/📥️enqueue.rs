@@ -389,15 +389,15 @@ fn event_owned_bytes(event: &DispatchEvent) -> usize {
 //#endregion 🔖️EventQueue
 
 #[cfg(test)]
-#[path = "../../📥️input/🎟️admission/🧪️tests/🦀️.rs"]
+#[path = "../../📥️input/🎟️admission/🧪️tests/🎟️admission/🦀️.rs"]
 mod input_admission_tests;
 
 #[cfg(test)]
-#[path = "../../📥️input/🎟️admission/🪪️root/🧪️tests/🦀️.rs"]
+#[path = "../../📥️input/🎟️admission/🪪️root/🧪️tests/🪪️root/🦀️.rs"]
 mod input_root_tests;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../../📥️input/🎟️admission/✍️writer/🧪️tests/🦀️.rs"]
+#[path = "../../📥️input/🎟️admission/✍️writer/🧪️tests/✍️writer/🦀️.rs"]
 mod input_writer_tests;
 
 #[cfg(test)]

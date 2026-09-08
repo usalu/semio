@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn drain(mut retirement: Box<dyn ErasedSnapshotRetirement>, items: usize, bytes: usize) -> usize {

@@ -58,14 +58,14 @@
       "id": "vortex-front",
       "vortexKind": "door",
       "position": [
-        0.0,
+        0,
         -1.6,
         1.2
       ],
       "direction": [
-        0.0,
-        -1.0,
-        0.0
+        0,
+        -1,
+        0
       ],
       "radius": 0.3,
       "label": "front door"
@@ -94,16 +94,16 @@
   ],
   "camera3d": {
     "position": [
-      10.0,
-      -10.0,
-      6.0
+      10,
+      -10,
+      6
     ],
     "target": [
-      0.0,
-      0.0,
-      1.0
+      0,
+      0,
+      1
     ],
-    "zoom": 1.0
+    "zoom": 1
   },
   "meta": {
     "description": "Fixture base for the block3d mutation vocabulary."

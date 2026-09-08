@@ -35,8 +35,7 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 pub(crate) type NamedDiffParts<D, T> = (Vec<String>, Vec<(String, D)>, Vec<(usize, T)>);
 
 use std::collections::{BTreeSet, HashMap, HashSet};
-
-use crate::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjNormal, ObjObject, ObjSmoothingRange, ObjTexCoord, ObjUnknownStatement, ObjUsemtlRange, ObjVertex};
+use crate::schema::snapshot::{ObjFace, ObjGroup, ObjNormal, ObjObject, ObjTexCoord, ObjVertex};
 use crate::ObjSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
@@ -2456,3 +2455,11 @@ pub(crate) fn demo_diff_cases() -> Vec<ObjDiff> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::schema::snapshot::ObjFaceVertex;
+pub use crate::schema::snapshot::ObjUsemtlRange;
+pub use crate::schema::snapshot::ObjSmoothingRange;
+pub use crate::schema::snapshot::ObjUnknownStatement;
+//#endregion 🔁️Re-exports

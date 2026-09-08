@@ -25,7 +25,5 @@ pub struct SequenceDiff {
     pub orientation: Option<String>,
     #[state(config)]
     pub camera: Option<SequenceCamera>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

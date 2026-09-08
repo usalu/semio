@@ -1,9 +1,8 @@
-
 use super::*;
 
 #[test]
 fn document_browser_actor_v1_matches_language_neutral_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️.json")).expect("neutral actor corpus");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("neutral actor corpus");
     let source = DocumentBrowserActorSourceV1 { component_sha256: fixture["componentSha256"].as_str().unwrap(), descriptor_byte_sha256: fixture["descriptorByteSha256"].as_str().unwrap() };
     for law in fixture["cases"].as_array().unwrap() {
         let mut candidate = if law["kind"] == "none" { serde_json::json!({ "kind": "none" }) } else { fixture["closed"].clone() };

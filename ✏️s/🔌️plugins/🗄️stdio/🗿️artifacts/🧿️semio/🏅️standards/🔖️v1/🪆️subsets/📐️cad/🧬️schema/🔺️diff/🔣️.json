@@ -25,7 +25,7 @@
           "type": "string"
         },
         "entity": {
-          "$ref": "../📸️snapshot/🔣️.json#/definitions/entity"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/cad/snapshot.json#/$defs/entity"
         }
       }
     },
@@ -33,7 +33,7 @@
       "type": "object",
       "properties": {
         "basePoint": {
-          "$ref": "../📸️snapshot/🔣️.json#/definitions/point2"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/cad/snapshot.json#/$defs/point2"
         },
         "entities": {
           "$ref": "#/definitions/entitiesDiff"
@@ -66,7 +66,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "../📸️snapshot/🔣️.json#/definitions/layer"
+            "$ref": "https://semio.tech/schema/s/stdio/semio/v1/cad/snapshot.json#/$defs/layer"
           }
         }
       }
@@ -97,7 +97,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "../📸️snapshot/🔣️.json#/definitions/block"
+            "$ref": "https://semio.tech/schema/s/stdio/semio/v1/cad/snapshot.json#/$defs/block"
           }
         }
       }
@@ -128,7 +128,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "../📸️snapshot/🔣️.json#/definitions/entityRecord"
+            "$ref": "https://semio.tech/schema/s/stdio/semio/v1/cad/snapshot.json#/$defs/entityRecord"
           }
         }
       }

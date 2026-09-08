@@ -3,7 +3,7 @@
 //! The `semantic-tabular-v1` profile compares the header and the cell grid. Line terminator, quote
 //! style and the presence of a trailing newline are writer choices, not normative content.
 //!
-//! @see 📇️registry/🔣️.json — the approved oracle registry these functions implement.
+//! @see 🧪️oracle/🔣️.json — the approved oracle registry these functions implement.
 
 use semio_repo_test_host::Json;
 

@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
 #[test]
 fn mutations_match_the_json_oracle_and_restore_the_base() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔁️mutations.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️mutations.json")).unwrap();
     let base: RemodelingConfig = serde_json::from_value(vectors["base"].clone()).unwrap();
     for vector in vectors["cases"].as_array().unwrap() {
         let oracle: RemodelingConfigMutation = serde_json::from_value(vector["mutation"].clone()).unwrap();

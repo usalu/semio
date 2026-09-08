@@ -39,9 +39,6 @@ impl EquationDiff {
             if let Some(value) = self.camera_zoom {
                 next.camera_zoom = value;
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -87,9 +84,6 @@ impl MutationDiff<EquationSnapshot> for EquationDiff {
         }
         if other.camera_zoom.is_some() {
             self.camera_zoom = other.camera_zoom;
-        }
-        if other.locale.is_some() {
-            self.locale = other.locale;
         }
     }
 }

@@ -10,9 +10,6 @@ pub use set_camera::SetCamera;
 #[path = "🧰️set-active-utility/🦀️.rs"]
 mod set_active_utility;
 pub use set_active_utility::SetActiveUtility;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = NoteConfig, diff = NoteConfig, schema = "note.config")]
@@ -23,8 +20,6 @@ pub enum NoteConfigMutation {
     SetCamera(SetCamera),
     #[dsl(key = "set-active-utility")]
     SetActiveUtility(SetActiveUtility),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
 }
 
 impl protocol::OpText for NoteConfigMutation {

@@ -3140,7 +3140,7 @@ function stripStringLiterals(source: string): string {
  * `const` bindings and one `export default`, with no function/class/control-flow anywhere in its
  * body — e.g. `export default { root, test: {...} };` or `export default defineConfig({...});`.
  * `classifyGlue`'s default fallback otherwise calls any non-declaration TS/JS content
- * "implementation", which wrongly caught data-only config modules (`🧪️tests/🟦️.ts`,
+ * "implementation", which wrongly caught data-only config modules (`vitest.config.ts`,
  * `🎨️postcss.config.ts`, `🟦️eslint.config.ts`) sitting inside a package boundary. */
 function isConfigDelegationModule(normalized: string): boolean {
   const withoutTrailingLineComments = normalized.replace(/\/\/[^\n]*$/gm, "");
@@ -4293,7 +4293,7 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
 /** 🧪️ `runVitest(bundleRoot, segments, config?)`'s optional third argument names a config file
  * resolved relative to `bundleRoot` at runtime (every `📜️script.ts` router's own `cwd`), not to
  * whatever else the call happens to quote first — `segments` is very often a literal array of
- * quoted test filenames (e.g. `runVitest(this.root, ["a.test.ts", …], "🧪️tests/🟦️.ts")`), so
+ * quoted canonical case paths (e.g. `runVitest(this.root, ["../../🧪️tests/🧩️case/🟦️.ts", …], "vitest.config.ts")`), so
  * the generic first-quoted-string scanners this file otherwise uses would misidentify a segment
  * name as the config path. This takes the LAST quoted string in the call instead, matching the
  * parameter's trailing position; a call with no quoted config argument (the common, default-using

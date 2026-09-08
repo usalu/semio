@@ -24,8 +24,6 @@ type Puzzle2dConfig {
   nodeKindWeights: [FloatEntry!]! @state(class: CONFIG)
   handleKindWeights: [FloatEntry!]! @state(class: CONFIG)
   activeUtilityByWindowId: [StringEntry!]! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
-  terminology: String! @state(class: CONFIG)
   exampleLoadGeneration: Long! @state(class: CONFIG)
   exampleLoadId: String @state(class: CONFIG)
 }

@@ -19,7 +19,7 @@ path = "🦀️.rs"
 
 [[test]]
 name = "first_party_geometry"
-path = "tests/📐️first_party_geometry.rs"
+path = "../../🧪️tests/📐️first-party-geometry/🦀️.rs"
 
 [dependencies]
 

@@ -26,7 +26,7 @@ pub const STDIO_SEMIO_DOCUMENT_SCHEMA: &str = "stdio.semio";
 pub const SEMIO_ARTIFACT_SCHEMA_ID: &str = "s.stdio.semio";
 
 /// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)

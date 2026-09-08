@@ -7,7 +7,6 @@ message PresentationDiff {
   optional PresentationTilesDelta tiles = 4; // @state artifact
   optional PresentationStringList selected_ids = 5; // @state presence
   optional string engagement_input = 6; // @state config
-  optional string locale = 7; // @state config
 }
 message PresentationStringList { repeated string values = 1; }
 message PresentationTilesDelta {
@@ -27,5 +26,4 @@ message PresentationArtifact {
   repeated FigureTileDraft tiles = 3;
   repeated string selected_ids = 4;
   string engagement_input = 5;
-  string locale = 6;
 }

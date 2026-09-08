@@ -4,5 +4,4 @@ message Block2dConfig {
   // @state config
   repeated string selected_ids = 1;
   // @state config
-  string locale = 2;
 }

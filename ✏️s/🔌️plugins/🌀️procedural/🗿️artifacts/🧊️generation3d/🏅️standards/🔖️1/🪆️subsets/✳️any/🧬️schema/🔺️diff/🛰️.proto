@@ -33,7 +33,6 @@ message Generation3dDiff {
   // @state presence
   optional string active_utility_id = 14;
   // @state config
-  optional string locale = 15;
 }
 
 message CameraJson {

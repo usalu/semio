@@ -77,8 +77,6 @@ pub struct Puzzle5dDiff {
     #[state(config)]
     pub lod_mode: Option<String>,
     #[state(config)]
-    pub locale: Option<String>,
-    #[state(config)]
     pub runtime_extras_json: Option<String>,
     #[state(artifact)]
     pub hovered_part_id: Option<Option<String>>,

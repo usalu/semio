@@ -207,9 +207,6 @@ impl Fem2dDiff {
             if let Some(value) = &self.camera {
                 next.camera = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             if let Some(value) = &self.solver_results_json {
                 next.solver_results_json = value.clone();
             }
@@ -275,7 +272,6 @@ impl MutationDiff<Fem2dSnapshot> for Fem2dDiff {
         take!(result_mode);
         take!(result_mode_index);
         take!(camera);
-        take!(locale);
         take!(solver_results_json);
         take!(mesh_preview_json);
         merge_delta(&mut self.nodes, other.nodes);
@@ -497,3 +493,8 @@ pub fn diff_set_snapshot(snapshot: Fem2dSnapshot) -> Fem2dDiff {
     Fem2dDiff { artifact: Some(Box::new(Fem2dArtifact::from_snapshot(snapshot))), ..Default::default() }
 }
 //#endregion 🔖️Constructors
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Fem2dDiffText = String;
+//#endregion 🚚️Carrier

@@ -1,0 +1,47 @@
+{
+  "base": {
+    "runOutputJson": "",
+    "contributionsJson": "[{\"id\":\"base\"}]"
+  },
+  "cases": [
+    {
+      "kind": "replace-config",
+      "mutation": {
+        "ReplaceConfig": {
+          "config": {
+            "runOutputJson": "{\"done\":true}",
+            "contributionsJson": "[]"
+          }
+        }
+      },
+      "expected": {
+        "runOutputJson": "{\"done\":true}",
+        "contributionsJson": "[]"
+      }
+    },
+    {
+      "kind": "set-run-output",
+      "mutation": {
+        "SetRunOutput": {
+          "json": "{\"Grüße\":2}"
+        }
+      },
+      "expected": {
+        "runOutputJson": "{\"Grüße\":2}",
+        "contributionsJson": "[{\"id\":\"base\"}]"
+      }
+    },
+    {
+      "kind": "set-contributions",
+      "mutation": {
+        "SetContributions": {
+          "json": "[]"
+        }
+      },
+      "expected": {
+        "runOutputJson": "",
+        "contributionsJson": "[]"
+      }
+    }
+  ]
+}

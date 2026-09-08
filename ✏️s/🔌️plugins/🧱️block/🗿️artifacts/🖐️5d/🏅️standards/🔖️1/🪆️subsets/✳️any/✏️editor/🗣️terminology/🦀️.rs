@@ -18,8 +18,8 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn block5d_labels(locale: &str) -> &'static Block5dLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<Block5dLabels>(locale)
+pub fn block5d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Block5dLabels {
+    semio_framework_plugin::resolve_labels::<Block5dLabels>(view_state)
 }
 //#endregion 🔖️Labels
 

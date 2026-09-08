@@ -217,7 +217,7 @@
       }
     },
     "registrySchema": {
-      "const": "../🧬️schema/🔣️.json"
+      "const": "../🛂️schema/🔣️.json"
     },
     "paragraphs": {
       "type": "array",

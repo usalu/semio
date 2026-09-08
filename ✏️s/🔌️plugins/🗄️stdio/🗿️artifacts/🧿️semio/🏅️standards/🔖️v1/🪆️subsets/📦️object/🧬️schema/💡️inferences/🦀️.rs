@@ -15,8 +15,7 @@ use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::composition::{compute_semio_object_composition, SemioObjectComposition};
-
+use super::composition::{compute_semio_object_composition};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio object snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `composition`, backed by the `🧩composition/` slug dir).
@@ -89,3 +88,8 @@ pub fn semio_object_artifact_inference_descriptor() -> framework_schema::Artifac
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::composition::SemioObjectComposition;
+//#endregion 🔁️Re-exports

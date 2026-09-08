@@ -7,8 +7,7 @@
 //! out a pure `empty_home_document()`/compute helper (every call site builds the literal
 //! `SHomeSnapshot { schema: "s.home".into(), catalog_generation: N }` directly), so this app has no
 //! document-side `⚙️engine` node under `🗿️artifacts/🏠️home`. What this file owns is `HomeConfig` — the
-//! Home launcher's real `ArtifactEditor::Config`: the one `view_state.locale` read the editor's home
-//! labels actually need, plus the `active_panel_tab` action, the folded hub directory read model
+//! Home launcher's real `ArtifactEditor::Config`: the active panel tab, folded hub directory read model
 //! (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C1/§C6) and the signed-in
 //! client identity.
 
@@ -123,8 +122,6 @@ pub(crate) fn directory_projection_state_is_valid(directory_json: &str, session_
 pub struct HomeConfig {
     /// 👁️ Active launcher panel tab.
     pub active_panel_tab: String,
-    /// 🗣️ BCP-47 locale tag.
-    pub locale: String,
     /// 📇️ JSON-serialized `DirectoryReadModel` (see `🔖️DirectoryJson` above) — folded here by
     /// `HomeConfigMutation::FoldDirectoryEvent` as `/directory/ws` events arrive; read via `directory()`.
     /// No optimistic mutation (contract §C6): the ONLY writer is the fold over hub-confirmed events.
@@ -242,7 +239,6 @@ impl Default for HomeConfig {
     fn default() -> Self {
         Self {
             active_panel_tab: String::new(),
-            locale: "en-US".into(),
             directory_json: directory_to_json(&store::os_directory::DirectoryReadModel::default()),
             directory_session_binding_sha256: String::new(),
             directory_authorization_generation: 0,
@@ -268,8 +264,6 @@ pub enum HomeConfigMutation {
     },
     #[dsl(key = "active-panel-tab")]
     SetActivePanelTab { tab_id: String },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
     /// 📇️ Folds one hub-confirmed `DirectoryEvent` (JSON-encoded, contract §C1) into `directory_json`
     /// — the SOLE writer of the directory read model (contract §C6: no optimistic mutation).
     #[dsl(key = "fold-directory-event")]
@@ -350,7 +344,6 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "⚙️", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-active-panel-tab", semantic_kind: "set-active-panel-tab", display_name: "Set Active Panel Tab", emoji: "⚙️", aggregate_variant: "SetActivePanelTab", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "⚙️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️fold-directory-event", semantic_kind: "fold-directory-event", display_name: "Fold Directory Event", emoji: "⚙️", aggregate_variant: "FoldDirectoryEvent", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️replace-directory-projection", semantic_kind: "replace-directory-projection", display_name: "Replace Directory Projection", emoji: "📄️", aggregate_variant: "ReplaceDirectoryProjection", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-client", semantic_kind: "set-client", display_name: "Set Client", emoji: "⚙️", aggregate_variant: "SetClient", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
@@ -360,10 +353,9 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
         match self {
             HomeConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
             HomeConfigMutation::SetActivePanelTab { .. } => &Self::DESCRIPTORS[1],
-            HomeConfigMutation::SetLocale { .. } => &Self::DESCRIPTORS[2],
-            HomeConfigMutation::FoldDirectoryEvent { .. } => &Self::DESCRIPTORS[3],
-            HomeConfigMutation::ReplaceDirectoryProjection { .. } => &Self::DESCRIPTORS[4],
-            HomeConfigMutation::SetClient { .. } => &Self::DESCRIPTORS[5],
+            HomeConfigMutation::FoldDirectoryEvent { .. } => &Self::DESCRIPTORS[2],
+            HomeConfigMutation::ReplaceDirectoryProjection { .. } => &Self::DESCRIPTORS[3],
+            HomeConfigMutation::SetClient { .. } => &Self::DESCRIPTORS[4],
         }
     }
 
@@ -374,7 +366,6 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
         match self {
             HomeConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
             HomeConfigMutation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
-            HomeConfigMutation::SetLocale { value } => next.locale = value.clone(),
             HomeConfigMutation::FoldDirectoryEvent { event_json } => {
                 if let (Ok(event), Ok(directory)) = (pack::from_json_str::<store::os_directory::DirectoryEvent>(event_json), next.directory()) {
                     next.directory_json = directory_to_json(&store::os_directory::fold(directory, &event));

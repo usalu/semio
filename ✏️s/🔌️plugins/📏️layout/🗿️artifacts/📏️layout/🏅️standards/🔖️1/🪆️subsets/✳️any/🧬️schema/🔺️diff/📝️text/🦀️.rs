@@ -147,9 +147,6 @@ impl LayoutDiff {
             if let Some(value) = &self.drop_preview {
                 next.drop_preview = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             if let Some(value) = &self.hovered_id {
                 next.hovered_id = value.clone();
             }
@@ -269,7 +266,6 @@ impl MutationDiff<LayoutSnapshot> for LayoutDiff {
         take!(preview_camera_y);
         take!(preview_camera_zoom);
         take!(drop_preview);
-        take!(locale);
         take!(hovered_id);
     }
 }
@@ -287,3 +283,8 @@ pub fn diff_set_snapshot(snapshot: &LayoutSnapshot) -> LayoutDiff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type LayoutDiffText = String;
+//#endregion 🚚️Carrier

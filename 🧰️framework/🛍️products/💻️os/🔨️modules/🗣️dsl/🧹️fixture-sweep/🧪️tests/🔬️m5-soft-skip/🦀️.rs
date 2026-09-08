@@ -1,4 +1,3 @@
-
 /// @emoji ⏭️ Returns true when the pilot constant/spec text is missing or still a stub.
 pub async fn soft_skip_missing(label: &str, text: &str) -> bool {
     let trimmed = text.trim();

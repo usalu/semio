@@ -8,7 +8,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
 #[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
 mod art_cad_demo_tests;
 extern crate semio_framework_schema as framework_schema;
 
@@ -1127,8 +1127,6 @@ pub mod editor {
             pub mod engagement;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️io/🦀️.rs"]
             pub mod io;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️locale/🦀️.rs"]
-            pub mod locale;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️model-definition/🦀️.rs"]
             pub mod model_definition;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node/🦀️.rs"]
@@ -1219,3 +1217,7 @@ pub mod viewer {
         }
     }
 }
+
+//#region 📚️Examples
+pub use standards::v1::subsets::any::examples;
+//#endregion 📚️Examples

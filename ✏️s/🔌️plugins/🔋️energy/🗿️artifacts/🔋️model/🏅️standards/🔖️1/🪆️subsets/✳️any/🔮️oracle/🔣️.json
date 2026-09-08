@@ -2910,8 +2910,8 @@
         },
         {
           "mutationId": "change-plant-loop-return-temperature",
-          "sourceMutationDirectoryName": "🧫️change-plant-loop-return-temperature",
-          "mutationDirectoryName": "🧫️change-plant-loop-return-temperature",
+          "sourceMutationDirectoryName": "🫖️change-plant-loop-return-temperature",
+          "mutationDirectoryName": "🫖️change-plant-loop-return-temperature",
           "scenarios": [
             {
               "id": "change-plant-loop-return-temperature-cools-the-return",

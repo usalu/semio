@@ -27,7 +27,6 @@ message Block2dArtifact {
   // @state presence
   repeated string selected_ids = 11;
   // @state config
-  string locale = 12;
 }
 
 message BlockKindIdentity {

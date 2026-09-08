@@ -1,5 +1,4 @@
-
-use super::mutation_laws_fixture::{AddCounter, AddCounterFourTimes, AddCounterThenNotifyForeign, AddCounterTwice, CounterDiff, CounterMutation, foreign_step_fixture};
+use super::mutation_laws_fixture::{foreign_step_fixture, AddCounter, AddCounterFourTimes, AddCounterThenNotifyForeign, AddCounterTwice, CounterDiff, CounterMutation};
 use super::*;
 
 fn json_oracle<T: protocol::value::ToValue>(value: &T) -> serde_json::Value {
@@ -41,7 +40,11 @@ impl Patchable<i64> for Item {
     }
     fn diff_patch(&self, other: &Self) -> Option<i64> {
         let delta = other.value - self.value;
-        if delta == 0 { None } else { Some(delta) }
+        if delta == 0 {
+            None
+        } else {
+            Some(delta)
+        }
     }
 }
 //#endregion 🧸️Fixtures

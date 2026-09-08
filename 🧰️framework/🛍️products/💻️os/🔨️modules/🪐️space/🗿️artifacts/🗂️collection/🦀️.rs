@@ -1005,5 +1005,5 @@ pub fn package_descriptor() -> Result<CollectionArtifactPackage, CollectionPacka
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🗂️collection/🦀️.rs"]
 mod tests;

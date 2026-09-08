@@ -66,13 +66,13 @@ async fn open_studio_demo_explicit_loads_demo_fixture() {
 
 #[semio_framework_async_macros::async_test]
 async fn open_studio_loads_ephemeral_created_studio() {
-    use crate::editor::home::commands::create_studio;
+    use semio_s_artifact_space_home::editor::home::commands::create_studio;
     use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
-    let _home = crate::editor::home::HomeApp;
-    let home_projection = crate::editor::home::HomeApp::initial_snapshot();
+    let _home = semio_s_artifact_space_home::editor::home::HomeApp;
+    let home_projection = semio_s_artifact_space_home::editor::home::HomeApp::initial_snapshot();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&home_projection, &history);
-    let home_config = crate::editor::home::config::HomeConfig::default();
+    let home_config = semio_s_artifact_space_home::editor::home::config::HomeConfig::default();
     let home_cfg = ConfigView { snapshot: &home_config };
     let create = create_studio::handle(&create_studio::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
     let space_id = create
@@ -94,13 +94,13 @@ async fn open_studio_loads_ephemeral_created_studio() {
 /// 🌉️ Exercises BOTH apps together (Home's `createStudio` followed by Space's `openSpace`).
 #[semio_framework_async_macros::async_test]
 async fn create_space_navigates_without_download_and_opens_empty() {
-    use crate::editor::home::commands::create_studio;
+    use semio_s_artifact_space_home::editor::home::commands::create_studio;
     use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, HistoryView};
-    let _home = crate::editor::home::HomeApp;
-    let home_projection = crate::editor::home::HomeApp::initial_snapshot();
+    let _home = semio_s_artifact_space_home::editor::home::HomeApp;
+    let home_projection = semio_s_artifact_space_home::editor::home::HomeApp::initial_snapshot();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&home_projection, &history);
-    let home_config = crate::editor::home::config::HomeConfig::default();
+    let home_config = semio_s_artifact_space_home::editor::home::config::HomeConfig::default();
     let home_cfg = ConfigView { snapshot: &home_config };
     let emit = create_studio::handle(&create_studio::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "create must not download a file");

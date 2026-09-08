@@ -13,8 +13,7 @@ use crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::extent::{compute_binary_extent, BinaryExtent};
-
+use super::extent::{compute_binary_extent};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a binary snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `extent`, backed by the `📏extent/` slug dir).
@@ -87,3 +86,8 @@ pub fn binary_artifact_inference_descriptor() -> framework_schema::ArtifactInfer
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::extent::BinaryExtent;
+//#endregion 🔁️Re-exports

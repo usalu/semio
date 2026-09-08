@@ -50,13 +50,7 @@ pub struct SpaceArtifactCreationKindV1 {
 impl SpaceArtifactCreationKindV1 {
     /// 🛡️ Presentation coordinates remain exact and cannot carry executable authority.
     pub fn validate(&self) -> bool {
-        identity(&self.kind_id)
-            && identity(&self.schema)
-            && self.dialect.artifact_kind == self.kind_id
-            && identity(&self.dialect.standard)
-            && identity(&self.dialect.subset)
-            && label(&self.label.en)
-            && label(&self.label.de)
+        identity(&self.kind_id) && identity(&self.schema) && self.dialect.artifact_kind == self.kind_id && identity(&self.dialect.standard) && identity(&self.dialect.subset) && label(&self.label.en) && label(&self.label.de)
     }
 }
 
@@ -85,14 +79,18 @@ impl SpaceArtifactCreationCatalogV1 {
 
     /// 📤️ Emits only a canonical bounded response.
     pub fn canonical_json(&self) -> Option<String> {
-        if !self.validate() { return None; }
+        if !self.validate() {
+            return None;
+        }
         let source = crate::os_pack::json::to_json_string(self);
         (source.len() <= SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES).then_some(source)
     }
 
     /// 🧾️ Rejects reordering, unknown fields, padding and oversized presentation rows.
     pub fn parse_canonical_json(source: &str) -> Option<Self> {
-        if source.len() > SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES { return None; }
+        if source.len() > SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES {
+            return None;
+        }
         let value: Self = crate::os_pack::json::from_json_str(source).ok()?;
         (value.validate() && crate::os_pack::json::to_json_string(&value) == source).then_some(value)
     }
@@ -112,13 +110,20 @@ pub struct SpaceArtifactCreateV1 {
 impl SpaceArtifactCreateV1 {
     /// 🛡️ Validates the schema-owned scalar bounds before catalog or storage access.
     pub fn validate(&self) -> bool {
-        self.schema == "semio.hub.space-artifact-create/v1" && request_id(&self.request_id) && identity(&self.kind_id)
-            && !self.name.is_empty() && self.name.chars().count() <= 128 && self.name.trim_matches(' ') == self.name && !self.name.chars().any(char::is_control)
+        self.schema == "semio.hub.space-artifact-create/v1"
+            && request_id(&self.request_id)
+            && identity(&self.kind_id)
+            && !self.name.is_empty()
+            && self.name.chars().count() <= 128
+            && self.name.trim_matches(' ') == self.name
+            && !self.name.chars().any(char::is_control)
     }
 
     /// 📦️ Rejects duplicate fields, unknown authority inputs, padding, and noncanonical JSON.
     pub fn parse_canonical_json(source: &str) -> Option<Self> {
-        if source.len() > SPACE_ARTIFACT_CREATION_MAX_BYTES { return None; }
+        if source.len() > SPACE_ARTIFACT_CREATION_MAX_BYTES {
+            return None;
+        }
         let value: Self = crate::os_pack::json::from_json_str(source).ok()?;
         (value.validate() && crate::os_pack::json::to_json_string(&value) == source).then_some(value)
     }
@@ -128,7 +133,14 @@ impl SpaceArtifactCreateV1 {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "lowercase")]
 #[value(rename_all = "lowercase")]
-pub enum SpaceArtifactCreationPhaseV1 { Accepted, Preparing, Ready, Indeterminate, Failed, Cancelled }
+pub enum SpaceArtifactCreationPhaseV1 {
+    Accepted,
+    Preparing,
+    Ready,
+    Indeterminate,
+    Failed,
+    Cancelled,
+}
 
 /// 🧭️ The server-selected artifact dialect, without executable authority supplied by a client.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
@@ -154,8 +166,12 @@ pub struct SpaceArtifactCreationReadyV1 {
 impl SpaceArtifactCreationReadyV1 {
     /// 🧷️ Checks the minted coordinate and exact kind/dialect relationship.
     pub fn validate(&self) -> bool {
-        self.document_id.strip_prefix("artifact-").is_some_and(request_id) && identity(&self.kind_id) && identity(&self.artifact_schema)
-            && self.parent_dialect.artifact_kind == self.kind_id && identity(&self.parent_dialect.standard) && identity(&self.parent_dialect.subset)
+        self.document_id.strip_prefix("artifact-").is_some_and(request_id)
+            && identity(&self.kind_id)
+            && identity(&self.artifact_schema)
+            && self.parent_dialect.artifact_kind == self.kind_id
+            && identity(&self.parent_dialect.standard)
+            && identity(&self.parent_dialect.subset)
     }
 }
 
@@ -176,7 +192,9 @@ pub struct SpaceArtifactCreationStatusV1 {
 impl SpaceArtifactCreationStatusV1 {
     /// 🔐️ Only Ready may contain document coordinates, and Ready must contain all of them.
     pub fn validate(&self) -> bool {
-        self.schema == "semio.hub.space-artifact-creation-status/v1" && request_id(&self.request_id) && identity(&self.space_id)
+        self.schema == "semio.hub.space-artifact-creation-status/v1"
+            && request_id(&self.request_id)
+            && identity(&self.space_id)
             && match (&self.phase, &self.ready) {
                 (SpaceArtifactCreationPhaseV1::Ready, Some(ready)) => ready.validate(),
                 (SpaceArtifactCreationPhaseV1::Ready, None) | (_, Some(_)) => false,
@@ -186,7 +204,9 @@ impl SpaceArtifactCreationStatusV1 {
 
     /// 🧾️ Reads one exact receipt, withholding malformed or authority-overposted results.
     pub fn parse_canonical_json(source: &str) -> Option<Self> {
-        if source.len() > SPACE_ARTIFACT_CREATION_MAX_BYTES { return None; }
+        if source.len() > SPACE_ARTIFACT_CREATION_MAX_BYTES {
+            return None;
+        }
         let value: Self = crate::os_pack::json::from_json_str(source).ok()?;
         (value.validate() && crate::os_pack::json::to_json_string(&value) == source).then_some(value)
     }

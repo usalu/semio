@@ -1,0 +1,18 @@
+{
+  "base": {
+    "engagementInput": ""
+  },
+  "cases": [
+    {
+      "kind": "set-engagement-input",
+      "mutation": {
+        "SetEngagementInput": {
+          "value": "2×2\nGrüße"
+        }
+      },
+      "expected": {
+        "engagementInput": "2×2\nGrüße"
+      }
+    }
+  ]
+}

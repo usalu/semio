@@ -41,9 +41,9 @@ export type StoryScope = {
   /**
    * Explicit story glob(s) for this scope, overriding the default `./stories/<id>/**` derivation —
    * added for `26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE` W7 story co-location, where a scope's
-   * stories live beside their component (`🧱️elements/<Element>/🧪️.story.tsx`, which doesn't match a
-   * `*.stories.*` glob) rather than under `.storybook/stories/<id>/`. List every glob this scope needs,
-   * including the legacy `./stories/<id>/**` one if any stories still live there.
+   * stories live beside their component (`🧱️elements/<Element>/🧪️tests/📚️storybook/🟦️.tsx`) rather
+   * than under `.storybook/stories/<id>/`. List every glob this scope needs, including the
+   * `./stories/<id>/**` one if any stories still live there.
    */
   readonly storyGlobs?: readonly string[];
 };
@@ -75,11 +75,13 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
       "@elements/ui/globals.css": "🧰️framework/🔨️modules/🖱️ui/🌐️globals-ui.css",
     },
     // 🎫️ 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE W7: most stories moved to co-locate with their
-    // component (🧱️elements/<Element>/🧪️.story.tsx); the legacy glob stays for stories whose component
-    // is still barrel-inline (not yet extracted) or whose target element dir is already occupied by
-    // another story sharing its name (the fixed single-leaf-filename taxonomy holds one story file per
-    // dir — see 📋️w0-status.md's W7 section for the full per-story disposition).
-    storyGlobs: ["./stories/ui/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)", "../🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/*.story.tsx"],
+    // component. The first glob retains authored non-test stories; the canonical glob owns the
+    // former co-located test stories as direct implementation leaves.
+    storyGlobs: [
+      "./stories/ui/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
+      "../🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/*.story.tsx",
+      "../🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/🧪️tests/📚️storybook/🟦️.tsx",
+    ],
   },
   {
     id: "puzzle",
@@ -306,78 +308,3 @@ export function scopeActive(activeScopeIds: readonly string[], prefix: string): 
   return activeScopeIds.some((id) => scopeTokenMatches(prefix, id));
 }
 // #endregion 🔖️ScopeResolution
-
-if (import.meta.vitest) {
-  const { describe, expect, it } = import.meta.vitest;
-
-  describe("resolveActiveScopes", () => {
-    it("returns every scope when the expression is empty", () => {
-      expect(resolveActiveScopes("").map((s) => s.id)).toEqual(STORY_SCOPES.map((s) => s.id));
-    });
-
-    it("resolves a hierarchical prefix to itself and its descendants", () => {
-      const ids = resolveActiveScopes("puzzle").map((s) => s.id);
-      expect(ids).toContain("puzzle");
-      expect(ids).toContain("puzzle/2d");
-      expect(ids).toContain("puzzle/3d");
-      expect(ids).not.toContain("ui");
-    });
-
-    it("composes multiple comma-separated scopes", () => {
-      const ids = resolveActiveScopes("ui,puzzle/2d").map((s) => s.id);
-      expect(ids).toEqual(["ui", "puzzle/2d"]);
-    });
-
-    it("throws on an unknown scope, listing registered ids", () => {
-      expect(() => resolveActiveScopes("not-a-scope")).toThrow(/unknown scope/);
-    });
-  });
-
-  describe("buildScopeStoryGlobs", () => {
-    it("dedupes a child glob subsumed by an active parent", () => {
-      const globs = buildScopeStoryGlobs(resolveActiveScopes("puzzle"));
-      expect(globs).toEqual(["./stories/puzzle/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)"]);
-    });
-  });
-
-  describe("buildScopeAliases", () => {
-    it("merges workspace and scope aliases without conflict", () => {
-      const aliases = buildScopeAliases(resolveActiveScopes("ui"), { "@semio-tech/ui-react": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react" });
-      expect(aliases["@semio-tech/ui-react"]).toBe("🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react");
-      expect(aliases["@elements/ui/globals.css"]).toBe("🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️.css");
-    });
-
-    it("throws on a genuine key conflict between scopes", () => {
-      expect(() =>
-        buildScopeAliases(
-          [
-            { id: "a", titlePrefix: "a", sourceRoots: [], aliases: { x: "1" } },
-            { id: "b", titlePrefix: "b", sourceRoots: [], aliases: { x: "2" } },
-          ],
-          {},
-        ),
-      ).toThrow(/alias conflict/);
-    });
-  });
-
-  describe("buildScopeWatchIgnores", () => {
-    it("ignores inactive scopes' source roots", () => {
-      const ignores = buildScopeWatchIgnores(resolveActiveScopes("ui"));
-      expect(ignores).toContain("**/✏️s/🔌️plugins/🧩️puzzle/🎛️apps/◻️2d/**");
-      expect(ignores.some((g) => g.includes("🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react"))).toBe(false);
-    });
-
-    it("ignores nothing when every scope is active", () => {
-      expect(buildScopeWatchIgnores(resolveActiveScopes(""))).toEqual([]);
-    });
-  });
-
-  describe("scopeActive", () => {
-    it("matches an active scope's own prefix and ancestors", () => {
-      const ids = resolveActiveScopes("puzzle/2d").map((s) => s.id);
-      expect(scopeActive(ids, "puzzle")).toBe(true);
-      expect(scopeActive(ids, "puzzle/2d")).toBe(true);
-      expect(scopeActive(ids, "ui")).toBe(false);
-    });
-  });
-}

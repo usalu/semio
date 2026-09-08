@@ -193,6 +193,7 @@ class PublicationAuthorityAuditScript extends BundleScript {
     const fixture = await Bun.file(resolve(puzzleRoot, "🔏️publication-authority/🔣️.json")).json() as PublicationFixture;
     const module = await Bun.file(resolve(puzzleRoot, "🧬️schema/🔣️.json")).json() as { $id: string };
     const ajv = new Ajv({ allErrors: true, strict: true });
+    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     ajv.addSchema(module);
     const validate = ajv.compile({ $ref: `${module.$id}#/$defs/PuzzlePublicationAuthority` });
     if (!validate(fixture)) throw new Error(`Puzzle publication fixture failed Ajv validation: ${JSON.stringify(validate.errors)}`);
@@ -213,7 +214,7 @@ class PublicationAuthorityAuditScript extends BundleScript {
         if (hostile === source) throw new Error(`${owner.owner} hostile activation mutation did not apply for ${blocked}`);
         if (ownerOracle(owner, hostile)) throw new Error(`${owner.owner} accepted hostile activation before decode/preparation for ${blocked}`);
       }
-      const missingContract = source.replace(/\s*ArtifactToolPublicationContract \{ tool_id: "(?:openAddObjectDialog|setLocale|canvasPointerDown)", lanes: &\[ArtifactToolPublicationLane::(?:HostOnly|Config)\] \},/, "");
+      const missingContract = source.replace(/\s*ArtifactToolPublicationContract \{ tool_id: "(?:openAddObjectDialog|setCamera|canvasPointerDown)", lanes: &\[ArtifactToolPublicationLane::(?:HostOnly|Config)\] \},/, "");
       if (missingContract !== source && ownerOracle(owner, missingContract)) throw new Error(`${owner.owner} accepted a missing publication contract`);
       if (owner.owner === "Puzzle3dPlayApp") {
         const missingPreparation = source.replace("Some(std::sync::Arc::new(Puzzle3dConfigStorePreparationFactory))", "None");

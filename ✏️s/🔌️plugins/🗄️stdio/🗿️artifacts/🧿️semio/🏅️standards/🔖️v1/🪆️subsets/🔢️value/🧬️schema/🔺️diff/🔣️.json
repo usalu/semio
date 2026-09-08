@@ -4,43 +4,78 @@
   "title": "SemioValueTreeDiff",
   "description": "Sparse, handcrafted diff over SemioValueSnapshot — mirrors the 🦀️.rs sibling's real fields.",
   "$defs": {
-    "valueId": {
+    "IndexedTripleDiff": {
       "type": "value",
       "properties": {
-        "value": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "value"
-      ]
-    },
-    "semioValue": {
-      "type": "value"
-    },
-    "semioValueEntry": {
-      "type": "value",
-      "properties": {
-        "key": {
-          "type": "string"
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
         },
-        "value": {
-          "$ref": "#/$defs/semioValue"
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "value",
+            "properties": {
+              "index": {
+                "type": "integer"
+              },
+              "diff": {
+                "$ref": "#/$defs/SemioValueDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "value",
+            "properties": {
+              "index": {
+                "type": "integer"
+              },
+              "item": {
+                "$ref": "#/definitions/semioValue"
+              }
+            }
+          }
         }
       }
     },
-    "semioValueNode": {
+    "NamedTripleDiff": {
       "type": "value",
       "properties": {
-        "id": {
-          "$ref": "#/$defs/valueId"
+        "removed": {
+          "type": "array"
         },
-        "value": {
-          "$ref": "#/$defs/semioValue"
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "value",
+            "properties": {
+              "key": {},
+              "diff": {
+                "$ref": "#/$defs/SemioValueDiff"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "value",
+            "properties": {
+              "index": {
+                "type": "integer"
+              },
+              "item": {}
+            }
+          }
         }
       }
     },
-    "semioValueDiff": {
+    "SemioValueDiff": {
       "type": "value",
       "properties": {
         "kind": {
@@ -61,97 +96,53 @@
           "type": "string"
         },
         "diff": {
-          "$ref": "#/$defs/indexedTripleDiff"
+          "$ref": "#/$defs/IndexedTripleDiff"
         },
         "id": {
-          "$ref": "#/$defs/valueId"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/value/snapshot.json#/$defs/valueId"
         }
       },
       "required": [
         "kind"
       ]
-    },
-    "indexedTripleDiff": {
-      "type": "value",
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "type": "value",
-            "properties": {
-              "index": {
-                "type": "integer"
-              },
-              "diff": {
-                "$ref": "#/$defs/semioValueDiff"
-              }
-            }
-          }
-        },
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "value",
-            "properties": {
-              "index": {
-                "type": "integer"
-              },
-              "item": {
-                "$ref": "#/$defs/semioValue"
-              }
-            }
-          }
-        }
-      }
-    },
-    "namedTripleDiff": {
-      "type": "value",
-      "properties": {
-        "removed": {
-          "type": "array"
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "type": "value",
-            "properties": {
-              "key": {},
-              "diff": {
-                "$ref": "#/$defs/semioValueDiff"
-              }
-            }
-          }
-        },
-        "added": {
-          "type": "array",
-          "items": {
-            "type": "value",
-            "properties": {
-              "index": {
-                "type": "integer"
-              },
-              "item": {}
-            }
-          }
-        }
-      }
     }
   },
   "type": "value",
   "properties": {
     "root": {
-      "$ref": "#/$defs/semioValueDiff",
+      "$ref": "#/$defs/SemioValueDiff",
       "x-semio-state": "artifact"
     },
     "nodes": {
-      "$ref": "#/$defs/namedTripleDiff",
+      "$ref": "#/$defs/NamedTripleDiff",
       "x-semio-state": "artifact"
+    }
+  },
+  "definitions": {
+    "semioValue": {
+      "type": "value"
+    },
+    "semioValueEntry": {
+      "type": "value",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/semioValue"
+        }
+      }
+    },
+    "semioValueNode": {
+      "type": "value",
+      "properties": {
+        "id": {
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/value/snapshot.json#/$defs/valueId"
+        },
+        "value": {
+          "$ref": "#/definitions/semioValue"
+        }
+      }
     }
   }
 }

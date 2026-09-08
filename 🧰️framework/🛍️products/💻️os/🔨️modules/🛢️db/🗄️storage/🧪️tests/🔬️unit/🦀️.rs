@@ -303,7 +303,7 @@ async fn fs_storage_stale_seal_marker_does_not_resurrect_missing_segment() {
 #[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn fs_storage_canonical_alias_writer_fences_all_six_mutations() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧪️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["mutations"], serde_json::json!(["create", "append", "sync", "seal", "truncate", "delete"]));
     let pid = std::process::id();
     let counter = SCRATCH_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);

@@ -8,8 +8,7 @@ use crate::PresentationSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::topology::{compute_presentation_topology, PresentationTopology};
-
+use super::topology::{compute_presentation_topology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a presentation snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir) — the tile
@@ -89,3 +88,8 @@ pub fn presentation_artifact_inference_descriptor() -> schema::ArtifactInference
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::topology::PresentationTopology;
+//#endregion 🔁️Re-exports

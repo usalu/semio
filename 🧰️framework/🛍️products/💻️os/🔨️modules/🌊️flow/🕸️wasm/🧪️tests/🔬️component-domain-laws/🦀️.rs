@@ -30,7 +30,7 @@ fn acknowledge_bridge_event(bridge: &mut FlowBridge<FlowDomainAdapter>, event: &
 }
 
 fn close_bridge(bridge: &mut FlowBridge<FlowDomainAdapter>) {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧹️session-close/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap();
     bridge.begin_close();
     for _ in 0..fixture["close"]["maximumTurns"].as_u64().unwrap() {
         match bridge.poll(bridge_budget()).unwrap() {
@@ -47,7 +47,7 @@ fn close_bridge(bridge: &mut FlowBridge<FlowDomainAdapter>) {
 
 #[test]
 fn compiled_session_close_retires_the_real_vcs_and_host_before_terminal_empty() {
-    let fixture = crate::os_pack::json::parse(include_str!("../../🧪️fixtures/🧹️session-close/🔣️.json")).unwrap();
+    let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json")).unwrap();
     let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
     bridge.try_send(bridge_request(protocol::FLOW_OPERATION_OPEN, 1, 1, Vec::new()), bridge_budget()).unwrap();
     let AbiMessage::Reply(reply) = bridge_poll(&mut bridge) else { panic!("session reply") };
@@ -61,7 +61,7 @@ fn compiled_session_close_retires_the_real_vcs_and_host_before_terminal_empty() 
 
 #[test]
 fn compiled_session_close_receipt_preserves_a_real_sibling_until_global_close() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json")).unwrap();
     let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
     let mut sessions = Vec::new();
     for request in 1..=2 {
@@ -349,7 +349,7 @@ fn production_bridge_installs_vcs_authority_page_ack_retry_and_incremental_close
 
 #[test]
 fn production_reachability_fixture_and_hostile_source_census_reject_the_old_route() {
-    let component = include_str!("../../../🗿️artifact/🦀️.rs");
+    let component = include_str!("../../🦀️component.rs");
     let production = component.split_once("//#region 🧪️DomainLaws").expect("Flow production/test boundary").0;
     let bridge_protocol = include_str!("../../📡️protocol.rs");
     let protocol_production = bridge_protocol.split_once("//#region 🧪️Laws").expect("Flow protocol production/test boundary").0;

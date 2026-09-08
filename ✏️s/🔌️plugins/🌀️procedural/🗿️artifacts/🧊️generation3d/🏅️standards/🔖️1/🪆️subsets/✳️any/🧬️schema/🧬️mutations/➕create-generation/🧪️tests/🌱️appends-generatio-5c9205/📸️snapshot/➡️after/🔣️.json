@@ -2,9 +2,9 @@
   "fixture": {
     "schema": "flow.fixture",
     "camera": {
-      "x": 0.0,
-      "y": 0.0,
-      "zoom": 1.0
+      "x": 0,
+      "y": 0,
+      "zoom": 1
     },
     "widgets": [
       {
@@ -29,8 +29,8 @@
     ],
     "layout": {
       "node-a": {
-        "x": 0.0,
-        "y": 0.0
+        "x": 0,
+        "y": 0
       }
     }
   },
@@ -40,14 +40,14 @@
         "id": "gen-1",
         "name": "Baseline",
         "values": {
-          "storeys": 3.0
+          "storeys": 3
         }
       },
       {
         "id": "gen-2",
         "name": "Taller",
         "values": {
-          "storeys": 5.0
+          "storeys": 5
         }
       }
     ],

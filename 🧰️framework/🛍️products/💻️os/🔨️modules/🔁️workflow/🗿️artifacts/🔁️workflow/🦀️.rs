@@ -1582,5 +1582,5 @@ pub async fn validate_workflow_snapshot(document: &WorkflowSnapshot) -> Workflow
 //#endregion 🔖️WorkflowSnapshot
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🔁️workflow/🦀️.rs"]
 mod tests;

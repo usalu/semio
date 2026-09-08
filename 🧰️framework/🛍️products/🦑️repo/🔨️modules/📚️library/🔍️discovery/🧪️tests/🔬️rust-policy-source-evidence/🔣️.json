@@ -1,0 +1,7 @@
+{
+  "productionPath": "owner/🦀️.rs",
+  "testPath": "owner/🧪️tests/🔬️law/🦀️.rs",
+  "production": "pub fn value() -> u8 { 7 }\n#[cfg(test)]\n#[path = \"🧪️tests/🔬️law/🦀️.rs\"]\nmod tests;\n",
+  "test": "use super::value;\n#[test]\nfn canonical_law() { assert_eq!(value(), 7); }\n",
+  "law": "fn canonical_law()"
+}

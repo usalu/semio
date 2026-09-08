@@ -43,8 +43,6 @@ pub struct DrawingDiff {
     pub camera_y: Option<f64>,
     #[state(config)]
     pub camera_zoom: Option<f64>,
-    #[state(config)]
-    pub locale: Option<String>,
     #[state(artifact)]
     pub hovered_id: Option<Option<String>>,
 }
@@ -171,9 +169,6 @@ impl DrawingDiff {
             }
             if let Some(value) = self.camera_zoom {
                 next.camera_zoom = value;
-            }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
             }
             if let Some(value) = &self.hovered_id {
                 next.hovered_id = value.clone();
@@ -425,7 +420,6 @@ impl MutationDiff<DrawingSnapshot> for DrawingDiff {
         take!(camera_x);
         take!(camera_y);
         take!(camera_zoom);
-        take!(locale);
         take!(hovered_id);
         match (&mut self.layers, other.layers) {
             (Some(dst), Some(src)) => {

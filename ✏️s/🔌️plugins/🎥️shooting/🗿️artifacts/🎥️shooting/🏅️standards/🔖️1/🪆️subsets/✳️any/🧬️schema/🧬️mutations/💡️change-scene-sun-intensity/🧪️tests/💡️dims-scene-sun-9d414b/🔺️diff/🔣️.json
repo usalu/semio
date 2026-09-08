@@ -7,8 +7,8 @@
     "background": "#101014",
     "sun": {
       "enabled": true,
-      "azimuth": 45.0,
-      "elevation": 35.0,
+      "azimuth": 45,
+      "elevation": 35,
       "intensity": 1.2,
       "color": "#ffffff"
     },
@@ -19,14 +19,14 @@
     "shadow": {
       "enabled": true,
       "opacity": 0.35,
-      "softness": 1.0
+      "softness": 1
     },
     "material": {
       "color": "#9aa0ab",
-      "metalness": 0.0,
-      "roughness": 1.0,
+      "metalness": 0,
+      "roughness": 1,
       "emissive": "#000000",
-      "emissiveIntensity": 0.0
+      "emissiveIntensity": 0
     }
   },
   "shots": null,
@@ -41,6 +41,5 @@
   "centerModel": null,
   "fitRevision": null,
   "cameraDraftLabel": null,
-  "camera": null,
-  "locale": null
+  "camera": null
 }

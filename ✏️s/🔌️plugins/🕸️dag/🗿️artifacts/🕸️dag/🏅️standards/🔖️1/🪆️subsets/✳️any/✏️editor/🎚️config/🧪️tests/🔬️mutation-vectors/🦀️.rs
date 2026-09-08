@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
 #[test]
 fn language_neutral_mutations_match_json_oracle_and_restore_base() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔁️mutations.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️mutations.json")).unwrap();
     for vector in vectors.as_array().unwrap() {
         let base: DagConfig = dsl::json::from_json_str(&vector["base"].to_string()).unwrap();
         let mutation: DagConfigMutation = dsl::json::from_json_str(&vector["mutation"].to_string()).unwrap();

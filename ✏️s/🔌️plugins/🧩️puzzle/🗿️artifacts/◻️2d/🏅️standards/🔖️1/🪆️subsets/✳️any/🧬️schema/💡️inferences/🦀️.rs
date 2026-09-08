@@ -13,8 +13,7 @@ use crate::Puzzle2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::flat_position::{compute_flat_position, Puzzle2dFlatPosition};
-
+use super::flat_position::compute_flat_position;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a puzzle2d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `flatPosition`, backed by the `🎛️flat-position/` slug dir).
@@ -62,11 +61,7 @@ pub fn puzzle2d_artifact_inference_descriptor() -> ::semio_framework_schema::Art
     ::semio_framework_schema::ArtifactInferenceDescriptor {
         id: "s.puzzle.puzzle2d.inference",
         inference: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
     }
 }
@@ -87,7 +82,6 @@ use crate::{Puzzle2dNode, Puzzle2dNodeAnchor};
 /// root rather than being duplicated into the slug dir.
 use semio_s_artifact_puzzle_3d::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS};
 use std::collections::{HashMap, HashSet, VecDeque};
-
 fn round_f(v: f64) -> f64 {
     (v * 1_000_000.0).round() / 1_000_000.0
 }
@@ -184,3 +178,8 @@ pub fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
 #[path = "🧪️tests/🔬️fastened/🦀️.rs"]
 mod fastened_tests;
 //#endregion 🔖️FastenedLayout
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::flat_position::Puzzle2dFlatPosition;
+//#endregion 🔁️Re-exports

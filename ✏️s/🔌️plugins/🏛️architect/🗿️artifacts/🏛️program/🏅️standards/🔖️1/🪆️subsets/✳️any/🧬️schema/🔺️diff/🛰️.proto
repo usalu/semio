@@ -961,3 +961,6 @@ message ProgramTracesPatchEntry {
   TraceLink item = 2;
 }
 
+message ProgramStringList {
+  repeated string values = 1;
+}

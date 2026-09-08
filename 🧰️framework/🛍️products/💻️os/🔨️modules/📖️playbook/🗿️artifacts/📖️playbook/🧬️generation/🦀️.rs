@@ -190,6 +190,6 @@ impl Drop for GenerationRootRetirement {
 
 //#region 🧪️RootLaws
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🧬️generation/🦀️.rs"]
 mod tests;
 //#endregion 🧪️RootLaws

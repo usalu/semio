@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle5d artifact schema — every field of the artifact with its state class.
 
-use crate::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dSnapshot};
+use crate::{Puzzle5dKindCatalogsExtra, Puzzle5dSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use std::collections::HashSet;
@@ -75,8 +75,6 @@ pub struct Puzzle5dArtifact {
     #[state(config)]
     pub lod_mode: String,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub runtime_extras_json: String,
     #[state(artifact)]
     pub hovered_part_id: Option<String>,
@@ -142,7 +140,6 @@ impl Puzzle5dArtifact {
             fill_count: 0,
             brush_candidate_index: 0,
             lod_mode: "automatic".into(),
-            locale: "en-US".into(),
             runtime_extras_json: "{}".into(),
             hovered_part_id: None,
             preview_seq: 0,
@@ -362,3 +359,11 @@ pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> Str
 #[path = "🧪️tests/🔬️engine-relocation/🦀️.rs"]
 mod engine_relocation_tests;
 //#endregion 🧪️EngineRelocationTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::Puzzle5dMeta;
+pub use crate::Puzzle5dKindCompatibility;
+pub use crate::Puzzle5dPart;
+pub use crate::Puzzle5dFastener;
+//#endregion 🔁️Re-exports

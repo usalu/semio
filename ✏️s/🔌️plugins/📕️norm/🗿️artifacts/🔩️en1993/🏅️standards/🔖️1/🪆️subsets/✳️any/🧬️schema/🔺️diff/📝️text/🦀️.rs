@@ -571,3 +571,8 @@ impl MutationDiff<En1993Snapshot> for En1993Diff {
     }
 }
 //#endregion 🔖️Apply
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type En1993DiffText = String;
+//#endregion 🚚️Carrier

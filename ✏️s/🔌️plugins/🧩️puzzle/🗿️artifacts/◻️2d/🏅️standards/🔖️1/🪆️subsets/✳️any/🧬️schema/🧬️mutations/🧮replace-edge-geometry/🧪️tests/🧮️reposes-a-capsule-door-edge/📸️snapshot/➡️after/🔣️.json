@@ -1,8 +1,8 @@
 {
   "schema": "puzzle.2d.fixture",
   "camera": {
-    "x": 0.0,
-    "y": 0.0,
+    "x": 0,
+    "y": 0,
     "zoom": 0.2407
   },
   "nodes": [
@@ -11,7 +11,7 @@
       "nodeKind": "Capsule P",
       "x": 99.74,
       "y": 833.268,
-      "radius": 20.0,
+      "radius": 20,
       "text": "cs_sl2_d1_t_f0_b_c1",
       "iconKind": "capsule_p",
       "anchor": "fixed",
@@ -20,7 +20,7 @@
           "id": "085a9625-3c6d-4e2d-921a-70ac66cbc56a:link",
           "handleKind": "door capsule right",
           "angle": -1.5707963267948966,
-          "radius": 3.0
+          "radius": 3
         }
       ]
     },
@@ -29,7 +29,7 @@
       "nodeKind": "Capsule Backslash",
       "x": 51.069,
       "y": 841.85,
-      "radius": 20.0,
+      "radius": 20,
       "text": "cs_sl0_d0_t_f0_b_c1",
       "iconKind": "capsule_backslash",
       "anchor": "fixed",
@@ -38,7 +38,7 @@
           "id": "14507529-de04-4eaa-bf7d-beddca7d46e9:link",
           "handleKind": "door capsule right",
           "angle": -1.5707963267948966,
-          "radius": 3.0
+          "radius": 3
         }
       ]
     },
@@ -47,7 +47,7 @@
       "nodeKind": "First Storey Tambour",
       "x": 86.132,
       "y": 898.398,
-      "radius": 20.0,
+      "radius": 20,
       "text": "t_f0_b_c1",
       "iconKind": "tambour_first-storey",
       "anchor": "fixed",
@@ -56,61 +56,61 @@
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:b",
           "handleKind": "core rectangular top",
           "angle": 1.5707963267948966,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d0",
           "handleKind": "door tambour right",
           "angle": -0.31415926535897953,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d1",
           "handleKind": "door tambour left",
           "angle": -1.256637061435917,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d2",
           "handleKind": "door tambour right",
           "angle": -1.884955592153876,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d3",
           "handleKind": "door tambour left",
           "angle": -2.8274333882308142,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl1_d0",
           "handleKind": "door tambour right",
           "angle": 2.827433388230814,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl1_d1",
           "handleKind": "door tambour left",
           "angle": 1.8849555921538763,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl2_d0",
           "handleKind": "door tambour right",
           "angle": 1.2566370614359168,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl2_d1",
           "handleKind": "door tambour left",
           "angle": 0.31415926535897953,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:t",
           "handleKind": "tambour rectangular top",
           "angle": -1.5707963267948966,
-          "radius": 3.0
+          "radius": 3
         }
       ]
     },
@@ -119,7 +119,7 @@
       "nodeKind": "Tambour",
       "x": 86.132,
       "y": 720.927,
-      "radius": 20.0,
+      "radius": 20,
       "text": "t_f1_b_c1",
       "iconKind": "tambour",
       "anchor": "fixed",
@@ -128,61 +128,61 @@
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:b",
           "handleKind": "tambour rectangular bottom",
           "angle": 1.5707963267948966,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d0",
           "handleKind": "door tambour right",
           "angle": -0.31415926535897953,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d1",
           "handleKind": "door tambour left",
           "angle": -1.256637061435917,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d2",
           "handleKind": "door tambour right",
           "angle": -1.884955592153876,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl0_d3",
           "handleKind": "door tambour left",
           "angle": -2.8274333882308142,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl1_d0",
           "handleKind": "door tambour right",
           "angle": 2.827433388230814,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl1_d1",
           "handleKind": "door tambour left",
           "angle": 1.8849555921538763,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl2_d0",
           "handleKind": "door tambour right",
           "angle": 1.2566370614359168,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:sl2_d1",
           "handleKind": "door tambour left",
           "angle": 0.31415926535897953,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:t",
           "handleKind": "tambour rectangular top",
           "angle": -1.5707963267948966,
-          "radius": 3.0
+          "radius": 3
         }
       ]
     },
@@ -191,7 +191,7 @@
       "nodeKind": "Capsule J",
       "x": 121.195,
       "y": 954.946,
-      "radius": 20.0,
+      "radius": 20,
       "text": "cs_sl1_d0_t_f0_b_c1",
       "iconKind": "capsule_J",
       "anchor": "fixed",
@@ -200,7 +200,7 @@
           "id": "4ab8da16-00a7-4c2d-b9ae-cd694119a4da:link",
           "handleKind": "door capsule right",
           "angle": -1.5707963267948966,
-          "radius": 3.0
+          "radius": 3
         }
       ]
     },
@@ -209,7 +209,7 @@
       "nodeKind": "Capsule J",
       "x": 29.584,
       "y": 933.461,
-      "radius": 20.0,
+      "radius": 20,
       "text": "cs_sl0_d2_t_f0_b_c1",
       "iconKind": "capsule_J",
       "anchor": "fixed",
@@ -218,7 +218,7 @@
           "id": "53ca4530-f017-4079-bbae-16bf1a76c2df:link",
           "handleKind": "door capsule right",
           "angle": -1.5707963267948966,
-          "radius": 3.0
+          "radius": 3
         }
       ]
     },
@@ -227,7 +227,7 @@
       "nodeKind": "Capsule L",
       "x": 21.002,
       "y": 884.79,
-      "radius": 20.0,
+      "radius": 20,
       "text": "cs_sl0_d1_t_f0_b_c1",
       "iconKind": "capsule_L",
       "anchor": "fixed",
@@ -236,7 +236,7 @@
           "id": "794499b1-500b-41b1-a271-29e67f4629c5:link",
           "handleKind": "door capsule left",
           "angle": 0.20597298038469009,
-          "radius": 3.0
+          "radius": 3
         }
       ]
     },
@@ -245,7 +245,7 @@
       "nodeKind": "Base",
       "x": 0.663,
       "y": 983.866,
-      "radius": 20.0,
+      "radius": 20,
       "text": "b",
       "iconKind": "base",
       "anchor": "fixed",
@@ -254,13 +254,13 @@
           "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:c0",
           "handleKind": "core rectangular bottom",
           "angle": -2.3561944901923453,
-          "radius": 3.0
+          "radius": 3
         },
         {
           "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:c1",
           "handleKind": "core rectangular bottom",
           "angle": -0.7853981633974483,
-          "radius": 3.0
+          "radius": 3
         }
       ]
     },
@@ -269,7 +269,7 @@
       "nodeKind": "Capsule S",
       "x": 143.08,
       "y": 863.335,
-      "radius": 20.0,
+      "radius": 20,
       "text": "cs_sl2_d0_t_f0_b_c1",
       "iconKind": "capsule_s",
       "anchor": "fixed",
@@ -278,7 +278,7 @@
           "id": "81fe9985-4791-4e70-8b81-012e13eab8e2:link",
           "handleKind": "door capsule right",
           "angle": -1.5707963267948966,
-          "radius": 3.0
+          "radius": 3
         }
       ]
     },
@@ -287,7 +287,7 @@
       "nodeKind": "Capsule Slash",
       "x": 151.262,
       "y": 912.006,
-      "radius": 20.0,
+      "radius": 20,
       "text": "cs_sl1_d1_t_f0_b_c1",
       "iconKind": "capsule_slash",
       "anchor": "fixed",
@@ -296,7 +296,7 @@
           "id": "b3de3e2e-f93f-4de6-8bcc-e47d1ce9ce36:link",
           "handleKind": "door capsule right",
           "angle": -1.5707963267948966,
-          "radius": 3.0
+          "radius": 3
         }
       ]
     },
@@ -305,7 +305,7 @@
       "nodeKind": "Capsule Slash",
       "x": 72.524,
       "y": 963.528,
-      "radius": 20.0,
+      "radius": 20,
       "text": "cs_sl0_d3_t_f0_b_c1",
       "iconKind": "capsule_slash",
       "anchor": "fixed",
@@ -314,7 +314,7 @@
           "id": "f1b5e882-0d34-40af-aa83-cca07919adab:link",
           "handleKind": "door capsule right",
           "angle": -1.5707963267948966,
-          "radius": 3.0
+          "radius": 3
         }
       ]
     },
@@ -323,7 +323,7 @@
       "nodeKind": "Capsule Backslash",
       "x": 51.069,
       "y": 664.379,
-      "radius": 20.0,
+      "radius": 20,
       "text": "cs_sl0_d0_t_f1_b_c1",
       "iconKind": "capsule_backslash",
       "anchor": "fixed",
@@ -332,7 +332,7 @@
           "id": "f537171c-bacd-4422-abed-09e1ab19c572:link",
           "handleKind": "door capsule right",
           "angle": -1.5707963267948966,
-          "radius": 3.0
+          "radius": 3
         }
       ]
     }
@@ -342,131 +342,131 @@
       "id": "015032e9-67ed-4736-adab-a6e10351079b",
       "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl1_d1",
       "target": "b3de3e2e-f93f-4de6-8bcc-e47d1ce9ce36:link",
-      "gap": 0.0,
-      "shift": 0.0,
-      "rise": 0.0,
-      "rotation": 0.0,
-      "turn": 0.0,
-      "tilt": 0.0,
-      "x": 0.0,
-      "y": 0.0
+      "gap": 0,
+      "shift": 0,
+      "rise": 0,
+      "rotation": 0,
+      "turn": 0,
+      "tilt": 0,
+      "x": 0,
+      "y": 0
     },
     {
       "id": "13c6ff51-664b-46a2-a291-9cf044bef338",
       "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl2_d1",
       "target": "085a9625-3c6d-4e2d-921a-70ac66cbc56a:link",
       "gap": 1.5,
-      "shift": 0.0,
-      "rise": 0.0,
-      "rotation": 0.0,
-      "turn": 0.0,
-      "tilt": 0.0,
-      "x": 0.0,
-      "y": 0.0
+      "shift": 0,
+      "rise": 0,
+      "rotation": 0,
+      "turn": 0,
+      "tilt": 0,
+      "x": 0,
+      "y": 0
     },
     {
       "id": "39e4e640-81a9-4e5f-a9bb-2c39baa9ec0f",
       "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d3",
       "target": "f1b5e882-0d34-40af-aa83-cca07919adab:link",
-      "gap": 0.0,
-      "shift": 0.0,
-      "rise": 0.0,
-      "rotation": 0.0,
-      "turn": 0.0,
-      "tilt": 0.0,
-      "x": 0.0,
-      "y": 0.0
+      "gap": 0,
+      "shift": 0,
+      "rise": 0,
+      "rotation": 0,
+      "turn": 0,
+      "tilt": 0,
+      "x": 0,
+      "y": 0
     },
     {
       "id": "5bf74e9f-c6f9-4e2b-bf76-d823f6946f24",
       "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl2_d0",
       "target": "81fe9985-4791-4e70-8b81-012e13eab8e2:link",
-      "gap": 0.0,
-      "shift": 0.0,
-      "rise": 0.0,
-      "rotation": 0.0,
-      "turn": 0.0,
-      "tilt": 0.0,
-      "x": 0.0,
-      "y": 0.0
+      "gap": 0,
+      "shift": 0,
+      "rise": 0,
+      "rotation": 0,
+      "turn": 0,
+      "tilt": 0,
+      "x": 0,
+      "y": 0
     },
     {
       "id": "77d41b5c-e532-45b3-ba07-7bc3fa960fe8",
       "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d2",
       "target": "53ca4530-f017-4079-bbae-16bf1a76c2df:link",
-      "gap": 0.0,
-      "shift": 0.0,
-      "rise": 0.0,
-      "rotation": 0.0,
-      "turn": 0.0,
-      "tilt": 0.0,
-      "x": 0.0,
-      "y": 0.0
+      "gap": 0,
+      "shift": 0,
+      "rise": 0,
+      "rotation": 0,
+      "turn": 0,
+      "tilt": 0,
+      "x": 0,
+      "y": 0
     },
     {
       "id": "8684b51c-94f5-4a50-be16-526ac8e0892a",
       "source": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:c1",
       "target": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:b",
-      "gap": 0.0,
-      "shift": 0.0,
-      "rise": 0.0,
-      "rotation": 0.0,
-      "turn": 0.0,
-      "tilt": 0.0,
-      "x": 0.0,
-      "y": 0.0
+      "gap": 0,
+      "shift": 0,
+      "rise": 0,
+      "rotation": 0,
+      "turn": 0,
+      "tilt": 0,
+      "x": 0,
+      "y": 0
     },
     {
       "id": "8fd1aad8-5f00-4032-900d-a91810294ffc",
       "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl1_d0",
       "target": "4ab8da16-00a7-4c2d-b9ae-cd694119a4da:link",
-      "gap": 0.0,
-      "shift": 0.0,
-      "rise": 0.0,
-      "rotation": 0.0,
-      "turn": 0.0,
-      "tilt": 0.0,
-      "x": 0.0,
-      "y": 0.0
+      "gap": 0,
+      "shift": 0,
+      "rise": 0,
+      "rotation": 0,
+      "turn": 0,
+      "tilt": 0,
+      "x": 0,
+      "y": 0
     },
     {
       "id": "b1ecc6c5-722a-4814-9047-a87222bbaa4d",
       "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:t",
       "target": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:b",
-      "gap": 0.0,
-      "shift": 0.0,
-      "rise": 0.0,
-      "rotation": 0.0,
-      "turn": 0.0,
-      "tilt": 0.0,
-      "x": 0.0,
-      "y": 0.0
+      "gap": 0,
+      "shift": 0,
+      "rise": 0,
+      "rotation": 0,
+      "turn": 0,
+      "tilt": 0,
+      "x": 0,
+      "y": 0
     },
     {
       "id": "f38996aa-33cd-433c-8217-fb6c55262b20",
       "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d1",
       "target": "794499b1-500b-41b1-a271-29e67f4629c5:link",
-      "gap": 0.0,
-      "shift": 0.0,
-      "rise": 0.0,
-      "rotation": 0.0,
-      "turn": 0.0,
-      "tilt": 0.0,
-      "x": 0.0,
-      "y": 0.0
+      "gap": 0,
+      "shift": 0,
+      "rise": 0,
+      "rotation": 0,
+      "turn": 0,
+      "tilt": 0,
+      "x": 0,
+      "y": 0
     },
     {
       "id": "feba8972-394f-4ecc-923c-9f1701881fd0",
       "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d0",
       "target": "14507529-de04-4eaa-bf7d-beddca7d46e9:link",
-      "gap": 0.0,
-      "shift": 0.0,
-      "rise": 0.0,
-      "rotation": 0.0,
-      "turn": 0.0,
-      "tilt": 0.0,
-      "x": 0.0,
-      "y": 0.0
+      "gap": 0,
+      "shift": 0,
+      "rise": 0,
+      "rotation": 0,
+      "turn": 0,
+      "tilt": 0,
+      "x": 0,
+      "y": 0
     }
   ],
   "meta": {

@@ -98,7 +98,7 @@
       "const": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-current-source-revision.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔣️readme-current-source-revision.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔖️readme-current-source-revision/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔖️readme-current-source-revision/🛂️schema/🔣️.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
@@ -106,7 +106,7 @@
         ".vscode/launch.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟦️readme-current-source-activation.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔣️readme-current-source-activation.json",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟢️readme-current-source-activation/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟢️readme-current-source-activation/🛂️schema/🔣️.json",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
       ]
@@ -189,7 +189,7 @@
           "parent": "tests"
         },
         {
-          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/👀️readme-reviewed-fixture-inputs/🧬️schema",
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/👀️readme-reviewed-fixture-inputs/🛂️schema",
           "kind": "schema",
           "parent": "test-case"
         },
@@ -199,7 +199,7 @@
           "parent": "test-case"
         },
         {
-          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/👀️readme-reviewed-fixture-inputs/🧫️fixtures/🧬️schema",
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/👀️readme-reviewed-fixture-inputs/🧫️fixtures/🛂️schema",
           "kind": "schema",
           "parent": "fixtures"
         }

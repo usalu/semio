@@ -80,7 +80,6 @@ pub struct RemodelingConfig {
     /// 🧰️ The active utility for `remodeling-main`/`remodeling-frames` — was read off `view_state.active_utility_id`.
     pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -129,7 +128,7 @@ impl store::ArtifactPack for RemodelingConfig {
 
 impl Default for RemodelingConfig {
     fn default() -> Self {
-        Self { camera: RemodelingWorldCamera::default(), layers: RemodelingLayerVisibility::default(), frame_cursor: RemodelingFrameCursor::default(), report_table: "frames".into(), active_utility_id: "select".into(), locale: "en-US".into() }
+        Self { camera: RemodelingWorldCamera::default(), layers: RemodelingLayerVisibility::default(), frame_cursor: RemodelingFrameCursor::default(), report_table: "frames".into(), active_utility_id: "select".into(), }
     }
 }
 
@@ -139,7 +138,7 @@ store::impl_whole_record_config!(RemodelingConfig);
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
-pub use mutations::{RemodelingConfigMutation, ReplaceConfig, SetCamera, SetLayerVisibility, SetFrameCursor, SetReportTable, SetActiveUtility, SetLocale};
+pub use mutations::{RemodelingConfigMutation, ReplaceConfig, SetCamera, SetLayerVisibility, SetFrameCursor, SetReportTable, SetActiveUtility};
 
 //#region 🧪️Tests
 #[cfg(test)]

@@ -1,15 +1,38 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/os/plugin/browser-bundle/patch-handoff/component.json",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "offer",
-    "acknowledged",
-    "rejected",
-    "hostileResults"
-  ],
+  "$ref": "#/$defs/BrowserActorPatchHandoffV1",
   "$defs": {
+    "BrowserActorPatchHandoffV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "offer",
+        "acknowledged",
+        "rejected",
+        "hostileResults"
+      ],
+      "properties": {
+        "offer": {
+          "$ref": "#/definitions/offer"
+        },
+        "acknowledged": {
+          "$ref": "#/definitions/result"
+        },
+        "rejected": {
+          "$ref": "#/definitions/result"
+        },
+        "hostileResults": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/definitions/result"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
     "scope": {
       "type": "object",
       "additionalProperties": false,
@@ -82,7 +105,7 @@
           "const": "browser-actor-ui-patch"
         },
         "scope": {
-          "$ref": "#/$defs/scope"
+          "$ref": "#/definitions/scope"
         },
         "verifiedSurfaceId": {
           "const": "s.gis.gismap@1/viewer"
@@ -96,10 +119,10 @@
           "minimum": 0
         },
         "patch": {
-          "$ref": "#/$defs/patch"
+          "$ref": "#/definitions/patch"
         },
         "receipt": {
-          "$ref": "#/$defs/receipt"
+          "$ref": "#/definitions/receipt"
         }
       }
     },
@@ -121,7 +144,7 @@
           "const": "browser-actor-ui-patch-result"
         },
         "scope": {
-          "$ref": "#/$defs/scope"
+          "$ref": "#/definitions/scope"
         },
         "verifiedSurfaceId": {
           "type": "string",
@@ -136,7 +159,7 @@
           "minimum": 0
         },
         "receipt": {
-          "$ref": "#/$defs/receipt"
+          "$ref": "#/definitions/receipt"
         },
         "outcome": {
           "enum": [
@@ -185,24 +208,6 @@
           }
         }
       ]
-    }
-  },
-  "properties": {
-    "offer": {
-      "$ref": "#/$defs/offer"
-    },
-    "acknowledged": {
-      "$ref": "#/$defs/result"
-    },
-    "rejected": {
-      "$ref": "#/$defs/result"
-    },
-    "hostileResults": {
-      "type": "array",
-      "minItems": 3,
-      "items": {
-        "$ref": "#/$defs/result"
-      }
     }
   }
 }

@@ -5,15 +5,10 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "engagementInput",
-    "locale"
+    "engagementInput"
   ],
   "properties": {
     "engagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
       "type": "string",
       "x-semio-state": "config"
     }

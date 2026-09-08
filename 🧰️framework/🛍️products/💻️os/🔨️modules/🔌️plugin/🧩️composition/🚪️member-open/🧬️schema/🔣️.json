@@ -1,90 +1,95 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/os/plugin/composition/member-open/component.json",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema",
-    "requiredFactoryOperations",
-    "inputBytes",
-    "requestIdentityBytes",
-    "derivedIdentityBytes",
-    "limits",
-    "input",
-    "authority",
-    "parent",
-    "selected",
-    "operations",
-    "operationLifecycle",
-    "cases"
-  ],
-  "properties": {
-    "schema": {
-      "const": "semio.plugin.public-member-open-handoff/v1"
-    },
-    "requiredFactoryOperations": {
-      "const": 18
-    },
-    "inputBytes": {
-      "const": 274
-    },
-    "requestIdentityBytes": {
-      "const": 37
-    },
-    "derivedIdentityBytes": {
-      "const": 72
-    },
-    "limits": {
-      "const": {
-        "operations": 64,
-        "abortRetirements": 64,
-        "childMembers": 64,
-        "rootRetirements": 64
-      }
-    },
-    "input": {
-      "$ref": "#/$defs/input"
-    },
-    "authority": {
-      "const": {
-        "operation": 7,
-        "generation": 11,
-        "expiresAt": 1000,
-        "now": 1
-      }
-    },
-    "parent": {
-      "$ref": "#/$defs/parent"
-    },
-    "selected": {
-      "$ref": "#/$defs/declaration"
-    },
-    "operations": {
-      "type": "array",
-      "minItems": 18,
-      "maxItems": 18,
-      "items": {
-        "$ref": "#/$defs/operation"
-      }
-    },
-    "operationLifecycle": {
-      "type": "array",
-      "minItems": 8,
-      "maxItems": 8,
-      "items": {
-        "$ref": "#/$defs/lifecycle"
-      }
-    },
-    "cases": {
-      "type": "array",
-      "minItems": 20,
-      "maxItems": 20,
-      "items": {
-        "$ref": "#/$defs/case"
+  "$ref": "#/$defs/CompositionMemberOpenV1",
+  "$defs": {
+    "CompositionMemberOpenV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "requiredFactoryOperations",
+        "inputBytes",
+        "requestIdentityBytes",
+        "derivedIdentityBytes",
+        "limits",
+        "input",
+        "authority",
+        "parent",
+        "selected",
+        "operations",
+        "operationLifecycle",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.plugin.public-member-open-handoff/v1"
+        },
+        "requiredFactoryOperations": {
+          "const": 18
+        },
+        "inputBytes": {
+          "const": 274
+        },
+        "requestIdentityBytes": {
+          "const": 37
+        },
+        "derivedIdentityBytes": {
+          "const": 72
+        },
+        "limits": {
+          "const": {
+            "operations": 64,
+            "abortRetirements": 64,
+            "childMembers": 64,
+            "rootRetirements": 64
+          }
+        },
+        "input": {
+          "$ref": "#/definitions/input"
+        },
+        "authority": {
+          "const": {
+            "operation": 7,
+            "generation": 11,
+            "expiresAt": 1000,
+            "now": 1
+          }
+        },
+        "parent": {
+          "$ref": "#/definitions/parent"
+        },
+        "selected": {
+          "$ref": "#/definitions/declaration"
+        },
+        "operations": {
+          "type": "array",
+          "minItems": 18,
+          "maxItems": 18,
+          "items": {
+            "$ref": "#/definitions/operation"
+          }
+        },
+        "operationLifecycle": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/definitions/lifecycle"
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 20,
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/definitions/case"
+          }
+        }
       }
     }
   },
-  "$defs": {
+  "definitions": {
     "text": {
       "type": "string",
       "minLength": 1,
@@ -99,7 +104,7 @@
       "minItems": 3,
       "maxItems": 3,
       "items": {
-        "$ref": "#/$defs/text"
+        "$ref": "#/definitions/text"
       }
     },
     "declaration": {
@@ -107,7 +112,7 @@
       "minItems": 4,
       "maxItems": 4,
       "items": {
-        "$ref": "#/$defs/text"
+        "$ref": "#/definitions/text"
       }
     },
     "input": {
@@ -208,7 +213,7 @@
       ],
       "properties": {
         "subset": {
-          "$ref": "#/$defs/name"
+          "$ref": "#/definitions/name"
         },
         "support": {
           "enum": [
@@ -253,7 +258,7 @@
       ],
       "properties": {
         "id": {
-          "$ref": "#/$defs/name"
+          "$ref": "#/definitions/name"
         },
         "stage": {
           "enum": [
@@ -320,7 +325,7 @@
       ],
       "properties": {
         "id": {
-          "$ref": "#/$defs/name"
+          "$ref": "#/definitions/name"
         },
         "mutation": {
           "enum": [

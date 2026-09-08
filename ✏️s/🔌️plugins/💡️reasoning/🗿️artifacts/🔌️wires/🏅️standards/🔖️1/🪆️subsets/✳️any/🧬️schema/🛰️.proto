@@ -15,7 +15,6 @@ message WiresArtifact {
   // @state artifact
   double drag_last_y = 5;
   // @state config
-  string locale = 6;
 }
 
 message DslValue {}

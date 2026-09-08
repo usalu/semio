@@ -10,8 +10,7 @@
     "dropPreview",
     "engagementInput",
     "camera",
-    "previewCamera",
-    "locale"
+    "previewCamera"
   ],
   "properties": {
     "activePageId": {
@@ -43,10 +42,6 @@
     },
     "previewCamera": {
       "$ref": "#/$defs/LayoutCamera",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   },

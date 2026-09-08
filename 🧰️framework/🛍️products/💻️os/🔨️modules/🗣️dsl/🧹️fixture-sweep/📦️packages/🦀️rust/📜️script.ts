@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runExactCargoLaws, resolveTestLevel, buildBudgetMs } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { testFixtureSweepExtraction } from "../../📜️script.ts";
+import { testFixtureSweepExtraction } from "../../../🧪️tests/🧹️fixture-sweep/🟦️.ts";
 
 class SourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {

@@ -44,7 +44,7 @@ console.log("[DEBUG] Flow session-retirement source fixtures=1 hostileRejections
 //#endregion 🔣️SessionOwnership
 
 //#region 🧹️BridgeSessionClose
-const sessionClose = await Bun.file(new URL("../../🕸️wasm/🧪️fixtures/🧹️session-close/🔣️.json", import.meta.url)).json();
+const sessionClose = await Bun.file(new URL("../../🕸️wasm/🧫️fixtures/🧹️session-close/🔣️.json", import.meta.url)).json();
 const validateClose = flowWasmContract("FlowRetainedSessionCloseV1");
 assert(validateClose(sessionClose), "retained session close fixture must satisfy its owned contract");
 assert.deepEqual(JSON.parse(stableStringify(sessionClose)), sessionClose);
@@ -58,7 +58,7 @@ console.log("[DEBUG] Flow retained-session close fixture=1 hostileRejections=4 o
 //#endregion 🧹️BridgeSessionClose
 
 //#region 🧑‍🤝‍🧑️BrowserRuntimeLifetime
-const runtimeLifetime = await Bun.file(new URL("../../🕸️wasm/🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json", import.meta.url)).json();
+const runtimeLifetime = await Bun.file(new URL("../../🕸️wasm/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json", import.meta.url)).json();
 const validateRuntime = flowWasmContract("FlowBrowserRuntimeLifetimeV1");
 assert(validateRuntime(runtimeLifetime), "browser runtime lifetime fixture must satisfy its owned contract");
 assert.deepEqual(JSON.parse(stableStringify(runtimeLifetime)), runtimeLifetime);

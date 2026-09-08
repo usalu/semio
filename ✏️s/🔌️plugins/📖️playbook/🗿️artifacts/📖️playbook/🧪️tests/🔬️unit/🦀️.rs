@@ -95,7 +95,7 @@ fn one_step(title: &str) -> Vec<PlaybookStep> {
 
 #[semio_framework_async_macros::async_test]
 async fn scene_owner_fixture_proves_identity_isolation_aba_wire_omission_and_bounded_close() {
-    let fixture: protocol::os_pack::json::Value = protocol::json::parse(include_str!("../../🧪️fixtures/👑️playbook-scene-owner-law.json")).expect("language-neutral playbook scene fixture");
+    let fixture: protocol::os_pack::json::Value = protocol::json::parse(include_str!("../../🧫️fixtures/👑️playbook-scene-owner-law.json")).expect("language-neutral playbook scene fixture");
     let cases = fixture["cases"].as_array().expect("fixture cases");
     assert_eq!(fixture["schemaVersion"], 1);
     assert_eq!(fixture["ownedSlots"], 1);

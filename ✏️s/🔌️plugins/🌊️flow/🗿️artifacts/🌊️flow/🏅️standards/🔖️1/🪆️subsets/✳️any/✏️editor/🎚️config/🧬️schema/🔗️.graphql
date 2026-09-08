@@ -11,7 +11,6 @@ type FlowConfig {
   contributionsJson: String! @state(class: CONFIG)
   generationJson: String! @state(class: CONFIG)
   duplicateWidgetProgressJson: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 
 type CameraJson {

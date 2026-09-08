@@ -16,15 +16,15 @@
       "x-semio-state": "artifact"
     },
     "partKind": {
-      "$ref": "#/$defs/BlockKindIdentity",
+      "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/BlockKindIdentity",
       "x-semio-state": "artifact"
     },
     "part2d": {
-      "$ref": "#/$defs/Block5dPart2d",
+      "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/Block5dPart2d",
       "x-semio-state": "artifact"
     },
     "part3d": {
-      "$ref": "#/$defs/Block5dPart3d",
+      "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/Block5dPart3d",
       "x-semio-state": "artifact"
     },
     "representations": {
@@ -52,87 +52,23 @@
       "x-semio-state": "artifact"
     },
     "camera2d": {
-      "$ref": "#/$defs/BlockCamera2d",
+      "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/BlockCamera2d",
       "x-semio-state": "artifact"
     },
     "camera3d": {
-      "$ref": "#/$defs/BlockCamera3d",
+      "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/BlockCamera3d",
       "x-semio-state": "artifact"
     },
     "meta": {
-      "$ref": "#/$defs/BlockMeta",
+      "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/BlockMeta",
       "x-semio-state": "artifact"
     },
     "selectedIds": {
       "$ref": "#/$defs/Block5dStringList",
       "x-semio-state": "presence"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {
-    "BlockKindIdentity": {
-      "title": "BlockKindIdentity",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block5dPart2d": {
-      "title": "Block5dPart2d",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block5dPart3d": {
-      "title": "Block5dPart3d",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockRepresentation": {
-      "title": "BlockRepresentation",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block5dGripKind": {
-      "title": "Block5dGripKind",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block5dGripTemplate": {
-      "title": "Block5dGripTemplate",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockCompatibilityRule": {
-      "title": "BlockCompatibilityRule",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockAttribute": {
-      "title": "BlockAttribute",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockAuthor": {
-      "title": "BlockAuthor",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockCamera2d": {
-      "title": "BlockCamera2d",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockCamera3d": {
-      "title": "BlockCamera3d",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockMeta": {
-      "title": "BlockMeta",
-      "type": "object",
-      "additionalProperties": true
-    },
     "Block5dStringList": {
       "title": "Block5dStringList",
       "type": "object",
@@ -160,7 +96,7 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/BlockAuthor"
+            "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/BlockAuthor"
           }
         }
       }
@@ -178,7 +114,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/BlockRepresentation"
+            "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/BlockRepresentation"
           }
         },
         "removed": {
@@ -225,7 +161,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "#/$defs/BlockRepresentation"
+          "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/BlockRepresentation"
         }
       }
     },
@@ -242,7 +178,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Block5dGripKind"
+            "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/Block5dGripKind"
           }
         },
         "removed": {
@@ -289,7 +225,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "#/$defs/Block5dGripKind"
+          "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/Block5dGripKind"
         }
       }
     },
@@ -306,7 +242,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Block5dGripTemplate"
+            "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/Block5dGripTemplate"
           }
         },
         "removed": {
@@ -353,7 +289,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "#/$defs/Block5dGripTemplate"
+          "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/Block5dGripTemplate"
         }
       }
     },
@@ -370,7 +306,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/BlockCompatibilityRule"
+            "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/BlockCompatibilityRule"
           }
         },
         "removed": {
@@ -417,7 +353,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "#/$defs/BlockCompatibilityRule"
+          "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/BlockCompatibilityRule"
         }
       }
     },
@@ -434,7 +370,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/BlockAttribute"
+            "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/BlockAttribute"
           }
         },
         "removed": {
@@ -481,7 +417,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "#/$defs/BlockAttribute"
+          "$ref": "https://semio.tech/schema/s/block/block5d/artifact.json#/$defs/BlockAttribute"
         }
       }
     }

@@ -14,7 +14,7 @@ fn projection(identity: &NativeVcsCodecIdentityV1) -> serde_json::Value {
 #[semio_framework_async_macros::async_test]
 async fn vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_factory_substitution() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
-    let document_ids: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️fixtures/🌱️artifact-document-id-v1/🔣️.json")).unwrap();
+    let document_ids: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1/🔣️.json")).unwrap();
     let document_id = document_ids["cases"].as_array().unwrap().iter().find(|row| row["accepted"] == true).unwrap()["documentId"].as_str().unwrap();
     let receipts = native_codec_factory_receipts().expect("complete inert VCS closure");
     assert_eq!(receipts.len(), fixture["receipts"].as_array().unwrap().len());

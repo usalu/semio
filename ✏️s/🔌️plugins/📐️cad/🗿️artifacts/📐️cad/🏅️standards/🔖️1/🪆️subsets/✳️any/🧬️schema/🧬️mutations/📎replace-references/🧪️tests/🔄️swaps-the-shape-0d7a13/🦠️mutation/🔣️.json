@@ -7,13 +7,13 @@
       "sourceUrl": "https://example.test/site.png",
       "mediaKind": "image",
       "origin": [
-        5.0,
-        0.0,
-        0.0
+        5,
+        0,
+        0
       ],
       "orientation": null,
       "scale": null,
-      "widthWorld": 16.0,
+      "widthWorld": 16,
       "hidden": false,
       "locked": false,
       "opacity": null

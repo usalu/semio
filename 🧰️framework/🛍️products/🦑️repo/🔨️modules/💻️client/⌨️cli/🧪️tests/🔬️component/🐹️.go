@@ -7745,6 +7745,65 @@ func TestEntityKinds(t *testing.T) {
 	}
 }
 
+// 🌪️TestAllEntityEmojisProjectsTheFrameworkCatalog holds the CLI's entity-emoji answer against the
+// language-agnostic catalog document every implementation reads, not against the Go projection it is
+// built from, so a hand-written list can never drift back in.
+func TestAllEntityEmojisProjectsTheFrameworkCatalog(t *testing.T) {
+	_, currentFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("failed to resolve current test file path")
+	}
+	repoRoot := findTestRepoRoot(filepath.Dir(currentFile))
+	catalogPath := filepath.Join(repoRoot, "🧰️framework", "🔨️modules", "🧬️schema", "🔣️entity-kinds.json")
+	raw, err := os.ReadFile(catalogPath)
+	if err != nil {
+		t.Fatalf("failed to read the framework entity-kind catalog at %s: %v", catalogPath, err)
+	}
+	var catalog []struct {
+		ID    string `json:"id"`
+		Emoji string `json:"emoji"`
+	}
+	if err := json.Unmarshal(raw, &catalog); err != nil {
+		t.Fatalf("failed to decode the framework entity-kind catalog: %v", err)
+	}
+	if len(catalog) != len(EntityKindCatalog) {
+		t.Fatalf("generated Go projection is stale: catalog has %d kinds, EntityKindCatalog has %d", len(catalog), len(EntityKindCatalog))
+	}
+	for index, kind := range catalog {
+		if EntityKindCatalog[index].ID != kind.ID || EntityKindCatalog[index].Emoji != kind.Emoji {
+			t.Fatalf("generated Go projection is stale at %d: catalog %q/%q, projection %q/%q", index, kind.ID, kind.Emoji, EntityKindCatalog[index].ID, EntityKindCatalog[index].Emoji)
+		}
+	}
+
+	seen := map[string]bool{}
+	var expected []string
+	for _, kind := range catalog {
+		normalized := emojiText(kind.Emoji)
+		if normalized == "" || seen[normalized] {
+			continue
+		}
+		seen[normalized] = true
+		expected = append(expected, normalized)
+	}
+	actual := AllEntityEmojis()
+	if len(actual) != len(expected) {
+		t.Fatalf("AllEntityEmojis length: expected %d, got %d", len(expected), len(actual))
+	}
+	for index, want := range expected {
+		if actual[index] != want {
+			t.Errorf("AllEntityEmojis[%d]: expected %q, got %q", index, want, actual[index])
+		}
+	}
+	for _, required := range []string{EmojiFileTemplate, EmojiBreachScope, EmojiFileResource} {
+		if !seen[emojiText(required)] {
+			t.Errorf("AllEntityEmojis is missing %q, which the catalog declares", required)
+		}
+	}
+	if kind, found := EntityKindByEmoji(EmojiTechnologyMono); !found || kind.ID != "technology-mono" {
+		t.Errorf("first-wins index: expected technology-mono for the shared seedling emoji, got %q (found=%v)", kind.ID, found)
+	}
+}
+
 func TestArtifactKinds(t *testing.T) {
 	expected := []string{"repo", "technology", "bundle", "folder", "file", "section", "definition"}
 	if len(ArtifactKinds) != len(expected) {

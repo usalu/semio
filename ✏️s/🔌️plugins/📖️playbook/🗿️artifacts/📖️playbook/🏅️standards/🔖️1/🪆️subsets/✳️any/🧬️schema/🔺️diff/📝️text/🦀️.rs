@@ -42,9 +42,6 @@ impl PlaybookDiff {
             if let Some(list) = &self.selected_ids {
                 next.selected_ids = list.values.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             if let Some(value) = &self.contributions_json {
                 next.contributions_json = value.clone();
             }
@@ -100,7 +97,6 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
         take!(document);
         take!(flow);
         take!(selected_ids);
-        take!(locale);
         take!(contributions_json);
     }
 }
@@ -123,3 +119,8 @@ pub fn diff_replace_content(title: Option<&str>, steps: Vec<PlaybookStep>) -> Pl
     PlaybookDiff { document: Some(document), flow: Some(flow), ..Default::default() }
 }
 //#endregion 🔖️Builders
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type PlaybookDiffText = String;
+//#endregion 🚚️Carrier

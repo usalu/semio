@@ -49,7 +49,7 @@ describe("extension Cargo installation owner", () => {
     const root = findRepoRoot(import.meta.dir);
     const folder = join(import.meta.dir, "../../📦️packages/🟦️typescript/🧫️fixtures/📦️extension-installation-owner");
     const fixture = JSON.parse(readFileSync(join(folder, "🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(folder, "🛂️schema.json"), "utf8")));
+    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(folder, "🛂️schema/🔣️.json"), "utf8")));
     expect(validate(fixture)).toBe(true);
     const workspace = toml.parse(readFileSync(join(root, "Cargo.toml"), "utf8"));
     for (const row of fixture.cases) {
@@ -316,7 +316,7 @@ describe("package language semantic handoff", () => {
   const fold = (value: string): string => value.normalize("NFC").replaceAll("\uFE0F", "");
 
   test("schema-first six-language authority preserves the existing package purity boundary", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(inputRoot, "🧬️schema/🔣️.json"), "utf8")));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(inputRoot, "🛂️schema/🔣️.json"), "utf8")));
     expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
     expect(validate({ ...vector, extra: true })).toBe(false);
     expect(validate({ ...vector, schemaVersion: 2 })).toBe(false);
@@ -406,7 +406,7 @@ describe("package language semantic handoff", () => {
     const { semanticDirectoryKindId, semanticOwnedInputFileSnapshot } = await import("../../🔍️discovery/🟦️.ts");
     const root = resolve(import.meta.dir, "../../../../../../.."), fixtureRoot = join(inputRoot, "💾️resident-package");
     const text = readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"), expected = JSON.parse(text);
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️schema/🔣️.json"), "utf8")));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🛂️schema/🔣️.json"), "utf8")));
     expect(validate(expected), JSON.stringify(validate.errors)).toBe(true);
     expect(parseJsonc(text)).toEqual(expected);
     for (const invalid of [{ ...expected, extra: true }, { ...expected, schemaVersion: 2 }, { ...expected, ownerPath: "foreign" }, { ...expected, cargo: { ...expected.cargo, lib: { ...expected.cargo.lib, path: "../../../🦀️.rs" } } }, { ...expected, cargo: { ...expected.cargo, dependencies: { serde_json: { workspace: true } } } }, { ...expected, wasmTargets: [...expected.wasmTargets].reverse() }]) expect(validate(invalid)).toBe(false);
@@ -557,7 +557,7 @@ describe("package language semantic handoff", () => {
       return bytes;
     };
     const neutralPath = posix.join(relative(root, fixtureRoot).split(sep).join("/"), "🔣️.json"), expected = JSON.parse(read(neutralPath).toString("utf8"));
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read(posix.join(dirname(neutralPath), "🧬️schema/🔣️.json")).toString("utf8")));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read(posix.join(dirname(neutralPath), "🛂️schema/🔣️.json")).toString("utf8")));
     expect(validate(expected), JSON.stringify(validate.errors)).toBe(true);
     expect(parseJsonc(captured.get(neutralPath)!.toString("utf8"))).toEqual(expected);
     for (const invalid of [{ ...expected, extra: true }, { ...expected, schemaVersion: 2 }, { ...expected, cargo: { ...expected.cargo, libPath: "../../🦀️.rs" } }, { ...expected, admission: { ...expected.admission, importSpecifier: "../../📥️inputs/🎟️admission/📜️script.ts" } }, { ...expected, project: { ...expected.project, targets: { ...expected.project.targets, install: {} } } }, { ...expected, checks: [...expected.checks, { command: "check-wasip2", args: ["check", "--target", "wasm32-wasip2"] }] }]) expect(validate(invalid)).toBe(false);
@@ -738,7 +738,7 @@ describe("active ticket clean protection", () => {
     const { cleanRemovalProtection, cleanProjectRemovals } = await import("../../../../../../../📜️script.ts");
     const fixturePath = join(import.meta.dir, "../🧼️clean");
     const fixture = JSON.parse(readFileSync(join(fixturePath, "🧫️fixture/🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(fixturePath, "🛂️schema.json"), "utf8")));
+    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(fixturePath, "🛂️schema/🔣️.json"), "utf8")));
     expect(validate(fixture)).toBe(true);
     for (const bad of [{ ...fixture, extra: true }, { ...fixture, version: 2 }, { ...fixture, cases: [] }]) expect(validate(bad)).toBe(false);
     const root = resolve("/synthetic-workspace");
@@ -804,7 +804,7 @@ describe("Windows checkout ticket paths", () => {
       checkout: { root: string; maxPathUnits: number; ticketRoot: string };
       components: { name: string; illegal: boolean }[];
     };
-    const schema = JSON.parse(readFileSync(join(fixturePath, "🛂️schema.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(fixturePath, "🛂️schema/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, version: 2 })).toBe(false);
@@ -834,7 +834,7 @@ describe("registryCompilerImports", () => {
     const { registryStaticImports } = await import("../../🔍️discovery/🟦️.ts");
     const ts = await import("typescript");
     const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🔍️discovery/🧫️fixtures/compiler-imports/🔣️.json"), "utf8")) as { cases: { name: string; source: string; expected: string[] }[] };
-    const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🔍️discovery/🧫️fixtures/compiler-imports/🛂️schema.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🔍️discovery/🧫️fixtures/compiler-imports/🛂️schema/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, extra: true })).toBe(false);
@@ -865,7 +865,7 @@ describe("registryCompilerImports", () => {
 
 //#region 📦️CargoProviderManifestProjection
 const CARGO_PROVIDER_PROJECTION_FIXTURE = join(import.meta.dir, "../📽️cargo-provider-projection/🔣️.json");
-const CARGO_PROVIDER_PROJECTION_SCHEMA = join(import.meta.dir, "../📽️cargo-provider-projection/🛂️schema.json");
+const CARGO_PROVIDER_PROJECTION_SCHEMA = join(import.meta.dir, "../📽️cargo-provider-projection/🛂️schema/🔣️.json");
 
 describe("cargo provider manifest projection", () => {
   test("matches independent TOML facts before preserving only bounded identity projections", () => {
@@ -892,7 +892,7 @@ describe("cargo provider manifest projection", () => {
 
 //#region 🔗️CargoProviderBinding
 const CARGO_PROVIDER_BINDING_FIXTURE = join(import.meta.dir, "../🪢️cargo-provider-binding/🔣️.json");
-const CARGO_PROVIDER_BINDING_SCHEMA = join(import.meta.dir, "../🪢️cargo-provider-binding/🛂️schema.json");
+const CARGO_PROVIDER_BINDING_SCHEMA = join(import.meta.dir, "../🪢️cargo-provider-binding/🛂️schema/🔣️.json");
 
 describe("cargo provider binding", () => {
   test("resolves one selected local normal dependency without inferring a provider", () => {
@@ -940,7 +940,7 @@ describe("cargo provider binding", () => {
 
 //#region 🧬️MutationMetadataSourceProvider
 const MUTATION_METADATA_SOURCE_FIXTURE = join(import.meta.dir, "../🏷️metadata-source-provider/🔣️.json");
-const MUTATION_METADATA_SOURCE_SCHEMA = join(import.meta.dir, "../🏷️metadata-source-provider/🛂️schema.json");
+const MUTATION_METADATA_SOURCE_SCHEMA = join(import.meta.dir, "../🏷️metadata-source-provider/🛂️schema/🔣️.json");
 
 describe("mutation metadata source provider", () => {
   test("proves independent canonical derive and lower contract routes from one consumer declaration", () => {
@@ -1057,7 +1057,7 @@ describe("owned filesystem discovery", () => {
 
 //#region 🧭️WorkspaceTaxonomyAuthority
 const WORKSPACE_TAXONOMY_FIXTURE = join(import.meta.dir, "../🌳️workspace-taxonomy/🧫️fixtures/🔣️.json");
-const WORKSPACE_TAXONOMY_SCHEMA = join(import.meta.dir, "../🌳️workspace-taxonomy/🛂️schema.json");
+const WORKSPACE_TAXONOMY_SCHEMA = join(import.meta.dir, "../🌳️workspace-taxonomy/🛂️schema/🔣️.json");
 
 function workspaceTaxonomyFixtureRoot(prefix: string): { readonly root: string; readonly retained: boolean } {
   const artifactDirectory = process.env.SEMIO_TEST_ARTIFACT_DIR?.trim();
@@ -2847,7 +2847,7 @@ describe("loadTaxonomy", () => {
     const external = Object.values(taxonomy.generatorContracts).filter((contract) => contract.ownership === "external");
     const inputRoot = join(import.meta.dir, "../🏭️owned-generator-preview-inventory"), input = readFileSync(join(inputRoot, "🔣️.json"), "utf8");
     const vector = JSON.parse(input) as { schemaVersion: number; contract: string; ownedGeneratorIds: string[] };
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(inputRoot, "🧬️schema/🔣️.json"), "utf8")));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(inputRoot, "🛂️schema/🔣️.json"), "utf8")));
     expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
     for (const invalid of [{ ...vector, schemaVersion: 2 }, { ...vector, extra: true }, { ...vector, ownedGeneratorIds: [] }, { ...vector, ownedGeneratorIds: [""] }, { ...vector, ownedGeneratorIds: ["duplicate", "duplicate"] }]) expect(validate(invalid)).toBe(false);
     expect(vector.ownedGeneratorIds).toEqual([...vector.ownedGeneratorIds].sort());
@@ -2891,7 +2891,7 @@ describe("loadTaxonomy", () => {
   test("admits only explicit same-project preview invocations", async () => {
     const root = join(import.meta.dir, "../🏭️owned-generator-preview-inventory");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")));
+    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(root, "🛂️schema/🔣️.json"), "utf8")));
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     const taxonomy = loadTaxonomy(), actor = taxonomy.generatorContracts["actor-typegen"]!;
     for (const row of fixture.previewRoutes) {
@@ -2953,7 +2953,7 @@ describe("loadTaxonomy", () => {
 
   test("discovers only exact byte-matched compiler manifest inputs", () => {
     const root = join(import.meta.dir, "../🏭️owned-generator-preview-inventory"), fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")));
+    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(root, "🛂️schema/🔣️.json"), "utf8")));
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     const sandbox = mkdtempSync(join(tmpdir(), "compiler-input-manifest-")), manifestPath = "📤️output/🧾️manifest.json";
     mkdirSync(join(sandbox, "🌱️source"), { recursive: true });
@@ -4340,7 +4340,7 @@ function projectionAuthority(projection: ArtifactProjectionGoldenEntry, nodes = 
 describe("artifact path projection authority", () => {
   test("authored Draw preflight context preserves absent evidence and foreign ticket inputs", async () => {
     const root = join(DRAW_SOURCE_SCENARIO_ROOT, "🛫️preflight-context"), text = readFileSync(join(root, "🔣️.json"), "utf8"), vector = JSON.parse(text);
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🛂️schema/🔣️.json"), "utf8")));
     expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
     expect(validate({ ...vector, cases: vector.cases.slice(1) })).toBe(false);
     const jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
@@ -4379,7 +4379,7 @@ describe("artifact path projection authority", () => {
 
   test("authored Draw submitted proof has exact canonical bytes and a closed single-case budget", async () => {
     const root = join(DRAW_SOURCE_SCENARIO_ROOT, "📨️submitted-proof"), text = readFileSync(join(root, "🔣️.json"), "utf8"), vector = JSON.parse(text);
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🛂️schema/🔣️.json"), "utf8")));
     expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
     for (const changed of [{ ...vector, schemaVersion: 2 }, { ...vector, fileMode: 420 }, { ...vector, writePolicy: "overwrite" }, { ...vector, singleCase: { ...vector.singleCase, budgetMs: 120001 } }, { ...vector, singleCase: { ...vector.singleCase, extraArguments: true } }]) expect(validate(changed)).toBe(false);
     const jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
@@ -4488,7 +4488,7 @@ describe("artifact path projection authority", () => {
 
   test("authored Draw commit route enforces its registered single-case parent budget", async () => {
     const inputRoot = join(DRAW_SOURCE_SCENARIO_ROOT, "🛣️commit-route"), bytes = readFileSync(join(inputRoot, "🔣️.json"), "utf8"), vector = JSON.parse(bytes);
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(inputRoot, "🧬️schema/🔣️.json"), "utf8")));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(inputRoot, "🛂️schema/🔣️.json"), "utf8")));
     expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
     for (const changed of [{ ...vector, budgetMs: 120001 }, { ...vector, bunTimeoutMs: 120001 }, { ...vector, testName: "other" }, { ...vector, extraArguments: true }, { ...vector, runner: "other" }]) expect(validate(changed)).toBe(false);
     const jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
@@ -4499,7 +4499,7 @@ describe("artifact path projection authority", () => {
 
   test("authored Draw residue recovery checkpoints have closed language-neutral ownership", async () => {
     const root = join(DRAW_SOURCE_SCENARIO_ROOT, "🛟️residue-recovery"), bytes = readFileSync(join(root, "🔣️.json"), "utf8");
-    const vector = JSON.parse(bytes), validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")));
+    const vector = JSON.parse(bytes), validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🛂️schema/🔣️.json"), "utf8")));
     expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
     for (const changed of [{ ...vector, schemaVersion: 2 }, { ...vector, generatorStarts: 1 }, { ...vector, preservation: "owned-only" }, { ...vector, cases: vector.cases.slice(1) }, { ...vector, cases: vector.cases.map((row: Record<string, unknown>, index: number) => index === 2 ? { ...row, phase: "transaction-journal-canonical-exchanged" } : row) }]) expect(validate(changed)).toBe(false);
     const jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
@@ -4511,7 +4511,7 @@ describe("artifact path projection authority", () => {
 
   test("authored Draw residue ignore authority outranks inherited negation before injection", async () => {
     const inputRoot = join(DRAW_SOURCE_SCENARIO_ROOT, "🙈️residue-ignore"), bytes = readFileSync(join(inputRoot, "🔣️.json"), "utf8"), vector = JSON.parse(bytes);
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(inputRoot, "🧬️schema/🔣️.json"), "utf8")));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(inputRoot, "🛂️schema/🔣️.json"), "utf8")));
     expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
     for (const changed of [{ ...vector, authoritativeSource: vector.lowerPrioritySource }, { ...vector, absentIgnored: false }, { ...vector, writePolicy: "replace-policy" }]) expect(validate(changed)).toBe(false);
     const jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
@@ -4554,7 +4554,7 @@ describe("artifact path projection authority", () => {
   });
 
   test("authored Draw source schema and parser oracles retain the exact eleven-member contract", async () => {
-    const schema = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🧬️schema/🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🛂️schema/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
     expect(validate(DRAW_SOURCE_SCENARIO)).toBe(true);
     for (const changed of [
@@ -6986,7 +6986,7 @@ describe("direct mutation ownership", () => {
     const { win32 } = await import("node:path");
     const inputRoot = join(import.meta.dir, "../🌱️mutation-root-discovery");
     const vectorPath = join(inputRoot, "🔣️.json");
-    const schemaPath = join(inputRoot, "🧬️schema/🔣️.json");
+    const schemaPath = join(inputRoot, "🛂️schema/🔣️.json");
     const vector = JSON.parse(readFileSync(vectorPath, "utf8")) as { ownedRoots: string[]; includedRoots: string[]; excludedRoots: string[]; filePaths: string[]; rejections: { name: string; path: string; kind: string; roots?: string[] }[] };
     const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(schemaPath, "utf8")));
     expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
@@ -7078,7 +7078,7 @@ describe("direct mutation ownership", () => {
     }
     const sourcePath = join(getWorkspaceRoot(), "📜️script.ts");
     const source = readFileSync(sourcePath, "utf8");
-    const inputs = [sourcePath, join(inputRoot, "🔣️.json"), join(inputRoot, "🧬️schema/🔣️.json"), import.meta.path].map((path) => ({ path, sha256: createHash("sha256").update(readFileSync(path)).digest("hex") }));
+    const inputs = [sourcePath, join(inputRoot, "🔣️.json"), join(inputRoot, "🛂️schema/🔣️.json"), import.meta.path].map((path) => ({ path, sha256: createHash("sha256").update(readFileSync(path)).digest("hex") }));
     const syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     const names = new Set(["policyFindAllMutationsDirs", "policyRepositoryOwnedRoots", "policyReaddirSafe"]);
     const constants = new Set(["MUTATION_TAXONOMY_SOURCE_SKIP", "POLICY_SKIP_DIRS"]);
@@ -7307,7 +7307,7 @@ describe("direct mutation ownership", () => {
 
   test("requires one enabled reachable non-ignored leaf test proven by parsed Rust items", () => {
     const fixturePath = join(import.meta.dir, "../✅️mutation-test-presence/🧫️fixtures/🔣️.json");
-    const schemaPath = join(import.meta.dir, "../✅️mutation-test-presence/🛂️schema.json");
+    const schemaPath = join(import.meta.dir, "../✅️mutation-test-presence/🛂️schema/🔣️.json");
     const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { schemaVersion: 1; mutationRoot: string; leaf: string; cases: readonly { name: string; source: string; files: Readonly<Record<string, string>>; links: Readonly<Record<string, string>>; compilerAccepted: boolean; runnableTests: number; policyAccepted: boolean }[] };
     expect(new Ajv({ allErrors: true, strict: true }).compile(JSON.parse(readFileSync(schemaPath, "utf8")))(fixture)).toBe(true);
     const artifactDirectory = process.env.SEMIO_TEST_ARTIFACT_DIR?.trim();
@@ -7417,7 +7417,7 @@ describe("direct mutation ownership", () => {
 
   test("prepares AST-safe direct mutation scaffolds before one guarded publication", () => {
     const golden = JSON.parse(readFileSync(join(import.meta.dir, "../🏗️mutation-scaffolding/🧫️fixtures/🔣️.json"), "utf8")) as { schemaVersion: number; mutationRoot: string; name: string; attributedAggregate: string; malformedAggregate: string; ambiguousAggregate: string; wrongMountAggregate: string; privateMountAggregate: string; wrongVariantAggregate: string; scopedAggregate: string; unrelatedDocAggregate: string; nestedAggregateDecoy: string; nestedAggregateScopes: string; unmatchedAggregate: string };
-    const schema = JSON.parse(readFileSync(join(import.meta.dir, "../🏗️mutation-scaffolding/🛂️schema.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(import.meta.dir, "../🏗️mutation-scaffolding/🛂️schema/🔣️.json"), "utf8"));
     const root = mkdtempSync(join(tmpdir(), "semio-mutation-scaffold-transaction-"));
     const snapshot = (): string => fastGlob.sync("**/*", { cwd: root, onlyFiles: true, followSymbolicLinks: false }).sort().map((path) => `${path}\0${readFileSync(join(root, path), "utf8")}`).join("\0");
     const mutationRoot = join(root, golden.mutationRoot);
@@ -7628,7 +7628,7 @@ describe("direct mutation ownership", () => {
 
   test("projects the actual wrapped mutation declaration origin through public aliases only", () => {
     const fixturePath = join(import.meta.dir, "../🧬️mutation-type-origin/🔣️.json");
-    const schemaPath = join(import.meta.dir, "../🧬️mutation-type-origin/🛂️schema.json");
+    const schemaPath = join(import.meta.dir, "../🧬️mutation-type-origin/🛂️schema/🔣️.json");
     const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { schemaVersion: 1; mutationRoot: string; leaf: string; rustFilename: "🦀️.rs"; cases: readonly { id: string; mutationRoot?: string; leaf?: string; rustFilename?: string; virtualFilesystem?: true; repoRoot?: string; repositoryRootSymlink?: true; repositoryAncestorSymlink?: true; rootSource: string; leafSource: string; extraFiles?: readonly { path: string; source: string }[]; links?: readonly { path: string; target: string }[]; compileAccepted: boolean; expected: { sourcePath: string; declarationName: string; modulePath: string[] } | null }[] };
     expect(new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(schemaPath, "utf8")))(fixture)).toBe(true);
     const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
@@ -7803,7 +7803,7 @@ describe("schema scope catalog", () => {
     const library = await import("../../🔍️discovery/🟦️.ts");
     const taxonomy = library.loadCatalogTaxonomy();
     const casesPath = join(import.meta.dir, "../🧬️schema-scope-catalog/🧫️fixtures/🔣️.json");
-    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string; exports: string[]; dependsOn: string[] }>; diagnosticCodes: string[]; placementPaths: string[] } }[] };
+    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string; exports: Record<string, { file: string; facet: string }>; dependsOn: string[] }>; diagnosticCodes: string[]; placementPaths: string[] } }[] };
     const authority = JSON.parse(readFileSync(join(import.meta.dir, "../🧬️schema-scope-catalog/🛂️schema/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true });
     expect(ajv.compile(authority)(cases)).toBe(true);
@@ -7816,7 +7816,7 @@ describe("schema scope catalog", () => {
           writeFileSync(abs, typeof body === "string" ? body : `${JSON.stringify(body, null, 2)}\n`);
         }
         const inventory = library.inventorySchemaScopes(root, taxonomy);
-        const scopes = Object.fromEntries(Object.entries(inventory.catalog.scopes).map(([id, scope]) => [id, { path: scope.path, level: scope.level, exports: [...scope.exports], dependsOn: [...scope.dependsOn] }]));
+        const scopes = Object.fromEntries(Object.entries(inventory.catalog.scopes).map(([id, scope]) => [id, { path: scope.path, level: scope.level, exports: scope.exports, dependsOn: [...scope.dependsOn] }]));
         expect({ case: row.id, scopes }).toEqual({ case: row.id, scopes: row.expected.scopes });
         expect({ case: row.id, codes: inventory.diagnostics.map(({ code }) => code).sort() }).toEqual({ case: row.id, codes: [...row.expected.diagnosticCodes].sort() });
         expect({ case: row.id, paths: inventory.placement.map(({ path }) => path).sort() }).toEqual({ case: row.id, paths: [...row.expected.placementPaths].sort() });

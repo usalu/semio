@@ -17,6 +17,7 @@ test("third-party Ajv accepts the strict Note cohort fixture", async () => {
   const schemaModule = await Bun.file(schemaModulePath).json();
   const fixture = await Bun.file(fixturePath).json() as Fixture;
   const validate = new Ajv({ allErrors: true, strict: true }).addSchema(schemaModule).compile({ $ref: `${schemaModule.$id}#/$defs/ActionCohort` });
+  validate.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
 });
 

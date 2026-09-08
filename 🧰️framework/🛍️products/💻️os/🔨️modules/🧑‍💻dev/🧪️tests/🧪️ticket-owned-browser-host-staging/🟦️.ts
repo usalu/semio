@@ -757,7 +757,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     itLong("keeps generated host imports and replies isolated across same-package activations", async () => {
       const { execFileSync } = await import("node:child_process");
       const { default: Ajv } = await import("ajv");
-      const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures");
+      const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧫️fixtures");
       const fixture = JSON.parse(readFileSync(join(fixtureRoot, "⚡️host-activation.json"), "utf8")) as { activations: Array<{ actorId: string; generation: string; value: string }> };
       const oracle = new Ajv();
       expect(oracle.validate(JSON.parse(readFileSync(join(fixtureRoot, "🛡️host-activation.schema.json"), "utf8")), fixture)).toBe(true);
@@ -889,7 +889,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
     itLong("executes independent Wasm memories from one cached explicit factory module", async () => {
       const { execFileSync } = await import("node:child_process");
       const { default: Ajv } = await import("ajv");
-      const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures");
+      const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧫️fixtures");
       const fixture = JSON.parse(readFileSync(join(root, "🏗️component-instantiation.json"), "utf8"));
       const oracle = new Ajv({ strict: true });
       expect(oracle.validate(JSON.parse(readFileSync(join(root, "📐️component-instantiation.schema.json"), "utf8")), fixture)).toBe(true);
@@ -947,7 +947,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
 
     itLong("preserves direct descriptor and job results and lifts large turn results indirectly", async () => {
       const { execFileSync } = await import("node:child_process");
-      const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures/⏳️async-results.json");
+      const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧫️fixtures/⏳️async-results.json");
       const generated = execFileSync("node", ["--input-type=module", "--eval", `
         import { parse, transpile } from "@bytecodealliance/jco";
         import { readFileSync } from "node:fs";

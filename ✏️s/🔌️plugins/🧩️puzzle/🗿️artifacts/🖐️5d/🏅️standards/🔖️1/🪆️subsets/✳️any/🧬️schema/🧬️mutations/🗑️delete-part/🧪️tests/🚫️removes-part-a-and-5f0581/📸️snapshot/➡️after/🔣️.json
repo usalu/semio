@@ -20,14 +20,14 @@
       "partKind": "part-kind-b",
       "anchor": "derived",
       "2d": {
-        "x": 10.0,
-        "y": 20.0
+        "x": 10,
+        "y": 20
       },
       "3d": {
         "origin": [
-          1.0,
-          2.0,
-          3.0
+          1,
+          2,
+          3
         ]
       },
       "grips": [
@@ -35,13 +35,13 @@
           "id": "grip-2",
           "gripKind": "grip-kind-b",
           "2d": {
-            "angle": 0.0
+            "angle": 0
           },
           "3d": {
             "position": [
-              0.0,
-              0.0,
-              0.0
+              0,
+              0,
+              0
             ]
           }
         }

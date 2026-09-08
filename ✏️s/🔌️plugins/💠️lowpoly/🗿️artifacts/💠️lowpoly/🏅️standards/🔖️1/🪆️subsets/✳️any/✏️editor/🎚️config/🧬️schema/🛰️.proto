@@ -65,8 +65,4 @@ message LowpolyConfig {
   double sun_intensity = 31;
   // @state config
   string sun_color = 32;
-  // @state config
-  string active_utility_id = 33;
-  // @state config
-  string locale = 34;
 }

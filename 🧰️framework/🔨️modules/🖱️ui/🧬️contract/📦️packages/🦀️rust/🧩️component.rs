@@ -424,16 +424,7 @@ impl TreeItemProps {
         for action in self.row_actions.iter() {
             row_actions.try_push(action.credited_clone()?).ok()?;
         }
-        Some(Self {
-            label: self.label.clone(),
-            description: self.description.clone(),
-            icon: self.icon.clone(),
-            default_open: self.default_open,
-            draggable: self.draggable,
-            drag_data: self.drag_data.clone(),
-            dimmed: self.dimmed,
-            row_actions,
-        })
+        Some(Self { label: self.label.clone(), description: self.description.clone(), icon: self.icon.clone(), default_open: self.default_open, draggable: self.draggable, drag_data: self.drag_data.clone(), dimmed: self.dimmed, row_actions })
     }
 }
 

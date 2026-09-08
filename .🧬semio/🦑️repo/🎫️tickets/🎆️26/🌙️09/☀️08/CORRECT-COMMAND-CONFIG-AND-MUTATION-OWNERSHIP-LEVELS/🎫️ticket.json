@@ -1,0 +1,10 @@
+{
+  "title": "Correct Command Config and Mutation Ownership Levels",
+  "emoji": "🏛️",
+  "status": "open",
+  "description": "Audit and refactor commands, configs, mutations and related abstractions to their proper domain and OS ownership levels. Locale is global OS-wide, not Jack-specific. Use maximum parallel fleet: GPT 6 Astra xhigh coordination, GPT 5.6 Sol xhigh execution and GPT 5.6 Terra xhigh read-only audits. Ticket LLM metadata uses generic codex because current MCP allowlist lacks requested models. Preserve concurrent unrelated edits and validate affected behavior.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪9b2b78bb46da4416a713b3909b96b4df"
+  ]
+}

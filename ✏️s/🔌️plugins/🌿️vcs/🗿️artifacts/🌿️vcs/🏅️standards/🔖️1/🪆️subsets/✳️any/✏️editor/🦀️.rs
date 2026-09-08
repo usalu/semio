@@ -10,7 +10,7 @@
 
 use crate::{op::VcsDemoMutation, VcsSnapshot, VCS_DOCUMENT_SCHEMA};
 use crate::editor::vcs::commands::edit as edit_command;
-use crate::editor::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, increment_counter, no_operation, patch_snapshot, set_locale, text_edit};
+use crate::editor::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, increment_counter, no_operation, patch_snapshot, text_edit};
 use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use crate::editor::vcs::modes::edit;
 use crate::editor::vcs::modes::edit::windows::{editor, history};
@@ -116,7 +116,6 @@ semio_framework_plugin::app_commands! {
         "patchSnapshot" as "patch-snapshot" => patch_snapshot::PatchSnapshot,
         "textEdit" as "text-edit" => text_edit::TextEdit,
         "edit" as "edit" => edit_command::Edit,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "noMutation" as "no-operation" => no_operation::NoMutation,
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "canvasPointerMove" as "canvas-pointer-move" => canvas_pointer_move::CanvasPointerMove,
@@ -150,7 +149,7 @@ semio_framework_plugin::app_commands! {
 pub struct VcsPlayApp;
 
 //#region 🧵️RetainedCommands
-const VCS_BOUNDED_TOOL_IDS: &[&str] = &["incrementCounter", "patchSnapshot", "setLocale", "noMutation", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel"];
+const VCS_BOUNDED_TOOL_IDS: &[&str] = &["incrementCounter", "patchSnapshot", "noMutation", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel"];
 const VCS_RESUMABLE_TOOL_IDS: &[&str] = &["textEdit", "edit"];
 const VCS_BOUNDED_PAYLOAD_SCHEMA: &str = "vcs.vcs.tool-command.v1";
 const VCS_BOUNDED_RAW_BYTES: usize = 8_192;
@@ -161,7 +160,6 @@ const VCS_EDIT_MAXIMUM_WORK_ITEMS: usize = 16_400;
 const VCS_BOUNDED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "incrementCounter", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "patchSnapshot", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "noMutation", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -185,7 +183,6 @@ fn vcs_bounded_extent(command: &VcsCommand, _snapshot: &VcsSnapshot, _interactio
     let bytes = match command {
         VcsCommand::IncrementCounter(_) | VcsCommand::NoMutation(_) | VcsCommand::CanvasPointerDown(_) | VcsCommand::CanvasPointerMove(_) | VcsCommand::CanvasPointerUp(_) | VcsCommand::CanvasWheel(_) => 0,
         VcsCommand::PatchSnapshot(payload) => payload.field.len().checked_add(payload.value.len())?,
-        VcsCommand::SetLocale(payload) => payload.value.len(),
         VcsCommand::TextEdit(_) | VcsCommand::Edit(_) => return None,
     };
     (bytes <= VCS_BOUNDED_RAW_BYTES).then_some(VCS_BOUNDED_WORK_ITEMS)
@@ -198,6 +195,7 @@ fn vcs_bounded_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<VcsPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
@@ -721,7 +719,6 @@ impl VcsBoundedProofs {
         tools: {
             "incrementCounter" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "patchSnapshot" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setLocale" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "noMutation" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "canvasPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "canvasPointerMove" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
@@ -824,8 +821,6 @@ impl ArtifactEditor for VcsPlayApp {
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
-    /// `app_commands!`'s generated `command_id()`. `setLocale` isn't declared in the manifest (mirrors
-    /// `ShootingCommand::SetLocale` — see `shooting_ui`'s identical doc), so it skips enforcement.
     fn command_id(command: &VcsCommand) -> &'static str {
         command.command_id()
     }
@@ -857,13 +852,6 @@ impl ArtifactEditor for VcsPlayApp {
                 }
                 Ok(VcsCommand::Edit(edit_command::Edit { text }))
             }
-            "setLocale" => {
-                let value = args.get("value").or_else(|| args.get("locale")).and_then(dsl::DslValue::as_str).unwrap_or_default().to_string();
-                if value.len() > VCS_BOUNDED_RAW_BYTES {
-                    return Err(Fault::from("vcs-command-payload-too-large"));
-                }
-                Ok(VcsCommand::SetLocale(set_locale::SetLocale { value }))
-            }
             "noMutation" => Ok(VcsCommand::NoMutation(no_operation::NoMutation {})),
             "canvasPointerDown" => Ok(VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {})),
             "canvasPointerMove" => Ok(VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {})),
@@ -877,15 +865,15 @@ impl ArtifactEditor for VcsPlayApp {
         command: &VcsCommand,
         doc: &ArtifactView<'_, VcsSnapshot>,
         cfg: &ConfigView<'_, VcsDemoConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<VcsDemoMutation, VcsDemoConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let labels = vcs_play_labels(cfg.snapshot);
+    fn render(body_key: &str, doc: &ArtifactView<'_, VcsSnapshot>, cfg: &ConfigView<'_, VcsDemoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let labels = vcs_play_labels(view_state);
         match body_key {
             VCS_PLAY_BODY_EDITOR => editor::render(doc.snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
             VCS_PLAY_BODY_HISTORY => history::render(doc.history).map(semio_framework_plugin::built_to_component_tree),
@@ -923,7 +911,6 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Leinwand-Mausrad"))
             .action_interactive_job("incrementCounter", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchSnapshot", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             .action_interactive_job("noMutation", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)

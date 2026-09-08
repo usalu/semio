@@ -13,18 +13,17 @@
   "camera2d": null,
   "camera3d": {
     "position": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
     ],
     "target": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
     ],
     "zoom": 0.5
   },
   "meta": null,
-  "selectedIds": null,
-  "locale": null
+  "selectedIds": null
 }

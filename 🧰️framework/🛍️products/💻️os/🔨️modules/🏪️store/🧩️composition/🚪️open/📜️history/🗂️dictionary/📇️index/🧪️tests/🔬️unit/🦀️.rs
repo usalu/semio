@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn retire(index: &mut RetainedDictionaryIndex, grant: usize) -> usize {

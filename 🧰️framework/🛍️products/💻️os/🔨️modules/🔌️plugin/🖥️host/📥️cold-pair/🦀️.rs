@@ -1,7 +1,7 @@
 use super::*;
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/📥️cold-pair/🦀️.rs"]
 mod tests;
 use semio_framework::kernel::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdDocumentPairPage, ColdPairIngressStatus};
 

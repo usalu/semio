@@ -140,3 +140,153 @@ export interface Fem3dArtifact {
   meshPreviewJson: string;
 }
 
+//#region 🚪️Parsers
+/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
+export class femFem3dArtifactGuardRefusal extends Error {
+  constructor(readonly at: string, readonly why: string) {
+    super(`${at}: ${why}`);
+  }
+}
+
+const femFem3dArtifactGuardReject = (at: string, why: string): never => {
+  throw new femFem3dArtifactGuardRefusal(at, why);
+};
+
+type femFem3dArtifactGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
+type femFem3dArtifactGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
+type femFem3dArtifactGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
+
+export const femFem3dArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : femFem3dArtifactGuardReject(at, "value is not an object");
+export const femFem3dArtifactGuardArray = (value: unknown, at: string, bounds: femFem3dArtifactGuardSizeBounds = {}): readonly unknown[] => {
+  if (!Array.isArray(value)) return femFem3dArtifactGuardReject(at, "value is not an array");
+  if (bounds.minItems !== undefined && value.length < bounds.minItems) femFem3dArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
+  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) femFem3dArtifactGuardReject(at, `array has more than ${bounds.maxItems} items`);
+  return value;
+};
+export const femFem3dArtifactGuardString = (value: unknown, at: string, bounds: femFem3dArtifactGuardTextBounds = {}): string => {
+  if (typeof value !== "string") return femFem3dArtifactGuardReject(at, "value is not a string");
+  const length = [...value].length;
+  if (bounds.minLength !== undefined && length < bounds.minLength) femFem3dArtifactGuardReject(at, `string is shorter than ${bounds.minLength}`);
+  if (bounds.maxLength !== undefined && length > bounds.maxLength) femFem3dArtifactGuardReject(at, `string is longer than ${bounds.maxLength}`);
+  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) femFem3dArtifactGuardReject(at, `string does not match ${bounds.pattern}`);
+  return value;
+};
+export const femFem3dArtifactGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : femFem3dArtifactGuardReject(at, "value is not a boolean"));
+export const femFem3dArtifactGuardNumber = (value: unknown, at: string, bounds: femFem3dArtifactGuardRangeBounds = {}): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return femFem3dArtifactGuardReject(at, "value is not a finite number");
+  if (bounds.minimum !== undefined && value < bounds.minimum) femFem3dArtifactGuardReject(at, `number is below ${bounds.minimum}`);
+  if (bounds.maximum !== undefined && value > bounds.maximum) femFem3dArtifactGuardReject(at, `number is above ${bounds.maximum}`);
+  return value;
+};
+export const femFem3dArtifactGuardInteger = (value: unknown, at: string, bounds: femFem3dArtifactGuardRangeBounds = {}): number =>
+  Number.isSafeInteger(value) ? femFem3dArtifactGuardNumber(value, at, bounds) : femFem3dArtifactGuardReject(at, "value is not an integer");
+export const femFem3dArtifactGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
+  members.includes(value as T) ? (value as T) : femFem3dArtifactGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const femFem3dArtifactGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
+  value === expected ? expected : femFem3dArtifactGuardReject(at, `value is not ${String(expected)}`);
+//#endregion 🚪️Parsers
+
+export function parseFem3dArtifact(value: unknown, at = "$"): Fem3dArtifact {
+  const row = femFem3dArtifactGuardObject(value, at);
+  return {
+    nodes: femFem3dArtifactGuardArray(row["nodes"], `${at}.nodes`).map((item, index) => parseFemNode(item, `${at}.nodes[${index}]`)),
+    elements: femFem3dArtifactGuardArray(row["elements"], `${at}.elements`).map((item, index) => parseFemElement(item, `${at}.elements[${index}]`)),
+    materials: femFem3dArtifactGuardArray(row["materials"], `${at}.materials`).map((item, index) => parseFemMaterial(item, `${at}.materials[${index}]`)),
+    sections: femFem3dArtifactGuardArray(row["sections"], `${at}.sections`).map((item, index) => parseFemSection(item, `${at}.sections[${index}]`)),
+    solids: femFem3dArtifactGuardArray(row["solids"], `${at}.solids`).map((item, index) => parseFemSolid(item, `${at}.solids[${index}]`)),
+    supports: femFem3dArtifactGuardArray(row["supports"], `${at}.supports`).map((item, index) => parseFemSupport(item, `${at}.supports[${index}]`)),
+    loadCases: femFem3dArtifactGuardArray(row["loadCases"], `${at}.loadCases`).map((item, index) => parseFemLoadCase(item, `${at}.loadCases[${index}]`)),
+    combinations: femFem3dArtifactGuardArray(row["combinations"], `${at}.combinations`).map((item, index) => parseFemCombination(item, `${at}.combinations[${index}]`)),
+    analysis: parseFemAnalysisSettings(row["analysis"], `${at}.analysis`),
+    resultSourceId: row["resultSourceId"] === undefined ? undefined : femFem3dArtifactGuardString(row["resultSourceId"], `${at}.resultSourceId`),
+    resultMode: femFem3dArtifactGuardString(row["resultMode"], `${at}.resultMode`),
+    resultModeIndex: femFem3dArtifactGuardInteger(row["resultModeIndex"], `${at}.resultModeIndex`, {"minimum": 0}),
+    camera: parseFemCamera(row["camera"], `${at}.camera`),
+    solverResultsJson: femFem3dArtifactGuardString(row["solverResultsJson"], `${at}.solverResultsJson`),
+    meshPreviewJson: femFem3dArtifactGuardString(row["meshPreviewJson"], `${at}.meshPreviewJson`),
+  };
+}
+
+export function parseFemCamera(value: unknown, at = "$"): FemCamera {
+  const row = femFem3dArtifactGuardObject(value, at);
+  return {
+    json: femFem3dArtifactGuardString(row["json"], `${at}.json`),
+  };
+}
+
+export function parseFemAnalysisSettings(value: unknown, at = "$"): FemAnalysisSettings {
+  const row = femFem3dArtifactGuardObject(value, at);
+  return {
+    modalCount: femFem3dArtifactGuardInteger(row["modalCount"], `${at}.modalCount`, {"minimum": 0}),
+    bucklingCount: femFem3dArtifactGuardInteger(row["bucklingCount"], `${at}.bucklingCount`, {"minimum": 0}),
+    deformationScale: femFem3dArtifactGuardNumber(row["deformationScale"], `${at}.deformationScale`),
+  };
+}
+
+export function parseFemNode(value: unknown, at = "$"): FemNode {
+  const row = femFem3dArtifactGuardObject(value, at);
+  return {
+    id: femFem3dArtifactGuardString(row["id"], `${at}.id`),
+    x: femFem3dArtifactGuardNumber(row["x"], `${at}.x`),
+    y: femFem3dArtifactGuardNumber(row["y"], `${at}.y`),
+    z: femFem3dArtifactGuardNumber(row["z"], `${at}.z`),
+  };
+}
+
+export function parseFemSolid(value: unknown, at = "$"): FemSolid {
+  const row = femFem3dArtifactGuardObject(value, at);
+  return {
+    id: femFem3dArtifactGuardString(row["id"], `${at}.id`),
+    name: femFem3dArtifactGuardString(row["name"], `${at}.name`),
+    outline: femFem3dArtifactGuardArray(row["outline"], `${at}.outline`).map((item, index) => femFem3dArtifactGuardArray(item, `${at}.outline[${index}]`, {"minItems": 2, "maxItems": 2}).map((item, index) => femFem3dArtifactGuardNumber(item, `${at}.outline[${index}][${index}]`))),
+    holes: femFem3dArtifactGuardArray(row["holes"], `${at}.holes`).map((item, index) => femFem3dArtifactGuardArray(item, `${at}.holes[${index}]`).map((item, index) => femFem3dArtifactGuardArray(item, `${at}.holes[${index}][${index}]`, {"minItems": 2, "maxItems": 2}).map((item, index) => femFem3dArtifactGuardNumber(item, `${at}.holes[${index}][${index}][${index}]`)))),
+    baseZ: femFem3dArtifactGuardNumber(row["baseZ"], `${at}.baseZ`),
+    height: femFem3dArtifactGuardNumber(row["height"], `${at}.height`),
+    layers: femFem3dArtifactGuardInteger(row["layers"], `${at}.layers`, {"minimum": 0}),
+    meshSize: femFem3dArtifactGuardNumber(row["meshSize"], `${at}.meshSize`),
+    materialId: femFem3dArtifactGuardString(row["materialId"], `${at}.materialId`),
+  };
+}
+
+export function parseFemMaterial(value: unknown, at = "$"): FemMaterial {
+  const row = femFem3dArtifactGuardObject(value, at);
+  return {
+    id: femFem3dArtifactGuardString(row["id"], `${at}.id`),
+    name: femFem3dArtifactGuardString(row["name"], `${at}.name`),
+    e: femFem3dArtifactGuardNumber(row["e"], `${at}.e`),
+    g: femFem3dArtifactGuardNumber(row["g"], `${at}.g`),
+    nu: femFem3dArtifactGuardNumber(row["nu"], `${at}.nu`),
+    rho: femFem3dArtifactGuardNumber(row["rho"], `${at}.rho`),
+  };
+}
+
+export function parseFemSection(value: unknown, at = "$"): FemSection {
+  const row = femFem3dArtifactGuardObject(value, at);
+  return {
+    id: femFem3dArtifactGuardString(row["id"], `${at}.id`),
+    name: femFem3dArtifactGuardString(row["name"], `${at}.name`),
+    area: femFem3dArtifactGuardNumber(row["area"], `${at}.area`),
+    iy: femFem3dArtifactGuardNumber(row["iy"], `${at}.iy`),
+    iz: femFem3dArtifactGuardNumber(row["iz"], `${at}.iz`),
+    j: femFem3dArtifactGuardNumber(row["j"], `${at}.j`),
+  };
+}
+
+export function parseFemSupport(value: unknown, at = "$"): FemSupport {
+  const row = femFem3dArtifactGuardObject(value, at);
+  return {
+    id: femFem3dArtifactGuardString(row["id"], `${at}.id`),
+    nodeId: femFem3dArtifactGuardString(row["nodeId"], `${at}.nodeId`),
+    fixed: femFem3dArtifactGuardArray(row["fixed"], `${at}.fixed`).map((item, index) => femFem3dArtifactGuardMember(item, `${at}.fixed[${index}]`, ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] as const)),
+  };
+}
+
+export function parseFemCombination(value: unknown, at = "$"): FemCombination {
+  const row = femFem3dArtifactGuardObject(value, at);
+  return {
+    id: femFem3dArtifactGuardString(row["id"], `${at}.id`),
+    name: femFem3dArtifactGuardString(row["name"], `${at}.name`),
+    terms: femFem3dArtifactGuardObject(row["terms"], `${at}.terms`),
+  };
+}

@@ -18,7 +18,6 @@ type RemodelingDiff {
   frameCursor: RemodelingUiFrameCursor @state(class: PRESENCE)
   camera: RemodelingUiCamera @state(class: CONFIG)
   layers: RemodelingUiLayers @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
 }
 
 type ArtifactDialect {
@@ -282,7 +281,6 @@ type RemodelingArtifact {
   frameCursor: RemodelingUiFrameCursor!
   camera: RemodelingUiCamera!
   layers: RemodelingUiLayers!
-  locale: String!
 }
 
 type RemodelingAssetChild {

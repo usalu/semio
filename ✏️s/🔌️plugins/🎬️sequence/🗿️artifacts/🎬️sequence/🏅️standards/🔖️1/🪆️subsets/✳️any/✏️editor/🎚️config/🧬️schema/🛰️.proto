@@ -9,6 +9,5 @@ message SequenceConfig {
   // @state config
   SequenceCamera camera = 4;
   // @state config
-  string locale = 5;
 }
 message SequenceCamera { double x = 1; double y = 2; double zoom = 3; }

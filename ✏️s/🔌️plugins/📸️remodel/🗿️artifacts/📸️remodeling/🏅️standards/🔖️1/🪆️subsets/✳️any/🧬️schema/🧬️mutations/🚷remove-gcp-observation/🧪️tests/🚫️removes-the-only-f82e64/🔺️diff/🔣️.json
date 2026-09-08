@@ -13,9 +13,9 @@
         "id": "gcp-corner",
         "name": "Corner",
         "worldPosition": [
-          1.0,
-          2.0,
-          3.0
+          1,
+          2,
+          3
         ],
         "observations": []
       },
@@ -23,9 +23,9 @@
         "id": "gcp-ridge",
         "name": "Ridge",
         "worldPosition": [
-          4.0,
-          5.0,
-          6.0
+          4,
+          5,
+          6
         ],
         "observations": []
       }
@@ -38,6 +38,5 @@
   "reportTable": null,
   "frameCursor": null,
   "camera": null,
-  "layers": null,
-  "locale": null
+  "layers": null
 }

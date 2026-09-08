@@ -2,7 +2,7 @@ use semio_framework_plugin::plugin_runtime::{install_plugin_bundle_result, Plugi
 
 #[test]
 fn vcs_guest_descriptor_has_one_canonical_native_openable_identity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🪪️native-openable-identity/🧬️v1/🔣️.json")).expect("neutral identity fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️native-openable-identity/🧬️v1/🔣️.json")).expect("neutral identity fixture");
     let authority = &fixture["authority"];
     let bundle = semio_s_plugin_vcs::plugin().expect("schema-owned VCS plugin");
     assert_eq!(bundle.manifest.plugin_id, authority["pluginId"].as_str().unwrap());

@@ -9,8 +9,7 @@
     "generation",
     "selectedIds",
     "graphCamera",
-    "showMode",
-    "locale"
+    "showMode"
   ],
   "properties": {
     "fixture": {
@@ -43,10 +42,6 @@
     "generationPreviewText": {
       "type": "string",
       "x-semio-state": "artifact"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

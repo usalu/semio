@@ -219,5 +219,10 @@
         "toIndex"
       ]
     }
+  ],
+  "x-semio-formats": [
+    "🔣️jsonschema",
+    "🔗️graphql",
+    "🛰️protobuf"
   ]
 }

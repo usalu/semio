@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn publish(authority: &mut TextEditAuthority, text: String, start: usize, end: usize) -> usize {

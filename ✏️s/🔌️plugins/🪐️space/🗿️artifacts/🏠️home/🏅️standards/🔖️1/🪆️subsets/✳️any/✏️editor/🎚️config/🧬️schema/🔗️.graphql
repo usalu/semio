@@ -1,6 +1,5 @@
 type HomeConfig {
   activePanelTab: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
   directoryJson: String! @state(class: CONFIG)
   directorySessionBindingSha256: String! @state(class: CONFIG)
   directoryAuthorizationGeneration: Long! @state(class: CONFIG)

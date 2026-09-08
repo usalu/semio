@@ -443,13 +443,13 @@ fn from_json<T: crate::value::FromValue>(value: serde_json::Value) -> T {
 //#endregion 🧪️TestBridge
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🏠️local-interaction/🦀️.rs"]
 mod tests;
 
 #[cfg(test)]
-#[path = "🌳️root/🧪️tests/🦀️.rs"]
+#[path = "🌳️root/🧪️tests/🌳️root/🦀️.rs"]
 mod retained_root_tests;
 
 #[cfg(test)]
-#[path = "🌳️root/🩹️update/🧪️tests/🦀️.rs"]
+#[path = "🌳️root/🩹️update/🧪️tests/🩹️update/🦀️.rs"]
 mod retained_update_tests;

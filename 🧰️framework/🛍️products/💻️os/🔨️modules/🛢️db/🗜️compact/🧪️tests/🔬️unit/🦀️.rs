@@ -37,7 +37,7 @@ async fn submit_record(storage: &MemoryStorage, wal: &mut db_wal::ArtifactWal, r
 }
 
 fn committed_compaction_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧪️fixtures/🧾️committed-effects/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🧾️committed-effects/🔣️.json")).unwrap()
 }
 
 async fn append_fixture_record(writer: &mut protocol::SprWriter<Vec<u8>>, mut record: WalRecord) {

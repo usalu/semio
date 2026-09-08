@@ -8,7 +8,6 @@ use crate::Vdi3805Snapshot;
 use ::framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::Vdi3805Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a vdi3805 snapshot. One field per named inference under
@@ -85,7 +84,6 @@ use crate::standards::v1::subsets::any::schema::{clause, diagnostics_to_report, 
 /// from the parent `🧬️schema`; the JSON (de)serializers come from `🚪️io`.
 use crate::*;
 use crate::document::{CheckReport, CheckResult, Quantity, QuantityKind};
-
 // #region SheetParts
 macro_rules! define_vdi_part {
     ($module:ident, $num:literal, reserved) => {
@@ -482,3 +480,8 @@ pub fn evaluate(document: &Vdi3805Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::Vdi3805Outline;
+//#endregion 🔁️Re-exports

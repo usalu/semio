@@ -34,8 +34,6 @@
     "dislocateBuilding",
     "dislocateEnergy",
     "dislocateStructureClassic",
-    "locale",
-    "terminology",
     "contributionsJson"
   ],
   "properties": {
@@ -232,14 +230,6 @@
     },
     "dislocateStructureClassic": {
       "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "terminology": {
-      "type": "string",
       "x-semio-state": "config"
     },
     "contributionsJson": {
@@ -532,8 +522,6 @@
             "setSunElevation",
             "setSunIntensity",
             "setActiveUtility",
-            "setLocale",
-            "setTerminology",
             "setContributions",
             "loadRawRequest"
           ]

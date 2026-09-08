@@ -7,7 +7,6 @@
   "required": [
     "selectedIds",
     "wantedTags",
-    "locale",
     "windows",
     "brushRadius",
     "brushFlip"
@@ -31,14 +30,10 @@
       },
       "x-semio-state": "config"
     },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "windows": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/Block3dWindowView"
+        "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/Block3dWindowView"
       },
       "x-semio-state": "config"
     },
@@ -55,33 +50,16 @@
       "x-semio-state": "config"
     },
     "brushPreview": {
-      "$ref": "#/$defs/Block3dBrushPreview",
+      "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/Block3dBrushPreview",
       "x-semio-state": "config"
     },
     "camera": {
-      "$ref": "#/$defs/BlockCamera3d",
+      "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockCamera3d",
       "x-semio-state": "config"
     },
     "hoveredVortexFullId": {
       "type": "string",
       "x-semio-state": "config"
-    }
-  },
-  "$defs": {
-    "Block3dWindowView": {
-      "title": "Block3dWindowView",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block3dBrushPreview": {
-      "title": "Block3dBrushPreview",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockCamera3d": {
-      "title": "BlockCamera3d",
-      "type": "object",
-      "additionalProperties": true
     }
   }
 }

@@ -11,25 +11,25 @@
       "id": "part-a",
       "partKind": "part-kind-a",
       "2d": {
-        "x": 0.0,
-        "y": 0.0,
+        "x": 0,
+        "y": 0,
         "shape": "circle",
-        "radius": 10.0,
+        "radius": 10,
         "text": "Alpha",
         "iconKind": "icon-alpha"
       },
       "3d": {
         "origin": [
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ],
         "meshUrl": "mesh://alpha",
         "orientation": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
+          0,
+          0,
+          0,
+          1
         ],
         "label": "Alpha 3d"
       },
@@ -38,13 +38,13 @@
           "id": "grip-1",
           "gripKind": "grip-kind-a",
           "2d": {
-            "angle": 0.0
+            "angle": 0
           },
           "3d": {
             "position": [
-              0.0,
-              0.0,
-              0.0
+              0,
+              0,
+              0
             ]
           }
         },
@@ -52,13 +52,13 @@
           "id": "grip-spare",
           "gripKind": "grip-kind-a",
           "2d": {
-            "angle": 0.0
+            "angle": 0
           },
           "3d": {
             "position": [
-              0.0,
-              0.0,
-              0.0
+              0,
+              0,
+              0
             ]
           }
         }
@@ -69,14 +69,14 @@
       "partKind": "part-kind-b",
       "anchor": "derived",
       "2d": {
-        "x": 10.0,
-        "y": 20.0
+        "x": 10,
+        "y": 20
       },
       "3d": {
         "origin": [
-          1.0,
-          2.0,
-          3.0
+          1,
+          2,
+          3
         ]
       },
       "grips": [
@@ -84,13 +84,13 @@
           "id": "grip-2",
           "gripKind": "grip-kind-b",
           "2d": {
-            "angle": 0.0
+            "angle": 0
           },
           "3d": {
             "position": [
-              0.0,
-              0.0,
-              0.0
+              0,
+              0,
+              0
             ]
           }
         }
@@ -103,14 +103,14 @@
       "source": "part-a:grip-1",
       "target": "part-b:grip-2",
       "fastenerKind": "fastener-kind-a",
-      "gap": 1.0,
-      "shift": 0.0,
-      "rise": 0.0,
-      "rotation": 0.0,
-      "turn": 0.0,
-      "tilt": 0.0,
-      "x": 0.0,
-      "y": 0.0
+      "gap": 1,
+      "shift": 0,
+      "rise": 0,
+      "rotation": 0,
+      "turn": 0,
+      "tilt": 0,
+      "x": 0,
+      "y": 0
     }
   ]
 }

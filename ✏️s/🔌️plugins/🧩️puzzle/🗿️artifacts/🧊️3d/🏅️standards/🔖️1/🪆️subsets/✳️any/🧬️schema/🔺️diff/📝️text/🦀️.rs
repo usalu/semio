@@ -186,9 +186,6 @@ impl Puzzle3dDiff {
             if let Some(value) = self.proximity_radius {
                 next.proximity_radius = value;
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             if let Some(value) = &self.runtime_extras_json {
                 next.runtime_extras_json = value.clone();
             }
@@ -281,7 +278,6 @@ impl MutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {
         take!(lod_depth_variable);
         take!(lod_manual);
         take!(proximity_radius);
-        take!(locale);
         take!(runtime_extras_json);
         take!(hovered_object_id);
         take!(hovered_vortex_full_id);
@@ -317,3 +313,8 @@ impl MutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {
     }
 }
 //#endregion 🔖️Apply
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Puzzle3dDiffText = String;
+//#endregion 🚚️Carrier

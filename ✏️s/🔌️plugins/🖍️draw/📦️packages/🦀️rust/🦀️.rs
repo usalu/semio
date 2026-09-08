@@ -46,12 +46,5 @@ mod plugin;
 pub use plugin::DrawApps;
 semio_framework_plugin::plugin_exports!(plugin::plugin, DrawApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_drawing_demo_session;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

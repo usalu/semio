@@ -66,9 +66,6 @@ pub(crate) fn every_command() -> Vec<CadCommand> {
         CadCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 45.0 }),
         CadCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 35.0 }),
         CadCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 0.85 }),
-        CadCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "dislocate".into() }),
-        CadCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-        CadCommand::SetTerminology(set_terminology::SetTerminology { value: "reuse".into() }),
         CadCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
         CadCommand::SaveSelected(save_selected::SaveSelected {}),
         CadCommand::SaveInPlay(save_in_play::SaveInPlay {}),
@@ -172,15 +169,14 @@ async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_
         }
     }
     assert!(complete && app.close_terminal_is_empty(), "the real mounted CAD owner must reach its empty terminal shell");
-    eprintln!("[DEBUG] CAD activation joined {} exact app factory rows including setActiveUtility and completed bounded close", admitted.len());
+    eprintln!("[DEBUG] CAD activation joined {} exact app factory rows and completed bounded close", admitted.len());
 }
 
 #[test]
 fn retained_config_store_preparation_is_bounded_exact_and_reversible() {
     let base = CadConfig::default();
     let mut next = base.clone();
-    next.locale = "de-DE".into();
-    next.active_utility_id = "dislocate".into();
+    next.selected_node_ids.push("node-retained".into());
     let mutation = CadConfigMutation::Snapshot { config: next.clone() };
     let footprint = admit_cad_config_mutation(&mutation).expect("bounded CAD config mutation");
     assert_eq!(footprint.work_items, 1);
@@ -215,8 +211,8 @@ fn retained_route_fixture_matches_the_exact_owner_manifest_and_laws() {
     let fixture: Value = json::parse(include_str!("../../../🗄️retained-jobs/🔣️.json")).expect("CAD retained route fixture");
     let routes = fixture.get("routes").and_then(Value::as_array).expect("route array");
     let route_ids = routes.iter().map(|route| route.get("id").and_then(Value::as_str).expect("route id")).collect::<std::collections::BTreeSet<_>>();
-    let command_ids = every_command().iter().map(CadCommand::command_id).filter(|id| *id != SET_ACTIVE_UTILITY_ACTION_ID).collect::<std::collections::BTreeSet<_>>();
-    assert_eq!(routes.len(), 40);
+    let command_ids = every_command().iter().map(CadCommand::command_id).collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(routes.len(), command_ids.len());
     assert_eq!(route_ids, command_ids);
     assert_eq!(fixture.get("admittedRoutes"), Some(&Value::Array(CAD_RETAINED_TOOL_IDS.iter().map(|id| Value::from(*id)).collect())));
     assert_eq!(fixture.pointer("/limits/closePageBytes").and_then(Value::as_u64), Some(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES as u64));
@@ -427,8 +423,9 @@ async fn renders_world_scene_for_each_pane() {
     let scene = forest_play_scene();
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
+    let view_state = ViewModel::default();
     for body_key in [shape::BODY_KEY, building::BODY_KEY, energy::BODY_KEY, structure_classic::BODY_KEY] {
-        let node = render_direct(&app, body_key, &doc, &CadConfig::default()).expect("CAD UI assembly");
+        let node = render_direct(&app, body_key, &doc, &CadConfig::default(), &view_state).expect("CAD UI assembly");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("world-3d"), "body {body_key} should render a world-3d scene");
     }
@@ -612,42 +609,40 @@ async fn gumball_inactive_without_selection() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn active_utility_flows_from_config_into_scene() {
+async fn active_utility_flows_from_the_host_view_into_scene() {
     let app = CadPlayApp::default();
     let scene = default_document();
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
-    let config = CadConfig { active_utility_id: CAD_DISLOCATE_UTILITY_ID.into(), ..CadConfig::default() };
-    let node = render_direct(&app, shape::BODY_KEY, &doc, &config).expect("CAD UI assembly");
+    let config = CadConfig::default();
+    let view_state = ViewModel { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewModel::default() };
+    let node = render_direct(&app, shape::BODY_KEY, &doc, &config, &view_state).expect("CAD UI assembly");
     let json = serde_json::to_string(&node).unwrap();
     // The world selection blob is embedded as an escaped JSON string inside the scene node.
-    assert!(json.contains(r#"transformMode\":\"transform"#), "render sources Dislocate from CadConfig::active_utility_id");
+    assert!(json.contains(r#"transformMode\":\"transform"#), "render sources Dislocate from ViewModel.active_utility_id");
 }
 
-/// @emoji 🎯️ WORKFLOWS-END-TO-END-TYPED-PORTS: `active_utility_id` is now a single, global
-/// `CadConfig` field (the pre-B1 per-window-instance `ViewModel.active_utility_by_window_id` has no
-/// replacement — `render`/`window_measures` have no per-instance parameter anymore, see
-/// `CadDislocateOptions`'s doc comment in `cad_document_engine`) — so the gumball is active in
-/// EVERY pane with an active selection once the Dislocate utility is on, not isolated per window.
 #[semio_framework_async_macros::async_test]
-async fn dislocate_gumball_config_fields_present_in_every_pane_once_the_utility_is_active() {
+async fn dislocate_utility_is_scoped_by_each_window_view_context() {
     // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh selection is
     // framework-owned now and `ArtifactApp::render` has no `InteractionView` (see
     // `edit::gumball_active`'s own doc comment) — the gumball can never be live-active at this
     // render boundary, in any pane; the transform-mode config fields still render regardless.
     let app = CadPlayApp::default();
     let scene = default_document();
-    let config = CadConfig { active_utility_id: CAD_DISLOCATE_UTILITY_ID.into(), ..CadConfig::default() };
+    let config = CadConfig::default();
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
-    let shape = render_direct(&app, shape::BODY_KEY, &doc, &config).expect("CAD UI assembly");
-    let building = render_direct(&app, building::BODY_KEY, &doc, &config).expect("CAD UI assembly");
+    let shape_view = ViewModel { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewModel::default() };
+    let building_view = ViewModel { active_utility_id: None, ..ViewModel::default() };
+    let shape = render_direct(&app, shape::BODY_KEY, &doc, &config, &shape_view).expect("CAD UI assembly");
+    let building = render_direct(&app, building::BODY_KEY, &doc, &config, &building_view).expect("CAD UI assembly");
     let shape_json = serde_json::to_string(&shape).unwrap();
     let building_json = serde_json::to_string(&building).unwrap();
     assert!(shape_json.contains(r#"gumballActive\":false"#));
     assert!(shape_json.contains(r#"transformMode\":\"transform"#));
     assert!(building_json.contains(r#"gumballActive\":false"#));
-    assert!(building_json.contains(r#"transformMode\":\"transform"#));
+    assert!(!building_json.contains(r#"transformMode\":\"transform"#));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -663,7 +658,8 @@ async fn context_menu_resolves_labels_from_the_registry() {
     let registry = AppActionRegistry::from_definition(&create_cad_app());
     let config = CadConfig::default();
 
-    let items = context_menu_direct(&app, &doc, &config, &registry);
+    let view_state = ViewModel::default();
+    let items = context_menu_direct(&app, &doc, &config, &view_state, &registry);
     assert!(items.iter().any(|item| item.id == "translateSelection" && item.label.is_some()), "labels must resolve from the registry: {items:?}");
     assert!(items.iter().any(|item| item.id == "deleteObject" && item.destructive == Some(true)), "deleteObject must be marked destructive: {items:?}");
 }
@@ -680,7 +676,8 @@ async fn context_menu_is_grouped_and_keeps_delete_object_last() {
     let registry = AppActionRegistry::from_definition(&create_cad_app());
     let config = CadConfig::default();
 
-    let items = context_menu_direct(&app, &doc, &config, &registry);
+    let view_state = ViewModel::default();
+    let items = context_menu_direct(&app, &doc, &config, &view_state, &registry);
 
     assert!(items.len() <= 9, "top-level context menu should stay progressively disclosed: {items:?}");
     assert_eq!(items.last().map(|item| item.id.as_str()), Some("deleteObject"), "deleteObject must stay the trailing item: {items:?}");
@@ -698,7 +695,8 @@ async fn dislocate_move_and_rotate_options_are_per_pane() {
     let config = config_after(&emit, &CadConfig::default());
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
-    let measures = window_measures_direct(&app, &doc, &config);
+    let view_state = ViewModel::default();
+    let measures = window_measures_direct(&app, &doc, &config, &view_state);
     let rotate_pressed = |window_id: &str| {
         measures.get(window_id).and_then(|items| {
             items.iter().find_map(|measure| match measure {
@@ -724,24 +722,10 @@ async fn engagement_hud_no_longer_carries_utility_switcher_options() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn switching_utility_emits_no_operations_and_no_history_entry() {
-    // 🧰️ The key regression guard: switching the host-owned active utility must be a pure View
-    // action — zero operations, no projection mutation, and (proven below) no intervening
-    // history entry. If the switch recorded an edit, the single undo would revert the switch
-    // instead of the preceding addObject.
-    // 🧱️ Uses `AddNode` as the "prior real edit" — `AddObject` is a documented no-op pending the
-    // child-dispatch seam (see `commands/🧱️object/component.rs`'s module doc), so it cannot
-    // stand in for a real history entry here anymore.
-    let mut app = new_app().await;
-    let before = app.snapshot().expect("snapshot").nodes.len();
-    app.dispatch_typed(CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local")).await.expect("add node");
-    let projection_after_add = json::to_json_string(&app.snapshot().expect("snapshot"));
-    let result = app.dispatch_typed(CadCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: CAD_DISLOCATE_UTILITY_ID.into() }), &meta("local")).await.expect("set active utility");
-    assert!(result.mutations.is_empty(), "utility switch must emit zero operations");
-    let projection_after_switch = json::to_json_string(&app.snapshot().expect("snapshot"));
-    assert_eq!(projection_after_add, projection_after_switch, "utility switch must not mutate the projection");
-    app.handle_action("undo", None, &meta("local")).await.expect("undo");
-    assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before, "a single undo reverts the addNode — proving the utility switch created no history entry");
+async fn utility_switch_has_no_plugin_command_or_config_lane() {
+    assert!(<CadPlayApp as ArtifactEditor>::command_from_action(SET_ACTIVE_UTILITY_ACTION_ID, None).is_err());
+    assert!(!CAD_RETAINED_TOOL_IDS.contains(&SET_ACTIVE_UTILITY_ACTION_ID));
+    assert!(!every_command().iter().any(|command| command.command_id() == SET_ACTIVE_UTILITY_ACTION_ID));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -752,7 +736,8 @@ async fn sun_measures_registered_for_all_four_panes_and_default_off() {
     let scene = default_document();
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
-    let measures = window_measures_direct(&app, &doc, &base_config);
+    let view_state = ViewModel::default();
+    let measures = window_measures_direct(&app, &doc, &base_config, &view_state);
     for window_kind in [shape::WINDOW_KIND_ID, building::WINDOW_KIND_ID, energy::WINDOW_KIND_ID, structure_classic::WINDOW_KIND_ID] {
         assert!(measures.contains_key(window_kind), "missing sun measures for {window_kind}");
     }
@@ -1000,14 +985,14 @@ async fn production_transition_authority_routes_engagement_utility_and_import_wi
     assert_eq!(started_stamp.operation, operation);
     assert_eq!(started_stamp.generation, base.engagement_preview_generation + 1);
 
-    let utility_emit = drive_with_operation(&app, &scene, "setActiveUtility", Some(json!({ "utilityId": CAD_DISLOCATE_UTILITY_ID })), &started, Some(operation.clone())).expect("utility clear transition");
+    let utility_emit = drive_with_operation(&app, &scene, "engagementAbort", None, &started, Some(operation.clone())).expect("engagement cancellation transition");
     let utility_cleared = config_after(&utility_emit, &started);
     let utility_stamp = persisted_preview_stamp(&utility_cleared);
     assert!(utility_cleared.engagement_session_json.is_none());
     assert!(utility_stamp.is_fresher_than(&started_stamp));
     assert_eq!(utility_stamp.generation, started_stamp.generation + 1);
 
-    let noop_emit = drive_with_operation(&app, &scene, "setActiveUtility", Some(json!({ "utilityId": "move" })), &utility_cleared, Some(operation.clone())).expect("same checkpoint utility update");
+    let noop_emit = drive_with_operation(&app, &scene, "engagementAbort", None, &utility_cleared, Some(operation.clone())).expect("same checkpoint cancellation");
     let noop = config_after(&noop_emit, &utility_cleared);
     assert_eq!(noop.engagement_session_json, utility_cleared.engagement_session_json);
     assert_eq!(persisted_preview_stamp(&noop), utility_stamp, "a non-session config change must not advance the preview generation");
@@ -1082,7 +1067,6 @@ async fn production_transition_exhaustion_and_missing_context_fail_before_checkp
     let checkpoint_before = at_max.engagement_session_json.clone();
     let operation_before = at_max.engagement_preview_operation_json.clone();
 
-    assert!(drive_with_operation(&app, &scene, "setActiveUtility", Some(json!({ "utilityId": CAD_DISLOCATE_UTILITY_ID })), &at_max, Some(operation.clone())).is_err());
     assert!(drive_with_operation(&app, &scene, "importCadFile", Some(spatial_scene_import_args()), &at_max, Some(operation.clone())).is_err());
     assert!(drive_with_operation(&app, &scene, "setActiveExample", Some(json!({ "exampleId": "" })), &at_max, Some(operation.clone())).is_err());
     assert!(drive_with_operation(&app, &scene, "engagementAbort", None, &at_max, Some(operation)).is_err());
@@ -1090,7 +1074,7 @@ async fn production_transition_exhaustion_and_missing_context_fail_before_checkp
     assert_eq!(at_max.engagement_preview_generation, CAD_PREVIEW_GENERATION_MAX);
     assert_eq!(at_max.engagement_preview_operation_json, operation_before);
 
-    assert!(drive_with_operation(&app, &scene, "setActiveUtility", Some(json!({ "utilityId": CAD_DISLOCATE_UTILITY_ID })), &started, None).is_err());
+    assert!(drive_with_operation(&app, &scene, "engagementAbort", None, &started, None).is_err());
     assert!(drive_with_operation(&app, &scene, "importCadFile", Some(spatial_scene_import_args()), &started, None).is_err());
     let mut bypass = cad_runtime_from_config(&started);
     bypass.engagement_session = None;
@@ -1152,7 +1136,7 @@ async fn preview_generation_cross_surface_domain_round_trips_max_and_rejects_plu
 
     let mut runtime = cad_runtime_from_config(&decoded);
     runtime.engagement_session = None;
-    let ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation: Some(operation) };
+    let ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation: Some(operation), view_state: None };
     assert!(preview_transition_snapshot_of(&runtime, &decoded, &ctx).is_err(), "incrementing the maximum generation must fail closed");
 
     let json_schema: Value = json::parse(include_str!("../../🎚️config/🧬️schema/🔣️.json")).expect("CAD config JSON descriptor");

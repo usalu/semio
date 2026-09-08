@@ -44,7 +44,7 @@ mod surface_tests;
 
 //#region 🪪️IdentityTests
 /// 🪪️ One law joining every authority that names this plugin, driven by the language-agnostic tuple
-/// `🧪️fixtures/🧫️plugin-identity/🔣️.json` (mirrored from the TypeScript side by the registry's
+/// `🧫️fixtures/🧫️plugin-identity/🔣️.json` (mirrored from the TypeScript side by the registry's
 /// `🪪️plugin-identity.test.ts`, which runs the same join for all 59 rows).
 #[cfg(test)]
 #[path = "🧪️tests/🔬️identity/🦀️.rs"]

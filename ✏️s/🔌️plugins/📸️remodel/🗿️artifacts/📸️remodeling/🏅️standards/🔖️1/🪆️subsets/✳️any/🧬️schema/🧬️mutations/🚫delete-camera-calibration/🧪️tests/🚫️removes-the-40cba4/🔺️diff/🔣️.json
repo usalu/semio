@@ -11,17 +11,17 @@
         "id": "orbit-cam-primary",
         "label": "Orbit Primary",
         "model": "brownConrady",
-        "fx": 272.0,
-        "fy": 272.0,
-        "cx": 160.0,
-        "cy": 120.0,
-        "skew": 0.0,
+        "fx": 272,
+        "fy": 272,
+        "cx": 160,
+        "cy": 120,
+        "skew": 0,
         "distortion": [
           -0.01953125,
           0.0048828125,
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ],
         "rmsReprojectionPx": 0.421875,
         "locked": false
@@ -30,17 +30,17 @@
         "id": "orbit-cam-secondary",
         "label": "Orbit Secondary",
         "model": "pinhole",
-        "fx": 272.0,
-        "fy": 272.0,
-        "cx": 160.0,
-        "cy": 120.0,
-        "skew": 0.0,
+        "fx": 272,
+        "fy": 272,
+        "cx": 160,
+        "cy": 120,
+        "skew": 0,
         "distortion": [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0,
+          0,
+          0
         ],
         "rmsReprojectionPx": 0.578125,
         "locked": false
@@ -50,29 +50,29 @@
       {
         "cameraId": "orbit-cam-primary",
         "rotationWxyz": [
-          1.0,
-          0.0,
-          0.0,
-          0.0
+          1,
+          0,
+          0,
+          0
         ],
         "translationM": [
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ]
       },
       {
         "cameraId": "orbit-cam-secondary",
         "rotationWxyz": [
-          1.0,
-          0.0,
+          1,
+          0,
           0.05078125,
-          0.0
+          0
         ],
         "translationM": [
           0.125,
-          0.0,
-          0.0
+          0,
+          0
         ]
       }
     ]
@@ -86,6 +86,5 @@
   "reportTable": null,
   "frameCursor": null,
   "camera": null,
-  "layers": null,
-  "locale": null
+  "layers": null
 }

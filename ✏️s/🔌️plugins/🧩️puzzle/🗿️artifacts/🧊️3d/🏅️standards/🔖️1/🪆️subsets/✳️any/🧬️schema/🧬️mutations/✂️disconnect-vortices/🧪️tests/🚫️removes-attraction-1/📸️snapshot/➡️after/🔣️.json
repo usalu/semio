@@ -19,26 +19,26 @@
       "objectKind": "object-kind-a",
       "anchor": "fixed",
       "origin": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
       ],
       "orientation": [
-        0.0,
-        0.0,
-        0.0,
-        1.0
+        0,
+        0,
+        0,
+        1
       ],
-      "scale": 1.0,
+      "scale": 1,
       "meshUrl": "mesh://alpha",
       "vortices": [
         {
           "id": "vortex-1",
           "vortexKind": "vortex-kind-a",
           "position": [
-            1.0,
-            0.0,
-            0.0
+            1,
+            0,
+            0
           ],
           "hidden": false,
           "locked": false
@@ -47,9 +47,9 @@
           "id": "vortex-spare",
           "vortexKind": "vortex-kind-a",
           "position": [
-            0.0,
-            1.0,
-            0.0
+            0,
+            1,
+            0
           ],
           "hidden": false,
           "locked": false
@@ -63,18 +63,18 @@
       "objectKind": "object-kind-b",
       "anchor": "fixed",
       "origin": [
-        4.0,
-        0.0,
-        0.0
+        4,
+        0,
+        0
       ],
       "vortices": [
         {
           "id": "vortex-2",
           "vortexKind": "vortex-kind-b",
           "position": [
-            -1.0,
-            0.0,
-            0.0
+            -1,
+            0,
+            0
           ],
           "hidden": false,
           "locked": false
@@ -89,20 +89,20 @@
     {
       "id": "volume-1",
       "origin": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
       ],
       "orientation": [
-        0.0,
-        0.0,
-        0.0,
-        1.0
+        0,
+        0,
+        0,
+        1
       ],
       "scale": [
-        2.0,
-        2.0,
-        2.0
+        2,
+        2,
+        2
       ],
       "hidden": false,
       "locked": false
@@ -116,11 +116,11 @@
         "mediaKind": "image"
       },
       "origin": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
       ],
-      "widthWorld": 10.0,
+      "widthWorld": 10,
       "locked": false,
       "hidden": false
     }

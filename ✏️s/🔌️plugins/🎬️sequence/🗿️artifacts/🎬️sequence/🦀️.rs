@@ -768,7 +768,7 @@ impl<A> SequenceApplication for A where
                 mod component;
                 pub use component::*;
                 #[cfg(test)]
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
                 mod tests;
             }
         }
@@ -812,8 +812,6 @@ pub mod editor {
             pub mod connection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️layout/🦀️.rs"]
             pub mod layout;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️locale/🦀️.rs"]
-            pub mod locale;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node-graph/🦀️.rs"]
             pub mod node_graph;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏃️run/🦀️.rs"]
@@ -860,7 +858,7 @@ pub mod editor {
                 mod component;
                 pub use component::*;
                 #[cfg(test)]
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
                 mod tests;
             }
         }
@@ -892,3 +890,7 @@ pub mod viewer {
         }
     }
 }
+
+//#region 📚️Examples
+pub use standards::v1::subsets::any::examples;
+//#endregion 📚️Examples

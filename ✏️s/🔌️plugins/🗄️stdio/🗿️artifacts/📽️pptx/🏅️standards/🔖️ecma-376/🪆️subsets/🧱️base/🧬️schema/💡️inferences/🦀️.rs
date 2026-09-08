@@ -8,7 +8,6 @@ use crate::PptxSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::PptxOutline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a pptx snapshot. One field per named inference under
@@ -70,3 +69,8 @@ pub fn pptx_artifact_inference_descriptor() -> framework_schema::ArtifactInferen
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::PptxOutline;
+//#endregion 🔁️Re-exports

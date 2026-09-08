@@ -34,7 +34,6 @@ type Puzzle3dArtifact {
   lodDepthVariable: Boolean! @state(class: CONFIG)
   lodManual: Float! @state(class: CONFIG)
   proximityRadius: Float! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
   runtimeExtrasJson: String! @state(class: CONFIG)
   hoveredObjectId: String @state(class: ARTIFACT)
   hoveredVortexFullId: String @state(class: ARTIFACT)
@@ -161,4 +160,12 @@ type Puzzle3dMeta {
 type Puzzle3dKindCatalogs {
   objects: [Puzzle3dCatalogObjectKind!]!
   vortices: [Puzzle3dCatalogVortexKind!]!
+}
+
+type Puzzle3dTargetVolume {
+  id: String
+}
+
+type Puzzle3dReference {
+  id: String
 }

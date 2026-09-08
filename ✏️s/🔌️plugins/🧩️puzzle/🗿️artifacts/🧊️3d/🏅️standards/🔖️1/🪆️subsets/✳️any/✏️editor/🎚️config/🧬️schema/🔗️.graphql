@@ -34,8 +34,6 @@ type Puzzle3dConfig {
   windowOptions: [Puzzle3dWindowOptionsEntry!]! @state(class: CONFIG)
   activeUtilityByWindowId: [StringEntry!]! @state(class: CONFIG)
   activeToolId: String @state(class: CONFIG)
-  terminology: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
   windowIds: [String!]! @state(class: CONFIG)
 }
 

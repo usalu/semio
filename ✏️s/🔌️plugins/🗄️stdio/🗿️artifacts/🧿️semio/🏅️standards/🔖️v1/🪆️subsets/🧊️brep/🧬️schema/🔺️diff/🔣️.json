@@ -4,7 +4,27 @@
   "title": "SemioBrepDiff",
   "description": "Handcrafted sparse diff — one NamedTripleDiff{removed,modified,added} per collection. See the sibling 🦀️.rs for the real source of truth.",
   "type": "object",
-  "$defs": {
+  "properties": {
+    "vertices": {
+      "$ref": "#/definitions/namedTriple"
+    },
+    "edges": {
+      "$ref": "#/definitions/namedTriple"
+    },
+    "loops": {
+      "$ref": "#/definitions/namedTriple"
+    },
+    "faces": {
+      "$ref": "#/definitions/namedTriple"
+    },
+    "shells": {
+      "$ref": "#/definitions/namedTriple"
+    },
+    "solids": {
+      "$ref": "#/definitions/namedTriple"
+    }
+  },
+  "definitions": {
     "namedTriple": {
       "type": "object",
       "properties": {
@@ -35,26 +55,6 @@
           "items": {}
         }
       }
-    }
-  },
-  "properties": {
-    "vertices": {
-      "$ref": "#/$defs/namedTriple"
-    },
-    "edges": {
-      "$ref": "#/$defs/namedTriple"
-    },
-    "loops": {
-      "$ref": "#/$defs/namedTriple"
-    },
-    "faces": {
-      "$ref": "#/$defs/namedTriple"
-    },
-    "shells": {
-      "$ref": "#/$defs/namedTriple"
-    },
-    "solids": {
-      "$ref": "#/$defs/namedTriple"
     }
   }
 }

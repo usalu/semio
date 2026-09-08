@@ -171,9 +171,9 @@ fn render_rows_wrapped(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, ac
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.build", "window admission failed"))
 }
 
-pub fn render(cfg: &HomeConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let table = semio_framework_plugin::resolve_labels_for_locale::<HomeTableLabels>(&cfg.locale);
-    let actions = semio_framework_plugin::resolve_labels_for_locale::<SHomeLabels>(&cfg.locale);
+pub fn render(cfg: &HomeConfig, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let table = semio_framework_plugin::resolve_labels::<HomeTableLabels>(view_state);
+    let actions = semio_framework_plugin::resolve_labels::<SHomeLabels>(view_state);
     let directory = cfg.directory().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
     // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
     // stay sync (called synchronously by `HomeApp::render`) — bridged via `resolve_ready`.

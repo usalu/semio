@@ -2,7 +2,6 @@ type Block3dConfig {
   selectedIds: [String!]! @state(class: CONFIG)
   activeRepresentationId: String @state(class: CONFIG)
   wantedTags: [String!]! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
   windows: [Block3dWindowView!]! @state(class: CONFIG)
   brushVortexKindId: String @state(class: CONFIG)
   brushRadius: Float! @state(class: CONFIG)

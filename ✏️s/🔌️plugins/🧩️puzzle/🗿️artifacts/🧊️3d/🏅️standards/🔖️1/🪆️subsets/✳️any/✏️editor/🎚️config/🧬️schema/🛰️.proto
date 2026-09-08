@@ -66,9 +66,7 @@ message Puzzle3dConfig {
   // @state config
   optional string active_tool_id = 32;
   // @state config
-  string terminology = 33;
   // @state config
-  string locale = 34;
   // @state config
   repeated string window_ids = 35;
   // @state config

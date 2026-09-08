@@ -41,9 +41,7 @@ message Puzzle2dDiff {
   // @state config
   optional string brush_candidate_source_handle_id = 18;
   // @state config
-  optional string locale = 19;
   // @state config
-  optional string terminology = 20;
   // @state config
   optional string lod_mode_by_pane_json = 21;
   // @state config

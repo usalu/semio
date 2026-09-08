@@ -3,7 +3,95 @@
   "$id": "https://semio.tech/schema/s/stdio/jpg/jfif-1.01/document/diff.json",
   "title": "JpgDiff",
   "type": "object",
-  "$defs": {
+  "properties": {
+    "width": {
+      "type": "integer",
+      "x-semio-state": "artifact"
+    },
+    "height": {
+      "type": "integer",
+      "x-semio-state": "artifact"
+    },
+    "pixels": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "x-semio-state": "artifact"
+    },
+    "reEncodeQuality": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "jfifVersion": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "x-semio-state": "artifact"
+    },
+    "jfifDensityUnits": {
+      "type": "string",
+      "enum": [
+        "aspect",
+        "pixelsPerInch",
+        "pixelsPerCm"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "jfifXDensity": {
+      "type": "integer",
+      "x-semio-state": "artifact"
+    },
+    "jfifYDensity": {
+      "type": "integer",
+      "x-semio-state": "artifact"
+    },
+    "jfifThumbnail": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "frame": {
+      "$ref": "#/definitions/frameChange",
+      "x-semio-state": "artifact"
+    },
+    "sofMarker": {
+      "type": "integer",
+      "x-semio-state": "artifact"
+    },
+    "arithmetic": {
+      "type": "boolean",
+      "x-semio-state": "artifact"
+    },
+    "quantTables": {
+      "$ref": "#/definitions/quantTablesDiff",
+      "x-semio-state": "artifact"
+    },
+    "huffmanTables": {
+      "$ref": "#/definitions/huffmanTablesDiff",
+      "x-semio-state": "artifact"
+    },
+    "restartInterval": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "otherSegments": {
+      "$ref": "#/definitions/otherSegmentsDiff",
+      "x-semio-state": "artifact"
+    }
+  },
+  "definitions": {
     "componentDiff": {
       "type": "object",
       "properties": {
@@ -36,7 +124,7 @@
                 "type": "integer"
               },
               "diff": {
-                "$ref": "#/$defs/componentDiff"
+                "$ref": "#/definitions/componentDiff"
               }
             }
           }
@@ -77,7 +165,7 @@
           "type": "integer"
         },
         "components": {
-          "$ref": "#/$defs/componentsDiff"
+          "$ref": "#/definitions/componentsDiff"
         },
         "frame": {
           "type": "object"
@@ -116,7 +204,7 @@
                 "type": "integer"
               },
               "diff": {
-                "$ref": "#/$defs/quantTableDiff"
+                "$ref": "#/definitions/quantTableDiff"
               }
             }
           }
@@ -175,7 +263,7 @@
         "removed": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/huffmanTableKey"
+            "$ref": "#/definitions/huffmanTableKey"
           }
         },
         "modified": {
@@ -184,10 +272,10 @@
             "type": "object",
             "properties": {
               "key": {
-                "$ref": "#/$defs/huffmanTableKey"
+                "$ref": "#/definitions/huffmanTableKey"
               },
               "diff": {
-                "$ref": "#/$defs/huffmanTableDiff"
+                "$ref": "#/definitions/huffmanTableDiff"
               }
             }
           }
@@ -240,7 +328,7 @@
                 "type": "integer"
               },
               "diff": {
-                "$ref": "#/$defs/segmentDiff"
+                "$ref": "#/definitions/segmentDiff"
               }
             }
           }
@@ -260,94 +348,6 @@
           }
         }
       }
-    }
-  },
-  "properties": {
-    "width": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "height": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "pixels": {
-      "type": "array",
-      "items": {
-        "type": "integer"
-      },
-      "x-semio-state": "artifact"
-    },
-    "reEncodeQuality": {
-      "type": [
-        "integer",
-        "null"
-      ],
-      "x-semio-state": "artifact"
-    },
-    "jfifVersion": {
-      "type": "array",
-      "items": {
-        "type": "integer"
-      },
-      "minItems": 2,
-      "maxItems": 2,
-      "x-semio-state": "artifact"
-    },
-    "jfifDensityUnits": {
-      "type": "string",
-      "enum": [
-        "aspect",
-        "pixelsPerInch",
-        "pixelsPerCm"
-      ],
-      "x-semio-state": "artifact"
-    },
-    "jfifXDensity": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "jfifYDensity": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "jfifThumbnail": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "x-semio-state": "artifact"
-    },
-    "frame": {
-      "$ref": "#/$defs/frameChange",
-      "x-semio-state": "artifact"
-    },
-    "sofMarker": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "arithmetic": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
-    },
-    "quantTables": {
-      "$ref": "#/$defs/quantTablesDiff",
-      "x-semio-state": "artifact"
-    },
-    "huffmanTables": {
-      "$ref": "#/$defs/huffmanTablesDiff",
-      "x-semio-state": "artifact"
-    },
-    "restartInterval": {
-      "type": [
-        "integer",
-        "null"
-      ],
-      "x-semio-state": "artifact"
-    },
-    "otherSegments": {
-      "$ref": "#/$defs/otherSegmentsDiff",
-      "x-semio-state": "artifact"
     }
   }
 }

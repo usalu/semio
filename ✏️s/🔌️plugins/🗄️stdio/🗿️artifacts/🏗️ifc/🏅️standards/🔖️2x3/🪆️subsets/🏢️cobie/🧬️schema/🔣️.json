@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/cobie/artifact.json",
+  "title": "Ifc2x3Artifact",
+  "description": "ifc 2x3/cobie re-exports the base subset's Ifc2x3Artifact; the artifact contract is that scope's and is referenced, never restated.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "https://semio.tech/schema/s/stdio/ifc/2x3/base/artifact.json"
+    }
+  ],
+  "x-semio-formats": [
+    "🔣️jsonschema"
+  ]
+}

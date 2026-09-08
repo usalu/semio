@@ -118,9 +118,6 @@
       "required": [
         "kind"
       ],
-      "discriminator": {
-        "propertyName": "kind"
-      },
       "oneOf": [
         {
           "type": "object",
@@ -496,9 +493,6 @@
       "required": [
         "kind"
       ],
-      "discriminator": {
-        "propertyName": "kind"
-      },
       "oneOf": [
         {
           "type": "object",
@@ -754,9 +748,6 @@
       "required": [
         "kind"
       ],
-      "discriminator": {
-        "propertyName": "kind"
-      },
       "oneOf": [
         {
           "type": "object",
@@ -873,9 +864,6 @@
         "kind",
         "requestId"
       ],
-      "discriminator": {
-        "propertyName": "kind"
-      },
       "oneOf": [
         {
           "type": "object",
@@ -1691,9 +1679,6 @@
       "required": [
         "kind"
       ],
-      "discriminator": {
-        "propertyName": "kind"
-      },
       "oneOf": [
         {
           "type": "object",

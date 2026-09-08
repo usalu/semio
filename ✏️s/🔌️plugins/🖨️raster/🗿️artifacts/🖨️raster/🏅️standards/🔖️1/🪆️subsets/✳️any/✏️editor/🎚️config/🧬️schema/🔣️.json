@@ -8,8 +8,7 @@
     "brushSize",
     "brushOpacity",
     "camera",
-    "activeUtilityId",
-    "locale"
+    "activeUtilityId"
   ],
   "properties": {
     "brushSize": {
@@ -31,10 +30,6 @@
       "x-semio-state": "config"
     },
     "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
       "type": "string",
       "x-semio-state": "config"
     }

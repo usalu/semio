@@ -7,7 +7,7 @@
         "id": "gen-1",
         "name": "Baseline",
         "values": {
-          "storeys": 3.0
+          "storeys": 3
         }
       }
     ],
@@ -23,6 +23,5 @@
   "sunJson": null,
   "selectedGenerationId": null,
   "generationPreviewText": null,
-  "activeUtilityId": null,
-  "locale": null
+  "activeUtilityId": null
 }

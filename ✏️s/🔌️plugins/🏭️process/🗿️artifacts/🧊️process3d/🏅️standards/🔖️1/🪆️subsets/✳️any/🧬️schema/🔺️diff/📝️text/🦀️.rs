@@ -106,9 +106,6 @@ impl Process3dDiff {
             if let Some(value) = &self.sun_color {
                 next.sun_color = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             if let Some(value) = &self.contributions_json {
                 next.contributions_json = value.clone();
             }
@@ -199,7 +196,6 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
         take!(sun_elevation);
         take!(sun_intensity);
         take!(sun_color);
-        take!(locale);
         take!(contributions_json);
         take!(hovered_id);
     }
@@ -218,3 +214,8 @@ pub fn diff_set_snapshot(snapshot: &Process3dSnapshot) -> Process3dDiff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Process3dDiffText = String;
+//#endregion 🚚️Carrier

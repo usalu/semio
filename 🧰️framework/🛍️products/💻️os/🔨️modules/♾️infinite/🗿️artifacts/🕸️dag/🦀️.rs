@@ -13,5 +13,5 @@ pub use snapshot::*;
 pub mod vcs;
 pub use vcs::*;
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🕸️dag/🦀️.rs"]
 mod package_tests;

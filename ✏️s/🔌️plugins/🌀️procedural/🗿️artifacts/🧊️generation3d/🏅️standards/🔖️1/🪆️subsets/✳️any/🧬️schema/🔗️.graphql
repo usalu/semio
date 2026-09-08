@@ -14,7 +14,6 @@ type Generation3dArtifact {
   selectedGenerationId: String @state(class: PRESENCE)
   generationPreviewText: String @state(class: ARTIFACT)
   activeUtilityId: String! @state(class: PRESENCE)
-  locale: String! @state(class: CONFIG)
 }
 
 type CameraJson {
@@ -63,4 +62,8 @@ type Generation3dPreviewCamera {
   targetY: Float!
   targetZ: Float!
   fov: Float!
+}
+
+type Generation3dStringList {
+  values: [String!]!
 }

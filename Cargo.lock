@@ -5365,6 +5365,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-config"
+version = "0.1.0"
+dependencies = [
+ "schemars",
+ "semio-framework",
+ "semio-framework-os-kernel",
+ "semio-framework-value-derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-os-dsl-fixture-sweep"
 version = "0.1.0"
 dependencies = [
@@ -5607,10 +5619,12 @@ dependencies = [
  "semio-framework-editor",
  "semio-framework-hash",
  "semio-framework-job",
+ "semio-framework-os-config",
  "semio-framework-os-flow",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-os-services",
+ "semio-framework-os-shell",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-surface",
@@ -5675,6 +5689,7 @@ name = "semio-framework-os-shell"
 version = "0.1.0"
 dependencies = [
  "schemars",
+ "semio-framework-os-config",
  "semio-framework-replication",
  "semio-framework-value-derive",
  "serde",
@@ -5750,6 +5765,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-hash",
  "semio-framework-job",
+ "semio-framework-os-config",
  "semio-framework-os-kernel",
  "semio-framework-os-services",
  "semio-framework-trace",
@@ -6050,6 +6066,7 @@ dependencies = [
  "semio-framework-plugin-host",
  "semio-framework-replication",
  "semio-framework-schema",
+ "semio-framework-schema-registry",
  "semio-s-artifact-gis-gismap",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-semio",
@@ -7114,6 +7131,7 @@ dependencies = [
  "semio-s-artifact-stdio-txt",
  "serde",
  "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -7147,6 +7165,7 @@ dependencies = [
  "semio-s-artifact-stdio-txt",
  "serde",
  "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -7178,6 +7197,7 @@ dependencies = [
  "semio-s-artifact-stdio-zip",
  "serde",
  "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -8458,26 +8478,12 @@ dependencies = [
 name = "semio-s-plugin-fem"
 version = "0.1.0"
 dependencies = [
- "semio-framework",
- "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
- "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
- "semio-framework-schema",
- "semio-framework-ui-contract",
- "semio-framework-ui-scene",
- "semio-framework-value-derive",
  "semio-s-artifact-fem-2d",
  "semio-s-artifact-fem-3d",
- "semio-s-artifact-stdio-csv",
- "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-md",
- "semio-s-artifact-stdio-obj",
- "semio-s-artifact-stdio-semio",
- "semio-s-artifact-stdio-stl",
- "serde_json",
 ]
 
 [[package]]
@@ -8849,6 +8855,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-plugin",
+ "semio-s-artifact-norm-contract",
  "semio-s-artifact-norm-din16798",
  "semio-s-artifact-norm-din18599",
  "semio-s-artifact-norm-din4108",
@@ -8864,6 +8871,8 @@ dependencies = [
  "semio-s-artifact-norm-en1999",
  "semio-s-artifact-norm-iso16757",
  "semio-s-artifact-norm-vdi3805",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -8938,40 +8947,13 @@ dependencies = [
 name = "semio-s-plugin-procedural"
 version = "0.1.0"
 dependencies = [
- "semio-framework",
- "semio-framework-artifact-playbook-playbook",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
- "semio-framework-geometry",
- "semio-framework-graph",
- "semio-framework-job",
- "semio-framework-os-flow",
- "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
- "semio-framework-schema",
- "semio-framework-ui",
- "semio-framework-ui-contract",
- "semio-framework-ui-styling",
- "semio-framework-value-derive",
  "semio-s-artifact-procedural-assembly",
  "semio-s-artifact-procedural-generation2d",
  "semio-s-artifact-procedural-generation3d",
- "semio-s-artifact-stdio-dwg",
- "semio-s-artifact-stdio-dxf",
- "semio-s-artifact-stdio-gltf",
- "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-las",
- "semio-s-artifact-stdio-obj",
- "semio-s-artifact-stdio-pdf",
- "semio-s-artifact-stdio-ply",
- "semio-s-artifact-stdio-png",
- "semio-s-artifact-stdio-semio",
- "semio-s-artifact-stdio-stl",
- "semio-s-artifact-stdio-svg",
- "semio-s-artifact-stdio-txt",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -9051,44 +9033,13 @@ dependencies = [
 name = "semio-s-plugin-puzzle"
 version = "0.1.0"
 dependencies = [
- "js-sys",
- "semio-framework",
- "semio-framework-3d",
- "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
- "semio-framework-geometry",
- "semio-framework-graph",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-framework-os-infinite",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
- "semio-framework-schema",
- "semio-framework-ui-contract",
- "semio-framework-ui-scene",
- "semio-framework-value-derive",
  "semio-s-artifact-puzzle-2d",
  "semio-s-artifact-puzzle-3d",
  "semio-s-artifact-puzzle-5d",
- "semio-s-artifact-stdio-dwg",
- "semio-s-artifact-stdio-dxf",
- "semio-s-artifact-stdio-gltf",
- "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-las",
- "semio-s-artifact-stdio-obj",
- "semio-s-artifact-stdio-pdf",
- "semio-s-artifact-stdio-ply",
- "semio-s-artifact-stdio-png",
- "semio-s-artifact-stdio-semio",
- "semio-s-artifact-stdio-stl",
- "semio-s-artifact-stdio-svg",
- "semio-s-artifact-stdio-txt",
- "semio-s-artifact-stdio-zip",
- "serde",
- "serde_json",
- "wasm-bindgen",
- "web-sys",
 ]
 
 [[package]]
@@ -9305,7 +9256,6 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-artifact-infinite-dag",
- "semio-framework-artifact-space-collection",
  "semio-framework-artifact-space-space",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
@@ -9323,11 +9273,6 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-s-artifact-space-home",
  "semio-s-artifact-space-space",
- "semio-s-artifact-stdio-csv",
- "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-txt",
- "semio-s-artifact-stdio-xlsx",
- "semio-s-artifact-stdio-zip",
  "serde",
  "serde_json",
 ]
@@ -9388,34 +9333,12 @@ dependencies = [
 name = "semio-s-plugin-trinity"
 version = "0.1.0"
 dependencies = [
- "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
- "semio-framework-editor",
- "semio-framework-geometry",
- "semio-framework-graph",
- "semio-framework-job",
- "semio-framework-math",
- "semio-framework-os-infinite",
  "semio-framework-os-kernel",
- "semio-framework-pack",
  "semio-framework-plugin",
- "semio-framework-schema",
- "semio-framework-ui-contract",
- "semio-framework-value-derive",
- "semio-s-artifact-stdio-csv",
- "semio-s-artifact-stdio-docx",
- "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-md",
- "semio-s-artifact-stdio-pdf",
- "semio-s-artifact-stdio-png",
- "semio-s-artifact-stdio-semio",
- "semio-s-artifact-stdio-svg",
- "semio-s-artifact-stdio-txt",
  "semio-s-artifact-trinity-jack",
  "semio-s-artifact-trinity-rewriting",
- "serde",
- "serde_json",
 ]
 
 [[package]]

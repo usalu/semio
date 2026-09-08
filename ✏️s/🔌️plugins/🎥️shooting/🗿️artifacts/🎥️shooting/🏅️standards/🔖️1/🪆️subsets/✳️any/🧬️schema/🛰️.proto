@@ -37,7 +37,6 @@ message ShootingArtifact {
   // @state config
   ShootingCamera camera = 18;
   // @state config
-  string locale = 19;
 }
 
 message ShootingCamera {
@@ -110,4 +109,14 @@ message ShootingSceneLighting {
   ShootingShadow shadow = 4;
   ShootingMaterial material = 5;
   optional string emblem_base64 = 6;
+}
+
+message ShootingRetainedCommandStepContract {
+  int64 max_raw_bytes = 1;
+  int64 max_decoded_items = 2;
+  int64 max_work_units_per_step = 3;
+  int64 max_output_bytes = 4;
+  int64 max_step_micros = 5;
+  optional int64 max_checkpoint_bytes = 6;
+  optional int64 max_in_flight_pages = 7;
 }

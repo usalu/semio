@@ -17,8 +17,7 @@ use semio_framework_plugin::ArtifactInferrer;
 use dsl::json;
 use dsl::os_pack::json::Value;
 
-use super::bounds::{compute_block2d_bounds, Block2dBounds};
-
+use super::bounds::{compute_block2d_bounds};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a block2d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
@@ -113,3 +112,8 @@ pub fn block2d_artifact_inference_descriptor() -> ::semio_framework_schema::Arti
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::bounds::Block2dBounds;
+//#endregion 🔁️Re-exports

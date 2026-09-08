@@ -14,7 +14,7 @@ pub struct SetFixtureJson {
 }
 
 pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-    let next_document = if let Ok(document) = crate::dsl::parse_dsl(&payload.json) {
+    let next_document = if let Ok(document) = crate::document_dsl::parse_dsl(&payload.json) {
         document
     } else {
         let Ok(parsed) = serde_json::from_str::<Value>(&payload.json) else {

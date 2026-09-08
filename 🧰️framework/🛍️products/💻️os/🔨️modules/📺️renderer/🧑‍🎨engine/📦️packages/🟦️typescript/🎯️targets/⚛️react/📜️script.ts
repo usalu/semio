@@ -14,7 +14,7 @@ const MODULE_SCHEMAS = {
 } as const;
 
 /** 🧬️ A draft-07 validator that treats the annotation-only `discriminator` keyword as data. */
-const ownedAjv = (): Ajv => new Ajv({ strict: true, allErrors: true }).addKeyword("discriminator").addKeyword("x-semio-note");
+const ownedAjv = (): Ajv => new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note");
 
 /** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
 function ownedExport(repoRoot: string, scope: keyof typeof MODULE_SCHEMAS, exportId: string): ValidateFunction {
@@ -280,9 +280,9 @@ export function scopedPresenceOracle(repoRoot: string): number {
   assert(shell.includes("retainInferencePortOwnerAfterCloseV1(inferenceOwner, runtimeKey)") && worker.includes('documentRuntimeKeyV1({ kind: "hub", ...inferencePort.scope }) === runtimeKey'));
   assert(shell.includes('from "./👥️presence-scope/🟦️.ts"'));
   assert(!shell.includes("presencePeersJson"));
-  assert(shell.includes("registerPluginBackboneRoute(runtimeKey, relayPluginBackboneMessage)"));
+  assert(shell.includes("entry.plugin.bindDocumentPort(entry.session.instanceId") && !shell.includes("registerPluginBackboneRoute("));
   assert(shell.includes("documentId: entry.documentId") && shell.includes("spaceId: entry.scope.spaceId"));
-  assert(shell.includes("const actorUri = `actor://${runtimeKey}`"));
+  assert(shell.includes('message: { kind: "documentBackbone", message }') && shell.includes("receiveDocumentBackbone(runtimeKey, entry, event.message)"));
   assert(worker.includes("presenceCandidate") && worker.includes("presenceAuthority"));
   assert(worker.includes('emitEvent(state, { kind: "presence", peers: [] })'));
   assert(worker.includes("const scope = artifactScope(state)"));

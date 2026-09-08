@@ -3,7 +3,7 @@ use super::*;
 use crate::db_storage::WalStorage;
 
 fn fail_stop_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧪️fixtures/🛑️fail-stop/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🛑️fail-stop/🔣️.json")).unwrap()
 }
 
 async fn fail_stop_segment_bytes(storage: &impl WalStorage, document: &ArtifactId) -> Vec<u8> {

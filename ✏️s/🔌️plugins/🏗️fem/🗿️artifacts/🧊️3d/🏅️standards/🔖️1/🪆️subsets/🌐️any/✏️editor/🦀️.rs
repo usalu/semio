@@ -43,7 +43,6 @@ semio_framework_plugin::app_commands! {
     /// `#[dsl(key = ..)]` the codec uses) — they are genuinely different vocabularies for 3 of these 18
     /// rows: `setActiveExample`/`active-example`, `setCamera`/`camera`, `setResultDisplay`/
     /// `result-display`. **Row order is the binary variant ordinal: appending is safe, reordering is a
-    /// wire-format break.** Unlike fem2d, there is NO `setLocale`/`SetLocale` row — fem3d's pre-migration
     /// `Fem3dCommand` enum never had one (a pre-existing, intentional asymmetry between the two apps).
     pub enum Fem3dCommand for Fem3dSnapshot, Fem3dMutation, Fem3dConfig, Fem3dConfigMutation {
         "addNode" as "add-node" => add_node::AddNode,
@@ -187,6 +186,7 @@ fn fem3d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Fem3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
@@ -1069,7 +1069,7 @@ impl ArtifactEditor for Fem3dPlayApp {
         command: &Fem3dCommand,
         doc: &ArtifactView<'_, Fem3dSnapshot>,
         cfg: &ConfigView<'_, Fem3dConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation, Self::DraftMutation>, Fault> {
@@ -1080,7 +1080,7 @@ impl ArtifactEditor for Fem3dPlayApp {
         crate::live_visual::reconcile(doc)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, Fem3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Fem3dSnapshot>, cfg: &ConfigView<'_, Fem3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let camera = &cfg.snapshot.camera;
         match body_key {
             window_model::FEM3D_BODY_MODEL => crate::live_visual::with_live_visual(doc.render_operation(), |visual| window_model::render_with_progress(camera, visual)),

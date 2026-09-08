@@ -981,5 +981,5 @@ mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/📖️playbook/🦀️.rs"]
 mod package_tests;

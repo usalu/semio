@@ -578,6 +578,51 @@ mod tests;
 
 #[cfg(feature = "component-app-assembly")]
 #[path = "."]
+pub mod examples {
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🐚️box-shell-preview/🦀️.rs"]
+    pub mod art_generation3d_box_shell_preview;
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧹️face-sweep-extrude/🦀️.rs"]
+    pub mod art_generation3d_face_sweep_extrude;
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🦀️.rs"]
+    pub mod art_generation3d_hexagonal_mushroom_column;
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍩️sphere-cut-with-torus/🦀️.rs"]
+    pub mod art_generation3d_sphere_cut_with_torus;
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧲️sphere-box-fuse/🦀️.rs"]
+    pub mod art_generation3d_sphere_box_fuse;
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪢️rectangle-wire-preview/🦀️.rs"]
+    pub mod art_generation3d_rectangle_wire_preview;
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️rectangle-extrude-volume/🦀️.rs"]
+    pub mod art_generation3d_rectangle_extrude_volume;
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📐️box-fillet-preview/🦀️.rs"]
+    pub mod art_generation3d_box_fillet_preview;
+    #[cfg(test)]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🐚️box-shell-preview/🧪️tests/🧩️example/🦀️.rs"]
+    mod box_shell_preview_tests;
+    #[cfg(test)]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧹️face-sweep-extrude/🧪️tests/🧩️example/🦀️.rs"]
+    mod face_sweep_extrude_tests;
+    #[cfg(test)]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍄️hexagonal-mushroom-column/🧪️tests/🧩️example/🦀️.rs"]
+    mod hexagonal_mushroom_column_tests;
+    #[cfg(test)]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🍩️sphere-cut-with-torus/🧪️tests/🧩️example/🦀️.rs"]
+    mod sphere_cut_with_torus_tests;
+    #[cfg(test)]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧲️sphere-box-fuse/🧪️tests/🧩️example/🦀️.rs"]
+    mod sphere_box_fuse_tests;
+    #[cfg(test)]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪢️rectangle-wire-preview/🧪️tests/🧩️example/🦀️.rs"]
+    mod rectangle_wire_preview_tests;
+    #[cfg(test)]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️rectangle-extrude-volume/🧪️tests/🧩️example/🦀️.rs"]
+    mod rectangle_extrude_volume_tests;
+    #[cfg(test)]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📐️box-fillet-preview/🧪️tests/🧩️example/🦀️.rs"]
+    mod box_fillet_preview_tests;
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod generation3d {
@@ -593,7 +638,7 @@ pub mod editor {
                 mod component;
                 pub use component::*;
                 #[cfg(test)]
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
                 mod tests;
             }
         }
@@ -667,8 +712,6 @@ pub mod editor {
             pub mod set_active_utility;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
             pub mod set_camera;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️.rs"]
-            pub mod set_locale;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod-mode/🦀️.rs"]
             pub mod set_lod_mode;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-show-mode/🦀️.rs"]

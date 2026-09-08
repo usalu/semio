@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn shooting_shot_field_values_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔢️field-values.json")).expect("neutral input vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔢️field-values.json")).expect("neutral input vectors");
     let base = crate::schema::default_snapshot();
     let id = base.shots[0].id.clone();
     for vector in vectors["cases"].as_array().expect("cases") {

@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/mp3/mpeg1-layer3/any/inference/text.json",
   "title": "Mp3InferenceText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of Mp3Inference: the instance is the serialized document this facet's grammar and codec speak."
 }

@@ -8,9 +8,6 @@ pub use replace_config::ReplaceConfig;
 #[path = "🎥️change-camera/🦀️.rs"]
 mod change_camera;
 pub use change_camera::ChangeCamera;
-#[path = "🗣️change-locale/🦀️.rs"]
-mod change_locale;
-pub use change_locale::ChangeLocale;
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -20,7 +17,6 @@ pub use change_locale::ChangeLocale;
 pub enum DagConfigMutation {
     ReplaceConfig(ReplaceConfig),
     ChangeCamera(ChangeCamera),
-    ChangeLocale(ChangeLocale),
 }
 
 impl protocol::OpText for DagConfigMutation {

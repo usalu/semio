@@ -1,9 +1,8 @@
 //! 🧬️ Fem2d snapshot schema — artifact-lane fields only.
 
-use crate::{FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+use crate::{FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-
 //#region 🔖️Snapshot
 /// 📸️ Persisted fem2d document snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord, ArtifactSchema)]
@@ -111,3 +110,8 @@ pub fn fem2d_identity_report_json(dsl_text: &str) -> Result<String, String> {
     Ok(dsl::json::to_json_string(&report))
 }
 //#endregion 🌉️IdentityBridge
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::FemAnalysisSettings;
+//#endregion 🔁️Re-exports

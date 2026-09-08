@@ -13,7 +13,7 @@
 //! first genuine `DepHash`-chained CQRS path (see `🔄relative-pose/🦀️.rs`).
 
 use crate::RemodelingSnapshot;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
@@ -80,8 +80,8 @@ impl ArtifactInferrer for crate::standards::v1::subsets::any::schema::Remodeling
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.remodel.remodeling.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `remodeling_artifact_schema_descriptor`'s registration.
-pub fn remodeling_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn remodeling_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.remodel.remodeling.inference",
         inference: schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
     }

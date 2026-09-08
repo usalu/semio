@@ -14,7 +14,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
 #[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
 mod art_dag_demo_tests;
 extern crate semio_framework_schema as framework_schema;
 
@@ -829,8 +829,6 @@ pub mod editor {
             pub mod rename_dag_node;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️reorganize/🦀️.rs"]
             pub mod reorganize;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️.rs"]
-            pub mod set_locale;
         }
 
         #[path = "."]
@@ -890,3 +888,7 @@ pub mod viewer {
         }
     }
 }
+
+//#region 📚️Examples
+pub use standards::v1::subsets::any::examples;
+//#endregion 📚️Examples

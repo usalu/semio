@@ -65,10 +65,6 @@ pub struct Puzzle5dConfig {
     pub sun: WorldSunConfig,
     #[state(config)]
     pub active_utility_by_window_id: BTreeMap<String, String>,
-    #[state(config)]
-    pub terminology: String,
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor

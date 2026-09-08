@@ -5,8 +5,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv, { type ValidateFunction } from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import Ajv from "ajv";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "../../../../../📜️script.ts";
 
 //#region 🧬️OwnedSchemaExports
@@ -23,7 +23,7 @@ const OS_MODULE_SCHEMAS = {
 /** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
 function ownedExport(repoRoot: string, scope: keyof typeof OS_MODULE_SCHEMAS, exportId: string): ValidateFunction {
   const doc = JSON.parse(readFileSync(join(repoRoot, OS_MODULE_SCHEMAS[scope]), "utf8")) as { $id: string };
-  const compiled = new Ajv({ strict: true, allErrors: true }).addKeyword("discriminator").addKeyword("x-semio-note").addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
+  const compiled = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
   if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
   return compiled as ValidateFunction;
 }
@@ -41,7 +41,7 @@ function exactCargoStageEnvironments() {
 class DatabaseHistoryCompletionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-history-completion-check accepts only --native");
-    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️fixtures/📜️history-completion");
+    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧫️fixtures/📜️history-completion");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     const validate = ownedExport(this.repoRoot, "db.engine", "HistoryCompletionV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
@@ -110,7 +110,7 @@ class DatabaseHistoryCompletionCheckScript extends BundleScript {
 class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-catalog-read-ownership-check accepts only --native");
-    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️fixtures/📖️catalog-read-ownership");
+    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧫️fixtures/📖️catalog-read-ownership");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     const validate = ownedExport(this.repoRoot, "db.engine", "CatalogReadOwnershipV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
@@ -218,7 +218,7 @@ class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
 class DatabaseCapabilityCompletionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-capability-completion-check accepts only --native");
-    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️fixtures/📬️capability-completion");
+    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧫️fixtures/📬️capability-completion");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     const validate = ownedExport(this.repoRoot, "db.engine", "CapabilityCompletionV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
@@ -356,19 +356,19 @@ class WalWriterAuthorityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-writer-authority-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const validate = ownedExport(this.repoRoot, "db.storage.writer", "WriterAuthorityV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
-    const remoteOwner = join(owner, "🧪️fixtures/🌐️remote-guard");
+    const remoteOwner = join(owner, "🧫️fixtures/🌐️remote-guard");
     const remoteFixture = JSON.parse(readFileSync(join(remoteOwner, "🔣️.json"), "utf8"));
     const validateRemote = ownedExport(this.repoRoot, "db.storage.writer", "RemoteGuardV1");
     assert(validateRemote(remoteFixture), JSON.stringify(validateRemote.errors));
     assert.deepEqual(remoteFixture.mutations, ["create", "append", "sync", "seal", "truncateTail", "delete"]);
-    const memoryOwner = join(owner, "..", "🧪️fixtures", "🧮️memory-backing");
+    const memoryOwner = join(owner, "..", "🧫️fixtures", "🧮️memory-backing");
     const memoryFixture = JSON.parse(readFileSync(join(memoryOwner, "🔣️.json"), "utf8"));
     const validateMemory = ownedExport(this.repoRoot, "db.storage", "MemoryBackingV1");
     assert(validateMemory(memoryFixture), JSON.stringify(validateMemory.errors));
-    const poolUseOwner = join(owner, "..", "🧪️fixtures", "🔐️backend-pool-use");
+    const poolUseOwner = join(owner, "..", "🧫️fixtures", "🔐️backend-pool-use");
     const poolUseFixture = JSON.parse(readFileSync(join(poolUseOwner, "🔣️.json"), "utf8"));
     const validatePoolUse = ownedExport(this.repoRoot, "db.storage", "BackendPoolUseV1");
     assert(validatePoolUse(poolUseFixture), JSON.stringify(validatePoolUse.errors));
@@ -410,11 +410,11 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     assert.equal(memoryFixture.sameSlotReuseBeforeOldResultClose, true);
     assert.equal(memoryFixture.taskSlotReleasedWhileResultRetained, true);
     assert.equal(memoryFixture.droppedResultRetirement, "mounted-io-maintenance");
-    const directoryOwner = join(owner, "..", "🧪️fixtures", "📁️directory-durability");
+    const directoryOwner = join(owner, "..", "🧫️fixtures", "📁️directory-durability");
     const directoryFixture = JSON.parse(readFileSync(join(directoryOwner, "🔣️.json"), "utf8"));
     const validateDirectory = ownedExport(this.repoRoot, "db.storage", "DirectoryDurabilityV1");
     assert(validateDirectory(directoryFixture), JSON.stringify(validateDirectory.errors));
-    const openOwner = join(owner, "..", "..", "📝️wal", "🧪️fixtures", "🚪️open-rejection");
+    const openOwner = join(owner, "..", "..", "📝️wal", "🧫️fixtures", "🚪️open-rejection");
     const openFixture = JSON.parse(readFileSync(join(openOwner, "🔣️.json"), "utf8"));
     const validateOpen = ownedExport(this.repoRoot, "db.wal", "OpenRejectionV1");
     assert(validateOpen(openFixture), JSON.stringify(validateOpen.errors));
@@ -668,7 +668,7 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-committed-transactions-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🧾️committed-transactions/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧾️committed-transactions/🔣️.json"), "utf8"));
     const validate = ownedExport(this.repoRoot, "db.wal", "CommittedTransactionsV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
     assert.deepEqual(fixture.historyProjection.expected, { entries: 1, operationIds: fixture.historyProjection.commands.map((command: any) => command.id), headSeq: fixture.historyProjection.commands.length, commitSeq: 1 });
@@ -730,7 +730,7 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
       assert.deepEqual({ accepted: error === null, transactions: error === null ? transactions : [], nextTxId: error === null ? next.toString() : null, recoverAbort: error === null ? recoverAbort : null, error }, row.expected, row.name);
     }
     console.log(`wal-committed-transactions-independent-oracle: AJV=1 u64=1 vectors=${fixture.cases.length}`);
-    const faults = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🛑️fail-stop/🔣️.json"), "utf8"));
+    const faults = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🛑️fail-stop/🔣️.json"), "utf8"));
     const validateFaults = ownedExport(this.repoRoot, "db.wal", "FailStopV1");
     assert(validateFaults(faults), JSON.stringify(validateFaults.errors));
     assert.deepEqual(
@@ -751,7 +751,7 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
     const history = readFileSync(join(owner, "../🗿️artifact/🦀️.rs"), "utf8");
     assert(history.includes("WalAuthenticatedSource<HistoryPageSet>") && !history.includes("struct HistoryFrameCursor"), "History must consume authenticated committed spans, with no independent frame grammar");
     for (const check of ["history envelope document differs", "history frontier document differs", "history committed frontier is not terminal"]) assert(history.includes(check), `History admission is missing ${check}`);
-    const decoder = JSON.parse(readFileSync(join(owner, "🧪️fixtures/📖️retained-decoder/🔣️.json"), "utf8"));
+    const decoder = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📖️retained-decoder/🔣️.json"), "utf8"));
     const validateDecoder = ownedExport(this.repoRoot, "db.wal", "RetainedDecoderV1");
     assert(validateDecoder(decoder), JSON.stringify(validateDecoder.errors));
     const { default: leb } = await import("@webassemblyjs/leb128/lib/leb.js");
@@ -829,7 +829,7 @@ class WalCommittedCompactionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-committed-compaction-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🧾️committed-effects/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧾️committed-effects/🔣️.json"), "utf8"));
     const validate = ownedExport(this.repoRoot, "db.compact", "CommittedEffectsV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
     assert.deepEqual(
@@ -919,7 +919,7 @@ class DatabaseShutdownCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-shutdown-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🚪️shutdown/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🚪️shutdown/🔣️.json"), "utf8"));
     const validate = ownedExport(this.repoRoot, "db.engine", "ShutdownV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
     assert.deepEqual(fixture.phases, ["authority", "versionGraph", "emit", "complete"]);
@@ -1020,7 +1020,7 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("document-mount-single-flight-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🚪️document-mount");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const validate = ownedExport(this.repoRoot, "db.engine", "DocumentMountV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
     for (const row of fixture.cases) {
@@ -1308,7 +1308,7 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
 class DurableOwnedGroupDecisionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("durable-owned-group-decision-check accepts only --native");
-    const { testDurableOwnedGroupDecisionFixture } = await import("../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️script.ts");
+    const { testDurableOwnedGroupDecisionFixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🗄️durable-owned-group/🟦️.ts");
     testDurableOwnedGroupDecisionFixture();
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
@@ -1355,7 +1355,7 @@ class DurableGroupJournalCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("durable-group-journal-check accepts only --native");
     const artifactOwner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact");
-    const fixtureOwner = join(artifactOwner, "🧪️fixtures/📓️durable-group-journal");
+    const fixtureOwner = join(artifactOwner, "🧫️fixtures/📓️durable-group-journal");
     const fixture = JSON.parse(readFileSync(join(fixtureOwner, "🔣️.json"), "utf8"));
     const validate = ownedExport(this.repoRoot, "db.artifact", "DurableGroupJournalV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
@@ -1380,7 +1380,7 @@ class DurableGroupJournalCheckScript extends BundleScript {
       assert.equal(row.returnedStoreOwners, 3);
     }
     const storeOwner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group");
-    const storeFixture = JSON.parse(readFileSync(join(storeOwner, "🧪️fixtures/🔣️.json"), "utf8"));
+    const storeFixture = JSON.parse(readFileSync(join(storeOwner, "🧫️fixtures/🔣️.json"), "utf8"));
     assert.equal(createHash("sha256").update(storeFixture.expected.unsignedJson).digest("hex"), fixture.record.decisionSha256);
     assert.equal(storeFixture.expected.anchorSha256, fixture.record.anchorSha256);
     const varintBytes = (value: number) => {
@@ -1476,10 +1476,10 @@ class WalRecoveryCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-recovery-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🚑️recovery/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🚑️recovery/🔣️.json"), "utf8"));
     const validate = ownedExport(this.repoRoot, "db.wal", "TailOnlyRecoveryV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
-    const failStop = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🛑️fail-stop/🔣️.json"), "utf8"));
+    const failStop = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🛑️fail-stop/🔣️.json"), "utf8"));
     const validateFailStop = ownedExport(this.repoRoot, "db.wal", "FailStopV1");
     assert(validateFailStop(failStop), JSON.stringify(validateFailStop.errors));
     assert.deepEqual(
@@ -1615,7 +1615,7 @@ class WalCapacityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-capacity-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/📏️capacity/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📏️capacity/🔣️.json"), "utf8"));
     const validate = ownedExport(this.repoRoot, "db.wal", "SegmentCapacityV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
     const leb = await import("@webassemblyjs/leb128");
@@ -1667,7 +1667,7 @@ class WalCapacityCheckScript extends BundleScript {
 //#region 🔎️ScalarWireSource
 class ScalarWireSourceScript extends BundleScript {
   async run(): Promise<void> {
-    const { testScalarRecordWireFixture } = await import("../../🔨️modules/🎒️pack/🔎️scalar-witness/📜️script.ts");
+    const { testScalarRecordWireFixture } = await import("../../🔨️modules/🎒️pack/🧪️tests/🔎️scalar-witness/🟦️.ts");
     testScalarRecordWireFixture();
   }
 }
@@ -1722,7 +1722,7 @@ class NativeTestScript extends BundleScript {
 class DirectoryRuntimeSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-directory-runtime-source accepts no arguments");
-    const { testDirectoryRuntimeIdentityFixture } = await import("../../🔨️modules/📇️directory/🔌️client/🪪️runtime/📜️script.ts");
+    const { testDirectoryRuntimeIdentityFixture } = await import("../../🔨️modules/📇️directory/🧪️tests/🪪️runtime-identity/🟦️.ts");
     testDirectoryRuntimeIdentityFixture();
   }
 }
@@ -1731,7 +1731,7 @@ class DirectoryRuntimeSourceScript extends BundleScript {
 export async function directoryEventPageContractOracle(repoRoot: string): Promise<number> {
   const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📃️event-page-v1.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
-  const validator = new Ajv2020({ strict: false, allErrors: true, discriminator: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
+  const validator = new Ajv({ strict: false, allErrors: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
   assert(validator(fixture.valid), JSON.stringify(validator.errors));
   assert.equal(new TextEncoder().encode(fixture.canonicalUnsigned).length, 474);
   assert.equal(createHash("sha256").update(fixture.canonicalUnsigned).digest("hex"), fixture.expectedReceiptSha256);
@@ -1759,7 +1759,7 @@ export async function directoryEventPageContractOracle(repoRoot: string): Promis
 export async function directoryEventPageClientOracle(repoRoot: string): Promise<number> {
   const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📃️event-page-v1.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
-  const validator = new Ajv2020({ strict: false, allErrors: true, discriminator: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
+  const validator = new Ajv({ strict: false, allErrors: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
   const canonical = JSON.stringify(fixture.valid);
   const accept = (raw: string, after: number) => {
     if (!Number.isSafeInteger(after) || after < 0 || new TextEncoder().encode(raw).byteLength > 65_536) throw new Error("client admission");
@@ -1930,15 +1930,23 @@ class WalSegmentStateCheckScript extends BundleScript {
 class CodecSendSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-codec-send-source accepts no arguments");
-    const { testNativeCodecSendFixture } = await import("../../🔨️modules/🏪️store/📦️codec/🧵️send/📜️script.ts");
+    const { testNativeCodecSendFixture } = await import("../../🔨️modules/🏪️store/🧪️tests/📦️native-codec-send/🟦️.ts");
     testNativeCodecSendFixture();
+  }
+}
+
+class GroupVisibilitySourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("test-group-visibility-source accepts no arguments");
+    const { testGroupVisibilityFixtures } = await import("../../🔨️modules/🏪️store/🧪️tests/👁️group-visibility/🟦️.ts");
+    testGroupVisibilityFixtures();
   }
 }
 
 class BackboneDetachSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-backbone-detach-source accepts no arguments");
-    const { testBackboneDetachFixture } = await import("../../🔨️modules/🏪️store/🔗️backbone/✂️detach/📜️script.ts");
+    const { testBackboneDetachFixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🔗️backbone-detach/🟦️.ts");
     testBackboneDetachFixture();
   }
 }
@@ -1946,18 +1954,18 @@ class BackboneDetachSourceScript extends BundleScript {
 class MemberDialectSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-member-dialect-source accepts no arguments");
-    const { testMemberDialectFixture } = await import("../../🔨️modules/🏪️store/🧩️composition/🪪️member-dialect/📜️script.ts");
+    const { testMemberDialectFixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🗣️member-dialect/🟦️.ts");
     testMemberDialectFixture();
-    const { testFixtureProjectionRetirement } = await import("../../🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/📜️script.ts");
+    const { testFixtureProjectionRetirement } = await import("../../🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🟦️.ts");
     testFixtureProjectionRetirement();
   }
 }
 
 class MemberDialectCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { testMemberDialectFixture } = await import("../../🔨️modules/🏪️store/🧩️composition/🪪️member-dialect/📜️script.ts");
+    const { testMemberDialectFixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🗣️member-dialect/🟦️.ts");
     testMemberDialectFixture();
-    const { testFixtureProjectionRetirement } = await import("../../🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/📜️script.ts");
+    const { testFixtureProjectionRetirement } = await import("../../🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🟦️.ts");
     testFixtureProjectionRetirement();
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,
@@ -2037,6 +2045,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("directory-event-page-bootstrap-check", DirectoryEventPageBootstrapCheckScript)
   .register("wal-segment-state-check", WalSegmentStateCheckScript)
   .register("test-codec-send-source", CodecSendSourceScript)
+  .register("test-group-visibility-source", GroupVisibilitySourceScript)
   .register("test-backbone-detach-source", BackboneDetachSourceScript)
   .register("test-member-dialect-source", MemberDialectSourceScript)
   .register("member-dialect-check", MemberDialectCheckScript);

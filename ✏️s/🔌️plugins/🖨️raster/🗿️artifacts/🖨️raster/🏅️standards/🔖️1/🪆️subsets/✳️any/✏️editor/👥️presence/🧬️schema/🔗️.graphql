@@ -10,3 +10,9 @@ type RasterPresence {
   camera: RasterPresenceCamera! @state(class: PRESENCE)
   activeUtilityId: String! @state(class: PRESENCE)
 }
+
+type RasterCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}

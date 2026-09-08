@@ -23,3 +23,8 @@ message Fem2dSnapshot {
   FemAnalysisSettings analysis = 9;
 }
 
+message FemAnalysisSettings {
+  uint32 modal_count = 1;
+  uint32 buckling_count = 2;
+  double deformation_scale = 3;
+}

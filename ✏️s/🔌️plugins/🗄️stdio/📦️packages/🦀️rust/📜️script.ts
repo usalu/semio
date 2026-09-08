@@ -28,6 +28,7 @@ async function compileStdioScopeExport(stdioRoot: string, exportId: string) {
   const module = JSON.parse(readFileSync(join(stdioRoot, "🧬️schema", "🔣️.json"), "utf8"));
   const { default: Ajv } = await import("ajv");
   const ajv = new Ajv({ strict: true });
+  ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   ajv.addSchema(module);
   return ajv.compile({ $ref: `${module.$id}#/$defs/${exportId}` });
 }
@@ -380,6 +381,7 @@ class FlowRetainedDecodeScript extends BundleScript {
     const fixture = JSON.parse(readFileSync(join(base, "🧫️fixture/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true });
+    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     const validate = ajv.compile(schema);
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const header = Buffer.concat([Buffer.from([137,83,69,77,13,10,26,10,24,0,0,0]), Buffer.from("stdio.semio.flow.pack v1")]);
@@ -526,7 +528,7 @@ class ArtifactDirectoryWiringScript extends BundleScript {
     const artifactsRoot = join(stdioRoot, "🗿️artifacts");
     const definitions = readdirSync(artifactsRoot, { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
-      .map((entry) => ({ directory: entry.name, path: join(artifactsRoot, entry.name, "🧬️schema/📜️artifact-definition.json") }))
+      .map((entry) => ({ directory: entry.name, path: join(artifactsRoot, entry.name, "📜️artifact-definition.json") }))
       .filter((entry) => existsSync(entry.path))
       .map((entry) => ({ directory: entry.directory, definition: JSON.parse(readFileSync(entry.path, "utf8")) as { artifact?: unknown; directory?: unknown; id?: unknown } }));
     if (definitions.length !== 36) throw new Error(`artifact-directory-wiring expected 36 physical definitions, got ${definitions.length}`);
@@ -596,6 +598,7 @@ class SubsetDirectoryWiringScript extends BundleScript {
     const schema = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🗂️subset-directory-wiring/🔣️.json"), "utf8"));
     const { default: Ajv2020 } = await import("ajv/dist/2020.js");
     const ajv = new Ajv2020({ strict: true });
+    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     const validate = ajv.compile(schema);
     assert(validate(fixture), ajv.errorsText(validate.errors));
     assert.equal(new Set(fixture.cases.map((row) => row.id)).size, fixture.cases.length);

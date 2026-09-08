@@ -214,5 +214,5 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
 //#endregion 📖️QueryOwner
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/📃️query/🦀️.rs"]
 pub(crate) mod tests;

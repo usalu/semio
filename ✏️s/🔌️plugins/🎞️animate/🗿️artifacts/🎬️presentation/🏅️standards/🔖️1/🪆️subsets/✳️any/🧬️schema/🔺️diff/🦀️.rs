@@ -25,8 +25,6 @@ pub struct PresentationDiff {
     pub selected_ids: Option<PresentationStringList>,
     #[state(config)]
     pub engagement_input: Option<String>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
 

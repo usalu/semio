@@ -1,4 +1,3 @@
-
 use super::testkit::*;
 use super::*;
 use crate::Puzzle2dSnapshot;
@@ -192,9 +191,9 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::binary::Puzzle2dStore;
-    use crate::{PUZZLE_2D_SCHEMA, Puzzle2dNode};
+    use crate::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{ArtifactCommand, create_document_envelope};
+    use store::{create_document_envelope, ArtifactCommand};
 
     let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None)).await.expect("store");
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
@@ -376,7 +375,7 @@ fn utility_registry_declares_utilities() {
 /// 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility.
 #[test]
 fn tool_registry_declares_fill_tool() {
-    use semio_framework_plugin::{SET_ACTIVE_TOOL_ACTION_ID, ToolRef};
+    use semio_framework_plugin::{ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
     let definition = create_puzzle2d_app();
     let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
     assert_eq!(tool_ids, vec![fill::TOOL_ID]);

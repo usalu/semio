@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/json/rfc8259/i-json/artifact.json",
+  "title": "JsonArtifact",
+  "description": "json rfc8259/i-json re-exports the base subset's JsonArtifact; the artifact contract is that scope's and is referenced, never restated.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/artifact.json"
+    }
+  ],
+  "x-semio-formats": [
+    "🔣️jsonschema"
+  ]
+}

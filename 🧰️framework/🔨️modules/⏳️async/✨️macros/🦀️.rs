@@ -44,9 +44,10 @@ pub fn expand_async_test(attr: TokenStream, item: TokenStream) -> syn::Result<To
     let output = &input.sig.output;
     let block = &input.block;
     let block_on_ident = syn::Ident::new("__semio_async_test_block_on", ident.span());
+    let test_attribute = syn::Ident::new("test", ident.span());
 
     Ok(quote! {
-        #[test]
+        #[#test_attribute]
         #(#other_attrs)*
         #vis fn #ident() #output {
             fn #block_on_ident<F: std::future::Future>(fut: F) -> F::Output {

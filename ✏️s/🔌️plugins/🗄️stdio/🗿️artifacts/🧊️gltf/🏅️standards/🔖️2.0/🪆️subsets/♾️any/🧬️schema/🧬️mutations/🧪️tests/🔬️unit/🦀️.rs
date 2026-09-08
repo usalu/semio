@@ -10,7 +10,7 @@ fn aggregate_descriptor_roster_is_exactly_the_direct_leaf_roster() {
 
 #[test]
 fn mutation_rejection_messages_match_the_language_neutral_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📨️mutation-carriers/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📨️mutation-carriers/🔣️.json")).unwrap();
     for case in fixture["rejections"].as_array().unwrap() {
         let outcome = crate::schema::modules::mutation_support::top_level::rejection_outcome(case["code"].as_str().unwrap(), case["path"].as_str().unwrap(), case["detail"].as_str().unwrap().to_owned());
         let encoded: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&outcome)).unwrap();
@@ -21,7 +21,7 @@ fn mutation_rejection_messages_match_the_language_neutral_json_oracle() {
 
 #[test]
 fn mutation_restore_preserves_the_language_neutral_wire_and_inverse() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📨️mutation-carriers/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📨️mutation-carriers/🔣️.json")).unwrap();
     let mutation: GltfMutation = dsl::json::from_json_str(&fixture["apply"].to_string()).unwrap();
     let mut base = GltfSnapshot::default();
     base.document.scene = Some(0);

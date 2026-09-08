@@ -8,7 +8,7 @@ import { loadTaxonomy, pathEmojiStatuteFindings, pathIsExcluded } from "../../..
 interface GraphOutputCatalog {
   readonly $schema?: string;
   readonly version: 1;
-  readonly shared: Readonly<{ rustRegistry: string; typescriptIndex: string; typescriptTypes: string; jsonSchema: string }>;
+  readonly shared: Readonly<{ rustRegistry: string; typescriptIndex: string; typescriptTypes: string }>;
   readonly manifests: readonly Readonly<{ id: string; rust: string; typescript: string }>[];
 }
 
@@ -22,7 +22,7 @@ export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly st
   }
   const root = record(input, ["version", "shared", "manifests"], ["$schema"]);
   if (root.version !== 1 || root.$schema !== undefined && typeof root.$schema !== "string") throw new Error("graph output catalog version/schema is invalid");
-  const shared = record(root.shared, ["rustRegistry", "typescriptIndex", "typescriptTypes", "jsonSchema"]);
+  const shared = record(root.shared, ["rustRegistry", "typescriptIndex", "typescriptTypes"]);
   const seen = new Set<string>();
   const entries: { path: string; nodeKind: "file" | "directory"; reserved: boolean }[] = [];
   const directories = new Set<string>();
@@ -42,7 +42,6 @@ export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly st
     rustRegistry: path(shared.rustRegistry, /^[^/.]+\.rs$/u),
     typescriptIndex: path(shared.typescriptIndex, /^[^/.]+\.ts$/u),
     typescriptTypes: path(shared.typescriptTypes, /^[^/.]+\.ts$/u),
-    jsonSchema: path(shared.jsonSchema, /^[^/.]+\.schema\.json$/u),
   });
   if (!Array.isArray(root.manifests) || root.manifests.length === 0) throw new Error("graph output manifests must be nonempty");
   const ids = new Set<string>();
@@ -279,44 +278,6 @@ function emitTsManifest(doc: ManifestDocument, typesSpecifier: string): string {
   return out;
 }
 
-function emitJsonSchema(): string {
-  return JSON.stringify(
-    {
-      $schema: "https://json-schema.org/draft/2020-12/schema",
-      $id: "manifest",
-      title: "GraphManifestDocument",
-      type: "object",
-      required: ["schema", "id"],
-      properties: {
-        schema: { const: "manifest" },
-        id: { type: "string" },
-        name: { type: "string" },
-        axes: {
-          type: "object",
-          properties: {
-            portModel: { enum: ["normal", "ported"] },
-            directedness: { enum: ["directed", "undirected"] },
-          },
-        },
-        nodeKinds: { type: "array" },
-        edgeKinds: { type: "array" },
-        portKinds: { type: "array" },
-        wireKinds: { type: "array" },
-        layerKinds: { type: "array" },
-        languageKinds: { type: "array" },
-        surfaceKinds: { type: "array" },
-        windowKinds: { type: "array" },
-        fileNodeKinds: { type: "array" },
-        descriptorKinds: { type: "array" },
-        edgeTips: { type: "array" },
-        kindCompatibility: { type: "array" },
-      },
-    },
-    null,
-    2,
-  );
-}
-
 type GraphArtifact = { path: string; content: string };
 
 /** @emoji 🧾️ Renders the full graph catalog from lexically admitted manifest inputs without writes. */
@@ -359,7 +320,6 @@ export function renderGraphArtifacts(root: string, outDir: string, log = true): 
       docs.map((d) => `        ${rustStr(d.id)} => Some(${rustModName(d.id)}::${rustFnName(d.id)}()),`).join("\n") +
       `\n        _ => None,\n    }\n}\n`;
     artifacts.push({ path: join(outDir, outputs.shared.rustRegistry), content: registryRs });
-    artifacts.push({ path: join(outDir, outputs.shared.jsonSchema), content: emitJsonSchema() });
     const manifestByIdCases = docs.map((d) => `    case ${tsStringLiteral(d.id)}: return ${pascalCase(d.id).toUpperCase()}_MANIFEST_DOCUMENT;`).join("\n");
     const manifestByIdImports = docs.map((d) => `import { ${pascalCase(d.id).toUpperCase()}_MANIFEST_DOCUMENT } from ${JSON.stringify(tsSpecifier(outputs.shared.typescriptIndex, byId.get(d.id)!.typescript))};`).join("\n");
     const tsTypes = `/** Generated graph manifest shared types */\n\nexport interface GraphManifestPropertyDef {\n  readonly name: string;\n  readonly kind: "data" | "derived";\n  readonly valueType?: unknown;\n  readonly expr?: string;\n}\n\nexport interface GraphManifestKindRow {\n  readonly id: string;\n  readonly name?: string;\n  readonly properties?: readonly GraphManifestPropertyDef[];\n  readonly ports?: readonly string[];\n  readonly direction?: string;\n  readonly presentation?: Readonly<Record<string, unknown>>;\n}\n\nexport interface GraphManifestDocument {\n  readonly schema: "manifest";\n  readonly id: string;\n  readonly name?: string;\n  readonly axes?: { readonly portModel?: "normal" | "ported"; readonly directedness?: "directed" | "undirected" };\n  readonly nodeKinds?: readonly GraphManifestKindRow[];\n  readonly edgeKinds?: readonly GraphManifestKindRow[];\n  readonly portKinds?: readonly GraphManifestKindRow[];\n  readonly wireKinds?: readonly GraphManifestKindRow[];\n  readonly layerKinds?: readonly GraphManifestKindRow[];\n  readonly blockKinds?: readonly GraphManifestKindRow[];\n  readonly languageKinds?: readonly GraphManifestKindRow[];\n  readonly surfaceKinds?: readonly GraphManifestKindRow[];\n  readonly windowKinds?: readonly GraphManifestKindRow[];\n  readonly fileNodeKinds?: readonly GraphManifestKindRow[];\n  readonly descriptorKinds?: readonly GraphManifestKindRow[];\n  readonly edgeTips?: readonly Record<string, unknown>[];\n  readonly kindCompatibility?: readonly Record<string, unknown>[];\n}\n\nexport interface HandleKind {\n  readonly color: string;\n  readonly defaultWireKind?: string;\n  readonly id: string;\n  readonly name: string;\n}\n\nexport interface WireKind {\n  readonly defaultEdgeKind?: string;\n  readonly id: string;\n  readonly name: string;\n}\n\nexport interface NodeKindHandleTemplate {\n  readonly handleKind: string;\n  readonly angle: number;\n  readonly radius?: number;\n}\n\nexport interface NodeKind {\n  readonly color?: string;\n  readonly defaultHandleKind?: string;\n  readonly icon?: string;\n  readonly id: string;\n  readonly name: string;\n  readonly stroke?: string;\n  readonly handles?: readonly NodeKindHandleTemplate[];\n}\n\nexport interface EdgeTip {\n  readonly filled?: boolean;\n  readonly geometry?: "arrow" | "fine-arrow" | "diamond" | "circle" | "bar";\n  readonly id: string;\n  readonly scale?: number;\n}\n\nexport interface EdgeKind {\n  readonly color?: string;\n  readonly directed?: boolean;\n  readonly id: string;\n  readonly name: string;\n  readonly pattern?: string;\n  readonly shape?: "bezier" | "line";\n  readonly sourceTip?: string;\n  readonly stroke?: string;\n  readonly targetTip?: string;\n}\n\nexport interface KindCatalogBundle {\n  readonly edgeTips?: readonly EdgeTip[];\n  readonly edges?: readonly EdgeKind[];\n  readonly handles?: readonly HandleKind[];\n  readonly nodes?: readonly NodeKind[];\n  readonly wires?: readonly WireKind[];\n}\n\nexport const MANIFEST_IDS = [${docs.map((d) => tsStringLiteral(d.id)).join(", ")}] as const;\nexport type ManifestId = (typeof MANIFEST_IDS)[number];\n\nexport function mergeManifestCatalogBundles(...bundles: readonly KindCatalogBundle[]): KindCatalogBundle {\n  function mergedSlice<T extends { id: string }>(slices: readonly (readonly T[] | undefined)[]): readonly T[] | undefined {\n    const byId = new Map<string, T>();\n    let any = false;\n    for (const slice of slices) {\n      if (!slice) continue;\n      any = true;\n      for (const row of slice) {\n        byId.set(row.id, row);\n      }\n    }\n    if (!any) return undefined;\n    return [...byId.values()].sort((left, right) => left.id.localeCompare(right.id));\n  }\n  return {\n    edgeTips: mergedSlice(bundles.map((bundle) => bundle.edgeTips)),\n    edges: mergedSlice(bundles.map((bundle) => bundle.edges)),\n    handles: mergedSlice(bundles.map((bundle) => bundle.handles)),\n    nodes: mergedSlice(bundles.map((bundle) => bundle.nodes)),\n    wires: mergedSlice(bundles.map((bundle) => bundle.wires)),\n  };\n}\n`;
@@ -467,7 +427,7 @@ class CheckGeneratedScript extends BundleScript {
     const actual = graphOutputInventory(outDir);
     const stale = rendered.artifacts.filter((artifact) => !existsSync(artifact.path) || readFileSync(artifact.path, "utf8") !== artifact.content).map((artifact) => basename(artifact.path));
     if (JSON.stringify(actual) !== JSON.stringify(expected) || stale.length > 0) throw new Error(`framework-graph generated catalog is stale: membership=${JSON.stringify(actual) !== JSON.stringify(expected)}, files=${JSON.stringify(stale)}`);
-    runCmd("bun", ["test", resolve(this.root, "../../🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 60_000 });
+    runCmd("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 60_000 });
     console.log(`[framework-graph] ${rendered.manifestCount} generated manifests are fresh`);
   }
 }
@@ -475,7 +435,7 @@ class CheckGeneratedScript extends BundleScript {
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runCmd("bun", ["test", resolve(this.root, "../../🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
+    runCmd("bun", ["test", resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], { cwd: this.repoRoot });
     runCargoTestBudgeted(["semio-framework-graph"], this.repoRoot, rest);
   }
 }

@@ -8,8 +8,7 @@
     "wiresFixture",
     "boardFixture",
     "dragLastX",
-    "dragLastY",
-    "locale"
+    "dragLastY"
   ],
   "properties": {
     "wiresFixture": {
@@ -35,10 +34,6 @@
       "x-semio-state": "artifact",
       "type": "number",
       "format": "double"
-    },
-    "locale": {
-      "x-semio-state": "config",
-      "type": "string"
     }
   },
   "$defs": {

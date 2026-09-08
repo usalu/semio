@@ -457,6 +457,6 @@ selected_cursor!(FlowFixtureCopy, FlowFixture);
 
 //#region 🧪️CopyLaws
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/📑️copy/🦀️.rs"]
 mod tests;
 //#endregion 🧪️CopyLaws

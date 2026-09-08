@@ -17,7 +17,6 @@
     "resultMode",
     "resultModeIndex",
     "camera",
-    "locale",
     "solverResultsJson",
     "meshPreviewJson"
   ],
@@ -100,10 +99,6 @@
       "$ref": "#/$defs/FemCamera",
       "x-semio-state": "config"
     },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "solverResultsJson": {
       "type": "string",
       "contentMediaType": "application/json",
@@ -167,36 +162,429 @@
       }
     },
     "FemNode": {
-      "title": "FemNode",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number",
+          "format": "double",
+          "x-semio-invariant": "mutations::guards::node_geometry — a node coordinate is finite"
+        },
+        "y": {
+          "type": "number",
+          "format": "double",
+          "x-semio-invariant": "mutations::guards::node_geometry — a node coordinate is finite"
+        }
+      },
+      "title": "FemNode"
     },
     "FemElement": {
-      "title": "FemElement",
-      "type": "object"
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "start",
+            "end",
+            "materialId",
+            "sectionId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bar"
+            },
+            "id": {
+              "type": "string"
+            },
+            "start": {
+              "type": "string"
+            },
+            "end": {
+              "type": "string"
+            },
+            "materialId": {
+              "type": "string"
+            },
+            "sectionId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "start",
+            "end",
+            "materialId",
+            "sectionId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "beam"
+            },
+            "id": {
+              "type": "string"
+            },
+            "start": {
+              "type": "string"
+            },
+            "end": {
+              "type": "string"
+            },
+            "materialId": {
+              "type": "string"
+            },
+            "sectionId": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "title": "FemElement"
     },
     "FemRegion": {
-      "title": "FemRegion",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "outline",
+        "holes",
+        "thickness",
+        "materialId",
+        "meshSize"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "outline": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 3,
+          "x-semio-invariant": "mutations::guards::region_geometry — an outline of at least three points enclosing non-zero area"
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "double"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "minItems": 3
+          },
+          "x-semio-invariant": "mutations::guards::region_geometry — every hole a real polygon lying inside the outline"
+        },
+        "thickness": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-invariant": "mutations::guards::region_geometry — a positive thickness"
+        },
+        "materialId": {
+          "type": "string"
+        },
+        "meshSize": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-invariant": "mutations::guards::region_geometry — a positive mesh size"
+        }
+      },
+      "title": "FemRegion"
     },
     "FemMaterial": {
-      "title": "FemMaterial",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "e",
+        "nu",
+        "rho"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "e": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-invariant": "mutations::guards::material_plausibility — a positive Young's modulus"
+        },
+        "nu": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": -1,
+          "exclusiveMaximum": 0.5,
+          "x-semio-invariant": "mutations::guards::material_plausibility — a Poisson ratio in the admissible open interval"
+        },
+        "rho": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-invariant": "mutations::guards::material_plausibility — a positive density"
+        }
+      },
+      "title": "FemMaterial"
     },
     "FemSection": {
-      "title": "FemSection",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "area",
+        "iy"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "area": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-invariant": "mutations::guards::section_plausibility — a positive area"
+        },
+        "iy": {
+          "type": "number",
+          "format": "double",
+          "exclusiveMinimum": 0,
+          "x-semio-invariant": "mutations::guards::section_plausibility — a positive second moment of area"
+        }
+      },
+      "title": "FemSection"
     },
     "FemSupport": {
-      "title": "FemSupport",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "nodeId",
+        "fixed"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "nodeId": {
+          "type": "string"
+        },
+        "fixed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ]
+          }
+        }
+      },
+      "title": "FemSupport"
     },
     "FemLoadCase": {
-      "title": "FemLoadCase",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "loads",
+        "selfWeight"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "loads": {
+          "type": "array",
+          "items": {
+            "title": "FemLoad",
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "id",
+                  "nodeId",
+                  "dof",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "nodal"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "nodeId": {
+                    "type": "string"
+                  },
+                  "dof": {
+                    "type": "string",
+                    "enum": [
+                      "Tx",
+                      "Ty",
+                      "Tz",
+                      "Rx",
+                      "Ry",
+                      "Rz"
+                    ]
+                  },
+                  "value": {
+                    "type": "number",
+                    "format": "double"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "id",
+                  "elementId",
+                  "wx",
+                  "wy"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "memberUdl"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "elementId": {
+                    "type": "string"
+                  },
+                  "wx": {
+                    "type": "number",
+                    "format": "double"
+                  },
+                  "wy": {
+                    "type": "number",
+                    "format": "double"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "id",
+                  "regionId",
+                  "pressure"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "area"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "regionId": {
+                    "type": "string"
+                  },
+                  "pressure": {
+                    "type": "number",
+                    "format": "double"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "selfWeight": {
+          "type": "boolean"
+        }
+      },
+      "title": "FemLoadCase"
     },
     "FemCombination": {
-      "title": "FemCombination",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "terms"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "terms": {
+          "type": "array",
+          "items": {
+            "title": "FemCombinationTerm",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "caseId",
+              "factor"
+            ],
+            "properties": {
+              "caseId": {
+                "type": "string"
+              },
+              "factor": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          }
+        }
+      },
+      "title": "FemCombination"
     }
   }
 }

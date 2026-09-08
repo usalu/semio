@@ -1,4 +1,3 @@
-
 use super::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Barrier, OnceLock};
@@ -38,13 +37,11 @@ fn credential_claim_is_single_read_class_bound_and_terminal_on_failure() {
     let failed = OnceLock::new();
     let failed_reads = AtomicUsize::new(0);
     for _ in 0..2 {
-        assert!(
-            claim_local_hub_credential_with(&failed, "native", |_| {
-                failed_reads.fetch_add(1, Ordering::SeqCst);
-                Err(super::super::client::DirectoryClientError::Unauthorized)
-            })
-            .is_err()
-        );
+        assert!(claim_local_hub_credential_with(&failed, "native", |_| {
+            failed_reads.fetch_add(1, Ordering::SeqCst);
+            Err(super::super::client::DirectoryClientError::Unauthorized)
+        })
+        .is_err());
     }
     assert_eq!(failed_reads.load(Ordering::SeqCst), 1);
 }

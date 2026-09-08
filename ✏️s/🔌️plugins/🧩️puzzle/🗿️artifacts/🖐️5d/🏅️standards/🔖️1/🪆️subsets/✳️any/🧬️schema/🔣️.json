@@ -33,7 +33,6 @@
     "fillCount",
     "brushCandidateIndex",
     "lodMode",
-    "locale",
     "runtimeExtrasJson",
     "previewSeq"
   ],
@@ -190,10 +189,6 @@
       "x-semio-state": "config"
     },
     "lodMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
       "type": "string",
       "x-semio-state": "config"
     },

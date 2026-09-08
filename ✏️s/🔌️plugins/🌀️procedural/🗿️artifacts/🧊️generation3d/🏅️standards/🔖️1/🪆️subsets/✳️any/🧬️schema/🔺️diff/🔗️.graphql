@@ -15,7 +15,6 @@ type Generation3dDiff {
   selectedGenerationId: String @state(class: PRESENCE)
   generationPreviewText: String @state(class: ARTIFACT)
   activeUtilityId: String @state(class: PRESENCE)
-  locale: String @state(class: CONFIG)
 }
 
 type CameraJson {

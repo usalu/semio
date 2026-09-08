@@ -8,7 +8,7 @@ import { basename, join, relative } from "node:path";
 //#region 🧹️WireRetirement
 class WireRetirementSourceScript extends BundleScript {
   async run(): Promise<void> {
-    const { testWireRetirementFixture } = await import("../../🔨️modules/🎯️action-bus/🧹️wire-retirement/📜️script.ts");
+    const { testWireRetirementFixture } = await import("../../🔨️modules/🎯️action-bus/🧹️wire-retirement/🧪️tests/🔬️wire-retirement/🟦️.ts");
     testWireRetirementFixture();
   }
 }

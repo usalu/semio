@@ -21,7 +21,7 @@
       "x-semio-state": "artifact"
     },
     "drawing": {
-      "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/artifact.json#/$defs/drawing",
+      "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgLogicalDrawing",
       "x-semio-state": "artifact"
     },
     "header": {
@@ -31,27 +31,27 @@
     "classes": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/class"
+        "$ref": "#/definitions/class"
       },
       "x-semio-state": "artifact"
     },
     "dependencies": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/dependency"
+        "$ref": "#/definitions/dependency"
       },
       "x-semio-state": "artifact"
     },
     "summary": {
-      "$ref": "#/$defs/summary",
+      "$ref": "#/definitions/summary",
       "x-semio-state": "artifact"
     },
     "application": {
-      "$ref": "#/$defs/application",
+      "$ref": "#/definitions/application",
       "x-semio-state": "artifact"
     },
     "template": {
-      "$ref": "#/$defs/template",
+      "$ref": "#/definitions/template",
       "x-semio-state": "artifact"
     },
     "auxiliaryHeader": {
@@ -71,7 +71,7 @@
       "x-semio-state": "artifact"
     }
   },
-  "$defs": {
+  "definitions": {
     "class": {
       "type": "object",
       "additionalProperties": false,
@@ -262,15 +262,15 @@
           "minimum": 0
         },
         "createdAt": {
-          "$ref": "#/$defs/julianDate"
+          "$ref": "#/definitions/julianDate"
         },
         "modifiedAt": {
-          "$ref": "#/$defs/julianDate"
+          "$ref": "#/definitions/julianDate"
         },
         "customProperties": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/customProperty"
+            "$ref": "#/definitions/customProperty"
           }
         }
       }

@@ -25,7 +25,6 @@ export interface FlowConfig {
   /** @state config */
   duplicateWidgetProgressJson: string;
   /** @state config */
-  locale: string;
 }
 
 export interface CameraJson {

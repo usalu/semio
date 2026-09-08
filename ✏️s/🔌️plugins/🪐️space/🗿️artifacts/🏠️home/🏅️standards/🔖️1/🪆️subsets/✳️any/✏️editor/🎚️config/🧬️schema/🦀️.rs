@@ -8,8 +8,6 @@ pub struct HomeConfig {
     #[state(config)]
     pub active_panel_tab: String,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub directory_json: String,
     #[state(config)]
     pub directory_session_binding_sha256: String,

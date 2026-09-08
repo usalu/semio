@@ -5,5 +5,6 @@
   "prerequisiteRoot": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
   "output": "{projectRoot}/dist/build",
   "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
+  "browserProbe": "if (import.meta.vitest) await import('node:fs'); export const value = 42;",
   "arguments": ["native", "cargo", "build", "--manifest", "🌎️hub/📦️packages/🦀️rust/Cargo.toml", "--release", "--bin", "os-hub"]
 }

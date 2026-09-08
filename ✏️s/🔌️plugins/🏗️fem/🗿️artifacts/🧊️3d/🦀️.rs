@@ -248,8 +248,7 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// `Fem3dPlayApp`'s CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
 /// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
 /// artifact-scoped function set.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    #[cfg(feature = "component-app-assembly")]
+#[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
     + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::fem3d::Fem3dPlayApp>>>
@@ -265,6 +264,7 @@ impl<PA> ArtifactApps for PA where
 {
 }
 
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
 use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
         ("s.fem.fem3d.standard.v1", "standard", "1", &[], None),
@@ -1164,6 +1164,9 @@ mod tests;
                 #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/📚️examples/🎬️demo/🦀️.rs"]
                 mod component;
                 pub use component::*;
+                #[cfg(test)]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
+                mod tests;
             }
         }
 
@@ -1184,7 +1187,7 @@ pub mod editor {
                 mod component;
                 pub use component::*;
                 #[cfg(test)]
-                #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
                 mod tests;
             }
         }

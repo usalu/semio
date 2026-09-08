@@ -1,4 +1,3 @@
-
 use super::*;
 
 async fn owner_entry(mutation_id: &str) -> HostMutationRosterEntry {

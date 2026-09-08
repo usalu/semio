@@ -6,7 +6,6 @@ type SequenceArtifact {
   lastRunJson: String! @state(class: CONFIG)
   orientation: String! @state(class: CONFIG)
   camera: SequenceCamera! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 type SequenceStep { id: String! kind: String! params: JSON! x: Float! y: Float! slot: SlotRef collapsed: Boolean! }
 type SequenceEdge { id: String! from: String! to: String! }

@@ -91,7 +91,11 @@ ports = { react = 6105, wgpu = 6205 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
+
+[[test]]
+name = "surface_render"
+path = "../../🖥️app-surface/🧪️tests/🖥️app-surface/🦀️.rs"
 
 [features]
 default = []
@@ -118,3 +122,6 @@ semio-s-artifact-norm-vdi3805 = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+semio-s-artifact-norm-contract = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

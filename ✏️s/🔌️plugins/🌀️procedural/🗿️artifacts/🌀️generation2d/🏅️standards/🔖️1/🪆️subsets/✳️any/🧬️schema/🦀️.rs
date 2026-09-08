@@ -7,8 +7,8 @@ use semio_framework_os_flow::forms_bridge::apply_generation_values_to_fixture;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::render_scene_json;
-use semio_framework_artifact_flow_flow::CameraJson;
-use semio_framework_artifact_flow_flow::FlowFixture;
+
+
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_infos_json, FlowEvalSession, FlowHost};
 use ::semio_framework_schema::ArtifactSchema;
@@ -16,7 +16,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactDsl;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
-
 //#region 🔖️Generation2dArtifact
 /// 🧬️ Generation2dArtifact facet type.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
@@ -38,8 +37,6 @@ pub struct Generation2dArtifact {
     pub selected_generation_id: Option<String>,
     #[state(artifact)]
     pub generation_preview_text: Option<String>,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Generation2dArtifact
 
@@ -53,7 +50,6 @@ impl Default for Generation2dArtifact {
             show_mode: "preview".into(),
             selected_generation_id: None,
             generation_preview_text: None,
-            locale: "en-US".into(),
         }
     }
 }
@@ -414,3 +410,9 @@ pub fn empty_generation2d_snapshot() -> Generation2dSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use semio_framework_artifact_flow_flow::CameraJson;
+pub use semio_framework_artifact_flow_flow::FlowFixture;
+//#endregion 🔁️Re-exports

@@ -38,12 +38,5 @@ mod viewer { pub use semio_s_artifact_reasoning_wires::viewer::*; }
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ReasoningApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_wires_demo_session;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

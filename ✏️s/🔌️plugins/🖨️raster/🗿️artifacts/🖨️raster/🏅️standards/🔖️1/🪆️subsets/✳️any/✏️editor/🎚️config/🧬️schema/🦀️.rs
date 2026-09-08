@@ -15,8 +15,6 @@ pub struct RasterConfig {
     pub camera: RasterCamera,
     #[state(config)]
     pub active_utility_id: String,
-    #[state(config)]
-    pub locale: String,
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]

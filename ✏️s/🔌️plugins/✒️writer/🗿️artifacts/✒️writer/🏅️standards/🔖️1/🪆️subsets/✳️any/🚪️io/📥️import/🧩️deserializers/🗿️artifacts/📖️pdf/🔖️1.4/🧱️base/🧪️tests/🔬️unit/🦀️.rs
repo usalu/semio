@@ -2,7 +2,7 @@
 use super::*;
 #[semio_framework_async_macros::async_test]
 async fn pdf_page_text_vectors_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️page-text.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️page-text.json")).unwrap();
     for vector in vectors["cases"].as_array().unwrap() {
         let value = serde_json::json!({"schema":"stdio.pdf","pages":vector["pages"]});
         let pdf: PdfSnapshot = dsl::os_pack::json::from_json_str(&value.to_string()).unwrap();

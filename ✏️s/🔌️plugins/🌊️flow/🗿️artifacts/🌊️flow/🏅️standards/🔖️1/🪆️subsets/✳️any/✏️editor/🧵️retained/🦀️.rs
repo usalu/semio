@@ -162,12 +162,11 @@ impl Retirement {
                 self.text(value.contributions_json);
                 self.text(value.generation_json);
                 self.text(value.duplicate_widget_progress_json);
-                self.text(value.locale);
             }
             Owner::ConfigMutation(value) => match value {
                 FlowConfigMutation::Snapshot { config } => self.push(Owner::Config(config)),
                 FlowConfigMutation::SetPreviewOff { node_ids } => self.push(Owner::Strings(node_ids)),
-                FlowConfigMutation::SetLodMode { value } | FlowConfigMutation::SetLocale { value } => self.text(value),
+                FlowConfigMutation::SetLodMode { value } => self.text(value),
                 FlowConfigMutation::SetContributions { json }
                 | FlowConfigMutation::SetAutomationEnabled { json }
                 | FlowConfigMutation::SetGeneration { json }
@@ -228,7 +227,7 @@ impl ErasedSnapshotRetirement for Retirement {
 //#region 🎚️ConfigCopy
 pub(super) struct ConfigSource<'a> {
     preview: &'a [String],
-    text: [&'a str; 7],
+    text: [&'a str; 6],
     camera: &'a semio_framework_artifact_flow_flow::CameraJson,
     proximity: f64,
     visible: bool,
@@ -240,7 +239,7 @@ impl<'a> ConfigSource<'a> {
     pub(super) fn base(config: &'a FlowConfig) -> Self {
         Self {
             preview: &config.preview_off_node_ids,
-            text: [&config.lod_mode, &config.catalogue_sections_json, &config.automation_enabled_json, &config.contributions_json, &config.generation_json, &config.duplicate_widget_progress_json, &config.locale],
+            text: [&config.lod_mode, &config.catalogue_sections_json, &config.automation_enabled_json, &config.contributions_json, &config.generation_json, &config.duplicate_widget_progress_json],
             camera: &config.camera,
             proximity: config.proximity_distance,
             visible: config.grid_visible,
@@ -267,7 +266,6 @@ impl<'a> ConfigSource<'a> {
             FlowConfigMutation::SetDuplicateWidgetProgress { json } => source.text[5] = json,
             FlowConfigMutation::CancelDuplicateWidget { .. } if cancel_matches => source.text[5] = "",
             FlowConfigMutation::CancelDuplicateWidget { .. } => {}
-            FlowConfigMutation::SetLocale { value } => source.text[6] = value,
         }
         source
     }
@@ -292,7 +290,7 @@ impl ConfigCopy {
                 preview_off_node_ids: Vec::new(), camera: source.camera.clone(), lod_mode: String::new(), proximity_distance: source.proximity,
                 grid_visible: source.visible, grid_snap_enabled: source.snap, grid_factor: source.factor,
                 catalogue_sections_json: String::new(), automation_enabled_json: String::new(), contributions_json: String::new(),
-                generation_json: String::new(), duplicate_widget_progress_json: String::new(), locale: String::new(),
+                generation_json: String::new(), duplicate_widget_progress_json: String::new(),
             }),
             field: selected.unwrap_or(0), item: 0, bytes: Vec::new(), selected, preview_reserved: false,
             utf8_remaining: 0, utf8_min: 0x80, utf8_max: 0xbf,
@@ -300,7 +298,7 @@ impl ConfigCopy {
     }
 
     pub(super) fn complete(&self) -> bool {
-        self.field >= 8
+        self.field >= 7
     }
 
     /// 🧬️ Validates each copied UTF-8 byte once, so completed buffers need no whole-string rescan.
@@ -341,7 +339,6 @@ impl ConfigCopy {
                 4 => target.contributions_json = value,
                 5 => target.generation_json = value,
                 6 => target.duplicate_widget_progress_json = value,
-                7 => target.locale = value,
                 _ => unreachable!(),
             }
             if self.field != 0 { self.next_field(); }
@@ -372,7 +369,7 @@ impl ConfigCopy {
     }
 
     fn next_field(&mut self) {
-        self.field = if self.selected.is_some() { 8 } else { self.field + 1 };
+        self.field = if self.selected.is_some() { 7 } else { self.field + 1 };
         self.item = 0;
     }
 
@@ -396,8 +393,7 @@ pub(super) fn inverse_field(mutation: &FlowConfigMutation) -> Option<usize> {
         FlowConfigMutation::SetContributions { .. } => Some(4),
         FlowConfigMutation::SetGeneration { .. } => Some(5),
         FlowConfigMutation::SetDuplicateWidgetProgress { .. } | FlowConfigMutation::CancelDuplicateWidget { .. } => Some(6),
-        FlowConfigMutation::SetLocale { .. } => Some(7),
-        _ => Some(8),
+        _ => Some(7),
     }
 }
 
@@ -416,7 +412,6 @@ pub(super) fn inverse(mutation: &FlowConfigMutation, config: FlowConfig) -> Flow
         FlowConfigMutation::SetContributions { .. } => FlowConfigMutation::SetContributions { json: config.contributions_json },
         FlowConfigMutation::SetGeneration { .. } => FlowConfigMutation::SetGeneration { json: config.generation_json },
         FlowConfigMutation::SetDuplicateWidgetProgress { .. } | FlowConfigMutation::CancelDuplicateWidget { .. } => FlowConfigMutation::SetDuplicateWidgetProgress { json: config.duplicate_widget_progress_json },
-        FlowConfigMutation::SetLocale { .. } => FlowConfigMutation::SetLocale { value: config.locale },
     }
 }
 //#endregion 🎚️ConfigCopy

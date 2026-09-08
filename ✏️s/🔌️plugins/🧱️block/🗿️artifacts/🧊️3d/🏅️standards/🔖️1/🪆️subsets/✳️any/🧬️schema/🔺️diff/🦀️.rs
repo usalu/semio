@@ -40,8 +40,6 @@ pub struct Block3dDiff {
     #[state(presence)]
     pub wanted_tags: Option<Block3dStringList>,
     #[state(config)]
-    pub locale: Option<String>,
-    #[state(config)]
     pub windows: Option<Block3dWindowsList>,
     #[state(config)]
     pub brush_vortex_kind_id: Option<Option<String>>,

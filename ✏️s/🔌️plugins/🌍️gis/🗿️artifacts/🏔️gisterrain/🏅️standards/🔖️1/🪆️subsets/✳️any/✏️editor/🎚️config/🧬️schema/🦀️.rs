@@ -12,8 +12,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct Gis3dConfig {
     #[state(config)]
     pub camera_json: String,
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor

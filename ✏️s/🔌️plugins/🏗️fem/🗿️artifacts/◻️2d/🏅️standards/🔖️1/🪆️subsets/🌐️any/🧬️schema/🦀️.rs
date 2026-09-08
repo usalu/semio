@@ -1,9 +1,8 @@
 //! 🧬️ Fem2d artifact schema — every field of the artifact with its state class.
 
-use crate::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-
 //#region 🔖️Artifact
 /// 🧬️ Full fem2d artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
@@ -36,8 +35,6 @@ pub struct Fem2dArtifact {
     pub result_mode_index: u32,
     #[state(config)]
     pub camera: FemCamera,
-    #[state(config)]
-    pub locale: String,
     #[state(artifact)]
     pub solver_results_json: String,
     #[state(artifact)]
@@ -62,7 +59,6 @@ impl Default for Fem2dArtifact {
             result_mode: "static".into(),
             result_mode_index: 0,
             camera: FemCamera::default(),
-            locale: "en-US".into(),
             solver_results_json: String::new(),
             mesh_preview_json: String::new(),
         }
@@ -299,3 +295,17 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: Fem2dComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::FemCamera;
+pub use crate::FemAnalysisSettings;
+pub use crate::FemNode;
+pub use crate::FemElement;
+pub use crate::FemRegion;
+pub use crate::FemMaterial;
+pub use crate::FemSection;
+pub use crate::FemSupport;
+pub use crate::FemLoadCase;
+pub use crate::FemCombination;
+//#endregion 🔁️Re-exports

@@ -14,3 +14,24 @@ type FlattenedNode {
   worldTransform: Transform!
   resolvedStyle: DrawStyle
 }
+
+type Rgba {
+  r: Float!
+  g: Float!
+  b: Float!
+  a: Float!
+}
+
+type DrawStyle {
+  name: String!
+  fill: Rgba
+  stroke: Rgba
+  strokeWidth: Float
+  opacity: Float
+}
+
+type Transform {
+  translation: [Float!]!
+  rotation: [Float!]!
+  scale: [Float!]!
+}

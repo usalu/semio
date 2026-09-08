@@ -8,7 +8,15 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts dev",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "generate",
+          "projects": [
+            "@semio-tech/framework-schema"
+          ]
+        }
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -56,6 +64,14 @@
       "inputs": [
         "default",
         "^default"
+      ],
+      "dependsOn": [
+        {
+          "target": "generate",
+          "projects": [
+            "@semio-tech/framework-schema"
+          ]
+        }
       ]
     },
     "lint": {
@@ -81,5 +97,8 @@
         "{projectRoot}/🧩️repo.vsix"
       ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "@semio-tech/framework-schema"
+  ]
 }

@@ -489,5 +489,5 @@ impl<V: super::FromValue> super::FromValue for OrderedMap<V> {
 //#endregion 🔁️Value
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🗂️ordered/🦀️.rs"]
 mod tests;

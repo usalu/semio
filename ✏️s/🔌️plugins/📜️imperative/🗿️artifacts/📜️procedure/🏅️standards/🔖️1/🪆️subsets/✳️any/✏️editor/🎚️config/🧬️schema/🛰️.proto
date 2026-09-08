@@ -5,7 +5,6 @@ message ImperativeConfig {
   // @state config
   string run_output_json = 2;
   // @state config
-  string locale = 3;
   // @state config
   string contributions_json = 4;
 }

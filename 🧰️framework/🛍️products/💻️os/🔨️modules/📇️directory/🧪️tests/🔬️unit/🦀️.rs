@@ -1,4 +1,3 @@
-
 use super::*;
 
 async fn fixture_events() -> Vec<DirectoryEvent> {

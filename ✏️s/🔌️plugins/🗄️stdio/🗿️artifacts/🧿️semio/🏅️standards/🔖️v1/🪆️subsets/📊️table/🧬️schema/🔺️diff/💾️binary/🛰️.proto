@@ -7,3 +7,9 @@ message SemioTableDiffFrame {
   uint32 presence = 2; // bit0=columns, bit1=rows
   bytes payload = 3;   // opaque: present sections only
 }
+
+message SemioTableDiffBinaryFrame {
+  optional int64 format = 1;
+  optional int64 presence = 2;
+  optional string payload = 3;
+}

@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/block/block2d/snapshot/text.json",
   "title": "Block2dSnapshotText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of Block2dSnapshot: the instance is the serialized document this facet's grammar and codec speak."
 }

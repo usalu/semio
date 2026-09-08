@@ -16,7 +16,6 @@ message RasterArtifact {
   double camera_x = 11;
   double camera_y = 12;
   double camera_zoom = 13;
-  string locale = 14;
   optional string hovered_id = 15;
 }
 

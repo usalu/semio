@@ -1043,50 +1043,6 @@
                 }
               },
               {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  },
-                  "reuse": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive"
-                  }
-                }
-              },
-              {
                 "id": "setCamera",
                 "label": {
                   "native": {
@@ -3054,7 +3010,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 100.0,
+                "size": 100,
                 "children": [
                   {
                     "kind": "window",

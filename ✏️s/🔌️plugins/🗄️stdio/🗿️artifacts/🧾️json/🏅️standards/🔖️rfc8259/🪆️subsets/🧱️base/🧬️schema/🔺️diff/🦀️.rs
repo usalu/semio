@@ -4,7 +4,7 @@
 //! `snapshot: Option<JsonSnapshot>` full-replace slot anywhere — `SetSnapshot`'s own diff is the
 //! sparse `between(base, next)` just like every other mutation.
 
-use crate::schema::snapshot::{JsonMember, JsonValue};
+use crate::schema::snapshot::{JsonMember};
 use crate::JsonSnapshot;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 // 🧭️ `DiffAlgebra` isn't yet on the `protocol` facade's curated re-export list (S1 added the
@@ -13,7 +13,6 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use protocol::os_spr::command::DiffAlgebra;
 use framework_schema::ArtifactSchema;
 use std::collections::{HashMap, HashSet};
-
 //#region 🔖️CollectionDiffs
 /// 📦️ Index-keyed `array` triple.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -1207,3 +1206,8 @@ pub(crate) fn demo_diff_cases() -> Vec<JsonDiff> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::schema::snapshot::JsonValue;
+//#endregion 🔁️Re-exports

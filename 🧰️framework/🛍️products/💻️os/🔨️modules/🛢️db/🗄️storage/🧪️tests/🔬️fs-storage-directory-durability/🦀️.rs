@@ -43,7 +43,7 @@ mod directory_durability_tests {
         let base = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
         let path = base.join(format!("directory-durability-{name}-{}-{}", std::process::id(), NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed))).join("nested/root");
         let storage = FsStorage::open(super::super::db_io_test_pool(), &path).await.unwrap();
-        let fixture = serde_json::from_str(include_str!("../../🧪️fixtures/📁️directory-durability/🔣️.json")).unwrap();
+        let fixture = serde_json::from_str(include_str!("../../🧫️fixtures/📁️directory-durability/🔣️.json")).unwrap();
         (storage, path, fixture)
     }
 

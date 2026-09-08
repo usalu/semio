@@ -65,7 +65,6 @@ impl Gis2dConfigDelta {
                 None => { next.layer_stroke_scale.remove(id); }
             }
         }
-        if let Some(value) = &self.locale { next.locale = value.clone(); }
         Ok(())
     }
 }

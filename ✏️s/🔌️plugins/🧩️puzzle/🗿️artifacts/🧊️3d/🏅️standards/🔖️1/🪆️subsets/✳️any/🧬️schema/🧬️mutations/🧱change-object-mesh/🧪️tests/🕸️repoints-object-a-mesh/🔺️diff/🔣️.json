@@ -16,26 +16,26 @@
             "objectKind": "object-kind-a",
             "anchor": "fixed",
             "origin": [
-              0.0,
-              0.0,
-              0.0
+              0,
+              0,
+              0
             ],
             "orientation": [
-              0.0,
-              0.0,
-              0.0,
-              1.0
+              0,
+              0,
+              0,
+              1
             ],
-            "scale": 1.0,
+            "scale": 1,
             "meshUrl": "mesh://alpha-lod2",
             "vortices": [
               {
                 "id": "vortex-1",
                 "vortexKind": "vortex-kind-a",
                 "position": [
-                  1.0,
-                  0.0,
-                  0.0
+                  1,
+                  0,
+                  0
                 ],
                 "hidden": false,
                 "locked": false
@@ -44,9 +44,9 @@
                 "id": "vortex-spare",
                 "vortexKind": "vortex-kind-a",
                 "position": [
-                  0.0,
-                  1.0,
-                  0.0
+                  0,
+                  1,
+                  0
                 ],
                 "hidden": false,
                 "locked": false
@@ -89,7 +89,6 @@
   "lodDepthVariable": null,
   "lodManual": null,
   "proximityRadius": null,
-  "locale": null,
   "runtimeExtrasJson": null,
   "hoveredObjectId": null,
   "hoveredVortexFullId": null,

@@ -315,9 +315,18 @@ mod wasm_program_exchange {
     /// targeted `AdvanceRetained` requests until the fixed producer publishes. Maintenance requests
     /// never poll the guest or emit visibility twice; exhausting the exact opportunity ceiling fails
     /// closed rather than returning an empty tree.
-    pub async fn render_with_document(client: &KernelClient, instance_id: u32, body_key: &str, _view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
-        let surface = SurfaceId::try_from(body_key).map_err(|_| "program surface id exceeds the retained contract".to_string())?;
-        let mut outcome = client.exchange_events(instance_id, vec![semio_framework::kernel::Event::SurfaceVisible { surface: body_key.to_string() }]).await?;
+    pub async fn render_with_document(client: &KernelClient, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
+        let surface = SurfaceId::try_from(surface_id).map_err(|_| "program surface id exceeds the retained contract".to_string())?;
+        let mut outcome = client
+            .exchange_events(
+                instance_id,
+                vec![semio_framework::kernel::Event::SurfaceVisible {
+                    surface: surface_id.to_string(),
+                    body_key: body_key.to_string(),
+                    view_state: pack_view_state(view_state)?,
+                }],
+            )
+            .await?;
         if let Some(sink) = refresh_effects {
             sink.append(&mut outcome.effects);
         }
@@ -327,15 +336,15 @@ mod wasm_program_exchange {
             }
         }
         for _ in 0..(UI_DOCUMENT_PATCH_OPS + UI_DOCUMENT_NODES * UI_DOCUMENT_NODES + UI_DOCUMENT_LEASE_SLOTS) {
-            if let Some(document) = outcome.take_surface(body_key) {
+            if let Some(document) = outcome.take_surface(surface_id) {
                 return Ok(document);
             }
             outcome = client.advance_retained(instance_id, surface.clone()).await?;
         }
-        if let Some(document) = outcome.take_surface(body_key) {
+        if let Some(document) = outcome.take_surface(surface_id) {
             return Ok(document);
         }
-        Err(format!("plugin retained document for surface '{body_key}' exceeded its bounded opportunity budget"))
+        Err(format!("plugin retained document for surface '{surface_id}' exceeded its bounded opportunity budget"))
     }
 
     /// 🚧️ `window_engagements`/`window_measures` rode the SAME `RefreshUi`/`SectionProbe{kind}`
@@ -493,16 +502,16 @@ impl ProgramBridgeEntry {
         }
     }
 
-    pub async fn render(&self, instance_id: u32, body_key: &str, view_state: &ViewModel) -> Result<UiDocumentLease, String> {
-        self.render_with_document(instance_id, body_key, view_state, None, None).await
+    pub async fn render(&self, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel) -> Result<UiDocumentLease, String> {
+        self.render_with_document(instance_id, surface_id, body_key, view_state, None, None).await
     }
 
-    pub async fn render_with_document(&self, instance_id: u32, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
+    pub async fn render_with_document(&self, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, body_key, view_state, document_dsl, refresh_effects).await,
+            ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects).await,
             #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::render_with_document(client, instance_id, body_key, view_state, document_dsl, refresh_effects).await,
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::render_with_document(client, instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects).await,
         }
     }
 
@@ -705,10 +714,11 @@ const BROWSER_DOCUMENT_ASSEMBLY_BYTES: usize = 32 * 1024;
 /// ordinary turn path, so nothing is dropped — but a caller relying on THIS sink for render-time effects
 /// gets an empty one.
 #[cfg(target_arch = "wasm32")]
-async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, body_key: &str, _view_state: &ViewModel, _document_dsl: Option<&str>, _refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
+async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, _refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
     let render = get_fn(handle.as_ref(), "renderDocument")?;
+    let view_json = serde_json::to_string(view_state).map_err(|error| error.to_string())?;
     let result = render
-        .call2(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(body_key))
+        .call4(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(surface_id), &JsValue::from_str(body_key), &JsValue::from_str(&view_json))
         .map_err(|error| format!("renderDocument failed: {}", describe_js_rejection(&error)))?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
         JsFuture::from(promise.clone()).await.map_err(|error| format!("renderDocument promise failed: {}", describe_js_rejection(&error)))?
@@ -717,12 +727,12 @@ async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, body_ke
     };
     let text = resolved.as_string().ok_or_else(|| "renderDocument result not string".to_string())?;
     let published: BrowserRetainedDocument = serde_json::from_str(&text).map_err(|error| format!("renderDocument result parse failed: {error}"))?;
-    let root = published.root.ok_or_else(|| format!("plugin published no root node for surface '{body_key}'"))?;
+    let root = published.root.ok_or_else(|| format!("plugin published no root node for surface '{surface_id}'"))?;
     if published.nodes.is_empty() {
-        return Err(format!("plugin published an empty retained document for surface '{body_key}'"));
+        return Err(format!("plugin published an empty retained document for surface '{surface_id}'"));
     }
     let mut assembly = ui_contract::UiDocumentAssembly::default();
-    let outcome = assemble_browser_document(&mut assembly, body_key, instance_id, root, &published);
+    let outcome = assemble_browser_document(&mut assembly, surface_id, instance_id, root, &published);
     if outcome.is_err() {
         retire_browser_assembly(&mut assembly);
     }

@@ -10,7 +10,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const fixture = JSON.parse(readFileSync(new URL("./🧫️fixture/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
     const lifetimeSchema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", source.url), "utf8"));
-    const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(schema).getSchema(`${schema.$id}#/$defs/PatchFixture`)!;
+    const valueSchema = JSON.parse(readFileSync(new URL("../../../🌱️value/🧬️schema/🔣️.json", source.url), "utf8"));
+    const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(schema).getSchema(`${schema.$id}#/$defs/PatchFixture`)!;
     expect(validate(fixture)).toBe(true);
     expect(validate({ ...fixture, maximumBytes: 36 })).toBe(false);
     const moduleName = "@webassemblyjs/leb128/lib/leb.js";

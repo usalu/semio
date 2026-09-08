@@ -2921,6 +2921,21 @@ export function schemaScopeOwnerLevel(ownerPath: string, taxonomy: Taxonomy = lo
   return null;
 }
 
+/**
+ * 🪞️ The owner directory a schema module belongs to: its parent, except when the module directory is
+ * itself a declared owner level.
+ *
+ * `🧰️framework/🔨️modules/🧬️schema` is the framework module whose own name is the facet directory name, so
+ * its parent is the module container `🧰️framework/🔨️modules`, which is deliberately not an owner level.
+ * A module that already sits at an eligible level owns itself; the alternative — admitting the container —
+ * would make every framework module's parent an owner.
+ */
+export function schemaScopeModuleOwnerPath(modulePath: string, taxonomy: Taxonomy = loadTaxonomy(), matcher: TaxonomyPathMatcher = createTaxonomyPathMatcher()): string {
+  const parent = modulePath.slice(0, Math.max(0, modulePath.lastIndexOf("/")));
+  if (schemaScopeOwnerLevel(parent, taxonomy, matcher)) return parent;
+  return schemaScopeOwnerLevel(modulePath, taxonomy, matcher) ? modulePath : parent;
+}
+
 /** 🧩️ Splits one document `$id` into its scope path segments and its facet filename, or `null` when it is not addressable. */
 export function schemaDocumentIdParts(documentId: string, taxonomy: Taxonomy = loadTaxonomy()): { readonly scopePath: readonly string[]; readonly facet: string } | null {
   const resolution = taxonomy.schemaExportResolution;
@@ -2949,10 +2964,37 @@ interface SchemaWalkResult {
   readonly files: readonly string[];
 }
 
+const GIT_SUBMODULE_PATHS = new Map<string, readonly string[]>();
+const GIT_SUBMODULE_PATH_DECLARATION = /^[\t ]*path[\t ]*=[\t ]*(.+?)[\t ]*$/gmu;
+
+/**
+ * 🧩️ The repository-relative paths `.gitmodules` declares, memoised per repository root.
+ *
+ * A submodule is a foreign repository tracked as one gitlink: its files are not this repository's sources
+ * and every law that walks the tree would double-count them. Read from the declaration file, never from a
+ * `git` subprocess, so the walk stays a pure filesystem read; NFC-normalised because the declaration and
+ * the directory entry can spell the same emoji path in different Unicode forms.
+ * @see https://git-scm.com/docs/gitmodules
+ */
+export function gitSubmodulePaths(repoRoot: string): readonly string[] {
+  const root = resolve(repoRoot);
+  const memoised = GIT_SUBMODULE_PATHS.get(root);
+  if (memoised) return memoised;
+  let declared: string[] = [];
+  try {
+    declared = [...readFileSync(join(root, ".gitmodules"), "utf8").matchAll(GIT_SUBMODULE_PATH_DECLARATION)].map((match) => match[1]!.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/+$/u, "").normalize("NFC")).filter((path) => path.length > 0);
+  } catch {
+    declared = [];
+  }
+  const paths = [...new Set(declared)].sort(byteSort);
+  GIT_SUBMODULE_PATHS.set(root, paths);
+  return paths;
+}
+
 function walkRepositoryTree(repoRoot: string, taxonomy: Taxonomy): SchemaWalkResult {
   const directories: string[] = [];
   const files: string[] = [];
-  const opaque = Object.values(taxonomy.pathExclusions).map((exclusion) => exclusion.path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/+$/u, ""));
+  const opaque = [...Object.values(taxonomy.pathExclusions).map((exclusion) => exclusion.path.replaceAll("\\", "/").replace(/^\.\//u, "").replace(/\/+$/u, "")), ...gitSubmodulePaths(repoRoot)].map((prefix) => prefix.normalize("NFC"));
   const visit = (relDir: string): void => {
     let entries: import("node:fs").Dirent<string>[];
     try {
@@ -2963,7 +3005,8 @@ function walkRepositoryTree(repoRoot: string, taxonomy: Taxonomy): SchemaWalkRes
     for (const entry of entries.sort((left, right) => byteSort(left.name, right.name))) {
       if (entry.isSymbolicLink()) continue;
       const rel = relDir ? `${relDir}/${entry.name}` : entry.name;
-      if (opaque.some((prefix) => rel === prefix || rel.startsWith(`${prefix}/`))) continue;
+      const key = rel.normalize("NFC");
+      if (opaque.some((prefix) => key === prefix || key.startsWith(`${prefix}/`))) continue;
       if (entry.isDirectory()) {
         if (isDiscoverySkipDirectory(entry.name) || entry.name.startsWith(".")) continue;
         directories.push(rel);
@@ -3067,7 +3110,7 @@ function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, 
   if (!id) diagnostics.push({ code: "schema-module-id-missing", path, detail: `Declare $id as ${resolution.idBase}<scope path>/<facet>.json.` });
   const parts = id ? schemaDocumentIdParts(id, taxonomy) : null;
   const scopeId = parts ? parts.scopePath.join(resolution.scopeIdSeparator) : null;
-  if (id && !scopeId) diagnostics.push({ code: "schema-module-id-unaddressable", path, detail: `$id ${JSON.stringify(id)} does not resolve to a dotted scope id under ${resolution.idBase}.` });
+  if (id && !scopeId) diagnostics.push({ code: "schema-document-id-unaddressable", path, detail: `$id ${JSON.stringify(id)} does not resolve to a dotted scope id under ${resolution.idBase}.` });
   if (dialect !== taxonomy.schemaJsonDialect) diagnostics.push({ code: "schema-dialect-not-draft-07", path, detail: `$schema must be ${taxonomy.schemaJsonDialect}, got ${JSON.stringify(dialect)}.` });
   if (parsed["x-semio-mutationKinds"] !== undefined) diagnostics.push({ code: "schema-mutation-aggregate-kinds-redundant", path, detail: "x-semio-mutationKinds restates the oneOf $ref union and has no reader; the aggregate's $refs are the identity." });
   const exportPattern = new RegExp(resolution.exportIdPattern, "u");
@@ -3133,7 +3176,13 @@ function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, 
   return { path, scopeId, scopePath: parts?.scopePath ?? null, id, facetFilename: parts ? parts.facet.replace(/\.json$/u, "") : null, dialect, exports, exportFormats, references };
 }
 
-/** 🧬️ Walks every `🧬️schema` module, reads its documents and derives the scope catalog and every finding. */
+/**
+ * 🧬️ Walks every `🧬️schema` module, reads its documents and derives the scope catalog and every finding.
+ *
+ * A module's content is the set of walked leaves that are still readable when the walk reaches them, so a
+ * file a concurrent writer removes mid-walk is absent from `hashes`, `documents` and the catalog row alike
+ * rather than aborting the run or outliving its deletion (ledger row 109).
+ */
 export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loadCatalogTaxonomy()): SchemaScopeInventory {
   const root = resolve(repoRoot);
   const { directories, files } = walkRepositoryTree(root, taxonomy);
@@ -3152,7 +3201,7 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
     return found;
   };
   const formatLeaves = Object.entries(taxonomy.schemaFormats).map(([formatId, format]) => [formatId, canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy)] as const);
-  const ownerPaths = modulePaths.map((modulePath) => modulePath.slice(0, Math.max(0, modulePath.lastIndexOf("/"))));
+  const ownerPaths = modulePaths.map((modulePath) => schemaScopeModuleOwnerPath(modulePath, taxonomy, matcher));
   const nestedOwners = new Set(ownerPaths);
   const facetChainDirs = new Set([...taxonomy.schemaChildDirs, ...taxonomy.representationDirs]);
   const ownedByNestedScope = (path: string, modulePath: string): boolean => {
@@ -3202,9 +3251,19 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
     }
     const level = schemaScopeOwnerLevel(ownerPath, taxonomy, matcher);
     if (!level) diagnostics.push({ code: "schema-owner-ineligible", path: modulePath, detail: `${ownerPath || "."} is not a declared schemaScopeOwnerLevels level.` });
-    const owned = filesUnder(modulePath).filter((path) => !ownedByNestedScope(path, modulePath) && !schemaScopeOwnerExcluded(path, taxonomy, matcher) && isFacetLeaf(path, modulePath, canonicalLeaves));
+    const walked = filesUnder(modulePath).filter((path) => !ownedByNestedScope(path, modulePath) && !schemaScopeOwnerExcluded(path, taxonomy, matcher) && isFacetLeaf(path, modulePath, canonicalLeaves));
     const hashes: Record<string, string> = {};
-    for (const path of owned) hashes[path.slice(modulePath.length + 1)] = createHash("sha256").update(readFileSync(join(root, path))).digest("hex");
+    const owned: string[] = [];
+    for (const path of walked) {
+      let bytes: Buffer;
+      try {
+        bytes = readFileSync(join(root, path));
+      } catch {
+        continue;
+      }
+      owned.push(path);
+      hashes[path.slice(modulePath.length + 1)] = createHash("sha256").update(bytes).digest("hex");
+    }
     const facetKindId = resolveSchemaFacetKind(modulePath, taxonomy);
     const formats: Record<string, string> = {};
     for (const [formatId, leaf] of formatLeaves) if (fileSet.has(`${modulePath}/${leaf}`)) formats[formatId] = `${modulePath}/${leaf}`;
@@ -3286,7 +3345,7 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
     if (!document.id) continue;
     const existing = documentsById.get(document.id);
     if (existing) {
-      diagnostics.push({ code: "schema-module-id-duplicate", path: document.path, detail: `$id ${document.id} is already declared by ${existing.path}; a document $id is the resolution key and is unique repository-wide.` });
+      diagnostics.push({ code: "schema-document-id-duplicate", path: document.path, detail: `$id ${document.id} is already declared by ${existing.path}; a document $id is the resolution key and is unique repository-wide.` });
       continue;
     }
     documentsById.set(document.id, { scopeId: module.level ? module.scopeId : null, path: document.path, exports: new Set(document.exports) });
@@ -4975,7 +5034,7 @@ export function parseSemanticPackageBrowserProfile(input: unknown, genericEmojiI
 
 /** 🪪️ Current WGPU package declarations, independent of frozen projection preimages. */
 export interface CanonicalWgpuPackageCatalog {
-  readonly $schema: "./🧬️package-catalog.schema.json";
+  readonly $schema: "https://semio.tech/schema/os/renderer/component.json#/$defs/RendererPackageCatalogV1";
   readonly schemaVersion: 1;
   readonly kind: "canonical-wgpu-package";
   readonly ownerPath: string;
@@ -4990,7 +5049,7 @@ export function parseCanonicalWgpuPackageCatalog(bytes: string, digest: string, 
   if (createHash("sha256").update(bytes).digest("hex") !== digest) throw new Error("Current WGPU package catalog digest drift");
   const row = JSON.parse(bytes) as CanonicalWgpuPackageCatalog;
   const exact = (value: unknown, keys: readonly string[]): boolean => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
-  if (!exact(row, ["$schema", "schemaVersion", "kind", "ownerPath", "packageRelativePath", "identity", "entryPaths", "artifacts"]) || row.$schema !== "./🧬️package-catalog.schema.json" || row.schemaVersion !== 1 || row.kind !== "canonical-wgpu-package" || row.ownerPath !== profile.ownerPath || row.packageRelativePath !== "📦️packages/🦀️rust") throw new Error("Current WGPU package catalog identity drift");
+  if (!exact(row, ["$schema", "schemaVersion", "kind", "ownerPath", "packageRelativePath", "identity", "entryPaths", "artifacts"]) || row.$schema !== "https://semio.tech/schema/os/renderer/component.json#/$defs/RendererPackageCatalogV1" || row.schemaVersion !== 1 || row.kind !== "canonical-wgpu-package" || row.ownerPath !== profile.ownerPath || row.packageRelativePath !== "📦️packages/🦀️rust") throw new Error("Current WGPU package catalog identity drift");
   if (!exact(row.identity, ["cargoPackageName", "nodePackageName", "nxProjectName"]) || row.identity.cargoPackageName !== "semio-framework-os-renderer-wgpu" || row.identity.nodePackageName !== "@semio-tech/framework-renderer-wgpu" || row.identity.nxProjectName !== row.identity.nodePackageName || !exact(row.entryPaths, ["cargoLibrary", "cargoBinary", "cargoBuild", "nodeLibrary"]) || Object.values(row.entryPaths).some((path) => !exactOwnerPath(path)) || row.entryPaths.cargoBuild !== "build.rs") throw new Error("Current WGPU package manifest authority drift");
   const ids = ["build-adapter", "binary-adapter", "typescript-adapter", "renderer-registration"];
   if (!Array.isArray(row.artifacts) || row.artifacts.length !== ids.length || row.artifacts.some((artifact, index) => !exact(artifact, ["id", "relativePath", "targetRelativePath", "language", "role", "content"]) || artifact.id !== ids[index] || !exactOwnerPath(artifact.relativePath) || artifact.targetRelativePath !== null && !exactOwnerPath(artifact.targetRelativePath) || !["rust", "typescript"].includes(artifact.language) || !["declaration", "implementation"].includes(artifact.role) || typeof artifact.content !== "string" || classifyPackageSourceRole(artifact.content, taxonomy.packageGlueGrammar[artifact.language]) !== artifact.role) || new Set(row.artifacts.map((artifact) => artifact.relativePath)).size !== ids.length) throw new Error("Current WGPU package artifact authority drift");
@@ -5299,7 +5358,7 @@ export function semanticPackageProjectionAuthority(
       const workspace = JSON.parse(facts.nodeWorkspaceContent ?? "null"), node = JSON.parse(nodes.get(activeRoot + "/package.json")?.content ?? "null"), nx = JSON.parse(nodes.get(activeRoot + "/📋️project.json")?.content ?? "null");
       if (!Array.isArray(workspace?.workspaces) || !workspace.workspaces.includes(activeRoot) || node?.name !== row.identity.nodePackageName || node?.exports?.["."] !== (destination ? "./🟦️typescript/📚️library/🟦️.ts" : "./🟦️.ts") || nx?.name !== row.identity.nxProjectName || nx?.sourceRoot !== activeRoot || !nx?.targets || Object.values(nx.targets).some((target) => (target as { options?: { cwd?: string } }).options?.cwd !== activeRoot) || destination && (!nx?.namedInputs?.default?.includes(`{workspaceRoot}/${row.semanticOwnerRoot}/**/*`) || node?.repository?.directory !== row.destinationRoot)) problems.push("WGPU Node/Nx workspace identity drift");
     } catch { problems.push("WGPU requires valid Node and Nx manifest evidence"); }
-    const configPath = destination ? "🟦️typescript/🧪️test/🟦️s.ts" : "🧪️tests/🟦️.ts";
+    const configPath = "vitest.config.ts";
     const config = nodes.get(activeRoot + "/" + configPath)?.content ?? "", script = nodes.get(activeRoot + "/📜️script.ts")?.content ?? "";
     if (classifyPackageSourceDisposition(config, taxonomy.packageSourceDispositions["vitest-config-entry"]!, taxonomy.packageGlueGrammar.typescript!) !== "tool-metadata" || script.split(JSON.stringify(configPath)).length !== 4) problems.push("WGPU exact Vitest configuration authority drift");
   }
@@ -10682,7 +10741,7 @@ interface SemanticResolverIndex {
 }
 
 const SEMANTIC_SKIP_DIRS = new Set(["node_modules", "target", "dist", ".git", ".nx", ".cache", "vendor", "pkg", "storybook-static", "temp"]);
-const SEMANTIC_NON_PRODUCTION_SEGMENTS = new Set(["🧪️tests", "tests", "test", "__tests__", "📚️examples", "🧪️examples", "examples", "fixtures", "🧪️fixtures", "🤖️generated"]);
+const SEMANTIC_NON_PRODUCTION_SEGMENTS = new Set(["🧪️tests", "tests", "test", "__tests__", "📚️examples", "🧪️examples", "examples", "fixtures", "🧫️fixtures", "🤖️generated"]);
 
 function semanticCompare(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;

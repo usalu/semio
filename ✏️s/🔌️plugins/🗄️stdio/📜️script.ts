@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { createStdioArtifactPackageTests } from "./🧪️tests/📦️artifact-package-graph/🟦️.ts";
 /** 📦️ Stdio artifact package build, validation and graph contract. */
 import assert from "node:assert/strict";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -8,9 +9,9 @@ import { getWorkspaceRoot } from "../../../🧰️framework/🛍️products/🦑
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const STDIO_ROOT = import.meta.dir;
-const REGISTRY_PATH = join(STDIO_ROOT, "📇️registry/🔣️.json");
+const ARTIFACTS_ROOT = join(STDIO_ROOT, "🗿️artifacts");
 const PACKAGE_SCHEMA_MODULE_PATH = join(STDIO_ROOT, "🧬️schema/🔣️.json");
-const PACKAGE_FIXTURE_PATH = join(STDIO_ROOT, "🧪️fixtures/📦️artifact-package/🔣️.json");
+const PACKAGE_FIXTURE_PATH = join(STDIO_ROOT, "🧫️fixtures/📦️artifact-package/🔣️.json");
 const CARGO_CONTRACT_NAME = "semio-s-artifact-stdio-contract";
 const CARGO_COMPOSITION_NAME = "semio-s-plugin-stdio";
 const NX_CONTRACT_NAME = "@semio-tech/stdio-artifact-contract-rs";
@@ -49,7 +50,7 @@ function packageRecord(repoRoot: string, definitionPath: string): PackageRecord 
   const artifact = String(definition.artifact ?? "");
   const directory = String(definition.directory ?? "");
   const identity = String(definition.id ?? "");
-  const artifactRoot = dirname(dirname(definitionPath));
+  const artifactRoot = dirname(definitionPath);
   const names = canonicalNames(artifact);
   return {
     artifact,
@@ -71,13 +72,21 @@ function packageRecord(repoRoot: string, definitionPath: string): PackageRecord 
   };
 }
 
-/** 🧭️ Derives the complete package contract from the schema-owned registry. */
+/** 🧭️ Every artifact module's own definition, in path order — the modules are the authority. */
+function artifactDefinitionPaths(): string[] {
+  const found: string[] = [];
+  for (const artifact of readdirSync(ARTIFACTS_ROOT, { withFileTypes: true })) {
+    if (!artifact.isDirectory()) continue;
+    const path = join(ARTIFACTS_ROOT, artifact.name, "📜️artifact-definition.json");
+    if (existsSync(path)) found.push(path);
+  }
+  return found.sort();
+}
+
+/** 🧭️ Derives the complete package contract from the artifact modules that own the definitions. */
 export function stdioArtifactPackageContract(repoRoot: string): { schemaVersion: 1; packages: PackageRecord[] } {
-  const registry = readJson(REGISTRY_PATH);
-  assert(Array.isArray(registry.artifact_definition_paths), "stdio artifact registry needs artifact_definition_paths");
-  const paths = registry.artifact_definition_paths.map((path: unknown) => resolve(dirname(REGISTRY_PATH), String(path)));
-  assert.equal(paths.length, 36, "stdio package registry must contain 36 definitions");
-  assert.equal(new Set(paths).size, paths.length, "stdio package registry repeats a definition");
+  const paths = artifactDefinitionPaths();
+  assert.equal(paths.length, 36, "stdio must carry 36 artifact definitions, one per artifact module");
   return { schemaVersion: 1, packages: paths.map((path: string) => packageRecord(repoRoot, path)) };
 }
 
@@ -295,6 +304,7 @@ async function assertSchemaOracle(contract: { schemaVersion: 1; packages: Packag
   const { default: Ajv } = await import("ajv");
   const module = readJson(PACKAGE_SCHEMA_MODULE_PATH);
   const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   ajv.addSchema(module);
   const validate = ajv.compile({ $ref: `${module.$id}#/$defs/StdioArtifactPackage` });
   const fixture = readJson(PACKAGE_FIXTURE_PATH);
@@ -319,60 +329,9 @@ async function assertCargoMetadata(repoRoot: string, contract: { packages: Packa
   console.log(`[stdio-package-contract] Cargo metadata packages=${contract.packages.length}`);
 }
 
-/** 🔍️ Validates schema fixtures, declarations, workspaces and Cargo's own metadata projection. */
-export async function testStdioArtifactPackageContract(repoRoot: string): Promise<void> {
-  const contract = stdioArtifactPackageContract(repoRoot);
-  await assertSchemaOracle(contract);
-  await assertSourceContract(repoRoot, contract);
-  await assertCargoMetadata(repoRoot, contract);
-  console.log(`[stdio-package-contract] source packages=${contract.packages.length} dag=valid`);
-}
-
-/** 🕸️ Compares declared artifact dependencies with the Nx project graph. */
-export async function testStdioArtifactPackageGraph(repoRoot: string): Promise<void> {
-  const contract = stdioArtifactPackageContract(repoRoot);
-  const metadata = await cargoMetadata(repoRoot);
-  const cargoPackages = new Map((metadata.packages as JsonMap[]).map((entry) => [String(entry.name), entry]));
-  assertActualCargoDag(metadata, new Set(contract.packages.map((entry) => entry.rust.cargoName)));
-  const output = await runCaptured(process.execPath, ["run", "nx", "graph", "--print"], repoRoot, 180_000);
-  const start = output.indexOf("{");
-  assert(start >= 0, "Nx graph emitted no JSON");
-  const graph = JSON.parse(output.slice(start)) as JsonMap;
-  const dependencies = graph.graph?.dependencies ?? graph.dependencies;
-  const nodes = graph.graph?.nodes ?? graph.nodes;
-  for (const entry of contract.packages) {
-    assert(nodes?.[entry.rust.nxName], `Nx graph misses ${entry.rust.nxName}`);
-    assert(nodes?.[entry.typescript.nxName], `Nx graph misses ${entry.typescript.nxName}`);
-    const rustEdges = new Set((dependencies?.[entry.rust.nxName] ?? []).map((edge: JsonMap) => edge.target));
-    const typescriptEdges = new Set((dependencies?.[entry.typescript.nxName] ?? []).map((edge: JsonMap) => edge.target));
-    assert(!rustEdges.has(COMPOSITION_RUST_NAME), `${entry.rust.nxName} has a composition back-edge`);
-    assert(rustEdges.has(NX_CONTRACT_NAME), `${entry.rust.nxName} misses Nx edge ${NX_CONTRACT_NAME}`);
-    const cargo = cargoPackages.get(entry.rust.cargoName);
-    assert(cargo, `Cargo metadata misses ${entry.rust.cargoName}`);
-    const expectedRustEdges = (cargo.dependencies as JsonMap[]).map((dependency) => String(dependency.name))
-      .filter((name) => name.startsWith("semio-s-artifact-stdio-") && name !== CARGO_CONTRACT_NAME)
-      .map((name) => canonicalNames(name.slice("semio-s-artifact-stdio-".length)).rustNx);
-    for (const target of expectedRustEdges) assert(rustEdges.has(target), `${entry.rust.nxName} misses Nx edge ${target}`);
-    const typescript = readJson(join(repoRoot, entry.typescript.manifest));
-    for (const target of Object.keys(typescript.dependencies ?? {})) assert(typescriptEdges.has(target), `${entry.typescript.nxName} misses Nx edge ${target}`);
-    const ownerRoot = slash(dirname(dirname(entry.source)));
-    const otherOwnerRoots = contract.packages.filter((candidate) => candidate.identity !== entry.identity).map((candidate) => slash(dirname(dirname(candidate.source))));
-    for (const node of [nodes[entry.rust.nxName], nodes[entry.typescript.nxName]]) {
-      const defaultInputs = node.data?.namedInputs?.default ?? [];
-      assert(defaultInputs.some((input: unknown) => typeof input === "string" && input.startsWith(`{workspaceRoot}/${ownerRoot}/`)), `${node.name} does not hash ${ownerRoot}`);
-      for (const input of defaultInputs) if (typeof input === "string" && !input.startsWith("!")) for (const other of otherOwnerRoots) {
-        if (input.startsWith(`{workspaceRoot}/${other}/`)) assert(!input.includes("*"), `${node.name} broadly hashes another artifact owner ${other}`);
-      }
-    }
-  }
-  assert(nodes?.[NX_CONTRACT_NAME], `Nx graph misses ${NX_CONTRACT_NAME}`);
-  assert(nodes?.[COMPOSITION_TYPESCRIPT_NAME], `Nx graph misses ${COMPOSITION_TYPESCRIPT_NAME}`);
-  console.log(`[stdio-package-contract] Nx graph rust=${contract.packages.length} typescript=${contract.packages.length}`);
-}
-
 function artifactFromPackageRoot(packageRoot: string): PackageRecord {
   const artifactRoot = resolve(packageRoot, "../..");
-  const definitionPath = join(artifactRoot, "🧬️schema/📜️artifact-definition.json");
+  const definitionPath = join(artifactRoot, "📜️artifact-definition.json");
   return packageRecord(getWorkspaceRoot(), definitionPath);
 }
 
@@ -385,7 +344,7 @@ async function buildTypeScriptPackage(root: string, entry: PackageRecord): Promi
   runTypeScriptCompiler(source, ["--declaration", "--emitDeclarationOnly", "--outDir", outdir]);
   const schemaRoot = join(outdir, "🧬️schema");
   mkdirSync(schemaRoot, { recursive: true });
-  copyFileSync(resolve(root, "../../🧬️schema/📜️artifact-definition.json"), join(schemaRoot, "📜️artifact-definition.json"));
+  copyFileSync(resolve(root, "../../📜️artifact-definition.json"), join(schemaRoot, "📜️artifact-definition.json"));
   console.log(`[stdio-package] built ${entry.typescript.name} outputs=${result.outputs.length}`);
 }
 
@@ -395,15 +354,6 @@ async function checkTypeScriptPackage(root: string, entry: PackageRecord): Promi
   if (!result.success) throw new AggregateError(result.logs, `failed to check ${entry.typescript.name}`);
   runTypeScriptCompiler(source, ["--noEmit"]);
   console.log(`[stdio-package] checked ${entry.typescript.name}`);
-}
-
-async function testTypeScriptPackage(root: string, entry: PackageRecord): Promise<void> {
-  await buildTypeScriptPackage(root, entry);
-  checkTypeScriptPackageDeclaration(root, entry.typescript.name, "definition, type ArtifactDefinition");
-  const module = await import(entry.typescript.name);
-  assert.equal(module.definition?.id, entry.identity);
-  assert.equal(module.definition?.artifact, entry.artifact);
-  console.log(`[stdio-package] tested ${entry.typescript.name} identity=${entry.identity}`);
 }
 
 function checkTypeScriptPackageDeclaration(root: string, packageName: string, bindings: string): void {
@@ -491,6 +441,12 @@ export async function runStdioTypeScriptArtifactPackageMain(packageRoot: string,
   const router = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
   await runBundleScriptMain(router, scriptUrl, { defaultCommand: "test" });
 }
+const createStdioArtifactPackageTestsInstance = createStdioArtifactPackageTests({ assert, assertActualCargoDag, assertCargoMetadata, assertSchemaOracle, assertSourceContract, buildTypeScriptPackage, canonicalNames, CARGO_CONTRACT_NAME, cargoMetadata, checkTypeScriptPackageDeclaration, COMPOSITION_RUST_NAME, COMPOSITION_TYPESCRIPT_NAME, dirname, join, NX_CONTRACT_NAME, readJson, runCaptured, slash, stdioArtifactPackageContract }, { directory: import.meta.dir, url: import.meta.url });
+export const testStdioArtifactPackageContract = createStdioArtifactPackageTestsInstance.testStdioArtifactPackageContract;
+export const testStdioArtifactPackageGraph = createStdioArtifactPackageTestsInstance.testStdioArtifactPackageGraph;
+const testTypeScriptPackage = createStdioArtifactPackageTestsInstance.testTypeScriptPackage;
+
+
 
 if (import.meta.main) {
   class ContractScript extends BundleScript {

@@ -2,7 +2,6 @@ syntax = "proto3";
 package semio.app.playbook.playbook;
 message PlaybookConfig {
   // @state config
-  string locale = 1;
   // @state config
   string contributions_json = 2;
 }

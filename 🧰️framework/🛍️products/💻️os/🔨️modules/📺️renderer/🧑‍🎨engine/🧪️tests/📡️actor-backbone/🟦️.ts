@@ -3,7 +3,7 @@ import deepEqual from "fast-deep-equal";
 import { describe, expect, it } from "vitest";
 import schema from "../../../🧬️schema/🔣️.json";
 import fixture from "../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json";
-import { ActorDocumentBindingV1, ActorDocumentMessagePortV1, decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1 } from "../../🧱️elements/🔌️PluginRuntime/📡️backbone/🟦️.ts";
+import { ActorDocumentBindingV1, ActorDocumentMessagePortV1, decodeDocumentBackboneControlV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1 } from "../../🧱️elements/🔌️PluginRuntime/📡️backbone/🟦️.ts";
 import { decodeBackboneMessage, encodeBackboneMessage, encodePackValue, packUInt, type BinaryBackboneMessage } from "@semio-tech/framework-os";
 import bindingSchema from "../../../../🔌️plugin/📡️backbone/🔗️binding/🧬️schema/🔣️.json";
 import bindingFixture from "../../../../🔌️plugin/📡️backbone/🔗️binding/🧪️fixture/🔣️.json";
@@ -141,6 +141,8 @@ describe("actor-owned document backbone", () => {
       const encoded = Array.from(encodeBackboneMessage(message));
       const expected = Array.from(fromHex(row.hex));
       expect(encoded, row.id).toEqual(expected);
+      if (value.Snapshot) expect(() => documentBackboneEffectV1(fromHex(row.hex))).toThrow("actor-document-port.snapshot-requires-cold-pair");
+      else expect(documentBackboneEffectV1(fromHex(row.hex))).toBe(value.Ack ? "remote-ingest-receipt" : "mutations");
       expect(deepEqual(encoded, expected), row.id).toBe(true);
       expect(deepEqual(comparable(decodeBackboneMessage(fromHex(row.hex))), comparable(message)), row.id).toBe(true);
     }

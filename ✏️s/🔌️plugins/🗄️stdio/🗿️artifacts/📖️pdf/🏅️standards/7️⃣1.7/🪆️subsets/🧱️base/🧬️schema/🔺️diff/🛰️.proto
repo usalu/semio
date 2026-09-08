@@ -118,3 +118,15 @@ message PdfDiff {
   PdfObjectsDiff objects = 4;
   PdfDictDiff trailer = 5;
 }
+
+message ObjRef {
+  int64 num = 1;
+  int64 gen = 2;
+}
+
+message PdfPage {
+  repeated double media_box = 1;
+  repeated double crop_box = 2;
+  optional int64 rotate = 3;
+  optional string text = 4;
+}

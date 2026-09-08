@@ -13,7 +13,6 @@ message ProcedureArtifact {
   // @state presence
   repeated string selected_step_ids = 4;
   // @state config
-  string locale = 5;
   // @state config
   string contributions_json = 6;
   // @state transient

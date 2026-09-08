@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::mutations::binary::test_support:
 
 #[test]
 fn raster_asset_capacity_matches_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️asset-capacity.json")).expect("neutral capacity vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️asset-capacity.json")).expect("neutral capacity vectors");
     assert_eq!(vectors["capacity"].as_u64(), Some(crate::RASTER_OWNED_MAP_CAPACITY as u64));
     for vector in vectors["cases"].as_array().expect("cases") {
         let count = usize::try_from(vector["count"].as_u64().expect("count")).expect("bounded count");

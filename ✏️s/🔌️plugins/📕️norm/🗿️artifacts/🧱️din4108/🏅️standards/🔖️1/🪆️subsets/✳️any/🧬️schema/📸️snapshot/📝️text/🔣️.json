@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/din4108/snapshot/text.json",
   "title": "Din4108SnapshotText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of Din4108Snapshot: the instance is the serialized document this facet's grammar and codec speak."
 }

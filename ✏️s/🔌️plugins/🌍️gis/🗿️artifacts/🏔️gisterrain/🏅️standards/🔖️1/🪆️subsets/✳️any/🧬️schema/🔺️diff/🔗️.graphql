@@ -6,7 +6,6 @@ type GisTerrainDiff {
   importedFeaturesJson: String @state(class: ARTIFACT)
   selectedIds: GisTerrainStringList @state(class: PRESENCE)
   cameraJson: String @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
 }
 
 type GisTerrainArtifact {
@@ -14,7 +13,6 @@ type GisTerrainArtifact {
   importedFeaturesJson: String!
   selectedIds: [String!]!
   cameraJson: String!
-  locale: String!
 }
 
 type GisTerrainStringList {

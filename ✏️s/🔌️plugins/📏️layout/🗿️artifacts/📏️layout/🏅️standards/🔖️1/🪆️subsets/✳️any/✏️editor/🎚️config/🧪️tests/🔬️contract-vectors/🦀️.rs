@@ -5,7 +5,7 @@ use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
 #[test]
 fn layout_configuration_contract_vectors_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
     let base: LayoutConfig = pack::from_json_str(&vectors["base"].to_string()).expect("owned base decoder");
     assert_eq!(<LayoutConfigMutation as Mutation<LayoutConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
     for vector in vectors["cases"].as_array().expect("cases") {

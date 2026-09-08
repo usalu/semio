@@ -64,8 +64,6 @@ pub struct LayoutDiff {
     pub preview_camera_zoom: Option<f64>,
     #[state(config)]
     pub drop_preview: Option<crate::LayoutDropPreviewState>,
-    #[state(config)]
-    pub locale: Option<String>,
     #[state(artifact)]
     pub hovered_id: Option<Option<String>>,
 }

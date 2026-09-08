@@ -2,6 +2,78 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/framework/graph/manifest/schema.json",
   "title": "Graph Manifest Schema Module",
+  "definitions": {
+    "graphManifestPropertyDef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "data",
+            "derived"
+          ]
+        },
+        "valueType": {},
+        "expr": {
+          "type": "string"
+        }
+      }
+    },
+    "graphManifestKindRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/graphManifestPropertyDef"
+          }
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "direction": {
+          "type": "string"
+        },
+        "presentation": {
+          "type": "object"
+        }
+      }
+    },
+    "graphManifestKindRows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/graphManifestKindRow"
+      }
+    },
+    "graphManifestRowList": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
   "$defs": {
     "Outputs": {
       "title": "Graph Catalog Output Identities",
@@ -25,8 +97,7 @@
           "required": [
             "rustRegistry",
             "typescriptIndex",
-            "typescriptTypes",
-            "jsonSchema"
+            "typescriptTypes"
           ],
           "properties": {
             "rustRegistry": {
@@ -40,10 +111,6 @@
             "typescriptTypes": {
               "type": "string",
               "pattern": "^[^/\\\\.]+\\.ts$"
-            },
-            "jsonSchema": {
-              "type": "string",
-              "pattern": "^[^/\\\\.]+\\.schema\\.json$"
             }
           }
         },
@@ -76,11 +143,85 @@
           }
         }
       }
+    },
+    "GraphManifestDocument": {
+      "title": "Graph Manifest Document",
+      "description": "One `*.manifest.json` source document the graph catalog generator admits: the language-neutral kind registry a manifest owner declares, from which the Rust registry and the TypeScript index are emitted.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "id"
+      ],
+      "properties": {
+        "schema": {
+          "const": "manifest"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "axes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "portModel": {
+              "enum": [
+                "normal",
+                "ported"
+              ]
+            },
+            "directedness": {
+              "enum": [
+                "directed",
+                "undirected"
+              ]
+            }
+          }
+        },
+        "nodeKinds": {
+          "$ref": "#/definitions/graphManifestKindRows"
+        },
+        "edgeKinds": {
+          "$ref": "#/definitions/graphManifestKindRows"
+        },
+        "portKinds": {
+          "$ref": "#/definitions/graphManifestKindRows"
+        },
+        "wireKinds": {
+          "$ref": "#/definitions/graphManifestKindRows"
+        },
+        "layerKinds": {
+          "$ref": "#/definitions/graphManifestKindRows"
+        },
+        "blockKinds": {
+          "$ref": "#/definitions/graphManifestKindRows"
+        },
+        "languageKinds": {
+          "$ref": "#/definitions/graphManifestKindRows"
+        },
+        "surfaceKinds": {
+          "$ref": "#/definitions/graphManifestKindRows"
+        },
+        "windowKinds": {
+          "$ref": "#/definitions/graphManifestKindRows"
+        },
+        "fileNodeKinds": {
+          "$ref": "#/definitions/graphManifestKindRows"
+        },
+        "descriptorKinds": {
+          "$ref": "#/definitions/graphManifestKindRows"
+        },
+        "edgeTips": {
+          "$ref": "#/definitions/graphManifestRowList"
+        },
+        "kindCompatibility": {
+          "$ref": "#/definitions/graphManifestRowList"
+        }
+      }
     }
-  },
-  "allOf": [
-    {
-      "$ref": "#/$defs/Outputs"
-    }
-  ]
+  }
 }

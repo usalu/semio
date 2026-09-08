@@ -382,7 +382,7 @@ fn artifact_runner_closing_poll_waits_for_retained_wake_before_next_turn() {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_open_ignores_neutral_aborted_command_snapshot_and_cas() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "aborted-commands-snapshot-cas-have-no-effects").unwrap();
     let document = ArtifactId::from("committed-artifact");
     let memory = db_wal::tests::committed_fixture_storage(row, &document).await;
@@ -431,7 +431,7 @@ fn history_construction_test_lock() -> std::sync::MutexGuard<'static, ()> {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_history_replay_uses_neutral_committed_inventory_and_retires_every_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for (name, compacted, hole) in [
         ("high-water-across-segments", false, false),
         ("high-water-across-segments", true, false),
@@ -472,7 +472,7 @@ async fn artifact_history_replay_uses_neutral_committed_inventory_and_retires_ev
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_history_replay_projects_real_committed_batch_and_cancels_owned_sources() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let projection = &fixture["historyProjection"];
     let mut engine = ArtifactEngine::create_retained(document_id().await, storage().await, ArtifactEngineConfig::default(), 0).await.unwrap();
     let mut commands = Vec::new();
@@ -541,7 +541,7 @@ async fn artifact_history_replay_projects_real_committed_batch_and_cancels_owned
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_history_and_opener_reject_neutral_inner_documents_and_frontier_order() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for row in fixture["historyProjection"]["rejections"].as_array().unwrap() {
         let backing = storage().await;
         let mut engine = ArtifactEngine::create_retained(document_id().await, backing.clone(), ArtifactEngineConfig::default(), 0).await.unwrap();
@@ -1378,7 +1378,7 @@ async fn document_authority_durable_group_journal_commits_one_exact_fsync_event(
 
 #[semio_framework_async_macros::async_test]
 async fn committed_durable_group_decision_accepts_only_one_exact_event_transaction() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📓️durable-group-journal/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📓️durable-group-journal/🔣️.json")).unwrap();
     let document = ArtifactId::from(fixture["record"]["document"].as_str().unwrap());
     let record = store::durable_group::durable_owned_group_journal_test_record();
     let canonical_pack = record.canonical_pack().to_vec();

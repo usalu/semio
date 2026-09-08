@@ -1,6 +1,6 @@
 {
   "mutation": "moveLayer",
   "layerId": "stamp",
-  "newX": 16.0,
-  "newY": -8.0
+  "newX": 16,
+  "newY": -8
 }

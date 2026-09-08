@@ -65,3 +65,20 @@ type SvgChildrenDiff {
   modified: [SvgChildModified!]!
   added: [SvgChildAdded!]!
 }
+
+type XmlAttr {
+  name: String!
+  value: String!
+}
+
+type XmlDeclaration {
+  version: String!
+  encoding: String
+  standalone: Boolean
+}
+
+type SvgElementDiff {
+  name: String
+  attributes: SvgAttributesDiff
+  children: SvgChildrenDiff
+}

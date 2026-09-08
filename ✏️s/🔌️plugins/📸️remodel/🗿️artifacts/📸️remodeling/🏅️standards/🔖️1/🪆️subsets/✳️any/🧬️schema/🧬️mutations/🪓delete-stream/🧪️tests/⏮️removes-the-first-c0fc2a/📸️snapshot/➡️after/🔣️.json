@@ -7,12 +7,12 @@
       "name": "Side",
       "kind": "image-sequence",
       "cameraId": null,
-      "syncOffsetMs": 0.0,
-      "fpsHint": 24.0,
+      "syncOffsetMs": 0,
+      "fpsHint": 24,
       "frames": [
         {
           "index": 0,
-          "timestampMs": 0.0,
+          "timestampMs": 0,
           "assetId": "asset-a"
         }
       ],
@@ -89,17 +89,17 @@
         "id": "cam-a",
         "label": "Front",
         "model": "brownConrady",
-        "fx": 1000.0,
-        "fy": 1000.0,
-        "cx": 512.0,
-        "cy": 384.0,
-        "skew": 0.0,
+        "fx": 1000,
+        "fy": 1000,
+        "cx": 512,
+        "cy": 384,
+        "skew": 0,
         "distortion": [
           0.0625,
           -0.03125,
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ],
         "rmsReprojectionPx": 0.5,
         "locked": false
@@ -108,17 +108,17 @@
         "id": "cam-b",
         "label": "Side",
         "model": "pinhole",
-        "fx": 800.0,
-        "fy": 800.0,
-        "cx": 320.0,
-        "cy": 240.0,
-        "skew": 0.0,
+        "fx": 800,
+        "fy": 800,
+        "cx": 320,
+        "cy": 240,
+        "skew": 0,
         "distortion": [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0,
+          0,
+          0
         ],
         "rmsReprojectionPx": null,
         "locked": true
@@ -128,15 +128,15 @@
       {
         "cameraId": "cam-a",
         "rotationWxyz": [
-          1.0,
-          0.0,
-          0.0,
-          0.0
+          1,
+          0,
+          0,
+          0
         ],
         "translationM": [
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ]
       }
     ]
@@ -152,7 +152,7 @@
       "detector": "orb",
       "targetCount": 4000,
       "octaves": 4,
-      "edgeThreshold": 10.0
+      "edgeThreshold": 10
     },
     "matching": {
       "matcher": "brute-force",
@@ -164,7 +164,7 @@
     },
     "sfm": {
       "ransacIterations": 1000,
-      "ransacThresholdPx": 2.0,
+      "ransacThresholdPx": 2,
       "minTrackLength": 3,
       "baMaxIterations": 50,
       "robustLoss": "huber",
@@ -178,8 +178,8 @@
       "maxPoints": 500000
     },
     "mesh": {
-      "tsdfVoxelSizeMm": 5.0,
-      "tsdfTruncationMm": 20.0,
+      "tsdfVoxelSizeMm": 5,
+      "tsdfTruncationMm": 20,
       "decimateTargetTriangles": 200000,
       "smoothingIterations": 2,
       "textureEnabled": true,
@@ -202,7 +202,7 @@
       "originAlt": null,
       "gsdM": 0.0625,
       "dsmCellM": 0.125,
-      "dtmFilterRadiusM": 2.0,
+      "dtmFilterRadiusM": 2,
       "orthoMaxPx": 4096
     }
   },
@@ -211,17 +211,17 @@
       "id": "gcp-corner",
       "name": "Corner",
       "worldPosition": [
-        1.0,
-        2.0,
-        3.0
+        1,
+        2,
+        3
       ],
       "observations": [
         {
           "streamId": "stream-b",
           "frameIndex": 0,
           "pixel": [
-            10.0,
-            20.0
+            10,
+            20
           ]
         }
       ]
@@ -230,9 +230,9 @@
       "id": "gcp-ridge",
       "name": "Ridge",
       "worldPosition": [
-        4.0,
-        5.0,
-        6.0
+        4,
+        5,
+        6
       ],
       "observations": []
     }
@@ -243,21 +243,21 @@
     "progress01": 0.5,
     "cancelRequested": false,
     "stageCursor": 3,
-    "startedAtMs": 1000.0,
+    "startedAtMs": 1000,
     "error": null,
     "cameraPosesPreview": [
       {
         "cameraId": "cam-a",
         "rotationWxyz": [
-          1.0,
-          0.0,
-          0.0,
-          0.0
+          1,
+          0,
+          0,
+          0
         ],
         "translation": [
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ]
       }
     ],
@@ -312,15 +312,15 @@
         {
           "cameraId": "cam-a",
           "rotationWxyz": [
-            1.0,
-            0.0,
-            0.0,
-            0.0
+            1,
+            0,
+            0,
+            0
           ],
           "translation": [
-            0.0,
-            0.0,
-            0.0
+            0,
+            0,
+            0
           ]
         },
         {
@@ -328,13 +328,13 @@
           "rotationWxyz": [
             0.75,
             0.25,
-            0.0,
-            0.0
+            0,
+            0
           ],
           "translation": [
             0.5,
-            0.0,
-            0.0
+            0,
+            0
           ]
         }
       ]
@@ -356,8 +356,8 @@
       "reprojectionRmsPx": 0.5,
       "gcpCheckpointRmse": 0.25,
       "watertight": null,
-      "meanTrackLength": 6.0,
-      "registeredFrameRatio": 1.0,
+      "meanTrackLength": 6,
+      "registeredFrameRatio": 1,
       "denseCoverageRatio": 0.75,
       "warnings": [
         "low overlap on frame 12"

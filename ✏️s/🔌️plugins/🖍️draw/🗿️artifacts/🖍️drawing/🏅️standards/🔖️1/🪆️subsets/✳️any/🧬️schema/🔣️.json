@@ -14,8 +14,7 @@
     "engagementInput",
     "cameraX",
     "cameraY",
-    "cameraZoom",
-    "locale"
+    "cameraZoom"
   ],
   "properties": {
     "schema": {
@@ -76,10 +75,6 @@
     "cameraZoom": {
       "type": "number",
       "format": "double",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     },
     "hoveredId": {

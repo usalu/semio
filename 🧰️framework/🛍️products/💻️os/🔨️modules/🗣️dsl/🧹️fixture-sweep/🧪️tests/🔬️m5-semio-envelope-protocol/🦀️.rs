@@ -1,6 +1,5 @@
-
 use crate::os_dsl::{parse_protocol, verify_protocol_source, walk_protocol};
-use crate::os_store::semio_format::{Component, SemioEnvelope, wrap_binary};
+use crate::os_store::semio_format::{wrap_binary, Component, SemioEnvelope};
 
 const PROTOCOL: &str = include_str!("../../../../🧬️semio/📡️protocol/📡️.protocol.semio");
 

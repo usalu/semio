@@ -1,0 +1,17 @@
+{
+  "environment": {
+    "SEMIO_LOCKED_LOCALE": " de ",
+    "SEMIO_LOCKED_THEME": "dark",
+    "SEMIO_LOCKED_APPEARANCE": " ",
+    "SEMIO_DEFAULT_EXAMPLE": "demo",
+    "PLAYGROUND_LOCKED_EXAMPLE_ID": "example",
+    "VITE_SEMIO_LOCKED_LOCALE": "en",
+    "UNRELATED": "ignored"
+  },
+  "expected": {
+    "VITE_SEMIO_LOCKED_LOCALE": "de",
+    "VITE_SEMIO_LOCKED_THEME": "dark",
+    "VITE_SEMIO_DEFAULT_EXAMPLE": "demo",
+    "VITE_SEMIO_LOCKED_EXAMPLE": "example"
+  }
+}

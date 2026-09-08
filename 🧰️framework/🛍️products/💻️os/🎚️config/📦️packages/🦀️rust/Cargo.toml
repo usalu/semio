@@ -1,0 +1,25 @@
+[package]
+name = "semio-framework-os-config"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Canonical event-sourced OS configuration schemas and mutations"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-config"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_os_config"
+path = "../../🦀️.rs"
+
+[dependencies]
+schemars = "0.8.22"
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value-derive = { workspace = true }

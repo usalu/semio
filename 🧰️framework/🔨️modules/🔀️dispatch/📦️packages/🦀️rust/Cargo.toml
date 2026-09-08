@@ -20,16 +20,16 @@ proc-macro2 = "1.0"
 
 [[test]]
 name = "mixed_receivers"
-path = "tests/🧩️mixed-receivers.rs"
+path = "../../🧪️tests/🧩️mixed-receivers/🦀️.rs"
 
 [[test]]
 name = "mut_receiver"
-path = "tests/✍️mutable-receiver.rs"
+path = "../../🧪️tests/✍️mutable-receiver/🦀️.rs"
 
 [[test]]
 name = "scale"
-path = "tests/📈️scale.rs"
+path = "../../🧪️tests/📈️scale/🦀️.rs"
 
 [[test]]
 name = "uninhabited"
-path = "tests/🕳️uninhabited.rs"
+path = "../../🧪️tests/🕳️uninhabited/🦀️.rs"

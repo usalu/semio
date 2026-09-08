@@ -229,7 +229,7 @@ export type PluginWasmHandle = {
   /** 📥️ Every live instance's turn outcomes, multicast (see {@link createTurnOutcomeBroadcast}) —
    * a caller filters to the `instanceId`(s) it owns. */
   readonly outcomes: AsyncIterable<TurnOutcome>;
-  readonly dispose: () => void;
+  readonly dispose: () => Promise<void>;
 };
 
 export function buildContributionsJson(loaded: ReadonlyArray<{ readonly pluginId: string; readonly manifest: PluginManifest }>): string {

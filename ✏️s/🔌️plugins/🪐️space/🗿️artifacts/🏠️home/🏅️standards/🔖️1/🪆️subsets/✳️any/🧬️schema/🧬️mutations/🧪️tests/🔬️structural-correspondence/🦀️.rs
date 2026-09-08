@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
-    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+    let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
     let owner = mutation_root.join("🔢️change-catalog-generation");
     let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
     let descriptor: pack::JsonValue = pack::parse_json(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");

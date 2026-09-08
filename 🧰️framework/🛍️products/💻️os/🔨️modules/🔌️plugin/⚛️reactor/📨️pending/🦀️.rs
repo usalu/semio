@@ -353,7 +353,7 @@ impl PendingPatchAuthority {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🩹️receipt.rs"]
+#[path = "🧪️tests/🩹️receipt/🦀️.rs"]
 mod issued_receipt_tests;
 
 #[cfg(test)]

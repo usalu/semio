@@ -9,7 +9,6 @@
     "stockExtra",
     "curated",
     "filters",
-    "locale",
     "contributionsJson"
   ],
   "properties": {
@@ -34,10 +33,6 @@
     },
     "filters": {
       "$ref": "#/$defs/Filters",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     },
     "contributionsJson": {

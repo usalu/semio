@@ -7,8 +7,7 @@
   "required": [
     "resultMode",
     "resultModeIndex",
-    "camera",
-    "locale"
+    "camera"
   ],
   "properties": {
     "resultSourceId": {
@@ -25,38 +24,8 @@
       "x-semio-state": "config"
     },
     "camera": {
-      "$ref": "#/$defs/FemCamera",
+      "$ref": "https://semio.tech/schema/s/fem/fem2d/artifact.json#/$defs/FemCamera",
       "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    }
-  },
-  "$defs": {
-    "FemCamera": {
-      "title": "FemCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        }
-      }
     }
   }
 }

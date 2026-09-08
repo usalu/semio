@@ -46,7 +46,7 @@
           "minimum": 0
         },
         "page": {
-          "$ref": "snapshot.json#/$defs/PageDoc"
+          "$ref": "https://semio.tech/schema/s/stdio/pdf/1.4/base/snapshot.json#/$defs/PageDoc"
         }
       }
     },

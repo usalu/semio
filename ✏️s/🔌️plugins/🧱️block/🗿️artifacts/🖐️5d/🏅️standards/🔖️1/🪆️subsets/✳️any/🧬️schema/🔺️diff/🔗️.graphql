@@ -16,7 +16,6 @@ type Block5dDiff {
   camera3d: BlockCamera3d @state(class: ARTIFACT)
   meta: BlockMeta @state(class: ARTIFACT)
   selectedIds: Block5dStringList @state(class: PRESENCE)
-  locale: String @state(class: CONFIG)
 }
 
 type BlockKindIdentity { _placeholder: Boolean }

@@ -143,9 +143,6 @@ impl Generation3dDiff {
             if let Some(value) = &self.active_utility_id {
                 next.active_utility_id = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -192,7 +189,6 @@ impl MutationDiff<Generation3dSnapshot> for Generation3dDiff {
         take!(selected_generation_id);
         take!(generation_preview_text);
         take!(active_utility_id);
-        take!(locale);
     }
 }
 //#endregion 🔖️Apply
@@ -216,3 +212,8 @@ pub fn diff_generation_from_ops(base: &Generation3dSnapshot, ops: Vec<Generation
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Generation3dDiffText = String;
+//#endregion 🚚️Carrier

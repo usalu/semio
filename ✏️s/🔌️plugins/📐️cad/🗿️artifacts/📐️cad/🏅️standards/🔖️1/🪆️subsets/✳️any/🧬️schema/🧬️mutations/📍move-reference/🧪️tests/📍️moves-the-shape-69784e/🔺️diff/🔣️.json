@@ -14,13 +14,13 @@
         "sourceUrl": "https://example.test/plan.png",
         "mediaKind": "image",
         "origin": [
-          1.0,
-          2.0,
-          3.0
+          1,
+          2,
+          3
         ],
         "orientation": null,
         "scale": 1.5,
-        "widthWorld": 8.0,
+        "widthWorld": 8,
         "hidden": false,
         "locked": true,
         "opacity": 0.5
@@ -58,8 +58,6 @@
   "dislocateBuilding": null,
   "dislocateEnergy": null,
   "dislocateStructureClassic": null,
-  "locale": null,
-  "terminology": null,
   "contributionsJson": null,
   "hoveredObjectId": null,
   "hoveredTargetObjectId": null,

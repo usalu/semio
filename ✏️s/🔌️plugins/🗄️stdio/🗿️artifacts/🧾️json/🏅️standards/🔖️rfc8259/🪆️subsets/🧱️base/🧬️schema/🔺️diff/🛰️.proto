@@ -53,3 +53,7 @@ message JsonObjectDiff {
 message JsonDiff {
   JsonValueDiff value = 1;
 }
+
+message JsonValue {
+  JsonValue value = 1;
+}

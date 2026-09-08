@@ -20,5 +20,5 @@ mod apply;
 pub use apply::{apply_run_operation, apply_run_operation_checked};
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🏃️run/🦀️.rs"]
 mod tests;

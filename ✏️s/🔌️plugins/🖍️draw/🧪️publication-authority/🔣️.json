@@ -161,12 +161,6 @@
           "lanes": [
             "config"
           ]
-        },
-        {
-          "id": "setLocale",
-          "lanes": [
-            "config"
-          ]
         }
       ],
       "laws": {

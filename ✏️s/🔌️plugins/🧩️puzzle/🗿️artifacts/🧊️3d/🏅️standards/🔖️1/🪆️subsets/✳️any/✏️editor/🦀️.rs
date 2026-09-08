@@ -18,8 +18,8 @@ use crate::Puzzle3dSnapshot;
 use crate::editor::puzzle3d::commands::{
     accept_suggestion, add_brush_object, add_object_kind, add_target_volume, apply_sun, close_vortex_suggestions, create_attraction, cycle_candidate, delete_attraction, delete_selection, delete_target_volume, duplicate_selection, engagement_abort,
     engagement_control_select, engagement_input, engagement_repeat_last, engagement_submit, fill_build_tick, focus_selection, hover_suggestion, open_vortex_suggestions, patch_inspector, register_brush_mesh, relocate_target_volume, rotate_selection,
-    scale_selection, select_same_kind, set_active, set_active_example, set_automatic, set_brush_placement_overlap_budget, set_camera, set_chunk_size, set_depth_variable, set_fill_count, set_fixture_json, set_kind_weight, set_locale, set_manual,
-    set_projection, set_proximity_radius, set_selectable_kind, set_selection_flag, set_snap_enabled, set_spacing, set_target_volume_flag, set_terminology, set_transform_gumball_flag, set_visible, set_vortex_direction, set_vortex_show,
+    scale_selection, select_same_kind, set_active, set_active_example, set_automatic, set_brush_placement_overlap_budget, set_camera, set_chunk_size, set_depth_variable, set_fill_count, set_fixture_json, set_kind_weight, set_manual,
+    set_projection, set_proximity_radius, set_selectable_kind, set_selection_flag, set_snap_enabled, set_spacing, set_target_volume_flag, set_transform_gumball_flag, set_visible, set_vortex_direction, set_vortex_show,
     set_voxel_dims, suggestions_tick, translate_selection, world_relocate,
 };
 use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dRuntime, Puzzle3dWindowOptions};
@@ -1856,8 +1856,6 @@ puzzle3d_command_variants! {
     WorldPointerDown = "worldPointerDown",
     // 🗣️ B1: locale/terminology used to be host-pushed `ViewState` fields with no app-level action of
     // their own; now that `ViewState` is gone from the app-facing surface, they need a real Command.
-    SetLocale = "setLocale",
-    SetTerminology = "setTerminology",
 }
 
 impl protocol::OpBinary for Puzzle3dCommand {
@@ -1925,9 +1923,7 @@ impl protocol::OpBinary for Puzzle3dCommand {
         "fillBuildTick",
         "registerBrushMesh",
         "worldPointerDown",
-        "setLocale",
-        "setTerminology",
-    ];
+                    ];
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(to_string(&self.to_json()).into_bytes())
@@ -2501,8 +2497,6 @@ fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args:
         "engagementSubmit" => engagement_submit::engagement_submit(ctx, args),
         "engagementRepeatLast" => engagement_repeat_last::engagement_repeat_last(ctx),
         "engagementAbort" => engagement_abort::engagement_abort(ctx),
-        "setLocale" => set_locale::set_locale(ctx, args),
-        "setTerminology" => set_terminology::set_terminology(ctx, args),
         SET_ACTIVE_UTILITY_ACTION_ID | SET_ACTIVE_TOOL_ACTION_ID => set_active::set_active(ctx, action, args),
         "worldPointerDown" => {}
         _ => {}
@@ -2530,7 +2524,7 @@ fn puzzle3d_action_uses_precompute(action: &str) -> bool {
 
 //#region 🧵️RetainedCommands
 pub(crate) const PUZZLE3D_RETAINED_TOOL_IDS: &[&str] = &[
-    "openAddObjectDialog", "worldPointerDown", "setLocale", "setTerminology", "setActiveExample", "setFillCount",
+    "openAddObjectDialog", "worldPointerDown", "setActiveExample", "setFillCount",
     "addTargetVolume",
     "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setFillCountStep", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate",
     "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "fillBuildTick", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "relocateTargetVolume", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "suggestionsTick", "toggleSun",
@@ -2745,14 +2739,6 @@ impl Puzzle3dScalarConfigWork {
                 window_id,
                 value: args.and_then(|args| args.get("value")).and_then(Value::as_str).unwrap_or("").to_string(),
             }),
-            "setLocale" => {
-                let value = args.and_then(|args| args.get("value")).and_then(Value::as_str)?;
-                matches!(value, "en" | "en-US" | "de" | "de-DE").then(|| Puzzle3dConfigMutation::SetLocale { value: value.to_string() })
-            }
-            "setTerminology" => {
-                let value = args.and_then(|args| args.get("value")).and_then(Value::as_str)?;
-                matches!(value, "native" | "reuse").then(|| Puzzle3dConfigMutation::SetTerminology { value: value.to_string() })
-            }
             _ => None,
         }
     }
@@ -2764,9 +2750,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
     }
 
     fn extent(&self, command: &Puzzle3dCommand, _snapshot: &Puzzle3dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        if matches!(self.tool_id, "setLocale" | "setTerminology") && self.mutation(command, &Puzzle3dConfig::default()).is_none() {
-            return None;
-        }
         Some(2)
     }
 
@@ -6230,8 +6213,6 @@ impl ArtifactOwnedToolJobFactory for Puzzle3dRetainedCommandJobFactory {
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "openAddObjectDialog", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setTerminology", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "addTargetVolume", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -6327,8 +6308,6 @@ fn puzzle3d_config_store_bounded_bytes(value: &Puzzle3dConfig) -> Result<usize, 
 
 fn puzzle3d_config_store_mutation_bytes(mutation: &Puzzle3dConfigMutation) -> Option<usize> {
     match mutation {
-        Puzzle3dConfigMutation::SetLocale { value } if matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE") => Some(value.len()),
-        Puzzle3dConfigMutation::SetTerminology { value } if matches!(value.as_str(), "native" | "reuse") => Some(value.len()),
         // 🌱️ `setActiveExample`'s Publish stage resets the runtime config to a fresh default via
         // this exact variant (see `Puzzle3dSetActiveExampleStage::Publish`) — bounded by the same
         // fixed Config-store envelope every other retained Config mutation obeys.
@@ -6734,7 +6713,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         factory_type: Puzzle3dRetainedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::resumable(8_192, 512, 1, 262_144, 7_500, 1, 1),
         tools: [
-            "openAddObjectDialog", "worldPointerDown", "setLocale", "setTerminology", "setActiveExample", "setFillCount",
+            "openAddObjectDialog", "worldPointerDown", "setActiveExample", "setFillCount",
             "addTargetVolume",
             "acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setFillCountStep", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate",
             "closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "fillBuildTick", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "relocateTargetVolume", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "suggestionsTick", "toggleSun",
@@ -6801,8 +6780,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             | "hoverSuggestion"
             | "engagementControlSelect"
             | "engagementInput"
-            | "setLocale"
-            | "setTerminology" => Box::new(Puzzle3dScalarConfigWork::new(tool_id)),
+                        => Box::new(Puzzle3dScalarConfigWork::new(tool_id)),
             "worldPointerDown" | "transformBegin" | "transformEnd" => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(tool_id)),
             _ => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent)),
         };
@@ -6860,6 +6838,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle3dConfig>,
         interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, Fault> {
@@ -6973,7 +6952,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = with_puzzle3d_app_for(cfg.snapshot, |app| -> semio_framework_plugin::UiAssemblyResult<_> {
             let (base_body_key, window_id_from_key) = body_key.split_once(':').map_or((body_key, None), |(b, w)| (b, Some(w)));
             let config = cfg.snapshot;
@@ -6998,7 +6977,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             let fill_available = precompute.fill_available_count();
             let fixture = puzzle3d_fixture_with_fill_display_memo(app.render_fixture(&puzzle3d_projection_value(doc.snapshot.value())), &precompute, config.fill_applied_count, fill_available, &app.fill_display_memo);
             let envelope = Puzzle3dScene { fixture, runtime: runtime_for_window, active_utility };
-            let labels = puzzle3d_labels(config).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle3d locale or terminology is not recognized"))?;
+            let labels = puzzle3d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle3d locale or terminology is not recognized"))?;
             match base_body_key {
                 main::BODY_KEY => {
                     let (instances_json, meshes_json) = app.geometry_jsons(&envelope.fixture);
@@ -7014,10 +6993,10 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         with_puzzle3d_app_for(cfg.snapshot, |app| {
             let config = cfg.snapshot;
-            let Some(labels) = puzzle3d_labels(config) else {
+            let Some(labels) = puzzle3d_labels(view_state) else {
                 return HashMap::new();
             };
             // 🪟️ One entry per live window INSTANCE (split top/perspective panes are two instances of the
@@ -7032,10 +7011,10 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         })
     }
 
-    fn window_measures(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         with_puzzle3d_app_for(cfg.snapshot, |app| {
             let config = cfg.snapshot;
-            let Some(labels) = puzzle3d_labels(config) else {
+            let Some(labels) = puzzle3d_labels(view_state) else {
                 return HashMap::new();
             };
             window_instance_ids(config, main::WINDOW_KIND_ID)
@@ -7049,11 +7028,11 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         })
     }
 
-    fn tool_measures(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn tool_measures(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         with_puzzle3d_app_for(cfg.snapshot, |app| {
             let config = cfg.snapshot;
             let wid = config.window_ids.first().map_or(main::WINDOW_KIND_ID, String::as_str);
-            let Some(labels) = puzzle3d_labels(config) else {
+            let Some(labels) = puzzle3d_labels(view_state) else {
                 return HashMap::new();
             };
             let envelope = app.scene_for(&puzzle3d_projection_value(doc.snapshot.value()), config, wid);
@@ -7066,10 +7045,11 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         request: &semio_framework_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle3dConfig>,
+        _view_state: &semio_framework_plugin::ViewModel,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let config = cfg.snapshot;
-        let Some(labels) = puzzle3d_labels(config) else {
+        let Some(labels) = puzzle3d_labels(view_state) else {
             return Vec::new();
         };
         let wid = config.window_ids.first().map_or(main::WINDOW_KIND_ID, String::as_str);
@@ -7202,8 +7182,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .shell_action("openAddObjectDialog", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}…"), |w| format!("{w} hinzufügen…")))
             // 👁️ Ephemeral view state — selection, hover, camera scratch, utility-parameter runtime.
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
-            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
-            .view_action("setTerminology", LocalizedLabel::native("Set Terminology", "Terminologie festlegen"))
             .view_action("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"))
             .view_action("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"))
             .view_action("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"))
@@ -7379,7 +7357,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setGridSnapEnabled", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodAutomatic", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodDepthVariable", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodManual", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -7393,7 +7370,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSunElevation", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunIntensity", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setTargetVolumeFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setTerminology", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setTransformGumballFlag", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setVortexDirection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setVortexKindWeight", semio_framework_plugin::InteractiveJobClassification::Migrated)

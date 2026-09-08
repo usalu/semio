@@ -20,8 +20,7 @@
     "reportTable",
     "frameCursor",
     "camera",
-    "layers",
-    "locale"
+    "layers"
   ],
   "properties": {
     "schema": {
@@ -98,10 +97,6 @@
     },
     "layers": {
       "$ref": "#/$defs/RemodelingUiLayers",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   },

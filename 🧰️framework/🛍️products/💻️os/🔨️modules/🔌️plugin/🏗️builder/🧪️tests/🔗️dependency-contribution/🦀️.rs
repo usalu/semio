@@ -39,10 +39,10 @@ impl protocol::MutationDiff<DependencyTestSnapshot> for DependencyTestDiff {
     }
 }
 
-#[path = "🧬️mutations/🦀️.rs"]
+#[path = "../🔗️dependency-contribution-mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::{AddValue, DependencyTestOp};
 
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "../🔗️dependency-contribution-unit/🦀️.rs"]
 mod tests;
 //#endregion 🔗️DependencyContributionFixture

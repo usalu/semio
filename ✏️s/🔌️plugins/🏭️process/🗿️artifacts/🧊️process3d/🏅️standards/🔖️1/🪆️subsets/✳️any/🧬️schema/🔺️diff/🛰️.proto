@@ -55,7 +55,6 @@ message Process3dDiff {
   // @state config
   optional string sun_color = 28;
   // @state config
-  optional string locale = 29;
   // @state config
   optional string contributions_json = 30;
   // @state artifact

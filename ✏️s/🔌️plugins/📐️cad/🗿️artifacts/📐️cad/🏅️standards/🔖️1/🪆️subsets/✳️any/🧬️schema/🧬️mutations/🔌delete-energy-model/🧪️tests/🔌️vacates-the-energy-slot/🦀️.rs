@@ -125,7 +125,7 @@ async fn committed_diff_is_canonical() {
 /// OUTER `None`. So `delete-energy-model`'s vacate intent does not survive a JSON round trip, and the
 /// decoded diff is inert. This test pins that hole rather than papering over it: the in-memory diff
 /// DOES carry `before` to `after`; the JSON-decoded one is indistinguishable from an empty diff.
-/// See `📓️census/🧪️fixtures/📓️-layout-cad.md`. Fixing the wire shape (a `double_option` helper, or
+/// See `📓️census/🧫️fixtures/📓️-layout-cad.md`. Fixing the wire shape (a `double_option` helper, or
 /// `skip_serializing_if` so an untouched slot is OMITTED rather than `null`) must flip this test to
 /// the plain `assert_eq!(produced, expected_after())` every other case uses.
 #[semio_framework_async_macros::async_test]

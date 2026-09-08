@@ -18,7 +18,7 @@ impl protocol::MutationDiff<ChildrenTestSnapshot> for ChildrenTestDiff {
 //#region 🧬️ChildrenMutationRoster
 mod mutations {
     use super::{ChildrenTestDiff, ChildrenTestSnapshot};
-    include!("../🧒️children-fixture/🧬️mutations/🦀️.rs");
+    include!("../🧒️children-fixture-mutations/🦀️.rs");
 }
 use mutations::ChildrenTestMutation;
 //#endregion 🧬️ChildrenMutationRoster

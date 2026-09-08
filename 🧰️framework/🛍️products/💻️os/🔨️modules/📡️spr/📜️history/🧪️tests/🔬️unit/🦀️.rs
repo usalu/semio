@@ -1,4 +1,3 @@
-
 use super::*;
 
 async fn sample_log() -> HistoryLog {

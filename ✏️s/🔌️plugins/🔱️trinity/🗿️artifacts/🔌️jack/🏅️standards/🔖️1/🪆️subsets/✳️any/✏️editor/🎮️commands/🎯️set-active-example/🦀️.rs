@@ -50,7 +50,6 @@ pub(crate) fn set_active_example(example_id: &str) -> Emit<TrinityGraphMutation,
             Emit {
                 effects: vec![crate::editor::jack::reset_document_effect(&next)],
                 config_mutations: vec![
-                    JackConfigMutation::SetActiveFixture(crate::editor::jack::config::SetActiveFixture { value: example_id.to_string() }),
                     JackConfigMutation::SetCamera(crate::editor::jack::config::SetCamera { camera: next.camera }),
                     JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: query }),
                     JackConfigMutation::SetResult(crate::editor::jack::config::SetResult { value: result_json }),

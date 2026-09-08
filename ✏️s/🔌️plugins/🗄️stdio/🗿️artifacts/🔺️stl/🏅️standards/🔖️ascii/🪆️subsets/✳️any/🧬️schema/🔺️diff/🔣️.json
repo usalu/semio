@@ -3,36 +3,6 @@
   "$id": "https://semio.tech/schema/s/stdio/stl/ascii/any/diff.json",
   "title": "StlDiff",
   "$defs": {
-    "StlTriangle": {
-      "type": "object",
-      "required": [
-        "normal",
-        "vertices"
-      ],
-      "properties": {
-        "normal": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "vertices": {
-          "type": "array",
-          "minItems": 3,
-          "maxItems": 3,
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "number"
-            },
-            "minItems": 3,
-            "maxItems": 3
-          }
-        }
-      }
-    },
     "StlTriangleDiff": {
       "type": "object",
       "properties": {
@@ -85,7 +55,7 @@
           "type": "integer"
         },
         "triangle": {
-          "$ref": "#/$defs/StlTriangle"
+          "$ref": "https://semio.tech/schema/s/stdio/stl/ascii/any/artifact.json#/$defs/StlTriangle"
         }
       }
     },

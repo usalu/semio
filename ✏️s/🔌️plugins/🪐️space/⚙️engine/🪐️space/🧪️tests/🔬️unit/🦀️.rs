@@ -81,7 +81,7 @@ impl SpaceRetainedCatalogOracle for SerdeJsonSpaceRetainedCatalogOracle {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_command_catalog_matches_the_serde_json_oracle() {
-    let oracle = SerdeJsonSpaceRetainedCatalogOracle.summarize(include_str!("../../🧪️fixtures/🧫️retained-command-limits/🔣️.json"));
+    let oracle = SerdeJsonSpaceRetainedCatalogOracle.summarize(include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
     let bounded_ids = SPACE_BOUNDED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
     let host_only_ids = <SpaceCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS
         .iter()
@@ -96,7 +96,7 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
-    let fixture = include_str!("../../🧪️fixtures/🧫️retained-command-limits/🔣️.json");
+    let fixture = include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
     let expected = ["setActiveExample", "importSpacePack", "goHome", "navigateVirtualFileSystemNode", "importSpacePackPayload", "setAppRegistrations"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
     let wrong_lane = fixture.replacen("\"hostOnly\"", "\"artifact\"", 1);
     let wrong_tool = fixture.replacen("\"setActiveExample\"", "\"forgedTool\"", 1);

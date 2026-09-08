@@ -9,7 +9,7 @@ import schema from "../../🛂️manifest/🧬️schema/🔣️.json";
 import current from "../../🛂️manifest/📇️outputs.json";
 
 test("explicit output identities preserve independent manifest IDs and reject ambiguous paths", () => {
-  const validate = new Ajv({ strict: true }).compile(schema);
+  const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/Outputs`)!;
   expect(validate(fixture.catalog)).toBe(true);
   const parsed = parseGraphOutputCatalog(fixture.catalog, fixture.manifestIds);
   expect([...Object.values(parsed.shared), ...parsed.manifests.flatMap((row) => [row.rust, row.typescript])]).toEqual(fixture.expectedPaths);
@@ -61,8 +61,8 @@ test("the actual generated registry loads every declared manifest through its cu
     const manifest = registry.manifestById(row.id);
     expect(manifest?.id).toBe(row.id);
     expect(manifest?.schema).toBe("manifest");
-    const source = readFileSync(new URL(`../🤖️generated/${row.typescript}`, import.meta.url), "utf8");
-    expect(source).toContain('from "../../🔠️types.js"');
+    const source = readFileSync(new URL(`../../🤖️generated/${row.typescript}`, import.meta.url), "utf8");
+    expect(source).toContain(`from "../${current.shared.typescriptTypes.replace(/\.ts$/u, ".js")}"`);
   }
   expect(registry.manifestById("unknown-manifest")).toBeUndefined();
 });

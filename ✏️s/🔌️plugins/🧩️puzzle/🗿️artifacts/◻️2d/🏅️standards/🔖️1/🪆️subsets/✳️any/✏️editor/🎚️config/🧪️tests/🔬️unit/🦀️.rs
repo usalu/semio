@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn fixed_fill_runtime_contract(source: &str) -> bool {

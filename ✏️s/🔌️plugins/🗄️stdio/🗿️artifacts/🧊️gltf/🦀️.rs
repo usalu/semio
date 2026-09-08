@@ -27,7 +27,7 @@ pub const GLTF_ARTIFACT_KIND_ID: &str = "s.stdio.gltf";
 pub const GLTF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.gltf";
 
 /// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 pub const GLTF_ARTIFACT_SCHEMA_VERSION: u32 = 1;
 pub const GLTF_DOCUMENT_SCHEMA_VERSION: u32 = 2;
 pub const GLTF_INFERENCE_SCHEMA_ID: &str = "s.stdio.gltf.inference";
@@ -1134,7 +1134,7 @@ pub mod examples {
         mod component;
         pub use component::*;
         #[cfg(test)]
-        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/📚️examples/🌱️metabolism/🧪️tests/🦀️.rs"]
+        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/📚️examples/🌱️metabolism/🧪️tests/🧩️example/🦀️.rs"]
         mod metabolism_tests;
     }
 }

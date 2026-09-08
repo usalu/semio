@@ -84,3 +84,14 @@ message SvgChildrenDiff {
   repeated SvgChildModified modified = 2;
   repeated SvgChildAdded added = 3;
 }
+
+message XmlAttr {
+  string name = 1;
+  string value = 2;
+}
+
+message XmlDeclaration {
+  string version = 1;
+  optional string encoding = 2;
+  optional bool standalone = 3;
+}

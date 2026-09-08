@@ -61,11 +61,11 @@ path = "../../🦀️.rs"
 
 [[test]]
 name = "native_codecs"
-path = "../../📇️native-codecs/🧪️tests/🦀️.rs"
+path = "../../📇️native-codecs/🧪️tests/📇️native-codecs/🦀️.rs"
 
 [[test]]
 name = "component_cold_map_patch"
-path = "../../🧪️fixtures/🌉️component-cold-map-patch/🦀️.rs"
+path = "../../🧪️tests/🌉️component-cold-map-patch/🦀️.rs"
 
 [features]
 # 🔌️ The WASM component entry point (`plugin_exports!` → `#[no_mangle]`

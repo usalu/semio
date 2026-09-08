@@ -10,7 +10,7 @@ fn presence(value: &serde_json::Value) -> FlowPresence {
 #[test]
 fn flow_presence_store_owners_preserve_readers_and_retire_neutral_byte_grants() {
     type App = EditorApp<crate::editor::flow::FlowPlayApp>;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/👥️presence-owners/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/👥️presence-owners/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         for grant in fixture["grants"].as_array().unwrap() {
             let maximum_bytes = grant.as_u64().unwrap() as usize;

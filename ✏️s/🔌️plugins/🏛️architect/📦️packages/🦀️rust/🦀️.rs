@@ -37,12 +37,5 @@ mod viewer { pub use semio_s_artifact_architect_program::viewer::*; }
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ArchitectApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_architect_demo_session;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

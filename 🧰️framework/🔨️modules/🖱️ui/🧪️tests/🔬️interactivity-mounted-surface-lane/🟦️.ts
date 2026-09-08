@@ -1,9 +1,9 @@
-import { INTERACTIVITY_AUDIT_SURFACE_LANE_FILE, INTERACTIVITY_AUDIT_UI_ENGINE_FILE, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE, INTERACTIVITY_AUDIT_WINIT_HOST_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, policyReadFileSafe, interactivityMountedSurfaceLaneFailures } from "../../../../../📜️script.ts";
+import { INTERACTIVITY_AUDIT_SURFACE_LANE_FILE, INTERACTIVITY_AUDIT_UI_ENGINE_FILE, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE, INTERACTIVITY_AUDIT_WINIT_HOST_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, policyReadRustPolicySource, interactivityMountedSurfaceLaneFailures } from "../../../../../📜️script.ts";
 
 /** 🧪️ Executes interactivity mounted surface lane policy assertions. */
 export function interactivityMountedSurfaceLaneSelfTests(repoRoot: string): void {
   const files = [INTERACTIVITY_AUDIT_SURFACE_LANE_FILE, INTERACTIVITY_AUDIT_UI_ENGINE_FILE, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE, INTERACTIVITY_AUDIT_WINIT_HOST_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE] as const;
-  const clean = files.map((file) => policyReadFileSafe(repoRoot, file));
+  const clean = files.map((file) => policyReadRustPolicySource(repoRoot, file));
   const mutations: readonly [string, number, string, string][] = [
     ["dynamic-resize-registry", 0, "static SURFACE_LANE_OCCUPIED: [AtomicBool; SURFACE_RESIZE_LANE_CAPACITY]", "static SURFACE_LANE_OCCUPIED: Vec<AtomicBool>"],
     ["wrapping-resize-generation", 0, "checked_add(1)", "wrapping_add(1)"],

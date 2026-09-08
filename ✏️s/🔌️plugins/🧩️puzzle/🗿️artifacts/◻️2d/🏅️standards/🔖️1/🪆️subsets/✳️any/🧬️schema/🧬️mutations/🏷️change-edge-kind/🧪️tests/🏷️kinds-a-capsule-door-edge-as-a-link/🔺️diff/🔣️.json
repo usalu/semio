@@ -15,14 +15,14 @@
             "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl1_d1",
             "target": "b3de3e2e-f93f-4de6-8bcc-e47d1ce9ce36:link",
             "edgeKind": "edge.link",
-            "gap": 0.0,
-            "shift": 0.0,
-            "rise": 0.0,
-            "rotation": 0.0,
-            "turn": 0.0,
-            "tilt": 0.0,
-            "x": 0.0,
-            "y": 0.0
+            "gap": 0,
+            "shift": 0,
+            "rise": 0,
+            "rotation": 0,
+            "turn": 0,
+            "tilt": 0,
+            "x": 0,
+            "y": 0
           }
         }
       }
@@ -42,8 +42,6 @@
   "fillCount": null,
   "brushCandidateIndex": null,
   "brushCandidateSourceHandleId": null,
-  "locale": null,
-  "terminology": null,
   "lodModeByPaneJson": null,
   "engagementInputByPaneJson": null,
   "brushCandidatesJson": null,

@@ -68,9 +68,6 @@ impl RemodelingDiff {
             if let Some(value) = &self.layers {
                 next.layers = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -144,7 +141,6 @@ impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
         take!(frame_cursor);
         take!(camera);
         take!(layers);
-        take!(locale);
     }
 }
 //#endregion 🔖️Apply
@@ -154,3 +150,8 @@ impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type RemodelingDiffText = String;
+//#endregion 🚚️Carrier

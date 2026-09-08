@@ -26,3 +26,8 @@ pub async fn print_dsl(document: &EnergyModelSnapshot) -> String {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type EnergyModelSnapshotText = String;
+//#endregion 🚚️Carrier

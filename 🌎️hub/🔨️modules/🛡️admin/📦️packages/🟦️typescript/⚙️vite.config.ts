@@ -13,6 +13,7 @@ const repoRoot = resolve(dir, "../../../../..");
 export default defineConfig({
   root: dir,
   base: "/admin/",
+  define: { "import.meta.vitest": "undefined" },
   plugins: [semioEmojiIndexHtmlVitePlugin(dir), react(), tailwindcss()],
   resolve: {
     alias: [

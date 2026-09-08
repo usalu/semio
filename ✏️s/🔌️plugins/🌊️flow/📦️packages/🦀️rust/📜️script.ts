@@ -22,16 +22,16 @@ class TestScript extends BundleScript {
 
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
-    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts");
+    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/📜️script.ts");
   }
 }
 
 class ChildIdentityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts");
+    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/📜️script.ts");
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot, cargoArgs: segments, buildBudgetMs: 3_600_000,
-      groups: [{ package: "semio-s-plugin-flow", target: { kind: "lib" }, laws: [
+      groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: [
         "scene_identity_matches_node_crypto_and_adopts_the_exact_root",
         "every_artifact_variant_matches_serde_bytes_including_nested_chrome",
         "large_unicode_key_and_label_scene_matches_serde_without_an_ordinal_map_scan",
@@ -50,10 +50,10 @@ class ChildIdentityCheckScript extends BundleScript {
 
 class ChildEditCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/📜️script.ts");
+    await import("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/📜️script.ts");
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot, cargoArgs: segments, buildBudgetMs: 3_600_000,
-      groups: [{ package: "semio-s-plugin-flow", target: { kind: "lib" }, laws: [
+      groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: [
         "add_widget_dispatches_one_typed_child_edit_without_repointing_parent_content",
       ] }],
     });
@@ -64,9 +64,10 @@ class ChildEditCheckScript extends BundleScript {
 class AddWidgetRetainedCheckScript extends BundleScript {
   async oracle(): Promise<void> {
     const root = new URL("../../🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/", import.meta.url);
-    const fixture = await Bun.file(new URL("🧪️fixtures/🧵️add-widget-retained/🔣️.json", root)).json();
+    const fixture = await Bun.file(new URL("🧫️fixtures/🧵️add-widget-retained/🔣️.json", root)).json();
     const schemaModule = await Bun.file(new URL("../🧬️schema/🔣️.json", root)).json();
     const ajv = new Ajv({ strict: true, allErrors: true });
+    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     ajv.addKeyword({ keyword: "x-semio-state", metaSchema: { type: "string" } });
     for (const numeric of ["double", "float", "int32", "int64", "uint32", "uint64"]) ajv.addFormat(numeric, true);
     const validate = ajv.addSchema(schemaModule).compile({ $ref: `${schemaModule.$id}#/$defs/FlowAddWidgetRetained` });
@@ -167,7 +168,7 @@ class AddWidgetRetainedCheckScript extends BundleScript {
     if (segments.includes("--oracle-only")) return;
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot, cargoArgs: segments, buildBudgetMs: 3_600_000,
-      groups: [{ package: "semio-s-plugin-flow", target: { kind: "lib" }, laws: [
+      groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: [
         "retained_add_widget_factory_is_exact_child_only_and_legacy_closed",
         "retained_add_widget_dispatches_one_acknowledged_child_group_and_retires",
       ] }],

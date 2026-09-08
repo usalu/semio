@@ -14,7 +14,7 @@
 
 use crate::op::Process3dMutation;
 use crate::{Capability, CapabilityRule, MachineCatalog, MachineCatalogs, MeasureRecipe, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, WorkingSolid, WorkshopMachine};
-use crate::editor::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, locale, media, step, stock, sun, utility, workshop, world};
+use crate::editor::process3d::commands::{camera, contribution, cursor, document, engagement, inspector, media, step, stock, sun, utility, workshop, world};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::modes::edit;
 use crate::editor::process3d::modes::edit::windows::workpiece;
@@ -56,6 +56,18 @@ pub struct Process3dInteractionSnapshot {
 /// ignore it via `_ctx`), see `🔖️KeyedAndContextualForms` in the SDK's `app_commands!` doc comment.
 pub struct Process3dDispatchCtx {
     pub interaction: Process3dInteractionSnapshot,
+    pub view_state: Option<semio_framework_plugin::ViewModel>,
+}
+
+impl Process3dDispatchCtx {
+    pub fn view_state(&self) -> Result<&semio_framework_plugin::ViewModel, Fault> {
+        self.view_state.as_ref().ok_or_else(|| Fault::from("process3d command requires host view context"))
+    }
+
+    pub fn active_utility(&self) -> Result<&str, Fault> {
+        let utility = self.view_state()?.active_utility_id.as_deref().unwrap_or_default();
+        (!utility.is_empty()).then_some(utility).ok_or_else(|| Fault::from("process3d command requires host active utility context"))
+    }
 }
 
 /// 🕹️ The `"geometry"` domain declaration: object granularity (stock/step/machine ids, the domain
@@ -142,9 +154,7 @@ fn internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind)
     ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, kind) }
 }
 
-/// 🧰️ Host effect that programmatically switches the workpiece window's active utility — the active
-/// utility is also mirrored into `Process3dConfig::active_utility_id` (via `SetActiveUtility`) for
-/// rendering, but the window chrome itself is still driven by this host effect. Shared by
+/// 🧰️ Host effect that programmatically switches the workpiece window's active utility. Shared by
 /// `🎮️commands/🎛️engagement` and `🎮️commands/🌍️world`.
 pub fn set_active_utility_effect(utility: &str) -> Effect {
     Effect::SetActiveUtility { window_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
@@ -213,7 +223,6 @@ semio_framework_plugin::app_commands! {
         "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
         "worldFaceDragEnd" as "world-face-drag-end" => world_face_drag_end::WorldFaceDragEnd,
         "importModelFile" as "import-model-file" => import_model_file::ImportModelFile,
-        "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "engagementAbort" as "engagement-abort" => engagement_abort::EngagementAbort,
         "setCamera" as "camera" => set_camera::SetCamera,
@@ -221,7 +230,6 @@ semio_framework_plugin::app_commands! {
         "setSunAzimuth" as "sun-azimuth" => set_sun_azimuth::SetSunAzimuth,
         "setSunElevation" as "sun-elevation" => set_sun_elevation::SetSunElevation,
         "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "setContributions" as "contributions" => set_contributions::SetContributions,
         "exportModel" as "export-model" => export_model::ExportModel,
         "loadModelRequest" as "load-model-request" => load_model_request::LoadModelRequest,
@@ -236,12 +244,10 @@ use cursor::{set_cursor, step_cursor, step_cursor_back, step_cursor_forward};
 use document::{set_active_example, set_snapshot};
 use engagement::{engagement_abort, engagement_input, engagement_submit};
 use inspector::patch_inspector;
-use locale::set_locale;
 use media::{export_model, import_model_file, load_model_request};
 use step::{add_step, move_step, remove_selected_step, remove_step, set_step_enabled, update_step};
 use stock::set_stock;
 use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
-use utility::set_active_utility;
 use workshop::{add_workshop_machine, remove_workshop_machine, update_workshop_machine};
 use world::{world_face_drag_end, world_pointer_down};
 //#endregion 🔖️Commands
@@ -288,13 +294,11 @@ const PROCESS3D_BOUNDED_TOOL_IDS: &[&str] = &[
     "stepCursorForward",
 ];
 const PROCESS3D_RESUMABLE_TOOL_IDS: &[&str] = &[
-    "setActiveUtility",
     "engagementInput",
     "toggleSun",
     "setSunAzimuth",
     "setSunElevation",
     "setSunIntensity",
-    "setLocale",
     "setContributions",
 ];
 const PROCESS3D_RETAINED_PAYLOAD_SCHEMA: &str = "process.3d.tool-command.v1";
@@ -334,9 +338,7 @@ fn process3d_string_units(value: &str) -> usize {
 
 fn process3d_resumable_extent(command: &Process3dCommand, _snapshot: &Process3dSnapshot, config: &Process3dConfig, _interaction: &protocol::InteractionState) -> Option<usize> {
     let value = match command {
-        Process3dCommand::SetActiveUtility(payload) => payload.utility_id.as_str(),
         Process3dCommand::EngagementInput(payload) => payload.value.as_str(),
-        Process3dCommand::SetLocale(payload) => payload.value.as_str(),
         Process3dCommand::SetContributions(payload) => payload.json.as_str(),
         Process3dCommand::ToggleSun(_) | Process3dCommand::SetSunAzimuth(_) | Process3dCommand::SetSunElevation(_) | Process3dCommand::SetSunIntensity(_) => config.sun_color.as_str(),
         _ => return None,
@@ -352,20 +354,22 @@ fn process3d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<Process3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Process3dMutation, Process3dConfigMutation, NoDraftMutation>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config };
     let selection = interaction.selection.get(PROCESS3D_INTERACTION_DOMAIN);
-    let mut ctx = Process3dDispatchCtx { interaction: Process3dInteractionSnapshot { ids: selection.map(|selection| selection.ids.clone()).unwrap_or_default() } };
+    let mut ctx = Process3dDispatchCtx {
+        interaction: Process3dInteractionSnapshot { ids: selection.map(|selection| selection.ids.clone()).unwrap_or_default() },
+        view_state: context.and_then(|context| context.view_state.clone()),
+    };
     command.dispatch(&doc, &cfg, &mut ctx)
 }
 
 fn process3d_resumable_bytes<'a>(command: &'a Process3dCommand, config: &'a Process3dConfig) -> Option<&'a [u8]> {
     match command {
-        Process3dCommand::SetActiveUtility(payload) => Some(payload.utility_id.as_bytes()),
         Process3dCommand::EngagementInput(payload) => Some(payload.value.as_bytes()),
-        Process3dCommand::SetLocale(payload) => Some(payload.value.as_bytes()),
         Process3dCommand::SetContributions(payload) => Some(payload.json.as_bytes()),
         Process3dCommand::ToggleSun(_) | Process3dCommand::SetSunAzimuth(_) | Process3dCommand::SetSunElevation(_) | Process3dCommand::SetSunIntensity(_) => Some(config.sun_color.as_bytes()),
         _ => None,
@@ -406,13 +410,11 @@ impl Process3dResumableCommandWork {
 
     fn complete_emit(&self, command: &Process3dCommand, config: &Process3dConfig) -> Result<Emit<Process3dMutation, Process3dConfigMutation, NoDraftMutation>, Fault> {
         let mutation = match command {
-            Process3dCommand::SetActiveUtility(payload) => Process3dConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() },
             Process3dCommand::EngagementInput(payload) => Process3dConfigMutation::SetEngagementInput { value: payload.value.clone() },
             Process3dCommand::ToggleSun(_) => Process3dConfigMutation::SetSun { enabled: !config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() },
             Process3dCommand::SetSunAzimuth(payload) => Process3dConfigMutation::SetSun { enabled: config.sun_enabled, azimuth: payload.value, elevation: config.sun_elevation, intensity: config.sun_intensity, color: config.sun_color.clone() },
             Process3dCommand::SetSunElevation(payload) => Process3dConfigMutation::SetSun { enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: payload.value, intensity: config.sun_intensity, color: config.sun_color.clone() },
             Process3dCommand::SetSunIntensity(payload) => Process3dConfigMutation::SetSun { enabled: config.sun_enabled, azimuth: config.sun_azimuth, elevation: config.sun_elevation, intensity: payload.value, color: config.sun_color.clone() },
-            Process3dCommand::SetLocale(payload) => Process3dConfigMutation::SetLocale { value: payload.value.clone() },
             Process3dCommand::SetContributions(payload) => Process3dConfigMutation::SetContributions { json: payload.json.clone() },
             _ => return Err(Fault::from("process3d-retained-route-not-resumable")),
         };
@@ -650,13 +652,11 @@ impl ArtifactOwnedToolJobFactory for Process3dResumableCommandJobFactory {
     const TOOL_IDS: &'static [&'static str] = PROCESS3D_RESUMABLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
     ];
 }
@@ -677,12 +677,12 @@ struct Process3dConfigStorePreparation {
 }
 
 fn process3d_config_retained_bytes(config: &Process3dConfig) -> Option<usize> {
-    [config.engagement_input.len(), config.sun_color.len(), config.active_utility_id.len(), config.locale.len(), config.contributions_json.len()].into_iter().try_fold(0usize, usize::checked_add)
+    [config.engagement_input.len(), config.sun_color.len(), config.contributions_json.len()].into_iter().try_fold(0usize, usize::checked_add)
 }
 
 fn process3d_config_mutation_retained_bytes(mutation: &Process3dConfigMutation) -> usize {
     match mutation {
-        Process3dConfigMutation::SetEngagementInput { value } | Process3dConfigMutation::SetActiveUtility { utility_id: value } | Process3dConfigMutation::SetLocale { value } => value.len(),
+        Process3dConfigMutation::SetEngagementInput { value } => value.len(),
         Process3dConfigMutation::SetSun { color, .. } => color.len(),
         Process3dConfigMutation::SetContributions { json } => json.len(),
         Process3dConfigMutation::SetCamera { .. } => 0,
@@ -706,8 +706,6 @@ fn prepare_process3d_config(base: &Process3dConfig, mutation: Process3dConfigMut
         Process3dConfigMutation::SetEngagementInput { .. } => Process3dConfigMutation::SetEngagementInput { value: base.engagement_input.clone() },
         Process3dConfigMutation::SetCamera { .. } => Process3dConfigMutation::SetCamera { position: base.camera_position, target: base.camera_target, fov: base.camera_fov },
         Process3dConfigMutation::SetSun { .. } => Process3dConfigMutation::SetSun { enabled: base.sun_enabled, azimuth: base.sun_azimuth, elevation: base.sun_elevation, intensity: base.sun_intensity, color: base.sun_color.clone() },
-        Process3dConfigMutation::SetActiveUtility { .. } => Process3dConfigMutation::SetActiveUtility { utility_id: base.active_utility_id.clone() },
-        Process3dConfigMutation::SetLocale { .. } => Process3dConfigMutation::SetLocale { value: base.locale.clone() },
         Process3dConfigMutation::SetContributions { .. } => Process3dConfigMutation::SetContributions { json: base.contributions_json.clone() },
     };
     let mut post = base.clone();
@@ -725,8 +723,6 @@ fn prepare_process3d_config(base: &Process3dConfig, mutation: Process3dConfigMut
             post.sun_intensity = *intensity;
             post.sun_color = color.clone();
         }
-        Process3dConfigMutation::SetActiveUtility { utility_id } => post.active_utility_id = utility_id.clone(),
-        Process3dConfigMutation::SetLocale { value } => post.locale = value.clone(),
         Process3dConfigMutation::SetContributions { json } => post.contributions_json = json.clone(),
     }
     if process3d_config_retained_bytes(&post).is_none_or(|bytes| bytes > PROCESS3D_CONFIG_STORE_MAXIMUM_BYTES) {
@@ -1284,13 +1280,11 @@ impl Process3dResumableProofs {
         factory: "Process3dResumableCommandJobFactory",
         factory_type: Process3dResumableCommandJobFactory,
         tools: {
-            "setActiveUtility" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
             "engagementInput" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
             "toggleSun" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
             "setSunAzimuth" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
             "setSunElevation" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
             "setSunIntensity" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
-            "setLocale" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
             "setContributions" => ToolExecutionContract::resumable(8_192, 64, 1, 16_384, 7_500, 1, 1),
         }
     }
@@ -1300,11 +1294,12 @@ impl Process3dResumableProofs {
 /// 🧱️ Every window/panel body of the process3d editor, rendered against one already-resolved
 /// `"geometry"` selection — shared by `render` (empty selection) and `render_with_request_context`
 /// (the live selection) so there is exactly one body-key match in the app.
-fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Process3dConfig, selected_ids: &[String]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-    let labels = process3d_labels(config);
+fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Process3dConfig, view_state: &semio_framework_plugin::ViewModel, selected_ids: &[String]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    let labels = process3d_labels(view_state);
+    let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or(PROCESS3D_DEFAULT_UTILITY);
     let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
     match base_body_key {
-        PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc, config).map(semio_framework_plugin::built_to_component_tree),
+        PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc, config, active_utility).map(semio_framework_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_DOCUMENT => document_panel::render(doc, labels).map(semio_framework_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_CATALOGUE => catalogue::render(doc, &config.contributions_json, labels).map(semio_framework_plugin::built_to_component_tree),
         PROCESS_3D_PLAY_BODY_WORKSHOP => workshop_panel::render(doc, &config.contributions_json, labels).map(semio_framework_plugin::built_to_component_tree),
@@ -1569,9 +1564,6 @@ impl ArtifactEditor for Process3dPlayApp {
                 face_extent: vec2_field("faceExtent").or_else(|| vec2_field("face_extent")),
             })),
             "importModelFile" => Ok(Process3dCommand::ImportModelFile(import_model_file::ImportModelFile { name: string_field("name").unwrap_or_default(), payload: string_field("payload").unwrap_or_default() })),
-            "setActiveUtility" => Ok(Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility {
-                utility_id: string_field("utilityId").or_else(|| string_field("utility_id")).unwrap_or_else(|| crate::editor::process3d::config::PROCESS3D_DEFAULT_UTILITY.into()),
-            })),
             "engagementInput" => Ok(Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: string_field("value").unwrap_or_default() })),
             "engagementAbort" => Ok(Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {})),
             "setCamera" => Ok(Process3dCommand::SetCamera(set_camera::SetCamera { position: vec3_field("position").unwrap_or([3.0, -3.0, 2.0]), target: vec3_field("target").unwrap_or_default(), fov: number_field("fov").unwrap_or(45.0) })),
@@ -1579,7 +1571,6 @@ impl ArtifactEditor for Process3dPlayApp {
             "setSunAzimuth" => Ok(Process3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: number_field("value").unwrap_or_default() })),
             "setSunElevation" => Ok(Process3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: number_field("value").unwrap_or_default() })),
             "setSunIntensity" => Ok(Process3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: number_field("value").unwrap_or_default() })),
-            "setLocale" => Ok(Process3dCommand::SetLocale(set_locale::SetLocale { value: string_field("value").unwrap_or_else(|| "en-US".into()) })),
             "setContributions" => Ok(Process3dCommand::SetContributions(set_contributions::SetContributions { json: string_field("json").unwrap_or_else(|| "[]".into()) })),
             "exportModel" => Ok(Process3dCommand::ExportModel(export_model::ExportModel { format: string_field("format").unwrap_or_else(|| "step".into()) })),
             "loadModelRequest" => Ok(Process3dCommand::LoadModelRequest(load_model_request::LoadModelRequest {})),
@@ -1600,11 +1591,12 @@ impl ArtifactEditor for Process3dPlayApp {
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation, Self::DraftMutation>, Fault> {
         let selection = interaction.selection(PROCESS3D_INTERACTION_DOMAIN);
-        let mut ctx = Process3dDispatchCtx { interaction: Process3dInteractionSnapshot { ids: selection.ids.clone() } };
+        let mut ctx = Process3dDispatchCtx { interaction: Process3dInteractionSnapshot { ids: selection.ids.clone() }, view_state: view_state.cloned() };
         command.dispatch(doc, cfg, &mut ctx)
     }
 
@@ -1614,8 +1606,8 @@ impl ArtifactEditor for Process3dPlayApp {
         semio_framework_plugin::ConfigSpec::default()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        process3d_render_body(body_key, doc.snapshot, cfg.snapshot, &[])
+    fn render(body_key: &str, doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        process3d_render_body(body_key, doc.snapshot, cfg.snapshot, view_state, &[])
     }
 
     /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): resolves the live `"geometry"`
@@ -1626,18 +1618,20 @@ impl ArtifactEditor for Process3dPlayApp {
         body_key: &str,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
         _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let selected_ids = interaction.selection(PROCESS3D_INTERACTION_DOMAIN).ids.clone();
-        process3d_render_body(body_key, doc.snapshot, cfg.snapshot, &selected_ids)
+        process3d_render_body(body_key, doc.snapshot, cfg.snapshot, view_state, &selected_ids)
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
-        HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::engagement(doc.snapshot, cfg.snapshot, process3d_labels(cfg.snapshot)))])
+    fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+        let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or(PROCESS3D_DEFAULT_UTILITY);
+        HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::engagement(doc.snapshot, cfg.snapshot, active_utility, process3d_labels(view_state)))])
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), workpiece::window_measures(cfg.snapshot))])
     }
 
@@ -1646,7 +1640,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// longer tell whether anything is selected (mirrors `📐️cad`'s own precedent) — always shows
     /// `removeSelectedStep`; it is itself a no-op via `remove_selected_step::handle` when nothing in
     /// the `"geometry"` domain is selected.
-    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         Menu::of(registry).action("addStep").destructive("removeSelectedStep").separator().action("undo").action("redo").build()
     }
 }
@@ -1727,7 +1721,6 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_with(internal_action("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View))
             .action_with(internal_action("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View))
             .action_with(internal_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"), ActionKind::View))
-            .action_with(internal_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
             // 📝️ Staged argument forms for the palette-visible create/export actions.
             .action_args("addStep", vec![
                 ActionArgDef::select("measure", LocalizedLabel::native("Measure", "Maßnahme"), vec![

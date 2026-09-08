@@ -26,7 +26,7 @@ pub const STDIO_PNG_DOCUMENT_SCHEMA: &str = "stdio.png";
 pub const PNG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.png";
 
 /// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     let factories = native_codecs();

@@ -56,7 +56,7 @@ impl ArtifactViewer for Process3dViewer {
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect,
     /// no dirty scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only
     /// action (camera orbit, "jump to step") is a pure addition here, never a signature change.
-    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+    fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
@@ -64,6 +64,7 @@ impl ArtifactViewer for Process3dViewer {
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
+        _view_state: &semio_framework_plugin::ViewModel,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             workpiece::PROCESS3D_VIEW_BODY_MAIN => workpiece::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),

@@ -27,11 +27,12 @@ async fn observe_refusal(case_id: &str) {
     let before_descriptor = serde_json::Value::from(store.envelope.backbone.to_value());
     let before_revision = store.content_revision;
     let mut detached = None;
-    let attempt = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        match store.detach_backbone() {
-            Ok(owner) => { detached = owner; false }
-            Err(_) => true,
+    let attempt = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| match store.detach_backbone() {
+        Ok(owner) => {
+            detached = owner;
+            false
         }
+        Err(_) => true,
     }));
     let refused = matches!(attempt, Ok(true));
     let panicked = attempt.is_err();
@@ -43,19 +44,25 @@ async fn observe_refusal(case_id: &str) {
         let queue = peer.inbox.as_ref().unwrap().lock().unwrap();
         matches!(queue.front(), Some(BackboneMessage::Mutations { envelopes }) if envelopes.as_ptr() == expected_pointer && envelopes.capacity() == expected_capacity && envelopes.len() == payload_length && envelopes.iter().all(|byte| *byte == payload_byte))
     };
-    if let Some(reservation) = occupied { store.displaced_retirements.release_owner_slots(reservation).expect("release exact fixture reservation"); }
+    if let Some(reservation) = occupied {
+        store.displaced_retirements.release_owner_slots(reservation).expect("release exact fixture reservation");
+    }
     store.generation = original_generation;
     drop(peer);
     if let Some(owner) = detached.take() {
         let mut retirement = ArtifactStoreBackboneRetirement::new(owner);
         for _ in 0..4_096 {
-            if retirement.terminal_is_empty() { break; }
+            if retirement.terminal_is_empty() {
+                break;
+            }
             retirement.close_step(1, 17).expect("retire exact returned owner before assertions");
         }
         assert!(retirement.terminal_is_empty());
     }
     for _ in 0..4_096 {
-        if SpaceMember::close_owned_terminal_is_empty(&store) { break; }
+        if SpaceMember::close_owned_terminal_is_empty(&store) {
+            break;
+        }
         SpaceMember::close_owned_step(&mut store, 1, 512).expect("close original Store before assertions");
     }
     assert!(SpaceMember::close_owned_terminal_is_empty(&store));

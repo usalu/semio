@@ -44,3 +44,7 @@ message HtmlSnapshot {
   optional string doctype = 2;
   HtmlNode root = 3;
 }
+
+message RawTextKind {
+  string value = 1;
+}

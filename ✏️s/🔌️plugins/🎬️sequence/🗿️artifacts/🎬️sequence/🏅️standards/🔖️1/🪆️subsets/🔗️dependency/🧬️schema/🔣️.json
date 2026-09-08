@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/sequence/sequence/1/dependency/artifact.json",
+  "description": "🪆️ The dependency subset of SequenceArtifact: the same document, mutated by this module's leaves. The subset owns its mutations, never a second copy of the artifact's types.",
+  "allOf": [
+    {
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/artifact.json"
+    }
+  ]
+}

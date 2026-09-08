@@ -177,9 +177,6 @@ impl Puzzle5dDiff {
             if let Some(value) = &self.lod_mode {
                 next.lod_mode = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             if let Some(value) = &self.runtime_extras_json {
                 next.runtime_extras_json = value.clone();
             }
@@ -272,7 +269,6 @@ impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
         take!(fill_count);
         take!(brush_candidate_index);
         take!(lod_mode);
-        take!(locale);
         take!(runtime_extras_json);
         take!(hovered_part_id);
         take!(preview_seq);
@@ -304,3 +300,8 @@ impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
     }
 }
 //#endregion 🔖️Apply
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Puzzle5dDiffText = String;
+//#endregion 🚚️Carrier

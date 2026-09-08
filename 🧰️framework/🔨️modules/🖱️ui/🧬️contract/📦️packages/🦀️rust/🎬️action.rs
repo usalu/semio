@@ -167,7 +167,7 @@ impl ::protocol::value::FromValue for UiText {
 
 //#region 📋️FixedListOwnership
 #[cfg(test)]
-#[path = "../../📋️list/🧪️tests/🦀️.rs"]
+#[path = "../../📋️list/🧪️tests/📋️list/🦀️.rs"]
 mod fixed_list_storage_tests;
 
 #[path = "../../📋️list/🦀️.rs"]
@@ -184,19 +184,19 @@ pub use component_copy::{UiComponentCopy, UiComponentCopyProgress};
 
 #[path = "../../⚖️compare/🦀️.rs"]
 mod component_compare;
-pub use component_compare::{UiComponentCompare, UiComponentCompareProgress};
 pub use component_compare::UiComponentComparisonCursor;
+pub use component_compare::{UiComponentCompare, UiComponentCompareProgress};
 
 #[cfg(test)]
-#[path = "../../🔗️bindings/📋️copy/🧪️tests/🦀️.rs"]
+#[path = "../../🔗️bindings/📋️copy/🧪️tests/📋️copy/🦀️.rs"]
 mod binding_copy_tests;
 
 #[cfg(test)]
-#[path = "../../🪞️copy/🧪️tests/🦀️.rs"]
+#[path = "../../🪞️copy/🧪️tests/🪞️copy/🦀️.rs"]
 mod component_copy_tests;
 
 #[cfg(test)]
-#[path = "../../⚖️compare/🧪️tests/🦀️.rs"]
+#[path = "../../⚖️compare/🧪️tests/⚖️compare/🦀️.rs"]
 mod component_compare_tests;
 
 pub struct UiFixedList<T, const N: usize = UI_FIXED_LIST_ITEMS> {
@@ -204,11 +204,15 @@ pub struct UiFixedList<T, const N: usize = UI_FIXED_LIST_ITEMS> {
 }
 
 impl<T: fmt::Debug, const N: usize> fmt::Debug for UiFixedList<T, N> {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result { formatter.debug_list().entries(self.iter()).finish() }
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.debug_list().entries(self.iter()).finish()
+    }
 }
 
 impl<T: PartialEq, const N: usize> PartialEq for UiFixedList<T, N> {
-    fn eq(&self, other: &Self) -> bool { self.len() == other.len() && self.iter().eq(other.iter()) }
+    fn eq(&self, other: &Self) -> bool {
+        self.len() == other.len() && self.iter().eq(other.iter())
+    }
 }
 
 impl<T: Eq, const N: usize> Eq for UiFixedList<T, N> {}
@@ -223,27 +227,49 @@ impl<T, const N: usize> Default for UiFixedList<T, N> {
 impl<T: Clone, const N: usize> Clone for UiFixedList<T, N> {
     fn clone(&self) -> Self {
         let mut result = Self::default();
-        if self.capacity() != 0 { result.try_reserve().expect("cold clone allocation"); }
-        for item in self.iter() { if result.try_push_reserved(item.clone()).is_err() { unreachable!("cold clone reserved exact logical capacity"); } }
+        if self.capacity() != 0 {
+            result.try_reserve().expect("cold clone allocation");
+        }
+        for item in self.iter() {
+            if result.try_push_reserved(item.clone()).is_err() {
+                unreachable!("cold clone reserved exact logical capacity");
+            }
+        }
         result
     }
 }
 
 impl<T, const N: usize> UiFixedList<T, N> {
     /// 🪹️ Empty fixed metadata requires neither a heap owner nor lazy initialization.
-    pub const fn empty() -> Self { Self { storage: fixed_list_storage::PagedList::empty() } }
+    pub const fn empty() -> Self {
+        Self { storage: fixed_list_storage::PagedList::empty() }
+    }
     /// 🧊️ Cold full-capacity reservation; interactive owners admit one page with try_reserve_one.
     pub fn try_reserve(&mut self) -> Result<bool, &'static str> {
         self.storage.reserve_full()
     }
 
-    pub fn allocated_bytes(&self) -> usize { self.storage.allocated_bytes() }
-    pub fn has_reserved_slot(&self) -> bool { self.storage.has_reserved_slot() }
-    pub fn next_allocation_bytes(&self) -> Result<usize, &'static str> { self.storage.next_allocation_bytes() }
-    pub fn try_reserve_one(&mut self, bytes: usize) -> Result<UiFixedListProgress, UiFixedListAllocationError> { self.storage.reserve_one(bytes) }
-    pub fn try_place_reserved(&mut self, source: &mut Option<T>, bytes: usize) -> Result<UiFixedListProgress, &'static str> { self.storage.place_reserved(source, bytes) }
-    pub fn release_empty_page(&mut self) -> Result<UiFixedListProgress, &'static str> { self.storage.release_empty_page() }
-    pub(crate) fn truncate_retired_last(&mut self) -> Result<(), &'static str> { self.storage.truncate_retired_last() }
+    pub fn allocated_bytes(&self) -> usize {
+        self.storage.allocated_bytes()
+    }
+    pub fn has_reserved_slot(&self) -> bool {
+        self.storage.has_reserved_slot()
+    }
+    pub fn next_allocation_bytes(&self) -> Result<usize, &'static str> {
+        self.storage.next_allocation_bytes()
+    }
+    pub fn try_reserve_one(&mut self, bytes: usize) -> Result<UiFixedListProgress, UiFixedListAllocationError> {
+        self.storage.reserve_one(bytes)
+    }
+    pub fn try_place_reserved(&mut self, source: &mut Option<T>, bytes: usize) -> Result<UiFixedListProgress, &'static str> {
+        self.storage.place_reserved(source, bytes)
+    }
+    pub fn release_empty_page(&mut self) -> Result<UiFixedListProgress, &'static str> {
+        self.storage.release_empty_page()
+    }
+    pub(crate) fn truncate_retired_last(&mut self) -> Result<(), &'static str> {
+        self.storage.truncate_retired_last()
+    }
 
     /// 📥️ Moves one payload into previously admitted storage without allocation or capacity growth.
     pub fn try_push_reserved(&mut self, value: T) -> Result<(), T> {
@@ -252,7 +278,9 @@ impl<T, const N: usize> UiFixedList<T, N> {
 
     /// 🧊️ Cold convenience combining allocation admission and one write; retained builders split them.
     pub fn try_push(&mut self, value: T) -> Result<(), T> {
-        if self.len() == N || self.try_reserve().is_err() { return Err(value); }
+        if self.len() == N || self.try_reserve().is_err() {
+            return Err(value);
+        }
         self.try_push_reserved(value)
     }
 
@@ -263,9 +291,13 @@ impl<T, const N: usize> UiFixedList<T, N> {
 
     /// 🧾️ Releases only empty backing; a live payload rejects the operation without mutation.
     pub fn release_empty_allocation(&mut self) -> Result<bool, &'static str> {
-        if !self.is_empty() { return Err("UI fixed-list payloads must be transferred before backing release"); }
+        if !self.is_empty() {
+            return Err("UI fixed-list payloads must be transferred before backing release");
+        }
         let released = !self.terminal_is_empty();
-        while !self.terminal_is_empty() { self.release_empty_page()?; }
+        while !self.terminal_is_empty() {
+            self.release_empty_page()?;
+        }
         Ok(released)
     }
 
@@ -287,9 +319,15 @@ impl<T, const N: usize> UiFixedList<T, N> {
     }
 
     pub fn swap_remove(&mut self, index: usize) -> Option<T> {
-        if index >= self.len() { return None; }
+        if index >= self.len() {
+            return None;
+        }
         let last = self.pop()?;
-        if index == self.len() { Some(last) } else { Some(std::mem::replace(self.get_mut(index)?, last)) }
+        if index == self.len() {
+            Some(last)
+        } else {
+            Some(std::mem::replace(self.get_mut(index)?, last))
+        }
     }
 
     pub fn iter_mut(&mut self) -> UiFixedListIterMut<'_, T, N> {
@@ -330,16 +368,27 @@ pub struct UiFixedListIter<'a, T, const N: usize> {
 impl<'a, T, const N: usize> Iterator for UiFixedListIter<'a, T, N> {
     type Item = &'a T;
     fn next(&mut self) -> Option<Self::Item> {
-        if self.next == self.end { return None; }
+        if self.next == self.end {
+            return None;
+        }
         let index = self.next;
         self.next += 1;
         self.owner.get(index)
     }
-    fn size_hint(&self) -> (usize, Option<usize>) { let length = self.end - self.next; (length, Some(length)) }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let length = self.end - self.next;
+        (length, Some(length))
+    }
 }
 
 impl<T, const N: usize> DoubleEndedIterator for UiFixedListIter<'_, T, N> {
-    fn next_back(&mut self) -> Option<Self::Item> { if self.next == self.end { return None; } self.end -= 1; self.owner.get(self.end) }
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.next == self.end {
+            return None;
+        }
+        self.end -= 1;
+        self.owner.get(self.end)
+    }
 }
 impl<T, const N: usize> ExactSizeIterator for UiFixedListIter<'_, T, N> {}
 
@@ -349,8 +398,12 @@ pub struct UiFixedListIterMut<'a, T, const N: usize> {
 
 impl<'a, T, const N: usize> Iterator for UiFixedListIterMut<'a, T, N> {
     type Item = &'a mut T;
-    fn next(&mut self) -> Option<Self::Item> { self.inner.next() }
-    fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
 }
 impl<T, const N: usize> ExactSizeIterator for UiFixedListIterMut<'_, T, N> {}
 
@@ -376,7 +429,9 @@ impl<T, const N: usize> IntoIterator for UiFixedList<T, N> {
 
     fn into_iter(mut self) -> Self::IntoIter {
         let mut values = Vec::with_capacity(self.len());
-        while let Some(value) = self.pop() { values.push(value); }
+        while let Some(value) = self.pop() {
+            values.push(value);
+        }
         values.reverse();
         self.release_empty_allocation().expect("cold iteration released empty pages");
         values.into_iter()
@@ -789,7 +844,10 @@ impl Default for UiValueArena {
 static UI_VALUE_ARENA: LazyLock<Mutex<UiValueArena>> = LazyLock::new(|| Mutex::new(UiValueArena::default()));
 
 pub(crate) const fn resident_static_backing_bytes() -> usize {
-    size_of::<LazyLock<Mutex<UiValueArena>>>() + UI_VALUE_AGGREGATE_ITEMS * (size_of::<UiPageSlot>() + size_of::<usize>()) + UI_VALUE_ADMISSION_SLOTS * (size_of::<UiCollectionSlot>() + size_of::<usize>()) + size_of::<UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, 4>>()
+    size_of::<LazyLock<Mutex<UiValueArena>>>()
+        + UI_VALUE_AGGREGATE_ITEMS * (size_of::<UiPageSlot>() + size_of::<usize>())
+        + UI_VALUE_ADMISSION_SLOTS * (size_of::<UiCollectionSlot>() + size_of::<usize>())
+        + size_of::<UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, 4>>()
 }
 
 fn with_ui_value_arena<T>(f: impl FnOnce(&mut UiValueArena) -> T) -> T {
@@ -807,18 +865,7 @@ impl UiValueArena {
         let next_epoch = self.collections[self.free_collections[self.free_collection_count - 1]].epoch.checked_add(1)?;
         let free_collection_count = self.free_collection_count.checked_sub(1)?;
         let slot = self.free_collections[free_collection_count];
-        self.collections[slot] = UiCollectionSlot {
-            epoch: next_epoch,
-            kind,
-            head: UI_VALUE_NONE,
-            tail: UI_VALUE_NONE,
-            aliases: 1,
-            items: 0,
-            bytes,
-            occupied: true,
-            retiring: false,
-            ..UiCollectionSlot::default()
-        };
+        self.collections[slot] = UiCollectionSlot { epoch: next_epoch, kind, head: UI_VALUE_NONE, tail: UI_VALUE_NONE, aliases: 1, items: 0, bytes, occupied: true, retiring: false, ..UiCollectionSlot::default() };
         self.free_collection_count = free_collection_count;
         self.bytes = next_bytes;
         Some(UiCollectionHandle { slot, epoch: next_epoch, kind })
@@ -952,7 +999,11 @@ impl UiList {
     }
 
     pub fn try_from_values(values: Vec<UiValue>) -> Result<Self, Vec<UiValue>> {
-        if values.is_empty() { Ok(Self::default()) } else { Err(values) }
+        if values.is_empty() {
+            Ok(Self::default())
+        } else {
+            Err(values)
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -968,9 +1019,7 @@ impl UiList {
     }
 
     pub fn backing_bytes(&self) -> usize {
-        self.handle
-            .and_then(|handle| with_ui_value_arena(|arena| arena.collection(handle).map(|collection| collection.bytes)))
-            .unwrap_or(0)
+        self.handle.and_then(|handle| with_ui_value_arena(|arena| arena.collection(handle).map(|collection| collection.bytes))).unwrap_or(0)
     }
 
     pub fn cursor(&self) -> UiListCursor {
@@ -1132,7 +1181,11 @@ impl UiMap {
     }
 
     pub fn try_from_entries(entries: Vec<(String, UiValue)>) -> Result<Self, Vec<(String, UiValue)>> {
-        if entries.is_empty() { Ok(Self::default()) } else { Err(entries) }
+        if entries.is_empty() {
+            Ok(Self::default())
+        } else {
+            Err(entries)
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -1148,9 +1201,7 @@ impl UiMap {
     }
 
     pub fn backing_bytes(&self) -> usize {
-        self.handle
-            .and_then(|handle| with_ui_value_arena(|arena| arena.collection(handle).map(|collection| collection.bytes)))
-            .unwrap_or(0)
+        self.handle.and_then(|handle| with_ui_value_arena(|arena| arena.collection(handle).map(|collection| collection.bytes))).unwrap_or(0)
     }
 
     pub fn cursor(&self) -> UiMapCursor {

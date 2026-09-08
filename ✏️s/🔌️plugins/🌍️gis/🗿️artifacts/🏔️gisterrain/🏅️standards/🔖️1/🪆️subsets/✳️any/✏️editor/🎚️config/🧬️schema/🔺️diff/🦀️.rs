@@ -25,7 +25,6 @@ impl protocol::MutationDiff<Gis3dConfig> for Gis3dConfigDiff {
         let mut next = base.clone();
         for step in &self.steps {
             if let Some(value) = &step.camera_json { next.camera_json = value.clone(); }
-            if let Some(value) = &step.locale { next.locale = value.clone(); }
         }
         Ok(next)
     }

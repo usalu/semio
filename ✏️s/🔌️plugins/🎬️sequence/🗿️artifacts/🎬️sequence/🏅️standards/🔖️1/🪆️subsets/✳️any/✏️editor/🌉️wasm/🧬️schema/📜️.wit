@@ -2,7 +2,7 @@ package semio:sequence-browser-abi@1.0.0;
 
 /// 🌉️ The browser ABI the sequence editor's wasm bridge exposes to its JavaScript host.
 /// The numeric operation and event codes live in the two producers this interface names —
-/// `📦️packages/🟨️javascript/🖥️sequence-host.js` (`SequenceOperation`) and `📡️protocol.rs` —
+/// `🖥️host/🟨️.js` (`SequenceOperation`) and `📡️protocol.rs` —
 /// and are never restated here; this facet is the language-neutral surface itself.
 interface abi {
     /// 🧵️ The ten feature groups every operation belongs to exactly once.

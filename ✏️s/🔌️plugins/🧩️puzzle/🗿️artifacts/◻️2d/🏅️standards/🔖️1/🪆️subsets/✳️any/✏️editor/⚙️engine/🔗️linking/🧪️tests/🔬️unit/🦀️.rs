@@ -1,4 +1,4 @@
-
+mod tests {
     use crate::editor::puzzle2d::engine::board_host::testkit::*;
 
     use crate::editor::puzzle2d::engine::canvas::Point;
@@ -815,9 +815,9 @@
         .unwrap();
         h.set_handle_link_compat_from_json(
             r#"[
-				{"source":"flow.wire","target":"nope","specificity":"wire"},
-				{"source":"parent","target":"child","specificity":"general","important":true}
-			]"#,
+    				{"source":"flow.wire","target":"nope","specificity":"wire"},
+    				{"source":"parent","target":"child","specificity":"general","important":true}
+    			]"#,
         )
         .unwrap();
         let desc = link_test_scene_no_edge();
@@ -919,3 +919,4 @@
         let ev = h.drain_events_json();
         assert!(!ev.contains("edgeCreate"));
     }
+}

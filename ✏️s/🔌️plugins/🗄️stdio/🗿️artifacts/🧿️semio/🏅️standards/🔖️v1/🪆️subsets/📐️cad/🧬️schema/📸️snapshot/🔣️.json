@@ -4,23 +4,63 @@
   "title": "SemioCadSnapshot",
   "description": "Real facet mirror of 🦀️.rs (source of truth) -- layers/blocks/entities, dxf r12-informed CadEntity vocabulary.",
   "type": "object",
-  "definitions": {
-    "point2": {
+  "properties": {
+    "schema": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "layers": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "$ref": "#/definitions/layer"
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "$ref": "#/definitions/block"
+      }
+    },
+    "entities": {
+      "type": "array",
+      "x-semio-state": "artifact",
+      "items": {
+        "$ref": "#/definitions/entityRecord"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "layers",
+    "blocks",
+    "entities"
+  ],
+  "$defs": {
+    "CadBlock": {
       "type": "object",
       "properties": {
-        "x": {
-          "type": "number"
+        "name": {
+          "type": "string"
         },
-        "y": {
-          "type": "number"
+        "basePoint": {
+          "$ref": "#/definitions/point2"
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/entityRecord"
+          }
         }
       },
       "required": [
-        "x",
-        "y"
+        "name",
+        "basePoint",
+        "entities"
       ]
     },
-    "entity": {
+    "CadEntity": {
       "oneOf": [
         {
           "type": "object",
@@ -250,7 +290,27 @@
         }
       ]
     },
-    "layer": {
+    "CadEntityRecord": {
+      "type": "object",
+      "description": "handle is the id key; layer must name a real layer (checked by SemioCadValidator, not this schema).",
+      "properties": {
+        "handle": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "entity": {
+          "$ref": "#/definitions/entity"
+        }
+      },
+      "required": [
+        "handle",
+        "layer",
+        "entity"
+      ]
+    },
+    "CadLayer": {
       "type": "object",
       "properties": {
         "name": {
@@ -273,80 +333,20 @@
         "visible"
       ]
     },
-    "entityRecord": {
+    "SemioPoint2": {
       "type": "object",
-      "description": "handle is the id key; layer must name a real layer (checked by SemioCadValidator, not this schema).",
       "properties": {
-        "handle": {
-          "type": "string"
+        "x": {
+          "type": "number"
         },
-        "layer": {
-          "type": "string"
-        },
-        "entity": {
-          "$ref": "#/definitions/entity"
+        "y": {
+          "type": "number"
         }
       },
       "required": [
-        "handle",
-        "layer",
-        "entity"
-      ]
-    },
-    "block": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "basePoint": {
-          "$ref": "#/definitions/point2"
-        },
-        "entities": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/entityRecord"
-          }
-        }
-      },
-      "required": [
-        "name",
-        "basePoint",
-        "entities"
+        "x",
+        "y"
       ]
     }
-  },
-  "properties": {
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "layers": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "$ref": "#/definitions/layer"
-      }
-    },
-    "blocks": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "$ref": "#/definitions/block"
-      }
-    },
-    "entities": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "$ref": "#/definitions/entityRecord"
-      }
-    }
-  },
-  "required": [
-    "schema",
-    "layers",
-    "blocks",
-    "entities"
-  ]
+  }
 }

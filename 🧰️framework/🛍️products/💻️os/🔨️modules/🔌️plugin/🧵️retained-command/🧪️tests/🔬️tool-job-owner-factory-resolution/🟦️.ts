@@ -7,7 +7,7 @@ import { WORKSPACE_ROOT, toolJobProofs, toolJobProofCatalogFailures, toolJobStat
 export function toolJobOwnerFactoryResolutionSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
   const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🏭️owner-factory-resolution.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🏭️owner-factory-resolution.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/OwnerFactoryResolutionV1" });
   if (!validate(fixture)) throw new Error(`owner factory fixture schema: ${JSON.stringify(validate.errors)}`);

@@ -33,5 +33,6 @@ serde_json = "1.0.149"
 # instead. `semio-framework-replication` has no dependency edge back to this crate.
 semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
+semio-framework-os-config = { workspace = true }
 
 [dev-dependencies]

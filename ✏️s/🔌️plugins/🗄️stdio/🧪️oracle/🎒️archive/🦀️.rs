@@ -4,7 +4,7 @@
 //! as a SET. Entry order, compression method and level, timestamps, external attributes and the
 //! extra field are writer choices, not normative content.
 //!
-//! @see 📇️registry/🔣️.json — the approved oracle registry these functions implement.
+//! @see 🧪️oracle/🔣️.json — the approved oracle registry these functions implement.
 
 use semio_repo_test_host::{digest, Json};
 

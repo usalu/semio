@@ -86,7 +86,7 @@ export function toolJobLatestWinsSelfTests(): number {
     && text.includes("retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close");
   if (!exact(source)) throw new Error("latest-wins production admission/publication authority is incomplete");
   for (const [, token] of obligations) if (exact(source.replaceAll(token, "unqualified_authority"))) throw new Error(`latest-wins accepts missing authority: ${token}`);
-  const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️fixtures/🚪️raw-allocation-close.json"), "utf8"));
+  const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧫️fixtures/🚪️raw-allocation-close.json"), "utf8"));
   const validateRaw = ajv.compile({ $ref: schema.$id + "#/$defs/RawAllocationCloseV1" });
   if (!validateRaw(rawFixture)) throw new Error(`retained raw allocation schema: ${JSON.stringify(validateRaw.errors)}`);
   for (const law of rawFixture.cases) {
@@ -99,7 +99,7 @@ export function toolJobLatestWinsSelfTests(): number {
     && text.includes("fn test_raw_allocation_close<A: ArtifactApp>()");
   if (!rawClose(rawSource)) throw new Error("retained command raw capacity incorrectly consumes semantic byte credit");
   if (rawClose(rawSource.replace("if self.raw.capacity() != 0 {\n            if maximum_items == 0 {", "if self.raw.capacity() != 0 {\n            if maximum_items == 0 || maximum_bytes < self.raw.capacity() {"))) throw new Error("retained raw close accepts capacity-sized byte deadlock");
-  const childCloseFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️fixtures/🧩️child-prepublication-close.json"), "utf8"));
+  const childCloseFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧫️fixtures/🧩️child-prepublication-close.json"), "utf8"));
   const validateChildClose = ajv.compile({ $ref: schema.$id + "#/$defs/ChildPrepublicationCloseV1" });
   if (!validateChildClose(childCloseFixture)) throw new Error(`retained child close fixture: ${JSON.stringify(validateChildClose.errors)}`);
   if (JSON.stringify(childCloseFixture.children.map((child: { id: string }) => child.id).reverse()) !== JSON.stringify(childCloseFixture.expectedRetirementOrder)) throw new Error("retained child close LIFO oracle diverged");
@@ -142,7 +142,7 @@ export function toolJobLatestWinsSelfTests(): number {
   if (!toolJobStoreOneItemPublicationBounded(storeSource, source)) throw new Error("mounted Store source binding lost its retained owned-preparation helper");
   const replayingOwnedBegin = storeSource.replace("let base = match self.snapshot_read() {", "replay_mutations(); let base = match self.snapshot_read() {");
   if (replayingOwnedBegin === storeSource || toolJobStoreOneItemPublicationBounded(replayingOwnedBegin, source)) throw new Error("mounted Store source binding accepted replay inside extracted preparation");
-  const dispatchFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️fixtures/📌️mounted-dispatch-binding.json"), "utf8"));
+  const dispatchFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧫️fixtures/📌️mounted-dispatch-binding.json"), "utf8"));
   const validateDispatch = ajv.compile({ $ref: schema.$id + "#/$defs/MountedDispatchBindingV1" });
   if (!validateDispatch(dispatchFixture)) throw new Error(`mounted dispatch fixture: ${JSON.stringify(validateDispatch.errors)}`);
   const validDispatch = ajv.compile({ const: "none" });

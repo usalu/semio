@@ -24,7 +24,7 @@
           "margin_bottom": null,
           "margin_left": null,
           "columns_count": 3,
-          "columns_gutter": 12.0,
+          "columns_gutter": 12,
           "frame_added": null,
           "frame_removed": null,
           "frame_patched": null
@@ -47,6 +47,5 @@
   "previewCameraY": null,
   "previewCameraZoom": null,
   "dropPreview": null,
-  "locale": null,
   "hoveredId": null
 }

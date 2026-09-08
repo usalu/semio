@@ -7,8 +7,7 @@
   "required": [
     "cameraX",
     "cameraY",
-    "cameraZoom",
-    "locale"
+    "cameraZoom"
   ],
   "properties": {
     "cameraX": {
@@ -21,10 +20,6 @@
     },
     "cameraZoom": {
       "type": "number",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   }

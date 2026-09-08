@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_plugin::{EditorApp, HistoryView};
 
-const RETAINED_LIMITS: &str = include_str!("../../🧪️fixtures/🧫️retained-command-limits/🔣️.json");
+const RETAINED_LIMITS: &str = include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
 
 #[test]
 fn create_playground_editor_builds_a_definition_for_the_editor_role() {

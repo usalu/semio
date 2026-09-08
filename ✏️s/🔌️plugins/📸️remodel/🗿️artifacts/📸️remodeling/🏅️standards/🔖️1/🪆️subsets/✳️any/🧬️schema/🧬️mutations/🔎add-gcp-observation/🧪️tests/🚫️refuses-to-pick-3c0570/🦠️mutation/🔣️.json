@@ -5,8 +5,8 @@
     "streamId": "orbit-primary",
     "frameIndex": 0,
     "pixel": [
-      10.0,
-      20.0
+      10,
+      20
     ]
   }
 }

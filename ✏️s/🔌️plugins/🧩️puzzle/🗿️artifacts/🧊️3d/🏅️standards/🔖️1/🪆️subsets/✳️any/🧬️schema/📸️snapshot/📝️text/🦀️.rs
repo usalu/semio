@@ -30,3 +30,8 @@ pub fn print_dsl(document: &Puzzle3dSnapshot) -> String {
 mod tests;
 
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Puzzle3dSnapshotText = String;
+//#endregion 🚚️Carrier

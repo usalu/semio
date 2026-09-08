@@ -21,29 +21,159 @@
     "sealedByStore": true
   },
   "migrated": [
-    { "action": "textEdit", "variants": ["text-edit"], "publication": ["Artifact"] },
-    { "action": "setText", "variants": ["set-text"], "publication": ["Artifact"] },
-    { "action": "setActiveExample", "variants": ["active-example"], "publication": ["HostOnly"] },
-    { "action": "setSnapshot", "variants": ["set-snapshot"], "publication": ["HostOnly"] },
-    { "action": "openDocument", "variants": ["open-document"], "publication": ["HostOnly"] },
-    { "action": "setSnapshotJson", "variants": ["document-json"], "publication": ["HostOnly"] },
-    { "action": "setFixtureJson", "variants": ["fixture-json"], "publication": ["HostOnly"] },
-    { "action": "formatDocument", "variants": ["format-document"], "publication": ["Artifact", "Config"] },
-    { "action": "commitRename", "variants": ["commit-rename"], "publication": ["Artifact"] },
-    { "action": "setCamera", "variants": ["camera"] },
-    { "action": "requestCompletions", "variants": ["request-completions"] },
-    { "action": "lintDocument", "variants": ["lint-document"] },
-    { "action": "setEditorSelection", "variants": ["editor-selection"] },
-    { "action": "toggleLineNumbers", "variants": ["toggle-line-numbers"] },
-    { "action": "setEditorSetting", "variants": ["font-px", "line-height", "tab-size"] },
-    { "action": "engagementInput", "variants": ["engagement-input"] },
-    { "action": "engagementSubmit", "variants": ["engagement-submit"], "publication": ["Artifact", "Config"] },
-    { "action": "setLocale", "variants": ["locale"] }
+    {
+      "action": "textEdit",
+      "variants": [
+        "text-edit"
+      ],
+      "publication": [
+        "Artifact"
+      ]
+    },
+    {
+      "action": "setText",
+      "variants": [
+        "set-text"
+      ],
+      "publication": [
+        "Artifact"
+      ]
+    },
+    {
+      "action": "setActiveExample",
+      "variants": [
+        "active-example"
+      ],
+      "publication": [
+        "HostOnly"
+      ]
+    },
+    {
+      "action": "setSnapshot",
+      "variants": [
+        "set-snapshot"
+      ],
+      "publication": [
+        "HostOnly"
+      ]
+    },
+    {
+      "action": "openDocument",
+      "variants": [
+        "open-document"
+      ],
+      "publication": [
+        "HostOnly"
+      ]
+    },
+    {
+      "action": "setSnapshotJson",
+      "variants": [
+        "document-json"
+      ],
+      "publication": [
+        "HostOnly"
+      ]
+    },
+    {
+      "action": "setFixtureJson",
+      "variants": [
+        "fixture-json"
+      ],
+      "publication": [
+        "HostOnly"
+      ]
+    },
+    {
+      "action": "formatDocument",
+      "variants": [
+        "format-document"
+      ],
+      "publication": [
+        "Artifact",
+        "Config"
+      ]
+    },
+    {
+      "action": "commitRename",
+      "variants": [
+        "commit-rename"
+      ],
+      "publication": [
+        "Artifact"
+      ]
+    },
+    {
+      "action": "setCamera",
+      "variants": [
+        "camera"
+      ]
+    },
+    {
+      "action": "requestCompletions",
+      "variants": [
+        "request-completions"
+      ]
+    },
+    {
+      "action": "lintDocument",
+      "variants": [
+        "lint-document"
+      ]
+    },
+    {
+      "action": "setEditorSelection",
+      "variants": [
+        "editor-selection"
+      ]
+    },
+    {
+      "action": "toggleLineNumbers",
+      "variants": [
+        "toggle-line-numbers"
+      ]
+    },
+    {
+      "action": "setEditorSetting",
+      "variants": [
+        "font-px",
+        "line-height",
+        "tab-size"
+      ]
+    },
+    {
+      "action": "engagementInput",
+      "variants": [
+        "engagement-input"
+      ]
+    },
+    {
+      "action": "engagementSubmit",
+      "variants": [
+        "engagement-submit"
+      ],
+      "publication": [
+        "Artifact",
+        "Config"
+      ]
+    }
   ],
   "batchOnly": [],
   "localeAdmissionCases": [
-    { "localeBytes": 64, "accepted": true, "fuelDelta": 1, "cursorDelta": 0, "ownersPreserved": true },
-    { "localeBytes": 65, "accepted": false, "fuelDelta": 0, "cursorDelta": 0, "ownersPreserved": true }
+    {
+      "localeBytes": 64,
+      "accepted": true,
+      "fuelDelta": 1,
+      "cursorDelta": 0,
+      "ownersPreserved": true
+    },
+    {
+      "localeBytes": 65,
+      "accepted": false,
+      "fuelDelta": 0,
+      "cursorDelta": 0,
+      "ownersPreserved": true
+    }
   ],
   "requiredLifecycle": [
     "exact-wire-admission",

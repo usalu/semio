@@ -27,6 +27,7 @@ async function compileVcsScopeExport(repoRoot: string, exportId: string) {
   const module = JSON.parse(readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌿️vcs/🧬️schema/🔣️.json"), "utf8"));
   const { default: Ajv } = await import("ajv");
   const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   ajv.addSchema(module);
   return ajv.compile({ $ref: `${module.$id}#/$defs/${exportId}` });
 }
@@ -38,11 +39,12 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validate = await compileVcsScopeExport(repoRoot, "VcsNativeCodecs");
   if (!validate(fixture)) throw new Error(`invalid VCS receipt corpus: ${JSON.stringify(validate.errors)}`);
-  const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️fixtures/🌱️artifact-document-id-v1");
+  const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1");
   const documentIds = JSON.parse(readFileSync(join(documentIdRoot, "🔣️.json"), "utf8"));
   const registryModule = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json"), "utf8"));
   const { default: RegistryAjv } = await import("ajv");
   const registryAjv = new RegistryAjv({ strict: true, allErrors: true });
+  registryAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   registryAjv.addSchema(registryModule);
   const validateDocumentIds = registryAjv.compile({ $ref: `${registryModule.$id}#/$defs/ArtifactDocumentIdV1` });
   if (!validateDocumentIds(documentIds)) throw new Error(`invalid artifact document-id corpus: ${JSON.stringify(validateDocumentIds.errors)}`);
@@ -86,7 +88,7 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
   const config = readFileSync(join(appBase, "🎚️config/🦀️.rs"), "utf8");
   const presence = readFileSync(join(appBase, "👥️presence/🦀️.rs"), "utf8");
   const history = readFileSync(join(appBase, "🎭️modes/✏️edit/🪟️windows/📜️history/🦀️.rs"), "utf8");
-  if (config.match(/schema_version: 1,/gu)?.length !== 2 || !config.includes('semantic_kind: "set-locale"') || !config.includes("MutationOutcomeClass::Warning") || !config.includes("fn descriptor(&self)")) throw new Error("VCS config mutation metadata is incomplete");
+  if (config.match(/schema_version: 1,/gu)?.length !== 1 || !config.includes('semantic_kind: "snapshot"') || !config.includes("MutationOutcomeClass::Warning") || !config.includes("fn descriptor(&self)")) throw new Error("VCS config mutation metadata is incomplete");
   if (presence.match(/schema_version: 1,/gu)?.length !== 1 || !presence.includes('semantic_kind: "noop"') || !presence.includes("MutationInvertibility::SelfInvertible") || !presence.includes("fn descriptor(&self)")) throw new Error("VCS presence mutation metadata is incomplete");
   if (!readFileSync(join(owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8").includes("semio-framework-ui-scene =") || !history.includes("use semio_framework_ui_scene::GraphTimelineScene;") || history.includes("semio_framework_ui_scene::GraphTimelineScene {")) throw new Error("VCS timeline scene does not use its declared first-party scene dependency");
   console.log(`vcs-native-codec-oracle: receipts=${fixture.receipts.length} hostile=${fixture.hostile.length} ajv+node+webcrypto=1 dependency-coherence=3; no catalog activation or VCS execution claim`);
@@ -111,11 +113,12 @@ class NativeCodecCheckScript extends BundleScript {
 class NativeOpenableIdentityCheckScript extends BundleScript {
   async run(): Promise<void> {
     const owner = join(this.root, "..", "..");
-    const fixtureRoot = join(owner, "🧪️fixtures/🪪️native-openable-identity/🧬️v1");
+    const fixtureRoot = join(owner, "🧫️fixtures/🪪️native-openable-identity/🧬️v1");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const module = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ allErrors: true, strict: true });
+    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     ajv.addSchema(module);
     const validate = ajv.compile({ $ref: `${module.$id}#/$defs/VcsNativeOpenableIdentity` });
     if (!validate(fixture)) throw new Error(`VCS identity fixture is invalid: ${ajv.errorsText(validate.errors)}`);

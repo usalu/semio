@@ -35,8 +35,7 @@
             "setBrushSize",
             "setCamera",
             "setCameraZoom",
-            "setCompositeViewport",
-            "setLocale"
+            "setCompositeViewport"
           ]
         }
       ]

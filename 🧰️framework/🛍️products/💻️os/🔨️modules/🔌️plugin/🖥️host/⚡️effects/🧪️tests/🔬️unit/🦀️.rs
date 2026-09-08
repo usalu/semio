@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_async::testkit::ManualRuntime;
 use std::sync::atomic::AtomicUsize;

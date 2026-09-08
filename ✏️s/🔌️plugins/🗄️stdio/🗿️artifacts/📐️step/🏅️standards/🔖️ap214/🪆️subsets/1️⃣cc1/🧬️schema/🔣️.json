@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/step/ap214/cc1/artifact.json",
+  "title": "StepArtifact",
+  "description": "step ap214/cc1 re-exports the base subset's StepArtifact; the artifact contract is that scope's and is referenced, never restated.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/artifact.json"
+    }
+  ],
+  "x-semio-formats": [
+    "🔣️jsonschema"
+  ]
+}

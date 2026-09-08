@@ -6,15 +6,10 @@
   "additionalProperties": false,
   "required": [
     "runOutputJson",
-    "locale",
     "contributionsJson"
   ],
   "properties": {
     "runOutputJson": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
       "type": "string",
       "x-semio-state": "config"
     },

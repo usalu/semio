@@ -1,1 +1,5 @@
-{"mutation":"renameStep","id":"step-1","newLabel":"Final Rip Cut"}
+{
+  "mutation": "renameStep",
+  "id": "step-1",
+  "newLabel": "Final Rip Cut"
+}

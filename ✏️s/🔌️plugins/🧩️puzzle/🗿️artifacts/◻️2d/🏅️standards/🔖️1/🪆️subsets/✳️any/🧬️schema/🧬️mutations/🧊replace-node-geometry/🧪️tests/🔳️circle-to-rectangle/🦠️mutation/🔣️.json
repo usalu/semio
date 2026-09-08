@@ -3,6 +3,6 @@
   "id": "node-a",
   "newShape": "rectangle",
   "newRadius": null,
-  "newWidth": 24.0,
-  "newHeight": 16.0
+  "newWidth": 24,
+  "newHeight": 16
 }

@@ -9,8 +9,7 @@ use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::duration::{compute_mp3_duration, Mp3Duration};
-
+use super::duration::{compute_mp3_duration};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an mp3 snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `duration`, backed by the `⏱️duration/` slug dir).
@@ -83,3 +82,8 @@ pub fn mp3_artifact_inference_descriptor() -> framework_schema::ArtifactInferenc
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::duration::Mp3Duration;
+//#endregion 🔁️Re-exports

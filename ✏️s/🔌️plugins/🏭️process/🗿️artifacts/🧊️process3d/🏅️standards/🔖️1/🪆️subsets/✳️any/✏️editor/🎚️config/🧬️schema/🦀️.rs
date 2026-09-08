@@ -25,10 +25,6 @@ pub struct Process3dConfig {
     #[state(config)]
     pub sun_color: String,
     #[state(config)]
-    pub active_utility_id: String,
-    #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub contributions_json: String,
 }
 

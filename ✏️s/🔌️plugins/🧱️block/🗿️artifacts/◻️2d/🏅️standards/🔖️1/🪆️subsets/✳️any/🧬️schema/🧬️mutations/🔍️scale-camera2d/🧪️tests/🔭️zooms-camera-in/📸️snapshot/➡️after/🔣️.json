@@ -35,7 +35,7 @@
     {
       "id": "handle-in",
       "handleKind": "hk-signal",
-      "angle": 0.0,
+      "angle": 0,
       "radius": 0.5
     }
   ],
@@ -61,8 +61,8 @@
     }
   ],
   "camera2d": {
-    "x": 0.0,
-    "y": 0.0,
+    "x": 0,
+    "y": 0,
     "zoom": 2.5
   },
   "meta": {

@@ -1,9 +1,8 @@
-
 use super::*;
 
 #[test]
 fn catalog_projection_budget_matches_serde_and_refuses_before_overdraw() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📇️native-catalog-surface/🧪️budget.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📇️native-catalog-surface/🧪️budget.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let value = row["text"].as_str().unwrap();
         let mut budget = NativeCatalogProjectionBudget::new();

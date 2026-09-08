@@ -4658,7 +4658,8 @@ async function renderDistributionBundle(workspace: string, artifactRoot: string)
   process.env.SEMIO_BRAND = "";
   let result: Awaited<ReturnType<typeof import("vite")["build"]>>;
   try {
-    const { build } = await import("vite"), { default: config } = await import("./⚙️vite.config.ts");
+    const { build } = await import("vite"), { default: createConfig } = await import("./⚙️vite.config.ts");
+    const config = await createConfig({ command: "build", mode: "production", isSsrBuild: false, isPreview: false });
     distributionProgress("actual production configuration loaded");
     const workerPlugins = config.worker?.plugins;
     result = await build({ ...config, configFile: false, publicDir: false, logLevel: "silent", cacheDir: join(artifactRoot, "vite-distribution-cache"), plugins: [collector(), ...(config.plugins ?? [])], worker: { ...config.worker, plugins: () => [collector(), ...(workerPlugins?.() ?? [])] }, build: { ...config.build, write: false, emptyOutDir: false, outDir: join(artifactRoot, "distribution-unwritten") } });
@@ -5285,7 +5286,7 @@ class CanonicalBootstrapFolderMirrorCheckScript extends BundleScript {
     if (!['source', 'process'].includes(phase) || segments.length !== 1) throw new Error("canonical-bootstrap-folder-mirror-check expects source|process");
     const fixtureRoot = canonicalBootstrapFolderMirrorFixtureRoot(this.repoRoot);
     const corpus = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as CanonicalBootstrapFolderMirrorCorpusV1;
-    const canonicalPairRoot = join(this.repoRoot, "🌎️hub", "🛰️lag-rebootstrap", "🧪️fixtures", "🪢️canonical-pair");
+    const canonicalPairRoot = join(this.repoRoot, "🌎️hub", "🛰️lag-rebootstrap", "🧫️fixtures", "🪢️canonical-pair");
     const canonicalPairCorpus = JSON.parse(readFileSync(join(canonicalPairRoot, "🔣️.json"), "utf8")) as { selection: { documentId: string; baseline: Record<string, unknown> }; frontierCases: readonly CanonicalPairFrontierCaseV1[] };
     const lagModule = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub", "🛰️lag-rebootstrap", "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
     const { default: Ajv } = await import("ajv");

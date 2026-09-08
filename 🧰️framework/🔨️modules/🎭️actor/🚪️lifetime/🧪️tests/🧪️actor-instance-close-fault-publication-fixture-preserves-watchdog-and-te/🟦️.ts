@@ -265,6 +265,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
     const ajv = new Ajv({ strict: true });
+    ajv.addSchema(JSON.parse(readFileSync(new URL("../../🌱️value/🧬️schema/🔣️.json", source.url), "utf8")));
     ajv.addSchema(schema);
     expect(ajv.getSchema(`${schema.$id}#/$defs/LifetimeFixture`)!(fixture)).toBe(true);
     const validate = ajv.getSchema(`${schema.$id}#/$defs/Lifetime`)!;

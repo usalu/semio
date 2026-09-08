@@ -22,32 +22,7 @@ pub use component::*;
 /// in that file). The test uses a narrow owned WIT source inspector and adds no external parser to
 /// the test graph.
 #[cfg(test)]
-#[path = "../../🪞️schema-parity/🦀️.rs"]
+#[path = "../../🪞️schema-parity/🧪️tests/🔬️unit/🦀️.rs"]
 mod schema_parity;
 
-/// 🎚️ Mounts the OS config schema and every direct semantic mutation leaf. `#[path = "."]` keeps
-/// Rust's synthetic module names from changing the base directory for emoji-named source folders.
-#[path = "."]
-pub mod opening_config {
-    #[path = "../../../../../🎚️config/🧬️schema/🦀️.rs"]
-    mod component;
-    pub use component::*;
-
-    #[path = "."]
-    pub mod mutations {
-        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🦀️.rs"]
-        mod component;
-        pub use component::*;
-
-        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/📌️set-default-app/🦀️.rs"]
-        pub mod set_default_app;
-        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🦀️.rs"]
-        pub mod clear_default_app;
-        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/🦀️.rs"]
-        pub mod change_merge_policy;
-        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦀️.rs"]
-        pub mod sign_in;
-        #[path = "../../../../../🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🦀️.rs"]
-        pub mod sign_out;
-    }
-}
+pub use semio_framework_os_config::opening_config;

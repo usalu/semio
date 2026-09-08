@@ -1,12 +1,10 @@
-//! 🧰️ Lowpoly play app commands — the active transform/paint utility switch (`setActiveUtility`, which
-//! also clears mid-gesture scratch so switching tools never leaves a stale drag behind) and per-utility
-//! parameter writes (`setUtilityParam`). Config-only.
+//! 🧰️ Lowpoly per-utility parameter writes.
 
 use crate::op::LowpolyMutation;
 use crate::LowpolySnapshot;
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::editor::lowpoly::view::{is_paint_utility, utility_params_value};
+use crate::editor::lowpoly::view::utility_params_value;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -39,34 +37,3 @@ pub mod set_utility_param {
     }
 }
 //#endregion 🔖️SetUtilityParam
-
-//#region 🔖️SetActiveUtility
-pub mod set_active_utility {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-    #[cfg_attr(test, derive(Serialize, Deserialize))]
-    #[dsl(keyword = "set-active-utility")]
-    pub struct SetActiveUtility {
-        pub utility_id: String,
-    }
-
-    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
-        ctx.reset_gestures();
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: hover used to be cleared here
-        // (`SetHoveredTarget`/`SetHoveredObject`) — it is framework-owned ephemeral state now, cleared by
-        // the surface's own `interactionHover{targets:[]}` on pointer-leave, never app-side.
-        let mut config_mutations = vec![LowpolyConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }];
-        if is_paint_utility(&payload.utility_id) {
-            config_mutations.push(LowpolyConfigMutation::SetPaintUtility { value: payload.utility_id.clone() });
-        }
-        Ok(Emit::config(config_mutations))
-    }
-}
-//#endregion 🔖️SetActiveUtility
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

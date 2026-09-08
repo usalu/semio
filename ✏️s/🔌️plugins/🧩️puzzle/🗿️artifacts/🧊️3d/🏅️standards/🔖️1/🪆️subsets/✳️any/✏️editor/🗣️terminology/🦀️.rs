@@ -111,10 +111,8 @@ fn puzzle3d_locale(value: &str) -> Option<Locale> {
 
 /// 🗣️ Resolves the active label set from `Puzzle3dConfig`'s own persisted locale/terminology strings
 /// through the explicit EN/DE BCP-47 tags and generated terminology axis; unsupported values fail closed.
-pub fn puzzle3d_labels(config: &Puzzle3dConfig) -> Option<&'static Puzzle3dLabels> {
-    let locale = puzzle3d_locale(config.locale.as_str())?;
-    let terminology = Terminology::parse(config.terminology.as_str())?;
-    Some(Puzzle3dLabels::labels(locale, terminology))
+pub fn puzzle3d_labels(view_state: &semio_framework_plugin::ViewModel) -> Option<&'static Puzzle3dLabels> {
+    Some(semio_framework_plugin::resolve_labels::<Puzzle3dLabels>(view_state))
 }
 
 /// 🗺️ Builds a full locale×terminology `LocalizedLabel` from one `Puzzle3dLabels` field, reusing the

@@ -278,7 +278,7 @@
     },
     {
       "key": "presence",
-      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧪️fixtures/🧬️mutations",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🧫️fixtures/🧬️mutations",
       "aggregate": "ValueMutation",
       "leaves": [
         {

@@ -36,6 +36,7 @@ async function compileGisScopeExport(repoRoot: string, moduleRel: string, export
   const module = JSON.parse(readFileSync(join(repoRoot, moduleRel), "utf8"));
   const Ajv = (await import("ajv")).default;
   const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   ajv.addKeyword("x-semio-state").addFormat("double", true);
   ajv.addSchema(module);
   return ajv.compile({ $ref: `${module.$id}#/$defs/${exportId}` });
@@ -48,11 +49,12 @@ export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<voi
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisNativeCodecs");
   if (!validate(fixture)) throw new Error(`invalid GIS receipt corpus: ${JSON.stringify(validate.errors)}`);
-  const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️fixtures/🌱️artifact-document-id-v1");
+  const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1");
   const documentIds = JSON.parse(readFileSync(join(documentIdRoot, "🔣️.json"), "utf8"));
   const registryModule = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json"), "utf8"));
   const { default: RegistryAjv } = await import("ajv");
   const registryAjv = new RegistryAjv({ strict: true, allErrors: true });
+  registryAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   registryAjv.addSchema(registryModule);
   const validateDocumentIds = registryAjv.compile({ $ref: `${registryModule.$id}#/$defs/ArtifactDocumentIdV1` });
   if (!validateDocumentIds(documentIds)) throw new Error(`invalid artifact document-id corpus: ${JSON.stringify(validateDocumentIds.errors)}`);
@@ -98,7 +100,7 @@ export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<voi
 
 /** 🌐️ Validates the literal bounded proposal independently of the native package. */
 export async function proveGisControlledProposal(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/💡️inference-control");
+  const root = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧫️fixtures/💡️inference-control");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisInferenceControl");
   if (!validate(fixture)) throw new Error(`invalid GIS controlled corpus: ${JSON.stringify(validate.errors)}`);
@@ -138,7 +140,7 @@ export async function proveGisControlledProposal(repoRoot: string): Promise<void
 
 /** 🧩️ Proves the neutral stable-child, typed parent+drawing+value CreateRegion group contract. */
 export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🧩️map-create-region-group");
+  const root = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧫️fixtures/🧩️map-create-region-group");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validate = await compileGisScopeExport(repoRoot, GIS_MAP_SCHEMA_MODULE, "GisMapCreateRegionGroup");
   if (!validate(fixture)) throw new Error(`invalid GIS Map group corpus: ${JSON.stringify(validate.errors)}`);
@@ -188,13 +190,14 @@ export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<vo
     const accepted = membership.drawingChildId === "gismap-drawing" && membership.valueChildId === "gismap-value" && membership.imageChildId === null;
     if (validateMembership(membership) !== row.accepted || accepted !== row.accepted) throw new Error(`GIS Map membership parity failed: ${row.name}`);
   }
-  if (!source.includes('fixture["membershipCases"]')) throw new Error("GIS Map native law does not consume membership cases");
+  const nativeTests = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+  if (!nativeTests.includes('fixture["membershipCases"]')) throw new Error("GIS Map native law does not consume membership cases");
   console.log(`gis-map-create-region-group-check: checks=${14 + fixture.hostile.length + fixture.membershipCases.length} clean; atomic durable publication not claimed`);
 }
 
 /** 🏗️ Proves the exact fixed-three GIS assembly schema, typed factory ports, and private Store bind. */
 export async function proveGisDurableThreeStoreAssembly(repoRoot: string): Promise<void> {
-  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🗄️durable-three-store-assembly");
+  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧫️fixtures/🗄️durable-three-store-assembly");
   const fixtureBytes = readFileSync(join(fixtureRoot, "🔣️.json"));
   const fixture = JSON.parse(fixtureBytes.toString("utf8"));
   const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisDurableThreeStoreAssembly");
@@ -226,7 +229,7 @@ export async function proveGisDurableThreeStoreAssembly(repoRoot: string): Promi
   }
   if (assembly.includes("begin_member_apply_one") || assembly.includes("group_id:") || !assembly.includes("begin_apply_one(")) throw new Error("Store durable assembly admits a caller group or catalog factory shortcut");
   const journal = storeSource.slice(storeSource.indexOf("DurableOwnedThreeStoreCommitPhaseV1::StartingJournal =>"), storeSource.indexOf("DurableOwnedThreeStoreCommitPhaseV1::Journal =>"));
-  if (!journal.includes("sink.as_deref_mut()") || (journal.match(/\.begin_commit\(/gu) ?? []).length !== 1) throw new Error("Store durable journal does not begin exactly once");
+  if (!journal.includes("sink.ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?") || (journal.match(/\.begin_commit\(/gu) ?? []).length !== 1) throw new Error("Store durable journal does not begin exactly once");
   const gisSource = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), "utf8");
   for (const builder of ["gis_map_parent_one_item_preparation_factory", "gis_map_drawing_one_item_preparation_factory", "gis_map_value_one_item_preparation_factory"]) {
     if (!gisSource.includes(builder)) throw new Error(`GIS exact preparation port missing ${builder}`);
@@ -236,7 +239,7 @@ export async function proveGisDurableThreeStoreAssembly(repoRoot: string): Promi
 
 /** 🌉️ Proves the receipt-bound GIS cold-pair, tiled-map patch, and addressed mutation corpus. */
 export async function proveGisComponentColdMapPatch(repoRoot: string): Promise<void> {
-  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🌉️component-cold-map-patch");
+  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch");
   const fixtureBytes = readFileSync(join(fixtureRoot, "🔣️.json"));
   const fixture = JSON.parse(fixtureBytes.toString("utf8"));
   const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisComponentColdMapPatch");
@@ -438,7 +441,7 @@ class MapCreateRegionGroupNativeCheckScript extends BundleScript {
     await proveGisMapCreateRegionGroup(this.repoRoot);
     const receipts = await runExactCargoLaws({
       cwd: this.root,
-      groups: [{ package: "semio-s-plugin-gis", target: { kind: "lib" }, cargoArgs: ["--no-default-features"], laws: ["artifacts::gismap::standards::v1::subsets::any::schema::inferences::tests::map_create_region_group_work_stabilizes_parent_drawing_value_without_image"] }],
+      groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, cargoArgs: ["--no-default-features"], laws: ["standards::v1::subsets::any::schema::inferences::component::tests::map_create_region_group_work_stabilizes_parent_drawing_value_without_image"] }],
       artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
       buildBudgetMs: 3_600_000,
       listBudgetMs: 60_000,
@@ -467,8 +470,8 @@ class DurableThreeStoreAssemblyNativeCheckScript extends BundleScript {
           "durable_group::tests::durable_map_three_store_assembly_cancellation_before_journal_restores_all_three_frontiers",
           "durable_group::tests::durable_map_three_store_assembly_uncertain_journal_retains_same_host_until_committed_or_proven_absent",
         ] },
-        { package: "semio-s-plugin-gis", target: { kind: "lib" }, cargoArgs: ["--no-default-features"], laws: [
-          "editor::gis2d::tests::gis_map_durable_three_store_factory_builders_are_exact_role_ports",
+        { package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, cargoArgs: ["--no-default-features", "--features", "component-app-assembly"], laws: [
+          "editor::gis2d::component::tests::gis_map_durable_three_store_factory_builders_are_exact_role_ports",
         ] },
       ],
       artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,

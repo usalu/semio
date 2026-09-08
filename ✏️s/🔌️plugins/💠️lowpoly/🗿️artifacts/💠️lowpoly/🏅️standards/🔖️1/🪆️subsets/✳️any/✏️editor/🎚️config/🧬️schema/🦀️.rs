@@ -45,10 +45,6 @@ pub struct LowpolyConfig {
     pub sun_intensity: f64,
     #[state(config)]
     pub sun_color: String,
-    #[state(config)]
-    pub active_utility_id: String,
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor

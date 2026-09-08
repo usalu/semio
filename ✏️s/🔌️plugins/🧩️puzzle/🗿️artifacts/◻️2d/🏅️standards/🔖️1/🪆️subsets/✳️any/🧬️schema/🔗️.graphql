@@ -18,8 +18,6 @@ type Puzzle2dArtifact {
   fillCount: Int! @state(class: CONFIG)
   brushCandidateIndex: Int! @state(class: CONFIG)
   brushCandidateSourceHandleId: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
-  terminology: String! @state(class: CONFIG)
   lodModeByPaneJson: String! @state(class: CONFIG)
   engagementInputByPaneJson: String! @state(class: CONFIG)
   brushCandidatesJson: String! @state(class: CONFIG)

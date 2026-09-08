@@ -43,6 +43,7 @@ pub enum Activity {
 /// a free-text caption.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct PeerMark {
     pub actor: String,
@@ -62,6 +63,7 @@ pub struct PeerMark {
 /// of the presence channel; every OTHER session's equivalent arrives as a [`PeerMark`] in `peers`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct OwnPresence {
     #[serde(default, skip_serializing_if = "is_false")]
@@ -85,8 +87,14 @@ pub struct OwnPresence {
 /// `ttl_ms` has elapsed without a fresh `PresenceUpdate` for that key, so a disconnected peer fades out
 /// on a timer instead of leaving a stuck mark. Replaces the old `ui_tree_stamp_presence`, which
 /// mutated hover/selection/color/peers directly onto tree nodes.
+///
+/// The normative shape is `framework.ui.contract`'s `PresenceUpdate` export
+/// (`🧬️schema/🔣️.json#/$defs/PresenceUpdate`), which this struct is re-exported into by
+/// `🧬️schema/🦀️.rs`; `deny_unknown_fields` here is that schema's `additionalProperties: false`, so
+/// both halves of the export accept exactly the same documents.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct PresenceUpdate {
     pub surface: crate::SurfaceId,

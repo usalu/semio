@@ -3,8 +3,8 @@
   "modelDefinitionId": "spatial.shape",
   "referenceId": "ref-1",
   "newOrigin": [
-    1.0,
-    2.0,
-    3.0
+    1,
+    2,
+    3
   ]
 }

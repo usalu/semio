@@ -4,7 +4,6 @@ message SourcingCurationConfig {
   // @state config
   Filters filters = 1;
   // @state config
-  string locale = 3;
   // @state config
   string contributions_json = 4;
 }

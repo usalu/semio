@@ -2,13 +2,13 @@
   "mutation": "moveGrip3d",
   "id": "grip-north",
   "newPosition": [
-    1.0,
-    2.0,
-    3.0
+    1,
+    2,
+    3
   ],
   "newDirection": [
-    1.0,
-    0.0,
-    0.0
+    1,
+    0,
+    0
   ]
 }

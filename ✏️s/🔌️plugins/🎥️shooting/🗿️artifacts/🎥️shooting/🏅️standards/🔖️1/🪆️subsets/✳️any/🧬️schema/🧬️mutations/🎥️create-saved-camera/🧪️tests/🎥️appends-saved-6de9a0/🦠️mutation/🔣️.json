@@ -5,17 +5,17 @@
     "label": "Top",
     "camera": {
       "position": [
-        0.0,
-        0.0,
-        20.0
+        0,
+        0,
+        20
       ],
       "target": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
       ],
-      "zoom": 1.0,
-      "fov": 50.0
+      "zoom": 1,
+      "fov": 50
     }
   },
   "index": null

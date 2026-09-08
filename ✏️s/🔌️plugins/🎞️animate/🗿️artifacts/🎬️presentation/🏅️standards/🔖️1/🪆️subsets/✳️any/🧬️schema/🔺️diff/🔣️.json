@@ -16,7 +16,7 @@
       "x-semio-state": "artifact"
     },
     "source": {
-      "$ref": "#/$defs/FigureTileSource",
+      "$ref": "https://semio.tech/schema/s/animate/presentation/artifact.json#/$defs/FigureTileSource",
       "x-semio-state": "artifact"
     },
     "tiles": {
@@ -30,92 +30,9 @@
     "engagementInput": {
       "type": "string",
       "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {
-    "FigureTileFrame": {
-      "title": "FigureTileFrame",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "width",
-        "height"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "width": {
-          "type": "number",
-          "format": "double"
-        },
-        "height": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "FigureTileSource": {
-      "title": "FigureTileSource",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "src",
-        "kind",
-        "frame"
-      ],
-      "properties": {
-        "src": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string"
-        },
-        "frame": {
-          "$ref": "#/$defs/FigureTileFrame"
-        },
-        "sourceAspect": {
-          "type": "number",
-          "format": "double"
-        },
-        "pdfPage": {
-          "type": "integer",
-          "format": "uint32"
-        }
-      }
-    },
-    "FigureTileDraft": {
-      "title": "FigureTileDraft",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "crop"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "crop": {
-          "$ref": "#/$defs/FigureTileFrame"
-        }
-      }
-    },
     "FigureTileDraftPatch": {
       "title": "FigureTileDraftPatch",
       "type": "object",
@@ -125,7 +42,7 @@
           "type": "string"
         },
         "crop": {
-          "$ref": "#/$defs/FigureTileFrame"
+          "$ref": "https://semio.tech/schema/s/animate/presentation/artifact.json#/$defs/FigureTileFrame"
         }
       }
     },
@@ -158,7 +75,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/FigureTileDraft"
+            "$ref": "https://semio.tech/schema/s/animate/presentation/artifact.json#/$defs/FigureTileDraft"
           }
         },
         "removed": {

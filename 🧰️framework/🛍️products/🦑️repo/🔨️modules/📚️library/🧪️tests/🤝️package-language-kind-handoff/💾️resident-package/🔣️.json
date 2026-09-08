@@ -4,7 +4,7 @@
   "ownerPath": "🧰️framework/🔨️modules/🌱️value/💾️resident",
   "packagePath": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
   "sourcePath": "🧰️framework/🔨️modules/🌱️value/💾️resident/🦀️.rs",
-  "testPath": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/🦀️.rs",
+  "testPath": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/💾️resident/🦀️.rs",
   "fixturePath": "🧰️framework/🔨️modules/🌱️value/💾️resident/🧫️fixture/🔣️.json",
   "member": {
     "registry": "members-of-members-of-modules",
@@ -57,7 +57,7 @@
       "default": [
         "{projectRoot}/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🦀️.rs",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/💾️resident/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧫️fixture/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/📐️schema/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/💾️resident/🧬️schema.json",

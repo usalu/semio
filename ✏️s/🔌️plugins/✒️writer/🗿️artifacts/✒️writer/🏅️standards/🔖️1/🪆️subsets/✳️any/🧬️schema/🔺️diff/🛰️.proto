@@ -18,7 +18,6 @@ message WriterDiff {
   optional double camera_x = 14;
   optional double camera_y = 15;
   optional double camera_zoom = 16;
-  optional string locale = 17;
 }
 
 message WriterArtifact {
@@ -37,7 +36,6 @@ message WriterArtifact {
   double camera_x = 13;
   double camera_y = 14;
   double camera_zoom = 15;
-  string locale = 16;
 }
 
 message WriterEditorSelection {

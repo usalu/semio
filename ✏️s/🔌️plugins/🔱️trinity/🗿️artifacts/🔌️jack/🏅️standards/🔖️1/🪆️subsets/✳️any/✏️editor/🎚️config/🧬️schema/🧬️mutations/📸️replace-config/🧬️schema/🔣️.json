@@ -27,27 +27,11 @@
           ],
           "additionalProperties": false
         },
-        "activeFixtureId": {
-          "type": "string"
-        },
         "jackQuery": {
           "type": "string"
         },
         "jackResultJson": {
           "type": "string"
-        },
-        "editorEngagementInput": {
-          "type": "string"
-        },
-        "graphEngagementInput": {
-          "type": "string"
-        },
-        "resultsEngagementInput": {
-          "type": "string"
-        },
-        "reorganizeEpoch": {
-          "type": "integer",
-          "minimum": 0
         },
         "editorSelection": {
           "type": [
@@ -75,28 +59,14 @@
           "additionalProperties": {
             "type": "string"
           }
-        },
-        "revision": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "locale": {
-          "type": "string"
         }
       },
       "required": [
         "camera",
-        "activeFixtureId",
         "jackQuery",
         "jackResultJson",
-        "editorEngagementInput",
-        "graphEngagementInput",
-        "resultsEngagementInput",
-        "reorganizeEpoch",
         "editorSelection",
-        "lodModeByWindow",
-        "revision",
-        "locale"
+        "lodModeByWindow"
       ],
       "additionalProperties": false
     }

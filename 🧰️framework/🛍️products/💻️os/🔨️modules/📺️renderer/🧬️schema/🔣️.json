@@ -6,7 +6,7 @@
   "$defs": {
     "ActorDocumentPortFixtureV1": {
       "type": "object", "additionalProperties": false,
-      "required": ["owner", "limits", "cases", "retirement", "bindingRetirement"],
+      "required": ["owner", "limits", "cases", "retirement", "bindingRetirement", "disposal"],
       "properties": {
         "owner": { "$ref": "#/$defs/ActorDocumentPortOwnerV1" },
         "limits": {
@@ -35,6 +35,22 @@
           }
         },
         "retirement": { "type": "array", "items": { "type": "string" } },
+        "disposal": {
+          "type": "object", "additionalProperties": false, "required": ["bound", "opening"],
+          "properties": {
+            "bound": { "type": "array", "items": { "enum": ["bind", "retire", "retired", "dispose"] }, "minItems": 4, "maxItems": 4 },
+            "opening": {
+              "type": "array", "minItems": 2, "maxItems": 2,
+              "items": {
+                "type": "object", "additionalProperties": false, "required": ["phase", "events"],
+                "properties": {
+                  "phase": { "enum": ["activation", "open"] },
+                  "events": { "type": "array", "items": { "enum": ["activate", "activated", "open", "opened", "dispose"] }, "minItems": 3, "maxItems": 5 }
+                }
+              }
+            }
+          }
+        },
         "bindingRetirement": {
           "type": "array", "minItems": 4, "maxItems": 4,
           "items": {
@@ -238,7 +254,8 @@
             "none",
             "socket",
             "attach",
-            "deadline"
+            "deadline",
+            "ready"
           ]
         },
         "replace": {
@@ -331,7 +348,10 @@
         "detach",
         "attach-b",
         "load",
-        "bind"
+        "bind",
+        "load-a",
+        "load-c",
+        "bind-c"
       ]
     },
     "DocumentOpeningCloseFailureV1": {

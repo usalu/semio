@@ -281,8 +281,7 @@ async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Ef
         }
     }
     let ui_patch_receipt = turn.ui_patch_receipt.map(super::wit_patch_receipt_to_kernel);
-    let ui_patches = super::ui_patch::wit_ui_patches_to_kernel(instance_id, max_patch_bytes, patches, turn.ui_patches, ui_patch_receipt)
-        .map_err(|error| TurnFault::Host(PluginHostError::Plugin(error)))?;
+    let ui_patches = super::ui_patch::wit_ui_patches_to_kernel(instance_id, max_patch_bytes, patches, turn.ui_patches, ui_patch_receipt).map_err(|error| TurnFault::Host(PluginHostError::Plugin(error)))?;
     Ok(KernelTurnResult {
         ui_patches,
         effects,

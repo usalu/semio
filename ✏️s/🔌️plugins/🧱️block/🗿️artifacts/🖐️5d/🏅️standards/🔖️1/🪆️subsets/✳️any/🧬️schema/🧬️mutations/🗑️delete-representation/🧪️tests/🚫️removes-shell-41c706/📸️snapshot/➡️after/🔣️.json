@@ -17,15 +17,15 @@
   },
   "3d": {
     "orientation": [
-      0.0,
-      0.0,
-      0.0,
-      1.0
+      0,
+      0,
+      0,
+      1
     ],
     "scale": [
-      1.0,
-      1.0,
-      1.0
+      1,
+      1,
+      1
     ]
   },
   "representations": [],
@@ -49,17 +49,17 @@
     {
       "id": "grip-north",
       "gripKind": "gk-plug",
-      "angle": 0.0,
+      "angle": 0,
       "radius2d": 0.3,
       "position": [
-        0.0,
-        1.0,
-        0.0
+        0,
+        1,
+        0
       ],
       "direction": [
-        0.0,
-        1.0,
-        0.0
+        0,
+        1,
+        0
       ],
       "radius3d": 0.25
     }
@@ -86,22 +86,22 @@
     }
   ],
   "camera2d": {
-    "x": 0.0,
-    "y": 0.0,
-    "zoom": 1.0
+    "x": 0,
+    "y": 0,
+    "zoom": 1
   },
   "camera3d": {
     "position": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
     ],
     "target": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
     ],
-    "zoom": 1.0
+    "zoom": 1
   },
   "meta": {
     "description": "Fixture base for the block5d mutation vocabulary."

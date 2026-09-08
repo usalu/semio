@@ -1,11 +1,11 @@
 
 use super::*;
-use crate::editor::process3d::config::Process3dConfig;
+use semio_framework_plugin::{Locale, ViewModel};
 
 #[semio_framework_async_macros::async_test]
 async fn labels_resolve_native_by_default_and_in_german() {
-    let mut config = Process3dConfig::default();
-    assert_eq!(process3d_labels(&config).stock.as_str(), "Stock");
-    config.locale = "de".into();
-    assert_eq!(process3d_labels(&config).stock.as_str(), "Rohteil");
+    let english = ViewModel { locale: Locale::En, ..ViewModel::default() };
+    assert_eq!(process3d_labels(&english).stock.as_str(), "Stock");
+    let german = ViewModel { locale: Locale::De, ..ViewModel::default() };
+    assert_eq!(process3d_labels(&german).stock.as_str(), "Rohteil");
 }

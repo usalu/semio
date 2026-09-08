@@ -2,5 +2,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/flow/flow/mutations/text.json",
   "title": "FlowMutationsText",
-  "type": "object"
+  "type": "object",
+  "x-semio-formats": [
+    "🔣️jsonschema",
+    "🟦️typescript"
+  ]
 }

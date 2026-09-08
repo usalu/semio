@@ -35,8 +35,6 @@
     "camera",
     "windowOptions",
     "activeUtilityByWindowId",
-    "terminology",
-    "locale",
     "windowIds"
   ],
   "properties": {
@@ -206,14 +204,6 @@
       "x-semio-state": "config"
     },
     "activeToolId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "terminology": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
       "type": "string",
       "x-semio-state": "config"
     },

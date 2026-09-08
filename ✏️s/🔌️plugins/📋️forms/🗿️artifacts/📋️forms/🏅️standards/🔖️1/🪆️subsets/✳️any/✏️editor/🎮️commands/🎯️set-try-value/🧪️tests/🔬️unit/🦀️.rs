@@ -76,7 +76,7 @@ fn finish_container(mut rewrite: ContainerRewrite, source: &str) -> (String, std
 
 #[test]
 fn vector_replacement_boundaries_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️vectors.json")).expect("vector fixture");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️vectors.json")).expect("vector fixture");
     for vector in vectors.as_array().expect("vector cases") {
         let source = vector["source"].as_str().expect("source JSON");
         let index = vector["index"].as_u64().expect("target index");

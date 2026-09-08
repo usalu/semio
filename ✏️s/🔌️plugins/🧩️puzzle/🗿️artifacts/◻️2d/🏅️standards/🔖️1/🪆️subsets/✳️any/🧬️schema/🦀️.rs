@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle2d artifact schema — every field of the artifact with its state class.
 
-use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dSnapshot};
+use crate::Puzzle2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -43,10 +43,6 @@ pub struct Puzzle2dArtifact {
     pub brush_candidate_index: u32,
     #[state(config)]
     pub brush_candidate_source_handle_id: String,
-    #[state(config)]
-    pub locale: String,
-    #[state(config)]
-    pub terminology: String,
     #[state(config)]
     pub lod_mode_by_pane_json: String,
     #[state(config)]
@@ -99,8 +95,6 @@ impl Puzzle2dArtifact {
             fill_count: 0,
             brush_candidate_index: 0,
             brush_candidate_source_handle_id: String::new(),
-            locale: "en-US".into(),
-            terminology: "native".into(),
             lod_mode_by_pane_json: "{}".into(),
             engagement_input_by_pane_json: "{}".into(),
             brush_candidates_json: "{}".into(),
@@ -129,11 +123,7 @@ pub fn puzzle2d_artifact_schema_descriptor() -> ::semio_framework_schema::Artifa
     ::semio_framework_schema::ArtifactSchemaDescriptor {
         id: "s.puzzle.puzzle2d",
         artifact: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
         snapshot: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("📸️snapshot/🦀️.rs"),
@@ -280,3 +270,11 @@ pub fn empty_puzzle2d_snapshot() -> Puzzle2dSnapshot {
     Puzzle2dSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::Puzzle2dCamera;
+pub use crate::Puzzle2dEdge;
+pub use crate::Puzzle2dMeta;
+pub use crate::Puzzle2dNode;
+//#endregion 🔁️Re-exports

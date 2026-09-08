@@ -81,3 +81,40 @@ These are outside the replication wire selection boundary and were not changed i
 ## Residual status
 
 The requested replication compilation gate is restored with the affected selection/runtime types on first-party `ToValue`/`FromValue` only. Replication behavior tests compile and all relevant codec tests pass. DB lib test discovery is green and nonzero. The next end-to-end blockers are the unrelated causal fixture mismatch, imperative registry serde call, and six hub-owned diagnostics listed above.
+
+## Raw document-backbone actor transport
+
+The document actor transport now carries one canonical outer `BackboneMessage::Mutations` byte sequence as `documentBackbone` in both request and event directions. The strict causal-batch decoder retains all three HLC limbs as `bigint`, rejects nonminimal and overflowing u64 encodings, malformed UTF-8, truncation and trailing bytes, and applies finite envelope/dependency/identifier/schema/payload limits before allocation. The worker preserves opaque mutation payload bytes across local admission, authoritative actor/timestamp stamping, offline retention, reconnect and server `Commands` delivery; it does not issue the old bound-port BroadcastChannel echo or a duplicate domain mutation event.
+
+The language-neutral draft-07 corpus is under `🧰️framework/🔨️modules/📡️replication/🔗️causal/{🧬️schema,🧫️fixtures}/🧮️document-backbone-batch-v1/🔣️.json`. Its retention contract is 1,048,576 bytes and 64 messages per document owner while each hot message remains capped at 262,144 bytes. Admission charges the owned raw-message size before enqueue, keeps the charge while a socket batch is requeued after disconnect, releases it only on terminal `Applied` Ack, and clears it synchronously on document disposal.
+
+The extracted worker test module previously assigned mutable production seams through destructured constants. A live getter/setter test-seam object now preserves the extracted layout while making all such mutations affect the worker's actual bindings.
+
+Current source verification:
+
+- framework replication session `79718`: 6/6 tests passed, including the 18-row AJV corpus and Node `Buffer` byte oracle;
+- framework OS wire session `2154`: 2/2 focused tests passed, including maximum-u64 HLC and hostile outer-message rows;
+- framework OS worker session `45938`: 5/5 focused tests passed, covering exact remote `Commands`, two isolated actors, noncanonical-but-valid Pack payload identity, zero pre-server echo, 1 MiB-minus-1 admission plus overflow/Ack/disposal, offline exact flush, and pre-Ack disconnect requeue without charge release.
+
+No native guest/component or two-peer browser acceptance is claimed by these TypeScript gates.
+
+## Rebootstrap deadline ownership
+
+The document worker now retains two distinct deadline owners. The inner artifact-bootstrap owner covers an admitted non-inline assembler and verifies the exact assembler, owner and timer before failing it. The outer rebootstrap epoch is armed before the verified pair is discarded and spans the authority request, reconnect, WebSocket welcome and cold-pair installation. Exact close, configuration replacement and successful verified installation clear only their matching timer; a stale epoch cannot close a successor socket.
+
+While an outer rebootstrap is required, `Welcome.None`, `Welcome.Tail` and `Welcome.Commands` cannot mark a pairless document live. A failure remains a retryable rebootstrap requirement and does not fabricate a pair.
+
+Verification:
+
+- focused watchdog session `3607`: 2/2 selected laws passed;
+- extracted-worker focused session `6490`: 3/3 selected regressions passed after restoring the current schema imports, live mutable test seams and a fixture lifetime long enough for its own hostile assertions;
+- full extracted-worker session `69767` was diagnostic only: 80/84 passed and exposed four moved-fixture/test-harness failures before the above repairs;
+- full extracted-worker session `14863` was diagnostic only: 83/86 passed and isolated the final three repaired harness failures.
+
+The focused laws use fake clocks to prove a no-Welcome timeout, one failure and socket close at the exact deadline, stale-owner no-op, pairless welcome refusal, and timer removal after a successor's verified cold-pair installation. They do not claim a browser or native component run.
+
+## Current WGPU package contract
+
+The canonical catalog parser now binds the same renderer schema URI that the catalog and draft-07 AJV schema require. The package test derives the activation manifest from the parsed catalog owner and package-relative path, uses the current target-owned browser entry, and passes the complete four-argument render bridge call. The pinned catalog digest is the independently computed SHA-256 `36ff0f02d3e491dfd5cd1df5b14270ee220d55b05ad8bf1ca9c21074fcf23fe3`.
+
+Focused renderer session `43536` passed all 15 package-integration laws. It validates the catalog with both the first-party parser and AJV/WebCrypto/TypeScript compiler oracles. The preceding session `63601` passed 12/15 and directly reproduced the stale schema identity plus incomplete render invocation before repair.

@@ -43,7 +43,5 @@ pub struct WriterDiff {
     pub camera_y: Option<f64>,
     #[state(config)]
     pub camera_zoom: Option<f64>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

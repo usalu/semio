@@ -89,9 +89,7 @@ message CadArtifact {
   // @state config
   CadDislocateOptions dislocate_structure_classic = 42;
   // @state config
-  string locale = 43;
   // @state config
-  string terminology = 44;
   // @state config
   string contributions_json = 45;
   // @state artifact
@@ -111,3 +109,7 @@ message CadGeometry { string anchors_json = 1; }
 message CadCamera { double zoom = 1; }
 message CadComponentSelection { string mode = 1; }
 message CadDislocateOptions { bool move_enabled = 1; bool rotate_enabled = 2; }
+
+message CadStringList {
+  repeated string values = 1;
+}

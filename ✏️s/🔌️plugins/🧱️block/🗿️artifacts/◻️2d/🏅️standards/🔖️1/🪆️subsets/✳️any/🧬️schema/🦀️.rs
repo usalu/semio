@@ -1,7 +1,7 @@
 //! 🧬️ Block2d artifact schema — every field with its state class.
 
-use crate::{Block2dHandleKind, Block2dHandleTemplate, Block2dPresentation, Block2dSnapshot};
-use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta};
+use crate::{Block2dSnapshot};
+
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -34,8 +34,6 @@ pub struct Block2dArtifact {
     pub meta: BlockMeta,
     #[state(presence)]
     pub selected_ids: Vec<String>,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -77,7 +75,6 @@ impl Block2dArtifact {
             camera2d: snapshot.camera2d,
             meta: snapshot.meta,
             selected_ids: Vec::new(),
-            locale: "en-US".into(),
         }
     }
 
@@ -279,3 +276,16 @@ pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> Str
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::BlockKindIdentity;
+pub use crate::Block2dPresentation;
+pub use crate::Block2dHandleKind;
+pub use crate::Block2dHandleTemplate;
+pub use crate::BlockCompatibilityRule;
+pub use crate::BlockAttribute;
+pub use crate::BlockAuthor;
+pub use crate::BlockCamera2d;
+pub use crate::BlockMeta;
+//#endregion 🔁️Re-exports

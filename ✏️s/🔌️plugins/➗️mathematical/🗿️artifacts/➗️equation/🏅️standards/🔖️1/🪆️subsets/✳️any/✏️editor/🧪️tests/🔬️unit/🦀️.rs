@@ -32,7 +32,7 @@ fn drive_retained(work: &mut EquationRetainedCommandWork, command: &EquationComm
 
 #[test]
 fn retained_schema_contract_and_factory_identity_are_exact() {
-    let fixture: Value = json::parse(include_str!("../../../../../../../🧪️fixtures/⚖️equation-retained-command-law.json")).expect("language-neutral retained fixture");
+    let fixture: Value = json::parse(include_str!("../../../../../../../🧫️fixtures/⚖️equation-retained-command-law.json")).expect("language-neutral retained fixture");
     assert_eq!(fixture["contract"]["workItems"], 65_536);
     assert_eq!(fixture["contract"]["maximumStepMillis"], 8);
     assert_eq!(fixture["actions"], json::array(EQUATION_TOOL_IDS.iter().map(|id| Value::from(*id))));

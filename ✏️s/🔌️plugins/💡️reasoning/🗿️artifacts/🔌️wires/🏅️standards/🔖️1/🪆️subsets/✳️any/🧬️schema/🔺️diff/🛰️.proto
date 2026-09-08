@@ -17,7 +17,6 @@ message WiresDiff {
   // @state artifact
   optional double drag_last_y = 6;
   // @state config
-  optional string locale = 7;
 }
 
 message WiresArtifact {
@@ -26,7 +25,6 @@ message WiresArtifact {
   optional string drag_node_id = 3;
   double drag_last_x = 4;
   double drag_last_y = 5;
-  string locale = 6;
 }
 
 message DslValue {}

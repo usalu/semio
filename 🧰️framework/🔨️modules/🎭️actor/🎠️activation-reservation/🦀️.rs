@@ -134,5 +134,5 @@ impl Kernel {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🎠️activation-reservation/🦀️.rs"]
 mod tests;

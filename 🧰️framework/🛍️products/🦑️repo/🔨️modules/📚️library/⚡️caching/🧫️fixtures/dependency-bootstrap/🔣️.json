@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "target": "deps-javascript",
+  "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+  "command": "sync",
+  "arguments": [
+    "install",
+    "--frozen-lockfile"
+  ],
+  "dependency": {
+    "name": "fixture-local-dependency",
+    "version": "1.0.0",
+    "content": "export const value = 42;\n"
+  },
+  "tooling": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
+    "packages": [
+      "@nx/js",
+      "@nxlv/python",
+      "nx",
+      "typescript"
+    ],
+    "graphSources": [
+      "nx.json",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs"
+    ]
+  },
+  "cancellation": {
+    "actors": [
+      "installer",
+      "child"
+    ],
+    "signal": "SIGTERM",
+    "timeoutMs": 10000
+  }
+}

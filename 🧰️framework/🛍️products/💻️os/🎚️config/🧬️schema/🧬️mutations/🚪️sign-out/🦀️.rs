@@ -3,8 +3,8 @@
 use super::sign_in::{sign_in, IdentitySetting};
 use super::IdentityConfigMutation;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🚪️ Clears the OS-wide signed-in session.

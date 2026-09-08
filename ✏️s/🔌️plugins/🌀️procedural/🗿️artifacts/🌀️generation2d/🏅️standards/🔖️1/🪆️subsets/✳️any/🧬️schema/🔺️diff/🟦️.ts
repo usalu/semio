@@ -18,7 +18,6 @@ export interface Generation2dDiff {
   /** @state artifact */
   generationPreviewText?: string | null;
   /** @state config */
-  locale?: string;
 }
 
 export type Generation2dStringList = { values: string[] };

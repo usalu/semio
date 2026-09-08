@@ -8,7 +8,7 @@ fn project(node: BuiltNode) -> serde_json::Value {
 
 #[test]
 fn architect_semantic_panels_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️panels.json")).expect("neutral semantic vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️panels.json")).expect("neutral semantic vectors");
     let program = crate::sample_plugin();
     let cfg = ArchitectConfig::default();
     let tree = project(render(&program, &cfg).expect("inspector"));

@@ -5,7 +5,7 @@ use crate::demo_space_projection;
 use crate::engine::space::config::SpaceConfig;
 use crate::engine::space::terminology::SStudioLabels;
 use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, OsWorkflowCamera, WorkflowSnapshot};
-use semio_framework_plugin::{resolve_labels_for_locale, ActionDescriptor, InteractionRef, LocalizedLabel, SurfaceKind, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{resolve_labels, ActionDescriptor, InteractionRef, LocalizedLabel, SurfaceKind, ViewModel, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_scene::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene, NodeGraphViewport};
 
 /// 🎯️ Builds a controller-addressed `ActionDescriptor` with no args — the `s_play_action` helper
@@ -128,8 +128,8 @@ pub async fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowS
 //#endregion 🔖️Render
 
 //#region 🔖️Measures
-pub async fn window_measures(config: &SpaceConfig, nodes: &[semio_framework_os::WorkflowNode]) -> Vec<semio_framework_plugin::WindowMeasure> {
-    let labels = resolve_labels_for_locale::<SStudioLabels>(&config.locale);
+pub async fn window_measures(config: &SpaceConfig, nodes: &[semio_framework_os::WorkflowNode], view_state: &ViewModel) -> Vec<semio_framework_plugin::WindowMeasure> {
+    let labels = resolve_labels::<SStudioLabels>(view_state);
     vec![crate::engine::space::modes::main::windows::workflow::options::active_instance::measure(config, nodes, labels).await]
 }
 //#endregion 🔖️Measures

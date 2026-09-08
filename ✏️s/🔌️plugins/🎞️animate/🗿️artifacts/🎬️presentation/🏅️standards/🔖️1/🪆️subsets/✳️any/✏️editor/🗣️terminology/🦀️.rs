@@ -2,7 +2,6 @@
 //! node reaches for. Deliberately ONE block for the whole app (never split per window/panel): the
 //! macro's value is that every locale×terminology combination is compile-checked in one place.
 
-use crate::editor::animate::config::PresentationConfig;
 use semio_framework_plugin::{AppLabels, Locale, Terminology};
 
 //#region 🔖️Labels
@@ -32,16 +31,12 @@ semio_framework_plugin::app_labels! {
 /// 🗣️ B1: resolves the active label set from `cfg.locale` (was the host-pushed `ViewModel.locale`);
 /// unknown/absent locales fall back to native English. `PresentationConfig` carries no terminology axis,
 /// so this app is always `Terminology::Native` — mirrors `sequence_ui`'s identical pair.
-pub fn animate_presentation_locale(config: &PresentationConfig) -> Locale {
-    if config.locale.starts_with("de") {
-        Locale::De
-    } else {
-        Locale::En
-    }
+pub fn animate_presentation_locale(view_state: &semio_framework_plugin::ViewModel) -> Locale {
+    view_state.locale
 }
 
-pub fn animate_presentation_labels(config: &PresentationConfig) -> &'static AnimatePresentationLabels {
-    AnimatePresentationLabels::labels(animate_presentation_locale(config), Terminology::Native)
+pub fn animate_presentation_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static AnimatePresentationLabels {
+    semio_framework_plugin::resolve_labels::<AnimatePresentationLabels>(view_state)
 }
 //#endregion 🔖️Resolvers
 

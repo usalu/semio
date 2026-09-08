@@ -237,10 +237,21 @@ error: [verify package-purity] 269 package language purity breach(es)
       at runPackagePurity (/Users/ueli/Documents/semio/📜️script.ts:7217:40)
 ```
 
-The command dispatches now (it previously died at `unknown command "policy"`). The 269 breaches are
-pre-existing Shape-V2 packaging violations across the tree, outside this partition and outside this ticket
-— reported, not fixed. Note this means `verify-package-purity` has been a **green-by-crashing** nx target:
-whatever ran it saw a router usage error, not a purity result.
+The command dispatches now. What it did before, measured on the same tree:
+
+```
+$ bun ./📜️script.ts bogus-command
+unknown command "bogus-command"
+usage: bun ./📜️script.ts <os|semio|examples|setup|start|dev|generate|scale-fixture|new|schema|lint|
+  verify|format|test|bench|stdio|build|cpp|publish|purge|clean|micro-commit|commit> [args…]
+```
+
+`policy` is absent from that registry, so `verify-package-purity` exited 1 with a router usage error and
+never produced a purity result — a target that has been failing for a reason unrelated to what it measures.
+(Both readings needed patience: the root script takes minutes to load its module graph on this loaded
+machine, and two earlier attempts were killed at a 2–3 minute timeout with zero output before dispatch was
+even reached.) The 269 breaches are pre-existing Shape-V2 packaging violations across the tree, outside this
+partition and outside this ticket — reported, not fixed.
 
 ### 3.6 Dispatch sanity after making `SchemaScript.run` async
 
@@ -330,6 +341,6 @@ new `sharedDiagnosticCodes()`). Add the field and both casts collapse to a plain
    this and I did not change it, but the function still has two sources of truth for what a repository-owned
    root is; settling it means declaring the missing `✏️s` areas in the taxonomy (library partition) and then
    deleting the literals here.
-4. **`verify package-purity` was dead, so its 269 breaches are unmeasured backlog** (§3.5). Nobody has ever
-   seen this gate's real output. Whoever owns Shape-V2 packaging should look at it before it is wired into
-   anything blocking.
+4. **`verify-package-purity` has been failing on a router usage error, so its 269 breaches are unmeasured
+   backlog** (§3.5). The target reported a failure, but never the one it exists to report. Whoever owns
+   Shape-V2 packaging should read the real output before it is wired into anything blocking.

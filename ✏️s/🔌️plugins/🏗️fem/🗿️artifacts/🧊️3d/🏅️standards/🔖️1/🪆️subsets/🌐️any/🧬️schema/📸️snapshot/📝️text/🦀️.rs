@@ -42,3 +42,8 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]
 mod semio_grammar_conformance;
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Fem3dSnapshotText = String;
+//#endregion 🚚️Carrier

@@ -2,5 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/ifc/2x3/base/snapshot/binary.json",
   "title": "Ifc2x3SnapshotBinary",
-  "type": "object"
+  "type": "string",
+  "contentEncoding": "base64",
+  "description": "🚚️ The binary representation of Ifc2x3SnapshotBinary: the instance is the base64-encoded byte payload this facet's grammar and codec speak."
 }

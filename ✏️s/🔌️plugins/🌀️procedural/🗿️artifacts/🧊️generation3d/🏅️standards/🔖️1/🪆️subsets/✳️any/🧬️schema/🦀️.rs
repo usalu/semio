@@ -1,21 +1,15 @@
 //! 🧬️ Generation3d artifact schema — every field of the artifact with its state class.
 
-use crate::standards::v1::subsets::any::schema::snapshot::text::{
-    GENERATION3D_EXAMPLE_BOX_FILLET_TEXT, GENERATION3D_EXAMPLE_BOX_SHELL_TEXT, GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT, GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT, GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT, GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT,
-    GENERATION3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT,
-};
+use crate::standards::v1::subsets::any::schema::snapshot::text::{GENERATION3D_EXAMPLE_BOX_FILLET_TEXT, GENERATION3D_EXAMPLE_BOX_SHELL_TEXT, GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT, GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT, GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT, GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT, GENERATION3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT};
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 use crate::widget_id;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::forms_bridge::apply_generation_values_to_fixture as apply_generation_values_to_fixture_json;
 use semio_framework_artifact_playbook_playbook::selected_generation;
-use semio_framework_artifact_playbook_playbook::GenerationPlayState;
-use semio_framework_artifact_flow_flow::CameraJson;
-use semio_framework_artifact_flow_flow::FlowFixture;
+
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
-use semio_framework_artifact_flow_flow::{Widget};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactDsl;
@@ -53,8 +47,6 @@ pub struct Generation3dArtifact {
     pub generation_preview_text: Option<String>,
     #[state(presence)]
     pub active_utility_id: String,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Generation3dArtifact
 
@@ -95,7 +87,6 @@ impl Default for Generation3dArtifact {
             selected_generation_id: None,
             generation_preview_text: None,
             active_utility_id: "move".into(),
-            locale: "en-US".into(),
         }
     }
 }
@@ -566,3 +557,11 @@ pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &s
     Ok(transform_id)
 }
 //#endregion 🔖️GumballTransforms
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use semio_framework_artifact_flow_flow::CameraJson;
+pub use semio_framework_artifact_flow_flow::Widget;
+pub use semio_framework_artifact_flow_flow::FlowFixture;
+pub use semio_framework_artifact_playbook_playbook::GenerationPlayState;
+//#endregion 🔁️Re-exports

@@ -9,11 +9,32 @@
     "layers",
     "frameCursor",
     "reportTable",
-    "activeUtilityId",
-    "locale"
+    "activeUtilityId"
   ],
   "properties": {
     "camera": {
+      "$ref": "#/$defs/RemodelingWorldCamera",
+      "x-semio-state": "config"
+    },
+    "layers": {
+      "$ref": "#/$defs/RemodelingLayerVisibility",
+      "x-semio-state": "config"
+    },
+    "frameCursor": {
+      "$ref": "#/$defs/RemodelingFrameCursor",
+      "x-semio-state": "config"
+    },
+    "reportTable": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "activeUtilityId": {
+      "type": "string",
+      "x-semio-state": "config"
+    }
+  },
+  "$defs": {
+    "RemodelingWorldCamera": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -47,7 +68,7 @@
       },
       "x-semio-state": "config"
     },
-    "layers": {
+    "RemodelingLayerVisibility": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -81,7 +102,7 @@
       },
       "x-semio-state": "config"
     },
-    "frameCursor": {
+    "RemodelingFrameCursor": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -98,18 +119,6 @@
           "x-semio-state": "config"
         }
       },
-      "x-semio-state": "config"
-    },
-    "reportTable": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   }

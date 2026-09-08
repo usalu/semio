@@ -7,7 +7,6 @@ type SequenceDiff {
   lastRunJson: String @state(class: CONFIG)
   orientation: String @state(class: CONFIG)
   camera: SequenceCamera @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
 }
 type SequenceStepsDelta { added: [SequenceStep!]! removed: [String!]! patched: [SequenceStepPatchEntry!]! reordered: [String!] }
 type SequenceEdgesDelta { added: [SequenceEdge!]! removed: [String!]! patched: [SequenceEdgePatchEntry!]! reordered: [String!] }
@@ -21,6 +20,9 @@ type SequenceEdgePatch { from: String to: String }
 type SequenceCamera { x: Float! y: Float! zoom: Float! }
 type SequenceArtifact {
   schema: String! steps: [SequenceStep!]! edges: [SequenceEdge!]!
-  lastRunJson: String! orientation: String! camera: SequenceCamera! locale: String!
-}
+  lastRunJson: String! orientation: String! camera: SequenceCamera!}
 scalar JSON
+
+type SequenceStringList {
+  values: [String!]!
+}

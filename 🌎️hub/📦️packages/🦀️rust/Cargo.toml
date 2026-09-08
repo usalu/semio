@@ -50,6 +50,10 @@ semio-s-artifact-stdio-semio = { workspace = true, optional = true }
 semio-s-plugin-gis = { path = "../../../✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust", default-features = false, optional = true }
 semio-s-plugin-vcs = { path = "../../../✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust", default-features = false, optional = true }
 semio-framework-plugin-host = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+# 🧬️ The os-kernel-free named-export registry (`📋️execution-contract.md` §C): every `🧬️schema/🦀️.rs`
+# of this crate registers its scope's exports through it, so registration is production code and not
+# a test artefact. It is a leaf crate — depending on it introduces no os-kernel edge.
+semio-framework-schema-registry = { workspace = true }
 semio-framework = { path = "../../../🧰️framework/📦️packages/🦀️rust" }
 semio-framework-plugin.workspace = true
 protocol = { path = "../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }

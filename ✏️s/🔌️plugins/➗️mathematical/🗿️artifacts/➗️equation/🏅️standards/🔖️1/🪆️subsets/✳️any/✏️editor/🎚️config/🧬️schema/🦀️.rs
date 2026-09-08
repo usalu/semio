@@ -1,11 +1,10 @@
 //! 🧬️ Equation app config schema — every local-ui field of EquationConfig.
 
-use crate::EquationCamera;
+
 use framework_schema::ArtifactSchema;
 // 🌱️ Additive `ToValue`/`FromValue` — see `🦀️.rs`'s own docstring note on this crate's
 // interim (not-yet-serde-free) state.
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
-
 //#region 🔖️Config
 /// 🎚️ Equation app config — unshared local app state.
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, ArtifactSchema)]
@@ -14,8 +13,6 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 pub struct EquationConfig {
     #[state(config)]
     pub camera: EquationCamera,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Config
 
@@ -43,3 +40,8 @@ pub fn app_schema_descriptor() -> ::framework_schema::AppSchemaDescriptor {
     }
 }
 //#endregion 🔖️Registration
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::EquationCamera;
+//#endregion 🔁️Re-exports

@@ -1,4 +1,3 @@
-
 use super::*;
 
 //#region 🧸️Fixtures
@@ -52,14 +51,14 @@ const CAUSAL_ADD_DESCRIPTOR: crate::mutation::MutationLeafDescriptor = crate::mu
     display_name: "Causal Add",
     emoji: "➕️",
     aggregate_variant: "CausalAddOp",
-    payload_schema: "🛂️schema/🔣️.json",
+    payload_schema: "🦀️.rs#CausalAddOp",
     text_opcode: None,
     binary_tag: None,
     invertibility: crate::mutation::MutationInvertibility::ExplicitMutation,
     diff_participation: crate::mutation::MutationDiffParticipation::ApplyOnly,
     outcome_classes: &[crate::mutation::MutationOutcomeClass::Applied],
     composition: crate::mutation::MutationComposition::Atomic,
-    required_language_surfaces: &[crate::mutation::MutationLanguageSurface::Rust, crate::mutation::MutationLanguageSurface::Binary, crate::mutation::MutationLanguageSurface::JsonSchema],
+    required_language_surfaces: &[crate::mutation::MutationLanguageSurface::Rust, crate::mutation::MutationLanguageSurface::Binary],
 };
 impl crate::mutation::Mutation<i64> for CausalAddOp {
     type Diff = CausalAddDiff;
@@ -567,6 +566,54 @@ fn envelopes_batch_binary_round_trips_including_empty() {
 
     let batch = vec![sample_envelope("operation-1", vec!["operation-0"]), sample_envelope("operation-2", Vec::new())];
     assert_eq!(decode_envelopes(&encode_envelopes(&batch)).unwrap(), batch);
+}
+
+#[test]
+fn document_backbone_batch_fixture_is_exact_bounded_and_u64_safe() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json")).expect("document backbone fixture parses");
+    assert_eq!(fixture["retention"]["maximumBytes"].as_u64(), Some(DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES as u64));
+    assert_eq!(fixture["retention"]["maximumMessages"].as_u64(), Some(DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES as u64));
+    for row in fixture["cases"].as_array().expect("fixture cases") {
+        let raw = row["rawHex"].as_str().expect("raw hex");
+        let bytes = (0..raw.len()).step_by(2).map(|index| u8::from_str_radix(&raw[index..index + 2], 16).expect("hex byte")).collect::<Vec<_>>();
+        let limits = &row["limits"];
+        let limits = DocumentBackboneBatchLimitsV1 {
+            maximum_bytes: limits["maximumBytes"].as_u64().expect("maximumBytes") as usize,
+            maximum_envelopes: limits["maximumEnvelopes"].as_u64().expect("maximumEnvelopes") as usize,
+            maximum_dependencies_per_envelope: limits["maximumDependenciesPerEnvelope"].as_u64().expect("maximumDependenciesPerEnvelope") as usize,
+            maximum_total_dependencies: limits["maximumTotalDependencies"].as_u64().expect("maximumTotalDependencies") as usize,
+            maximum_identifier_bytes: limits["maximumIdentifierBytes"].as_u64().expect("maximumIdentifierBytes") as usize,
+            maximum_schema_bytes: limits["maximumSchemaBytes"].as_u64().expect("maximumSchemaBytes") as usize,
+            maximum_payload_bytes: limits["maximumPayloadBytes"].as_u64().expect("maximumPayloadBytes") as usize,
+        };
+        let expected = row["expect"]["outcome"].as_str().expect("expected outcome");
+        match (decode_document_backbone_envelopes_exact_with_limits(&bytes, limits), expected) {
+            (Ok(envelopes), "accepted") => {
+                assert_eq!(encode_envelopes(&envelopes), bytes, "{}", row["id"]);
+                let expected_envelopes = row["expect"]["envelopes"].as_array().expect("expected envelopes");
+                assert_eq!(envelopes.len(), expected_envelopes.len(), "{}", row["id"]);
+                for (actual, expected) in envelopes.iter().zip(expected_envelopes) {
+                    assert_eq!(actual.mutation_id.0, expected["mutationId"].as_str().expect("mutationId"));
+                    assert_eq!(actual.document_id.0, expected["documentId"].as_str().expect("documentId"));
+                    assert_eq!(actual.actor.0, expected["actor"].as_str().expect("actor"));
+                    assert_eq!(
+                        actual.dependencies.iter().map(|dependency| dependency.0.as_str()).collect::<Vec<_>>(),
+                        expected["dependencies"].as_array().expect("dependencies").iter().map(|dependency| dependency.as_str().expect("dependency")).collect::<Vec<_>>()
+                    );
+                    assert_eq!(actual.diff.schema.0, expected["diff"]["schema"].as_str().expect("diff schema"));
+                    assert_eq!(actual.inverse.schema.0, expected["inverse"]["schema"].as_str().expect("inverse schema"));
+                    assert_eq!(actual.diff.payload.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), expected["diff"]["payloadHex"].as_str().expect("diff payloadHex"));
+                    assert_eq!(actual.inverse.payload.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), expected["inverse"]["payloadHex"].as_str().expect("inverse payloadHex"));
+                    assert_eq!(actual.timestamp.actor.to_string(), expected["timestamp"]["actor"].as_str().expect("timestamp actor"));
+                    assert_eq!(actual.timestamp.physical_ms.to_string(), expected["timestamp"]["physicalMs"].as_str().expect("timestamp physicalMs"));
+                    assert_eq!(actual.timestamp.logical.to_string(), expected["timestamp"]["logical"].as_str().expect("timestamp logical"));
+                }
+            }
+            (Err(crate::ProtocolError::LimitExceeded(_)), "limit") => {}
+            (Err(_), "malformed") => {}
+            (actual, expected) => panic!("{} produced {actual:?}, expected {expected}", row["id"]),
+        }
+    }
 }
 
 #[test]

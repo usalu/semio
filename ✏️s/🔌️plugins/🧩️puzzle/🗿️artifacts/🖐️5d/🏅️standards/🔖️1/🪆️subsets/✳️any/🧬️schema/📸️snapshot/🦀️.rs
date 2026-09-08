@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle5d snapshot schema — artifact-lane fields only.
 
-use crate::{Puzzle5dFastener, Puzzle5dKindCatalogsExtra, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, PUZZLE_5D_SCHEMA};
+use crate::{Puzzle5dFastener, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, PUZZLE_5D_SCHEMA};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
@@ -100,3 +100,8 @@ impl Default for Puzzle5dSnapshot {
         Self { schema: PUZZLE_5D_SCHEMA.to_string(), domain: "architecture".to_string(), label: None, meta: Default::default(), kind_catalogs: None, kind_catalogs_extra: None, kind_compatibility: Vec::new(), parts: Vec::new(), fasteners: Vec::new() }
     }
 }
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::Puzzle5dKindCatalogsExtra;
+//#endregion 🔁️Re-exports

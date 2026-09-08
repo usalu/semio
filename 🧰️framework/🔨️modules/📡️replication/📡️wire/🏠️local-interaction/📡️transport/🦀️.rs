@@ -287,5 +287,5 @@ pub fn decode_local_interaction_query_reply(bytes: &[u8]) -> Result<LocalInterac
 //#endregion 📡️CommandAndReply
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/📡️transport/🦀️.rs"]
 mod tests;

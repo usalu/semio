@@ -13,7 +13,7 @@
       "x-semio-state": "artifact"
     },
     "value": {
-      "$ref": "📸️snapshot/🔣️.json#/$defs/JsonValue",
+      "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue",
       "x-semio-state": "artifact"
     }
   }

@@ -6,3 +6,8 @@ message SemioTextMutationOpDsl {
   string keyword = 1;
   string args_wire = 2;
 }
+
+message SemioTextMutationText {
+  optional string keyword = 1;
+  optional string args_wire = 2;
+}

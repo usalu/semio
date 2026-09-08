@@ -2,6 +2,63 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/framework/ui/contract/schema.json",
   "title": "Ui Contract Schema Module",
+  "definitions": {
+    "presenceOwnMarks": {
+      "$comment": "OwnPresence (📦️packages/🦀️rust/👥️presence.rs): this session's own marks on the node; every flag defaults to false and is omitted from the wire when false.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hovered": {
+          "type": "boolean"
+        },
+        "selected": {
+          "type": "boolean"
+        },
+        "previewed": {
+          "type": "boolean"
+        },
+        "color": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "presencePeerMark": {
+      "$comment": "PeerMark (📦️packages/🦀️rust/👥️presence.rs): one OTHER peer's mark on the node.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor",
+        "label"
+      ],
+      "properties": {
+        "actor": {
+          "type": "string"
+        },
+        "color": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 255
+        },
+        "hovered": {
+          "type": "boolean"
+        },
+        "selected": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    }
+  },
   "$defs": {
     "ConformanceCatalogFixture": {
       "x-semio-formats": [
@@ -100,44 +157,43 @@
                 "minLength": 1
               },
               "update": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "surface",
-                  "nodeKey",
-                  "own",
-                  "ttlMs"
-                ],
-                "properties": {
-                  "surface": {
-                    "type": "string",
-                    "minLength": 1
+                "$comment": "One owner for this shape: the scope's own PresenceUpdate export. The overlay only narrows (📋️execution-contract.md §D) — each fixture case sets exactly one own flag and carries a live ttl.",
+                "allOf": [
+                  {
+                    "$ref": "https://semio.tech/schema/framework/ui/contract/schema.json#/$defs/PresenceUpdate"
                   },
-                  "nodeKey": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "own": {
+                  {
                     "type": "object",
-                    "additionalProperties": false,
                     "properties": {
-                      "selected": {
-                        "const": true
+                      "surface": {
+                        "type": "string",
+                        "minLength": 1
                       },
-                      "hovered": {
-                        "const": true
+                      "nodeKey": {
+                        "type": "string",
+                        "minLength": 1
                       },
-                      "previewed": {
-                        "const": true
+                      "own": {
+                        "type": "object",
+                        "properties": {
+                          "selected": {
+                            "const": true
+                          },
+                          "hovered": {
+                            "const": true
+                          },
+                          "previewed": {
+                            "const": true
+                          }
+                        }
+                      },
+                      "ttlMs": {
+                        "type": "integer",
+                        "minimum": 1
                       }
                     }
-                  },
-                  "ttlMs": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 4294967295
                   }
-                }
+                ]
               },
               "expected": {
                 "type": "object",
@@ -161,6 +217,44 @@
               }
             }
           }
+        }
+      }
+    },
+    "PresenceUpdate": {
+      "$comment": "The wire shape of semio_framework_ui_contract::PresenceUpdate, this scope's own coalesced TTL-scoped presence message, keyed (surface, nodeKey). Exactly as wide as the Rust struct: 'surface' is a SurfaceId (UiText, UI_TEXT_MAX_BYTES = 512), 'peers' is omitted when empty, and every struct on this branch is deny_unknown_fields. Consumers narrow with const/minimum per 📋️execution-contract.md §D; they never restate the shape.",
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust"
+      ],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surface",
+        "nodeKey",
+        "own",
+        "ttlMs"
+      ],
+      "properties": {
+        "surface": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "nodeKey": {
+          "type": "string"
+        },
+        "own": {
+          "$ref": "#/definitions/presenceOwnMarks"
+        },
+        "peers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/presencePeerMark"
+          }
+        },
+        "ttlMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     }

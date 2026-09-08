@@ -1,3 +1,4 @@
+import { PLAYGROUND_LOCKED_EXAMPLE_ENV } from "./🔒️preferences/🟦️.ts";
 /** @emoji 🎮️ Playground identity for the whole repository: the generated OS playground catalog, the
  * dev/test port table every host binds, and the locked-example Vite define. Split out of
  * `📦️packages/🟦️typescript/🟦️.ts` so a consumer that only needs a port (the styling package's dev
@@ -160,7 +161,7 @@ export const OS_HUB_PORT = 8787;
 export const OS_HUB_PORT_ENV = "OS_HUB_PORT";
 
 /** @emoji 🔒️ Process env var locking a playground to one example (hides navbar dropdown). */
-export const PLAYGROUND_LOCKED_EXAMPLE_ENV = "PLAYGROUND_LOCKED_EXAMPLE_ID";
+export { PLAYGROUND_LOCKED_EXAMPLE_ENV } from "./🔒️preferences/🟦️.ts";
 
 /** @emoji 🔒️ Locked example id from process env, if any. */
 export function playgroundLockedExampleIdFromEnv(env: NodeJS.ProcessEnv = process.env): string | undefined {

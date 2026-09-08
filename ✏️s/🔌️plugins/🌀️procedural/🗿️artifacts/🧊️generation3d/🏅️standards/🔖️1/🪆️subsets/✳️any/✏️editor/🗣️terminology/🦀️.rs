@@ -1,7 +1,6 @@
 //! 🗣️ Generation3d play app — the single `app_labels!` block plus the locale resolvers every taxonomy
 //! node reaches for.
 
-use crate::editor::generation3d::config::Generation3dConfig;
 
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
@@ -31,8 +30,8 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn generation3d_labels(cfg: &Generation3dConfig) -> &'static Generation3dLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<Generation3dLabels>(&cfg.locale)
+pub fn generation3d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Generation3dLabels {
+    semio_framework_plugin::resolve_labels::<Generation3dLabels>(view_state)
 }
 
 /// 🗣️ Resolves a catalogue widget kind's display label from its stable id; unknown kinds fall back to

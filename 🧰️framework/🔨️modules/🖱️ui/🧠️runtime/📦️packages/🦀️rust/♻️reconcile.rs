@@ -2697,7 +2697,7 @@ fn close_surface_patch_owner(patch: &mut ui_contract::UiPendingPatch, credit: &m
 }
 
 #[cfg(test)]
-#[path = "../../🩹️patch/🧪️tests/🦀️.rs"]
+#[path = "../../🩹️patch/🧪️tests/🩹️patch/🦀️.rs"]
 mod patch_handoff_tests;
 
 
@@ -3382,7 +3382,7 @@ pub fn close_surface_reconcile_handback_one() -> Result<bool, &'static str> {
 }
 
 #[cfg(test)]
-#[path = "../../🚪️handback/🧪️tests/🦀️.rs"]
+#[path = "../../🚪️handback/🧪️tests/🚪️handback/🦀️.rs"]
 mod handback_entry_tests;
 
 //#endregion 🎟️RetainedAuthority

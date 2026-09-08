@@ -72,7 +72,6 @@ export interface Puzzle5dDiff {
   /** @state config */
   lodMode?: string;
   /** @state config */
-  locale?: string;
   /** @state config */
   runtimeExtrasJson?: string;
   /** @state artifact */
@@ -96,3 +95,73 @@ export interface Puzzle5dMeta { [key: string]: unknown; }
 export interface Puzzle5dKindCatalogs { [key: string]: unknown; }
 
 export interface Puzzle5dKindCompatibilityList { values: Puzzle5dKindCompatibility[]; }
+
+//#region 🚪️Parsers
+/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
+export class puzzlePuzzle5dDiffGuardRefusal extends Error {
+  constructor(readonly at: string, readonly why: string) {
+    super(`${at}: ${why}`);
+  }
+}
+
+const puzzlePuzzle5dDiffGuardReject = (at: string, why: string): never => {
+  throw new puzzlePuzzle5dDiffGuardRefusal(at, why);
+};
+
+type puzzlePuzzle5dDiffGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
+type puzzlePuzzle5dDiffGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
+type puzzlePuzzle5dDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
+
+export const puzzlePuzzle5dDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : puzzlePuzzle5dDiffGuardReject(at, "value is not an object");
+export const puzzlePuzzle5dDiffGuardArray = (value: unknown, at: string, bounds: puzzlePuzzle5dDiffGuardSizeBounds = {}): readonly unknown[] => {
+  if (!Array.isArray(value)) return puzzlePuzzle5dDiffGuardReject(at, "value is not an array");
+  if (bounds.minItems !== undefined && value.length < bounds.minItems) puzzlePuzzle5dDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
+  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) puzzlePuzzle5dDiffGuardReject(at, `array has more than ${bounds.maxItems} items`);
+  return value;
+};
+export const puzzlePuzzle5dDiffGuardString = (value: unknown, at: string, bounds: puzzlePuzzle5dDiffGuardTextBounds = {}): string => {
+  if (typeof value !== "string") return puzzlePuzzle5dDiffGuardReject(at, "value is not a string");
+  const length = [...value].length;
+  if (bounds.minLength !== undefined && length < bounds.minLength) puzzlePuzzle5dDiffGuardReject(at, `string is shorter than ${bounds.minLength}`);
+  if (bounds.maxLength !== undefined && length > bounds.maxLength) puzzlePuzzle5dDiffGuardReject(at, `string is longer than ${bounds.maxLength}`);
+  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) puzzlePuzzle5dDiffGuardReject(at, `string does not match ${bounds.pattern}`);
+  return value;
+};
+export const puzzlePuzzle5dDiffGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : puzzlePuzzle5dDiffGuardReject(at, "value is not a boolean"));
+export const puzzlePuzzle5dDiffGuardNumber = (value: unknown, at: string, bounds: puzzlePuzzle5dDiffGuardRangeBounds = {}): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return puzzlePuzzle5dDiffGuardReject(at, "value is not a finite number");
+  if (bounds.minimum !== undefined && value < bounds.minimum) puzzlePuzzle5dDiffGuardReject(at, `number is below ${bounds.minimum}`);
+  if (bounds.maximum !== undefined && value > bounds.maximum) puzzlePuzzle5dDiffGuardReject(at, `number is above ${bounds.maximum}`);
+  return value;
+};
+export const puzzlePuzzle5dDiffGuardInteger = (value: unknown, at: string, bounds: puzzlePuzzle5dDiffGuardRangeBounds = {}): number =>
+  Number.isSafeInteger(value) ? puzzlePuzzle5dDiffGuardNumber(value, at, bounds) : puzzlePuzzle5dDiffGuardReject(at, "value is not an integer");
+export const puzzlePuzzle5dDiffGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
+  members.includes(value as T) ? (value as T) : puzzlePuzzle5dDiffGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const puzzlePuzzle5dDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
+  value === expected ? expected : puzzlePuzzle5dDiffGuardReject(at, `value is not ${String(expected)}`);
+//#endregion 🚪️Parsers
+
+export function parsePuzzle5dStringList(value: unknown, at = "$"): Puzzle5dStringList {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    values: puzzlePuzzle5dDiffGuardArray(row["values"], `${at}.values`).map((item, index) => puzzlePuzzle5dDiffGuardString(item, `${at}.values[${index}]`)),
+  };
+}
+
+export function parsePuzzle5dPartPatchEntry(value: unknown, at = "$"): Puzzle5dPartPatchEntry {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
+    patch: parsePuzzle5dPartPatch(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parsePuzzle5dFastenerPatchEntry(value: unknown, at = "$"): Puzzle5dFastenerPatchEntry {
+  const row = puzzlePuzzle5dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle5dDiffGuardString(row["id"], `${at}.id`),
+    patch: parsePuzzle5dFastenerPatch(row["patch"], `${at}.patch`),
+  };
+}

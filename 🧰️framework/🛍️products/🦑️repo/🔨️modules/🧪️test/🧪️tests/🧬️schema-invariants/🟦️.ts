@@ -16,9 +16,11 @@ import protocolSchema from "../../🧬️schema/🔣️.json";
 import {
   type SchemaBoundFixture,
   type SchemaDiagnostic,
+  type SchemaDiagnosticCode,
   GRAPHQL_EXPORT_KEYWORDS,
   SCHEMA_DIAGNOSTIC_CODES,
   SCHEMA_DIAGNOSTIC_CODE_TABLE,
+  SCHEMA_DIAGNOSTIC_EMITTERS,
   SCHEMA_FIXTURE_STAGES,
   TAXONOMY_REL_PATH,
   TEST_DOMAIN_REL_PATH,
@@ -29,21 +31,29 @@ import {
   fixtureUrisIn,
   isFixtureOwnedPath,
   isJsonSchemaDefinition,
+  leafDescriptorCoverage,
   matchesTaxonomyPathPattern,
+  mutationLeafDirectories,
   mutationLeafSchemaId,
   parseFeature,
   parseSchemaUri,
+  readLeafDescriptors,
   readSchemaCatalog,
   repoRootFromHere,
   resolveFixtures,
+  resolvePayloadSchemas,
   resolveSchemaExport,
   schemaContractDiagnostics,
+  schemaDiagnosticCodesEmittedBy,
   schemaExportCompletenessDiagnostics,
   schemaFixtureIsolationDiagnostics,
+  schemaMeasurementDisagreementDiagnostics,
   schemaOwnerEligibilityDiagnostics,
   schemaPlacementDiagnostics,
   schemaResolutionDiagnostics,
   schemaScopeEligibility,
+  schemaTreeFiles,
+  submodulePaths,
   runSchemaFixture,
   validateAgainstJsonSchema,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
@@ -267,6 +277,7 @@ describe("🔣️ schema invariant cases are themselves contracted", () => {
 
   test("every case collection carries at least one case", () => {
     expect(cases.eligibilityCases.length).toBeGreaterThan(0);
+    expect(cases.exportPresenceCases.length).toBeGreaterThan(0);
     expect(cases.treeCases.length).toBeGreaterThan(0);
     expect(cases.resolutionCases.length).toBeGreaterThan(0);
     expect(cases.catalogCases.length).toBeGreaterThan(0);
@@ -283,6 +294,9 @@ describe("🔣️ schema invariant cases are themselves contracted", () => {
  */
 describe("🔠️ the diagnostic code table is the single vocabulary", () => {
   const protocolCodes = (protocolSchema as { $defs: { SchemaDiagnosticCode: { enum: string[] } } }).$defs.SchemaDiagnosticCode.enum;
+  const protocolEmitters = (protocolSchema as { $defs: { SchemaDiagnosticEmitter: { enum: string[] } } }).$defs.SchemaDiagnosticEmitter.enum;
+  const expectedCodes = (rows: readonly { code: string }[]): string[] => rows.map((row) => row.code);
+  const everyExpectedCode = [...expectedCodes(cases.treeCases.flatMap((entry) => entry.expect)), ...expectedCodes(cases.catalogCases.flatMap((entry) => entry.expect)), ...cases.resolutionCases.flatMap((row) => row.expect.codes), ...cases.pipelineCases.flatMap((row) => (row.expect.code === null || row.expect.code === undefined ? [] : [row.expect.code]))];
 
   test("the exported table and the protocol enum declare exactly the same codes", () => {
     expect([...SCHEMA_DIAGNOSTIC_CODES].sort()).toEqual([...protocolCodes].sort());
@@ -290,15 +304,37 @@ describe("🔠️ the diagnostic code table is the single vocabulary", () => {
 
   test("every code carries a one-line description a reader can act on", () => {
     for (const code of SCHEMA_DIAGNOSTIC_CODES) {
-      const description = SCHEMA_DIAGNOSTIC_CODE_TABLE[code];
+      const { description } = SCHEMA_DIAGNOSTIC_CODE_TABLE[code];
       expect(`${code}:${description.length > 20}:${description.includes("\n")}`).toBe(`${code}:true:false`);
     }
   });
 
-  test("every code a case expects is one the table declares", () => {
+  test("every code names the emitters that raise it, out of the vocabulary the protocol declares", () => {
+    expect([...SCHEMA_DIAGNOSTIC_EMITTERS].sort()).toEqual([...protocolEmitters].sort());
+    for (const code of SCHEMA_DIAGNOSTIC_CODES) {
+      const { emitters } = SCHEMA_DIAGNOSTIC_CODE_TABLE[code];
+      const unknown = (emitters as readonly string[]).filter((emitter) => !(SCHEMA_DIAGNOSTIC_EMITTERS as readonly string[]).includes(emitter));
+      expect(`${code}:${emitters.length > 0}:${unknown.join(",")}`).toBe(`${code}:true:`);
+    }
+    expect([...schemaDiagnosticCodesEmittedBy("harness"), ...schemaDiagnosticCodesEmittedBy("check")].length).toBeGreaterThan(SCHEMA_DIAGNOSTIC_CODES.length);
+  });
+
+  /**
+   * 🏭️ The table holds codes only the root `schema check` raises, so the boundary has to be stated
+   * somewhere a second implementation can read it: the vector names them, and this asserts the table
+   * agrees and that no case in the vector ever expects one out of the harness.
+   */
+  test("the codes the vector reserves for schema check are exactly the ones the table withholds from the harness", () => {
+    expect([...cases.checkOnlyDiagnosticCodes].sort()).toEqual(SCHEMA_DIAGNOSTIC_CODES.filter((code) => !(SCHEMA_DIAGNOSTIC_CODE_TABLE[code].emitters as readonly string[]).includes("harness")).sort());
+    for (const code of cases.checkOnlyDiagnosticCodes) expect(`${code}:${(SCHEMA_DIAGNOSTIC_CODE_TABLE[code as SchemaDiagnosticCode].emitters as readonly string[]).includes("check")}`).toBe(`${code}:true`);
+    const reserved = new Set<string>(cases.checkOnlyDiagnosticCodes);
+    expect(everyExpectedCode.filter((code) => reserved.has(code))).toEqual([]);
+  });
+
+  test("every code a case expects is one the table declares, and one the harness emits", () => {
     const declared = new Set<string>(SCHEMA_DIAGNOSTIC_CODES);
-    for (const row of [...cases.treeCases.flatMap((entry) => entry.expect), ...cases.catalogCases.flatMap((entry) => entry.expect)]) expect(`${row.code}:${declared.has(row.code)}`).toBe(`${row.code}:true`);
-    for (const row of cases.resolutionCases) for (const code of row.expect.codes) expect(`${code}:${declared.has(code)}`).toBe(`${code}:true`);
+    const harness = new Set<string>(schemaDiagnosticCodesEmittedBy("harness"));
+    for (const code of everyExpectedCode) expect(`${code}:${declared.has(code)}:${harness.has(code)}`).toBe(`${code}:true:true`);
   });
 });
 
@@ -324,6 +360,196 @@ describe("🏛️ owner eligibility", () => {
     expect(isFixtureOwnedPath(repoRoot, `${TEST_DOMAIN_REL_PATH}/🧬️schema/🔣️.json`)).toBe(false);
     expect(isFixtureOwnedPath(repoRoot, `${TEST_DOMAIN_REL_PATH}/🧪️tests/x/🔣️.json`)).toBe(true);
     expect(matchesTaxonomyPathPattern("🧰️framework/🛍️products/*/🔨️modules/**", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine")).toBe(true);
+  });
+
+  /**
+   * 🔨️ The one thing the collection test decides itself is the module-member carve-out, and its
+   * directory name is vocabulary (`schemaScopeOwnerLevels.moduleMemberDirName`, ledger row 114). A
+   * repository that renames the directory must keep the carve-out; renaming it here is the only way to
+   * tell a taxonomy read apart from a literal that happens to agree with the taxonomy.
+   */
+  test("the module-member carve-out is the directory name the taxonomy declares, never a literal", () => {
+    const root = scaffold();
+    try {
+      const taxonomy = JSON.parse(readFileSync(join(root, TAXONOMY_REL_PATH), "utf8")) as { schemaScopeOwnerLevels: Record<string, unknown> };
+      taxonomy.schemaScopeOwnerLevels.moduleMemberDirName = "🧱️units";
+      writeFileSync(join(root, TAXONOMY_REL_PATH), JSON.stringify(taxonomy));
+      clearSchemaContractCache();
+      expect(isFixtureOwnedPath(root, "🧰️framework/🧱️units/🧪️test/🧬️schema/🔣️.json")).toBe(false);
+      expect(isFixtureOwnedPath(root, "🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json")).toBe(true);
+      delete taxonomy.schemaScopeOwnerLevels.moduleMemberDirName;
+      writeFileSync(join(root, TAXONOMY_REL_PATH), JSON.stringify(taxonomy));
+      clearSchemaContractCache();
+      expect(isFixtureOwnedPath(root, "🧰️framework/🧱️units/🧪️test/🧬️schema/🔣️.json")).toBe(true);
+    } finally {
+      discard(root);
+    }
+  });
+});
+
+/**
+ * 🚶️ What the schema tree walk REACHES, and what it declines to. A walker that audits a directory
+ * nobody in this repository can change reports findings nobody can act on, and one that audits build
+ * output reports the same finding once per generated copy — both make a count that cannot be closed.
+ */
+/**
+ * 🍃️ A mutation leaf sits at depth 1 or 2 under `🧬️mutations`. Reading one level reported the
+ * grouping directories as undeclared leaves — they can never carry a descriptor — and never reached
+ * the real leaves beneath them at all, so the coverage ratio was measured against the wrong set twice.
+ */
+describe("🍃️ mutation leaves at depth one and two", () => {
+  const OWNER = `${WRITER_OWNER}`;
+  const descriptor = (kind: string, variant: string) => ({ schemaVersion: 1, owner: `${OWNER}/🧬️schema/🧬️mutations`, semanticKind: kind, displayName: kind, emoji: "🌱️", aggregateVariant: variant, payloadSchema: "🧬️schema/🔣️.json", outcomeClasses: ["applied"] });
+  const payload = { $schema: "http://json-schema.org/draft-07/schema#", $id: `https://semio.tech/schema/s/writer/writer/mutation/x/schema.json`, type: "object" };
+
+  function repoWithLeaves(): string {
+    const root = scaffold();
+    const mutations = `${OWNER}/🧬️schema/🧬️mutations`;
+    // 🍃️A one-segment leaf, beside a two-segment one: the grouping directory carries no descriptor,
+    // its child carries one, and the verb directory's own name yields no kind at all.
+    write(root, `${mutations}/🪄️change-title/🔣️.json`, `${JSON.stringify(descriptor("change-title", "ChangeTitle"), null, 2)}\n`);
+    write(root, `${mutations}/🪄️change-title/🧬️schema/🔣️.json`, `${JSON.stringify(payload, null, 2)}\n`);
+    write(root, `${mutations}/🔑️access-rule/🌱️create/🔣️.json`, `${JSON.stringify(descriptor("create-access-rule", "CreateAccessRule"), null, 2)}\n`);
+    write(root, `${mutations}/🔑️access-rule/🌱️create/🧬️schema/🔣️.json`, `${JSON.stringify(payload, null, 2)}\n`);
+    // 🧫️A collection under `🧬️mutations` holds example data; its case file is not a leaf descriptor.
+    write(root, `${mutations}/🧪️tests/🧪️replays-a-change/🔣️.json`, `${JSON.stringify({ schemaVersion: 1 }, null, 2)}\n`);
+    // 📝️A codec facet is a facet whatever it contains.
+    write(root, `${mutations}/📝️text/🔣️.json`, `${JSON.stringify(payload, null, 2)}\n`);
+    clearSchemaContractCache();
+    return root;
+  }
+
+  test("a grouping directory is never a leaf, and every leaf beneath it is one", () => {
+    const root = repoWithLeaves();
+    try {
+      expect(mutationLeafDirectories(root, OWNER)).toEqual(["🔑️access-rule/🌱️create", "🪄️change-title"]);
+    } finally {
+      discard(root);
+    }
+  });
+
+  test("a two-segment leaf resolves its payload contract and is named by its descriptor", () => {
+    const root = repoWithLeaves();
+    try {
+      const rows = resolvePayloadSchemas(root, OWNER);
+      expect(rows.map((row) => `${row.kind}:${row.schema === null ? "refused" : "resolved"}`)).toEqual(["change-title:resolved", "create-access-rule:resolved"]);
+      expect(rows.map((row) => row.leaf)).toContain(`${OWNER}/🧬️schema/🧬️mutations/🔑️access-rule/🌱️create`);
+      expect(readLeafDescriptors(root, OWNER).size).toBe(2);
+      expect(leafDescriptorCoverage(root, OWNER)).toEqual({ leaves: 2, described: 2, missing: [] });
+    } finally {
+      discard(root);
+    }
+  });
+
+  test("a leaf the taxonomy's name pattern admits and nobody described is still reported", () => {
+    const root = repoWithLeaves();
+    try {
+      write(root, `${OWNER}/🧬️schema/🧬️mutations/🪄️change-subtitle/🧬️schema/🔣️.json`, `${JSON.stringify(payload, null, 2)}\n`);
+      clearSchemaContractCache();
+      expect(mutationLeafDirectories(root, OWNER)).toContain("🪄️change-subtitle");
+      expect(leafDescriptorCoverage(root, OWNER).missing).toEqual(["🪄️change-subtitle"]);
+    } finally {
+      discard(root);
+    }
+  });
+});
+
+/**
+ * ⚖️ `--under` narrows BOTH measurements or the gate lies by omission, and the two measurements are
+ * held against each other so a subtree can never read clean because one of them declined to look.
+ */
+describe("⚖️ the two measurements", () => {
+  test("a subtree filter still measures export completeness, over that subtree's scopes only", () => {
+    const root = catalogRepo({ dropRustExport: true });
+    try {
+      expect(codesOf(schemaResolutionDiagnostics(root, WRITER_OWNER))).toEqual(["schema-export-incomplete"]);
+      expect(schemaResolutionDiagnostics(root, HUB_OWNER)).toEqual([]);
+      expect(codesOf(schemaContractDiagnostics(root, WRITER_OWNER))).toEqual(["schema-export-incomplete"]);
+    } finally {
+      discard(root);
+    }
+  });
+
+  test("a cross-scope reference out of the filtered subtree still resolves", () => {
+    const root = catalogRepo({ crossScopeRef: true });
+    try {
+      // 🔗️`s.writer.writer` refs `hub.inference`, which the filter excludes from REPORTING but never
+      // from the `$id` index: a narrowed index would report the legal reference as unresolved.
+      expect(codesOf(schemaResolutionDiagnostics(root, WRITER_OWNER))).toEqual(["schema-cross-scope-dependency-forbidden"]);
+    } finally {
+      discard(root);
+    }
+  });
+
+  test("a schema module the catalog does not name is a stale catalog, not a clean subtree", () => {
+    const root = catalogRepo();
+    try {
+      expect(schemaMeasurementDisagreementDiagnostics(root)).toEqual([]);
+      write(root, `${WRITER_OWNER}/✏️editor/🎚️config/🧬️schema/🔣️.json`, `${JSON.stringify({ $schema: "http://json-schema.org/draft-07/schema#", $id: "https://semio.tech/schema/s/writer/writer/config/schema.json", $defs: { Config: { type: "object" } } }, null, 2)}\n`);
+      clearSchemaContractCache();
+      const found = schemaMeasurementDisagreementDiagnostics(root);
+      expect(locatedOf(found)).toEqual([`schema-catalog-stale ${WRITER_OWNER}/✏️editor/🎚️config/🧬️schema`]);
+      expect(codesOf(schemaContractDiagnostics(root, `${WRITER_OWNER}/✏️editor`))).toEqual(["schema-catalog-stale"]);
+    } finally {
+      discard(root);
+    }
+  });
+
+  test("a catalog row whose module the walk never reaches is the same disagreement, from the other side", () => {
+    const root = catalogRepo();
+    try {
+      rmSync(join(root, HUB_OWNER, "🧬️schema", "🔣️.json"));
+      clearSchemaContractCache();
+      const found = schemaMeasurementDisagreementDiagnostics(root, undefined, HUB_OWNER);
+      expect(found.map((entry) => `${entry.code} ${entry.scope}`)).toEqual(["schema-catalog-stale hub.inference"]);
+    } finally {
+      discard(root);
+    }
+  });
+});
+
+describe("🚶️ the tree walk's boundaries", () => {
+  const definition = { $schema: "http://json-schema.org/draft-07/schema#", $id: "https://semio.tech/schema/foreign/schema.json", type: "object" };
+
+  test("a git submodule declared in .gitmodules is a foreign repository and is never walked", () => {
+    const root = scaffold();
+    try {
+      write(root, ".gitmodules", '[submodule "recherche"]\n\tpath = ♻️mit-bestand/🔎️recherche\n\turl = https://example.invalid/recherche.git\n');
+      write(root, "♻️mit-bestand/🔎️recherche/contracts/lane_schema.json", `${JSON.stringify(definition)}\n`);
+      write(root, "♻️mit-bestand/📋️bericht/contracts/lane_schema.json", `${JSON.stringify(definition)}\n`);
+      clearSchemaContractCache();
+      expect([...submodulePaths(root)]).toEqual(["♻️mit-bestand/🔎️recherche"]);
+      const reached = schemaTreeFiles(root, "♻️mit-bestand");
+      expect(reached).toEqual(["♻️mit-bestand/📋️bericht/contracts/lane_schema.json"]);
+      // 📍️The sibling that is NOT a submodule still reports, so the skip is the declaration and not the prefix.
+      expect(codesOf(schemaPlacementDiagnostics(root, reached))).toEqual(["schema-placement-outside-module"]);
+    } finally {
+      discard(root);
+    }
+  });
+
+  test("a repository that declares no submodules carves nothing out", () => {
+    const root = scaffold();
+    try {
+      write(root, "♻️mit-bestand/🔎️recherche/contracts/lane_schema.json", `${JSON.stringify(definition)}\n`);
+      clearSchemaContractCache();
+      expect([...submodulePaths(root)]).toEqual([]);
+      expect(schemaTreeFiles(root, "♻️mit-bestand")).toEqual(["♻️mit-bestand/🔎️recherche/contracts/lane_schema.json"]);
+    } finally {
+      discard(root);
+    }
+  });
+
+  test("build output under dist/ is generated, never an authority", () => {
+    const root = scaffold();
+    try {
+      write(root, `${WRITER_OWNER}/📦️packages/🟦️typescript/dist/🧬️schema/📜️artifact-definition.json`, `${JSON.stringify(definition)}\n`);
+      write(root, `${WRITER_OWNER}/📦️packages/🟦️typescript/🧬️schema/📜️artifact-definition.json`, `${JSON.stringify(definition)}\n`);
+      clearSchemaContractCache();
+      expect(schemaTreeFiles(root, WRITER_OWNER)).toEqual([`${WRITER_OWNER}/📦️packages/🟦️typescript/🧬️schema/📜️artifact-definition.json`]);
+    } finally {
+      discard(root);
+    }
   });
 });
 
@@ -420,6 +646,28 @@ describe("📚️ catalog completeness and cross-scope dependencies", () => {
  * built on, asserted directly so a change to it is caught here and not only through a case repository.
  */
 describe("🔎️ per-format export presence", () => {
+  for (const row of cases.exportPresenceCases) {
+    test(`${row.format} · ${row.id}`, () => {
+      expect(declaresSchemaExport(row.format, row.source, row.export)).toBe(row.present);
+      const parser = (row as { parser?: boolean }).parser;
+      if (parser !== undefined) expect(declaresSchemaExportParser(row.format, row.source, row.export)).toBe(parser);
+    });
+  }
+
+  // 🦀️Row 148 in prose: a scope that OWNS its type elsewhere and republishes it by name has declared
+  // the export, and one that hides it in a group or a glob has not. The vector above carries the same
+  // twelve verdicts as data; these three restate the boundary where a regex is easiest to get wrong.
+  test("a rust re-export declares an export only when the statement names it, alone", () => {
+    expect(declaresSchemaExport("🦀️rust", "pub use inner::Artifact;\n", "Artifact")).toBe(true);
+    expect(declaresSchemaExport("🦀️rust", "pub use inner::{Artifact};\n", "Artifact")).toBe(false);
+    expect(declaresSchemaExport("🦀️rust", "pub use inner::*;\n", "Artifact")).toBe(false);
+    expect(declaresSchemaExport("🦀️rust", "pub use inner::ArtifactDraft;\n", "Artifact")).toBe(false);
+    expect(declaresSchemaExport("🦀️rust", "pub use inner::ArtifactV1 as Artifact;\n", "Artifact")).toBe(true);
+    expect(declaresSchemaExport("🦀️rust", "pub use inner::Artifact as ArtifactV1;\n", "Artifact")).toBe(false);
+    expect(declaresSchemaExport("🦀️rust", "pub(crate) use inner::Artifact;\n", "Artifact")).toBe(false);
+    expect(declaresSchemaExport("🦀️rust", "use inner::Artifact;\n", "Artifact")).toBe(false);
+  });
+
   test("graphql accepts every type-system keyword the contract lists, and nothing else", () => {
     for (const keyword of GRAPHQL_EXPORT_KEYWORDS) expect(`${keyword}:${declaresSchemaExport("🔗️graphql", `${keyword} Artifact {\n  title: String!\n}\n`, "Artifact")}`).toBe(`${keyword}:true`);
     expect(declaresSchemaExport("🔗️graphql", "scalar Artifact\n", "Artifact")).toBe(true);

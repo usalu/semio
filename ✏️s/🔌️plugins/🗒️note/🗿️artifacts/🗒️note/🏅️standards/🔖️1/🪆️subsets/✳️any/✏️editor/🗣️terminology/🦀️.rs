@@ -2,7 +2,6 @@
 //! reaches for. Deliberately ONE block for the whole app (never split per window/panel): the macro's
 //! value is that every locale combination is compile-checked in one place.
 
-use crate::editor::note::config::NoteConfig;
 
 //#region 🔖️Labels
 // 🗣️ Complete UI label set for the note app; one field per label makes every locale combination
@@ -57,7 +56,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn note_play_labels(cfg: &NoteConfig) -> &'static NotePlayLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<NotePlayLabels>(&cfg.locale)
+pub fn note_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static NotePlayLabels {
+    semio_framework_plugin::resolve_labels::<NotePlayLabels>(view_state)
 }
 //#endregion 🔖️Resolvers

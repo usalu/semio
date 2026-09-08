@@ -8,14 +8,14 @@
       "id": "artwork",
       "name": "Artwork",
       "visible": true,
-      "opacity": 1.0,
+      "opacity": 1,
       "blendMode": "normal",
       "transform": {
-        "x": 0.0,
-        "y": 0.0,
-        "scaleX": 1.0,
-        "scaleY": 1.0,
-        "rotation": 0.0
+        "x": 0,
+        "y": 0,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0
       },
       "mask": null,
       "children": [
@@ -24,14 +24,14 @@
           "id": "sketch",
           "name": "Sketch",
           "visible": true,
-          "opacity": 1.0,
+          "opacity": 1,
           "blendMode": "normal",
           "transform": {
-            "x": 0.0,
-            "y": 0.0,
-            "scaleX": 1.0,
-            "scaleY": 1.0,
-            "rotation": 0.0
+            "x": 0,
+            "y": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "rotation": 0
           },
           "mask": null,
           "width": 512,

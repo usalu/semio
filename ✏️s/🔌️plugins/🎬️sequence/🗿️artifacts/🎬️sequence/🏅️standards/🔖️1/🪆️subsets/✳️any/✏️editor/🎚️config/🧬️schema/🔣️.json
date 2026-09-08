@@ -7,8 +7,7 @@
   "required": [
     "lastRunJson",
     "orientation",
-    "camera",
-    "locale"
+    "camera"
   ],
   "properties": {
     "lastRunJson": {
@@ -20,38 +19,8 @@
       "x-semio-state": "config"
     },
     "camera": {
-      "$ref": "#/$defs/SequenceCamera",
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/artifact.json#/$defs/SequenceCamera",
       "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    }
-  },
-  "$defs": {
-    "SequenceCamera": {
-      "title": "SequenceCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        }
-      }
     }
   }
 }

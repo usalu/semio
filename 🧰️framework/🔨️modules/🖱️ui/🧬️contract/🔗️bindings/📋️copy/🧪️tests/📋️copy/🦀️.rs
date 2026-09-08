@@ -1,12 +1,16 @@
 use super::*;
 
 //#region 🧪️BindingCopyLaws
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+}
 
 fn source(count: usize) -> crate::UiNodeBindings {
     let scope = fixture()["scope"].as_str().unwrap().to_owned();
     let mut result = crate::UiNodeBindings::default();
-    for index in 0..count { result.try_push(ActionBinding { action: ActionId::try_v1(&scope, &format!("action-{index}")).unwrap(), ..Default::default() }).unwrap(); }
+    for index in 0..count {
+        result.try_push(ActionBinding { action: ActionId::try_v1(&scope, &format!("action-{index}")).unwrap(), ..Default::default() }).unwrap();
+    }
     result
 }
 
@@ -14,7 +18,10 @@ fn close(owner: &mut UiBindingsCopy, grant: usize) {
     for _ in 0..100_000 {
         let step = owner.close_step(1, grant).unwrap();
         assert!(step.released_items <= 1 && step.released_bytes <= grant);
-        if step.complete { assert!(owner.terminal_is_empty()); return; }
+        if step.complete {
+            assert!(owner.terminal_is_empty());
+            return;
+        }
     }
     panic!("binding copy did not retire exact owners");
 }
@@ -64,7 +71,9 @@ fn retained_binding_copy_separates_allocation_clone_and_placement() {
         assert!(step.allocated_bytes + step.copied_bytes + step.placed_bytes <= grant);
         copied += step.copied_bytes;
         placed += step.placed_bytes;
-        if step.complete { break; }
+        if step.complete {
+            break;
+        }
     }
     assert_eq!(copied, 32 * size_of::<ActionBinding>());
     assert_eq!(placed, copied);
@@ -92,10 +101,16 @@ fn retained_binding_copy_cancel_and_arena_contention_keep_exact_aliases() {
             let mut reader = UiValueRetirement::new(value.credited_clone().unwrap());
             source.get_mut(0).unwrap().args = Some(value);
             let mut owner = UiBindingsCopy::new(source);
-            for _ in 0..frontier.as_u64().unwrap() { owner.advance(1, 4096, 4096).unwrap(); }
+            for _ in 0..frontier.as_u64().unwrap() {
+                owner.advance(1, 4096, 4096).unwrap();
+            }
             close(&mut owner, grant);
             assert!(!reader.terminal_is_empty());
-            for _ in 0..2000 { if reader.close_step(1, grant).unwrap().complete { break; } }
+            for _ in 0..2000 {
+                if reader.close_step(1, grant).unwrap().complete {
+                    break;
+                }
+            }
             assert!(reader.terminal_is_empty());
         }
     }
@@ -104,7 +119,9 @@ fn retained_binding_copy_cancel_and_arena_contention_keep_exact_aliases() {
     builder.push(UiValue::Bool(true)).unwrap();
     source.get_mut(0).unwrap().args = Some(UiValue::List(builder.finish()));
     let mut owner = UiBindingsCopy::new(source);
-    while owner.next_allocation_bytes().unwrap() != 0 { owner.advance(1, 4096, 4096).unwrap(); }
+    while owner.next_allocation_bytes().unwrap() != 0 {
+        owner.advance(1, 4096, 4096).unwrap();
+    }
     assert!(!owner.advance(1, 4096, fixture["smallGrantBytes"].as_u64().unwrap() as usize).unwrap().progressed);
     let guard = UI_VALUE_ARENA.lock().unwrap();
     let step = owner.advance(1, 4096, 4096).unwrap();

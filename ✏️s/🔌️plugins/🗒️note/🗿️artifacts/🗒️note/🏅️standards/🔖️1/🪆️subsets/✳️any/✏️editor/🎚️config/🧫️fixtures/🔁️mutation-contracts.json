@@ -1,0 +1,68 @@
+{
+  "base": {
+    "engagementInput": "Before",
+    "camera": {
+      "x": 0.25,
+      "y": -0.75,
+      "zoom": 1.5
+    },
+    "activeUtilityId": "selectDirect"
+  },
+  "cases": [
+    {
+      "kind": "set-engagement-input",
+      "mutation": {
+        "SetEngagementInput": {
+          "value": "Nachher"
+        }
+      },
+      "expected": {
+        "engagementInput": "Nachher",
+        "camera": {
+          "x": 0.25,
+          "y": -0.75,
+          "zoom": 1.5
+        },
+        "activeUtilityId": "selectDirect"
+      }
+    },
+    {
+      "kind": "set-camera",
+      "mutation": {
+        "SetCamera": {
+          "camera": {
+            "x": 2.5,
+            "y": -3.25,
+            "zoom": 1.75
+          }
+        }
+      },
+      "expected": {
+        "engagementInput": "Before",
+        "camera": {
+          "x": 2.5,
+          "y": -3.25,
+          "zoom": 1.75
+        },
+        "activeUtilityId": "selectDirect"
+      }
+    },
+    {
+      "kind": "set-active-utility",
+      "mutation": {
+        "SetActiveUtility": {
+          "utilityId": "pencil"
+        }
+      },
+      "expected": {
+        "engagementInput": "Before",
+        "camera": {
+          "x": 0.25,
+          "y": -0.75,
+          "zoom": 1.5
+        },
+        "activeUtilityId": "pencil"
+      }
+    }
+  ]
+}

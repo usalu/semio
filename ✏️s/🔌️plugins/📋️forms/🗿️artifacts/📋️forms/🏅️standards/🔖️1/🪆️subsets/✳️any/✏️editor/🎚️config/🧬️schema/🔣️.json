@@ -7,7 +7,6 @@
   "required": [
     "currentStepIndex",
     "tryValues",
-    "locale",
     "contributionsJson"
   ],
   "properties": {
@@ -25,10 +24,6 @@
           "maxLength": 4096
         }
       },
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     },
     "contributionsJson": {

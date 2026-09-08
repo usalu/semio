@@ -18,7 +18,6 @@
     "setPreviewOff",
     "setCatalogueSections",
     "toggleExtension",
-    "setLocale",
     "evaluate",
     "contextMenuAt",
     "openSpotlight",
@@ -99,8 +98,7 @@
         "setGridFactor",
         "setPreviewOff",
         "setCatalogueSections",
-        "toggleExtension",
-        "setLocale"
+        "toggleExtension"
       ]
     },
     {

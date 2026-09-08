@@ -159,10 +159,6 @@
       "format": "double",
       "x-semio-state": "config"
     },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "hoveredBlockId": {
       "oneOf": [
         {
@@ -176,44 +172,6 @@
     }
   },
   "$defs": {
-    "NoteBlockNode": {
-      "title": "NoteBlockNode",
-      "type": "object",
-      "additionalProperties": true,
-      "required": [
-        "kind"
-      ],
-      "properties": {
-        "kind": {
-          "type": "string"
-        }
-      }
-    },
-    "NoteImageAsset": {
-      "title": "NoteImageAsset",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mime",
-        "data"
-      ],
-      "properties": {
-        "mime": {
-          "type": "string"
-        },
-        "data": {
-          "type": "string"
-        },
-        "width": {
-          "type": "number",
-          "format": "double"
-        },
-        "height": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
     "NoteAssetsDelta": {
       "title": "NoteAssetsDelta",
       "type": "object",
@@ -230,7 +188,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/$defs/NoteImageAsset"
+                "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/$defs/NoteImageAsset"
               }
             ]
           }
@@ -266,7 +224,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/NoteBlockNode"
+            "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/$defs/NoteBlockNode"
           }
         },
         "removed": {

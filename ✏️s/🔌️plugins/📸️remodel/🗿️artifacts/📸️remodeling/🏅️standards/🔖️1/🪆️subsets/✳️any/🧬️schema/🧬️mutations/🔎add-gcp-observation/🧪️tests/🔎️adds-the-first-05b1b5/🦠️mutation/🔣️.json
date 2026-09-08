@@ -5,8 +5,8 @@
     "streamId": "stream-a",
     "frameIndex": 1,
     "pixel": [
-      30.0,
-      40.0
+      30,
+      40
     ]
   }
 }

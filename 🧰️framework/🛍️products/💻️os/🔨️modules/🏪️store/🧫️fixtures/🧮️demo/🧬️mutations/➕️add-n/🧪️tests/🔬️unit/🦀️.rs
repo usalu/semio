@@ -1,4 +1,3 @@
-
 use super::*;
 #[test]
 fn direct_fixture_leaf_contract() {

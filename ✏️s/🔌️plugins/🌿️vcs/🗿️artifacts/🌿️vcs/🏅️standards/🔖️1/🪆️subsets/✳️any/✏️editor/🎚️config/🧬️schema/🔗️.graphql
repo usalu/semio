@@ -1,3 +1,2 @@
 type VcsDemoConfig {
-  locale: String! @state(class: CONFIG)
 }

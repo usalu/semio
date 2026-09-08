@@ -17,7 +17,7 @@ path = "🦀️.rs"
 
 [[test]]
 name = "typegen_export"
-path = "tests/🧬️typegen_export.rs"
+path = "../../🧪️tests/🧬️typegen-export/🦀️.rs"
 
 [features]
 default = []

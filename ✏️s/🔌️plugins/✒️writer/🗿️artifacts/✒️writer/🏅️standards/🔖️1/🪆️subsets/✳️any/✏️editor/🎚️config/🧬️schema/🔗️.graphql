@@ -6,7 +6,6 @@ type WriterConfig {
   editorSettings: WriterEditorSettings! @state(class: CONFIG)
   engagementInput: String! @state(class: CONFIG)
   camera: WriterCamera! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 
 type WriterEditorSelection {

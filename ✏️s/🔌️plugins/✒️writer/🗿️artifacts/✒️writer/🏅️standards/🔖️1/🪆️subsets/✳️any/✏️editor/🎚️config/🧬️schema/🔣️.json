@@ -10,8 +10,7 @@
     "revision",
     "editorSettings",
     "engagementInput",
-    "camera",
-    "locale"
+    "camera"
   ],
   "properties": {
     "editorSelection": {
@@ -37,7 +36,7 @@
       "x-semio-state": "config"
     },
     "editorSettings": {
-      "$ref": "#/$defs/WriterEditorSettings",
+      "$ref": "https://semio.tech/schema/s/writer/writer/artifact.json#/$defs/WriterEditorSettings",
       "x-semio-state": "config"
     },
     "engagementInput": {
@@ -46,10 +45,6 @@
     },
     "camera": {
       "$ref": "#/$defs/WriterCamera",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   },
@@ -68,36 +63,6 @@
         },
         "end": {
           "type": "integer",
-          "minimum": 0
-        }
-      }
-    },
-    "WriterEditorSettings": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "showLineNumbers",
-        "fontPx",
-        "lineHeight",
-        "tabSize"
-      ],
-      "properties": {
-        "showLineNumbers": {
-          "type": "boolean"
-        },
-        "fontPx": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "lineHeight": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "tabSize": {
-          "type": "integer",
-          "format": "uint32",
           "minimum": 0
         }
       }

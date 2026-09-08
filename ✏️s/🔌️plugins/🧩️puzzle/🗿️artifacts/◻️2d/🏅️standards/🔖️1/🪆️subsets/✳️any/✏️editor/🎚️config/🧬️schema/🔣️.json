@@ -29,8 +29,6 @@
     "nodeKindWeights",
     "handleKindWeights",
     "activeUtilityByWindowId",
-    "locale",
-    "terminology",
     "exampleLoadGeneration"
   ],
   "properties": {
@@ -175,14 +173,6 @@
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "terminology": {
-      "type": "string",
       "x-semio-state": "config"
     },
     "exampleLoadGeneration": {

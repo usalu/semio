@@ -5,17 +5,17 @@
       "name": "Back",
       "spreadId": "spread-2",
       "parentPageId": null,
-      "width": 200.0,
-      "height": 300.0,
+      "width": 200,
+      "height": 300,
       "margins": {
-        "top": 5.0,
-        "right": 5.0,
-        "bottom": 5.0,
-        "left": 5.0
+        "top": 5,
+        "right": 5,
+        "bottom": 5,
+        "left": 5
       },
       "columns": {
         "count": 2,
-        "gutter": 6.0
+        "gutter": 6
       },
       "guides": [],
       "layerIds": [

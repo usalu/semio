@@ -368,7 +368,7 @@ describe("strict plugin catalog completion", () => {
   });
 
   it("preserves opt-in emission deadlines through guard and child-process budgets", async () => {
-    const fixtureDir = join(import.meta.dirname, "../../../🖨️describe/🧪️fixtures/⏱️emission-budget");
+    const fixtureDir = join(import.meta.dirname, "../../../🖨️describe/🧫️fixtures/⏱️emission-budget");
     const cases = JSON.parse(readFileSync(join(fixtureDir, "🔣️.json"), "utf8"));
     const describeSchema = JSON.parse(readFileSync(join(import.meta.dirname, "../../../🖨️describe/🧬️schema/🔣️.json"), "utf8"));
     const describeAjv = new Ajv({ strict: true });

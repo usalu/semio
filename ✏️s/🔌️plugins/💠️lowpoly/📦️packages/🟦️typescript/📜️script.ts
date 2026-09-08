@@ -44,7 +44,7 @@ const validateOwnedFixture = (value: unknown): value is Fixture => {
     if (route.classification === "migrated") {
       migrated += 1;
       const signature = `${route.lanes.join("+")}|${route.preparation.join("+")}`;
-      if (!["Artifact|Artifact", "Config|Config", "HostOnly|", "Transient|", "Config+Transient|Config", "Artifact+Transient|Artifact", "Artifact+Config|Artifact+Config", "Artifact+Config+Transient|Artifact+Config"].includes(signature) || route.blocker !== null) return false;
+      if (!["artifact|Artifact", "config|Config", "host-only|", "transient|", "config+transient|Config", "artifact+transient|Artifact", "artifact+config|Artifact+Config", "artifact+config+transient|Artifact+Config"].includes(signature) || route.blocker !== null) return false;
     } else if (route.classification === "batch-only-pending-rewrite") {
       batch += 1;
       if (route.lanes.length !== 0 || route.preparation.length !== 0 || typeof route.blocker !== "string" || route.blocker.length === 0) return false;
@@ -75,7 +75,7 @@ class TestScript extends BundleScript {
     const registered = [...source.matchAll(/\.action_interactive_job\("([^"]+)", InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => ({ toolId: match[1]!, classification: match[2]! }));
     reject(registered.length === 47, "Lowpoly source must register exactly 47 classified actions");
     for (const route of fixture.routes) {
-      reject(registered.some((row) => row.toolId === route.toolId && row.classification === route.classification), `Lowpoly source classification drift: ${route.toolId}`);
+      reject(registered.some((row) => row.toolId === route.toolId && row.classification === variant(route.classification)), `Lowpoly source classification drift: ${route.toolId}`);
       if (route.classification === "migrated") {
         const lanes = route.lanes.map((lane) => `semio_framework_plugin::ArtifactToolPublicationLane::${variant(lane)}`).join(", ");
         reject(source.includes(`ArtifactToolPublicationContract { tool_id: "${route.toolId}", lanes: &[${lanes}] }`), `Lowpoly publication lane drift: ${route.toolId}`);
@@ -111,6 +111,7 @@ class TestScript extends BundleScript {
     console.log("lowpoly interactive-job owned source/fixture ok: 47 Migrated, 0 BatchOnlyPendingRewrite");
 
     const ajv = new Ajv({ allErrors: true, strict: true, allowUnionTypes: true });
+    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     ajv.addSchema(module);
     const validateOracle = ajv.compile({ $ref: `${module.$id}#/$defs/LowpolyInteractiveJobPartition` });
     reject(validateOracle(fixture), `Ajv oracle rejected canonical fixture: ${ajv.errorsText(validateOracle.errors)}`);

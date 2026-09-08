@@ -1155,8 +1155,6 @@ pub mod editor {
             pub mod set_camera_zoom;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧫️set-fixture-json/🦀️.rs"]
             pub mod set_fixture_json;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️.rs"]
-            pub mod set_locale;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌫️set-selected-opacity/🦀️.rs"]
             pub mod set_selected_opacity;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📸️set-snapshot/🦀️.rs"]
@@ -1218,3 +1216,7 @@ pub mod viewer {
         }
     }
 }
+
+//#region 📚️Examples
+pub use standards::v1::subsets::any::examples;
+//#endregion 📚️Examples

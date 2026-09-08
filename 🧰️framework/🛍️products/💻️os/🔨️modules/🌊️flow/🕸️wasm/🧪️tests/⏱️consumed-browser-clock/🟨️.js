@@ -7,7 +7,7 @@ import { createFlowBrowserRuntime } from "../../📦️packages/🟨️javascrip
 
 //#region ⏱️ConsumedClock
 export async function testFlowBrowserClock() {
-  const fixture = JSON.parse(await readFile(new URL("../../🧪️fixtures/🚀️browser-startup/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(await readFile(new URL("../../🧫️fixtures/🚀️browser-startup/🔣️.json", import.meta.url), "utf8"));
   assert.equal(flowWasmContract("FlowBrowserStartupV1")(fixture), true);
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, "performance");
   const receiver = globalThis.performance;

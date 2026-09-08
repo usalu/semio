@@ -1375,51 +1375,6 @@
                 }
               },
               {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  },
-                  "reuse": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -3554,51 +3509,6 @@
                 }
               },
               {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  },
-                  "reuse": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -4479,7 +4389,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 50,
                 "children": [
                   {
                     "kind": "window",
@@ -4490,7 +4400,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 50,
                 "children": [
                   {
                     "kind": "window",
@@ -6307,7 +6217,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "layers",
@@ -6326,7 +6236,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 1.0
+                    "default": 1
                   },
                   {
                     "id": "meshSize",
@@ -8531,7 +8441,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "layers",
@@ -8550,7 +8460,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 1.0
+                    "default": 1
                   },
                   {
                     "id": "meshSize",
@@ -10125,7 +10035,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 50,
                 "children": [
                   {
                     "kind": "window",
@@ -10136,7 +10046,7 @@
               },
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 50,
                 "children": [
                   {
                     "kind": "window",

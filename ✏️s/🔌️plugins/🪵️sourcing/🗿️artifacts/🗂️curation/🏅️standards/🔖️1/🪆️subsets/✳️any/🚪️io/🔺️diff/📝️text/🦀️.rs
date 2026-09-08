@@ -133,9 +133,6 @@ impl CurationDiff {
             if let Some(filters) = &self.filters {
                 next.filters = filters.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             if let Some(value) = &self.contributions_json {
                 next.contributions_json = value.clone();
             }
@@ -182,7 +179,6 @@ impl MutationDiff<CurationSnapshot> for CurationDiff {
         }
         take!(catalog);
         take!(filters);
-        take!(locale);
         take!(contributions_json);
         match (&mut self.stock_extra, other.stock_extra) {
             (Some(dst), Some(src)) => {

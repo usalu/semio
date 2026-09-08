@@ -1,4 +1,4 @@
-//! 🧰️ CAD play app commands — the window-scoped Dislocate utility: activation and its per-pane handle options.
+//! 🧰️ CAD play app commands — per-pane options for the window-scoped Dislocate utility.
 
 use crate::op::CadMutation;
 use crate::CadPaneId;
@@ -8,30 +8,6 @@ use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{cad_pane_id_from_suffix, cad_window_id_for_pane, preview_transition_snapshot_of, runtime_of, snapshot_of};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-
-//#region 🔖️SetActiveUtility
-pub mod set_active_utility {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
-    #[dsl(keyword = "active-utility")]
-    pub struct SetActiveUtility {
-        pub utility_id: String,
-    }
-
-    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        // 🧰️ Switching the active utility is config-only: it never mutates the document. Clear
-        // any in-progress engagement session / rubber-band scratch so a stale preview cannot
-        // leak across a utility switch.
-        let mut runtime = runtime_of(cfg);
-        runtime.engagement_input.clear();
-        runtime.engagement_session = None;
-        runtime.engagement_step = "Idle".into();
-        runtime.active_utility_id = payload.utility_id.clone();
-        Ok(Emit::config(vec![preview_transition_snapshot_of(&runtime, cfg.snapshot, ctx)?]))
-    }
-}
-//#endregion 🔖️SetActiveUtility
 
 //#region 🔖️SetDislocateOption
 pub mod set_dislocate_option {

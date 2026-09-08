@@ -5,7 +5,6 @@ import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
 import {
   BundleScript,
   ScriptRouter,
@@ -141,7 +140,7 @@ class CanonicalPairCheckScript extends BundleScript {
 /** 🗺️ Independently validates the committed GIS roster without granting execution authority. */
 class InferenceDiscoveryOracleScript extends BundleScript {
   run(): void {
-    const identityRoot = join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "🧪️fixtures", "🪪️artifact-identity");
+    const identityRoot = join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "🧫️fixtures", "🪪️artifact-identity");
     const identity = JSON.parse(readFileSync(join(identityRoot, "🔣️.json"), "utf8"));
     const validateIdentity = gisContract(this.repoRoot, "GisArtifactIdentity");
     if (!validateIdentity(identity)) throw new Error(`invalid GIS identity fixture: ${JSON.stringify(validateIdentity.errors)}`);
@@ -160,7 +159,7 @@ class InferenceDiscoveryOracleScript extends BundleScript {
       if (validateIdentity(candidate)) throw new Error(`GIS identity oracle admitted ${kind}`);
     }
     console.log(`gis-artifact-identity-oracle: canonical=${kinds.size} hostile=${identity.hostileKinds.length}; native assembly still requires Rust law`);
-    const controlRoot = join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "🧪️fixtures", "💡️inference-control");
+    const controlRoot = join(this.repoRoot, "✏️s", "🔌️plugins", "🌍️gis", "🧫️fixtures", "💡️inference-control");
     const control = JSON.parse(readFileSync(join(controlRoot, "🔣️.json"), "utf8"));
     const validateControl = gisContract(this.repoRoot, "GisInferenceControl");
     if (!validateControl(control)) throw new Error(`invalid GIS control fixture: ${JSON.stringify(validateControl.errors)}`);
@@ -220,7 +219,7 @@ class InferenceDiscoveryOracleScript extends BundleScript {
       },
     });
     console.log(`gis-inference-control-oracle: checkpoints=${checkpoints.length} interruptions=${control.interruptions.length} typed-proposal=1; no hub execution claim`);
-    const fixtureRoot = join(this.root, "..", "..", "💡️inference", "🧪️fixtures", "🗺️gis-discovery");
+    const fixtureRoot = join(this.root, "..", "..", "💡️inference", "🧫️fixtures", "🗺️gis-discovery");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     // 🧬️ Shape comes from the module contract `💡️inference/🧬️schema/🔣️.json` (real value space —
     // any owner, any dotted service id, any version ≥ 1); EXACTNESS comes from the fixture itself.

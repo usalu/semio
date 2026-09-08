@@ -8,7 +8,6 @@ type Generation2dArtifact {
   showMode: String! @state(class: CONFIG)
   selectedGenerationId: String @state(class: PRESENCE)
   generationPreviewText: String @state(class: ARTIFACT)
-  locale: String! @state(class: CONFIG)
 }
 
 type CameraJson {
@@ -48,4 +47,8 @@ type GenerationPlayState {
   generations: [FormGeneration!]!
   selectedGenerationId: String
   previewText: String
+}
+
+type Generation2dStringList {
+  values: [String!]!
 }

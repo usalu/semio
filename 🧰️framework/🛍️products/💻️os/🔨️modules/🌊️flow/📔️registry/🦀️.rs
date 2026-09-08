@@ -337,5 +337,5 @@ fn titleize_extension(extension: &str) -> String {
 // #endregion 🔖️ExtensionRegistry
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/📔️registry/🦀️.rs"]
 mod tests;

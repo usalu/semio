@@ -21,9 +21,6 @@
     "dislocateBuilding",
     "dislocateEnergy",
     "dislocateStructureClassic",
-    "activeUtilityId",
-    "locale",
-    "terminology",
     "contributionsJson"
   ],
   "properties": {
@@ -133,31 +130,19 @@
       "x-semio-state": "config"
     },
     "dislocateShape": {
-      "$ref": "#/$defs/CadDislocateOptions",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadDislocateOptions",
       "x-semio-state": "config"
     },
     "dislocateBuilding": {
-      "$ref": "#/$defs/CadDislocateOptions",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadDislocateOptions",
       "x-semio-state": "config"
     },
     "dislocateEnergy": {
-      "$ref": "#/$defs/CadDislocateOptions",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadDislocateOptions",
       "x-semio-state": "config"
     },
     "dislocateStructureClassic": {
-      "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "config"
-    },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "terminology": {
-      "type": "string",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadDislocateOptions",
       "x-semio-state": "config"
     },
     "contributionsJson": {
@@ -347,22 +332,6 @@
         },
         "projection": {
           "$ref": "#/$defs/CadProjectionDsl"
-        }
-      }
-    },
-    "CadDislocateOptions": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "moveEnabled",
-        "rotateEnabled"
-      ],
-      "properties": {
-        "moveEnabled": {
-          "type": "boolean"
-        },
-        "rotateEnabled": {
-          "type": "boolean"
         }
       }
     }

@@ -21,7 +21,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(layout = "lines")]
 pub struct PlaybookConfig {
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `playbook.blockKind` hot-swap installs.
     #[value(default = "default_contributions_json")]
     pub contributions_json: String,
@@ -77,7 +76,7 @@ fn default_contributions_json() -> String {
 
 impl Default for PlaybookConfig {
     fn default() -> Self {
-        Self { locale: "en-US".into(), contributions_json: default_contributions_json() }
+        Self { contributions_json: default_contributions_json() }
     }
 }
 

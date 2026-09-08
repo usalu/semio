@@ -2414,11 +2414,19 @@
       ],
       "description": "🪜️ The six stages every schema-bound fixture runs through, in order. A negative fixture names the stage it is supposed to fail at, so a case that starts failing EARLIER stops counting as the proof it was written to be."
     },
+    "SchemaDiagnosticEmitter": {
+      "enum": [
+        "harness",
+        "check"
+      ],
+      "description": "🏭️ The two implementations that raise the shared schema-contract vocabulary: the test harness, and the root script's `schema check`. Every code in the table names the emitters that can raise it, so a code only one side implements is declared once instead of being restated as a second vocabulary."
+    },
     "SchemaDiagnosticCode": {
       "enum": [
         "schema-export-resolution-undeclared",
         "schema-catalog-missing",
         "schema-catalog-malformed",
+        "schema-catalog-stale",
         "schema-uri-malformed",
         "schema-scope-unknown",
         "schema-scope-ambiguous",
@@ -2436,15 +2444,28 @@
         "schema-export-parser-missing",
         "schema-export-format-undeclared",
         "schema-export-formats-annotation-invalid",
+        "schema-export-id-duplicate",
+        "schema-export-id-invalid",
         "schema-dialect-not-draft-07",
         "schema-module-id-missing",
+        "schema-document-id-duplicate",
+        "schema-document-id-unaddressable",
+        "schema-module-id-inconsistent",
+        "schema-document-unparseable",
+        "schema-document-not-object",
+        "schema-enum-empty",
+        "schema-cross-scope-dependency-uncataloged",
+        "schema-mutation-leaf-id",
+        "schema-mutation-leaf-schema-absent",
+        "schema-mutation-aggregate-id",
+        "schema-mutation-aggregate-kinds-redundant",
         "schema-fixture-defines-schema",
         "schema-fixture-local-schema-fallback",
         "schema-fixture-metadata-invalid",
         "schema-fixture-parse-failed",
         "schema-instance-invalid"
       ],
-      "description": "🩺️ One code per distinguishable failure. \"It did not resolve\" is not actionable; \"the catalog declares no scope s.writer.absent\" is. This enum is the protocol half of the single code table the harness exports as `SCHEMA_DIAGNOSTIC_CODE_TABLE`; the two are held equal by the invariants suite."
+      "description": "🩺️ One code per distinguishable failure, whichever of the two implementations raises it. \"It did not resolve\" is not actionable; \"the catalog declares no scope s.writer.absent\" is. This enum is the protocol half of the single code table the harness exports as `SCHEMA_DIAGNOSTIC_CODE_TABLE`, whose rows carry the description and the `SchemaDiagnosticEmitter` list; the code sets are held equal by the invariants suite."
     },
     "SchemaDiagnostic": {
       "type": "object",
@@ -2784,7 +2805,9 @@
       "additionalProperties": false,
       "required": [
         "schema",
+        "checkOnlyDiagnosticCodes",
         "eligibilityCases",
+        "exportPresenceCases",
         "treeCases",
         "resolutionCases",
         "catalogCases",
@@ -2792,13 +2815,22 @@
         "validationCases",
         "pipelineCases"
       ],
-      "description": "🧬️ The language-agnostic vector every implementation of the scope-owned schema contract is measured against: who may own a contract, where a definition may live, how `schema://` resolves, what a mutation leaf's `$id` reads, what a draft-07 validator must decide, and which stage a bound fixture fails at.",
+      "description": "🧬️ The language-agnostic vector every implementation of the scope-owned schema contract is measured against: who may own a contract, where a definition may live, how `schema://` resolves, what a mutation leaf's `$id` reads, what a draft-07 validator must decide, which stage a bound fixture fails at, and which codes belong to the other emitter and must never be raised here.",
       "properties": {
         "$schema": {
           "type": "string"
         },
         "schema": {
-          "const": "semio.repository-test.schema-invariant-cases/v2"
+          "const": "semio.repository-test.schema-invariant-cases/v4"
+        },
+        "checkOnlyDiagnosticCodes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "🏭️ The codes the root `schema check` raises and a harness implementation never does. They are in the shared table because the table declares every code EITHER emitter raises; naming them here is what keeps a harness from inventing a finding it has no rule for.",
+          "items": {
+            "$ref": "#/$defs/SchemaDiagnosticCode"
+          }
         },
         "eligibilityCases": {
           "type": "array",
@@ -2828,6 +2860,46 @@
                   "string",
                   "null"
                 ]
+              }
+            }
+          }
+        },
+        "exportPresenceCases": {
+          "type": "array",
+          "minItems": 1,
+          "description": "🔎️ Export PRESENCE per format, as source text and a verdict (execution contract §A). Rust admits a definition or a per-name `pub use` re-export and refuses a grouped or glob one; GraphQL admits six type-system keywords; TypeScript needs the type AND `parse<Export>()`. A second implementation of this rule set reads these instead of re-deriving the regexes.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "format",
+              "export",
+              "source",
+              "present"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/Slug"
+              },
+              "format": {
+                "$ref": "#/$defs/SchemaFormatId"
+              },
+              "export": {
+                "$ref": "#/$defs/SchemaExportId"
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "description": "🧾️The format source, verbatim. A presence rule is a statement about text, so the vector carries the text."
+              },
+              "present": {
+                "type": "boolean",
+                "description": "✅️Whether that source DECLARES the export under that name."
+              },
+              "parser": {
+                "type": "boolean",
+                "description": "🚪️Whether the source also carries the entry point the format's completeness requires. Only TypeScript has one; every other format answers true by construction."
               }
             }
           }

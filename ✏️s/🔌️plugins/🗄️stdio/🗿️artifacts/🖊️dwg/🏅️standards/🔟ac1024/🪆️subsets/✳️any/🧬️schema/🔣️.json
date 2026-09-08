@@ -25,11 +25,11 @@
       "x-semio-state": "artifact"
     },
     "drawing": {
-      "$ref": "#/$defs/drawing",
+      "$ref": "#/$defs/DwgLogicalDrawing",
       "x-semio-state": "artifact"
     },
     "header": {
-      "$ref": "#/$defs/headerVariables",
+      "$ref": "#/$defs/DwgHeaderVariables",
       "x-semio-state": "artifact"
     },
     "classes": {
@@ -59,19 +59,19 @@
       "x-semio-state": "artifact"
     },
     "auxiliaryHeader": {
-      "$ref": "#/$defs/auxiliaryHeader",
+      "$ref": "#/$defs/DwgAuxiliaryHeader",
       "x-semio-state": "artifact"
     },
     "revisionHistory": {
-      "$ref": "#/$defs/revisionHistory",
+      "$ref": "#/$defs/DwgRevisionHistory",
       "x-semio-state": "artifact"
     },
     "preview": {
-      "$ref": "#/$defs/indexedPreview",
+      "$ref": "#/$defs/DwgIndexedPreview",
       "x-semio-state": "artifact"
     },
     "applicationHistory": {
-      "$ref": "#/$defs/applicationHistory",
+      "$ref": "#/$defs/DwgApplicationHistory",
       "x-semio-state": "artifact"
     }
   },
@@ -93,6 +93,283 @@
     "applicationHistory"
   ],
   "$defs": {
+    "DwgApplicationHistory": {
+      "type": "object",
+      "properties": {
+        "historyIdentifierOne": {
+          "type": "string"
+        },
+        "historyIdentifierTwo": {
+          "type": "string"
+        },
+        "classVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "applicationVersionDigest": {
+          "type": "string"
+        },
+        "applicationVersion": {
+          "type": "string"
+        },
+        "trustCommentDigest": {
+          "type": "string"
+        },
+        "trustComment": {
+          "type": "string"
+        },
+        "propertySetDigest": {
+          "type": "string"
+        },
+        "propertyFormatIdentifier": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/applicationProperty"
+          }
+        },
+        "productDigest": {
+          "type": "string"
+        },
+        "product": {
+          "$ref": "#/definitions/productInformation"
+        }
+      },
+      "required": [
+        "historyIdentifierOne",
+        "historyIdentifierTwo",
+        "classVersion",
+        "applicationVersionDigest",
+        "applicationVersion",
+        "trustCommentDigest",
+        "trustComment",
+        "propertySetDigest",
+        "propertyFormatIdentifier",
+        "properties",
+        "productDigest",
+        "product"
+      ],
+      "additionalProperties": false
+    },
+    "DwgAuxiliaryHeader": {
+      "type": "object",
+      "properties": {
+        "totalSaves": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "savePartitionOne": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "savePartitionTwo": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "saveGeneration": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "legacyStampOne": {
+          "$ref": "#/definitions/versionStamp"
+        },
+        "legacyStampTwo": {
+          "$ref": "#/definitions/versionStamp"
+        },
+        "compatibilityProfile": {
+          "const": "autocad2009"
+        },
+        "createdAt": {
+          "type": "object"
+        },
+        "updatedAt": {
+          "type": "object"
+        },
+        "handleSeed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "terminalSaveGeneration": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "totalSaves",
+        "savePartitionOne",
+        "savePartitionTwo",
+        "saveGeneration",
+        "legacyStampOne",
+        "legacyStampTwo",
+        "compatibilityProfile",
+        "createdAt",
+        "updatedAt",
+        "handleSeed",
+        "terminalSaveGeneration"
+      ],
+      "additionalProperties": false
+    },
+    "DwgHeaderVariables": {
+      "type": "object",
+      "properties": {
+        "units": {
+          "$ref": "#/definitions/headerUnits"
+        },
+        "modes": {
+          "$ref": "#/definitions/headerModes"
+        },
+        "integers": {
+          "$ref": "#/definitions/headerIntegerSettings"
+        },
+        "scalars": {
+          "$ref": "#/definitions/headerScalars"
+        },
+        "time": {
+          "$ref": "#/definitions/headerTimeState"
+        },
+        "paperSpace": {
+          "$ref": "#/definitions/headerSpaceGeometry"
+        },
+        "modelSpace": {
+          "$ref": "#/definitions/headerSpaceGeometry"
+        },
+        "dimensions": {
+          "$ref": "#/definitions/dimensionSettings"
+        },
+        "policy": {
+          "$ref": "#/definitions/drawingPolicy"
+        },
+        "strings": {
+          "$ref": "#/definitions/headerStrings"
+        },
+        "relations": {
+          "$ref": "#/definitions/headerRelations"
+        }
+      },
+      "required": [
+        "units",
+        "modes",
+        "integers",
+        "scalars",
+        "time",
+        "paperSpace",
+        "modelSpace",
+        "dimensions",
+        "policy",
+        "strings",
+        "relations"
+      ],
+      "additionalProperties": false
+    },
+    "DwgIndexedPreview": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "origin": {
+          "const": "bottomUp"
+        },
+        "palette": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rgba"
+          }
+        },
+        "pixelIndices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "backgroundPaletteIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "origin",
+        "palette",
+        "pixelIndices",
+        "backgroundPaletteIndex"
+      ],
+      "additionalProperties": false
+    },
+    "DwgLogicalDrawing": {
+      "type": "object",
+      "properties": {
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/layer"
+          }
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/object"
+          }
+        },
+        "extmin": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "extmax": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      },
+      "required": [
+        "layers",
+        "objects",
+        "extmin",
+        "extmax"
+      ]
+    },
+    "DwgRevisionHistory": {
+      "type": "object",
+      "properties": {
+        "formatMajor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "formatMinor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "revisions": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "required": [
+        "formatMajor",
+        "formatMinor",
+        "revisions"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
     "layer": {
       "type": "object",
       "properties": {
@@ -213,7 +490,7 @@
       "type": "object",
       "properties": {
         "common": {
-          "$ref": "#/$defs/entityCommon"
+          "$ref": "#/definitions/entityCommon"
         },
         "start": {
           "type": "array",
@@ -255,7 +532,7 @@
       "type": "object",
       "properties": {
         "common": {
-          "$ref": "#/$defs/entityCommon"
+          "$ref": "#/definitions/entityCommon"
         },
         "center": {
           "type": "array",
@@ -300,7 +577,7 @@
       "type": "object",
       "properties": {
         "common": {
-          "$ref": "#/$defs/entityCommon"
+          "$ref": "#/definitions/entityCommon"
         },
         "closed": {
           "type": "boolean"
@@ -342,7 +619,7 @@
       "type": "object",
       "properties": {
         "common": {
-          "$ref": "#/$defs/entityCommon"
+          "$ref": "#/definitions/entityCommon"
         }
       },
       "required": [
@@ -354,7 +631,7 @@
       "type": "object",
       "properties": {
         "common": {
-          "$ref": "#/$defs/entityCommon"
+          "$ref": "#/definitions/entityCommon"
         }
       },
       "required": [
@@ -366,7 +643,7 @@
       "type": "object",
       "properties": {
         "common": {
-          "$ref": "#/$defs/entityCommon"
+          "$ref": "#/definitions/entityCommon"
         },
         "insertion": {
           "type": "array",
@@ -442,7 +719,7 @@
       "type": "object",
       "properties": {
         "common": {
-          "$ref": "#/$defs/entityCommon"
+          "$ref": "#/definitions/entityCommon"
         },
         "extrusion": {
           "type": "array",
@@ -464,7 +741,7 @@
           "type": "number"
         },
         "status": {
-          "$ref": "#/$defs/dimensionStatus"
+          "$ref": "#/definitions/dimensionStatus"
         },
         "userText": {
           "type": "string"
@@ -561,7 +838,7 @@
       "type": "object",
       "properties": {
         "dimension": {
-          "$ref": "#/$defs/dimensionCommon"
+          "$ref": "#/definitions/dimensionCommon"
         },
         "extensionLine1": {
           "type": "array",
@@ -608,7 +885,7 @@
       "type": "object",
       "properties": {
         "common": {
-          "$ref": "#/$defs/entityCommon"
+          "$ref": "#/definitions/entityCommon"
         },
         "center": {
           "type": "array",
@@ -815,7 +1092,7 @@
           "type": "number"
         },
         "ambientColor": {
-          "$ref": "#/$defs/complexColor"
+          "$ref": "#/definitions/complexColor"
         },
         "clipBoundaryHandle": {
           "type": "integer",
@@ -889,10 +1166,10 @@
       "type": "object",
       "properties": {
         "common": {
-          "$ref": "#/$defs/entityCommon"
+          "$ref": "#/definitions/entityCommon"
         },
         "geometry": {
-          "$ref": "#/$defs/logicalGeometry"
+          "$ref": "#/definitions/logicalGeometry"
         }
       },
       "required": [
@@ -910,7 +1187,7 @@
               "const": "line"
             },
             "value": {
-              "$ref": "#/$defs/lineEntity"
+              "$ref": "#/definitions/lineEntity"
             }
           },
           "required": [
@@ -926,7 +1203,7 @@
               "const": "arc"
             },
             "value": {
-              "$ref": "#/$defs/arcEntity"
+              "$ref": "#/definitions/arcEntity"
             }
           },
           "required": [
@@ -942,7 +1219,7 @@
               "const": "lwPolyline"
             },
             "value": {
-              "$ref": "#/$defs/lwPolylineEntity"
+              "$ref": "#/definitions/lwPolylineEntity"
             }
           },
           "required": [
@@ -958,7 +1235,7 @@
               "const": "blockBegin"
             },
             "value": {
-              "$ref": "#/$defs/blockBeginEntity"
+              "$ref": "#/definitions/blockBeginEntity"
             }
           },
           "required": [
@@ -974,7 +1251,7 @@
               "const": "blockEnd"
             },
             "value": {
-              "$ref": "#/$defs/blockEndEntity"
+              "$ref": "#/definitions/blockEndEntity"
             }
           },
           "required": [
@@ -990,7 +1267,7 @@
               "const": "insert"
             },
             "value": {
-              "$ref": "#/$defs/insertEntity"
+              "$ref": "#/definitions/insertEntity"
             }
           },
           "required": [
@@ -1006,7 +1283,7 @@
               "const": "dimensionLinear"
             },
             "value": {
-              "$ref": "#/$defs/linearDimensionEntity"
+              "$ref": "#/definitions/linearDimensionEntity"
             }
           },
           "required": [
@@ -1022,7 +1299,7 @@
               "const": "viewport"
             },
             "value": {
-              "$ref": "#/$defs/viewportEntity"
+              "$ref": "#/definitions/viewportEntity"
             }
           },
           "required": [
@@ -1038,7 +1315,7 @@
               "const": "geometry"
             },
             "value": {
-              "$ref": "#/$defs/geometryEntity"
+              "$ref": "#/definitions/geometryEntity"
             }
           },
           "required": [
@@ -1253,7 +1530,7 @@
         "entries": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/namedReference"
+            "$ref": "#/definitions/namedReference"
           }
         },
         "cloningFlag": {
@@ -1315,7 +1592,7 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/xrecordValue"
+            "$ref": "#/definitions/xrecordValue"
           }
         },
         "objectIdHandles": {
@@ -1419,10 +1696,10 @@
       "type": "object",
       "properties": {
         "dependency": {
-          "$ref": "#/$defs/associativeDependency"
+          "$ref": "#/definitions/associativeDependency"
         },
         "cachedValue": {
-          "$ref": "#/$defs/evaluationVariant"
+          "$ref": "#/definitions/evaluationVariant"
         },
         "valueName": {
           "type": "string"
@@ -1439,7 +1716,7 @@
       "type": "object",
       "properties": {
         "dependency": {
-          "$ref": "#/$defs/associativeDependency"
+          "$ref": "#/definitions/associativeDependency"
         },
         "enabled": {
           "type": "boolean"
@@ -1582,7 +1859,7 @@
           "minimum": 0
         },
         "value": {
-          "$ref": "#/$defs/evaluationExpressionValue"
+          "$ref": "#/definitions/evaluationExpressionValue"
         },
         "nodeId": {
           "type": "integer",
@@ -1602,7 +1879,7 @@
       "type": "object",
       "properties": {
         "evaluationExpression": {
-          "$ref": "#/$defs/evaluationExpression"
+          "$ref": "#/definitions/evaluationExpression"
         },
         "gripType": {
           "type": "integer",
@@ -1623,7 +1900,7 @@
       "type": "object",
       "properties": {
         "evaluationExpression": {
-          "$ref": "#/$defs/evaluationExpression"
+          "$ref": "#/definitions/evaluationExpression"
         }
       },
       "required": [
@@ -1672,7 +1949,7 @@
         "dependencies": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/associativeActionDependency"
+            "$ref": "#/definitions/associativeActionDependency"
           }
         }
       },
@@ -1689,7 +1966,7 @@
       "type": "object",
       "properties": {
         "action": {
-          "$ref": "#/$defs/associativeAction"
+          "$ref": "#/definitions/associativeAction"
         },
         "name": {
           "type": "string"
@@ -1704,7 +1981,7 @@
           "type": "string"
         },
         "evaluatedValue": {
-          "$ref": "#/$defs/evaluationVariant"
+          "$ref": "#/definitions/evaluationVariant"
         },
         "mergeable": {
           "type": "boolean"
@@ -1831,7 +2108,7 @@
           "maximum": 65535
         },
         "value": {
-          "$ref": "#/$defs/complexColorValue"
+          "$ref": "#/definitions/complexColorValue"
         },
         "name": {
           "type": "string"
@@ -1914,7 +2191,7 @@
       "type": "object",
       "properties": {
         "value": {
-          "$ref": "#/$defs/complexColor"
+          "$ref": "#/definitions/complexColor"
         },
         "operation": {
           "enum": [
@@ -1935,88 +2212,88 @@
       "type": "object",
       "properties": {
         "faceLightingModel": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "faceLightingQuality": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "faceColorMode": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "faceModifiers": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "faceOpacity": {
-          "$ref": "#/$defs/visualStyleFloatProperty"
+          "$ref": "#/definitions/visualStyleFloatProperty"
         },
         "faceSpecularAmount": {
-          "$ref": "#/$defs/visualStyleFloatProperty"
+          "$ref": "#/definitions/visualStyleFloatProperty"
         },
         "faceMonochromeColor": {
-          "$ref": "#/$defs/visualStyleColorProperty"
+          "$ref": "#/definitions/visualStyleColorProperty"
         },
         "edgeModel": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "edgeStyles": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "edgeIntersectionColor": {
-          "$ref": "#/$defs/visualStyleColorProperty"
+          "$ref": "#/definitions/visualStyleColorProperty"
         },
         "edgeObscuredColor": {
-          "$ref": "#/$defs/visualStyleColorProperty"
+          "$ref": "#/definitions/visualStyleColorProperty"
         },
         "edgeObscuredLinePattern": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "edgeIntersectionLinePattern": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "edgeCreaseAngle": {
-          "$ref": "#/$defs/visualStyleFloatProperty"
+          "$ref": "#/definitions/visualStyleFloatProperty"
         },
         "edgeModifiers": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "edgeColor": {
-          "$ref": "#/$defs/visualStyleColorProperty"
+          "$ref": "#/definitions/visualStyleColorProperty"
         },
         "edgeOpacity": {
-          "$ref": "#/$defs/visualStyleFloatProperty"
+          "$ref": "#/definitions/visualStyleFloatProperty"
         },
         "edgeWidth": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "edgeOverhang": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "edgeJitter": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "edgeSilhouetteColor": {
-          "$ref": "#/$defs/visualStyleColorProperty"
+          "$ref": "#/definitions/visualStyleColorProperty"
         },
         "edgeSilhouetteWidth": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "edgeHaloGap": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "edgeIsolines": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "hiddenEdgePrecision": {
-          "$ref": "#/$defs/visualStyleBoolProperty"
+          "$ref": "#/definitions/visualStyleBoolProperty"
         },
         "displaySettings": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         },
         "displayBrightness": {
-          "$ref": "#/$defs/visualStyleFloatProperty"
+          "$ref": "#/definitions/visualStyleFloatProperty"
         },
         "displayShadowType": {
-          "$ref": "#/$defs/visualStyleUIntProperty"
+          "$ref": "#/definitions/visualStyleUIntProperty"
         }
       },
       "required": [
@@ -2070,7 +2347,7 @@
           "type": "boolean"
         },
         "properties": {
-          "$ref": "#/$defs/visualStyleProperties"
+          "$ref": "#/definitions/visualStyleProperties"
         }
       },
       "required": [
@@ -2175,13 +2452,13 @@
         "nodes": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/evaluationGraphNode"
+            "$ref": "#/definitions/evaluationGraphNode"
           }
         },
         "edges": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/evaluationGraphEdge"
+            "$ref": "#/definitions/evaluationGraphEdge"
           }
         }
       },
@@ -2214,7 +2491,7 @@
         "connections": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/blockParameterConnection"
+            "$ref": "#/definitions/blockParameterConnection"
           }
         }
       },
@@ -2260,7 +2537,7 @@
       "type": "object",
       "properties": {
         "evaluationExpression": {
-          "$ref": "#/$defs/evaluationExpression"
+          "$ref": "#/definitions/evaluationExpression"
         },
         "name": {
           "type": "string"
@@ -2290,7 +2567,7 @@
         "properties": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/blockParameterProperty"
+            "$ref": "#/definitions/blockParameterProperty"
           },
           "minItems": 4,
           "maxItems": 4
@@ -2308,7 +2585,7 @@
           "type": "string"
         },
         "valueSet": {
-          "$ref": "#/$defs/blockFlipValueSet"
+          "$ref": "#/definitions/blockFlipValueSet"
         },
         "labelPoint": {
           "type": "array",
@@ -2319,7 +2596,7 @@
           "maxItems": 3
         },
         "updatedFlip": {
-          "$ref": "#/$defs/namedEvaluationNodeReference"
+          "$ref": "#/definitions/namedEvaluationNodeReference"
         }
       },
       "required": [
@@ -2374,7 +2651,7 @@
       "type": "object",
       "properties": {
         "evaluationExpression": {
-          "$ref": "#/$defs/evaluationExpression"
+          "$ref": "#/definitions/evaluationExpression"
         },
         "elementName": {
           "type": "string"
@@ -2396,7 +2673,7 @@
         "properties": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/blockParameterProperty"
+            "$ref": "#/definitions/blockParameterProperty"
           },
           "minItems": 2,
           "maxItems": 2
@@ -2431,7 +2708,7 @@
         "states": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/visibilityState"
+            "$ref": "#/definitions/visibilityState"
           }
         }
       },
@@ -2524,7 +2801,7 @@
         "entries": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/drawOrderEntry"
+            "$ref": "#/definitions/drawOrderEntry"
           }
         }
       },
@@ -2562,7 +2839,7 @@
           "type": "integer"
         },
         "contentColor": {
-          "$ref": "#/$defs/complexColor"
+          "$ref": "#/definitions/complexColor"
         },
         "textStyleHandle": {
           "type": "integer",
@@ -2628,7 +2905,7 @@
           "type": "integer"
         },
         "color": {
-          "$ref": "#/$defs/complexColor"
+          "$ref": "#/definitions/complexColor"
         },
         "lineweight": {
           "type": "integer"
@@ -2658,22 +2935,22 @@
       "type": "object",
       "properties": {
         "top": {
-          "$ref": "#/$defs/cellBorder"
+          "$ref": "#/definitions/cellBorder"
         },
         "horizontalInside": {
-          "$ref": "#/$defs/cellBorder"
+          "$ref": "#/definitions/cellBorder"
         },
         "bottom": {
-          "$ref": "#/$defs/cellBorder"
+          "$ref": "#/definitions/cellBorder"
         },
         "left": {
-          "$ref": "#/$defs/cellBorder"
+          "$ref": "#/definitions/cellBorder"
         },
         "verticalInside": {
-          "$ref": "#/$defs/cellBorder"
+          "$ref": "#/definitions/cellBorder"
         },
         "right": {
-          "$ref": "#/$defs/cellBorder"
+          "$ref": "#/definitions/cellBorder"
         }
       },
       "additionalProperties": false
@@ -2688,19 +2965,19 @@
           "type": "integer"
         },
         "backgroundColor": {
-          "$ref": "#/$defs/complexColor"
+          "$ref": "#/definitions/complexColor"
         },
         "contentLayout": {
           "type": "integer"
         },
         "contentFormat": {
-          "$ref": "#/$defs/cellContentFormat"
+          "$ref": "#/definitions/cellContentFormat"
         },
         "margins": {
-          "$ref": "#/$defs/cellMargins"
+          "$ref": "#/definitions/cellMargins"
         },
         "borders": {
-          "$ref": "#/$defs/cellBorders"
+          "$ref": "#/definitions/cellBorders"
         }
       },
       "required": [
@@ -2728,16 +3005,16 @@
           "minimum": 1
         },
         "table": {
-          "$ref": "#/$defs/cellStyle"
+          "$ref": "#/definitions/cellStyle"
         },
         "title": {
-          "$ref": "#/$defs/cellStyle"
+          "$ref": "#/definitions/cellStyle"
         },
         "header": {
-          "$ref": "#/$defs/cellStyle"
+          "$ref": "#/definitions/cellStyle"
         },
         "data": {
-          "$ref": "#/$defs/cellStyle"
+          "$ref": "#/definitions/cellStyle"
         }
       },
       "required": [
@@ -2772,7 +3049,7 @@
           "type": "object"
         },
         "fillColor": {
-          "$ref": "#/$defs/complexColor"
+          "$ref": "#/definitions/complexColor"
         },
         "startAngle": {
           "type": "number"
@@ -2935,40 +3212,40 @@
           "type": "string"
         },
         "ambient": {
-          "$ref": "#/$defs/materialColor"
+          "$ref": "#/definitions/materialColor"
         },
         "diffuse": {
-          "$ref": "#/$defs/materialColor"
+          "$ref": "#/definitions/materialColor"
         },
         "diffuseMap": {
-          "$ref": "#/$defs/materialMap"
+          "$ref": "#/definitions/materialMap"
         },
         "specular": {
-          "$ref": "#/$defs/materialColor"
+          "$ref": "#/definitions/materialColor"
         },
         "specularMap": {
-          "$ref": "#/$defs/materialMap"
+          "$ref": "#/definitions/materialMap"
         },
         "specularGloss": {
           "type": "number"
         },
         "reflectionMap": {
-          "$ref": "#/$defs/materialMap"
+          "$ref": "#/definitions/materialMap"
         },
         "opacity": {
           "type": "number"
         },
         "opacityMap": {
-          "$ref": "#/$defs/materialMap"
+          "$ref": "#/definitions/materialMap"
         },
         "bumpMap": {
-          "$ref": "#/$defs/materialMap"
+          "$ref": "#/definitions/materialMap"
         },
         "refractionIndex": {
           "type": "number"
         },
         "refractionMap": {
-          "$ref": "#/$defs/materialMap"
+          "$ref": "#/definitions/materialMap"
         },
         "translucence": {
           "type": "number"
@@ -3042,7 +3319,7 @@
       "type": "object",
       "properties": {
         "action": {
-          "$ref": "#/$defs/associativeAction"
+          "$ref": "#/definitions/associativeAction"
         },
         "networkActionIndex": {
           "type": "integer"
@@ -3102,7 +3379,7 @@
       "type": "object",
       "properties": {
         "node": {
-          "$ref": "#/$defs/constraintNodeCore"
+          "$ref": "#/definitions/constraintNodeCore"
         },
         "ownerNodeId": {
           "type": "integer",
@@ -3127,7 +3404,7 @@
       "type": "object",
       "properties": {
         "node": {
-          "$ref": "#/$defs/constraintNodeCore"
+          "$ref": "#/definitions/constraintNodeCore"
         },
         "geometryDependencyHandle": {
           "type": "integer",
@@ -3148,7 +3425,7 @@
       "type": "object",
       "properties": {
         "geometric": {
-          "$ref": "#/$defs/geometricConstraint"
+          "$ref": "#/definitions/geometricConstraint"
         },
         "valueDependencyHandle": {
           "type": "integer",
@@ -3170,7 +3447,7 @@
       "type": "object",
       "properties": {
         "geometry": {
-          "$ref": "#/$defs/constraintGeometry"
+          "$ref": "#/definitions/constraintGeometry"
         },
         "point": {
           "type": "array",
@@ -3202,7 +3479,7 @@
       "type": "object",
       "properties": {
         "geometry": {
-          "$ref": "#/$defs/constraintGeometry"
+          "$ref": "#/definitions/constraintGeometry"
         },
         "origin": {
           "type": "array",
@@ -3250,7 +3527,7 @@
       "type": "object",
       "properties": {
         "explicit": {
-          "$ref": "#/$defs/explicitConstraint"
+          "$ref": "#/definitions/explicitConstraint"
         },
         "directionKind": {
           "type": "integer",
@@ -3274,7 +3551,7 @@
       "type": "object",
       "properties": {
         "geometric": {
-          "$ref": "#/$defs/geometricConstraint"
+          "$ref": "#/definitions/geometricConstraint"
         },
         "datumLineIndex": {
           "type": "integer"
@@ -3290,7 +3567,7 @@
       "type": "object",
       "properties": {
         "geometry": {
-          "$ref": "#/$defs/constraintGeometry"
+          "$ref": "#/definitions/constraintGeometry"
         },
         "origin": {
           "type": "array",
@@ -3321,7 +3598,7 @@
               "const": "constrainedImplicitPoint"
             },
             "value": {
-              "$ref": "#/$defs/constrainedImplicitPoint"
+              "$ref": "#/definitions/constrainedImplicitPoint"
             }
           },
           "required": [
@@ -3347,7 +3624,7 @@
               ]
             },
             "value": {
-              "$ref": "#/$defs/geometricConstraint"
+              "$ref": "#/definitions/geometricConstraint"
             }
           },
           "required": [
@@ -3363,7 +3640,7 @@
               "const": "constrainedBoundedLine"
             },
             "value": {
-              "$ref": "#/$defs/constrainedBoundedLine"
+              "$ref": "#/definitions/constrainedBoundedLine"
             }
           },
           "required": [
@@ -3379,7 +3656,7 @@
               "const": "distanceConstraint"
             },
             "value": {
-              "$ref": "#/$defs/distanceConstraint"
+              "$ref": "#/definitions/distanceConstraint"
             }
           },
           "required": [
@@ -3395,7 +3672,7 @@
               "const": "parallelConstraint"
             },
             "value": {
-              "$ref": "#/$defs/parallelConstraint"
+              "$ref": "#/definitions/parallelConstraint"
             }
           },
           "required": [
@@ -3411,7 +3688,7 @@
               "const": "constrainedDatumLine"
             },
             "value": {
-              "$ref": "#/$defs/constrainedDatumLine"
+              "$ref": "#/definitions/constrainedDatumLine"
             }
           },
           "required": [
@@ -3426,7 +3703,7 @@
       "type": "object",
       "properties": {
         "action": {
-          "$ref": "#/$defs/associativeAction"
+          "$ref": "#/definitions/associativeAction"
         },
         "doNotCheckNewlyAddedConstraints": {
           "type": "boolean"
@@ -3450,7 +3727,7 @@
         "nodes": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/constraintNode"
+            "$ref": "#/definitions/constraintNode"
           }
         }
       },
@@ -3861,7 +4138,7 @@
               "const": "dictionary"
             },
             "value": {
-              "$ref": "#/$defs/dictionaryBody"
+              "$ref": "#/definitions/dictionaryBody"
             }
           },
           "required": [
@@ -3877,7 +4154,7 @@
               "const": "tableControl"
             },
             "value": {
-              "$ref": "#/$defs/tableControlBody"
+              "$ref": "#/definitions/tableControlBody"
             }
           },
           "required": [
@@ -3893,7 +4170,7 @@
               "const": "tableRecord"
             },
             "value": {
-              "$ref": "#/$defs/tableRecordBody"
+              "$ref": "#/definitions/tableRecordBody"
             }
           },
           "required": [
@@ -3909,7 +4186,7 @@
               "const": "xrecord"
             },
             "value": {
-              "$ref": "#/$defs/xrecordBody"
+              "$ref": "#/definitions/xrecordBody"
             }
           },
           "required": [
@@ -3925,7 +4202,7 @@
               "const": "entity"
             },
             "value": {
-              "$ref": "#/$defs/entityBody"
+              "$ref": "#/definitions/entityBody"
             }
           },
           "required": [
@@ -3941,7 +4218,7 @@
               "const": "associativeDependency"
             },
             "value": {
-              "$ref": "#/$defs/associativeDependency"
+              "$ref": "#/definitions/associativeDependency"
             }
           },
           "required": [
@@ -3957,7 +4234,7 @@
               "const": "associativeValueDependency"
             },
             "value": {
-              "$ref": "#/$defs/associativeValueDependency"
+              "$ref": "#/definitions/associativeValueDependency"
             }
           },
           "required": [
@@ -3973,7 +4250,7 @@
               "const": "associativeGeometryDependency"
             },
             "value": {
-              "$ref": "#/$defs/associativeGeometryDependency"
+              "$ref": "#/definitions/associativeGeometryDependency"
             }
           },
           "required": [
@@ -3989,7 +4266,7 @@
               "const": "blockGripLocationComponent"
             },
             "value": {
-              "$ref": "#/$defs/blockGripLocationComponent"
+              "$ref": "#/definitions/blockGripLocationComponent"
             }
           },
           "required": [
@@ -4005,7 +4282,7 @@
               "const": "dynamicBlockProxyNode"
             },
             "value": {
-              "$ref": "#/$defs/dynamicBlockProxyNode"
+              "$ref": "#/definitions/dynamicBlockProxyNode"
             }
           },
           "required": [
@@ -4021,7 +4298,7 @@
               "const": "associativeVariable"
             },
             "value": {
-              "$ref": "#/$defs/associativeVariable"
+              "$ref": "#/definitions/associativeVariable"
             }
           },
           "required": [
@@ -4037,7 +4314,7 @@
               "const": "associativeDimensionDependencyBody"
             },
             "value": {
-              "$ref": "#/$defs/associativeDimensionDependencyBody"
+              "$ref": "#/definitions/associativeDimensionDependencyBody"
             }
           },
           "required": [
@@ -4053,7 +4330,7 @@
               "const": "visualStyle"
             },
             "value": {
-              "$ref": "#/$defs/visualStyle"
+              "$ref": "#/definitions/visualStyle"
             }
           },
           "required": [
@@ -4069,7 +4346,7 @@
               "const": "blockParameterDependencyBody"
             },
             "value": {
-              "$ref": "#/$defs/blockParameterDependencyBody"
+              "$ref": "#/definitions/blockParameterDependencyBody"
             }
           },
           "required": [
@@ -4085,7 +4362,7 @@
               "const": "blockRepresentationData"
             },
             "value": {
-              "$ref": "#/$defs/blockRepresentationData"
+              "$ref": "#/definitions/blockRepresentationData"
             }
           },
           "required": [
@@ -4101,7 +4378,7 @@
               "const": "dynamicBlockPurgePreventer"
             },
             "value": {
-              "$ref": "#/$defs/dynamicBlockPurgePreventer"
+              "$ref": "#/definitions/dynamicBlockPurgePreventer"
             }
           },
           "required": [
@@ -4117,7 +4394,7 @@
               "const": "evaluationGraph"
             },
             "value": {
-              "$ref": "#/$defs/evaluationGraph"
+              "$ref": "#/definitions/evaluationGraph"
             }
           },
           "required": [
@@ -4133,7 +4410,7 @@
               "const": "blockFlipParameter"
             },
             "value": {
-              "$ref": "#/$defs/blockFlipParameter"
+              "$ref": "#/definitions/blockFlipParameter"
             }
           },
           "required": [
@@ -4149,7 +4426,7 @@
               "const": "blockVisibilityParameter"
             },
             "value": {
-              "$ref": "#/$defs/blockVisibilityParameter"
+              "$ref": "#/definitions/blockVisibilityParameter"
             }
           },
           "required": [
@@ -4165,7 +4442,7 @@
               "const": "placeholder"
             },
             "value": {
-              "$ref": "#/$defs/placeholder"
+              "$ref": "#/definitions/placeholder"
             }
           },
           "required": [
@@ -4181,7 +4458,7 @@
               "const": "dictionaryVariable"
             },
             "value": {
-              "$ref": "#/$defs/dictionaryVariable"
+              "$ref": "#/definitions/dictionaryVariable"
             }
           },
           "required": [
@@ -4197,7 +4474,7 @@
               "const": "annotationScale"
             },
             "value": {
-              "$ref": "#/$defs/annotationScale"
+              "$ref": "#/definitions/annotationScale"
             }
           },
           "required": [
@@ -4213,7 +4490,7 @@
               "const": "sortEntitiesTable"
             },
             "value": {
-              "$ref": "#/$defs/sortEntitiesTable"
+              "$ref": "#/definitions/sortEntitiesTable"
             }
           },
           "required": [
@@ -4229,7 +4506,7 @@
               "const": "tableStyle"
             },
             "value": {
-              "$ref": "#/$defs/tableStyle"
+              "$ref": "#/definitions/tableStyle"
             }
           },
           "required": [
@@ -4245,7 +4522,7 @@
               "const": "mlineStyle"
             },
             "value": {
-              "$ref": "#/$defs/mlineStyle"
+              "$ref": "#/definitions/mlineStyle"
             }
           },
           "required": [
@@ -4261,7 +4538,7 @@
               "const": "mLeaderStyle"
             },
             "value": {
-              "$ref": "#/$defs/mLeaderStyle"
+              "$ref": "#/definitions/mLeaderStyle"
             }
           },
           "required": [
@@ -4277,7 +4554,7 @@
               "const": "material"
             },
             "value": {
-              "$ref": "#/$defs/material"
+              "$ref": "#/definitions/material"
             }
           },
           "required": [
@@ -4293,7 +4570,7 @@
               "const": "blockMoveAction"
             },
             "value": {
-              "$ref": "#/$defs/blockMoveAction"
+              "$ref": "#/definitions/blockMoveAction"
             }
           },
           "required": [
@@ -4309,7 +4586,7 @@
               "const": "assocNetwork"
             },
             "value": {
-              "$ref": "#/$defs/assocNetwork"
+              "$ref": "#/definitions/assocNetwork"
             }
           },
           "required": [
@@ -4325,7 +4602,7 @@
               "const": "assoc2dConstraintGroup"
             },
             "value": {
-              "$ref": "#/$defs/assoc2dConstraintGroup"
+              "$ref": "#/definitions/assoc2dConstraintGroup"
             }
           },
           "required": [
@@ -4341,7 +4618,7 @@
               "const": "blockLinearParameter"
             },
             "value": {
-              "$ref": "#/$defs/blockLinearParameter"
+              "$ref": "#/definitions/blockLinearParameter"
             }
           },
           "required": [
@@ -4357,7 +4634,7 @@
               "const": "blockLinearGrip"
             },
             "value": {
-              "$ref": "#/$defs/blockLinearGrip"
+              "$ref": "#/definitions/blockLinearGrip"
             }
           },
           "required": [
@@ -4373,7 +4650,7 @@
               "const": "blockFlipGrip"
             },
             "value": {
-              "$ref": "#/$defs/blockFlipGrip"
+              "$ref": "#/definitions/blockFlipGrip"
             }
           },
           "required": [
@@ -4389,7 +4666,7 @@
               "const": "blockVisibilityGrip"
             },
             "value": {
-              "$ref": "#/$defs/blockVisibilityGrip"
+              "$ref": "#/definitions/blockVisibilityGrip"
             }
           },
           "required": [
@@ -4405,7 +4682,7 @@
               "const": "blockAlignmentParameter"
             },
             "value": {
-              "$ref": "#/$defs/blockAlignmentParameter"
+              "$ref": "#/definitions/blockAlignmentParameter"
             }
           },
           "required": [
@@ -4421,7 +4698,7 @@
               "const": "blockAlignmentGrip"
             },
             "value": {
-              "$ref": "#/$defs/blockAlignmentGrip"
+              "$ref": "#/definitions/blockAlignmentGrip"
             }
           },
           "required": [
@@ -4437,7 +4714,7 @@
               "const": "blockStretchAction"
             },
             "value": {
-              "$ref": "#/$defs/blockStretchAction"
+              "$ref": "#/definitions/blockStretchAction"
             }
           },
           "required": [
@@ -4453,7 +4730,7 @@
               "const": "blockScaleAction"
             },
             "value": {
-              "$ref": "#/$defs/blockScaleAction"
+              "$ref": "#/definitions/blockScaleAction"
             }
           },
           "required": [
@@ -4469,7 +4746,7 @@
               "const": "blockFlipAction"
             },
             "value": {
-              "$ref": "#/$defs/blockFlipAction"
+              "$ref": "#/definitions/blockFlipAction"
             }
           },
           "required": [
@@ -4485,7 +4762,7 @@
               "const": "blockBasePointParameter"
             },
             "value": {
-              "$ref": "#/$defs/blockBasePointParameter"
+              "$ref": "#/definitions/blockBasePointParameter"
             }
           },
           "required": [
@@ -4501,7 +4778,7 @@
               "const": "blockVerticalConstraintParameter"
             },
             "value": {
-              "$ref": "#/$defs/blockLinearConstraintParameter"
+              "$ref": "#/definitions/blockLinearConstraintParameter"
             }
           },
           "required": [
@@ -4517,7 +4794,7 @@
               "const": "blockHorizontalConstraintParameter"
             },
             "value": {
-              "$ref": "#/$defs/blockLinearConstraintParameter"
+              "$ref": "#/definitions/blockLinearConstraintParameter"
             }
           },
           "required": [
@@ -4533,7 +4810,7 @@
               "const": "layout"
             },
             "value": {
-              "$ref": "#/$defs/layout"
+              "$ref": "#/definitions/layout"
             }
           },
           "required": [
@@ -4554,7 +4831,7 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/xrecordValue"
+            "$ref": "#/definitions/xrecordValue"
           }
         }
       },
@@ -4614,11 +4891,11 @@
         "extendedData": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/extendedEntityData"
+            "$ref": "#/definitions/extendedEntityData"
           }
         },
         "body": {
-          "$ref": "#/$defs/objectBody"
+          "$ref": "#/definitions/objectBody"
         }
       },
       "required": [
@@ -4629,41 +4906,6 @@
         "reactorHandles",
         "referencedHandles",
         "extendedData"
-      ]
-    },
-    "drawing": {
-      "type": "object",
-      "properties": {
-        "layers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/layer"
-          }
-        },
-        "objects": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/object"
-          }
-        },
-        "extmin": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          }
-        },
-        "extmax": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          }
-        }
-      },
-      "required": [
-        "layers",
-        "objects",
-        "extmin",
-        "extmax"
       ]
     },
     "headerUnits": {
@@ -6038,58 +6280,6 @@
       ],
       "additionalProperties": false
     },
-    "headerVariables": {
-      "type": "object",
-      "properties": {
-        "units": {
-          "$ref": "#/$defs/headerUnits"
-        },
-        "modes": {
-          "$ref": "#/$defs/headerModes"
-        },
-        "integers": {
-          "$ref": "#/$defs/headerIntegerSettings"
-        },
-        "scalars": {
-          "$ref": "#/$defs/headerScalars"
-        },
-        "time": {
-          "$ref": "#/$defs/headerTimeState"
-        },
-        "paperSpace": {
-          "$ref": "#/$defs/headerSpaceGeometry"
-        },
-        "modelSpace": {
-          "$ref": "#/$defs/headerSpaceGeometry"
-        },
-        "dimensions": {
-          "$ref": "#/$defs/dimensionSettings"
-        },
-        "policy": {
-          "$ref": "#/$defs/drawingPolicy"
-        },
-        "strings": {
-          "$ref": "#/$defs/headerStrings"
-        },
-        "relations": {
-          "$ref": "#/$defs/headerRelations"
-        }
-      },
-      "required": [
-        "units",
-        "modes",
-        "integers",
-        "scalars",
-        "time",
-        "paperSpace",
-        "modelSpace",
-        "dimensions",
-        "policy",
-        "strings",
-        "relations"
-      ],
-      "additionalProperties": false
-    },
     "versionStamp": {
       "type": "object",
       "properties": {
@@ -6105,90 +6295,6 @@
       "required": [
         "version",
         "maintenance"
-      ],
-      "additionalProperties": false
-    },
-    "auxiliaryHeader": {
-      "type": "object",
-      "properties": {
-        "totalSaves": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "savePartitionOne": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "savePartitionTwo": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "saveGeneration": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "legacyStampOne": {
-          "$ref": "#/$defs/versionStamp"
-        },
-        "legacyStampTwo": {
-          "$ref": "#/$defs/versionStamp"
-        },
-        "compatibilityProfile": {
-          "const": "autocad2009"
-        },
-        "createdAt": {
-          "type": "object"
-        },
-        "updatedAt": {
-          "type": "object"
-        },
-        "handleSeed": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "terminalSaveGeneration": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "required": [
-        "totalSaves",
-        "savePartitionOne",
-        "savePartitionTwo",
-        "saveGeneration",
-        "legacyStampOne",
-        "legacyStampTwo",
-        "compatibilityProfile",
-        "createdAt",
-        "updatedAt",
-        "handleSeed",
-        "terminalSaveGeneration"
-      ],
-      "additionalProperties": false
-    },
-    "revisionHistory": {
-      "type": "object",
-      "properties": {
-        "formatMajor": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "formatMinor": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "revisions": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
-        }
-      },
-      "required": [
-        "formatMajor",
-        "formatMinor",
-        "revisions"
       ],
       "additionalProperties": false
     },
@@ -6221,50 +6327,6 @@
         "green",
         "blue",
         "alpha"
-      ],
-      "additionalProperties": false
-    },
-    "indexedPreview": {
-      "type": "object",
-      "properties": {
-        "width": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "height": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "origin": {
-          "const": "bottomUp"
-        },
-        "palette": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/rgba"
-          }
-        },
-        "pixelIndices": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 255
-          }
-        },
-        "backgroundPaletteIndex": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 255
-        }
-      },
-      "required": [
-        "width",
-        "height",
-        "origin",
-        "palette",
-        "pixelIndices",
-        "backgroundPaletteIndex"
       ],
       "additionalProperties": false
     },
@@ -6317,66 +6379,6 @@
         "registryVersion",
         "installId",
         "localeId"
-      ],
-      "additionalProperties": false
-    },
-    "applicationHistory": {
-      "type": "object",
-      "properties": {
-        "historyIdentifierOne": {
-          "type": "string"
-        },
-        "historyIdentifierTwo": {
-          "type": "string"
-        },
-        "classVersion": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "applicationVersionDigest": {
-          "type": "string"
-        },
-        "applicationVersion": {
-          "type": "string"
-        },
-        "trustCommentDigest": {
-          "type": "string"
-        },
-        "trustComment": {
-          "type": "string"
-        },
-        "propertySetDigest": {
-          "type": "string"
-        },
-        "propertyFormatIdentifier": {
-          "type": "string"
-        },
-        "properties": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/applicationProperty"
-          }
-        },
-        "productDigest": {
-          "type": "string"
-        },
-        "product": {
-          "$ref": "#/$defs/productInformation"
-        }
-      },
-      "required": [
-        "historyIdentifierOne",
-        "historyIdentifierTwo",
-        "classVersion",
-        "applicationVersionDigest",
-        "applicationVersion",
-        "trustCommentDigest",
-        "trustComment",
-        "propertySetDigest",
-        "propertyFormatIdentifier",
-        "properties",
-        "productDigest",
-        "product"
       ],
       "additionalProperties": false
     }

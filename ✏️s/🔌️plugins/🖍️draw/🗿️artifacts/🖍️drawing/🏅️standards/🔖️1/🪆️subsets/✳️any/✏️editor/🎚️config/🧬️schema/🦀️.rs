@@ -1,6 +1,6 @@
 //! 🧬️ Drawing app config schema — every local-ui field of DrawingConfig.
 
-use crate::DrawingCamera;
+
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Config
@@ -21,8 +21,6 @@ pub struct DrawingConfig {
     pub trace_pointer_completed_work: u64,
     #[state(config)]
     pub trace_pointer_pending_work: u64,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Config
 
@@ -50,3 +48,8 @@ pub fn app_schema_descriptor() -> ::framework_schema::AppSchemaDescriptor {
     }
 }
 //#endregion 🔖️AppSchemaDescriptor
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::DrawingCamera;
+//#endregion 🔁️Re-exports

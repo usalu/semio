@@ -17,7 +17,7 @@ type Call = { readonly operation: "lstat" | "read"; readonly path: string };
 type VirtualFilesystem = { readonly files: ReadonlyMap<string, string>; readonly directories: ReadonlySet<string>; readonly symlink?: string; readonly calls: Call[] };
 
 const actual = { ...filesystem };
-const fixturePath = join(import.meta.dir, "🔣️.json"), schemaPath = join(import.meta.dir, "🛂️schema.json");
+const fixturePath = join(import.meta.dir, "🔣️.json"), schemaPath = join(import.meta.dir, "🛂️schema/🔣️.json");
 const fixture = JSON.parse(actual.readFileSync(fixturePath, "utf8")) as { readonly schemaVersion: 1; readonly traces: readonly Trace[] };
 let virtual: VirtualFilesystem | undefined;
 

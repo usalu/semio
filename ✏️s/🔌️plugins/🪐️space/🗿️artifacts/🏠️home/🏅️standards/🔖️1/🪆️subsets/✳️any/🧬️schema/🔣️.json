@@ -7,8 +7,7 @@
   "required": [
     "schema",
     "catalogGeneration",
-    "activePanelTab",
-    "locale"
+    "activePanelTab"
   ],
   "properties": {
     "schema": {
@@ -22,10 +21,6 @@
       "x-semio-state": "artifact"
     },
     "activePanelTab": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
       "type": "string",
       "x-semio-state": "config"
     }

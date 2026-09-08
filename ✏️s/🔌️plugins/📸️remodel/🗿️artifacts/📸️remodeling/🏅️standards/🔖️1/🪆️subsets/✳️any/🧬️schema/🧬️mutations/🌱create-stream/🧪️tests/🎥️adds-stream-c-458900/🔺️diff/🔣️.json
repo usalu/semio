@@ -10,16 +10,16 @@
         "kind": "video",
         "cameraId": "cam-a",
         "syncOffsetMs": 12.5,
-        "fpsHint": 30.0,
+        "fpsHint": 30,
         "frames": [
           {
             "index": 0,
-            "timestampMs": 0.0,
+            "timestampMs": 0,
             "assetId": "asset-a"
           },
           {
             "index": 1,
-            "timestampMs": 40.0,
+            "timestampMs": 40,
             "assetId": "asset-a"
           }
         ],
@@ -27,7 +27,7 @@
           "name": "front.mp4",
           "container": "mp4",
           "codec": "avc",
-          "durationMs": 6400.0,
+          "durationMs": 6400,
           "frameCount": 160,
           "width": 1024,
           "height": 768
@@ -38,12 +38,12 @@
         "name": "Side",
         "kind": "image-sequence",
         "cameraId": null,
-        "syncOffsetMs": 0.0,
-        "fpsHint": 24.0,
+        "syncOffsetMs": 0,
+        "fpsHint": 24,
         "frames": [
           {
             "index": 0,
-            "timestampMs": 0.0,
+            "timestampMs": 0,
             "assetId": "asset-a"
           }
         ],
@@ -54,8 +54,8 @@
         "name": "Top",
         "kind": "image-sequence",
         "cameraId": "cam-b",
-        "syncOffsetMs": 0.0,
-        "fpsHint": 12.0,
+        "syncOffsetMs": 0,
+        "fpsHint": 12,
         "frames": [],
         "source": null
       }
@@ -73,6 +73,5 @@
   "reportTable": null,
   "frameCursor": null,
   "camera": null,
-  "layers": null,
-  "locale": null
+  "layers": null
 }

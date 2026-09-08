@@ -13,14 +13,12 @@ export interface RewritingDiff {
   parameterBindings?: Record<string, PropertyValue | null>;
   /** @state artifact */
   ruleLayout?: Record<string, LayoutPoint | null>;
-  /** @state presence */
+  /** @state config */
   lodModeByWindow?: Record<string, string | null>;
   /** @state config */
   beforePaneCamera?: Camera;
   /** @state config */
-  reorganizeEpoch?: number;
   /** @state config */
-  locale?: string;
 }
 
 export interface RewritingArtifact {

@@ -12,8 +12,8 @@ use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{
-    app_labels, create_default_layout, mesh_from_kind, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, App, AppLabels, ArtifactApp,
-    ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, Locale, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, PluginApp, Terminology, WorldSunConfig,
+    app_labels, create_default_layout, mesh_from_kind, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, App, ArtifactApp,
+    ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, PluginApp, WorldSunConfig,
 };
 // 🌱️ `Value`/`Map` alias `pack::json`'s first-party JSON tree (the `serde_json::Value`
 // replacement, `🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs`), keeping this file's shape
@@ -101,14 +101,6 @@ app_labels! {
     }
 }
 
-/// 🕳️ B1: `render`/`handle` dropped `ViewModel` entirely and this module's `Config` is `NoConfig`
-/// (no locale/terminology axis of its own), so there is no locale signal left to resolve against at
-/// this render call site — same native-only-render gap other `NoConfig`-backed slots hit in this
-/// migration. Defaults to the native English cell until this block-kind slot grows its own locale
-/// channel (see `s-home-ui`'s `resolve_labels` for the general two-axis pattern this mirrors).
-fn resolve_labels<L: AppLabels>() -> &'static L {
-    L::labels(Locale::En, Terminology::Native)
-}
 //#endregion 🔖️Terminology
 
 //#region 🔖️Payload
@@ -618,8 +610,8 @@ impl ArtifactApp for ModuleApp {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<ComponentTree> {
-        let labels = resolve_labels::<ModuleLabels>();
+    async fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+        let labels = semio_framework_plugin::resolve_labels::<ModuleLabels>(view_state);
         match body_key {
             BODY_PARAMS => render_params_body(doc.snapshot, labels),
             BODY_PREVIEW => render_preview_body(doc.snapshot),

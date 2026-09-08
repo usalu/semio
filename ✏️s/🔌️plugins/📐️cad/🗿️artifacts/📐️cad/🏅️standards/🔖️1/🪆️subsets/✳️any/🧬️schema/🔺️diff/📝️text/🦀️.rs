@@ -141,12 +141,6 @@ impl CadDiff {
             if let Some(value) = self.dislocate_structure_classic {
                 next.dislocate_structure_classic = value;
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
-            if let Some(value) = &self.terminology {
-                next.terminology = value.clone();
-            }
             if let Some(value) = &self.contributions_json {
                 next.contributions_json = value.clone();
             }
@@ -342,8 +336,6 @@ impl MutationDiff<CadSnapshot> for CadDiff {
         take!(dislocate_building);
         take!(dislocate_energy);
         take!(dislocate_structure_classic);
-        take!(locale);
-        take!(terminology);
         take!(contributions_json);
         take!(hovered_object_id);
         take!(hovered_target_object_id);
@@ -371,3 +363,8 @@ impl MutationDiff<CadSnapshot> for CadDiff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type CadDiffText = String;
+//#endregion 🚚️Carrier

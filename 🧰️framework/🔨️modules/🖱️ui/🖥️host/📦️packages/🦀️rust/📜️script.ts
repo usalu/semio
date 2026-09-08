@@ -6,11 +6,12 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "source") {
       if (segments.length !== 1) throw new Error("UI-host source test accepts no arguments");
-      const { testInputAdmissionFixture } = await import("../../📥️input/🎟️admission/📜️script.ts");
+      const { testInputAdmissionFixture } = await import("../../📥️input/🎟️admission/🧪️tests/🔬️input-admission/🟦️.ts");
       testInputAdmissionFixture();
       return;
     }
     const { rest } = resolveTestLevel(segments);
+    await runTestBudgeted(process.execPath, ["../../🧪️tests/🌐️browser-host/🟨️.js"], { cwd: this.root, budgetMs: buildBudgetMs() });
     await runCargoTestBudgeted(["semio-framework-ui-host"], this.repoRoot, ["--no-fail-fast", ...rest]);
   }
 }

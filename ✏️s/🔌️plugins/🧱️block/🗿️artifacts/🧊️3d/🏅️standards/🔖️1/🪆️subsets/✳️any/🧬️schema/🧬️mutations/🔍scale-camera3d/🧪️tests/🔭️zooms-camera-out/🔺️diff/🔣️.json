@@ -10,14 +10,14 @@
   "authors": null,
   "camera3d": {
     "position": [
-      10.0,
-      -10.0,
-      6.0
+      10,
+      -10,
+      6
     ],
     "target": [
-      0.0,
-      0.0,
-      1.0
+      0,
+      0,
+      1
     ],
     "zoom": 0.5
   },
@@ -25,7 +25,6 @@
   "selectedIds": null,
   "activeRepresentationId": null,
   "wantedTags": null,
-  "locale": null,
   "windows": null,
   "brushVortexKindId": null,
   "brushRadius": null,

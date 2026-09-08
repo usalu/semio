@@ -4,17 +4,17 @@
     "id": "orbit-cam-secondary",
     "label": "Orbit Secondary",
     "model": "pinhole",
-    "fx": 272.0,
-    "fy": 272.0,
-    "cx": 160.0,
-    "cy": 120.0,
-    "skew": 0.0,
+    "fx": 272,
+    "fy": 272,
+    "cx": 160,
+    "cy": 120,
+    "skew": 0,
     "distortion": [
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0,
+      0,
+      0
     ],
     "rmsReprojectionPx": 0.578125,
     "locked": false

@@ -16,7 +16,7 @@ workspace = true
 
 [[test]]
 name = "fixture_sweep"
-path = "../../🧪️tests/🦀️.rs"
+path = "../../🧪️tests/🧹️fixture-sweep/🦀️.rs"
 
 [dependencies]
 semio-framework-artifact-flow-flow = { workspace = true }

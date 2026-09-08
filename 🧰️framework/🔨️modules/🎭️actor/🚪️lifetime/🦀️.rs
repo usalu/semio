@@ -416,7 +416,7 @@ pub(crate) mod request_sequence {
 
 //#region 🧪️SharedWireLaws
 #[cfg(test)]
-#[path = "🩹️patch/🧪️tests/🦀️.rs"]
+#[path = "🩹️patch/🧪️tests/🩹️patch/🦀️.rs"]
 mod patch_receipt_tests;
 
 #[cfg(test)]

@@ -1,8 +1,7 @@
 //! 🧬️ schema leaf
-use crate::{LayoutCamera, LayoutDropPreviewState};
+
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.layout.layout.config")]
@@ -17,8 +16,6 @@ pub struct LayoutConfig {
     pub camera: LayoutCamera,
     #[state(config)]
     pub preview_camera: LayoutCamera,
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor
@@ -45,3 +42,9 @@ pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::LayoutDropPreviewState;
+pub use crate::LayoutCamera;
+//#endregion 🔁️Re-exports

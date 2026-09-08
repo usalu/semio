@@ -3,7 +3,7 @@
 import { builtinModules } from "node:module";
 import { resolve } from "node:path";
 import { build, type InlineConfig } from "vite";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, runVitest, TEST_LEVELS } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, TEST_LEVELS } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 //#region Build
 const extensionExternals = new Set(["vscode", ...builtinModules, ...builtinModules.map((name) => `node:${name}`)]);
@@ -39,11 +39,11 @@ class DevScript extends BundleScript {
   }
 }
 
-/** ⏱️The `🔬️schema` case runs at every level under vitest; the extension-host Mocha case (`🧪️tests/🧩️extension/🟦️.ts`) can only run inside the VSCode test harness and is added at `long` and above. */
+/** ⏱️The extension-host Mocha case (`🧪️tests/🧩️extension/🟦️.ts`) is this package's only test and can
+ * only run inside the VSCode test harness, so it is added at `long` and above. */
 class TestScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const { level, rest } = resolveTestLevel(segments);
-    await runVitest(this.root, rest, "vitest.config.ts");
+  run(segments: string[]): void {
+    const { level } = resolveTestLevel(segments);
     if (TEST_LEVELS.indexOf(level) < TEST_LEVELS.indexOf("long")) return;
     runBunx(["vscode-test"], this.root);
   }

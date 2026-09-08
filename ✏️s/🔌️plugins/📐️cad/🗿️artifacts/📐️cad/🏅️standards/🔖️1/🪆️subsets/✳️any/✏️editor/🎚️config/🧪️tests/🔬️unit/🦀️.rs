@@ -5,8 +5,6 @@ use super::*;
 async fn cad_config_default_matches_the_existing_runtime_defaults() {
     let config = CadConfig::default();
     assert_eq!(config.engagement_step, "Idle");
-    assert_eq!(config.active_utility_id, "move");
-    assert_eq!(config.locale, "en-US");
     assert!(config.dislocate_shape.move_enabled);
     assert!(config.dislocate_shape.rotate_enabled);
 }
@@ -17,8 +15,6 @@ async fn cad_config_dsl_round_trips_a_populated_record() {
         selected_node_ids: vec!["node-1".into(), "node-2".into()],
         hovered_reference_id: Some("ref-1".into()),
         engagement_session_json: Some("{\"interactionId\":\"box\"}".into()),
-        active_utility_id: "rotate".into(),
-        locale: "de-DE".into(),
         camera: CadCamera { position: [1.0, 2.0, 3.0], ..CadCamera::default() },
         ..CadConfig::default()
     };
@@ -46,8 +42,8 @@ async fn cad_sun_config_round_trips_through_world_sun_config() {
 
 #[semio_framework_async_macros::async_test]
 async fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
-    let base = CadConfig { active_utility_id: "move".into(), ..CadConfig::default() };
-    let next = CadConfig { active_utility_id: "rotate".into(), selected_node_ids: vec!["node-1".into()], ..CadConfig::default() };
+    let base = CadConfig::default();
+    let next = CadConfig { selected_node_ids: vec!["node-1".into()], ..CadConfig::default() };
     let operation = CadConfigMutation::Snapshot { config: next.clone() };
     let forward = operation.diff(&base).diff().clone();
     assert_eq!(forward, next);

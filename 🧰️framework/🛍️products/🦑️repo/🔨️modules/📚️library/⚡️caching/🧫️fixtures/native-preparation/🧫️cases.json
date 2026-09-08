@@ -233,5 +233,53 @@
       ],
       "valid": false
     }
-  ]
+  ],
+  "artifactArguments": [
+    {
+      "operation": "build",
+      "args": [
+        "--release"
+      ],
+      "valid": true,
+      "cargoArgs": [
+        "--release"
+      ]
+    },
+    {
+      "operation": "check",
+      "args": [
+        "--workspace"
+      ],
+      "valid": false,
+      "cargoArgs": []
+    },
+    {
+      "operation": "test",
+      "args": [
+        "quick",
+        "--",
+        "--test-threads=1"
+      ],
+      "valid": true,
+      "cargoArgs": [
+        "--",
+        "--test-threads=1"
+      ]
+    },
+    {
+      "operation": "test",
+      "args": [
+        "fundamental",
+        "--manifest-path",
+        "../other/Cargo.toml"
+      ],
+      "valid": false,
+      "cargoArgs": []
+    }
+  ],
+  "artifactProgress": {
+    "label": "artifact-rust:fixture:build",
+    "intervalMs": 1,
+    "pattern": "^\\[artifact-rust:fixture:build\\] running elapsedMs=[0-9]+$"
+  }
 }

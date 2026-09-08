@@ -32,8 +32,6 @@ pub struct PlaybookDiff {
     #[state(presence)]
     pub selected_ids: Option<PlaybookStringList>,
     #[state(config)]
-    pub locale: Option<String>,
-    #[state(config)]
     pub contributions_json: Option<String>,
 }
 //#endregion 🔖️Diff
@@ -64,7 +62,6 @@ impl ::semio_framework_os_kernel::ToValue for PlaybookDiff {
             ("document".to_string(), self.document.as_ref().map_or(::semio_framework_os_kernel::DslValue::Null, |document| ::semio_framework_os_kernel::to_dsl_value(document).expect("ArtifactChild serializes"))),
             ("flow".to_string(), self.flow.as_ref().map_or(::semio_framework_os_kernel::DslValue::Null, |flow| ::semio_framework_os_kernel::to_dsl_value(flow).expect("ArtifactChild serializes"))),
             ("selectedIds".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.selected_ids)),
-            ("locale".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.locale)),
             ("contributionsJson".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.contributions_json)),
         ])
     }
@@ -94,7 +91,6 @@ impl ::semio_framework_os_kernel::FromValue for PlaybookDiff {
             document: child("document")?,
             flow: flow_child("flow")?,
             selected_ids: get("selectedIds").map_or(Ok(None), ::semio_framework_os_kernel::FromValue::from_value)?,
-            locale: get("locale").map_or(Ok(None), ::semio_framework_os_kernel::FromValue::from_value)?,
             contributions_json: get("contributionsJson").map_or(Ok(None), ::semio_framework_os_kernel::FromValue::from_value)?,
         })
     }

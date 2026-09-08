@@ -5,14 +5,14 @@
   "part2d": null,
   "part3d": {
     "orientation": [
-      0.0,
-      0.0,
-      1.0,
-      0.0
+      0,
+      0,
+      1,
+      0
     ],
     "scale": [
-      2.0,
-      1.0,
+      2,
+      1,
       0.5
     ]
   },
@@ -25,6 +25,5 @@
   "camera2d": null,
   "camera3d": null,
   "meta": null,
-  "selectedIds": null,
-  "locale": null
+  "selectedIds": null
 }

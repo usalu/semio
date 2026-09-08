@@ -3,12 +3,12 @@
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes`/`edges` replaced by a single
 //! composed `content: JackContentChild` slot, matching `DagArtifact`'s own field swap exactly.
 
-use crate::{Camera, JackContentChild, Manifest};
+use crate::{JackContentChild};
 use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
-/// 🧬️ Full jack artifact state across the artifact, presence and config lanes.
+/// 🧬️ Full jack artifact state across the artifact and local config lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.trinity.jack")]
 pub struct JackArtifact {
@@ -27,30 +27,16 @@ pub struct JackArtifact {
     pub content: JackContentChild,
     #[state(artifact)]
     pub root_node_id: Option<String>,
-    #[state(presence)]
-    pub active_fixture_id: String,
-    #[state(presence)]
+    #[state(config)]
     pub jack_query: String,
-    #[state(presence)]
+    #[state(config)]
     pub lod_mode_by_window: BTreeMap<String, String>,
     #[state(config)]
     pub viewport_camera: Camera,
     #[state(config)]
     pub jack_result_json: String,
     #[state(config)]
-    pub editor_engagement_input: String,
-    #[state(config)]
-    pub graph_engagement_input: String,
-    #[state(config)]
-    pub results_engagement_input: String,
-    #[state(config)]
-    pub reorganize_epoch: u64,
-    #[state(config)]
     pub editor_selection: Option<JackEditorSelection>,
-    #[state(config)]
-    pub revision: u64,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -71,18 +57,11 @@ impl dsl::ToValue for JackArtifact {
             ("camera".to_string(), dsl::ToValue::to_value(&self.camera)),
             ("content".to_string(), dsl::to_dsl_value(&self.content).expect("ArtifactChild serializes")),
             ("rootNodeId".to_string(), dsl::ToValue::to_value(&self.root_node_id)),
-            ("activeFixtureId".to_string(), dsl::ToValue::to_value(&self.active_fixture_id)),
             ("jackQuery".to_string(), dsl::ToValue::to_value(&self.jack_query)),
             ("lodModeByWindow".to_string(), dsl::ToValue::to_value(&self.lod_mode_by_window)),
             ("viewportCamera".to_string(), dsl::ToValue::to_value(&self.viewport_camera)),
             ("jackResultJson".to_string(), dsl::ToValue::to_value(&self.jack_result_json)),
-            ("editorEngagementInput".to_string(), dsl::ToValue::to_value(&self.editor_engagement_input)),
-            ("graphEngagementInput".to_string(), dsl::ToValue::to_value(&self.graph_engagement_input)),
-            ("resultsEngagementInput".to_string(), dsl::ToValue::to_value(&self.results_engagement_input)),
-            ("reorganizeEpoch".to_string(), dsl::ToValue::to_value(&self.reorganize_epoch)),
             ("editorSelection".to_string(), dsl::ToValue::to_value(&self.editor_selection)),
-            ("revision".to_string(), dsl::ToValue::to_value(&self.revision)),
-            ("locale".to_string(), dsl::ToValue::to_value(&self.locale)),
         ])
     }
 }
@@ -99,18 +78,11 @@ impl dsl::FromValue for JackArtifact {
             camera: dsl::FromValue::from_value(field("camera")?)?,
             content: dsl::from_dsl_value(field("content")?).map_err(dsl::ValueError::new)?,
             root_node_id: dsl::FromValue::from_value(field("rootNodeId")?)?,
-            active_fixture_id: dsl::FromValue::from_value(field("activeFixtureId")?)?,
             jack_query: dsl::FromValue::from_value(field("jackQuery")?)?,
             lod_mode_by_window: dsl::FromValue::from_value(field("lodModeByWindow")?)?,
             viewport_camera: dsl::FromValue::from_value(field("viewportCamera")?)?,
             jack_result_json: dsl::FromValue::from_value(field("jackResultJson")?)?,
-            editor_engagement_input: dsl::FromValue::from_value(field("editorEngagementInput")?)?,
-            graph_engagement_input: dsl::FromValue::from_value(field("graphEngagementInput")?)?,
-            results_engagement_input: dsl::FromValue::from_value(field("resultsEngagementInput")?)?,
-            reorganize_epoch: dsl::FromValue::from_value(field("reorganizeEpoch")?)?,
             editor_selection: dsl::FromValue::from_value(field("editorSelection")?)?,
-            revision: dsl::FromValue::from_value(field("revision")?)?,
-            locale: dsl::FromValue::from_value(field("locale")?)?,
         })
     }
 }
@@ -137,18 +109,11 @@ impl Default for JackArtifact {
             camera: Camera::default(),
             content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()),
             root_node_id: None,
-            active_fixture_id: String::new(),
             jack_query: String::new(),
             lod_mode_by_window: BTreeMap::new(),
             viewport_camera: Camera::default(),
             jack_result_json: String::new(),
-            editor_engagement_input: String::new(),
-            graph_engagement_input: String::new(),
-            results_engagement_input: String::new(),
-            reorganize_epoch: 0,
             editor_selection: None,
-            revision: 0,
-            locale: "en-US".into(),
         }
     }
 }
@@ -359,3 +324,9 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: JackComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::Camera;
+pub use crate::Manifest;
+//#endregion 🔁️Re-exports

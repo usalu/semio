@@ -21,7 +21,6 @@ message Generation2dDiff {
   // @state artifact
   optional string generation_preview_text = 8;
   // @state config
-  optional string locale = 9;
 }
 
 message CameraJson {

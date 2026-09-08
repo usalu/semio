@@ -3,7 +3,7 @@ mod runtime_instance_registry_tests {
 
     #[test]
     fn sparse_live_instances_receive_successive_round_robin_turns() {
-        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧪️fixtures/🔣️.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
         let mut registry = RuntimeInstanceRegistry::new();
         for id in fixture["instances"].as_array().unwrap() {
             registry.insert_admitted(id.as_u64().unwrap() as u32, ());

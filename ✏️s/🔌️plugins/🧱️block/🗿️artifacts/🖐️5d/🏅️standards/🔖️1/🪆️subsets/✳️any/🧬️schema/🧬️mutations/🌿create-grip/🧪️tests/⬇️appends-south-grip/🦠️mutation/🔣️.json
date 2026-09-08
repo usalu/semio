@@ -3,17 +3,17 @@
   "grip": {
     "id": "grip-south",
     "gripKind": "gk-plug",
-    "angle": 3.0,
+    "angle": 3,
     "radius2d": 0.3,
     "position": [
-      0.0,
-      -1.0,
-      0.0
+      0,
+      -1,
+      0
     ],
     "direction": [
-      0.0,
-      -1.0,
-      0.0
+      0,
+      -1,
+      0
     ],
     "radius3d": 0.25
   }

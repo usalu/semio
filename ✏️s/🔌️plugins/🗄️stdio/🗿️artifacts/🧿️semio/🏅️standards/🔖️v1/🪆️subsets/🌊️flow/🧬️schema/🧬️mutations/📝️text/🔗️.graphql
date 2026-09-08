@@ -57,3 +57,18 @@ type SemioFlowMutation {
   from: PortRef
   to: PortRef
 }
+
+type SemioFlowMutationText {
+  mutation: String!
+  snapshot: SemioFlowSnapshot
+  node: FlowNode
+  edge: FlowEdge
+  id: String
+  kind: String
+  label: String
+  position: SemioPoint2
+  key: String
+  value: String
+  from: PortRef
+  to: PortRef
+}

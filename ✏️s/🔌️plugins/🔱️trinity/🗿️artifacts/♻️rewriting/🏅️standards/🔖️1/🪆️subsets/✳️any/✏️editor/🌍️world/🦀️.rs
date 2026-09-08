@@ -11,11 +11,11 @@ use semio_s_artifact_trinity_jack::language_service::{complete as complete_jack,
 use semio_s_artifact_trinity_jack::lexer::tokenize as tokenize_jack;
 use semio_framework_os_infinite::{
     compute_edge_bezier_points, distance_between,
-    force_semio_framework_graph::apply_force_graph_layout_to_fixture_v1_json,
+    force_graph::apply_force_graph_layout_to_fixture_v1_json,
     BoardEngine, CanvasPalette, HandleRole,
 };
 use semio_framework_os_infinite::BoardHost;
-pub use infinite_canvas as canvas;
+pub use semio_framework_os_infinite::canvas;
 use std::cell::Cell;
 use std::collections::HashMap;
 
@@ -29,18 +29,7 @@ const TRINITY_DEFAULT_NODE_RADIUS: f64 = 44.0;
 const TRINITY_BOARD_KIND_CATALOGS_JSON: &str = "{\"handleKinds\":[{\"id\":\"port\",\"name\":\"Port\",\"color\":\"#6b7280\"}],\"edgeKinds\":[{\"id\":\"Connection\",\"name\":\"Connection\",\"color\":\"#94a3b8\"}]}";
 
 //#region 🔖️Lod
-use canvas::lod::{Lod, LodScale};
-
-const TRINITY_LODS: &[Lod; 6] = &[
-    Lod { id: "minimap", name: "Minimap", description: "Whole-graph silhouette; edges and node fills only.", max_zoom: 0.15 },
-    Lod { id: "overview", name: "Overview", description: "Topology without labels or port handles.", max_zoom: 0.35 },
-    Lod { id: "compact", name: "Compact", description: "Abbreviated node names.", max_zoom: 0.55 },
-    Lod { id: "normal", name: "Normal", description: "Full node names.", max_zoom: 1.25 },
-    Lod { id: "detail", name: "Detail", description: "Node names and port handles.", max_zoom: 2.5 },
-    Lod { id: "micro", name: "Micro", description: "Maximum port-graph fidelity.", max_zoom: f64::INFINITY },
-];
-
-const TRINITY_LOD_SCALE: LodScale = LodScale { lods: TRINITY_LODS };
+use semio_s_artifact_trinity_jack::editor::jack::lod::TRINITY_LOD_SCALE;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum TrinityDrawLod {
@@ -114,21 +103,6 @@ fn trinity_abbreviate_label(name: &str) -> String {
 
 fn trinity_lod_index(zoom: f64) -> usize {
     TRINITY_LOD_SCALE.resolve_index(zoom.max(0.05))
-}
-
-pub fn trinity_lod_scale_json() -> String {
-    let rows: Vec<pack::JsonValue> = TRINITY_LODS
-        .iter()
-        .map(|lod| {
-            pack::json!({
-                "id": lod.id,
-                "name": lod.name,
-                "description": lod.description,
-                "maxZoom": lod.max_zoom,
-            })
-        })
-        .collect();
-    pack::json_to_string(&pack::json_array(rows))
 }
 
 fn trinity_node_radius(node: &Node) -> f64 {

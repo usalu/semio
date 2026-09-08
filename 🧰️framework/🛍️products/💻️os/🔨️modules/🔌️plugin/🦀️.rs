@@ -10,6 +10,10 @@ mod declaration_fixture_mutations;
 mod fixture_projection_retirement_tests;
 //#endregion 📄️DeclarationFixtureMutationMount
 
+#[doc(hidden)]
+#[path = "🧪️tests/🧬️generated-test-contracts/🦀️.rs"]
+mod generated_test_contracts;
+
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub mod wasip2 {
     //! 🧩️ WASI P2 bindings for the actor world shared by plugins and extensions.
@@ -5843,12 +5847,7 @@ pub mod app {
 
     pub use ui_wgpu::wgpu::AppLabels;
 
-    /// 🗣️ Anything `resolve_labels` can resolve a label set from — `ViewModel` (locale+terminology
-    /// from the shell) and, since the B1 config-driven apps stopped threading `ViewModel` through
-    /// render, any per-app `Config` exposing just a raw `cfg.locale` string (region-tolerant: `"de"`
-    /// and `"de-DE"` both resolve to `Locale::De`, matching every hand-rolled `is_de_locale` this
-    /// replaces) — `terminology()` defaults to `Native`, matching every one of those apps' behavior
-    /// (none of them threaded a terminology axis themselves).
+    /// 🗣️ Anything `resolve_labels` can resolve a label set from.
     pub trait LabelAxes {
         fn locale(&self) -> Locale;
         fn terminology(&self) -> Terminology {
@@ -6249,7 +6248,7 @@ pub mod app {
         /// 🪪️ A local-actor `ActionMeta` for test dispatch (`instance_id: 1`).
         // 🚫️async: E1 pure constructor, called pervasively as `&meta("...")` — see R9.
         pub fn meta(actor: &str) -> ActionMeta {
-            ActionMeta { actor: actor.into(), instance_id: 1 }
+            ActionMeta { actor: actor.into(), instance_id: 1, view_state: None }
         }
 
         // 🏛️ 👁️✏️ W3 dissolution (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET): the two-
@@ -6575,7 +6574,7 @@ pub mod app {
             let hover = InteractionHoverState::new();
             let peers = PeerPresenceRoot::empty();
             let interaction = InteractionView { state: &state, hover: &hover, peers: &peers };
-            let emit = ViewerApp::<V>::handle(&V::Command::default(), &doc, &cfg, &interaction, &draft, &store::EngineHandles::empty()).await.expect("viewer adapter command succeeds");
+            let emit = ViewerApp::<V>::handle(&V::Command::default(), &doc, &cfg, &interaction, None, &draft, &store::EngineHandles::empty()).await.expect("viewer adapter command succeeds");
             assert!(emit.artifact_mutations.is_empty(), "a viewer must never emit document mutations");
             assert!(emit.draft_mutations.is_empty(), "a viewer must never emit draft mutations");
         }
@@ -9205,12 +9204,13 @@ pub mod app {
     }
 
     /// @emoji 🪪️ Per-invocation runtime metadata handed to the object-safe {@link PluginApp} — the local
-    /// actor id (author of resulting operations, drives `UndoPolicy` foreign-edit classification) and
-    /// the instance id used to stamp operation/document handles.
+    /// actor id, the instance id used to stamp operation handles, and optional host view context.
+    /// Headless operations have no view; UI actions carry the addressed concrete window's projection.
     #[derive(Clone, Debug, Default)]
     pub struct ActionMeta {
         pub actor: String,
         pub instance_id: u32,
+        pub view_state: Option<ViewModel>,
     }
 
     /// @emoji 🔤️ Parses the raw action id crossing the WASM ABI (`ArtifactApp::handle_action`'s `action: &str`)
@@ -9839,6 +9839,7 @@ pub mod app {
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
             interaction: &InteractionView<'_>,
+            view_state: Option<&ViewModel>,
             draft: &DraftView<'_, Self::Draft>,
             engines: &EngineHandles,
         ) -> ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>;
@@ -9931,11 +9932,17 @@ pub mod app {
         // 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): return type flipped
         // from `ui_wgpu::wgpu::UiNode` to `ui_runtime::ComponentTree` — the choke-point change every
         // implementer of this trait must follow; see `📓️recipe-plugin.md` in this ticket's folder.
-        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree>;
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree>;
         /// 🎭️ Renders against the same instance-retained operation owner used by typed jobs.
-        async fn render_with_instance_operation_owner(owner: &ArtifactInstanceOperationOwnerHandle, body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
+        async fn render_with_instance_operation_owner(
+            owner: &ArtifactInstanceOperationOwnerHandle,
+            body_key: &str,
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
+        ) -> UiAssemblyResult<ComponentTree> {
             let _ = owner;
-            Self::render(body_key, doc, cfg).await
+            Self::render(body_key, doc, cfg, view_state).await
         }
         /// 🧮️ Supplies the immutable local request snapshot used by retained reducers to render.
         ///
@@ -9947,27 +9954,28 @@ pub mod app {
             body_key: &str,
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
             transient: &TransientView<'_, Self::Transient>,
             interaction: &InteractionView<'_>,
         ) -> UiAssemblyResult<ComponentTree> {
             let _ = (transient, interaction);
-            Self::render_with_instance_operation_owner(owner, body_key, doc, cfg).await
+            Self::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state).await
         }
         /// 🪟️ Keyed by window INSTANCE id — an app with two open instances of the same kind (e.g. split
         /// panes) returns one entry per instance so their chrome/options never collapse together. Apps with
         /// a single window kind and no splitting return `vec![kind_id]`-worth of entries either way.
-        async fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+        async fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
         /// 🪟️ See `window_engagements` — same per-window-instance keying.
-        async fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         /// 🛠️ Keyed by TOOL id (`AppDefinition.tools[].id`), not window instance — a tool's live options
         /// (e.g. puzzle3d fill's count slider) rendered in the mode-level tool panel rather than a
         /// window's utility-options rail. Reuses `WindowMeasure` as the shared control vocabulary; the
         /// `Group.active_utility_id` tag is simply unused for tool measures.
-        async fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         /// 🖱️ Answers an on-demand right-click menu request — the WIT `context-menu` export's SDK
@@ -9979,7 +9987,7 @@ pub mod app {
         /// `AppActionRegistry` (the same one `VcsArtifactApp` enforces the actions contract with) —
         /// pass it to `Menu::of(registry)` to resolve labels/icons from declared `ActionDefinition`s
         /// instead of hand-building rows.
-        async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             Vec::new()
         }
         /// 🌱️ Initial mutations applied through normal dispatch right after the store is constructed —
@@ -10423,20 +10431,18 @@ pub mod app {
         async fn attach_hot_backbone(&mut self, backbone: store::Backbones) -> Result<(), Fault>;
         async fn tick_backbone(&mut self) -> Result<Vec<protocol::MergeReport>, Fault>;
         async fn detach_backbone(&mut self) -> Result<(), Fault>;
-        /// @emoji 🕰️ `view_state` is kept here ONLY for wrapper-owned framework chrome (the injected
-        /// history panel body's locale — see `VcsArtifactApp::render`); it is never forwarded into
-        /// `ArtifactApp::render`, which dropped `ViewModel` entirely in B1.
+        /// @emoji 🕰️ `view_state` supplies wrapper chrome and the OS-owned render context.
         // 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): return type flipped
         // from `UiNode` to `ui_runtime::ComponentTree`, matching `ArtifactApp::render` above.
         async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel) -> Result<ComponentTree, Fault>;
-        async fn window_engagements(&mut self) -> HashMap<String, WindowEngagement> {
+        async fn window_engagements(&mut self, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
-        async fn window_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn window_measures(&mut self, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         /// 🛠️ Object-safe counterpart to `ArtifactApp::tool_measures` — keyed by tool id.
-        async fn tool_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn tool_measures(&mut self, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         /// ⏱️ Object-safe counterpart to `ArtifactApp::pending_effects` — called once per `refreshUi` pass.
@@ -10445,7 +10451,7 @@ pub mod app {
         }
         /// 🖱️ Object-safe counterpart to `ArtifactApp::context_menu` — the WIT `context-menu` export's
         /// dispatch target.
-        async fn context_menu(&mut self, _request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
+        async fn context_menu(&mut self, _request: &ContextMenuRequest, _view_state: &ViewModel) -> Vec<ContextMenuItemSpec> {
             Vec::new()
         }
         /// 🎞️ Explicit batch-only counterpart to `ArtifactApp::export_media`. Interactive UI and
@@ -11901,6 +11907,7 @@ pub mod app {
     /// 🧬 Immutable app-owned state captured by the scheduler for one retained job lifetime.
     pub struct ArtifactOwnedToolJobContext<A: ArtifactApp> {
         pub app_instance_id: u32,
+        pub view_state: Option<ViewModel>,
         pub canonical_base_revision: [u8; 32],
         pub draft_generation: u64,
         pub transient_generation: u64,
@@ -11910,7 +11917,7 @@ pub mod app {
         identity_digest: u64,
     }
 
-    fn artifact_owned_tool_job_context_identity_digest(app_instance_id: u32, canonical_base_revision: [u8; 32], draft_generation: u64, transient_generation: u64, children_digest: u64) -> u64 {
+    fn artifact_owned_tool_job_context_identity_digest(app_instance_id: u32, view_state: Option<&ViewModel>, canonical_base_revision: [u8; 32], draft_generation: u64, transient_generation: u64, children_digest: u64) -> u64 {
         fn extend(mut digest: u64, bytes: impl IntoIterator<Item = u8>) -> u64 {
             for byte in bytes {
                 digest = (digest ^ u64::from(byte)).wrapping_mul(0x1000_0000_01b3);
@@ -11920,6 +11927,7 @@ pub mod app {
 
         let mut digest = extend(0xcbf2_9ce4_8422_2325, b"ARC-CONTEXT-2".iter().copied());
         digest = extend(digest, app_instance_id.to_le_bytes());
+        digest = extend(digest, view_state.map(protocol::json::to_json_string).unwrap_or_default().bytes());
         digest = extend(digest, canonical_base_revision);
         digest = extend(digest, draft_generation.to_le_bytes());
         digest = extend(digest, transient_generation.to_le_bytes());
@@ -11928,12 +11936,13 @@ pub mod app {
 
     #[cfg(test)]
     pub(crate) fn test_artifact_owned_tool_job_context_identity_digest(app_instance_id: u32, canonical_base_revision: [u8; 32], draft_generation: u64, transient_generation: u64, children_digest: u64) -> u64 {
-        artifact_owned_tool_job_context_identity_digest(app_instance_id, canonical_base_revision, draft_generation, transient_generation, children_digest)
+        artifact_owned_tool_job_context_identity_digest(app_instance_id, None, canonical_base_revision, draft_generation, transient_generation, children_digest)
     }
 
     impl<A: ArtifactApp> ArtifactOwnedToolJobContext<A> {
         pub fn new(
             app_instance_id: u32,
+            view_state: Option<ViewModel>,
             canonical_base_revision: [u8; 32],
             draft_generation: u64,
             transient_generation: u64,
@@ -11941,8 +11950,8 @@ pub mod app {
             draft: std::sync::Arc<A::Draft>,
             transient: std::sync::Arc<A::Transient>,
         ) -> Self {
-            let identity_digest = artifact_owned_tool_job_context_identity_digest(app_instance_id, canonical_base_revision, draft_generation, transient_generation, children.identity_digest());
-            Self { app_instance_id, canonical_base_revision, draft_generation, transient_generation, children, draft, transient, identity_digest }
+            let identity_digest = artifact_owned_tool_job_context_identity_digest(app_instance_id, view_state.as_ref(), canonical_base_revision, draft_generation, transient_generation, children.identity_digest());
+            Self { app_instance_id, view_state, canonical_base_revision, draft_generation, transient_generation, children, draft, transient, identity_digest }
         }
 
         pub fn identity_digest(&self) -> u64 {
@@ -15200,7 +15209,7 @@ pub mod app {
             let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone()).await;
             app.test_tool_clock = clock;
             app.bind_instance_id(7).await;
-            let meta = ActionMeta { actor: "fixture".into(), instance_id: 7 };
+            let meta = ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None };
             let first = Box::new(command(case["firstTarget"].as_str().unwrap(), case["firstValue"].as_i64().unwrap() as i32));
             let wire = <A::Command as ::protocol::OpBinary>::encode_op(&first).unwrap();
             let admission = app.admit_command_wire("compositeEdit", &wire, 1).await.unwrap();
@@ -15282,7 +15291,7 @@ pub mod app {
         for case in fixture["lostReservations"].as_array().unwrap() {
             let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone()).await;
             app.bind_instance_id(7).await;
-            let meta = ActionMeta { actor: "fixture".into(), instance_id: 7 };
+            let meta = ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None };
             let command = Box::new(command("aä🧵", 42));
             let wire = <A::Command as ::protocol::OpBinary>::encode_op(&command).unwrap();
             let admission = app.admit_command_wire("compositeEdit", &wire, 1).await.unwrap();
@@ -20217,6 +20226,7 @@ pub mod app {
             let output_chunks = ArtifactOutputChunks::new(admission.proof.contract().max_output_bytes);
             let owned_context = std::sync::Arc::new(ArtifactOwnedToolJobContext::new(
                 meta.instance_id,
+                meta.view_state.clone(),
                 canonical_base_revision,
                 draft_generation,
                 transient_generation,
@@ -22395,15 +22405,6 @@ pub mod app {
                 let root = ui_history_panel(history, &self.registry.controller_id, view_state.locale == Locale::De, A::ROLE == AppRole::Viewer).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(built_to_component_tree(root));
             }
-            let effective_body_key = if let Some(ref wid) = view_state.window_id {
-                if !body_key.contains(':') {
-                    format!("{body_key}:{wid}")
-                } else {
-                    body_key.to_string()
-                }
-            } else {
-                body_key.to_string()
-            };
             // 🕹️ Task 5: materialized once, before either branch, then used to stamp EVERY
             // `interaction_domain`-bound `UiTree` this render produces — see `stamp_and_cache_interaction_ui`.
             let interaction_state = self.interaction_state().await;
@@ -22421,8 +22422,8 @@ pub mod app {
                 let cfg = ConfigView { snapshot: &config };
                 let transient = self.transient_store.current_root();
                 let transient = TransientView { snapshot: transient.as_ref() };
-                let node = A::render_with_request_context(&self.instance_operation_owner, &effective_body_key, &doc, &cfg, &transient, &interaction).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
-                self.stamp_and_cache_interaction_ui(&node, &interaction_state, &effective_body_key).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                let node = A::render_with_request_context(&self.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                self.stamp_and_cache_interaction_ui(&node, &interaction_state, body_key).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(node);
             }
             let canonical_base_revision = self.store.content_revision();
@@ -22442,33 +22443,33 @@ pub mod app {
                 let cfg = ConfigView { snapshot: config.as_ref() };
                 let transient = self.transient_store.current_root();
                 let transient = TransientView { snapshot: transient.as_ref() };
-                A::render_with_request_context(&self.instance_operation_owner, &effective_body_key, &doc, &cfg, &transient, &interaction).await.map_err(|error| plugin_sdk_fault(error.to_string()))?
+                A::render_with_request_context(&self.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction).await.map_err(|error| plugin_sdk_fault(error.to_string()))?
             };
-            self.stamp_and_cache_interaction_ui(&node, &interaction_state, &effective_body_key).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
+            self.stamp_and_cache_interaction_ui(&node, &interaction_state, body_key).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
             Ok(node)
         }
 
-        async fn window_engagements(&mut self) -> HashMap<String, WindowEngagement> {
+        async fn window_engagements(&mut self, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             if self.refresh_cache().await.is_err() {
                 return HashMap::new();
             }
             let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_content_root)).await;
             let cfg = ConfigView { snapshot: config.as_ref() };
-            A::window_engagements(&doc, &cfg).await
+            A::window_engagements(&doc, &cfg, view_state).await
         }
 
-        async fn window_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn window_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             if self.refresh_cache().await.is_err() {
                 return HashMap::new();
             }
             let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_content_root)).await;
             let cfg = ConfigView { snapshot: config.as_ref() };
-            A::window_measures(&doc, &cfg).await
+            A::window_measures(&doc, &cfg, view_state).await
         }
 
-        async fn tool_measures(&mut self) -> HashMap<String, Vec<WindowMeasure>> {
+        async fn tool_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             if self.refresh_cache().await.is_err() {
                 return HashMap::new();
             }
@@ -22476,7 +22477,7 @@ pub mod app {
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
             let cfg = ConfigView { snapshot: config.as_ref() };
-            A::tool_measures(&doc, &cfg).await
+            A::tool_measures(&doc, &cfg, view_state).await
         }
 
         async fn pending_effects(&mut self) -> Vec<Effect> {
@@ -22512,7 +22513,7 @@ pub mod app {
         /// 🗂️ Every context menu is organized (D2 of the grouped-context-menu mechanism design) at this
         /// single funnel — a raw-vec emitter is grouped for free, and an emitter that already built its own
         /// `Menu::group(...)` rows is never re-flattened (`organize_context_menu` is idempotent on already-organized input).
-        async fn context_menu(&mut self, request: &ContextMenuRequest) -> Vec<ContextMenuItemSpec> {
+        async fn context_menu(&mut self, request: &ContextMenuRequest, view_state: &ViewModel) -> Vec<ContextMenuItemSpec> {
             if self.refresh_cache().await.is_err() {
                 return Vec::new();
             }
@@ -22520,7 +22521,7 @@ pub mod app {
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
             let cfg = ConfigView { snapshot: config.as_ref() };
-            let items = A::context_menu(request, &doc, &cfg, registry).await;
+            let items = A::context_menu(request, &doc, &cfg, view_state, registry).await;
             ui_wgpu::wgpu::organize_context_menu(items, &|id| registry.category_of(id))
         }
 
@@ -22597,6 +22598,7 @@ pub mod app {
     pub struct AppInstance<PA: PluginApp = NoPluginApp> {
         pub id: u32,
         pub app: PA,
+        pub(crate) surface_contexts: crate::reactor::surface_context::SurfaceContexts,
     }
     //#endregion 🔖️DocumentContract
 
@@ -23655,6 +23657,7 @@ pub mod app {
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
             interaction: &InteractionView<'_>,
+            view_state: Option<&ViewModel>,
             draft: &DraftView<'_, Self::Draft>,
             engines: &EngineHandles,
         ) -> ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>;
@@ -23710,11 +23713,11 @@ pub mod app {
         fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             Vec::new()
         }
-        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree>;
+        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree>;
         /// 🎭️ Renders against the same instance-retained operation owner used by typed jobs.
-        fn render_with_instance_operation_owner(owner: &ArtifactInstanceOperationOwnerHandle, body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
+        fn render_with_instance_operation_owner(owner: &ArtifactInstanceOperationOwnerHandle, body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
             let _ = owner;
-            Self::render(body_key, doc, cfg)
+            Self::render(body_key, doc, cfg, view_state)
         }
         /// 🧮️ Renders from the same immutable transient snapshot retained by app-owned jobs.
         ///
@@ -23726,22 +23729,23 @@ pub mod app {
             body_key: &str,
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
             transient: &TransientView<'_, Self::Transient>,
             interaction: &InteractionView<'_>,
         ) -> UiAssemblyResult<ComponentTree> {
             let _ = (transient, interaction);
-            Self::render_with_instance_operation_owner(owner, body_key, doc, cfg)
+            Self::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state)
         }
-        fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+        fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
-        fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
-        fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
-        fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             Vec::new()
         }
         fn genesis() -> Vec<Self::Mutation> {
@@ -23956,7 +23960,7 @@ pub mod app {
         /// 👁️ The pure heart of a viewer — same shape as `ArtifactEditor::handle` minus `draft` (a
         /// viewer never has a draft lane), returning `ViewEmit` instead of `Emit`: structurally
         /// incapable of an artifact or draft mutation (contract §2.2).
-        fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>, engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault>;
+        fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, interaction: &InteractionView<'_>, view_state: Option<&ViewModel>, engines: &EngineHandles) -> Result<ViewEmit<Self::ConfigMutation>, Fault>;
         fn command_id(_command: &Self::Command) -> &'static str {
             "typed-command"
         }
@@ -23973,7 +23977,7 @@ pub mod app {
         fn interaction_topology(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
             protocol::InteractionTopology::default()
         }
-        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree>;
+        fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree>;
         /// 🕹️ `interaction` reads the framework-owned interaction mechanism (hover + selection) so a
         /// window can paint its own hovered/selected state instead of ever storing it again itself —
         /// see `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`.
@@ -23982,25 +23986,26 @@ pub mod app {
             body_key: &str,
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
             transient: &TransientView<'_, Self::Transient>,
             interaction: &InteractionView<'_>,
         ) -> UiAssemblyResult<ComponentTree> {
             let _ = (transient, interaction);
-            Self::render(body_key, doc, cfg)
+            Self::render(body_key, doc, cfg, view_state)
         }
         fn pending_effects(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             Vec::new()
         }
-        fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
+        fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
             HashMap::new()
         }
-        fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
-        fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
+        fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
-        fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             Vec::new()
         }
         fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
@@ -24245,10 +24250,11 @@ pub mod app {
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
             interaction: &InteractionView<'_>,
+            view_state: Option<&ViewModel>,
             draft: &DraftView<'_, Self::Draft>,
             engines: &EngineHandles,
         ) -> ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation> {
-            E::handle(command, doc, cfg, interaction, draft, engines)
+            E::handle(command, doc, cfg, interaction, view_state, draft, engines)
         }
         async fn command_id(command: &Self::Command) -> &'static str {
             E::command_id(command)
@@ -24283,33 +24289,40 @@ pub mod app {
         async fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             E::pending_effects(doc, cfg)
         }
-        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
-            E::render(body_key, doc, cfg)
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+            E::render(body_key, doc, cfg, view_state)
         }
-        async fn render_with_instance_operation_owner(owner: &ArtifactInstanceOperationOwnerHandle, body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
-            E::render_with_instance_operation_owner(owner, body_key, doc, cfg)
+        async fn render_with_instance_operation_owner(
+            owner: &ArtifactInstanceOperationOwnerHandle,
+            body_key: &str,
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
+        ) -> UiAssemblyResult<ComponentTree> {
+            E::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state)
         }
         async fn render_with_request_context(
             owner: &ArtifactInstanceOperationOwnerHandle,
             body_key: &str,
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
             transient: &TransientView<'_, Self::Transient>,
             interaction: &InteractionView<'_>,
         ) -> UiAssemblyResult<ComponentTree> {
-            E::render_with_request_context(owner, body_key, doc, cfg, transient, interaction)
+            E::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction)
         }
-        async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
-            E::window_engagements(doc, cfg)
+        async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
+            E::window_engagements(doc, cfg, view_state)
         }
-        async fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
-            E::window_measures(doc, cfg)
+        async fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+            E::window_measures(doc, cfg, view_state)
         }
-        async fn tool_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
-            E::tool_measures(doc, cfg)
+        async fn tool_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+            E::tool_measures(doc, cfg, view_state)
         }
-        async fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-            E::context_menu(request, doc, cfg, registry)
+        async fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+            E::context_menu(request, doc, cfg, view_state, registry)
         }
         async fn genesis() -> Vec<Self::Mutation> {
             E::genesis()
@@ -24474,10 +24487,11 @@ pub mod app {
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
             interaction: &InteractionView<'_>,
+            view_state: Option<&ViewModel>,
             _draft: &DraftView<'_, Self::Draft>,
             engines: &EngineHandles,
         ) -> ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation> {
-            let view_emit = V::handle(command, doc, cfg, interaction, engines)?;
+            let view_emit = V::handle(command, doc, cfg, interaction, view_state, engines)?;
             Ok(Emit { config_mutations: view_emit.config_mutations, effects: view_emit.effects, ui_scope: view_emit.ui_dirty, ..Default::default() })
         }
         async fn command_id(command: &Self::Command) -> &'static str {
@@ -24492,33 +24506,34 @@ pub mod app {
         async fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
             V::interaction_topology(doc, cfg)
         }
-        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
-            V::render(body_key, doc, cfg)
+        async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+            V::render(body_key, doc, cfg, view_state)
         }
         async fn render_with_request_context(
             owner: &ArtifactInstanceOperationOwnerHandle,
             body_key: &str,
             doc: &ArtifactView<'_, Self::Snapshot>,
             cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
             transient: &TransientView<'_, Self::Transient>,
             interaction: &InteractionView<'_>,
         ) -> UiAssemblyResult<ComponentTree> {
-            V::render_with_request_context(owner, body_key, doc, cfg, transient, interaction)
+            V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction)
         }
         async fn pending_effects(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Vec<Effect> {
             V::pending_effects(doc, cfg)
         }
-        async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, WindowEngagement> {
-            V::window_engagements(doc, cfg)
+        async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
+            V::window_engagements(doc, cfg, view_state)
         }
-        async fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
-            V::window_measures(doc, cfg)
+        async fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+            V::window_measures(doc, cfg, view_state)
         }
-        async fn tool_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> HashMap<String, Vec<WindowMeasure>> {
-            V::tool_measures(doc, cfg)
+        async fn tool_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+            V::tool_measures(doc, cfg, view_state)
         }
-        async fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-            V::context_menu(request, doc, cfg, registry)
+        async fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+            V::context_menu(request, doc, cfg, view_state, registry)
         }
         async fn app_schema() -> Option<::semio_framework_schema::AppSchemaDescriptor> {
             V::app_schema()
@@ -25037,6 +25052,18 @@ pub mod app {
         /// guard (dropped before the next step), then one `io_register` call per subset (each
         /// independently atomic — see `preflight_artifact_declarations`'s doc for why these cannot
         /// share a guard with each other or with the codec/format step).
+        /// 📌️ The one boot-time site that publishes the named schema exports of the scopes whose
+        /// crates cannot register themselves: `framework.interaction` and `framework.ui.contract`
+        /// declare `register_scope_exports()` but nothing on their side runs at process start.
+        /// Registration is exact-duplicate tolerant and conflict-fatal, so calling it once per
+        /// plugin assembly is the same as calling it once (`📋️execution-contract.md` §C,
+        /// `📓️wp4c-framework-modules.md` §5.4, ledger row 95).
+        // 🚫️async: E1 pure registration helper (no I/O) — see R9
+        fn register_boot_scope_schema_exports() {
+            semio_framework::interaction::schema::register_scope_exports();
+            semio_framework_ui_contract::schema_metadata::register_scope_exports();
+        }
+
         pub(crate) fn commit_artifact_declarations<PA: PluginApp>(plugin_id: &str, declarations: &[ArtifactDeclaration<PA>]) -> Result<(), PluginAssemblyError> {
             preflight_artifact_declarations(plugin_id, declarations)?;
 
@@ -25065,6 +25092,7 @@ pub mod app {
                 }
             }
 
+            register_boot_scope_schema_exports();
             ::semio_framework_schema::register_artifact_schema_descriptors(schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
             ::semio_framework_schema::register_artifact_inference_descriptors(inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
             register_artifact_inference_services(inference_services).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference-service", error.to_string()))?;
@@ -25754,16 +25782,6 @@ pub mod plugin_runtime {
         runtime.instance_actors.try_borrow().ok().and_then(|actors| actors.get(instance_id).map(RuntimeActorAuthority::to_string)).unwrap_or_else(|| "local".to_string())
     }
 
-    /// 🗣️ Decodes a packed `ViewModel` payload (empty → default). No process-global    /// 🗣️ Decodes a packed `ViewModel` payload (empty → default). No process-global cache —
-    /// host-authoritative chrome/draft owns locale; every command/refresh carries view_state on the wire.
-    async fn decode_view_state(view_state_bytes: &[u8]) -> ViewModel {
-        if view_state_bytes.is_empty() {
-            ViewModel::default()
-        } else {
-            store::pack_rt::decode_wire_value(view_state_bytes).ok().and_then(|value| serde_json::from_value::<ViewModel>(Value::from(value)).ok()).unwrap_or_default()
-        }
-    }
-
     /// 🧬️ The local async mutex keeps the instance in-place across a suspending app call. Dropping an
     /// in-flight future releases the RAII guard and wakes the next caller without losing the instance.
     async fn with_instances_mut<PA: PluginApp, R, F: FnOnce(&mut RuntimeInstanceRegistry<std::sync::Arc<RuntimeAppCell<PA>>>) -> Result<R, Fault>>(runtime: &PluginRuntime<PA>, f: F) -> Result<R, Fault> {
@@ -26021,7 +26039,7 @@ pub mod plugin_runtime {
         let program = program.as_ref().ok_or_else(|| plugin_internal_fault("plugin not initialized"))?;
         let mut app = program.create_app(app_id).ok_or_else(|| plugin_internal_fault("unknown app"))?;
         resolve_ready(app.bind_instance_id(request.instance_id));
-        let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: request.instance_id, app }));
+        let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: request.instance_id, app, surface_contexts: Default::default() }));
         let lease = PluginInstanceCloseLease::from_cell(request.instance_id, &cell);
         let owner = crate::reactor::instance_lifetime::NativeLifetimeOwner::from_lease(slot.cell.lifetime(), lease).expect("preflighted exact native lifetime");
         slot.cell.install_owner(owner).unwrap_or_else(|_| panic!("preflighted opening owner slot"));
@@ -26060,7 +26078,7 @@ pub mod plugin_runtime {
             let mut app = program.create_app(app_id).ok_or_else(|| plugin_internal_fault(format!("unknown app: {app_id}")))?;
             resolve_ready(app.bind_instance_id(id));
             resolve_ready(with_instances_mut(runtime, |list| {
-                list.insert_admitted(id, std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id, app })));
+                list.insert_admitted(id, std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() })));
                 Ok(())
             }))?;
             Ok(id)
@@ -27210,6 +27228,14 @@ pub mod plugin_runtime {
     #[cfg(test)]
     include!("🧪️tests/🔬️plugin-runtime-dff-public-action-admission/🦀️.rs");
 
+    fn addressed_action_view(view: &ViewModel, invocation: &ManifestActionInvocation) -> Result<ViewModel, Fault> {
+        let projected = view.for_window_instance(&invocation.address.window_instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown action window instance {}", invocation.address.window_instance_id)))?;
+        if projected.active_window_kind_id.as_deref() != Some(invocation.address.window_kind_id.as_str()) {
+            return Err(plugin_internal_fault(format!("action window instance {} has a different kind than {}", invocation.address.window_instance_id, invocation.address.window_kind_id)));
+        }
+        Ok(projected)
+    }
+
     #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_handle_action<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, action_json: &str, context_json: &str) -> Result<InvocationResult, Fault> {
         validate_public_json_envelope(action_json, "action")?;
@@ -27219,20 +27245,17 @@ pub mod plugin_runtime {
         let invocation: ManifestActionInvocation = dsl::os_pack::json::from_json_str(action_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let context: Value = serde_json::from_str(context_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let actor = context.get("actor").and_then(|value| value.as_str()).unwrap_or("local").to_string();
-        let meta = ActionMeta { actor, instance_id };
         let owner_matches = runtime.plugin.borrow().as_ref().is_some_and(|program| program.manifest.plugin_id == invocation.address.plugin_id);
         if !owner_matches {
             return Err(plugin_internal_fault(format!("action plugin owner {} does not match the active program", invocation.address.plugin_id)));
         }
         let view = context.get("viewState").cloned().and_then(|value| serde_json::from_value::<ViewModel>(value).ok()).ok_or_else(|| plugin_internal_fault("action context is missing a valid viewState"))?;
-        let addressed_window =
-            view.window_instances.iter().find(|window| window.id == invocation.address.window_instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown action window instance {}", invocation.address.window_instance_id)))?;
-        if addressed_window.window_kind_id != invocation.address.window_kind_id {
-            return Err(plugin_internal_fault(format!("action window instance {} has kind {}, not {}", addressed_window.id, addressed_window.window_kind_id, invocation.address.window_kind_id)));
-        }
-        let active_mode_id = view.active_mode_id;
+        let view = addressed_action_view(&view, &invocation)?;
+        let active_mode_id = view.active_mode_id.clone();
+        let meta = ActionMeta { actor, instance_id, view_state: Some(view) };
         let cell = runtime_instance_cell(runtime, instance_id)?;
         let mut instance = cell.instance.try_lock().map_err(|_| plugin_internal_fault(format!("instance busy or poisoned: {instance_id}")))?;
+        instance.surface_contexts.update_view(meta.view_state.as_ref().expect("addressed UI action has host context"));
         instance.app.handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta).await
     }
 
@@ -27247,7 +27270,8 @@ pub mod plugin_runtime {
         let invocation: ManifestCommandInvocation = dsl::os_pack::json::from_json_str(command_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let context: Value = serde_json::from_str(context_json).map_err(|error| plugin_internal_fault(error.to_string()))?;
         let actor = context.get("actor").and_then(|value| value.as_str()).unwrap_or("local").to_string();
-        let meta = ActionMeta { actor, instance_id };
+        let view_state = context.get("viewState").cloned().map(serde_json::from_value::<ViewModel>).transpose().map_err(|error| plugin_internal_fault(error.to_string()))?;
+        let meta = ActionMeta { actor, instance_id, view_state };
         match &invocation.address.owner {
             ManifestCommandOwnerAddress::Os => Err(plugin_internal_fault("os commands must be dispatched by the os host")),
             // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready` (`handle_plugin_command`
@@ -27262,10 +27286,13 @@ pub mod plugin_runtime {
                 if !owner_matches {
                     return Err(plugin_internal_fault(format!("command plugin owner {plugin_id} does not match the active program")));
                 }
-                let active_mode_id = context.get("viewState").cloned().and_then(|value| serde_json::from_value::<ViewModel>(value).ok()).and_then(|view| view.active_mode_id);
+                let active_mode_id = meta.view_state.as_ref().ok_or_else(|| plugin_internal_fault("app command context is missing viewState"))?.active_mode_id.as_deref();
                 with_instances_mut(runtime, |list| {
                     let mut instance = find_instance(list, instance_id)?;
-                    resolve_ready(instance.app.handle_command(&invocation, active_mode_id.as_deref(), &meta))
+                    if let Some(view) = &meta.view_state {
+                        instance.surface_contexts.update_view(view);
+                    }
+                    resolve_ready(instance.app.handle_command(&invocation, active_mode_id, &meta))
                 })
                 .await
             }
@@ -27429,7 +27456,6 @@ pub mod plugin_runtime {
                     .ok_or_else(|| plugin_internal_fault("live document backbone channel is missing"))?;
                 owner.begin_retire().map_err(|error| plugin_internal_fault(error.to_string()))?;
                 plugin_detach_backbone(runtime, command.instance_id).await?;
-                let mut effects = document_backbone_effects(&owner, &command.uri)?;
                 if !owner.terminal_is_empty().map_err(|error| plugin_internal_fault(error.to_string()))? {
                     return Err(plugin_internal_fault("retired document backbone channel did not drain"));
                 }
@@ -27437,8 +27463,7 @@ pub mod plugin_runtime {
                 let binding = bindings.get_mut(command.instance_id).ok_or_else(|| plugin_internal_fault("document backbone binding disappeared during retirement"))?;
                 binding.uri = None;
                 binding.channel = None;
-                effects.push(document_backbone_receipt_effect(receipt));
-                Ok(Some(effects))
+                Ok(Some(vec![document_backbone_receipt_effect(receipt)]))
             }
         }
     }
@@ -27571,6 +27596,40 @@ pub mod plugin_runtime {
     // `UiNode` to `ui_runtime::ComponentTree`, matching `PluginApp::render`/`ArtifactApp::render` —
     // this is the exact boundary `⚛️reactor/🦀️.rs`'s `poll()` calls into before handing the
     // tree to `PatchTracker::diff`.
+    pub(crate) async fn plugin_mount_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, surface: String, body_key: String, view_state: &[u8]) -> Result<(), Fault> {
+        if view_state.len() > MAX_PUBLIC_ACTION_BODY_BYTES || body_key.len() > MAX_PUBLIC_ACTION_STRING_BYTES {
+            return Err(plugin_internal_fault("surface context exceeds its wire bound"));
+        }
+        let view = decode_wire_serialized::<ViewModel>(view_state).await?;
+        let view = match view.window_id.as_deref() {
+            Some(window) => view.for_window_instance(window).ok_or_else(|| plugin_internal_fault(format!("unknown surface window instance {window}")))?,
+            None => view,
+        };
+        with_instances_mut(runtime, |list| {
+            let mut instance = find_instance(list, instance_id)?;
+            instance.surface_contexts.insert(surface, body_key, view).map_err(plugin_internal_fault)
+        })
+        .await
+    }
+
+    pub(crate) async fn plugin_hide_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, surface: &str) -> Result<(), Fault> {
+        with_instances_mut(runtime, |list| {
+            let mut instance = find_instance(list, instance_id)?;
+            instance.surface_contexts.remove(surface);
+            Ok(())
+        })
+        .await
+    }
+
+    pub(crate) async fn plugin_render_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, surface: &str) -> Result<ComponentTree, Fault> {
+        with_instances_mut(runtime, |list| {
+            let mut instance = find_instance(list, instance_id)?;
+            let context = instance.surface_contexts.get(surface).ok_or_else(|| plugin_internal_fault(format!("surface {surface} has no host context")))?;
+            resolve_ready(instance.app.render(&context.body_key, None, &context.view_state))
+        })
+        .await
+    }
+
     pub async fn plugin_render<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, body_key: &str, view_state_json: &str) -> Result<ComponentTree, Fault> {
         plugin_render_with_document(runtime, instance_id, body_key, None, view_state_json).await
     }
@@ -27597,6 +27656,7 @@ pub mod plugin_runtime {
         };
         with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
+            instance.surface_contexts.update_view(&view_state);
             resolve_ready(instance.app.render(&resolved_body_key, override_snapshot.as_deref(), &view_state))
         })
         .await
@@ -27737,6 +27797,7 @@ pub mod plugin_runtime {
         with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
 
+            instance.surface_contexts.update_view(&request.view_state);
             // ⏱️ Arm/advance background work BEFORE rendering below, not after — e.g. a `flowEvalTick`
             // chain's `computing_json` must be fresh by the time this same pass renders the graph, or a
             // cold-start load would render one full refresh cycle behind (nothing flagged as computing
@@ -27747,8 +27808,7 @@ pub mod plugin_runtime {
                 // 🪟️ Stamp this window's instance id and its own active utility into the view state before
                 // rendering, so a `ArtifactApp` can key per-window options and utility-driven scene state off
                 // `view_state.window_id` / `view_state.active_utility_id` and never off the focused window alone.
-                let active_utility_id = request.view_state.active_utility_by_window_id.get(&entry.key).cloned().or_else(|| request.view_state.active_utility_id.clone());
-                let window_view_state = ViewModel { window_id: Some(entry.key.clone()), active_utility_id, ..request.view_state.clone() };
+                let window_view_state = request.view_state.for_window_instance(&entry.key).ok_or_else(|| plugin_internal_fault(format!("unknown render window instance {}", entry.key)))?;
                 let node = resolve_ready(instance.app.render(&entry.body_key, None, &window_view_state))?;
                 let (hash, value) = resolve_ready(ui_refresh_section(&node.root, entry.hash.as_deref()));
                 response.windows.push(SectionResponse { key: entry.key.clone(), hash, value });
@@ -27766,17 +27826,17 @@ pub mod plugin_runtime {
             // practice; wire this up once the utilities API refactor lands.
             let _ = &request.utilities;
             if let Some(requested) = &request.engagements {
-                let engagements = resolve_ready(instance.app.window_engagements());
+                let engagements = resolve_ready(instance.app.window_engagements(&request.view_state));
                 let (hash, value) = resolve_ready(ui_refresh_section(&engagements, requested.hash.as_deref()));
                 response.engagements = Some(SectionResponse { key: "engagements".into(), hash, value });
             }
             if let Some(requested) = &request.measures {
-                let measures = resolve_ready(instance.app.window_measures());
+                let measures = resolve_ready(instance.app.window_measures(&request.view_state));
                 let (hash, value) = resolve_ready(ui_refresh_section(&measures, requested.hash.as_deref()));
                 response.measures = Some(SectionResponse { key: "measures".into(), hash, value });
             }
             if let Some(requested) = &request.tools {
-                let tool_measures = resolve_ready(instance.app.tool_measures());
+                let tool_measures = resolve_ready(instance.app.tool_measures(&request.view_state));
                 let (hash, value) = resolve_ready(ui_refresh_section(&tool_measures, requested.hash.as_deref()));
                 response.tools = Some(SectionResponse { key: "tools".into(), hash, value });
             }
@@ -27795,9 +27855,7 @@ pub mod plugin_runtime {
     //#endregion 🔖️RefreshUi
 
     //#region 🔖️ContextMenu
-    /// 🖱️ Wire shape for an on-demand context-menu request — mirrors TS `PluginContextMenuRequest` minus
-    /// `viewState` (B1 dropped `ViewModel` from `ArtifactApp::context_menu` entirely, so this struct no
-    /// longer parses-and-discards a field it never forwards). Module-scoped (not nested in
+    /// 🖱️ Wire shape for an on-demand context-menu request. Module-scoped (not nested in
     /// `plugin_context_menu`) so `plugin_exchange`'s `AppCommand::ContextMenu` arm below can decode the
     /// same typed shape directly off the binary wire instead of round-tripping through JSON strings.
     #[derive(Deserialize, FromValue)]
@@ -27805,6 +27863,7 @@ pub mod plugin_runtime {
     #[value(rename_all = "camelCase")]
     struct ContextMenuWireRequest {
         menu: UiMenuRef,
+        view_state: ViewModel,
         #[serde(default)]
         #[value(default)]
         surface: Option<ContextMenuSurfaceTarget>,
@@ -27816,9 +27875,14 @@ pub mod plugin_runtime {
         point: Option<ContextMenuPoint>,
     }
 
-    impl From<ContextMenuWireRequest> for ContextMenuRequest {
-        fn from(wire: ContextMenuWireRequest) -> Self {
-            ContextMenuRequest { menu: wire.menu, surface: wire.surface, window_instance_id: wire.window_instance_id, point: wire.point }
+    impl ContextMenuWireRequest {
+        fn into_parts(self) -> Result<(ContextMenuRequest, ViewModel), Fault> {
+            let view = match self.window_instance_id.as_deref() {
+                Some(window) => self.view_state.for_window_instance(window).ok_or_else(|| plugin_internal_fault(format!("unknown context-menu window instance {window}")))?,
+                None => self.view_state.for_panel(),
+            };
+            let request = ContextMenuRequest { menu: self.menu, surface: self.surface, window_instance_id: self.window_instance_id, point: self.point };
+            Ok((request, view))
         }
     }
 
@@ -27826,10 +27890,10 @@ pub mod plugin_runtime {
     /// cached, never part of `refresh_ui`. String-in/string-out JSON entry point for the WIT boundary.
     pub async fn plugin_context_menu<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, request_json: &str) -> Result<String, String> {
         let wire: ContextMenuWireRequest = serde_json::from_str(request_json).map_err(|error| error.to_string())?;
-        let request: ContextMenuRequest = wire.into();
+        let (request, view_state) = wire.into_parts().map_err(|fault| fault.message)?;
         with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
-            let items = resolve_ready(instance.app.context_menu(&request));
+            let items = resolve_ready(instance.app.context_menu(&request, &view_state));
             Ok(serde_json::to_string(&ContextMenuResponse { items }).unwrap_or_else(|_| r#"{"items":[]}"#.into()))
         })
         .await
@@ -28206,11 +28270,13 @@ pub mod plugin_runtime {
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
         let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
         let mut event_bytes: Vec<Vec<u8>> = Vec::new();
-        let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id };
+        let actor = instance_actor(runtime, instance_id).await;
 
         for intent in intents {
             let dispatched = with_instances_mut(runtime, |list| {
                 let mut instance = find_instance(list, instance_id)?;
+                let context = instance.surface_contexts.get(intent.surface.as_ref()).ok_or_else(|| plugin_internal_fault("intent surface has no host context"))?;
+                let meta = ActionMeta { actor: actor.clone(), instance_id, view_state: Some(context.view_state) };
                 resolve_ready(instance.app.handle_intent_frame(intent, &meta))
             })
             .await;
@@ -28493,7 +28559,7 @@ pub mod plugin_runtime {
                     // 🧮️ B1: `command` is a binary-encoded `store::ArtifactCommand<A::ConfigMutation>` —
                     // real dispatch against the config store (replaces the deleted `apply_config_bytes`
                     // whole-record-replace legacy path); undo/redo/checkpoint all work on config now.
-                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id };
+                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state: None };
                     let dispatched = with_instances_mut(runtime, |list| {
                         let mut instance = find_instance(list, instance_id)?;
                         resolve_ready(instance.app.dispatch_config_command(&command, &meta))
@@ -28507,17 +28573,40 @@ pub mod plugin_runtime {
                         Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
                     }
                 }
-                protocol::AppCommand::Command { seq, command, view_state } => {
-                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id };
+                protocol::AppCommand::Command { seq, command, view_state } => 'dispatch: {
+                    let view_state = if view_state.is_empty() {
+                        None
+                    } else {
+                        match decode_wire_serialized::<ViewModel>(&view_state).await {
+                            Ok(view) => Some(view),
+                            Err(fault) => {
+                                push_app_fault(&mut frames, Some(seq), fault).await;
+                                break 'dispatch;
+                            }
+                        }
+                    };
+                    let mut meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state };
                     with_instances_mut(runtime, |list| {
                         let mut instance = find_instance(list, instance_id)?;
+                        if let Some(view) = &meta.view_state {
+                            instance.surface_contexts.update_view(view);
+                        }
                         resolve_ready(instance.app.begin_dispatch_report());
                         Ok(())
                     })
                     .await?;
                     let dispatched = match decode_wire_serialized::<ManifestActionInvocation>(&command).await {
                         Ok(invocation) => {
-                            let active_mode_id = decode_view_state(&view_state).await.active_mode_id;
+                            let addressed_view = meta.view_state.as_ref().ok_or_else(|| plugin_internal_fault("action context is missing viewState")).and_then(|view| addressed_action_view(view, &invocation));
+                            let view = match addressed_view {
+                                Ok(view) => view,
+                                Err(fault) => {
+                                    push_app_fault(&mut frames, Some(seq), fault).await;
+                                    break 'dispatch;
+                                }
+                            };
+                            let active_mode_id = view.active_mode_id.clone();
+                            meta.view_state = Some(view);
                             let owner_matches = runtime.plugin.borrow().as_ref().is_some_and(|program| program.manifest.plugin_id == invocation.address.plugin_id);
                             if !owner_matches {
                                 Err(plugin_internal_fault(format!("action plugin owner {} does not match the active program", invocation.address.plugin_id)))
@@ -28529,7 +28618,7 @@ pub mod plugin_runtime {
                         }
                         Err(_) => match decode_wire_serialized::<ManifestCommandInvocation>(&command).await {
                             Ok(invocation) => {
-                                let active_mode_id = decode_view_state(&view_state).await.active_mode_id;
+                                let active_mode_id = meta.view_state.as_ref().and_then(|view| view.active_mode_id.as_deref());
                                 match &invocation.address.owner {
                                     ManifestCommandOwnerAddress::Os => Err(plugin_internal_fault("os commands must be dispatched by the os host")),
                                     ManifestCommandOwnerAddress::Plugin { .. } => {
@@ -28543,7 +28632,7 @@ pub mod plugin_runtime {
                                         } else {
                                             with_instances_mut(runtime, |list| {
                                                 let mut instance = find_instance(list, instance_id)?;
-                                                resolve_ready(instance.app.handle_command(&invocation, active_mode_id.as_deref(), &meta))
+                                                resolve_ready(instance.app.handle_command(&invocation, active_mode_id, &meta))
                                             })
                                             .await
                                         }
@@ -28614,12 +28703,11 @@ pub mod plugin_runtime {
                     // 🗂️ Decodes straight into the typed wire shape and encodes the typed response straight
                     // back out — no intermediate `Value`/JSON-string hop through `plugin_context_menu`
                     // (which stays as the separate string-in/string-out entry point the WIT boundary needs).
-                    match decode_wire_serialized::<ContextMenuWireRequest>(&request).await {
-                        Ok(wire) => {
-                            let request: ContextMenuRequest = wire.into();
+                    match decode_wire_serialized::<ContextMenuWireRequest>(&request).await.and_then(ContextMenuWireRequest::into_parts) {
+                        Ok((request, view_state)) => {
                             let outcome = with_instances_mut(runtime, |list| {
                                 let mut instance = find_instance(list, instance_id)?;
-                                Ok(resolve_ready(instance.app.context_menu(&request)))
+                                Ok(resolve_ready(instance.app.context_menu(&request, &view_state)))
                             });
                             match outcome.await {
                                 Ok(items) => frames.push(protocol::AppFrame::ContextMenu { in_reply_to: seq, items: encode_wire_serialized(&items) }),
@@ -28636,7 +28724,7 @@ pub mod plugin_runtime {
                     if !DOCUMENT_COMMAND_ACTION_IDS.contains(&action.as_str()) {
                         push_os_fault(&mut frames, Some(seq), "unsupported", format!("ArtifactCommand action {action:?} not supported (Wave 1: history verbs only)")).await;
                     } else {
-                        let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id };
+                        let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state: None };
                         let dispatched = with_instances_mut(runtime, |list| {
                             let mut instance = find_instance(list, instance_id)?;
                             resolve_ready(instance.app.handle_action(&action, args.as_ref(), &meta))
@@ -28802,7 +28890,7 @@ pub mod plugin_runtime {
                     }
                 }
                 protocol::AppCommand::PureCommand { seq, command, document, document_spr, config, config_spr, draft, draft_spr } => {
-                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id };
+                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state: None };
                     let dispatched = with_instances_mut(runtime, |list| {
                         let mut instance = find_instance(list, instance_id)?;
                         resolve_ready(instance.app.hydrate_document_lane(&document, &document_spr))?;
@@ -28853,7 +28941,7 @@ pub mod plugin_runtime {
                     }
                 }
                 protocol::AppCommand::TransactionCommit { seq, txn_id } => {
-                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id };
+                    let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await, instance_id, view_state: None };
                     let outcome = with_instances_mut(runtime, |list| {
                         let mut instance = find_instance(list, instance_id)?;
                         resolve_ready(instance.app.transaction_commit(&txn_id, &meta))
@@ -29268,25 +29356,7 @@ pub mod plugin_runtime {
             // repo-wide ratchet metric this ladder climbs against is `📇️registry:check`'s own
             // "descriptor gate: N/<total> crates have a 🔣️.json" census line — that count is
             // the thing that should trend toward `<total>` as this list grows, never this test alone.
-            #[cfg(test)]
-            #[test]
-            fn descriptor_is_fresh() {
-                __semio_install_plugin_bundle();
-                let plugin_id = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_manifest(runtime))).plugin_id;
-                let assembled = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($describe(runtime)));
-                let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️.descriptor.semio");
-                const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note", "sequence", "vcs", "forms", "sourcing", "dag", "mathematical", "writer", "reasoning", "animate", "draw", "energy", "layout"];
-                match std::fs::read(expected_path) {
-                    Ok(expected) => {
-                        if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {
-                            assert_eq!(assembled, expected, "{expected_path} is stale — re-run `describe` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
-                        }
-                    }
-                    Err(_) => {
-                        assert!(!DESCRIPTOR_MIGRATED_PLUGINS.contains(&plugin_id.as_str()), "{expected_path} is missing but {plugin_id:?} is listed in DESCRIPTOR_MIGRATED_PLUGINS — run `describe` and commit 🛂️.descriptor.semio + 🔣️.json");
-                    }
-                }
-            }
+            $crate::__semio_plugin_descriptor_fresh_test!($describe);
         };
     }
 
@@ -29675,28 +29745,7 @@ pub mod plugin_runtime {
             // rationale. `DESCRIPTOR_MIGRATED_EXTENSIONS` starts empty: no extension has committed a
             // descriptor yet as of this packet; extend it, never shrink it, as each extension's own
             // emission packet lands.
-            #[cfg(test)]
-            #[semio_framework_async_macros::async_test]
-            async fn descriptor_is_fresh() {
-                __semio_install_extension_bundle();
-                let extension_id = $crate::plugin_runtime::extension_manifest().await.extension_id;
-                let assembled = $crate::describe::describe_extension().await;
-                let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️.descriptor.semio");
-                const DESCRIPTOR_MIGRATED_EXTENSIONS: &[&str] = &[];
-                match std::fs::read(expected_path) {
-                    Ok(expected) => {
-                        if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {
-                            assert_eq!(assembled, expected, "{expected_path} is stale — re-run `describe` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
-                        }
-                    }
-                    Err(_) => {
-                        assert!(
-                            !DESCRIPTOR_MIGRATED_EXTENSIONS.contains(&extension_id.as_str()),
-                            "{expected_path} is missing but {extension_id:?} is listed in DESCRIPTOR_MIGRATED_EXTENSIONS — run `describe` and commit 🛂️.descriptor.semio + 🔣️.json"
-                        );
-                    }
-                }
-            }
+            $crate::__semio_extension_descriptor_fresh_test!();
         };
     }
     //#endregion 🧩️Extension
@@ -30865,15 +30914,7 @@ macro_rules! subset {
 
             $(pub const EXAMPLES: &'static [$crate::ExampleSource] = &[$($example),+];)?
 
-            #[cfg(test)]
-            mod conformance {
-                use super::*;
-
-                #[semio_framework_async_macros::async_test]
-                async fn subset_macro_owning_dialect_matches_spec() {
-                    assert_eq!(SUBSET_DIALECT, <$composition as $crate::ArtifactComposition>::WRITES);
-                }
-            }
+            $crate::__semio_subset_owning_conformance_tests!($composition);
         }
 
         $vis use __subset_registration::{register as register_subset, KIND, SUBSET_DIALECT};
@@ -30918,24 +30959,7 @@ macro_rules! subset {
             $(pub const POSITIVE_EXAMPLES: &'static [$crate::ExampleSource] = &[$($pos_example),+];)?
             $(pub const NEGATIVE_EXAMPLES: &'static [$crate::ExampleSource] = &[$($neg_example),+];)?
 
-            #[cfg(test)]
-            mod conformance {
-                use super::*;
-
-                #[semio_framework_async_macros::async_test]
-                async fn subset_macro_derived_dialect_is_non_any() {
-                    assert_ne!(SUBSET_DIALECT.subset, $crate::SubsetId::ANY);
-                }
-
-                #[semio_framework_async_macros::async_test]
-                async fn subset_macro_derived_validator_registers() {
-                    register().await;
-                    let registered = semio_framework::io::list_registered_subset_validator_dialects().await.expect("registered subset observation");
-                    assert_eq!(registered.iter().filter(|dialect| **dialect == SUBSET_DIALECT).count(), 1);
-                    let payload = $crate::IoPayload::Text(String::new());
-                    let _ = <$validator as $crate::SubsetValidator>::validate(&payload).await;
-                }
-            }
+            $crate::__semio_subset_derived_conformance_tests!($validator);
         }
 
         $vis use __subset_registration::{register as register_subset, KIND, SUBSET_DIALECT};

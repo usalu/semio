@@ -33,3 +33,7 @@ message BmpSnapshot {
   repeated BmpPaletteEntry palette = 14;
   bytes pixels = 15;
 }
+
+message BmpRowOrder {
+  string value = 1;
+}

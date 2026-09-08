@@ -12,7 +12,7 @@
   ],
   "properties": {
     "camera": {
-      "$ref": "#/$defs/CameraJson",
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/CameraJson",
       "x-semio-state": "presence"
     },
     "previewCamera": {
@@ -29,30 +29,6 @@
     }
   },
   "$defs": {
-    "CameraJson": {
-      "title": "CameraJson",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
     "Generation3dPreviewCamera": {
       "title": "Generation3dPreviewCamera",
       "type": "object",

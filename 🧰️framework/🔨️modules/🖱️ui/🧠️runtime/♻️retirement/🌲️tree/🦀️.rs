@@ -42,5 +42,5 @@ impl SurfaceTreeRetireCursor {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🌲️tree/🦀️.rs"]
 mod tests;

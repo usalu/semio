@@ -57,11 +57,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-catalog-generation" => Vector {
-            before: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-catalog-generation-to-7/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-catalog-generation-to-7/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-catalog-generation-to-7/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-catalog-generation-to-7/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-catalog-generation-to-7/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-s-home-1: no committed specification vector is registered for kind {other:?}"),
     }

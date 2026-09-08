@@ -35,15 +35,13 @@ pub struct VcsArtifact {
     #[state(presence)]
     #[value(default)]
     pub selected_checkpoint_ids: Vec<String>,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for VcsArtifact {
     fn default() -> Self {
-        Self { schema: crate::VCS_DOCUMENT_SCHEMA.into(), title: "VCS Demo".into(), counter: 0, notes: String::new(), status: "new".into(), tags: Vec::new(), selected_checkpoint_ids: Vec::new(), locale: "en-US".into() }
+        Self { schema: crate::VCS_DOCUMENT_SCHEMA.into(), title: "VCS Demo".into(), counter: 0, notes: String::new(), status: "new".into(), tags: Vec::new(), selected_checkpoint_ids: Vec::new() }
     }
 }
 

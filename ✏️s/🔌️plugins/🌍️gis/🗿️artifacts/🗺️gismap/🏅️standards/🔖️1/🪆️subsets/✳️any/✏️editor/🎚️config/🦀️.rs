@@ -39,7 +39,6 @@ pub struct Gis2dConfig {
     #[dsl(block)]
     pub layer_stroke_scale: BTreeMap<String, f64>,
     /// 🗣️ BCP-47 locale tag.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -109,7 +108,6 @@ impl Default for Gis2dConfig {
             // the config type stays independent of the tiled-map surface crate.
             lod_mode: "automatic".into(),
             layer_stroke_scale: BTreeMap::new(),
-            locale: "en-US".into(),
         }
     }
 }

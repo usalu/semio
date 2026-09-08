@@ -7,7 +7,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
 #[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
 mod art_lowpoly_demo_tests;
 extern crate semio_framework_schema as framework_schema;
 
@@ -448,28 +448,6 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-#[cfg(test)]
-#[semio_framework_async_macros::async_test]
-async fn artifact_schema_descriptor_leaves_parse_and_field_states_match_snapshot_json() {
-    use framework_schema::{parse_state_class_kebab, ArtifactSchemaFields};
-    let descriptor = crate::schema::lowpoly_artifact_schema_descriptor();
-    assert_eq!(descriptor.id, "s.lowpoly.lowpoly");
-    let schema: dsl::os_pack::json::Value = dsl::os_pack::json::from_json_str(descriptor.snapshot.json_schema).expect("snapshot json");
-    assert_eq!(schema["title"], "LowpolySnapshot");
-    let properties = schema["properties"].as_object().expect("properties");
-    let mut json_states: Vec<(String, _)> = properties
-        .iter()
-        .map(|(name, prop)| {
-            let raw = prop["x-semio-state"].as_str().expect("state");
-            (name.to_string(), parse_state_class_kebab(raw).expect("parse"))
-        })
-        .collect();
-    json_states.sort_by(|a, b| a.0.cmp(&b.0));
-    let mut derived: Vec<(String, _)> = LowpolySnapshot::field_states().await.iter().map(|(n, c)| ((*n).to_string(), *c)).collect();
-    derived.sort_by(|a, b| a.0.cmp(&b.0));
-    assert_eq!(derived, json_states);
-    assert_eq!(crate::schema::LowpolyArtifact::artifact_schema_id().await, "s.lowpoly.lowpoly");
-}
 //#endregion 🧪️Tests
 
 #[path = "."]

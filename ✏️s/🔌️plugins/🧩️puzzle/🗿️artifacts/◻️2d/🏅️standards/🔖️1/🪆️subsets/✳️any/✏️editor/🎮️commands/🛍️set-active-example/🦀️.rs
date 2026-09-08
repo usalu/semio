@@ -2,8 +2,8 @@
 //! (`✏️editor/🦀️.rs`), the single resumable state machine both the retained job and the batch
 //! `handle` path drive — this module only owns the warmed example snapshots it reads.
 
-use crate::Puzzle2dSnapshot;
 use crate::editor::puzzle2d::{PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
+use crate::Puzzle2dSnapshot;
 use std::sync::LazyLock;
 
 static EMPTY: LazyLock<Puzzle2dSnapshot> = LazyLock::new(Puzzle2dSnapshot::default);

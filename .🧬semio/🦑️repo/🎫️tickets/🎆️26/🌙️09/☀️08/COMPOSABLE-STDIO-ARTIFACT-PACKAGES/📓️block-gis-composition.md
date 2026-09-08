@@ -34,3 +34,16 @@ Additional files are both GIS artifact roots and manifests plus gismap `🏅️s
 Removing the old GIS parent mount tree must preserve its two editor demo-session implementations. Both now have canonical mounts in the corresponding artifact editor examples module, with their existing tests. The two existing test asset includes were corrected to reach the adjacent example asset directory. The plugin no longer mounts those artifact implementations independently. Additional files are the gismap and gisterrain `✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs` files, plus both artifact roots.
 
 The current composition check also restored the `protocol`/`store` aliases required by the closed-app dispatch macro. Terrain selects its editor framework dependency only through component app assembly. Map's retained initializer now names the canonical kernel fault types, allowing its framework dependency to be optional and selected only for its editor/viewer feature. Existing schema use of Surface terrain tiles remains a real default dependency.
+
+## Persistent GIS Law Routing
+
+The two GIS native law groups now name the map artifact directly; the editor law explicitly enables component-app-assembly. Their exact test names include the taxonomy mounting component module. The map group oracle now inspects its extracted test source for neutral membership coverage, and the durable assembly oracle checks the current owned optional-sink expression. The map group oracle passed 26 checks; the durable assembly oracle passed AJV plus Node/WebCrypto hash agreement, three roles, four cancellation cases and three rejection cases. Native law execution is still pending the old Cargo queue.
+
+Additional coordinator-owned test routing and fixture-reference files:
+
+- `✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🗺️mutate-gismap-1/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏔️mutate-gisterrain-1/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs`

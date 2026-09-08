@@ -20,14 +20,14 @@
             "source": "part-a:grip-1",
             "target": "part-b:grip-2",
             "fastenerKind": "fastener-kind-a",
-            "gap": 5.0,
-            "shift": 6.0,
-            "rise": 7.0,
-            "rotation": 8.0,
-            "turn": 9.0,
-            "tilt": 10.0,
-            "x": 11.0,
-            "y": 12.0
+            "gap": 5,
+            "shift": 6,
+            "rise": 7,
+            "rotation": 8,
+            "turn": 9,
+            "tilt": 10,
+            "x": 11,
+            "y": 12
           }
         }
       }
@@ -56,7 +56,6 @@
   "fillCount": null,
   "brushCandidateIndex": null,
   "lodMode": null,
-  "locale": null,
   "runtimeExtrasJson": null,
   "hoveredPartId": null,
   "previewSeq": null

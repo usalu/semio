@@ -33,7 +33,7 @@
     "elements": {
       "type": "array",
       "items": {
-        "$ref": "snapshot.json#/$defs/PlyElement"
+        "$ref": "https://semio.tech/schema/s/stdio/ply/1.0/any/snapshot.json#/$defs/PlyElement"
       },
       "x-semio-state": "artifact"
     }

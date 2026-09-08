@@ -20,7 +20,6 @@ type NoteArtifact {
   cameraX: Float!
   cameraY: Float!
   cameraZoom: Float!
-  locale: String!
   hoveredBlockId: String
 }
 

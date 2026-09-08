@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::editor::process3d::testkit::{action, app, app_with_registry, dispatch, main_window_measures, process3d_app_manifest_for_testkit, render as render_body};
+use crate::editor::process3d::testkit::{action, app, app_with_registry, dispatch, dispatch_with_utility, main_window_measures, process3d_app_manifest_for_testkit, render as render_body};
 use semio_framework_plugin::{ContextMenuRequest, ContextMenuSurfaceTarget, EditorApp, HistoryView, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID, UiMenuRef, testkit};
 
 fn production_initial_snapshot(label: &str) -> Process3dSnapshot {
@@ -321,7 +321,7 @@ async fn retained_resumable_progress_checkpoint_identity_replay_and_close_are_ex
     }
     let mut checkpoint = [0u8; 40];
     assert_eq!(uninterrupted.checkpoint(&mut checkpoint).expect("checkpoint"), checkpoint.len());
-    let mut wrong_tool = Process3dResumableCommandWork::new("setLocale", extent);
+    let mut wrong_tool = Process3dResumableCommandWork::new("engagementInput", extent);
     assert!(wrong_tool.restore(&checkpoint).is_err(), "a config command must not accept another tool's checkpoint");
     let mut replayed = Process3dResumableCommandWork::new("setContributions", extent);
     replayed.restore(&checkpoint).expect("restore");
@@ -355,7 +355,7 @@ async fn retained_bounded_and_resumable_maximum_steps_stay_below_eight_milliseco
     ];
     for command in &bounded {
         let started = std::time::Instant::now();
-        process3d_retained_reduce(command, &empty, &config, &history, &interaction, &hover, &operation).expect("bounded reducer");
+        process3d_retained_reduce(command, &empty, &config, &history, &interaction, &hover, None, &operation).expect("bounded reducer");
         assert!(started.elapsed().as_micros() < 8_000, "bounded {} exceeded the interactive step ceiling", command.command_id());
     }
 
@@ -363,13 +363,11 @@ async fn retained_bounded_and_resumable_maximum_steps_stay_below_eight_milliseco
     config_max.sun_color = "x".repeat(PROCESS3D_RETAINED_RAW_BYTES);
     let maximum = "x".repeat(PROCESS3D_RETAINED_RAW_BYTES);
     let fixtures = [
-        (Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: maximum.clone() }), Process3dConfig::default()),
         (Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: maximum.clone() }), Process3dConfig::default()),
         (Process3dCommand::ToggleSun(toggle_sun::ToggleSun {}), config_max.clone()),
         (Process3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 1.0 }), config_max.clone()),
         (Process3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 1.0 }), config_max.clone()),
         (Process3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 1.0 }), config_max),
-        (Process3dCommand::SetLocale(set_locale::SetLocale { value: maximum.clone() }), Process3dConfig::default()),
         (Process3dCommand::SetContributions(set_contributions::SetContributions { json: maximum }), Process3dConfig::default()),
     ];
     for (command, config) in fixtures {
@@ -448,7 +446,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
             "setSunAzimuth" => "sun-azimuth",
             "setSunElevation" => "sun-elevation",
             "setSunIntensity" => "sun-intensity",
-            "setLocale" => "locale",
             "setContributions" => "contributions",
             "exportModel" => "export-model",
             "loadModelRequest" => "load-model-request",
@@ -497,7 +494,6 @@ pub(super) fn every_command() -> Vec<Process3dCommand> {
         Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }),
         Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }),
         Process3dCommand::ImportModelFile(import_model_file::ImportModelFile { name: "beam.step".into(), payload: "data:application/octet-stream;base64,AAAA".into() }),
-        Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "cut".into() }),
         Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: "cut".into() }),
         Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
         Process3dCommand::SetCamera(set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }),
@@ -505,7 +501,6 @@ pub(super) fn every_command() -> Vec<Process3dCommand> {
         Process3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 90.0 }),
         Process3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 45.0 }),
         Process3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 1.0 }),
-        Process3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         Process3dCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
         Process3dCommand::ExportModel(export_model::ExportModel { format: "step".into() }),
         Process3dCommand::LoadModelRequest(load_model_request::LoadModelRequest {}),
@@ -646,10 +641,10 @@ async fn process3d_io_declares_geometry_in_and_brep_out_ports() {
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn labels_resolve_native_by_default_and_in_german() {
-    let mut config = Process3dConfig::default();
-    assert_eq!(process3d_labels(&config).stock.as_str(), "Stock");
-    config.locale = "de".into();
-    assert_eq!(process3d_labels(&config).stock.as_str(), "Rohteil");
+    let english = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::En, ..Default::default() };
+    assert_eq!(process3d_labels(&english).stock.as_str(), "Stock");
+    let german = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    assert_eq!(process3d_labels(&german).stock.as_str(), "Rohteil");
 }
 
 /// ↩️ Ticket `26/09/01/PROCESS-END-TO-END`: `AddStep` dispatches a real `CreateStep` mutation
@@ -701,26 +696,20 @@ async fn arg_form_set_stock_emits_ops_reading_kind_arg() {
     assert_eq!(document.steps, cleared_steps, "swapping stock resets the step timeline");
 }
 
-fn set_utility(app: &mut crate::editor::process3d::testkit::Process3dRawApp, utility: &str) {
-    dispatch(app, Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: utility.into() }));
-}
-
 /// 🌉️ `WorldPointerDown` dispatches `insert_step_mutations` → a real `CreateStep` mutation
 /// against `step_payloads`, appended at the resolved-up-to cursor (or the timeline end). This
 /// asserts the command dispatches a mutation for a real world-space click.
 #[semio_framework_async_macros::async_test]
 async fn world_pointer_down_dispatches_a_mutation_for_a_real_click() {
     let mut app = app();
-    set_utility(&mut app, "cut");
-    let result = dispatch(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }));
+    let result = dispatch_with_utility(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }), "cut");
     assert!(!result.mutations.is_empty(), "worldPointerDown must still dispatch a mutation for a real click");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn world_pointer_down_resets_active_utility_to_select() {
     let mut app = app();
-    set_utility(&mut app, "cut");
-    let result = dispatch(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }));
+    let result = dispatch_with_utility(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }), "cut");
     assert!(
         result.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { utility_id, .. } if utility_id == "select")),
         "placing a step must hand the host a SetActiveUtility(select) effect so the click-to-place utility disengages",
@@ -731,10 +720,8 @@ async fn world_pointer_down_resets_active_utility_to_select() {
 #[semio_framework_async_macros::async_test]
 async fn repeated_world_pointer_down_each_dispatch_a_mutation() {
     let mut app = app();
-    set_utility(&mut app, "cut");
-    let first = dispatch(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 0.0, 0.0] }));
-    set_utility(&mut app, "cut");
-    let second = dispatch(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [2.0, 0.0, 0.0] }));
+    let first = dispatch_with_utility(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 0.0, 0.0] }), "cut");
+    let second = dispatch_with_utility(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [2.0, 0.0, 0.0] }), "cut");
     assert!(!first.mutations.is_empty() && !second.mutations.is_empty(), "each real click must dispatch its own mutation");
 }
 
@@ -760,8 +747,7 @@ async fn world_face_drag_end_attach_dispatches_a_mutation() {
 #[semio_framework_async_macros::async_test]
 async fn world_face_drag_end_ignored_while_a_placement_utility_is_active() {
     let mut app = app();
-    set_utility(&mut app, "cut");
-    let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: None }));
+    let result = dispatch_with_utility(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: None }), "cut");
     assert!(result.mutations.is_empty(), "worldFaceDragEnd should be a no-operation while a placement utility is active, not the select utility");
 }
 

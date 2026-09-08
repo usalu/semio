@@ -70,7 +70,7 @@ impl ArtifactViewer for RasterViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
             composite::RASTER_VIEW_BODY_COMPOSITE => composite::render(doc.snapshot)?,
             navigator::RASTER_VIEW_BODY_NAVIGATOR => navigator::render(doc.snapshot)?,

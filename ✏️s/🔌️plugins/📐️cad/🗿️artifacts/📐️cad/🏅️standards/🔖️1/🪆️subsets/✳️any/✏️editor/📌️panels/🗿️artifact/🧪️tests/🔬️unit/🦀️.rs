@@ -7,7 +7,7 @@ use crate::editor::cad::testkit::*;
 use crate::editor::cad::{CadPlayApp, CadPlayRuntime, make_object_for_typology};
 use crate::standards::v1::subsets::any::io::geometry_import::CadPrimitiveSlot;
 use crate::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_SHAPE, default_document, forest_play_scene};
-use semio_framework_plugin::{ArtifactView, PluginApp, ViewModel};
+use semio_framework_plugin::{ArtifactView, Locale, PluginApp, ViewModel};
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_nodes() {
@@ -26,7 +26,7 @@ async fn document_lists_nodes() {
 async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
     let mut object = make_object_for_typology("building.building.beam", 0, CadPaneId::Shape);
     object.label = "U2".into();
-    let labels = cad_labels(&CadConfig::default());
+    let labels = cad_labels(&ViewModel::default());
     let item = object_tree_item("shape", &object, labels).expect("object tree item");
     let semio_framework_plugin::Component::TreeItem(props) = &item.component else {
         panic!("expected tree item");
@@ -34,8 +34,8 @@ async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
     assert_eq!(props.label.0.as_str(), "U2");
     assert_eq!(props.description.as_ref().map(|text| text.as_str()), Some("Beam"));
 
-    let de_config = CadConfig { locale: "de".into(), ..CadConfig::default() };
-    let de_labels = cad_labels(&de_config);
+    let de_view = ViewModel { locale: Locale::De, ..ViewModel::default() };
+    let de_labels = cad_labels(&de_view);
     let de_item = object_tree_item("shape", &object, de_labels).expect("German object tree item");
     let semio_framework_plugin::Component::TreeItem(props) = &de_item.component else {
         panic!("expected German tree item");
@@ -47,7 +47,7 @@ async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
 async fn object_tree_item_includes_primitive_children() {
     let mut object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
     object.primitives = vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }];
-    let labels = cad_labels(&CadConfig::default());
+    let labels = cad_labels(&ViewModel::default());
     let item = object_tree_item("shape", &object, labels).expect("object tree item");
     let json = serde_json::to_string(&item).unwrap();
     assert!(json.contains("cad-primitive:"));
@@ -78,8 +78,9 @@ async fn cad_labels_translate_document_tree_panes_in_german() {
     let scene = default_document();
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
-    let config = CadConfig { locale: "de".into(), ..CadConfig::default() };
-    let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &config).expect("CAD UI assembly");
+    let config = CadConfig::default();
+    let view_state = ViewModel { locale: Locale::De, ..ViewModel::default() };
+    let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &config, &view_state).expect("CAD UI assembly");
     let json = serde_json::to_string(&node).unwrap();
     assert!(json.contains("\"Form\""));
     assert!(json.contains("Gebäude"));

@@ -4,10 +4,10 @@
       "src": "/fixture-deck.png",
       "kind": "figure",
       "frame": {
-        "x": 0.0,
-        "y": 0.0,
-        "width": 1.0,
-        "height": 1.0
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
       },
       "sourceAspect": 1.5
     }

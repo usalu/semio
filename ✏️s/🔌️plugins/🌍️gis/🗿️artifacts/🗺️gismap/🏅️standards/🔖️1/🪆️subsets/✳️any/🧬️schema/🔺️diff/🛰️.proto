@@ -35,7 +35,6 @@ message GisMapDiff {
   // @state config
   optional string selection_mode = 15;
   // @state config
-  optional string locale = 16;
 }
 
 message GisMapArtifact {
@@ -53,7 +52,6 @@ message GisMapArtifact {
   string hover_json = 12;
   string selection_method = 13;
   string selection_mode = 14;
-  string locale = 15;
 }
 
 message GisMapFeature { string id = 1; string data_json = 2; }

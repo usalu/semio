@@ -9,7 +9,7 @@
 //! embeds xml's *node* model, never xml's *diff* model).
 
 use crate::SvgSnapshot;
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype, XmlDtdDeclaration, XmlExternalId};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use framework_schema::ArtifactSchema;
@@ -1531,3 +1531,10 @@ pub(crate) fn demo_diff_cases() -> Vec<SvgDiff> {
 mod handcrafted_diff_codec_tests;
 //#endregion 🧪️Tests
 //#endregion 🔖️HandcraftedDiffCodec
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
+pub use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+pub use semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration;
+//#endregion 🔁️Re-exports

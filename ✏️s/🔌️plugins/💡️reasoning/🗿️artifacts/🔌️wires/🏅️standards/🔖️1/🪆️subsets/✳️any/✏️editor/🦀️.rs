@@ -22,7 +22,6 @@ use crate::editor::wires::commands::add_node;
 use crate::editor::wires::commands::add_relationship;
 use crate::editor::wires::commands::delete_selection;
 use crate::editor::wires::commands::set_active_example;
-use crate::editor::wires::commands::set_locale;
 use crate::editor::wires::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up};
 use crate::editor::wires::commands::{force_layout, reorganize};
 use crate::editor::wires::config::{WiresConfig, WiresConfigMutation};
@@ -162,7 +161,6 @@ semio_framework_plugin::app_commands! {
     /// assembled from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
     /// (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different
-    /// vocabularies; `setLocale`/`locale` is the row that proves it. **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
     pub enum WiresCommand for WiresSnapshot, WiresMutation, WiresConfig, WiresConfigMutation {
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
@@ -174,7 +172,6 @@ semio_framework_plugin::app_commands! {
         "canvasPointerMove" as "pointer-move" => canvas_pointer_move::CanvasPointerMove,
         "canvasPointerDown" as "pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "canvasPointerUp" as "pointer-up" => canvas_pointer_up::CanvasPointerUp,
-        "setLocale" as "locale" => set_locale::SetLocale,
     }
 }
 //#endregion 🔖️Commands
@@ -186,13 +183,12 @@ semio_framework_plugin::app_commands! {
 pub struct ReasoningWiresPlayApp;
 
 //#region 🧵️RetainedCommands
-const WIRES_RETAINED_TOOL_IDS: &[&str] = &["canvasPointerUp", "setLocale"];
+const WIRES_RETAINED_TOOL_IDS: &[&str] = &["canvasPointerUp", ];
 const WIRES_RETAINED_PAYLOAD_SCHEMA: &str = "reasoning.wires.tool-command.v1";
 const WIRES_RETAINED_RAW_BYTES: usize = 8_192;
 const WIRES_RETAINED_WORK_ITEMS: usize = 1;
 const WIRES_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
 ];
 
 fn wires_retained_contract() -> ToolExecutionContract {
@@ -202,7 +198,6 @@ fn wires_retained_contract() -> ToolExecutionContract {
 fn wires_retained_extent(command: &WiresCommand, _snapshot: &WiresSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     match command {
         WiresCommand::CanvasPointerUp(_) => Some(WIRES_RETAINED_WORK_ITEMS),
-        WiresCommand::SetLocale(payload) if payload.value.len() <= WIRES_RETAINED_RAW_BYTES => Some(WIRES_RETAINED_WORK_ITEMS),
         _ => None,
     }
 }
@@ -214,11 +209,11 @@ fn wires_retained_reduce(
     _history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<ReasoningWiresPlayApp>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<WiresMutation, WiresConfigMutation, NoDraftMutation>, Fault> {
     match command {
         WiresCommand::CanvasPointerUp(_) => Ok(Emit::config(vec![WiresConfigMutation::SetDrag(crate::editor::wires::config::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 })])),
-        WiresCommand::SetLocale(payload) if payload.value.len() <= WIRES_RETAINED_RAW_BYTES => Ok(Emit::config(vec![WiresConfigMutation::SetLocale(crate::editor::wires::config::SetLocale { value: payload.value.clone() })])),
         _ => Err(Fault::from("wires-retained-route-mismatch")),
     }
 }
@@ -297,7 +292,6 @@ struct WiresConfigPreparation {
 fn wires_config_mutation_bytes(mutation: &WiresConfigMutation) -> usize {
     match mutation {
         WiresConfigMutation::SetDrag(payload) => payload.node_id.as_ref().map_or(0, String::len),
-        WiresConfigMutation::SetLocale(payload) => payload.value.len(),
     }
 }
 
@@ -337,7 +331,7 @@ impl store::ArtifactStoreOneItemPreparation<WiresConfig, WiresConfigMutation> fo
         if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
         if self.candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "Wires config preparation lost its exact base root".to_string())?.get();
-            if base.locale.len().saturating_add(base.drag_node_id.as_ref().map_or(0, String::len)) > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES { return Err("Wires config base exceeds retained byte capacity".into()); }
+            if base.drag_node_id.as_ref().map_or(0, String::len) > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES { return Err("Wires config base exceeds retained byte capacity".into()); }
             let mutation = self.mutation.take().ok_or_else(|| "Wires config preparation lost its mutation owner".to_string())?;
             let post = protocol::Mutation::diff(&mutation, base).into_parts().0;
             let inverse = protocol::Mutation::inverse(&mutation, base);
@@ -407,7 +401,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         factory: "WiresRetainedCommandJobFactory",
         factory_type: WiresRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 16, 1, 16_384, 7_500),
-        tools: ["canvasPointerUp", "setLocale"]
+        tools: ["canvasPointerUp", ]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -465,7 +459,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         command: &WiresCommand,
         doc: &ArtifactView<'_, WiresSnapshot>,
         cfg: &ConfigView<'_, WiresConfig>,
-        interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<WiresMutation, WiresConfigMutation, Self::DraftMutation>, Fault> {
@@ -475,9 +469,9 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, WiresSnapshot>, cfg: &ConfigView<'_, WiresConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::wires::terminology::WiresLabels>(&cfg.snapshot.locale);
+        let labels = semio_framework_plugin::resolve_labels::<crate::editor::wires::terminology::WiresLabels>(view_state);
         match body_key {
             WIRES_PLAY_BODY_COMPOSITE => edit::windows::canvas::render(&crate::wires_working_board(document), &document.wires_fixture),
             WIRES_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
@@ -526,7 +520,6 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
         .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"))
         .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
-        .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
         .action_interactive_job("setActiveExample", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("addNode", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("addRelationship", InteractiveJobClassification::BatchOnlyPendingRewrite)

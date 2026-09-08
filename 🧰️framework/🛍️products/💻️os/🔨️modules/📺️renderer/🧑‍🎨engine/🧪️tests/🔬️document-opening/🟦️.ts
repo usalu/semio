@@ -3,9 +3,51 @@ import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
 import documentOpeningFixture from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
-import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, DocumentAttachmentLaneV1, runDocumentOpeningAttemptV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
+import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, runDocumentOpeningAttemptV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 
 describe("Shell document opening", () => {
+  it("coalesces paused cold pairs and binds only the latest retained pair", async () => {
+    const sequence: string[] = [];
+    const queue = new LatestDocumentReplacementV1<string>();
+    let release!: () => void, started!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const entered = new Promise<void>(resolve => { started = resolve; });
+    const apply = async (value: string, current: () => boolean) => {
+      sequence.push(`load-${value}`);
+      if (value === "a") { started(); await gate; }
+      if (current()) sequence.push(`bind-${value}`);
+    };
+    const first = queue.replace("a", apply);
+    await entered;
+    const second = queue.replace("b", apply);
+    const third = queue.replace("c", apply);
+    expect(await second).toBe(false);
+    release();
+    expect(await first).toBe(false);
+    expect(await third).toBe(true);
+    expect(deepEqual(sequence, documentOpeningFixture.latestColdReplacement)).toBe(true);
+    expect(queue.pending).toBe(false);
+  });
+
+  it("cleans a failed cold lane without retiring a queued same-owner successor", async () => {
+    const sequence: string[] = [];
+    const lane = new DocumentAttachmentLaneV1(async () => { sequence.push("detach"); });
+    let release!: () => void, started!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const entered = new Promise<void>(resolve => { started = resolve; });
+    const first = lane.replace("a", () => true, async () => { sequence.push("load"); started(); await gate; throw new Error("load failed"); });
+    const failed = expect(first).rejects.toThrow("load failed");
+    await entered;
+    const second = lane.replace("a", () => true, async () => { sequence.push("bind"); });
+    release();
+    await Promise.all([failed, second]);
+    expect(deepEqual(sequence, documentOpeningFixture.failedColdReplacement)).toBe(true);
+    await lane.close("a");
+    expect(lane.idle).toBe(true);
+    await expect(lane.replace("b", () => true, async () => { throw new Error("bind failed"); })).rejects.toThrow("bind failed");
+    expect(lane.idle).toBe(true);
+  });
+
   it("atomically retires, cold-loads and binds before a close can finish", async () => {
     const sequence: string[] = [];
     const validate = new Ajv({ strict: true }).addSchema(rendererSchema).compile({ type: "array", items: { $ref: `${rendererSchema.$id}#/$defs/DocumentOpeningAttachmentStepV1` } });
@@ -116,6 +158,7 @@ describe("Shell document opening", () => {
           },
           attach: async () => {
             sequence.push("attach");
+            if (row.fail === "ready") await new Promise(() => {});
             if (row.fail === "attach") throw new Error("attach rejected");
             if (row.replace === "attach") mounted = route = "opening-b";
           },
@@ -132,8 +175,8 @@ describe("Shell document opening", () => {
         expect(route, row.id).toBe(row.replace !== "none" ? "opening-b" : row.outcome === "failed" ? null : "opening-a");
       }
     } finally { vi.useRealTimers(); }
-    console.log("[DEBUG] Document opening: neutral=6 failed-owner-cleanup=3 replacement-preserved=2 timer-leaks=0");
-  });
+    console.log("[DEBUG] Document opening: neutral=7 failed-owner-cleanup=4 replacement-preserved=2 timer-leaks=0");
+  }, 2_000);
 
   it("finishes physical cleanup even when route retirement throws", async () => {
     for (const row of documentOpeningFixture.closeFailures) {

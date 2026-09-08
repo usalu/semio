@@ -9,11 +9,11 @@ use semio_framework::InteractiveJobClassification;
 use semio_framework_plugin::{ArtifactApp, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationLane, EditorApp};
 use std::collections::{BTreeMap, BTreeSet};
 
-const STUDIO_FIXTURE: &str = include_str!("../../⚙️engine/🪐️space/🧪️fixtures/🧫️retained-command-limits/🔣️.json");
-const HOME_FIXTURE: &str = include_str!("../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧫️retained-command-limits/🔣️.json");
-const SPACE_INDEX_FIXTURE: &str = include_str!("../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🧫️retained-command-limits/🔣️.json");
+const STUDIO_FIXTURE: &str = include_str!("../../⚙️engine/🪐️space/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
+const HOME_FIXTURE: &str = include_str!("../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
+const SPACE_INDEX_FIXTURE: &str = include_str!("../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
 const COMPONENT_MANIFEST: &str = include_str!("../../📦️packages/🦀️rust/Cargo.toml");
-const IDENTITY_FIXTURE: &str = include_str!("../../🧪️fixtures/🧫️plugin-identity/🔣️.json");
+const IDENTITY_FIXTURE: &str = include_str!("../../🧫️fixtures/🧫️plugin-identity/🔣️.json");
 const DEPLOYMENT_CATALOG: &str = include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🗺️catalog.json");
 const GENERATED_REGISTRY: &str = include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
 
@@ -111,15 +111,15 @@ async fn studio_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_f
 
 #[semio_framework_async_macros::async_test]
 async fn home_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory() {
-    let definition = crate::editor::home::create_home_app().await;
+    let definition = semio_s_artifact_space_home::editor::home::create_home_app().await;
     let (fixture_migrated, fixture_host_only) = migrated_and_host_only_rows(HOME_FIXTURE);
-    let owned = factory_tool_ids::<crate::editor::home::HomeRetainedCommandJobFactory>();
+    let owned = factory_tool_ids::<semio_s_artifact_space_home::editor::home::HomeRetainedCommandJobFactory>();
     assert!(unclassified_ids(&definition).is_empty());
     assert_eq!(app_owned(migrated_ids(&definition), &owned), fixture_migrated);
     assert_eq!(owned, fixture_migrated);
-    assert_eq!(factory_contract_ids::<crate::editor::home::HomeRetainedCommandJobFactory>(), owned);
-    assert_eq!(factory_host_only_ids::<crate::editor::home::HomeRetainedCommandJobFactory>(), fixture_host_only);
-    assert_eq!(<EditorApp<crate::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
+    assert_eq!(factory_contract_ids::<semio_s_artifact_space_home::editor::home::HomeRetainedCommandJobFactory>(), owned);
+    assert_eq!(factory_host_only_ids::<semio_s_artifact_space_home::editor::home::HomeRetainedCommandJobFactory>(), fixture_host_only);
+    assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
     for tool in ["importSpace", "foldDirectoryEvents", "createStudio", "deleteVirtualFileSystemNode", "renameSpace", "bindSpaceFile"] {
         assert!(owned.contains(tool), "Home's own rows and the shell dispatch {tool}");
     }
@@ -127,15 +127,15 @@ async fn home_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_fac
 
 #[semio_framework_async_macros::async_test]
 async fn space_index_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory() {
-    let definition = crate::editor::space_index::create_space_index_editor();
+    let definition = semio_s_artifact_space_space::editor::space_index::create_space_index_editor();
     let (fixture_migrated, fixture_host_only) = migrated_and_host_only(SPACE_INDEX_FIXTURE);
-    let owned = factory_tool_ids::<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory>();
+    let owned = factory_tool_ids::<semio_s_artifact_space_space::editor::space_index::SpaceIndexRetainedCommandJobFactory>();
     assert!(unclassified_ids(&definition).is_empty());
     assert_eq!(app_owned(migrated_ids(&definition), &owned), fixture_migrated);
     assert_eq!(owned, fixture_migrated);
-    assert_eq!(factory_contract_ids::<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory>(), owned);
-    assert_eq!(factory_host_only_ids::<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory>(), fixture_host_only);
-    assert_eq!(<EditorApp<crate::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
+    assert_eq!(factory_contract_ids::<semio_s_artifact_space_space::editor::space_index::SpaceIndexRetainedCommandJobFactory>(), owned);
+    assert_eq!(factory_host_only_ids::<semio_s_artifact_space_space::editor::space_index::SpaceIndexRetainedCommandJobFactory>(), fixture_host_only);
+    assert_eq!(<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
 }
 
 /// 🧾️ `validate_tool_job_rows` joins each proof row's `controller_id`/`document_schema` against
@@ -145,13 +145,13 @@ async fn space_index_declares_every_fixture_migrated_id_and_backs_it_with_the_ow
 async fn tool_proof_catalogs_match_the_runtime_identity_they_are_joined_against() {
     assert_eq!(crate::engine::space::S_PLAY_APP_ID, "s.space.studio@1/*#editor");
     assert_eq!(<crate::engine::space::SpaceApp as ArtifactApp>::DOCUMENT_SCHEMA, "os.workflow");
-    assert_eq!(<crate::editor::home::HomeApp as ArtifactEditor>::DIALECT.artifact_kind, "s.space.home");
-    assert_eq!(<crate::editor::home::HomeApp as ArtifactEditor>::DOCUMENT_SCHEMA, "s.home");
-    assert_eq!(<crate::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DIALECT.artifact_kind, "s.space.space");
-    assert_eq!(<crate::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DOCUMENT_SCHEMA, "s.space");
+    assert_eq!(<semio_s_artifact_space_home::editor::home::HomeApp as ArtifactEditor>::DIALECT.artifact_kind, "s.space.home");
+    assert_eq!(<semio_s_artifact_space_home::editor::home::HomeApp as ArtifactEditor>::DOCUMENT_SCHEMA, "s.home");
+    assert_eq!(<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DIALECT.artifact_kind, "s.space.space");
+    assert_eq!(<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DOCUMENT_SCHEMA, "s.space");
     assert_eq!(<crate::engine::space::SpaceCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <crate::engine::space::SpaceApp as ArtifactApp>::DOCUMENT_SCHEMA);
-    assert_eq!(<crate::editor::home::HomeRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <crate::editor::home::HomeApp as ArtifactEditor>::DOCUMENT_SCHEMA);
-    assert_eq!(<crate::editor::space_index::SpaceIndexRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <crate::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DOCUMENT_SCHEMA);
+    assert_eq!(<semio_s_artifact_space_home::editor::home::HomeRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <semio_s_artifact_space_home::editor::home::HomeApp as ArtifactEditor>::DOCUMENT_SCHEMA);
+    assert_eq!(<semio_s_artifact_space_space::editor::space_index::SpaceIndexRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DOCUMENT_SCHEMA);
 }
 
 /// 🪪️ Builder id, `package_id` and the Cargo component package must be the same identity.
@@ -243,11 +243,11 @@ async fn plugin_assembly_succeeds_and_registers_all_five_surfaces() {
 #[semio_framework_async_macros::async_test]
 async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
     let mut studio = VcsArtifactApp::<crate::engine::space::SpaceApp>::with_registry(Default::default(), AppActionRegistry::from_definition(&crate::engine::space::create_space_app().await.definition)).await;
-    let mut home = VcsArtifactApp::<EditorApp<crate::editor::home::HomeApp>>::with_registry(Default::default(), AppActionRegistry::from_definition(&crate::editor::home::create_home_app().await)).await;
-    let mut index = VcsArtifactApp::<EditorApp<crate::editor::space_index::SpaceIndexEditor>>::with_registry(Default::default(), AppActionRegistry::from_definition(&crate::editor::space_index::create_space_index_editor())).await;
+    let mut home = VcsArtifactApp::<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_home::editor::home::create_home_app().await)).await;
+    let mut index = VcsArtifactApp::<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_space::editor::space_index::create_space_index_editor())).await;
     assert_eq!(<crate::engine::space::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 15);
-    assert_eq!(<EditorApp<crate::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 18);
-    assert_eq!(<EditorApp<crate::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 14);
+    assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 18);
+    assert_eq!(<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 14);
     testkit::close_registered_fixture_app(&mut studio);
     testkit::close_registered_fixture_app(&mut home);
     testkit::close_registered_fixture_app(&mut index);

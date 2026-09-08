@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/browser-actor-view-state/schema.json",
+  "title": "BrowserActorViewStateRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "clientInstanceId",
+    "scope",
+    "viewState"
+  ],
+  "properties": {
+    "kind": {
+      "const": "browser-actor-view-state"
+    },
+    "clientInstanceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spaceId",
+        "documentId"
+      ],
+      "properties": {
+        "spaceId": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "documentId": {
+          "$ref": "#/$defs/Identifier"
+        }
+      }
+    },
+    "viewState": {
+      "$ref": "https://semio.tech/schema/framework/view-context/schema.json"
+    }
+  },
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    }
+  }
+}

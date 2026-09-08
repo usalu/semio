@@ -22,7 +22,9 @@ impl BuiltChildrenIntoIter {
                 Err(std::sync::TryLockError::Poisoned(_)) => return Err("built child retirement authority is poisoned"),
             };
             let entry = &authority.slots[key.slot];
-            if entry.epoch != key.epoch || !entry.reserved || entry.owner.is_some() { return Err("built child retirement reservation changed"); }
+            if entry.epoch != key.epoch || !entry.reserved || entry.owner.is_some() {
+                return Err("built child retirement reservation changed");
+            }
             authority.release(key);
             self.handback = None;
         }

@@ -15,5 +15,4 @@ message Fem2dConfig {
   // @state config
   FemCamera camera = 4;
   // @state config
-  string locale = 5;
 }

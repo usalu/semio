@@ -5,8 +5,8 @@
       "label": "Knob",
       "id": "knob",
       "value": 6.5,
-      "min": 0.0,
-      "max": 10.0,
+      "min": 0,
+      "max": 10,
       "step": 0.5
     }
   }

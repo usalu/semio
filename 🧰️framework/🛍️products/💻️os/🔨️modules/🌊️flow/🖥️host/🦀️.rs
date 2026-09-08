@@ -2316,7 +2316,7 @@ impl Drop for FlowHostRetirement {
 
 // #region 🔖️EvalSession
 #[cfg(test)]
-#[path = "🧹️retirement/🧪️tests/🦀️.rs"]
+#[path = "🧹️retirement/🧪️tests/🧹️retirement/🦀️.rs"]
 mod session_retirement_tests;
 
 use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};

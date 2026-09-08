@@ -18,6 +18,5 @@ type Filters {
 
 type SourcingCurationConfig {
   filters: Filters! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
   contributionsJson: String! @state(class: CONFIG)
 }

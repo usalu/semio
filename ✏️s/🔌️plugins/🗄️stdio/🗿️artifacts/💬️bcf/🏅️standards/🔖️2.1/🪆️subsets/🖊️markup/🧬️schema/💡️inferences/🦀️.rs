@@ -9,8 +9,7 @@
 use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::topicstats::{compute_bcf_topic_stats, BcfTopicStats};
-
+use super::topicstats::{compute_bcf_topic_stats};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a bcf snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topicStats`, backed by the `🗒️topicstats/` slug dir).
@@ -83,3 +82,8 @@ pub fn bcf_artifact_inference_descriptor() -> framework_schema::ArtifactInferenc
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::topicstats::BcfTopicStats;
+//#endregion 🔁️Re-exports

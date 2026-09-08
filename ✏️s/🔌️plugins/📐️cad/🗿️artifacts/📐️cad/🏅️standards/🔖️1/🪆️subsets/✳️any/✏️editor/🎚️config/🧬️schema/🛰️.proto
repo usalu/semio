@@ -93,11 +93,6 @@ message CadConfig {
   // @state config
   CadDislocateOptions dislocate_structure_classic = 26;
   // @state config
-  string active_utility_id = 27;
-  // @state config
-  string locale = 28;
-  // @state config
-  string terminology = 29;
   // @state config
   string contributions_json = 30;
   // @state config

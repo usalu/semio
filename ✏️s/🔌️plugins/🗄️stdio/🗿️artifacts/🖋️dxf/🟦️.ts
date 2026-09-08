@@ -1,5 +1,5 @@
 /** 🗄️ stdio.dxf TypeScript facade. */
-import definition from "./🧬️schema/📜️artifact-definition.json" with { type: "json" };
+import definition from "./📜️artifact-definition.json" with { type: "json" };
 
 export { definition };
 export type ArtifactDefinition = typeof definition;

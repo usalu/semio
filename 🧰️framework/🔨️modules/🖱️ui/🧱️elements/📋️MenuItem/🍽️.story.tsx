@@ -1,6 +1,6 @@
 // #region 🔌️Adapters
 import { MenuItem } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️story.ts";
+import type { Meta, StoryObj } from "../../🧪️tests/📚️storybook-types/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 📋️MenuItemMatrix

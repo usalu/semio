@@ -3,9 +3,9 @@
   "fixture": {
     "schema": "flow.fixture.revised",
     "camera": {
-      "x": 0.0,
-      "y": 0.0,
-      "zoom": 1.0
+      "x": 0,
+      "y": 0,
+      "zoom": 1
     },
     "widgets": [
       {
@@ -30,8 +30,8 @@
     ],
     "layout": {
       "note-a": {
-        "x": 0.0,
-        "y": 0.0
+        "x": 0,
+        "y": 0
       }
     }
   },
@@ -40,6 +40,5 @@
   "graphCamera": null,
   "showMode": null,
   "selectedGenerationId": null,
-  "generationPreviewText": null,
-  "locale": null
+  "generationPreviewText": null
 }

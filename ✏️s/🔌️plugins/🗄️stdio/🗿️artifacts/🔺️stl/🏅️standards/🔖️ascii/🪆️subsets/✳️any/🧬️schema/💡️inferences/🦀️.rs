@@ -10,8 +10,7 @@ use crate::StlSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::bounds::{compute_stl_bounds, StlBounds};
-
+use super::bounds::{compute_stl_bounds};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a stl snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
@@ -84,3 +83,8 @@ pub fn stl_artifact_inference_descriptor() -> framework_schema::ArtifactInferenc
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::bounds::StlBounds;
+//#endregion 🔁️Re-exports

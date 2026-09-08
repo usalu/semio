@@ -69,53 +69,12 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/docBlock"
+        "$ref": "#/$defs/DocBlock"
       }
     }
   },
   "$defs": {
-    "runStyle": {
-      "type": "object",
-      "properties": {
-        "bold": {
-          "type": "boolean"
-        },
-        "italic": {
-          "type": "boolean"
-        },
-        "underline": {
-          "type": "boolean"
-        },
-        "size": {
-          "type": "number"
-        },
-        "font": {
-          "type": "string"
-        },
-        "color": {
-          "type": "string"
-        },
-        "link": {
-          "type": "string"
-        }
-      }
-    },
-    "docRun": {
-      "type": "object",
-      "required": [
-        "text",
-        "style"
-      ],
-      "properties": {
-        "text": {
-          "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/runStyle"
-        }
-      }
-    },
-    "docBlock": {
+    "DocBlock": {
       "type": "object",
       "required": [
         "kind"
@@ -146,7 +105,7 @@
             "runs": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/docRun"
+                "$ref": "#/$defs/DocRun"
               }
             }
           }
@@ -167,7 +126,7 @@
             "runs": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/docRun"
+                "$ref": "#/$defs/DocRun"
               }
             }
           }
@@ -188,7 +147,7 @@
                   "blocks": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/$defs/docBlock"
+                      "$ref": "#/$defs/DocBlock"
                     }
                   }
                 }
@@ -214,7 +173,7 @@
                         "blocks": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/$defs/docBlock"
+                            "$ref": "#/$defs/DocBlock"
                           }
                         }
                       }
@@ -246,7 +205,7 @@
             "blocks": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/docBlock"
+                "$ref": "#/$defs/DocBlock"
               }
             }
           }
@@ -278,6 +237,47 @@
           }
         }
       ]
+    },
+    "DocRun": {
+      "type": "object",
+      "required": [
+        "text",
+        "style"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "style": {
+          "$ref": "#/$defs/RunStyle"
+        }
+      }
+    },
+    "RunStyle": {
+      "type": "object",
+      "properties": {
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "underline": {
+          "type": "boolean"
+        },
+        "size": {
+          "type": "number"
+        },
+        "font": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        }
+      }
     }
   }
 }

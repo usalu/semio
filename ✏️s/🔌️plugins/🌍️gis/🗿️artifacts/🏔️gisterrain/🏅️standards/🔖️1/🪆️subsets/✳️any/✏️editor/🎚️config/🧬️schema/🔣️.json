@@ -5,15 +5,10 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "cameraJson",
-    "locale"
+    "cameraJson"
   ],
   "properties": {
     "cameraJson": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
       "type": "string",
       "x-semio-state": "config"
     }

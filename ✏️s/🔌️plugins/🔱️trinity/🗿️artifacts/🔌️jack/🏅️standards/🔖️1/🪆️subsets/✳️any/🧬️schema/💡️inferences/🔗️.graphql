@@ -27,3 +27,8 @@ type JackFlatPositionEntry {
   u: Float!
   v: Float!
 }
+
+type JackFlatPositionUv {
+  u: Float!
+  v: Float!
+}

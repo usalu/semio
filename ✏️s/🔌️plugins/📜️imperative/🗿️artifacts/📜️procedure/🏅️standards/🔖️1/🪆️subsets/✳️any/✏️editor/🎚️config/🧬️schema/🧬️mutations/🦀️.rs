@@ -7,9 +7,6 @@ pub use replace_config::ReplaceConfig;
 #[path = "📤️set-run-output/🦀️.rs"]
 mod set_run_output;
 pub use set_run_output::SetRunOutput;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 #[path = "🧩️set-contributions/🦀️.rs"]
 mod set_contributions;
 pub use set_contributions::SetContributions;
@@ -21,8 +18,6 @@ pub enum ImperativeConfigMutation {
     ReplaceConfig(ReplaceConfig),
     #[dsl(key = "set-run-output")]
     SetRunOutput(SetRunOutput),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
     #[dsl(key = "set-contributions")]
     SetContributions(SetContributions),
 }

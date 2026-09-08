@@ -17,14 +17,13 @@ use crate::editor::cad::commands::camera::{set_camera, set_projection, set_proje
 use crate::editor::cad::commands::contribution::set_contributions;
 use crate::editor::cad::commands::engagement::{engagement_abort, engagement_input, engagement_possible_select, engagement_repeat_last, engagement_submit, world_pointer_down, world_pointer_move};
 use crate::editor::cad::commands::io::{import_cad_file, load_raw_request, save_current, save_in_play, save_selected};
-use crate::editor::cad::commands::locale::{set_locale, set_terminology};
 use crate::editor::cad::commands::model_definition::{focus_model_definition, set_active_example};
 use crate::editor::cad::commands::node::{add_node, rename_node, set_node_selection};
 use crate::editor::cad::commands::object::{add_object, delete_object, duplicate_object, patch_object, patch_selection};
 use crate::editor::cad::commands::reference::{patch_cad_play_reference, reference_hover, set_reference_selection};
 use crate::editor::cad::commands::sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use crate::editor::cad::commands::transform::{apply_transformation, rotate_selection, scale_selection, translate_selection};
-use crate::editor::cad::commands::utility::{set_active_utility, set_dislocate_option};
+use crate::editor::cad::commands::utility::set_dislocate_option;
 use crate::editor::cad::config::{cad_sun_config_from_world, cad_sun_config_to_world, deserialize_cad_preview_generation, CadConfig, CadConfigMutation, CadDislocateOptions, CAD_PREVIEW_GENERATION_MAX};
 use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, commit_object, keyed_transitions, parse_repl_line, resolve_interaction_key, start_session, CadEngagementScratch};
 use crate::editor::cad::modes::edit;
@@ -36,7 +35,7 @@ use semio_framework_plugin::{
     tree_item_with_action, world3d_camera_projection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppOperationContext, ArtifactOwnedToolJobFactory,
     ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DraftView,
     EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, NoDraft, NoDraftMutation, PluginAssemblyError, UiText, UiValue, UtilityCategory,
-    UtilityDefinition, WindowEngagement, WindowMeasure, WorldSunConfig, SET_ACTIVE_UTILITY_ACTION_ID,
+    UtilityDefinition, ViewModel, WindowEngagement, WindowMeasure, WorldSunConfig,
 };
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -164,12 +163,6 @@ pub struct CadPlayRuntime {
     pub camera_structure_classic: CadCamera,
     #[value(default)]
     pub dislocate_options_by_window_id: HashMap<String, CadDislocateOptions>,
-    #[value(default)]
-    pub active_utility_id: String,
-    #[value(default)]
-    pub locale: String,
-    #[value(default)]
-    pub terminology: String,
 }
 
 impl Default for CadPlayRuntime {
@@ -193,9 +186,6 @@ impl Default for CadPlayRuntime {
             camera_energy: CadCamera::default(),
             camera_structure_classic: CadCamera::default(),
             dislocate_options_by_window_id: HashMap::new(),
-            active_utility_id: "move".into(),
-            locale: "en-US".into(),
-            terminology: "native".into(),
         }
     }
 }
@@ -252,9 +242,6 @@ pub fn cad_runtime_from_config(cfg: &CadConfig) -> CadPlayRuntime {
             (energy::WINDOW_KIND_ID.to_string(), cfg.dislocate_energy),
             (structure_classic::WINDOW_KIND_ID.to_string(), cfg.dislocate_structure_classic),
         ]),
-        active_utility_id: cfg.active_utility_id.clone(),
-        locale: cfg.locale.clone(),
-        terminology: cfg.terminology.clone(),
     }
 }
 
@@ -285,9 +272,6 @@ fn cad_config_from_runtime(runtime: &CadPlayRuntime, base: &CadConfig) -> CadCon
         dislocate_building: runtime.dislocate_options(building::WINDOW_KIND_ID),
         dislocate_energy: runtime.dislocate_options(energy::WINDOW_KIND_ID),
         dislocate_structure_classic: runtime.dislocate_options(structure_classic::WINDOW_KIND_ID),
-        active_utility_id: runtime.active_utility_id.clone(),
-        locale: runtime.locale.clone(),
-        terminology: runtime.terminology.clone(),
     }
 }
 
@@ -828,6 +812,7 @@ pub fn cad_io() -> semio_framework_plugin::AppIo {
 pub struct CadDispatchCtx {
     pub interaction: CadInteractionSnapshot,
     pub preview_operation: Option<CadPreviewOperationIdentity>,
+    pub view_state: Option<ViewModel>,
 }
 
 /// 🪪️ Collision-free public-operation identity attached to every persisted preview generation.
@@ -921,9 +906,6 @@ semio_framework_plugin::app_commands! {
         "setSunAzimuth" as "sun-azimuth" => set_sun_azimuth::SetSunAzimuth,
         "setSunElevation" as "sun-elevation" => set_sun_elevation::SetSunElevation,
         "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
-        "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
-        "setLocale" as "locale" => set_locale::SetLocale,
-        "setTerminology" as "terminology" => set_terminology::SetTerminology,
         "setContributions" as "contributions" => set_contributions::SetContributions,
 
         // 🐚️ Shell effects — export/import round-trips through the host, no operations either way.
@@ -956,9 +938,6 @@ fn cad_command_from_action(action: &str, args: Option<&protocol::DslValue>) -> R
     let position_axis = |index: usize| args.and_then(|value| value.get("position")).and_then(protocol::DslValue::as_array).and_then(|array| array.get(index)).and_then(protocol::DslValue::as_f64);
     Ok(match action {
         "setActiveExample" => CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").unwrap_or_default() }),
-        SET_ACTIVE_UTILITY_ACTION_ID => CadCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: str_field("utilityId").unwrap_or_default() }),
-        "setLocale" => CadCommand::SetLocale(set_locale::SetLocale { value: str_field("value").unwrap_or_default() }),
-        "setTerminology" => CadCommand::SetTerminology(set_terminology::SetTerminology { value: str_field("value").unwrap_or_default() }),
         "setDislocateOption" => CadCommand::SetDislocateOption(set_dislocate_option::SetDislocateOption { pane: str_field("pane"), option: str_field("option").unwrap_or_default(), pressed: bool_field("pressed") }),
         "setNodeSelection" => CadCommand::SetNodeSelection(set_node_selection::SetNodeSelection { node_ids: str_vec_field("nodeIds") }),
         "setCamera" => CadCommand::SetCamera(set_camera::SetCamera { pane: str_field("surfaceId"), camera: args.and_then(|value| value.get("camera")).and_then(|value| protocol::FromValue::from_value(value.clone()).ok()).unwrap_or_default() }),
@@ -1077,9 +1056,6 @@ const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setSunAzimuth",
     "setSunElevation",
     "setSunIntensity",
-    "setActiveUtility",
-    "setLocale",
-    "setTerminology",
     "setContributions",
 ];
 const CAD_RETAINED_TOOL_IDS: &[&str] = &[
@@ -1103,9 +1079,6 @@ const CAD_RETAINED_TOOL_IDS: &[&str] = &[
     "setSunAzimuth",
     "setSunElevation",
     "setSunIntensity",
-    "setActiveUtility",
-    "setLocale",
-    "setTerminology",
     "setContributions",
     "loadRawRequest",
 ];
@@ -1136,9 +1109,6 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setTerminology", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
@@ -1158,13 +1128,18 @@ fn cad_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config };
     let selection = interaction.selection.get(CAD_INTERACTION_DOMAIN).cloned().unwrap_or_default();
     let retained_interaction = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id };
-    let mut ctx = CadDispatchCtx { interaction: retained_interaction, preview_operation: Some(CadPreviewOperationIdentity::from(operation)) };
+    let mut ctx = CadDispatchCtx {
+        interaction: retained_interaction,
+        preview_operation: Some(CadPreviewOperationIdentity::from(operation)),
+        view_state: context.and_then(|context| context.view_state.clone()),
+    };
     if CAD_RETAINED_ARTIFACT_TOOL_IDS.contains(&command.command_id()) {
         admit_cad_snapshot(snapshot).map_err(Fault::from)?;
         return command.dispatch(&doc, &cfg, &mut ctx);
@@ -1286,9 +1261,6 @@ fn cad_config_retained_bytes(config: &CadConfig) -> usize {
         .saturating_add(cad_camera_retained_bytes(&config.camera_building))
         .saturating_add(cad_camera_retained_bytes(&config.camera_energy))
         .saturating_add(cad_camera_retained_bytes(&config.camera_structure_classic))
-        .saturating_add(config.active_utility_id.len())
-        .saturating_add(config.locale.len())
-        .saturating_add(config.terminology.len())
         .saturating_add(config.contributions_json.len())
 }
 
@@ -1757,9 +1729,6 @@ impl ArtifactEditor for CadPlayApp {
             "setSunAzimuth",
             "setSunElevation",
             "setSunIntensity",
-            "setActiveUtility",
-            "setLocale",
-            "setTerminology",
             "setContributions",
             "loadRawRequest"
         ]
@@ -1895,19 +1864,24 @@ impl ArtifactEditor for CadPlayApp {
         doc: &ArtifactView<'_, CadSnapshot>,
         cfg: &ConfigView<'_, CadConfig>,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, Fault> {
         let selection = interaction.selection(CAD_INTERACTION_DOMAIN);
         let snapshot = CadInteractionSnapshot { granularity: selection.granularity.clone(), ids: selection.ids.clone(), anchor_id: selection.anchor_id.clone() };
-        let mut ctx = CadDispatchCtx { interaction: snapshot, preview_operation: Some(CadPreviewOperationIdentity::from(doc.operation()?)) };
+        let mut ctx = CadDispatchCtx {
+            interaction: snapshot,
+            preview_operation: Some(CadPreviewOperationIdentity::from(doc.operation()?)),
+            view_state: view_state.cloned(),
+        };
         command.dispatch(doc, cfg, &mut ctx)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: cad_runtime_from_config(cfg.snapshot) };
-        let labels = cad_labels(cfg.snapshot);
+        let labels = cad_labels(view_state);
         let window_kind_id = match body_key {
             shape::BODY_KEY => shape::WINDOW_KIND_ID,
             building::BODY_KEY => building::WINDOW_KIND_ID,
@@ -1915,7 +1889,7 @@ impl ArtifactEditor for CadPlayApp {
             structure_classic::BODY_KEY => structure_classic::WINDOW_KIND_ID,
             _ => shape::WINDOW_KIND_ID,
         };
-        let active_utility = Some(cfg.snapshot.active_utility_id.as_str());
+        let active_utility = view_state.active_utility_id.as_deref();
         let options = view.runtime.dislocate_options(window_kind_id);
         match body_key {
             shape::BODY_KEY => shape::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
@@ -1929,9 +1903,9 @@ impl ArtifactEditor for CadPlayApp {
         }
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
         let view = CadPlayView { document: doc.snapshot.clone(), runtime: cad_runtime_from_config(cfg.snapshot) };
-        let labels = cad_labels(cfg.snapshot);
+        let labels = cad_labels(view_state);
         HashMap::from([
             (shape::WINDOW_KIND_ID.to_string(), shape::engagement(&view, labels)),
             (building::WINDOW_KIND_ID.to_string(), building::engagement(&view, labels)),
@@ -1942,9 +1916,9 @@ impl ArtifactEditor for CadPlayApp {
 
     /// 🪟️ Keyed by the 4 fixed window-KIND ids; each window collects its own measures from the edit
     /// mode's `☑️options/*` components.
-    fn window_measures(_doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let runtime = cad_runtime_from_config(cfg.snapshot);
-        let is_de = cad_is_de_locale(cfg.snapshot);
+        let is_de = cad_is_de_locale(view_state);
         HashMap::from([
             (shape::WINDOW_KIND_ID.to_string(), shape::window_measures(&runtime, is_de)),
             (building::WINDOW_KIND_ID.to_string(), building::window_measures(&runtime, is_de)),
@@ -1959,7 +1933,7 @@ impl ArtifactEditor for CadPlayApp {
     /// (`cfg.snapshot.selected_object_ids`, now framework-owned and unreachable here) — always shows
     /// the section; a bare right-click with nothing selected is a documented reduced-fidelity gap
     /// (each action already no-ops on an empty selection at dispatch time)?.
-    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         Menu::of(registry).action("translateSelection").action("rotateSelection").action("scaleSelection").action("duplicateObject").destructive("deleteObject").build()
     }
 }
@@ -2039,8 +2013,6 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("patchCadPlayReference", LocalizedLabel::native("Patch Reference", "Referenz aktualisieren"), ActionKind::Mutation).in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation).in_palette(false))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
-            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
-            .view_action("setTerminology", LocalizedLabel::native("Set Terminology", "Terminologie festlegen"))
             .view_action("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"))
             .view_action("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"))
             .mutation("focusModelDefinition", LocalizedLabel::native("Focus Model Definition", "Modelldefinition fokussieren"))
@@ -2103,7 +2075,6 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             // shooting's format defaults — every `CadConfig` field is session view-state, not a setting).
             .config(CadPlayApp::config_spec())
             .io(cad_io())
-            .action_interactive_job("setActiveUtility", InteractiveJobClassification::Migrated)
             .action_interactive_job("addObject", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("patchObject", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("patchSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
@@ -2137,8 +2108,6 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setTerminology", InteractiveJobClassification::Migrated)
             .action_interactive_job("saveSelected", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("saveInPlay", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("saveCurrent", InteractiveJobClassification::BatchOnlyPendingRewrite)

@@ -802,6 +802,11 @@ export const DOCUMENT_BACKBONE_BATCH_LIMITS = {
   maximumPayloadBytes: 262_144,
 } as const;
 
+export const DOCUMENT_BACKBONE_RETENTION_LIMITS = {
+  maximumBytes: 1_048_576,
+  maximumMessages: 64,
+} as const;
+
 export type DocumentBackboneBatchLimits = Readonly<{
   maximumBytes: number;
   maximumEnvelopes: number;
@@ -1630,5 +1635,5 @@ if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️artifact-bootstrap-protocol/🟦️.ts");
   await registerTests1(import.meta.vitest, { ArtifactBootstrapAssembler, artifactBootstrapAggregateHash, artifactBootstrapSha256, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame }, { directory: import.meta.dir, url: import.meta.url });
   const { registerTests2 } = await import("./🧪️tests/🧪️document-backbone-envelope-batch/🟦️.ts");
-  await registerTests2(import.meta.vitest, { DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests2(import.meta.vitest, { DOCUMENT_BACKBONE_RETENTION_LIMITS, DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact }, { directory: import.meta.dir, url: import.meta.url });
 }

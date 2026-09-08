@@ -148,6 +148,21 @@ fn the_json_mirror_publishes_exactly_the_registry_exports() {
 /// 🪞️ os is a CLIENT of hub for the GIS Map approval intent — this proves the `os.mcp` mirror is
 /// byte-identical in value space to hub's own authority, so a hub-side change breaks here loudly
 /// instead of drifting. It only READS hub's file.
+/// 📌️ The scope registration must publish exactly the registry's export ids, so
+/// `resolve_schema_export("os.mcp", …)` can answer for every `$defs` key the mirror publishes.
+#[test]
+fn the_scope_export_declaration_matches_the_registry() {
+    let mut declared = scope_export_ids();
+    declared.sort_unstable();
+    let mut registered: Vec<&str> = schemas().into_iter().map(|(name, _)| name).collect();
+    registered.sort_unstable();
+    assert_eq!(declared, registered, "the ScopeSchemaExports declaration drifted from schemas()");
+    register_scope_exports();
+    for id in scope_export_ids() {
+        assert!(semio_framework_schema::resolve_schema_export("os.mcp", id, semio_framework_schema::SchemaFormat::JsonSchema).is_ok(), "{id} does not resolve");
+    }
+}
+
 #[test]
 fn os_mirror_of_the_hub_approval_request_is_structurally_identical() {
     let hub: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🌎️hub/💡️inference/🧬️schema/🔣️.json")).expect("hub module schema parses");

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "grant": { "maxItems": 1, "maxBytes": 4096 },
+  "admissionPrefixes": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  "maximumSteps": 64,
+  "reservedOutputs": 3,
+  "blocked": ["pending", "returned", "faulted"],
+  "terminal": { "pending": 0, "empty": true, "data": { "bytes": 0, "slots": 0, "owners": 0 } }
+}

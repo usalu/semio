@@ -1,6 +1,8 @@
 use crate::*;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+}
 
 #[test]
 fn instance_lifetime_ui_patch_pending_cancel_never_allocates_a_payload_page() {
@@ -19,7 +21,9 @@ fn instance_lifetime_ui_patch_pending_cancel_never_allocates_a_payload_page() {
             assert_eq!(owner.get().is_some(), fixture["unplaced"]["readsAfterClose"].as_bool().unwrap());
             assert_eq!(owner.source_mut().is_ok(), fixture["unplaced"]["sourceReplacementAfterClose"].as_bool().unwrap());
             assert_eq!(owner.allocated_bytes(), 0);
-            if step.complete { break; }
+            if step.complete {
+                break;
+            }
         }
         assert!(owner.terminal_is_empty());
         assert_eq!(bytes, fixture["unplaced"]["semanticBytes"].as_u64().unwrap() as usize);
@@ -32,13 +36,19 @@ fn instance_lifetime_ui_patch_pending_placement_requires_full_inline_grant() {
     *owner.source_mut().unwrap() = Some(UiPatchOp::SetRoot { id: UiNodeId(7) });
     let mut target = UiPatchOps::default();
     assert_eq!(owner.place_into(&mut target, 32768), Ok(0));
-    while !target.has_reserved_slot() { target.try_reserve_one(target.next_allocation_bytes().unwrap()).unwrap(); }
+    while !target.has_reserved_slot() {
+        target.try_reserve_one(target.next_allocation_bytes().unwrap()).unwrap();
+    }
     assert_eq!(owner.place_into(&mut target, 4096), Ok(0));
     assert!(owner.get().is_some());
     assert_eq!(owner.place_into(&mut target, size_of::<UiPatchOp>()), Ok(size_of::<UiPatchOp>()));
     assert!(owner.terminal_is_empty());
     assert!(owner.close_step(1, 1).unwrap().complete);
-    for _ in 0..100 { if target.close_step(1, 1).unwrap().complete { break; } }
+    for _ in 0..100 {
+        if target.close_step(1, 1).unwrap().complete {
+            break;
+        }
+    }
     assert!(target.terminal_is_empty());
 }
 
@@ -78,7 +88,9 @@ fn instance_lifetime_ui_patch_storage_reservation_placement_and_cancel_preserve_
         let placed = operations.try_push_reserved(&mut source, grant).unwrap();
         assert_eq!(placed, if grant >= size_of::<UiPatchOp>() { size_of::<UiPatchOp>() } else { 0 });
         assert_eq!(source.is_some(), placed == 0);
-        if placed == 0 { assert_eq!(operations.try_push_reserved(&mut source, page), Ok(page)); }
+        if placed == 0 {
+            assert_eq!(operations.try_push_reserved(&mut source, page), Ok(page));
+        }
         let payload = operations.get(0).unwrap() as *const UiPatchOp;
         let before = operations.allocated_bytes();
         let mut moved = operations.take_all();
@@ -90,7 +102,11 @@ fn instance_lifetime_ui_patch_storage_reservation_placement_and_cancel_preserve_
         assert!(!moved.close_step(0, 4096).unwrap().progressed);
         assert!(!moved.close_step(1, 0).unwrap().progressed);
         assert_eq!(moved.allocated_bytes(), unchanged);
-        for _ in 0..100 { if moved.close_step(1, 1).unwrap().complete { break; } }
+        for _ in 0..100 {
+            if moved.close_step(1, 1).unwrap().complete {
+                break;
+            }
+        }
         assert!(moved.terminal_is_empty());
         assert_eq!(moved.allocated_bytes(), 0);
     }
@@ -103,18 +119,27 @@ fn instance_lifetime_ui_patch_storage_wire_oracle_and_full_capacity_are_unchange
     assert_eq!(serde_json::to_value(&operations).unwrap(), fixture["operations"]);
     let mut order = Vec::new();
     while let Some(operation) = operations.pop() {
-        order.push(match operation { UiPatchOp::SetRoot { id } | UiPatchOp::Remove { id } => id.0, _ => panic!("unexpected oracle operation") });
+        order.push(match operation {
+            UiPatchOp::SetRoot { id } | UiPatchOp::Remove { id } => id.0,
+            _ => panic!("unexpected oracle operation"),
+        });
     }
     operations.release_empty_allocation().unwrap();
     assert_eq!(serde_json::to_value(order).unwrap(), fixture["retirementOrder"]);
-    for index in 0..UI_DOCUMENT_PATCH_OPS { operations.try_push(UiPatchOp::SetRoot { id: UiNodeId(index as u64) }).unwrap(); }
+    for index in 0..UI_DOCUMENT_PATCH_OPS {
+        operations.try_push(UiPatchOp::SetRoot { id: UiNodeId(index as u64) }).unwrap();
+    }
     let retained = operations.allocated_bytes();
     let mut rejected = Some(UiPatchOp::SetRoot { id: UiNodeId(u64::MAX) });
     assert!(operations.next_allocation_bytes().is_err());
     assert!(operations.try_push_reserved(&mut rejected, 32768).is_err());
     assert!(rejected.is_some());
     assert_eq!(operations.allocated_bytes(), retained);
-    for _ in 0..UI_DOCUMENT_PATCH_OPS * 8 { if operations.close_step(1, 1).unwrap().complete { break; } }
+    for _ in 0..UI_DOCUMENT_PATCH_OPS * 8 {
+        if operations.close_step(1, 1).unwrap().complete {
+            break;
+        }
+    }
     assert!(operations.terminal_is_empty());
 }
 
@@ -126,7 +151,8 @@ fn instance_lifetime_ui_patch_storage_typed_unicode_close_is_in_place_and_resuma
         let mut operations: UiPatchOps = serde_json::from_value(serde_json::json!([{
             "type": "setComponent", "id": 7,
             "component": {"type": "text", "value": "é".repeat(256)}
-        }])).unwrap();
+        }]))
+        .unwrap();
         let pointer = operations.get(0).unwrap() as *const UiPatchOp;
         let mut total = 0;
         for turn in 0..2000 {
@@ -140,7 +166,9 @@ fn instance_lifetime_ui_patch_storage_typed_unicode_close_is_in_place_and_resuma
                 operations = moved.take_all();
                 assert!(moved.terminal_is_empty());
             }
-            if step.complete { break; }
+            if step.complete {
+                break;
+            }
         }
         assert_eq!(total, 512);
         assert!(operations.terminal_is_empty());

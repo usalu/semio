@@ -8,7 +8,6 @@ use crate::Din16798Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::Din16798Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a din16798 snapshot. One field per named inference under
@@ -205,3 +204,8 @@ pub fn evaluate(document: &Din16798Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::Din16798Outline;
+//#endregion 🔁️Re-exports

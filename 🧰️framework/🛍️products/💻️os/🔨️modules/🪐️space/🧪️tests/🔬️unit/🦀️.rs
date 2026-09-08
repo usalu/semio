@@ -58,7 +58,7 @@ fn space_snapshot_dsl_pack_round_trips() {
 
 #[test]
 fn space_default_example_dsl_round_trips() {
-    let text = include_str!("../../📚️examples/🪐️demo.space");
+    let text = include_str!("../../🗿️artifacts/🪐️space/📚️examples/🪐️demo.space");
     let parsed = <SpaceSnapshot as ArtifactDsl>::parse_dsl(text).expect("parse default .space example");
     store::test_support::assert_dsl_round_trip(&parsed);
 }
@@ -100,7 +100,7 @@ fn space_envelope_id_is_two_dot_segments() {
 
 #[test]
 fn collection_default_example_dsl_round_trips() {
-    let text = include_str!("../../📚️examples/🎬️demo.collection");
+    let text = include_str!("../../🗿️artifacts/🗂️collection/📚️examples/🎬️demo.collection");
     let parsed = <CollectionSnapshot as ArtifactDsl>::parse_dsl(text).expect("parse default .collection example");
     store::test_support::assert_dsl_round_trip(&parsed);
 }

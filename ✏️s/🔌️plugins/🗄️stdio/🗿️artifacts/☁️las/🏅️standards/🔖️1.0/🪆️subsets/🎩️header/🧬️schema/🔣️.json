@@ -9,20 +9,20 @@
       "x-semio-state": "artifact"
     },
     "header": {
-      "$ref": "snapshot.json#/definitions/LasHeader",
+      "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/snapshot.json#/$defs/LasHeader",
       "x-semio-state": "artifact"
     },
     "vlrs": {
       "type": "array",
       "items": {
-        "$ref": "snapshot.json#/definitions/LasVlr"
+        "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/snapshot.json#/$defs/LasVlr"
       },
       "x-semio-state": "artifact"
     },
     "points": {
       "type": "array",
       "items": {
-        "$ref": "snapshot.json#/definitions/LasPoint"
+        "$ref": "https://semio.tech/schema/s/stdio/las/1.0/header/snapshot.json#/$defs/LasPoint"
       },
       "x-semio-state": "artifact"
     }

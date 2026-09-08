@@ -17,7 +17,6 @@ message WriterConfig {
   // @state config
   WriterCamera camera = 10;
   // @state config
-  string locale = 11;
 }
 
 message WriterEditorSelection {

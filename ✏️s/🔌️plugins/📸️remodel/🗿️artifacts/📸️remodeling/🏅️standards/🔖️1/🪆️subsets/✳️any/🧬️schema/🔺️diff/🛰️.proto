@@ -39,7 +39,6 @@ message RemodelingDiff {
   // @state config
   optional RemodelingUiLayers layers = 17;
   // @state config
-  optional string locale = 18;
 }
 
 message ArtifactDialect {
@@ -303,7 +302,6 @@ message RemodelingArtifact {
   RemodelingUiFrameCursor frame_cursor = 14;
   RemodelingUiCamera camera = 15;
   RemodelingUiLayers layers = 16;
-  string locale = 17;
 }
 
 message RemodelingAssetChild {

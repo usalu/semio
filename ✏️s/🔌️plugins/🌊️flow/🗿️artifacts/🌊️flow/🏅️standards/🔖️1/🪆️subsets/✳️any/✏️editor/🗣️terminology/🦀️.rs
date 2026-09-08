@@ -2,7 +2,6 @@
 //! reaches for. Deliberately ONE block for the whole app (never split per window/panel): the macro's
 //! value is that every locale×terminology combination is compile-checked in one place.
 
-use crate::editor::flow::config::FlowConfig;
 use semio_framework_plugin::Label;
 
 //#region 🔖️Labels
@@ -65,8 +64,8 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn flow_play_labels(cfg: &FlowConfig) -> &'static FlowPlayLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<FlowPlayLabels>(&cfg.locale)
+pub fn flow_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static FlowPlayLabels {
+    semio_framework_plugin::resolve_labels::<FlowPlayLabels>(view_state)
 }
 
 /// 🗣️ Resolves a built-in extension's display name from its stable id; unknown ids fall back to the

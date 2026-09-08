@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/trinity/jack/snapshot/text.json",
   "title": "JackSnapshotText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of JackSnapshot: the instance is the serialized document this facet's grammar and codec speak."
 }

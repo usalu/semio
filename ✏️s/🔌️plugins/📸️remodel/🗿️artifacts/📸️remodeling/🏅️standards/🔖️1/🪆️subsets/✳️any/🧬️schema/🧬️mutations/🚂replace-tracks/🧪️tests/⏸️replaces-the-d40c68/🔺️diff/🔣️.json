@@ -58,15 +58,15 @@
         {
           "cameraId": "cam-a",
           "rotationWxyz": [
-            1.0,
-            0.0,
-            0.0,
-            0.0
+            1,
+            0,
+            0,
+            0
           ],
           "translation": [
-            0.0,
-            0.0,
-            0.0
+            0,
+            0,
+            0
           ]
         },
         {
@@ -74,13 +74,13 @@
           "rotationWxyz": [
             0.75,
             0.25,
-            0.0,
-            0.0
+            0,
+            0
           ],
           "translation": [
             0.5,
-            0.0,
-            0.0
+            0,
+            0
           ]
         }
       ]
@@ -90,7 +90,7 @@
         "id": "track-b",
         "length": 8,
         "class": "static",
-        "meanSpeedMS": 0.0
+        "meanSpeedMS": 0
       },
       {
         "id": "track-c",
@@ -108,8 +108,8 @@
       "reprojectionRmsPx": 0.5,
       "gcpCheckpointRmse": 0.25,
       "watertight": null,
-      "meanTrackLength": 6.0,
-      "registeredFrameRatio": 1.0,
+      "meanTrackLength": 6,
+      "registeredFrameRatio": 1,
       "denseCoverageRatio": 0.75,
       "warnings": [
         "low overlap on frame 12"
@@ -121,6 +121,5 @@
   "reportTable": null,
   "frameCursor": null,
   "camera": null,
-  "layers": null,
-  "locale": null
+  "layers": null
 }

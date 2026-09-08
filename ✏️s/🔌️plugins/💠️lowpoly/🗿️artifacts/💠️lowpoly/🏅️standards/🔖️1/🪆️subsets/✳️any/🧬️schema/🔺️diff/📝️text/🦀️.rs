@@ -107,9 +107,6 @@ impl LowpolyDiff {
             if let Some(value) = &self.engagement_input {
                 next.engagement_input = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             if let Some(value) = &self.hovered_object_id {
                 next.hovered_object_id = value.clone();
             }
@@ -253,7 +250,6 @@ impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
         take!(selection_method);
         take!(selection_mode_default);
         take!(engagement_input);
-        take!(locale);
         take!(hovered_object_id);
         take!(hovered_target_object_id);
         take!(hovered_target_mode);
@@ -378,3 +374,8 @@ pub fn diff_replace_snapshot(before: &LowpolySnapshot, after: &LowpolySnapshot) 
     }
 }
 //#endregion 🔖️Constructors
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type LowpolyDiffText = String;
+//#endregion 🚚️Carrier

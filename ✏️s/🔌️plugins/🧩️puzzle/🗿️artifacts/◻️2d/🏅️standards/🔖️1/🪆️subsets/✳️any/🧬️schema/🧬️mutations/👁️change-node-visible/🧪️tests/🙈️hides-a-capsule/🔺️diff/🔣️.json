@@ -14,7 +14,7 @@
             "nodeKind": "Capsule Slash",
             "x": 72.524,
             "y": 963.528,
-            "radius": 20.0,
+            "radius": 20,
             "text": "cs_sl0_d3_t_f0_b_c1",
             "iconKind": "capsule_slash",
             "visible": false,
@@ -24,7 +24,7 @@
                 "id": "f1b5e882-0d34-40af-aa83-cca07919adab:link",
                 "handleKind": "door capsule right",
                 "angle": -1.5707963267948966,
-                "radius": 3.0
+                "radius": 3
               }
             ]
           }
@@ -47,8 +47,6 @@
   "fillCount": null,
   "brushCandidateIndex": null,
   "brushCandidateSourceHandleId": null,
-  "locale": null,
-  "terminology": null,
   "lodModeByPaneJson": null,
   "engagementInputByPaneJson": null,
   "brushCandidatesJson": null,

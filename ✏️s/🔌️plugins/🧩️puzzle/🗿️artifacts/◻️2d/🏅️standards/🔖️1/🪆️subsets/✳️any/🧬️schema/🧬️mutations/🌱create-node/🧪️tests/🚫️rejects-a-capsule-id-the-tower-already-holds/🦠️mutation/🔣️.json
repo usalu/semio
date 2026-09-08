@@ -5,7 +5,7 @@
     "nodeKind": "Capsule Backslash",
     "x": 51.069,
     "y": 664.379,
-    "radius": 20.0,
+    "radius": 20,
     "text": "cs_sl0_d0_t_f1_b_c1",
     "iconKind": "capsule_backslash",
     "anchor": "fixed",
@@ -14,7 +14,7 @@
         "id": "f537171c-bacd-4422-abed-09e1ab19c572:link",
         "handleKind": "door capsule right",
         "angle": -1.5707963267948966,
-        "radius": 3.0
+        "radius": 3
       }
     ]
   },

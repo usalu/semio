@@ -13,14 +13,14 @@
         "id": "part-c",
         "partKind": "part-kind-a",
         "2d": {
-          "x": 40.0,
-          "y": 40.0
+          "x": 40,
+          "y": 40
         },
         "3d": {
           "origin": [
-            4.0,
-            4.0,
-            4.0
+            4,
+            4,
+            4
           ]
         },
         "grips": []
@@ -53,7 +53,6 @@
   "fillCount": null,
   "brushCandidateIndex": null,
   "lodMode": null,
-  "locale": null,
   "runtimeExtrasJson": null,
   "hoveredPartId": null,
   "previewSeq": null

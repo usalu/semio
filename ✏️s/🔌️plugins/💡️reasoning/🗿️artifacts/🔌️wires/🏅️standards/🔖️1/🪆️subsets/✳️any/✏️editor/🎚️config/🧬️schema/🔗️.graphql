@@ -2,5 +2,4 @@ type WiresConfig {
   dragNodeId: String @state(class: CONFIG)
   dragLastX: Float! @state(class: CONFIG)
   dragLastY: Float! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }

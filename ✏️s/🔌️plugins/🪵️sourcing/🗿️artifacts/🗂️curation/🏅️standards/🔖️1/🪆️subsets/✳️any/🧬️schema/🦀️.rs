@@ -1,6 +1,6 @@
 //! 🧬️ Curation artifact schema — every field of the artifact with its state class.
 
-use crate::{CurationSnapshot, CuratedItem, Filters, GeometryRecipe, ObjectKind, ObjectKindExtra, SourcingMutation};
+use crate::{CurationSnapshot, SourcingMutation};
 use framework_schema::ArtifactSchema;
 use semio_framework::parse_contributions;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
@@ -23,8 +23,6 @@ pub struct CurationArtifact {
     #[state(config)]
     pub filters: Filters,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub contributions_json: String,
 }
 //#endregion 🔖️Artifact
@@ -36,7 +34,7 @@ fn default_contributions_json() -> String {
 
 impl Default for CurationArtifact {
     fn default() -> Self {
-        Self { catalog: crate::catalog_child_handle(&[]), stock_extra: Vec::new(), curated: Vec::new(), filters: Filters::default(), locale: "en-US".into(), contributions_json: default_contributions_json() }
+        Self { catalog: crate::catalog_child_handle(&[]), stock_extra: Vec::new(), curated: Vec::new(), filters: Filters::default(), contributions_json: default_contributions_json() }
     }
 }
 
@@ -775,3 +773,12 @@ pub type Construction = semio_framework_plugin::app::SnapshotBuilder<CurationSna
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::GeometryRecipe;
+pub use crate::ObjectKind;
+pub use crate::ObjectKindExtra;
+pub use crate::CuratedItem;
+pub use crate::Filters;
+//#endregion 🔁️Re-exports

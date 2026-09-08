@@ -2,6 +2,127 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+    {
+      "name": "🧪️test🪟️context-menu-view-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-context-menu-view-context",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.11
+      }
+    },
+    {
+      "name": "⚖️gate🏛️abstraction-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-abstraction-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.1
+      }
+    },
+    {
+      "name": "🧪️test🏛️abstraction-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-abstraction-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.101
+      }
+    },
+    {
+      "name": "🧪️test🪟️window-view-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-window-view-context",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10200000000003
+      }
+    },
+    {
+      "name": "🧪️test🪟️window-view-context🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-window-view-context-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.103
+      }
+    },
+    {
+      "name": "🧪️test🪟️surface-view-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-surface-view-context",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10400000000004
+      }
+    },
+    {
+      "name": "🧪️test🌐️resolved-host-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-resolved-host-context",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.105
+      }
+    },
+    {
+      "name": "🧪️test🌐️browser-actor-host-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-browser-actor-host-context",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.106
+      }
+    },
+    {
+      "name": "🧪️test🌐️browser-actor-host-context⚙️worker",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-browser-actor-host-context-worker",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107
+      }
+    },
+    {
+      "name": "🔎️check⚙️os-config",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-config:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.108
+      }
+    },
+    {
+      "name": "🧪️test⚙️os-config",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-config:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10900000000004
+      }
+    },
     // #region ⚡️Nx Lifecycle and Cache
     {
       "name": "🧪️test print compiler",
@@ -8790,6 +8911,28 @@
       }
     },
     {
+      "name": "📦️test🧬️schema🧩️compile",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-compile",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.8
+      }
+    },
+    {
+      "name": "📦️generate🧬️schema📤️entries",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:schema-entries",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 208.9
+      }
+    },
+    {
       "name": "📦️verify🧩️taxonomy📋️report",
       "type": "node-terminal",
       "request": "launch",
@@ -11892,6 +12035,22 @@
       }
     },
     {
+      "name": "📦️build🦀️os-hub",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 502.42 }
+    },
+    {
+      "name": "📦️build🟦️os-hub-admin",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-admin:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 502.4205 }
+    },
+    {
       "name": "🔎️check🦀️os-hub",
       "type": "node-terminal",
       "request": "launch",
@@ -13594,6 +13753,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 503.932
+      }
+    },
+    {
+      "name": "🧪️test🟦️sequence-browser",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/sequence-tests:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 503.933
       }
     },
     {

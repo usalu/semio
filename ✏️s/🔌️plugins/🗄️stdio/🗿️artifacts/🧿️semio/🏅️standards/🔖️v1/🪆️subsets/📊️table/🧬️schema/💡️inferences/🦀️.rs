@@ -11,8 +11,7 @@ use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::shape::{compute_semio_table_shape, SemioTableShape};
-
+use super::shape::{compute_semio_table_shape};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio table snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `shape`, backed by the `📐shape/` slug dir).
@@ -86,3 +85,8 @@ pub fn semio_table_artifact_inference_descriptor() -> framework_schema::Artifact
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::shape::SemioTableShape;
+//#endregion 🔁️Re-exports

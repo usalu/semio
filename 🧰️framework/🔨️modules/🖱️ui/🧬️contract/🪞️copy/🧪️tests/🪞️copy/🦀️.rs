@@ -1,13 +1,18 @@
 use super::*;
 
 //#region 🧪️ComponentCopyLaws
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+}
 
 fn close(owner: &mut UiComponentCopy, grant: usize) {
     for _ in 0..500_000 {
         let step = owner.close_step(1, grant).unwrap();
         assert!(step.released_items <= 1 && step.released_bytes <= grant);
-        if step.complete { assert!(owner.terminal_is_empty()); return; }
+        if step.complete {
+            assert!(owner.terminal_is_empty());
+            return;
+        }
     }
     panic!("component copy did not retire exact source and candidate");
 }
@@ -32,7 +37,9 @@ fn retained_component_copy_all_variants_match_native_serde() {
             assert!(step.allocated_bytes <= request && step.copied_bytes <= 32768);
             allocated += step.allocated_bytes;
             turns += 1;
-            if step.complete { break; }
+            if step.complete {
+                break;
+            }
             assert_eq!(owner.candidate().is_some(), fixture["partialCandidateReadable"].as_bool().unwrap());
         }
         assert_eq!(serde_json::to_value(owner.candidate().unwrap()).unwrap(), expected);
@@ -78,10 +85,17 @@ fn retained_component_copy_surface_advances_under_real_4096_work_grant() {
     for _ in 0..256 {
         let step = owner.advance(1, fixture["allocationGrant"].as_u64().unwrap() as usize, grant).unwrap();
         maximum_work = maximum_work.max(step.copied_bytes);
-        if step.complete { complete = true; break; }
-        if !step.progressed { break; }
+        if step.complete {
+            complete = true;
+            break;
+        }
+        if !step.progressed {
+            break;
+        }
     }
-    if complete { assert_eq!(serde_json::to_value(owner.candidate().unwrap()).unwrap(), expected); }
+    if complete {
+        assert_eq!(serde_json::to_value(owner.candidate().unwrap()).unwrap(), expected);
+    }
     close(&mut owner, 64);
     eprintln!("[DEBUG] component-copy-real-grant inline={} work-max={maximum_work} complete={complete}", size_of::<crate::Component>());
     assert!(maximum_work <= grant);

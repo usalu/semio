@@ -152,36 +152,411 @@
       }
     },
     "FemNode": {
-      "title": "FemNode",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      },
+      "title": "FemNode"
     },
     "FemElement": {
-      "title": "FemElement",
-      "type": "object"
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "end",
+            "id",
+            "kind",
+            "materialId",
+            "sectionId",
+            "start"
+          ],
+          "properties": {
+            "kind": {
+              "const": "bar"
+            },
+            "id": {
+              "type": "string"
+            },
+            "start": {
+              "type": "string"
+            },
+            "end": {
+              "type": "string"
+            },
+            "materialId": {
+              "type": "string"
+            },
+            "sectionId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "end",
+            "id",
+            "kind",
+            "materialId",
+            "roll",
+            "sectionId",
+            "start"
+          ],
+          "properties": {
+            "kind": {
+              "const": "frame"
+            },
+            "id": {
+              "type": "string"
+            },
+            "start": {
+              "type": "string"
+            },
+            "end": {
+              "type": "string"
+            },
+            "materialId": {
+              "type": "string"
+            },
+            "sectionId": {
+              "type": "string"
+            },
+            "roll": {
+              "type": "number"
+            }
+          }
+        }
+      ],
+      "title": "FemElement"
     },
     "FemSolid": {
-      "title": "FemSolid",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseZ",
+        "height",
+        "holes",
+        "id",
+        "layers",
+        "materialId",
+        "meshSize",
+        "name",
+        "outline"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "outline": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
+        },
+        "baseZ": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "layers": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "meshSize": {
+          "type": "number"
+        },
+        "materialId": {
+          "type": "string"
+        }
+      },
+      "title": "FemSolid"
     },
     "FemMaterial": {
-      "title": "FemMaterial",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "e",
+        "g",
+        "id",
+        "name",
+        "nu",
+        "rho"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "e": {
+          "type": "number"
+        },
+        "g": {
+          "type": "number"
+        },
+        "nu": {
+          "type": "number"
+        },
+        "rho": {
+          "type": "number"
+        }
+      },
+      "title": "FemMaterial"
     },
     "FemSection": {
-      "title": "FemSection",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "area",
+        "id",
+        "iy",
+        "iz",
+        "j",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "area": {
+          "type": "number"
+        },
+        "iy": {
+          "type": "number"
+        },
+        "iz": {
+          "type": "number"
+        },
+        "j": {
+          "type": "number"
+        }
+      },
+      "title": "FemSection"
     },
     "FemSupport": {
-      "title": "FemSupport",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixed",
+        "id",
+        "nodeId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "nodeId": {
+          "type": "string"
+        },
+        "fixed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Tx",
+              "Ty",
+              "Tz",
+              "Rx",
+              "Ry",
+              "Rz"
+            ]
+          }
+        }
+      },
+      "title": "FemSupport"
     },
     "FemLoadCase": {
-      "title": "FemLoadCase",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "loads",
+        "name",
+        "selfWeight"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "loads": {
+          "type": "array",
+          "items": {
+            "title": "FemLoad",
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "dof",
+                  "id",
+                  "kind",
+                  "nodeId",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "nodal"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "nodeId": {
+                    "type": "string"
+                  },
+                  "dof": {
+                    "type": "string",
+                    "enum": [
+                      "Tx",
+                      "Ty",
+                      "Tz",
+                      "Rx",
+                      "Ry",
+                      "Rz"
+                    ]
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "elementId",
+                  "id",
+                  "kind",
+                  "wx",
+                  "wy",
+                  "wz"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "memberUdl"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "elementId": {
+                    "type": "string"
+                  },
+                  "wx": {
+                    "type": "number"
+                  },
+                  "wy": {
+                    "type": "number"
+                  },
+                  "wz": {
+                    "type": "number"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "kind",
+                  "pressure",
+                  "solidId"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "area"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "solidId": {
+                    "type": "string"
+                  },
+                  "pressure": {
+                    "type": "number"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "selfWeight": {
+          "type": "boolean"
+        }
+      },
+      "title": "FemLoadCase"
     },
     "FemCombination": {
-      "title": "FemCombination",
-      "type": "object"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "terms"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "terms": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      },
+      "title": "FemCombination"
     },
     "Fem3dRetainedCommandLimits": {
       "type": "object",

@@ -32,7 +32,6 @@ export interface WriterDiff {
   /** @state config */
   cameraZoom?: number;
   /** @state config */
-  locale?: string;
 }
 
 export interface WriterArtifact {
@@ -50,7 +49,6 @@ export interface WriterArtifact {
   cameraX: number;
   cameraY: number;
   cameraZoom: number;
-  locale: string;
 }
 
 export interface WriterEditorSelection {

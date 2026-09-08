@@ -1,6 +1,6 @@
 //! 🧬️ Shooting diff schema — sparse field delta over the artifact.
 
-use crate::{ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSavedCameraPatch, ShootingSceneLighting, ShootingShot, ShootingShotPatch};
+use crate::{ShootingAsset, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot};
 use schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -49,8 +49,6 @@ pub struct ShootingDiff {
     pub camera_draft_label: Option<String>,
     #[state(config)]
     pub camera: Option<ShootingCamera>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
 
@@ -116,3 +114,10 @@ pub struct ShootingSavedCameraPatchEntry {
     pub patch: ShootingSavedCameraPatch,
 }
 //#endregion 🔖️DeltaHelpers
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::ShootingAssetPatch;
+pub use crate::ShootingShotPatch;
+pub use crate::ShootingSavedCameraPatch;
+//#endregion 🔁️Re-exports

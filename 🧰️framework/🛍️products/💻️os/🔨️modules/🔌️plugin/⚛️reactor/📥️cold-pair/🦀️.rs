@@ -411,5 +411,5 @@ impl<const N: usize> Drop for ColdDocumentPairIngressRegistry<N> {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/📥️cold-pair/🦀️.rs"]
 mod tests;

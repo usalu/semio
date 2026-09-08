@@ -9,17 +9,17 @@
         "label": "Top",
         "camera": {
           "position": [
-            0.0,
-            0.0,
-            20.0
+            0,
+            0,
+            20
           ],
           "target": [
-            0.0,
-            0.0,
-            0.0
+            0,
+            0,
+            0
           ],
-          "zoom": 1.0,
-          "fov": 50.0
+          "zoom": 1,
+          "fov": 50
         }
       }
     ],
@@ -40,6 +40,5 @@
   "centerModel": null,
   "fitRevision": null,
   "cameraDraftLabel": null,
-  "camera": null,
-  "locale": null
+  "camera": null
 }

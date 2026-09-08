@@ -30,7 +30,6 @@ message SpaceConfig {
   // @state config
   optional string client_name = 14;
   // @state config
-  string locale = 15;
 }
 
 message SpaceWindowCamera {

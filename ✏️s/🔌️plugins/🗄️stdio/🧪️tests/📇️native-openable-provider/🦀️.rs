@@ -19,7 +19,7 @@ fn native_catalog_dependency_is_exactly_its_compiled_owner() {
 
 #[test]
 fn generic_plugin_builder_preserves_domain_owned_topic_contributions() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️fixtures/📇️topic-contributions/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧫️fixtures/📇️topic-contributions/🔣️.json"))).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let plugin_id = format!("builder-topic-{}", row["id"].as_str().unwrap());
         let contributions: Vec<semio_framework::TopicContribution> = serde_json::from_value(row["contributions"].clone()).unwrap();
@@ -41,7 +41,7 @@ use semio_s_plugin_stdio::registry::native_codec_factory_receipts;
 
 #[test]
 fn native_composition_and_validation_claims_are_disjoint_but_each_exclusive() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️registry/🧪️fixtures/🧾️claim-authority/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️registry/🧫️fixtures/🧾️claim-authority/🔣️.json"))).unwrap();
     assert_eq!(ArtifactIdentityNamespace::validated_dialect().as_str(), "validated-dialect");
     let rows = fixture["cases"].as_array().unwrap();
     assert_eq!(rows.len(), 8);
@@ -78,7 +78,7 @@ fn artifact_owned_native_codec_receipts_form_one_complete_static_bijection() {
 #[test]
 fn native_catalog_matches_every_decoded_descriptor_kind_without_guest_app_assembly() {
     use semio_s_plugin_stdio::registry::{artifact_definitions, native_codec_artifact_kinds, validate_native_codec_artifact_kinds};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️registry/🧪️fixtures/📇️native-catalog-surface/🔣️.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️registry/🧫️fixtures/📇️native-catalog-surface/🔣️.json"))).unwrap();
     let expected = native_codec_artifact_kinds();
     assert_eq!(artifact_definitions().unwrap().len(), fixture["definitionCount"].as_u64().unwrap() as usize);
     assert_eq!(expected.len(), fixture["codecCount"].as_u64().unwrap() as usize);
@@ -128,7 +128,7 @@ fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authoriti
             _ => {}
         }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️registry/🧪️fixtures/📇️native-catalog-surface/🧪️commitment.json"))).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️registry/🧫️fixtures/📇️native-catalog-surface/🧪️commitment.json"))).unwrap();
     let contribution = native_artifact_catalog_contribution().unwrap();
     let original = serde_json::to_value(&contribution).unwrap();
     println!("[DEBUG] native-catalog-payload={}", serde_json::to_string(&original["payload"]).unwrap());

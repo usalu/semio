@@ -86,4 +86,4 @@ semio-s-artifact-stdio-json = { workspace = true }
 
 [[test]]
 name = "flow_retained_decode"
-path = "../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧪️tests/🦀️.rs"
+path = "../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧪️tests/💾️binary/🦀️.rs"

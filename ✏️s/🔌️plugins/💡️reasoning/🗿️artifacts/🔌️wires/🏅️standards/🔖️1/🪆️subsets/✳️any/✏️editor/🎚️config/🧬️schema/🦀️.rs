@@ -11,8 +11,6 @@ pub struct WiresConfig {
     pub drag_last_x: f64,
     #[state(config)]
     pub drag_last_y: f64,
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor

@@ -91,9 +91,7 @@ message CadDiff {
   // @state config
   optional CadDislocateOptions dislocate_structure_classic = 43;
   // @state config
-  optional string locale = 44;
   // @state config
-  optional string terminology = 45;
   // @state config
   optional string contributions_json = 46;
   // @state artifact

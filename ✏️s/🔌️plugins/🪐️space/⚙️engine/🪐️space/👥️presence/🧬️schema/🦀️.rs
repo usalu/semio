@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::engine::space::config::SpaceWindowCamera;
+
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -18,3 +18,8 @@ pub struct SpacePresence {
     #[state(presence)]
     pub preview_off_node_ids: Vec<String>,
 }
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::engine::space::config::SpaceWindowCamera;
+//#endregion 🔁️Re-exports

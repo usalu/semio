@@ -94,6 +94,6 @@ app_labels! {
 }
 
 /// 🌐️ Resolves the label set for the config's current BCP-47 locale tag.
-pub fn remodeling_labels(cfg: &RemodelingConfig) -> &'static RemodelingLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<RemodelingLabels>(&cfg.locale)
+pub fn remodeling_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static RemodelingLabels {
+    semio_framework_plugin::resolve_labels::<RemodelingLabels>(view_state)
 }

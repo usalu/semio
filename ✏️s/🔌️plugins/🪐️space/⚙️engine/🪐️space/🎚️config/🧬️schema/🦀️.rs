@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use super::SpaceWindowCamera;
+
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -35,8 +35,6 @@ pub struct SpaceConfig {
     pub client_id: Option<String>,
     #[state(config)]
     pub client_name: Option<String>,
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor
@@ -63,3 +61,8 @@ pub async fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::SpaceWindowCamera;
+//#endregion 🔁️Re-exports

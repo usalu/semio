@@ -1,5 +1,5 @@
 {
   "mutation": "resizeNode",
   "nodeId": "node-nucleus",
-  "newRadius": 24.0
+  "newRadius": 24
 }

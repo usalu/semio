@@ -240,9 +240,6 @@ impl RasterDiff {
             if let Some(value) = self.camera_zoom {
                 next.camera_zoom = value;
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             if let Some(value) = &self.hovered_id {
                 next.hovered_id = value.clone();
             }
@@ -399,7 +396,6 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
         take!(camera_x);
         take!(camera_y);
         take!(camera_zoom);
-        take!(locale);
         take!(hovered_id);
         match (&mut self.layers, other.layers) {
             (Some(dst), Some(src)) => {
@@ -469,3 +465,8 @@ pub fn diff_remove_asset(asset_id: &str) -> RasterDiff {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️asset-capacity-vectors/🦀️.rs"]
 mod asset_capacity_vectors;
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type RasterDiffText = String;
+//#endregion 🚚️Carrier

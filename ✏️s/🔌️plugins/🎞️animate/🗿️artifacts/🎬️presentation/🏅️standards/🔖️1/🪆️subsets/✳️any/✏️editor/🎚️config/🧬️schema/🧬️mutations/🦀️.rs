@@ -4,9 +4,6 @@ use super::*;
 #[path = "⌨️set-engagement-input/🦀️.rs"]
 mod set_engagement_input;
 pub use set_engagement_input::SetEngagementInput;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -14,8 +11,6 @@ pub use set_locale::SetLocale;
 pub enum PresentationConfigMutation {
     #[dsl(key = "set-engagement-input")]
     SetEngagementInput(SetEngagementInput),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
 }
 
 impl protocol::OpText for PresentationConfigMutation {

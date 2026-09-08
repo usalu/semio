@@ -1103,6 +1103,8 @@ pub enum Event {
 
     SurfaceVisible {
         surface: String,
+        body_key: String,
+        view_state: Vec<u8>,
     },
     SurfaceHidden {
         surface: String,
@@ -1925,7 +1927,7 @@ impl TurnResult {
 }
 
 #[cfg(test)]
-#[path = "📤️return/📦️content/🗣️dialects/🦀️.rs"]
+#[path = "🧪️tests/🗣️return-content-dialects/🦀️.rs"]
 mod return_content_dialect_tests;
 
 #[path = "📤️return/📦️content/🦀️.rs"]
@@ -1935,19 +1937,19 @@ pub mod return_content;
 pub mod return_message;
 
 #[cfg(test)]
-#[path = "📤️return/📦️content/🖼️framing/🦀️.rs"]
+#[path = "📤️return/📦️content/🖼️framing/🧪️tests/🔬️standalone/🦀️.rs"]
 mod return_content_framing_tests;
 
 #[cfg(test)]
-#[path = "📤️return/📦️content/💌️message/🧪️tests/🦀️.rs"]
+#[path = "📤️return/📦️content/💌️message/🧪️tests/💌️message/🦀️.rs"]
 mod return_content_message_tests;
 
 #[cfg(test)]
-#[path = "📤️return/🏠️source/🦀️.rs"]
+#[path = "📤️return/🏠️source/🧪️tests/🔬️standalone/🦀️.rs"]
 mod return_source_inventory_tests;
 
 #[cfg(test)]
-#[path = "📤️return/🏠️source/📚️entries/🧪️tests/🦀️.rs"]
+#[path = "📤️return/🏠️source/📚️entries/🧪️tests/📚️entries/🦀️.rs"]
 mod return_source_entries_tests;
 
 #[cfg(test)]

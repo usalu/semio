@@ -3,9 +3,8 @@ use super::*;
 use protocol::Mutation;
 
 #[semio_framework_async_macros::async_test]
-async fn jack_config_default_has_default_locale() {
+async fn jack_config_default_has_default_camera() {
     let config = JackConfig::default();
-    assert_eq!(config.locale, "en-US");
     assert_eq!(config.camera, Camera::default());
 }
 
@@ -20,9 +19,9 @@ async fn jack_config_dsl_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn jack_config_operation_backwards_restores_prior_snapshot() {
     let base = JackConfig::default();
-    let operation = JackConfigMutation::SetActiveFixture(SetActiveFixture { value: "nakagin".into() });
+    let operation = JackConfigMutation::SetQuery(SetQuery { value: "RETURN 1".into() });
     let next = operation.diff(&base).diff().clone();
-    assert_eq!(next.active_fixture_id, "nakagin".to_string());
+    assert_eq!(next.jack_query, "RETURN 1".to_string());
     let backwards = operation.inverse(&base);
     let restored = backwards[0].diff(&next).diff().clone();
     assert_eq!(restored, base);
@@ -31,5 +30,5 @@ async fn jack_config_operation_backwards_restores_prior_snapshot() {
 #[semio_framework_async_macros::async_test]
 async fn jack_config_operation_text_round_trips() {
     ::store::os_store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetLodMode(SetLodMode { window_id: "trinity-jack-graph".into(), value: "compact".into() }));
-    ::store::os_store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetActiveFixture(SetActiveFixture { value: "nakagin".into() }));
+    ::store::os_store::test_support::assert_op_line_round_trip(&JackConfigMutation::SetQuery(SetQuery { value: "RETURN 1".into() }));
 }

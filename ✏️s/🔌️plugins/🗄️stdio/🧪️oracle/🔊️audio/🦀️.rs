@@ -4,7 +4,7 @@
 //! the DECODED samples. Chunk padding, LIST/INFO metadata, chunk order and the total byte length are
 //! writer choices.
 //!
-//! @see 📇️registry/🔣️.json — the approved oracle registry these functions implement.
+//! @see 🧪️oracle/🔣️.json — the approved oracle registry these functions implement.
 
 use semio_repo_test_host::Json;
 

@@ -111,6 +111,7 @@ import {
   packValueFromBase64,
   packValueToBase64,
 } from "@semio-tech/framework-os";
+import { type UiPreferencesConfigMutation, setAppearance, setDriver, setLayout, setLocale, setTerminology, setTheme } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import type { DomainSelection, InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import {
   decodeWorldProjectionTemplateId,
@@ -141,7 +142,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  setUiLocale,
   singleTreeLeaf,
   Slider,
   staticTreePanelDefinition,
@@ -3453,6 +3453,7 @@ export function buildOsCommands(
 export function dispatchOsCommand(
   commandId: string,
   args: Record<string, unknown> | undefined,
+  commitUiPreference: (mutation: UiPreferencesConfigMutation) => void,
   dispatch: (action: ShellAction) => void,
   dockLayoutStore: DockLayoutStore,
   dockUiStateStore: DockUiStateStore,
@@ -3464,14 +3465,14 @@ export function dispatchOsCommand(
       return;
     case "os.setAppearance":
       if (locks.appearance) return;
-      dispatch({ type: "SET_UI_APPEARANCE", value: (args?.appearance as ElementsSurfaceAppearance) ?? "system" });
+      commitUiPreference(setAppearance((args?.appearance as ElementsSurfaceAppearance) ?? "system"));
       return;
     case "os.setThemeId":
       if (locks.themeId) return;
-      if (typeof args?.themeId === "string") dispatch({ type: "SET_UI_THEME_ID", value: args.themeId });
+      if (typeof args?.themeId === "string") commitUiPreference(setTheme(args.themeId));
       return;
     case "os.setLayout":
-      dispatch({ type: "SET_UI_LAYOUT", value: (args?.layout as UiChromeLayout) ?? "desktop" });
+      commitUiPreference(setLayout((args?.layout as UiChromeLayout) ?? "desktop"));
       return;
     case "os.resetDock":
       dispatch({ type: "RESET_DOCK" });
@@ -3480,17 +3481,14 @@ export function dispatchOsCommand(
       return;
     case "os.setLocale":
       if (locks.locale) return;
-      if (typeof args?.locale === "string") {
-        setUiLocale(args.locale as UiLocale);
-        dispatch({ type: "SET_UI_LOCALE", value: args.locale as UiLocale });
-      }
+      if (typeof args?.locale === "string") commitUiPreference(setLocale(args.locale as UiLocale));
       return;
     case "os.setTerminology":
       if (locks.terminology) return;
-      if (typeof args?.terminology === "string") dispatch({ type: "SET_UI_TERMINOLOGY", value: args.terminology });
+      if (typeof args?.terminology === "string") commitUiPreference(setTerminology(args.terminology));
       return;
     case "os.setDriver":
-      if (typeof args?.driver === "string") dispatch({ type: "SET_UI_DRIVER_ID", value: args.driver });
+      if (typeof args?.driver === "string") commitUiPreference(setDriver(args.driver));
       return;
     // 👁️✏️ Neither sends a wire command itself (contract freeze §5) — both just focus the Document
     // panel's "Open with…" section, pre-expanded to the role the palette entry named.

@@ -20,9 +20,7 @@
     "objectKindWeights",
     "vortexKindWeights",
     "sun",
-    "activeUtilityByWindowId",
-    "terminology",
-    "locale"
+    "activeUtilityByWindowId"
   ],
   "properties": {
     "camera2d": {
@@ -106,14 +104,6 @@
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "config"
-    },
-    "terminology": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   },

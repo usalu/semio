@@ -199,6 +199,9 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[cfg(test)]
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🔬️unit/🦀️.rs"]
+                                mod tests;
                             }
                         }
                     }

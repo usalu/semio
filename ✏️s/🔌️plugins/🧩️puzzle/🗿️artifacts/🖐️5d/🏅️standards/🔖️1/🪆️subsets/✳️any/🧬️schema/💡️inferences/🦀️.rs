@@ -13,7 +13,7 @@
 //! that sibling slug's function directly; `ArtifactInferrer::infer_cached`'s default passthrough
 //! (just calls `infer`) is used as-is, uncached.
 
-use semio_s_artifact_puzzle_3d::FlattenPose;
+
 use crate::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot;
 use crate::Puzzle5dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
@@ -82,3 +82,8 @@ pub fn puzzle5d_artifact_inference_descriptor() -> ::semio_framework_schema::Art
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use semio_s_artifact_puzzle_3d::FlattenPose;
+//#endregion 🔁️Re-exports

@@ -1,6 +1,6 @@
 //! 🧬️ Raster artifact schema — every field of the artifact with its state class.
 
-use crate::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterOwnedMap, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
+use crate::{RasterAssetChild, RasterOwnedMap, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -35,8 +35,6 @@ pub struct RasterArtifact {
     pub camera_y: f64,
     #[state(config)]
     pub camera_zoom: f64,
-    #[state(config)]
-    pub locale: String,
     #[state(artifact)]
     pub hovered_id: Option<String>,
 }
@@ -59,7 +57,6 @@ impl Default for RasterArtifact {
             camera_x: 0.0,
             camera_y: 0.0,
             camera_zoom: 1.0,
-            locale: "en-US".into(),
             hovered_id: None,
         }
     }
@@ -243,7 +240,6 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `crate::schema::…` (the artifact root's own pre-existing `pub mod schema { pub
 /// use super::standards::v1::subsets::any::schema::*; }` shim keeps that path resolving).
 use crate::{RasterSnapshot, RasterTransform};
-
 pub fn create_raster_id(prefix: &str) -> String {
     let next = {
         let hex = framework_hash::hash_bytes(concat!(file!(), line!()).as_bytes());
@@ -480,3 +476,10 @@ pub fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
 #[path = "🧪️tests/🔬️boot-document/🦀️.rs"]
 mod boot_document_tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::RasterImageAsset;
+pub use crate::RasterLayerNode;
+pub use crate::RasterViewportSize;
+//#endregion 🔁️Re-exports

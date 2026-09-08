@@ -230,7 +230,6 @@ semio_framework_plugin::app_commands! {
     /// from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
     /// (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — different vocabularies, and
-    /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal:
     /// appending is safe, reordering is a wire-format break.**
     pub enum ShootingCommand for ShootingSnapshot, ShootingMutation, ShootingConfig, ShootingConfigMutation, ctx = ShootingDispatchCtx {
         "importSnapshotJson" as "import-snapshot-json" => import_snapshot_json::ImportSnapshotJson,
@@ -263,7 +262,6 @@ semio_framework_plugin::app_commands! {
         "setCameraDraftLabel" as "camera-draft-label" => set_camera_draft_label::SetCameraDraftLabel,
         "setCenterModel" as "center-model" => set_center_model::SetCenterModel,
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "setShotSelection" as "set-shot-selection" => set_shot_selection::SetShotSelection,
         "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
         "worldPointerMove" as "world-pointer-move" => world_pointer_move::WorldPointerMove,
@@ -283,7 +281,6 @@ use camera::{load_saved_camera, save_camera, set_camera, set_camera_draft_label,
 use export::export_shots;
 use fixture::{import_snapshot_json, load_request, reset_snapshot, save_download, set_active_example};
 use gumball::{rotate_selection, scale_selection, translate_selection};
-use locale::set_locale;
 use scene::{set_ambient_intensity, set_material_roughness, set_shadow_enabled, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use selection::{set_active_utility, set_center_model, set_shot_selection, world_pointer_down, world_pointer_move};
 use shot::{add_shot, patch_shots, set_active_shot, set_active_shot_format, set_active_shot_label, set_active_shot_shape};
@@ -329,6 +326,7 @@ fn shooting_bounded_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<ShootingPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<ShootingMutation, ShootingConfigMutation, NoDraftMutation>, Fault> {
     if !SHOOTING_BOUNDED_TOOL_IDS.contains(&shooting_command_id(command)) {
@@ -520,7 +518,7 @@ impl ArtifactEditor for ShootingPlayApp {
         command: &ShootingCommand,
         doc: &ArtifactView<'_, ShootingSnapshot>,
         cfg: &ConfigView<'_, ShootingConfig>,
-        interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<ShootingMutation, ShootingConfigMutation, Self::DraftMutation>, Fault> {
@@ -555,9 +553,9 @@ impl ArtifactEditor for ShootingPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let snapshot = doc.snapshot;
-        let labels = shooting_play_labels(cfg.snapshot);
+        let labels = shooting_play_labels(view_state);
         match body_key {
             SHOOTING_PLAY_BODY_SCENE => scene_window::render(snapshot, cfg.snapshot),
             SHOOTING_PLAY_BODY_ICON => icon_window::render(snapshot, cfg.snapshot),
@@ -568,13 +566,13 @@ impl ArtifactEditor for ShootingPlayApp {
         }.map(semio_framework_plugin::built_to_component_tree)
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, WindowEngagement> {
-        let labels = shooting_play_labels(cfg.snapshot);
+    fn window_engagements(doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
+        let labels = shooting_play_labels(view_state);
         HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::engagement(doc.snapshot, cfg.snapshot, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::engagement(doc.snapshot, labels))])
     }
 
-    fn window_measures(doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        let labels = shooting_play_labels(cfg.snapshot);
+    fn window_measures(doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        let labels = shooting_play_labels(view_state);
         HashMap::from([(SHOOTING_PLAY_WINDOW_SCENE.into(), scene_window::window_measures(doc.snapshot, labels)), (SHOOTING_PLAY_WINDOW_ICON.into(), icon_window::window_measures(doc.snapshot, labels))])
     }
 }

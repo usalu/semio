@@ -9,7 +9,6 @@ message ProcedureDiff {
   optional ProcedurePathDelta path = 3; // @state artifact
   optional map<string, string> seed = 4; // @state artifact
   optional ProcedureStringList selected_step_ids = 5; // @state presence
-  optional string locale = 6; // @state config
   optional string contributions_json = 7; // @state config
 }
 
@@ -60,7 +59,6 @@ message ProcedureArtifact {
   ProcedurePath path = 2;
   map<string, string> seed = 3;
   repeated string selected_step_ids = 4;
-  string locale = 5;
   string contributions_json = 6;
   string run_output_json = 7;
 }

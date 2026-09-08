@@ -14,7 +14,7 @@ async fn default_camera_is_centered_and_unzoomed() {
 
 #[semio_framework_async_macros::async_test]
 async fn child_local_text_fixture_proves_bounded_identity_isolation_aba_and_wire_omission() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/⚖️writer-child-local-text-law.json")).expect("language-neutral writer child fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚖️writer-child-local-text-law.json")).expect("language-neutral writer child fixture");
     let cases = fixture["cases"].as_array().expect("fixture cases");
     assert_eq!(fixture["schemaVersion"], 1);
     assert_eq!(cases.len(), fixture["maximumCases"].as_u64().expect("bounded maximum") as usize);

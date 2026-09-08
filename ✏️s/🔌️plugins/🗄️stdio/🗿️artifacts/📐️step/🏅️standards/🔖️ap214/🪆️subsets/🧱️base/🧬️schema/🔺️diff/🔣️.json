@@ -3,24 +3,6 @@
   "$id": "https://semio.tech/schema/s/stdio/step/ap214/base/diff.json",
   "title": "StepDiff",
   "$defs": {
-    "StepValue": {
-      "$ref": "../📸️snapshot/🔣️.json#/$defs/StepValue"
-    },
-    "StepComplexType": {
-      "$ref": "../📸️snapshot/🔣️.json#/$defs/StepComplexType"
-    },
-    "StepEntity": {
-      "$ref": "../📸️snapshot/🔣️.json#/$defs/StepEntity"
-    },
-    "StepFileDescription": {
-      "$ref": "../📸️snapshot/🔣️.json#/$defs/StepFileDescription"
-    },
-    "StepFileName": {
-      "$ref": "../📸️snapshot/🔣️.json#/$defs/StepFileName"
-    },
-    "StepFileSchema": {
-      "$ref": "../📸️snapshot/🔣️.json#/$defs/StepFileSchema"
-    },
     "StepArgModified": {
       "type": "object",
       "required": [
@@ -33,7 +15,7 @@
           "minimum": 0
         },
         "value": {
-          "$ref": "#/$defs/StepValue"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/snapshot.json#/$defs/StepValue"
         }
       }
     },
@@ -49,7 +31,7 @@
           "minimum": 0
         },
         "value": {
-          "$ref": "#/$defs/StepValue"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/snapshot.json#/$defs/StepValue"
         }
       }
     },
@@ -89,7 +71,7 @@
         "complex": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/StepComplexType"
+            "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/snapshot.json#/$defs/StepComplexType"
           }
         }
       }
@@ -122,7 +104,7 @@
           "minimum": 0
         },
         "entity": {
-          "$ref": "#/$defs/StepEntity"
+          "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/snapshot.json#/$defs/StepEntity"
         }
       }
     },
@@ -154,15 +136,15 @@
   "type": "object",
   "properties": {
     "fileDescription": {
-      "$ref": "#/$defs/StepFileDescription",
+      "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/snapshot.json#/$defs/StepFileDescription",
       "x-semio-state": "artifact"
     },
     "fileName": {
-      "$ref": "#/$defs/StepFileName",
+      "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/snapshot.json#/$defs/StepFileName",
       "x-semio-state": "artifact"
     },
     "fileSchema": {
-      "$ref": "#/$defs/StepFileSchema",
+      "$ref": "https://semio.tech/schema/s/stdio/step/ap214/base/snapshot.json#/$defs/StepFileSchema",
       "x-semio-state": "artifact"
     },
     "entities": {

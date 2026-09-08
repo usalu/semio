@@ -15,14 +15,14 @@
             "id": "attraction-1",
             "attracting": "object-a:vortex-1",
             "attracted": "object-b:vortex-2",
-            "gap": 2.0,
-            "shift": 1.0,
+            "gap": 2,
+            "shift": 1,
             "rise": 0.5,
-            "rotation": 0.0,
-            "turn": 0.0,
-            "tilt": 0.0,
-            "x": 3.0,
-            "y": 4.0
+            "rotation": 0,
+            "turn": 0,
+            "tilt": 0,
+            "x": 3,
+            "y": 4
           }
         }
       }
@@ -57,7 +57,6 @@
   "lodDepthVariable": null,
   "lodManual": null,
   "proximityRadius": null,
-  "locale": null,
   "runtimeExtrasJson": null,
   "hoveredObjectId": null,
   "hoveredVortexFullId": null,

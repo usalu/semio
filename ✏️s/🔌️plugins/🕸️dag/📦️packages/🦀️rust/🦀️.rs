@@ -24,12 +24,5 @@ mod plugin;
 pub use plugin::DagApps;
 semio_framework_plugin::plugin_exports!(plugin::plugin, DagApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_dag_demo_session;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

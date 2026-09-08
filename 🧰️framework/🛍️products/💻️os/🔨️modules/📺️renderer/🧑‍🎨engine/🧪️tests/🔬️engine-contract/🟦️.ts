@@ -4,7 +4,7 @@ import { flushSync } from "react-dom";
 import { applyPatch } from "fast-json-patch";
 import { Layout, UIDialog, createTutorialClock, uiI18n } from "@semio-tech/ui-react";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
-import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧪️fixtures/🔣️.json";
+import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🔣️.json";
 import {
   dispatchInvokeExtensionEffect,
   artifactKindChoiceDraftRetirementsV1,
@@ -21,12 +21,11 @@ import {
 } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 import { EMPTY_APP_LABELS_OVERLAY, makeEffectDispatchOne, renderStagedArgControl, resolveDialogDefinition } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
-import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧪️fixtures/🔣️extension-invocation.json";
+import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
-import mountedGisMapProbeFixture from "../../🧱️elements/🏛️ShellHost/🧪️fixtures/🔬️mounted-gis-map-probe-v1/🔣️.json";
+import mountedGisMapProbeFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔬️mounted-gis-map-probe-v1/🔣️.json";
 import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
 import Ajv, { type ValidateFunction } from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
 import deepEqual from "fast-deep-equal";
 import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🔣️.json";
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
@@ -50,12 +49,12 @@ import interactionSchema from "../../../../../../../🔨️modules/🕹️intera
 import manifestFixtureSchema from "../../../../../../../🔨️modules/🛂️manifest/🧬️schema/🔣️.json";
 import actionSemanticsFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️fixtures/⚖️action-semantics.json";
 import tutorialDocumentFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️fixtures/🎞️tutorial-document-track.json";
-import boardSessionFixture from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️session-factory.json";
+import boardSessionFixture from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧫️fixtures/🔣️session-factory.json";
 import boardSessionSchema from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
 import type { DialogDefinition, TutorialDefinition, TutorialUiChange, TutorialUiSnapshot } from "@semio-tech/framework";
 import presenceOverlayFixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/👥️presence-overlay.json";
-import presenceOverlaySchema from "../../../../../../../🔨️modules/🖱️ui/🧬️schema/🔣️.json";
+import uiContractSchema from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧬️schema/🔣️.json";
 import { createRequire } from "node:module";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES } from "@semio-tech/framework-replication";
@@ -63,11 +62,11 @@ import { unresolvedActionArgs } from "@semio-tech/framework";
 import choiceFixture from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧫️fixtures/🔽️choices/🔣️.json";
 import choiceSchema from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧬️schema/🔣️.json";
 
-const ownedExports = new Ajv({ strict: true, allErrors: true }).addKeyword("discriminator").addKeyword("x-semio-note").addSchema(rendererSchema).addSchema(directorySchema);
+const ownedExports = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(rendererSchema).addSchema(directorySchema);
 /** 🧬️ Compiles one named export of the `os.renderer` schema module. */
 /** 🧬️ Compiles one named `$defs` export of a peer scope's `🧬️schema/` module. */
 const peerExport = (module: { $id: string }, exportId: string): ValidateFunction =>
-  new Ajv({ strict: true, allErrors: true }).addKeyword("discriminator").addKeyword("x-semio-note").addSchema(module)
+  new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(module)
     .getSchema(`${module.$id}#/$defs/${exportId}`) as ValidateFunction;
 const rendererExport = (exportId: string): ValidateFunction =>
   ownedExports.getSchema(`${rendererSchema.$id}#/$defs/${exportId}`) as ValidateFunction;
@@ -1375,15 +1374,15 @@ describe("app-owned surface session factories", () => {
   });
 });
 //#endregion 🧩️AppOwnedSurfaceSession
-import graphSliderFixture from "../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️fixtures/🎚️slider-overlay.json";
+import graphSliderFixture from "../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧫️fixtures/🎚️slider-overlay.json";
 import dagVcsSchema from "../../../../♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🔣️.json" with { type: "json" };
 import graphParameterFixture from "../../../../🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/🧫️fixtures/🔣️.json";
-import graphPickFixture from "../../🧱️elements/🕸️NodeGraph/🧪️fixtures/🔣️pick-target.json";
+import graphPickFixture from "../../🧱️elements/🕸️NodeGraph/🧫️fixtures/🔣️pick-target.json";
 import flowParameterSchema from "../../../../🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/🧬️schema/🔣️.json" with { type: "json" };
 import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { createFlowBrowserRuntime } from "@semio-tech/flow-core/🌐️flow-browser.js";
-import { MockFlowBridge } from "../../../../🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🧪️tests/mock-flow-bridge.ts";
-import flowBrowserRuntimeFixture from "../../../../🌊️flow/🕸️wasm/🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json";
+import { MockFlowBridge } from "../../../../🌊️flow/🕸️wasm/🧪️tests/🎭️mock-flow-bridge/🟦️.ts";
+import flowBrowserRuntimeFixture from "../../../../🌊️flow/🕸️wasm/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json";
 import flowWasmSchema from "../../../../🌊️flow/🕸️wasm/🧬️schema/🔣️.json" with { type: "json" };
 import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -3537,11 +3536,14 @@ describe("declarative forms parity", () => {
   });
 
   it("applies separate presence fixtures without replacing the retained document", () => {
-    const validate = new Ajv({ strict: true }).addSchema(presenceOverlaySchema).compile({ $ref: `${presenceOverlaySchema.$id}#/$defs/PresenceOverlayFixture` });
+    // 🧬️ One owner for this fixture: `framework.ui.contract`'s `ContractFixture` export (ticket
+    // 26/09/08 `📋️cross-partition-requests.md` row 145). `framework.ui` no longer restates it as
+    // `PresenceOverlayFixture`; this consumer compiles the owning scope's export by its `$id`.
+    const validate = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(uiContractSchema).compile({ $ref: `${uiContractSchema.$id}#/$defs/ContractFixture` });
     expect(validate(presenceOverlayFixture)).toBe(true);
     expect(validate({ cases: presenceOverlayFixture.cases.map((row) => ({ ...row, update: { ...row.update, selectionJson: "{}" } })) })).toBe(false);
     for (const update of [{ ...presenceOverlayFixture.cases[0]!.update, ttlMs: -1 }, { ...presenceOverlayFixture.cases[0]!.update, own: { selected: "true" } }]) {
-      expect(validate({ cases: [{ ...presenceOverlayFixture.cases[0], update }] })).toBe(false);
+      expect(validate({ cases: presenceOverlayFixture.cases.map((row, index) => (index === 0 ? { ...row, update } : row)) })).toBe(false);
     }
     const store = new UiDocumentStore("document");
     store.loadSnapshot(buildContractSnapshot({ key: "item:根,1", component: { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null } }));
@@ -7200,7 +7202,7 @@ describe("Introduce App command", () => {
 
   it("starts the introduction at its first step", () => {
     const dispatch = vi.fn();
-    dispatchOsCommand("os.introduceApp", undefined, dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never);
+    dispatchOsCommand("os.introduceApp", undefined, vi.fn(), dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never);
     expect(dispatch).toHaveBeenCalledWith({ type: "SET_INTRODUCTION_STEP", value: 0 });
   });
 });
@@ -7223,8 +7225,8 @@ describe("Play/Record Tutorial commands", () => {
 
   it("os-scope Play/Record Tutorial commands are NOT handled by dispatchOsCommand (routed earlier, through the shell's own startTutorialRef/toggleTutorialRecordingRef bridge)", () => {
     const dispatch = vi.fn();
-    dispatchOsCommand("os.playTutorial", { tutorialId: "welcome-tour" }, dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never);
-    dispatchOsCommand("os.recordTutorial", undefined, dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never);
+    dispatchOsCommand("os.playTutorial", { tutorialId: "welcome-tour" }, vi.fn(), dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never);
+    dispatchOsCommand("os.recordTutorial", undefined, vi.fn(), dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never);
     expect(dispatch).not.toHaveBeenCalled();
   });
 });
@@ -7462,7 +7464,9 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
 
   it("dispatchOsCommand is a no-operation for a locked pref even if invoked directly", () => {
     const dispatch = vi.fn();
-    dispatchOsCommand("os.setLocale", { locale: "de" }, dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never, { locale: "en" });
+    const commit = vi.fn();
+    dispatchOsCommand("os.setLocale", { locale: "de" }, commit, dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never, { locale: "en" });
+    expect(commit).not.toHaveBeenCalled();
     expect(dispatch).not.toHaveBeenCalled();
   });
 });

@@ -206,8 +206,8 @@ pub struct SemanticDescriptor {
 /// 🪞️ Reexports the lower mutation metadata contract through the public OS command façade.
 pub use protocol::mutation::{
     validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_descriptor_roster_uniqueness, validate_mutation_leaf_source, MutationComposition, MutationDiffParticipation, MutationDomainOperation,
-    MutationInvertibility, MutationLanguageSurface, MutationLeaf, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, ValidatedMutationLeafSourceScope, MutationLeafSourceValidationError,
-    MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance,
+    MutationInvertibility, MutationLanguageSurface, MutationLeaf, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, MutationLeafSourceValidationError,
+    MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, ValidatedMutationLeafSourceScope,
 };
 //#endregion 🪪️MutationLeafDescriptor
 

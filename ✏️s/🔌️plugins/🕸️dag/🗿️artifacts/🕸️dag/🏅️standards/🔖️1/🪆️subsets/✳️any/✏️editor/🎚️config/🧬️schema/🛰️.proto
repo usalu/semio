@@ -9,5 +9,4 @@ message DagConfig {
   // @state config
   double camera_zoom = 4;
   // @state config
-  string locale = 5;
 }

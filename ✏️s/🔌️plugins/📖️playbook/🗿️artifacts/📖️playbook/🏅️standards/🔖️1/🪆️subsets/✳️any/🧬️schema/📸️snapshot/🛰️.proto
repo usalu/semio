@@ -4,3 +4,8 @@ message JsonSnapshot {
   string schema = 1;
   string value_wire = 2;
 }
+
+message PlaybookSnapshot {
+  optional string schema = 1;
+  optional string value = 2;
+}

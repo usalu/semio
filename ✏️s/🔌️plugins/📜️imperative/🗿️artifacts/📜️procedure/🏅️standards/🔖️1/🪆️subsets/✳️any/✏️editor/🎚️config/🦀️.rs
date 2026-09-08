@@ -18,7 +18,6 @@ pub struct ImperativeConfig {
     /// 📤️ Last `run` output, JSON-encoded scope — was `ImperativePlayRuntime::run_output_json`.
     pub run_output_json: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `imperative.module` hot-swap installs.
     #[value(default = "default_contributions_json")]
     pub contributions_json: String,
@@ -74,7 +73,7 @@ fn default_contributions_json() -> String {
 
 impl Default for ImperativeConfig {
     fn default() -> Self {
-        Self { run_output_json: String::new(), locale: "en-US".into(), contributions_json: default_contributions_json() }
+        Self { run_output_json: String::new(), contributions_json: default_contributions_json() }
     }
 }
 

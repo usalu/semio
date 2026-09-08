@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct SaveDownload {}
 
 pub fn handle(_payload: &SaveDownload, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
-    let data = crate::dsl::print_dsl(doc.snapshot);
+    let data = crate::document_dsl::print_dsl(doc.snapshot);
     Ok(Emit::effect(Effect::DownloadMediaExport { filename: "🗒️semio.note.dsl".into(), mime_type: "text/plain".into(), data, encoding: None }))
 }
 

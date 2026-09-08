@@ -11,5 +11,4 @@ message SHomeDiff {
   // @state config
   optional string active_panel_tab = 3;
   // @state config
-  optional string locale = 4;
 }

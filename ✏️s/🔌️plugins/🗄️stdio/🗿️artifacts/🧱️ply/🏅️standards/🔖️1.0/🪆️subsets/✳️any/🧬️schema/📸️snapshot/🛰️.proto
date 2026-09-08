@@ -59,3 +59,7 @@ message PlySnapshot {
   repeated string comments = 3;
   repeated PlyElement elements = 4;
 }
+
+message PlyScalarType {
+  string value = 1;
+}

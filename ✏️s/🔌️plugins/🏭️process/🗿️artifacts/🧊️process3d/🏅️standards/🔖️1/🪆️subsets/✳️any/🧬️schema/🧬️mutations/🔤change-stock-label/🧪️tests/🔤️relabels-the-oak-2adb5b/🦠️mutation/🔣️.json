@@ -1,1 +1,4 @@
-{"mutation":"changeStockLabel","newLabel":"Oak Beam, planed"}
+{
+  "mutation": "changeStockLabel",
+  "newLabel": "Oak Beam, planed"
+}

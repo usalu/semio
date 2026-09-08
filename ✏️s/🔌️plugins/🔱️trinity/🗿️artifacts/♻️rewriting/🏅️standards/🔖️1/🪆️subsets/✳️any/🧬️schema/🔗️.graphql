@@ -6,10 +6,8 @@ type RewritingArtifact {
   rhsJson: String! @state(class: ARTIFACT)
   parameterBindings: [PropertyValueEntry!]! @state(class: ARTIFACT)
   ruleLayout: [LayoutPointEntry!]! @state(class: ARTIFACT)
-  lodModeByWindow: [StringEntry!]! @state(class: PRESENCE)
+  lodModeByWindow: [StringEntry!]! @state(class: CONFIG)
   beforePaneCamera: Camera! @state(class: CONFIG)
-  reorganizeEpoch: Int! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 
 type PropertyValueEntry {

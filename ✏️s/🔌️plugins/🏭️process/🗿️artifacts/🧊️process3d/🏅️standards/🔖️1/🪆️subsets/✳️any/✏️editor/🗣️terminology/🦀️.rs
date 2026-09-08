@@ -51,9 +51,9 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-/// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn process3d_labels(cfg: &crate::editor::process3d::config::Process3dConfig) -> &'static Process3dLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<Process3dLabels>(&cfg.locale)
+/// 🗣️ Resolves the active label set from the OS-owned view context.
+pub fn process3d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Process3dLabels {
+    semio_framework_plugin::resolve_labels::<Process3dLabels>(view_state)
 }
 
 /// 🎨️ The icon a process measure renders with, shared by the document panel's step tree and the

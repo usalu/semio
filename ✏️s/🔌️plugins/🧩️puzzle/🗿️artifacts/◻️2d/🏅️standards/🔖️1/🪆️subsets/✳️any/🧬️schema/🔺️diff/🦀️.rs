@@ -47,10 +47,6 @@ pub struct Puzzle2dDiff {
     #[state(config)]
     pub brush_candidate_source_handle_id: Option<String>,
     #[state(config)]
-    pub locale: Option<String>,
-    #[state(config)]
-    pub terminology: Option<String>,
-    #[state(config)]
     pub lod_mode_by_pane_json: Option<String>,
     #[state(config)]
     pub engagement_input_by_pane_json: Option<String>,

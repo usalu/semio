@@ -5,7 +5,7 @@
 //! `pdf-writer`, `lopdf`, `zip` or `quick-xml`. Compiled only with the `oracles` feature, which no
 //! production target enables.
 //!
-//! @see 📇️registry/🔣️.json — the approved oracle registry these functions implement.
+//! @see 🧪️oracle/🔣️.json — the approved oracle registry these functions implement.
 
 use semio_repo_test_host::Json;
 

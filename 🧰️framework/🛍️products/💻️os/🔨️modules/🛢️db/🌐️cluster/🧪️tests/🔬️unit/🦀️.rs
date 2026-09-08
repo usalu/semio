@@ -115,7 +115,7 @@ async fn failover_via_lease_expiry_bumps_the_epoch_and_hands_off_to_the_new_lead
 
 //#region 🔖️Replication
 fn writer_replication_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🗄️storage/🔐️writer/🧪️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../../🗄️storage/🔐️writer/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 #[semio_framework_async_macros::async_test]
@@ -241,7 +241,7 @@ async fn replicate_document_reports_up_to_date_once_a_follower_catches_up() {
 
 #[semio_framework_async_macros::async_test]
 async fn replicate_document_transfers_a_snapshot_when_the_follower_is_below_the_retained_floor() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗄️storage/🔐️writer/🧪️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗄️storage/🔐️writer/🧫️fixtures/🔣️.json")).unwrap();
     let transfer = &fixture["replication"]["snapshotTransfer"];
     let pattern: Vec<u8> = transfer["pattern"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
     let expected = pattern.repeat(transfer["repetitions"].as_u64().unwrap() as usize);

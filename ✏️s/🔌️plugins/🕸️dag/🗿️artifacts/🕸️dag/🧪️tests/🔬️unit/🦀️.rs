@@ -9,7 +9,7 @@ struct SerdeJsonDagChildOwnerOracle;
 
 impl DagChildOwnerOracle for SerdeJsonDagChildOwnerOracle {
     fn expected() -> serde_json::Value {
-        serde_json::from_str(include_str!("../../🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral DAG child-owner fixture")
+        serde_json::from_str(include_str!("../../🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral DAG child-owner fixture")
     }
 }
 

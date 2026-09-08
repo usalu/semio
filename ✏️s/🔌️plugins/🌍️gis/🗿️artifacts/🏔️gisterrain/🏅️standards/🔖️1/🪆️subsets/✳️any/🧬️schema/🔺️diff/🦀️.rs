@@ -17,7 +17,5 @@ pub struct GisTerrainDiff {
     pub imported_features_json: Option<String>,
     #[state(config)]
     pub camera_json: Option<String>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔹Diff

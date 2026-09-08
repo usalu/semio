@@ -37,7 +37,6 @@ message RemodelingArtifact {
   // @state config
   RemodelingUiLayers layers = 16;
   // @state config
-  string locale = 17;
 }
 
 message ArtifactDialect {
@@ -400,4 +399,40 @@ message WatertightReportSnapshot {
   bool is_closed = 14;
   bool is_two_manifold = 15;
   bool is_watertight = 16;
+}
+
+message DenseResolution {
+  string value = 1;
+}
+
+message FeatureDetector {
+  string value = 1;
+}
+
+message MatcherKind {
+  string value = 1;
+}
+
+message MediaKind {
+  string value = 1;
+}
+
+message MeshSource {
+  string value = 1;
+}
+
+message ReconstructionStage {
+  string value = 1;
+}
+
+message RobustLossKind {
+  string value = 1;
+}
+
+message TrackClass {
+  string value = 1;
+}
+
+message VideoCodec {
+  string value = 1;
 }

@@ -105,7 +105,6 @@ export interface RemodelingArtifact {
   /** @state config */
   layers: RemodelingUiLayers;
   /** @state config */
-  locale: string;
 }
 //#endregion 🔖️Artifact
 
@@ -192,3 +191,515 @@ export function remodelingArtifactToSnapshot(artifact: RemodelingArtifact): Remo
 export const decodeRemodelingArtifact = (json: unknown): RemodelingArtifact => decodeRecord(json, REMODELING_ARTIFACT_SPEC, "") as unknown as RemodelingArtifact;
 
 //#endregion 🔖️Conversions
+
+//#region 🚪️Parsers
+/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
+export class remodelRemodelingArtifactGuardRefusal extends Error {
+  constructor(readonly at: string, readonly why: string) {
+    super(`${at}: ${why}`);
+  }
+}
+
+const remodelRemodelingArtifactGuardReject = (at: string, why: string): never => {
+  throw new remodelRemodelingArtifactGuardRefusal(at, why);
+};
+
+type remodelRemodelingArtifactGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
+type remodelRemodelingArtifactGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
+type remodelRemodelingArtifactGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
+
+export const remodelRemodelingArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : remodelRemodelingArtifactGuardReject(at, "value is not an object");
+export const remodelRemodelingArtifactGuardArray = (value: unknown, at: string, bounds: remodelRemodelingArtifactGuardSizeBounds = {}): readonly unknown[] => {
+  if (!Array.isArray(value)) return remodelRemodelingArtifactGuardReject(at, "value is not an array");
+  if (bounds.minItems !== undefined && value.length < bounds.minItems) remodelRemodelingArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
+  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) remodelRemodelingArtifactGuardReject(at, `array has more than ${bounds.maxItems} items`);
+  return value;
+};
+export const remodelRemodelingArtifactGuardString = (value: unknown, at: string, bounds: remodelRemodelingArtifactGuardTextBounds = {}): string => {
+  if (typeof value !== "string") return remodelRemodelingArtifactGuardReject(at, "value is not a string");
+  const length = [...value].length;
+  if (bounds.minLength !== undefined && length < bounds.minLength) remodelRemodelingArtifactGuardReject(at, `string is shorter than ${bounds.minLength}`);
+  if (bounds.maxLength !== undefined && length > bounds.maxLength) remodelRemodelingArtifactGuardReject(at, `string is longer than ${bounds.maxLength}`);
+  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) remodelRemodelingArtifactGuardReject(at, `string does not match ${bounds.pattern}`);
+  return value;
+};
+export const remodelRemodelingArtifactGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : remodelRemodelingArtifactGuardReject(at, "value is not a boolean"));
+export const remodelRemodelingArtifactGuardNumber = (value: unknown, at: string, bounds: remodelRemodelingArtifactGuardRangeBounds = {}): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return remodelRemodelingArtifactGuardReject(at, "value is not a finite number");
+  if (bounds.minimum !== undefined && value < bounds.minimum) remodelRemodelingArtifactGuardReject(at, `number is below ${bounds.minimum}`);
+  if (bounds.maximum !== undefined && value > bounds.maximum) remodelRemodelingArtifactGuardReject(at, `number is above ${bounds.maximum}`);
+  return value;
+};
+export const remodelRemodelingArtifactGuardInteger = (value: unknown, at: string, bounds: remodelRemodelingArtifactGuardRangeBounds = {}): number =>
+  Number.isSafeInteger(value) ? remodelRemodelingArtifactGuardNumber(value, at, bounds) : remodelRemodelingArtifactGuardReject(at, "value is not an integer");
+export const remodelRemodelingArtifactGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
+  members.includes(value as T) ? (value as T) : remodelRemodelingArtifactGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const remodelRemodelingArtifactGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
+  value === expected ? expected : remodelRemodelingArtifactGuardReject(at, `value is not ${String(expected)}`);
+//#endregion 🚪️Parsers
+
+export function parseRemodelingArtifact(value: unknown, at = "$"): RemodelingArtifact {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    schema: remodelRemodelingArtifactGuardString(row["schema"], `${at}.schema`),
+    id: remodelRemodelingArtifactGuardString(row["id"], `${at}.id`),
+    streams: remodelRemodelingArtifactGuardArray(row["streams"], `${at}.streams`).map((item, index) => parseMediaStream(item, `${at}.streams[${index}]`)),
+    assets: remodelRemodelingArtifactGuardObject(row["assets"], `${at}.assets`),
+    durableArtifacts: remodelRemodelingArtifactGuardObject(row["durableArtifacts"], `${at}.durableArtifacts`),
+    calibration: parseCalibrationState(row["calibration"], `${at}.calibration`),
+    params: parseReconstructionParams(row["params"], `${at}.params`),
+    gcps: remodelRemodelingArtifactGuardArray(row["gcps"], `${at}.gcps`).map((item, index) => parseGroundControlPoint(item, `${at}.gcps[${index}]`)),
+    job: parseReconstructionJob(row["job"], `${at}.job`),
+    results: parseReconstructionResults(row["results"], `${at}.results`),
+    selection: parseRemodelingUiSelection(row["selection"], `${at}.selection`),
+    activeUtilityId: remodelRemodelingArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
+    reportTable: remodelRemodelingArtifactGuardString(row["reportTable"], `${at}.reportTable`),
+    frameCursor: parseRemodelingUiFrameCursor(row["frameCursor"], `${at}.frameCursor`),
+    camera: parseRemodelingUiCamera(row["camera"], `${at}.camera`),
+    layers: parseRemodelingUiLayers(row["layers"], `${at}.layers`),
+  };
+}
+
+export interface ArtifactDialect {
+  readonly artifactKind: string;
+  readonly standard: string;
+  readonly subset: string;
+}
+
+export function parseArtifactDialect(value: unknown, at = "$"): ArtifactDialect {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    artifactKind: remodelRemodelingArtifactGuardString(row["artifactKind"], `${at}.artifactKind`),
+    standard: remodelRemodelingArtifactGuardString(row["standard"], `${at}.standard`),
+    subset: remodelRemodelingArtifactGuardString(row["subset"], `${at}.subset`),
+  };
+}
+
+export interface ArtifactRef {
+  readonly artifactId: string;
+  readonly dialect: ArtifactDialect;
+}
+
+export function parseArtifactRef(value: unknown, at = "$"): ArtifactRef {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    artifactId: remodelRemodelingArtifactGuardString(row["artifactId"], `${at}.artifactId`),
+    dialect: parseArtifactDialect(row["dialect"], `${at}.dialect`),
+  };
+}
+
+export interface CalibrationState {
+  readonly cameras: readonly CameraCalibration[];
+  readonly rig: readonly RigExtrinsic[];
+}
+
+export function parseCalibrationState(value: unknown, at = "$"): CalibrationState {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    cameras: remodelRemodelingArtifactGuardArray(row["cameras"], `${at}.cameras`).map((item, index) => parseCameraCalibration(item, `${at}.cameras[${index}]`)),
+    rig: remodelRemodelingArtifactGuardArray(row["rig"], `${at}.rig`).map((item, index) => parseRigExtrinsic(item, `${at}.rig[${index}]`)),
+  };
+}
+
+export interface CameraPosePreview {
+  readonly cameraId: string;
+  readonly rotationWxyz: readonly number[];
+  readonly translation: readonly number[];
+}
+
+export function parseCameraPosePreview(value: unknown, at = "$"): CameraPosePreview {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    cameraId: remodelRemodelingArtifactGuardString(row["cameraId"], `${at}.cameraId`),
+    rotationWxyz: remodelRemodelingArtifactGuardArray(row["rotationWxyz"], `${at}.rotationWxyz`, {"minItems": 4, "maxItems": 4}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.rotationWxyz[${index}]`)),
+    translation: remodelRemodelingArtifactGuardArray(row["translation"], `${at}.translation`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.translation[${index}]`)),
+  };
+}
+
+export interface CameraTrajectory {
+  readonly poses: readonly CameraPosePreview[];
+}
+
+export function parseCameraTrajectory(value: unknown, at = "$"): CameraTrajectory {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    poses: remodelRemodelingArtifactGuardArray(row["poses"], `${at}.poses`).map((item, index) => parseCameraPosePreview(item, `${at}.poses[${index}]`)),
+  };
+}
+
+export interface DenseParams {
+  readonly resolution: DenseResolution;
+  readonly windowRadiusPx: number;
+  readonly minViewConsistency: number;
+  readonly confidenceThreshold: number;
+  readonly maxPoints: number;
+}
+
+export function parseDenseParams(value: unknown, at = "$"): DenseParams {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    resolution: parseDenseResolution(row["resolution"], `${at}.resolution`),
+    windowRadiusPx: remodelRemodelingArtifactGuardInteger(row["windowRadiusPx"], `${at}.windowRadiusPx`, {"minimum": 0}),
+    minViewConsistency: remodelRemodelingArtifactGuardInteger(row["minViewConsistency"], `${at}.minViewConsistency`, {"minimum": 0}),
+    confidenceThreshold: remodelRemodelingArtifactGuardNumber(row["confidenceThreshold"], `${at}.confidenceThreshold`),
+    maxPoints: remodelRemodelingArtifactGuardInteger(row["maxPoints"], `${at}.maxPoints`, {"minimum": 0}),
+  };
+}
+
+export type DenseResolution = "low" | "medium" | "high";
+
+export function parseDenseResolution(value: unknown, at = "$"): DenseResolution {
+  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["low", "medium", "high"] as const);
+}
+
+export type FeatureDetector = "orb" | "akaze" | "harris";
+
+export function parseFeatureDetector(value: unknown, at = "$"): FeatureDetector {
+  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["orb", "akaze", "harris"] as const);
+}
+
+export interface FeatureParams {
+  readonly detector: FeatureDetector;
+  readonly targetCount: number;
+  readonly octaves: number;
+  readonly edgeThreshold: number;
+}
+
+export function parseFeatureParams(value: unknown, at = "$"): FeatureParams {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    detector: parseFeatureDetector(row["detector"], `${at}.detector`),
+    targetCount: remodelRemodelingArtifactGuardInteger(row["targetCount"], `${at}.targetCount`, {"minimum": 0}),
+    octaves: remodelRemodelingArtifactGuardInteger(row["octaves"], `${at}.octaves`, {"minimum": 0}),
+    edgeThreshold: remodelRemodelingArtifactGuardNumber(row["edgeThreshold"], `${at}.edgeThreshold`),
+  };
+}
+
+export interface FrameRef {
+  readonly index: number;
+  readonly timestampMs: number;
+  readonly assetId: string;
+}
+
+export function parseFrameRef(value: unknown, at = "$"): FrameRef {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    index: remodelRemodelingArtifactGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
+    timestampMs: remodelRemodelingArtifactGuardNumber(row["timestampMs"], `${at}.timestampMs`),
+    assetId: remodelRemodelingArtifactGuardString(row["assetId"], `${at}.assetId`),
+  };
+}
+
+export interface GcpObservation {
+  readonly streamId: string;
+  readonly frameIndex: number;
+  readonly pixel: readonly number[];
+}
+
+export function parseGcpObservation(value: unknown, at = "$"): GcpObservation {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    streamId: remodelRemodelingArtifactGuardString(row["streamId"], `${at}.streamId`),
+    frameIndex: remodelRemodelingArtifactGuardInteger(row["frameIndex"], `${at}.frameIndex`, {"minimum": 0}),
+    pixel: remodelRemodelingArtifactGuardArray(row["pixel"], `${at}.pixel`, {"minItems": 2, "maxItems": 2}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.pixel[${index}]`)),
+  };
+}
+
+export interface GroundControlPoint {
+  readonly id: string;
+  readonly name: string;
+  readonly worldPosition: readonly number[];
+  readonly observations: readonly GcpObservation[];
+}
+
+export function parseGroundControlPoint(value: unknown, at = "$"): GroundControlPoint {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    id: remodelRemodelingArtifactGuardString(row["id"], `${at}.id`),
+    name: remodelRemodelingArtifactGuardString(row["name"], `${at}.name`),
+    worldPosition: remodelRemodelingArtifactGuardArray(row["worldPosition"], `${at}.worldPosition`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.worldPosition[${index}]`)),
+    observations: remodelRemodelingArtifactGuardArray(row["observations"], `${at}.observations`).map((item, index) => parseGcpObservation(item, `${at}.observations[${index}]`)),
+  };
+}
+
+export interface IngestParams {
+  readonly frameSampleStride: number;
+  readonly maxFrames: number;
+  readonly downscaleLongEdgePx: number;
+  readonly minSharpness: number;
+}
+
+export function parseIngestParams(value: unknown, at = "$"): IngestParams {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    frameSampleStride: remodelRemodelingArtifactGuardInteger(row["frameSampleStride"], `${at}.frameSampleStride`, {"minimum": 0}),
+    maxFrames: remodelRemodelingArtifactGuardInteger(row["maxFrames"], `${at}.maxFrames`, {"minimum": 0}),
+    downscaleLongEdgePx: remodelRemodelingArtifactGuardInteger(row["downscaleLongEdgePx"], `${at}.downscaleLongEdgePx`, {"minimum": 0}),
+    minSharpness: remodelRemodelingArtifactGuardNumber(row["minSharpness"], `${at}.minSharpness`),
+  };
+}
+
+export interface MatchParams {
+  readonly matcher: MatcherKind;
+  readonly ratioTest: number;
+  readonly crossCheck: boolean;
+  readonly sequentialWindow: number;
+  readonly maxPairsPerFrame: number;
+  readonly loopClosure: boolean;
+}
+
+export function parseMatchParams(value: unknown, at = "$"): MatchParams {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    matcher: parseMatcherKind(row["matcher"], `${at}.matcher`),
+    ratioTest: remodelRemodelingArtifactGuardNumber(row["ratioTest"], `${at}.ratioTest`),
+    crossCheck: remodelRemodelingArtifactGuardBoolean(row["crossCheck"], `${at}.crossCheck`),
+    sequentialWindow: remodelRemodelingArtifactGuardInteger(row["sequentialWindow"], `${at}.sequentialWindow`, {"minimum": 0}),
+    maxPairsPerFrame: remodelRemodelingArtifactGuardInteger(row["maxPairsPerFrame"], `${at}.maxPairsPerFrame`, {"minimum": 0}),
+    loopClosure: remodelRemodelingArtifactGuardBoolean(row["loopClosure"], `${at}.loopClosure`),
+  };
+}
+
+export type MatcherKind = "brute-force" | "kd-tree";
+
+export function parseMatcherKind(value: unknown, at = "$"): MatcherKind {
+  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["brute-force", "kd-tree"] as const);
+}
+
+export type MediaKind = "image-sequence" | "video";
+
+export function parseMediaKind(value: unknown, at = "$"): MediaKind {
+  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["image-sequence", "video"] as const);
+}
+
+export interface MeshParams {
+  readonly tsdfVoxelSizeMm: number;
+  readonly tsdfTruncationMm: number;
+  readonly decimateTargetTriangles: number;
+  readonly smoothingIterations: number;
+  readonly textureEnabled: boolean;
+  readonly textureSize: number;
+  readonly guaranteeWatertight: boolean;
+  readonly holeFillMaxBoundaryVerts: number;
+  readonly selfIntersectionCheck: boolean;
+}
+
+export function parseMeshParams(value: unknown, at = "$"): MeshParams {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    tsdfVoxelSizeMm: remodelRemodelingArtifactGuardNumber(row["tsdfVoxelSizeMm"], `${at}.tsdfVoxelSizeMm`),
+    tsdfTruncationMm: remodelRemodelingArtifactGuardNumber(row["tsdfTruncationMm"], `${at}.tsdfTruncationMm`),
+    decimateTargetTriangles: remodelRemodelingArtifactGuardInteger(row["decimateTargetTriangles"], `${at}.decimateTargetTriangles`, {"minimum": 0}),
+    smoothingIterations: remodelRemodelingArtifactGuardInteger(row["smoothingIterations"], `${at}.smoothingIterations`, {"minimum": 0}),
+    textureEnabled: remodelRemodelingArtifactGuardBoolean(row["textureEnabled"], `${at}.textureEnabled`),
+    textureSize: remodelRemodelingArtifactGuardInteger(row["textureSize"], `${at}.textureSize`, {"minimum": 0}),
+    guaranteeWatertight: remodelRemodelingArtifactGuardBoolean(row["guaranteeWatertight"], `${at}.guaranteeWatertight`),
+    holeFillMaxBoundaryVerts: remodelRemodelingArtifactGuardInteger(row["holeFillMaxBoundaryVerts"], `${at}.holeFillMaxBoundaryVerts`, {"minimum": 0}),
+    selfIntersectionCheck: remodelRemodelingArtifactGuardBoolean(row["selfIntersectionCheck"], `${at}.selfIntersectionCheck`),
+  };
+}
+
+export type MeshSource = "placeholder" | "reconstructed" | "imported";
+
+export function parseMeshSource(value: unknown, at = "$"): MeshSource {
+  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["placeholder", "reconstructed", "imported"] as const);
+}
+
+export interface MotionParams {
+  readonly enabled: boolean;
+  readonly maxTracks: number;
+  readonly trackWindowPx: number;
+  readonly minTrackQuality: number;
+  readonly minTrackLengthFrames: number;
+}
+
+export function parseMotionParams(value: unknown, at = "$"): MotionParams {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    enabled: remodelRemodelingArtifactGuardBoolean(row["enabled"], `${at}.enabled`),
+    maxTracks: remodelRemodelingArtifactGuardInteger(row["maxTracks"], `${at}.maxTracks`, {"minimum": 0}),
+    trackWindowPx: remodelRemodelingArtifactGuardInteger(row["trackWindowPx"], `${at}.trackWindowPx`, {"minimum": 0}),
+    minTrackQuality: remodelRemodelingArtifactGuardNumber(row["minTrackQuality"], `${at}.minTrackQuality`),
+    minTrackLengthFrames: remodelRemodelingArtifactGuardInteger(row["minTrackLengthFrames"], `${at}.minTrackLengthFrames`, {"minimum": 0}),
+  };
+}
+
+export interface MotionTrackSummary {
+  readonly id: string;
+  readonly length: number;
+  readonly class: TrackClass;
+  readonly meanSpeedMS: number;
+}
+
+export function parseMotionTrackSummary(value: unknown, at = "$"): MotionTrackSummary {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    id: remodelRemodelingArtifactGuardString(row["id"], `${at}.id`),
+    length: remodelRemodelingArtifactGuardInteger(row["length"], `${at}.length`, {"minimum": 0}),
+    class: parseTrackClass(row["class"], `${at}.class`),
+    meanSpeedMS: remodelRemodelingArtifactGuardNumber(row["meanSpeedMS"], `${at}.meanSpeedMS`),
+  };
+}
+
+export interface ReconstructionParams {
+  readonly ingest: IngestParams;
+  readonly feature: FeatureParams;
+  readonly matching: MatchParams;
+  readonly sfm: SfmParams;
+  readonly dense: DenseParams;
+  readonly mesh: MeshParams;
+  readonly motion: MotionParams;
+  readonly geo: GeoParams;
+}
+
+export function parseReconstructionParams(value: unknown, at = "$"): ReconstructionParams {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    ingest: parseIngestParams(row["ingest"], `${at}.ingest`),
+    feature: parseFeatureParams(row["feature"], `${at}.feature`),
+    matching: parseMatchParams(row["matching"], `${at}.matching`),
+    sfm: parseSfmParams(row["sfm"], `${at}.sfm`),
+    dense: parseDenseParams(row["dense"], `${at}.dense`),
+    mesh: parseMeshParams(row["mesh"], `${at}.mesh`),
+    motion: parseMotionParams(row["motion"], `${at}.motion`),
+    geo: parseGeoParams(row["geo"], `${at}.geo`),
+  };
+}
+
+export type ReconstructionStage = "idle" | "ingesting" | "calibrating" | "extracting-features" | "matching-features" | "estimating-poses" | "bundle-adjusting" | "georeferencing" | "dense-stereo" | "fusing-volume" | "extracting-surface" | "cleaning-mesh" | "texturing" | "tracking-motion" | "deriving-geo-products" | "reporting-qc" | "done" | "failed";
+
+export function parseReconstructionStage(value: unknown, at = "$"): ReconstructionStage {
+  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["idle", "ingesting", "calibrating", "extracting-features", "matching-features", "estimating-poses", "bundle-adjusting", "georeferencing", "dense-stereo", "fusing-volume", "extracting-surface", "cleaning-mesh", "texturing", "tracking-motion", "deriving-geo-products", "reporting-qc", "done", "failed"] as const);
+}
+
+export interface RemodelingAssetChild {
+  readonly childId: string;
+  readonly target: ArtifactRef;
+}
+
+export function parseRemodelingAssetChild(value: unknown, at = "$"): RemodelingAssetChild {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    childId: remodelRemodelingArtifactGuardString(row["childId"], `${at}.childId`),
+    target: parseArtifactRef(row["target"], `${at}.target`),
+  };
+}
+
+export interface RemodelingMeshChild {
+  readonly childId: string;
+  readonly target: ArtifactRef;
+}
+
+export function parseRemodelingMeshChild(value: unknown, at = "$"): RemodelingMeshChild {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    childId: remodelRemodelingArtifactGuardString(row["childId"], `${at}.childId`),
+    target: parseArtifactRef(row["target"], `${at}.target`),
+  };
+}
+
+export function parseRemodelingUiCamera(value: unknown, at = "$"): RemodelingUiCamera {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    position: remodelRemodelingArtifactGuardArray(row["position"], `${at}.position`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.position[${index}]`)),
+    target: remodelRemodelingArtifactGuardArray(row["target"], `${at}.target`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.target[${index}]`)),
+    fov: remodelRemodelingArtifactGuardNumber(row["fov"], `${at}.fov`),
+  };
+}
+
+export function parseRemodelingUiLayers(value: unknown, at = "$"): RemodelingUiLayers {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    mesh: remodelRemodelingArtifactGuardBoolean(row["mesh"], `${at}.mesh`),
+    dense: remodelRemodelingArtifactGuardBoolean(row["dense"], `${at}.dense`),
+    sparse: remodelRemodelingArtifactGuardBoolean(row["sparse"], `${at}.sparse`),
+    cameras: remodelRemodelingArtifactGuardBoolean(row["cameras"], `${at}.cameras`),
+    gcps: remodelRemodelingArtifactGuardBoolean(row["gcps"], `${at}.gcps`),
+  };
+}
+
+export function parseRemodelingUiSelection(value: unknown, at = "$"): RemodelingUiSelection {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    mode: remodelRemodelingArtifactGuardString(row["mode"], `${at}.mode`),
+    ids: remodelRemodelingArtifactGuardArray(row["ids"], `${at}.ids`).map((item, index) => remodelRemodelingArtifactGuardString(item, `${at}.ids[${index}]`)),
+  };
+}
+
+export interface RigExtrinsic {
+  readonly cameraId: string;
+  readonly rotationWxyz: readonly number[];
+  readonly translationM: readonly number[];
+}
+
+export function parseRigExtrinsic(value: unknown, at = "$"): RigExtrinsic {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    cameraId: remodelRemodelingArtifactGuardString(row["cameraId"], `${at}.cameraId`),
+    rotationWxyz: remodelRemodelingArtifactGuardArray(row["rotationWxyz"], `${at}.rotationWxyz`, {"minItems": 4, "maxItems": 4}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.rotationWxyz[${index}]`)),
+    translationM: remodelRemodelingArtifactGuardArray(row["translationM"], `${at}.translationM`, {"minItems": 3, "maxItems": 3}).map((item, index) => remodelRemodelingArtifactGuardNumber(item, `${at}.translationM[${index}]`)),
+  };
+}
+
+export type RobustLossKind = "l2" | "huber" | "cauchy";
+
+export function parseRobustLossKind(value: unknown, at = "$"): RobustLossKind {
+  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["l2", "huber", "cauchy"] as const);
+}
+
+export interface SfmParams {
+  readonly ransacIterations: number;
+  readonly ransacThresholdPx: number;
+  readonly minTrackLength: number;
+  readonly baMaxIterations: number;
+  readonly robustLoss: RobustLossKind;
+  readonly huberDeltaPx: number;
+}
+
+export function parseSfmParams(value: unknown, at = "$"): SfmParams {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    ransacIterations: remodelRemodelingArtifactGuardInteger(row["ransacIterations"], `${at}.ransacIterations`, {"minimum": 0}),
+    ransacThresholdPx: remodelRemodelingArtifactGuardNumber(row["ransacThresholdPx"], `${at}.ransacThresholdPx`),
+    minTrackLength: remodelRemodelingArtifactGuardInteger(row["minTrackLength"], `${at}.minTrackLength`, {"minimum": 0}),
+    baMaxIterations: remodelRemodelingArtifactGuardInteger(row["baMaxIterations"], `${at}.baMaxIterations`, {"minimum": 0}),
+    robustLoss: parseRobustLossKind(row["robustLoss"], `${at}.robustLoss`),
+    huberDeltaPx: remodelRemodelingArtifactGuardNumber(row["huberDeltaPx"], `${at}.huberDeltaPx`),
+  };
+}
+
+export type TrackClass = "static" | "moving";
+
+export function parseTrackClass(value: unknown, at = "$"): TrackClass {
+  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["static", "moving"] as const);
+}
+
+export type VideoCodec = "avc" | "hevc" | "vp9" | "av1" | "mjpeg" | "unknown";
+
+export function parseVideoCodec(value: unknown, at = "$"): VideoCodec {
+  return remodelRemodelingArtifactGuardMember(value, `${at}`, ["avc", "hevc", "vp9", "av1", "mjpeg", "unknown"] as const);
+}
+
+export interface VideoSource {
+  readonly name: string;
+  readonly container: string;
+  readonly codec: VideoCodec;
+  readonly durationMs: number;
+  readonly frameCount: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export function parseVideoSource(value: unknown, at = "$"): VideoSource {
+  const row = remodelRemodelingArtifactGuardObject(value, at);
+  return {
+    name: remodelRemodelingArtifactGuardString(row["name"], `${at}.name`),
+    container: remodelRemodelingArtifactGuardString(row["container"], `${at}.container`),
+    codec: parseVideoCodec(row["codec"], `${at}.codec`),
+    durationMs: remodelRemodelingArtifactGuardNumber(row["durationMs"], `${at}.durationMs`),
+    frameCount: remodelRemodelingArtifactGuardInteger(row["frameCount"], `${at}.frameCount`, {"minimum": 0}),
+    width: remodelRemodelingArtifactGuardInteger(row["width"], `${at}.width`, {"minimum": 0}),
+    height: remodelRemodelingArtifactGuardInteger(row["height"], `${at}.height`, {"minimum": 0}),
+  };
+}

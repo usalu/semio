@@ -17,52 +17,16 @@
     "nodes": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/DagNodeSpec"
+        "$ref": "https://semio.tech/schema/s/dag/dag/artifact.json#/$defs/DagNodeSpec"
       },
       "x-semio-state": "artifact"
     },
     "edges": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/DagFixtureEdge"
+        "$ref": "https://semio.tech/schema/s/dag/dag/artifact.json#/$defs/DagFixtureEdge"
       },
       "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "DagNodeSpec": {
-      "title": "DagNodeSpec",
-      "type": "object",
-      "additionalProperties": true,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "DagFixtureEdge": {
-      "title": "DagFixtureEdge",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "source",
-        "target"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string"
-        },
-        "target": {
-          "type": "string"
-        }
-      }
     }
   }
 }

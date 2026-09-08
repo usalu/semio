@@ -11,7 +11,7 @@ use crate::op::GisTerrainMutation;
 use crate::schema::default_terrain_document;
 use crate::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 use crate::editor::gis3d::commands::{exaggeration, locale, view};
-use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation, SetCamera, SetLocale};
+use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation, SetCamera};
 use crate::editor::gis3d::modes::view as view_mode;
 use crate::editor::gis3d::modes::view::windows::terrain;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -107,13 +107,11 @@ semio_framework_plugin::app_commands! {
     pub enum Gis3dCommand for GisTerrainSnapshot, GisTerrainMutation, Gis3dConfig, Gis3dConfigMutation {
         "setExaggeration" as "exaggeration" => set_exaggeration::SetExaggeration,
         "setCamera" as "camera" => set_camera::SetCamera,
-        "setLocale" as "locale" => set_locale::SetLocale,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier.
 use exaggeration::set_exaggeration;
-use locale::set_locale;
 use view::set_camera;
 //#endregion 🔖️Commands
 
@@ -124,7 +122,7 @@ use view::set_camera;
 pub struct Gis3dPlayApp;
 
 //#region 🧵️RetainedCommands
-const GIS3D_RETAINED_TOOL_IDS: &[&str] = &["setExaggeration", "setCamera", "setLocale"];
+const GIS3D_RETAINED_TOOL_IDS: &[&str] = &["setExaggeration", "setCamera", ];
 const GIS3D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.terrain.tool-command.v1";
 const GIS3D_RETAINED_RAW_BYTES: usize = 8_192;
 const GIS3D_RETAINED_WORK_ITEMS: usize = 1;
@@ -137,7 +135,6 @@ fn gis3d_retained_extent(command: &Gis3dCommand, _snapshot: &GisTerrainSnapshot,
     let bytes = match command {
         Gis3dCommand::SetExaggeration(payload) if payload.exaggeration.is_finite() => 0,
         Gis3dCommand::SetCamera(payload) if serde_json::from_str::<Value>(&payload.camera_json).is_ok_and(|camera| camera.is_object()) => payload.camera_json.len(),
-        Gis3dCommand::SetLocale(payload) if matches!(payload.value.as_str(), "en" | "en-US" | "de" | "de-DE") => payload.value.len(),
         _ => return None,
     };
     (bytes <= GIS3D_RETAINED_RAW_BYTES).then_some(GIS3D_RETAINED_WORK_ITEMS)
@@ -150,6 +147,7 @@ fn gis3d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Gis3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
@@ -210,7 +208,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Gis3dCommandJobFact
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "setExaggeration", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
     ];
 }
 //#endregion 🧵️RetainedCommands
@@ -285,7 +282,6 @@ fn prepare_gis3d_config(base: &Gis3dConfig, mutation: Gis3dConfigMutation) -> Re
     use protocol::{Mutation as _, MutationDiff as _};
     let valid = match &mutation {
         Gis3dConfigMutation::SetCamera(SetCamera { camera_json }) => camera_json.len() <= GIS3D_RETAINED_RAW_BYTES && serde_json::from_str::<Value>(camera_json).is_ok_and(|camera| camera.is_object()),
-        Gis3dConfigMutation::SetLocale(SetLocale { value }) => matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE"),
     };
     if !valid {
         return Err("GIS terrain Config preparation rejected its exact mutation envelope".into());
@@ -429,7 +425,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Gis3dConfig, Gis3dConfigMutat
         }
         let retained_bytes = match mutation {
             Gis3dConfigMutation::SetCamera(SetCamera { camera_json }) if camera_json.len() <= GIS3D_RETAINED_RAW_BYTES && serde_json::from_str::<Value>(camera_json).is_ok_and(|camera| camera.is_object()) => camera_json.len(),
-            Gis3dConfigMutation::SetLocale(SetLocale { value }) if matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE") => value.len(),
             _ => return Err("GIS terrain Config preparation rejected its exact mutation".into()),
         };
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })
@@ -475,7 +470,6 @@ impl ArtifactEditor for Gis3dPlayApp {
         tools: {
             "setExaggeration" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "setCamera" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setLocale" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
     }
 
@@ -581,13 +575,6 @@ impl ArtifactEditor for Gis3dPlayApp {
                 }
                 Ok(Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json }))
             }
-            "setLocale" => {
-                let value = str_arg(&["value", "locale"]).unwrap_or_default();
-                if value.len() > GIS3D_RETAINED_RAW_BYTES || !matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE") {
-                    return Err(Fault::from("gis3d-command-payload-too-large"));
-                }
-                Ok(Gis3dCommand::SetLocale(set_locale::SetLocale { value }))
-            }
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -599,7 +586,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         command: &Gis3dCommand,
         doc: &ArtifactView<'_, GisTerrainSnapshot>,
         cfg: &ConfigView<'_, Gis3dConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>, Fault> {
@@ -612,7 +599,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         semio_framework_plugin::ConfigSpec::default()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, Gis3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, cfg.snapshot).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
@@ -663,7 +650,6 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setExaggeration", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .config(Gis3dPlayApp::config_spec())

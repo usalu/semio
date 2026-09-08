@@ -20,7 +20,7 @@ fn close(retirement: &mut dyn ErasedSnapshotRetirement) {
 
 #[test]
 fn neutral_fixture_retires_exact_mutation_shared_snapshot_and_final_snapshot_owners() {
-    let source = include_str!("../../../🌿️vcs/🧪️fixtures/🔣️mutations.json");
+    let source = include_str!("../../../🌿️vcs/🧫️fixtures/🔣️mutations.json");
     let oracle: serde_json::Value = serde_json::from_str(source).expect("serde oracle");
     let fixture = crate::os_pack::json::parse(source).expect("first-party fixture parser");
     let first_party_oracle: serde_json::Value = serde_json::from_str(&crate::os_pack::json::to_json_string(&fixture)).expect("first-party fixture as serde oracle");

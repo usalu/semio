@@ -17,46 +17,46 @@
       ]
     },
     "scenes": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "nodes": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "meshes": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "accessors": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "bufferViews": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "buffers": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "bufferBytes": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "materials": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "textures": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "images": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "samplers": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "skins": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "animations": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "cameras": {
-      "$ref": "#/$defs/collectionDiff"
+      "$ref": "#/definitions/collectionDiff"
     },
     "extensionsUsed": {
       "type": "array",
@@ -80,32 +80,7 @@
     }
   },
   "$defs": {
-    "touchedRegion": {
-      "enum": [
-        "asset",
-        "scene",
-        "scenes",
-        "nodes",
-        "meshes",
-        "accessors",
-        "bufferViews",
-        "buffers",
-        "bufferBytes",
-        "materials",
-        "textures",
-        "images",
-        "samplers",
-        "skins",
-        "animations",
-        "cameras",
-        "extensionsUsed",
-        "extensionsRequired",
-        "extensions",
-        "extras",
-        "sourceForm"
-      ]
-    },
-    "derivation": {
+    "GltfDiffDerivation": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -131,11 +106,38 @@
         "touchedRegions": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/touchedRegion"
+            "$ref": "#/definitions/touchedRegion"
           },
           "uniqueItems": true
         }
       }
+    }
+  },
+  "definitions": {
+    "touchedRegion": {
+      "enum": [
+        "asset",
+        "scene",
+        "scenes",
+        "nodes",
+        "meshes",
+        "accessors",
+        "bufferViews",
+        "buffers",
+        "bufferBytes",
+        "materials",
+        "textures",
+        "images",
+        "samplers",
+        "skins",
+        "animations",
+        "cameras",
+        "extensionsUsed",
+        "extensionsRequired",
+        "extensions",
+        "extras",
+        "sourceForm"
+      ]
     },
     "collectionDiff": {
       "type": "object",

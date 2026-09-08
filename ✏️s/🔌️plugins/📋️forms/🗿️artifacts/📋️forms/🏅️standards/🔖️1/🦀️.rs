@@ -2,7 +2,7 @@
 //! its one subset (`✳️any`). New file: this level did not exist before ticket
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM.
 
-pub fn standard() -> semio_framework_plugin::app::declarations::StandardDeclaration<crate::FormsApps> {
+pub fn standard<A: crate::FormsApplication>() -> semio_framework_plugin::app::declarations::StandardDeclaration<A> {
     use crate::standards::v1::subsets;
     use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
     use semio_framework_plugin::StandardId;

@@ -9,7 +9,6 @@ message NoteConfig {
   // @state config
   string active_utility_id = 5;
   // @state config
-  string locale = 6;
 }
 
 message NoteCamera {

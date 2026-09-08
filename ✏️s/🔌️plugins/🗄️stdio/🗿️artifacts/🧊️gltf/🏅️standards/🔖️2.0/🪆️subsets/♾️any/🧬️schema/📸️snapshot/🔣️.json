@@ -40,10 +40,10 @@
               "type": "string"
             },
             "extensions": {
-              "$ref": "#/$defs/gltfJson"
+              "$ref": "#/$defs/GltfJson"
             },
             "extras": {
-              "$ref": "#/$defs/gltfJson"
+              "$ref": "#/$defs/GltfJson"
             }
           }
         },
@@ -478,10 +478,10 @@
           }
         },
         "extensions": {
-          "$ref": "#/$defs/gltfJson"
+          "$ref": "#/$defs/GltfJson"
         },
         "extras": {
-          "$ref": "#/$defs/gltfJson"
+          "$ref": "#/$defs/GltfJson"
         }
       }
     },
@@ -507,7 +507,7 @@
     }
   },
   "$defs": {
-    "gltfJson": {
+    "GltfJson": {
       "description": "This artifact's own JSON value enum (extras/extensions).",
       "anyOf": [
         {
@@ -525,13 +525,13 @@
         {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/gltfJson"
+            "$ref": "#/$defs/GltfJson"
           }
         },
         {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/gltfJson"
+            "$ref": "#/$defs/GltfJson"
           }
         }
       ]

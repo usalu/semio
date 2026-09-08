@@ -2,9 +2,9 @@
   "fixture": {
     "schema": "flow.fixture",
     "camera": {
-      "x": 0.0,
-      "y": 0.0,
-      "zoom": 1.0
+      "x": 0,
+      "y": 0,
+      "zoom": 1
     },
     "widgets": [
       {
@@ -21,8 +21,8 @@
     "synapses": [],
     "layout": {
       "node-a": {
-        "x": 0.0,
-        "y": 0.0
+        "x": 0,
+        "y": 0
       }
     }
   },
@@ -32,7 +32,7 @@
         "id": "gen-1",
         "name": "Baseline",
         "values": {
-          "storeys": 3.0
+          "storeys": 3
         }
       }
     ],

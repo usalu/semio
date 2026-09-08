@@ -21,7 +21,9 @@ impl Watchdog {
 
 impl WatchdogAdmission {
     /// 🔎️ Returns diagnostic data, never a constructible commit capability.
-    pub fn verdict(&self) -> CallbackVerdict { self.admission }
+    pub fn verdict(&self) -> CallbackVerdict {
+        self.admission
+    }
 
     /// 🏁️ Records interim optional telemetry before the terminal reading of the same window.
     pub fn finish_after_telemetry(mut self) -> CallbackVerdict {
@@ -32,7 +34,9 @@ impl WatchdogAdmission {
         let terminal_us = try_now_us();
         let fault = fault.or_else(|| clock_order_fault(sample_us, terminal_us));
         let mut terminal = self.guard.verdict_at(terminal_us);
-        if let Some(fault) = fault { terminal.elapsed = Err(fault); }
+        if let Some(fault) = fault {
+            terminal.elapsed = Err(fault);
+        }
         terminal
     }
 }
@@ -45,4 +49,3 @@ fn clock_order_fault(before: Option<u64>, after: Option<u64>) -> Option<Callback
     }
 }
 //#endregion 🐕️Admission
-

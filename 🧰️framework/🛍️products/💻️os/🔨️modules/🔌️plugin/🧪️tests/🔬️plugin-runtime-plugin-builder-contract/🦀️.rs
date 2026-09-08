@@ -33,7 +33,7 @@ mod plugin_builder_contract_tests {
     use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, CommandDefinition, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
     use semio_framework_job::InteractiveJob as _;
     mod local_interaction_dispatch {
-        include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/🦀️.rs"));
+        include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs"));
     }
     /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): this module names every other type
     /// explicitly (no `use super::*;`), so the `🕹️IntentDispatchTests` fixture needs its own
@@ -56,9 +56,13 @@ mod plugin_builder_contract_tests {
     /// never independently drift (guarded by `test_app_id_matches_its_own_dialect` below).
     const TEST_APP_DIALECT: Dialect = Dialect { artifact_kind: "s.test.synthetic", standard: StandardId("1"), subset: SubsetId::ANY };
 
+    std::thread_local! {
+        static RENDER_CONTEXT_PROBE: std::cell::RefCell<Option<(String, ViewModel)>> = const { std::cell::RefCell::new(None) };
+    }
+
     #[test]
     fn app_owned_request_context_identity_matches_language_neutral_oracle_and_rejects_every_root_drift() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧵️retained-command/🧪️fixtures/🧬️request-context.json")).expect("request context fixture");
+        let fixture: Value = serde_json::from_str(include_str!("../../🧵️retained-command/🧫️fixtures/🧬️request-context.json")).expect("request context fixture");
         let hex = |text: &str| text.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("hex pair"), 16).expect("hex byte")).collect::<Vec<_>>();
         let revision: [u8; 32] = hex(fixture["canonicalBaseRevisionHex"].as_str().expect("revision hex")).try_into().expect("revision width");
         let expected = u64::from_str_radix(fixture["expectedIdentityDigestHex"].as_str().expect("digest hex"), 16).expect("digest");
@@ -900,7 +904,7 @@ mod plugin_builder_contract_tests {
             command: &TestCommand,
             doc: &ArtifactView<'_, TestSnapshot>,
             _cfg: &ConfigView<'_, TestConfig>,
-            _interaction: &InteractionView<'_>,
+            _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
             _draft: &DraftView<'_, NoDraft>,
             _engines: &EngineHandles,
         ) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
@@ -953,7 +957,8 @@ mod plugin_builder_contract_tests {
             }
         }
 
-        async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> UiAssemblyResult<ComponentTree> {
+        async fn render(body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+            RENDER_CONTEXT_PROBE.with(|probe| probe.replace(Some((body_key.into(), view_state.clone()))));
             built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
         }
 
@@ -996,7 +1001,7 @@ mod plugin_builder_contract_tests {
         /// `contract_registry`-backed tests, which never set that label, are untouched) — a flat >9-row
         /// menu fixture for `context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu` below,
         /// proving `VcsArtifactApp::context_menu` runs every emitter through `organize_context_menu`.
-        async fn context_menu(_request: &ContextMenuRequest, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        async fn context_menu(_request: &ContextMenuRequest, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             // 🩹️ Rewritten from `Menu::when(cond, |m| m.command(..))` — `when`'s closure param is
             // `impl FnOnce(Self) -> Self` (sync, a public documented pattern other plugins use), but
             // `Menu::command`/`action` are genuinely async (they await `AppActionRegistry::get*`). An
@@ -1257,13 +1262,13 @@ mod plugin_builder_contract_tests {
             _command: &TestCommand,
             _doc: &ArtifactView<'_, TestSnapshot>,
             _cfg: &ConfigView<'_, TestConfig>,
-            _interaction: &InteractionView<'_>,
+            _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
             _draft: &DraftView<'_, NoDraft>,
             _engines: &EngineHandles,
         ) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
             Err(Fault::from("keyed fixture requires its actual retained factory"))
         }
-        async fn render(body: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>) -> UiAssemblyResult<ComponentTree> {
+        async fn render(body: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
             TestApp::<false>::render(body, doc, cfg).await
         }
     }
@@ -1380,15 +1385,15 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_operation_continues_after_command_admission_until_publication_and_retirement() {
-        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧪️fixtures/🔣️.json")).unwrap();
+        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
         let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
         let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
         app.bind_instance_id(id).await;
         let value = fixture["command"]["value"].as_i64().unwrap() as i32;
         let command = TestCommand::CompositeEdit { slot: String::new(), child_id: fixture["command"]["target"].as_str().unwrap().into(), child_value: value };
-        app.dispatch_typed(command, &ActionMeta { actor: "fixture".into(), instance_id: id }).await.unwrap();
+        app.dispatch_typed(command, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.unwrap();
         let runtime = super::PluginRuntime::new();
-        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app }));
+        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let mut terminal = false;
         let mut receipts = 0;
@@ -1456,10 +1461,10 @@ mod plugin_builder_contract_tests {
         let TestMembers::Child(child_store) = &mut child;
         child_store.install_member_store_owners_exact(<TestSnapshot as store::MemberStoreOwner<TestMutation>>::member_store_owners());
         app.register_child("slot", "child-1", test_child_dialect().await, child).await.expect("register child");
-        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id }).await.expect("admit retained child gesture");
+        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("admit retained child gesture");
 
         let runtime = super::PluginRuntime::new();
-        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app }));
+        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let acknowledgement_fixture: Value = serde_json::from_str(include_str!("../../🥇️tool-latest-wins.json")).expect("language-neutral result ACK fixture");
         let mut lanes = Vec::new();
@@ -1553,13 +1558,13 @@ mod plugin_builder_contract_tests {
             let TestMembers::Child(child) = child;
             assert_eq!(child.snapshot().expect("child snapshot").count, 9);
 
-            active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id }).await.expect("undo retained group");
+            active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("undo retained group");
             assert_eq!(active.app.snapshot().expect("undone parent snapshot").count, 0);
             let (_, child) = active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("undone child");
             let TestMembers::Child(child) = child;
             assert_eq!(child.snapshot().expect("undone child snapshot").count, 0);
 
-            active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id }).await.expect("redo retained group");
+            active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("redo retained group");
             assert_eq!(active.app.snapshot().expect("redone parent snapshot").count, 9);
             let (_, child) = active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("redone child");
             let TestMembers::Child(child) = child;
@@ -1621,21 +1626,21 @@ mod plugin_builder_contract_tests {
             command: &TestCommand,
             doc: &ArtifactView<'_, TestSnapshot>,
             cfg: &ConfigView<'_, TestConfig>,
-            interaction: &InteractionView<'_>,
+            interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
             draft: &DraftView<'_, NoDraft>,
             engines: &EngineHandles,
         ) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
             TestApp::<false>::handle(command, doc, cfg, interaction, draft, engines).await
         }
 
-        async fn render(body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>) -> UiAssemblyResult<ComponentTree> {
+        async fn render(body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
             TestApp::<false>::render(body_key, doc, cfg).await
         }
     }
 
     // 🚫️async: E1 pure constructor, called pervasively as `&meta()` — see R9.
     fn meta() -> ActionMeta {
-        ActionMeta { actor: "local".into(), instance_id: 1 }
+        ActionMeta { actor: "local".into(), instance_id: 1, view_state: None }
     }
 
     async fn synthetic_play_app() -> App {
@@ -2277,7 +2282,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_command_child_emit_prepublication_close_and_rejected_handoff_are_bounded() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧵️retained-command/🧪️fixtures/🧩️child-prepublication-close.json")).expect("language-neutral child close fixture");
+        let fixture: Value = serde_json::from_str(include_str!("../../🧵️retained-command/🧫️fixtures/🧩️child-prepublication-close.json")).expect("language-neutral child close fixture");
         let expected_ids = fixture["children"].as_array().expect("child close fixture rows").iter().map(|child| child["childId"].as_str().unwrap().to_string()).collect::<Vec<_>>();
         let expected_order = fixture["expectedRetirementOrder"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>();
         let build_emit = || {
@@ -2438,7 +2443,7 @@ mod plugin_builder_contract_tests {
         object
     }
 
-    include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime.rs"));
+    include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs"));
 
     async fn __semio_plugin_bundle() -> Result<Plugin<TestRuntimeApps>, PluginAssemblyError> {
         Plugin::<TestRuntimeApps>::builder("test").label("Synthetic").version("0.0.1").package_id("semio:test").document_app::<TestApp>(synthetic_play_app().await).document_app_mutation_roster::<TestApp>().try_build()
@@ -3816,12 +3821,12 @@ mod plugin_builder_contract_tests {
         let set_label_icon = catalog_action_icon_id("setLabelRequired", ActionKind::Mutation).as_str().to_string();
         let increment_icon = catalog_command_icon_id("incrementViaCommand").as_str().to_string();
 
-        let empty_label = app.context_menu(&request).await;
+        let empty_label = app.context_menu(&request, &ViewModel::default()).await;
         assert_eq!(empty_label.len(), 1, "the gated command must be absent with no label set: {empty_label:?}");
         assert_eq!(empty_label[0], ContextMenuItemSpec { id: "setLabelRequired".into(), label: Some("Set Label".into()), icon: Some(set_label_icon), action: Some("setLabelRequired".into()), ..Default::default() });
 
         app.dispatch_typed(TestCommand::SetLabel { value: "hi".into() }, &meta()).await.expect("set label");
-        let with_label = app.context_menu(&request).await;
+        let with_label = app.context_menu(&request, &ViewModel::default()).await;
         assert_eq!(with_label.len(), 2, "the guard must open once a label is set: {with_label:?}");
         assert_eq!(with_label[1], ContextMenuItemSpec { id: "incrementViaCommand".into(), label: Some("Increment".into()), icon: Some(increment_icon), action: Some("incrementViaCommand".into()), ..Default::default() });
     }
@@ -3894,7 +3899,7 @@ mod plugin_builder_contract_tests {
         app.dispatch_typed(TestCommand::SetLabel { value: "flat-menu-test".into() }, &meta()).await.expect("set label");
         let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
 
-        let organized = app.context_menu(&request).await;
+        let organized = app.context_menu(&request, &ViewModel::default()).await;
         let ids: Vec<&str> = organized.iter().map(|item| item.id.as_str()).collect();
         assert_eq!(
             ids,
@@ -3908,12 +3913,50 @@ mod plugin_builder_contract_tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn context_menu_wire_request_without_view_state_still_parses() {
-        let wire: ContextMenuWireRequest = serde_json::from_str(r#"{"menu":{"id":"window"}}"#).expect("viewState is no longer a required field");
-        assert_eq!(wire.menu.id, "window");
-        assert!(wire.surface.is_none());
-        assert!(wire.window_instance_id.is_none());
-        assert!(wire.point.is_none());
+    async fn context_menu_wire_requires_and_forwards_canonical_view_state() {
+        assert!(serde_json::from_str::<ContextMenuWireRequest>(r#"{"menu":{"id":"window"}}"#).is_err());
+        let wire: ContextMenuWireRequest = serde_json::from_str(r#"{"menu":{"id":"window"},"viewState":{"locale":"de","terminology":"reuse"}}"#).expect("canonical viewState parses");
+        let (request, view_state) = wire.into_parts().unwrap();
+        assert_eq!(request.menu.id, "window");
+        assert_eq!(view_state.locale, crate::Locale::De);
+        assert_eq!(view_state.terminology, crate::Terminology::Reuse);
+        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧪️tests/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+        for surface in fixture["surfaces"].as_array().unwrap() {
+            let wire: ContextMenuWireRequest = serde_json::from_value(json!({"menu":{"id":"window"},"windowInstanceId":surface["windowId"],"viewState":fixture["view"]})).unwrap();
+            let (_, view) = wire.into_parts().unwrap();
+            assert_eq!(view.window_id.as_deref(), surface["windowId"].as_str());
+            assert_eq!(view.active_utility_id.as_deref(), surface["activeUtilityId"].as_str());
+        }
+        let wire: ContextMenuWireRequest = serde_json::from_value(json!({"menu":{"id":"window"},"windowInstanceId":"unknown","viewState":fixture["view"]})).unwrap();
+        assert!(wire.into_parts().is_err());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn surface_context_reaches_real_app_render_and_rejects_hidden_surfaces() {
+        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧪️tests/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+        let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
+        let runtime = super::PluginRuntime::new();
+        let app = contract_app_under_test().await;
+        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }));
+        runtime.instances.borrow_mut().insert_admitted(7, cell);
+        for surface in fixture["surfaces"].as_array().unwrap() {
+            let view = surface["windowId"].as_str().map(|window| host_view.for_window_instance(window).unwrap()).unwrap_or_else(|| host_view.clone());
+            super::plugin_mount_surface(&runtime, 7, surface["id"].as_str().unwrap().into(), surface["bodyKey"].as_str().unwrap().into(), &super::encode_wire_serialized(&view)).await.unwrap();
+        }
+        for surface in fixture["surfaces"].as_array().unwrap() {
+            super::plugin_render_surface(&runtime, 7, surface["id"].as_str().unwrap()).await.unwrap();
+            let (body, actual) = RENDER_CONTEXT_PROBE.with(|probe| probe.take().unwrap());
+            assert_eq!(body, surface["bodyKey"].as_str().unwrap());
+            assert_eq!(actual.window_id.as_deref(), surface["windowId"].as_str());
+            assert_eq!(actual.active_utility_id.as_deref(), surface["activeUtilityId"].as_str());
+            assert_eq!(actual.locale, host_view.locale);
+            assert_eq!(actual.terminology, host_view.terminology);
+        }
+        let hidden = fixture["hidden"].as_str().unwrap();
+        super::plugin_hide_surface(&runtime, 7, hidden).await.unwrap();
+        assert!(super::plugin_render_surface(&runtime, 7, hidden).await.is_err());
+        assert!(super::plugin_render_surface(&runtime, 7, fixture["survivor"].as_str().unwrap()).await.is_ok());
+        eprintln!("[DEBUG] real app render receives host preferences and each concrete surface context; hidden surface rendering is rejected");
     }
     //#endregion 🗂️GroupedContextMenu
 
@@ -4149,8 +4192,8 @@ mod plugin_builder_contract_tests {
             }),
         );
         let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::Plugin { plugin_id: "fixture".into() }, command_id: "refresh".into() }, arguments: Default::default() };
-        plugin.handle_plugin_command(&invocation, &ActionMeta { actor: "a".into(), instance_id: 1 }).expect("first app instance");
-        plugin.handle_plugin_command(&invocation, &ActionMeta { actor: "b".into(), instance_id: 2 }).expect("second app instance");
+        plugin.handle_plugin_command(&invocation, &ActionMeta { actor: "a".into(), instance_id: 1, view_state: None }).expect("first app instance");
+        plugin.handle_plugin_command(&invocation, &ActionMeta { actor: "b".into(), instance_id: 2, view_state: None }).expect("second app instance");
         assert_eq!(calls.load(Ordering::SeqCst), 3);
     }
 
@@ -4387,7 +4430,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn a_spawned_task_awaits_a_real_request_and_its_resume_mutates_the_store_under_the_original_meta() {
         let instance = 501;
-        let spawn_meta = ActionMeta { actor: "alice".into(), instance_id: instance };
+        let spawn_meta = ActionMeta { actor: "alice".into(), instance_id: instance, view_state: None };
         let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
 
         let result = app.dispatch_typed(TestCommand::SpawnCountTask, &spawn_meta).await.expect("dispatching SpawnCountTask must succeed");
@@ -4425,7 +4468,7 @@ mod plugin_builder_contract_tests {
         // `plugin_runtime::plugin_resume_task`'s `TaskResumeInput::Command` arm, exercised
         // directly rather than through `crate::reactor::drain_task_resumes` (wasm-only).
         let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
-        crate::plugin_runtime::test_push_instance(&runtime, AppInstance { id: resumed_instance, app: TestRuntimeApps::from(app) }).await;
+        crate::plugin_runtime::test_push_instance(&runtime, AppInstance { id: resumed_instance, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
         let output = crate::plugin_runtime::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, crate::plugin_runtime::TaskResumeInput::Command(command_bytes)).await;
         assert_eq!(output.frames.len(), 1, "a successful resume must frame exactly one AppFrame::Emit");
         let frame = protocol::decode_app_frame(&output.frames[0]).await.expect("must decode back to an AppFrame");
@@ -4441,7 +4484,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it() {
         let instance = 502;
-        let meta = ActionMeta { actor: "local".into(), instance_id: instance };
+        let meta = ActionMeta { actor: "local".into(), instance_id: instance, view_state: None };
         crate::reactor::test_support::set_instance_quota(instance, 2).await;
 
         for label in ["first", "second"] {
@@ -4457,7 +4500,7 @@ mod plugin_builder_contract_tests {
 
         // 🔓️ A different instance has its OWN quota accounting, unaffected by 502's exhaustion.
         let other_instance = 503;
-        let other_meta = ActionMeta { actor: "local".into(), instance_id: other_instance };
+        let other_meta = ActionMeta { actor: "local".into(), instance_id: other_instance, view_state: None };
         let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("elsewhere", |_ctx| async move { Ok(TaskResolution::Done) });
         crate::reactor::spawn_task(other_instance, &other_meta, task.await).await.expect("a different instance must not be affected by 502's quota exhaustion");
     }
@@ -4468,7 +4511,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn key_dedupe_cancels_the_previously_live_task_under_the_same_key() {
         let instance = 504;
-        let meta = ActionMeta { actor: "local".into(), instance_id: instance };
+        let meta = ActionMeta { actor: "local".into(), instance_id: instance, view_state: None };
         let first_ran = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let first_ran_inner = first_ran.clone();
         let first = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("first", move |_ctx| async move {
@@ -4505,8 +4548,8 @@ mod plugin_builder_contract_tests {
     async fn instance_close_cancellation_drops_the_instances_tasks_and_leaks_no_registry_slot() {
         let dying = 505;
         let survivor = 506;
-        let dying_meta = ActionMeta { actor: "local".into(), instance_id: dying };
-        let survivor_meta = ActionMeta { actor: "local".into(), instance_id: survivor };
+        let dying_meta = ActionMeta { actor: "local".into(), instance_id: dying, view_state: None };
+        let survivor_meta = ActionMeta { actor: "local".into(), instance_id: survivor, view_state: None };
 
         let dying_ran = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let dying_ran_inner = dying_ran.clone();
@@ -4553,7 +4596,7 @@ mod plugin_builder_contract_tests {
         let completion: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture/🔣️.json"))).unwrap();
         let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
         let instance = 507;
-        let meta = ActionMeta { actor: "local".into(), instance_id: instance };
+        let meta = ActionMeta { actor: "local".into(), instance_id: instance, view_state: None };
         let restart_command = <TestCommand as ::protocol::OpBinary>::encode_op(&TestCommand::ApplyCountFromTask { value: 7 }).expect("must encode");
         let observed_completion = std::sync::Arc::new(std::sync::Mutex::new(None));
 

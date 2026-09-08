@@ -1,13 +1,13 @@
 import Ajv2020 from "ajv/dist/2020.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { createSequenceFeatures, createSequenceHost } from "../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/📦️packages/🟨️javascript/🖥️sequence-host.js";
+import { createSequenceBrowserFeatures } from "@semio-tech/sequence-sequence";
 
 //#region 🔮️ThirdPartyOracle
 
-const root = new URL("../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm", import.meta.url);
+const root = new URL("../../🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/", import.meta.url);
 const schema = JSON.parse(readFileSync(fileURLToPath(new URL("🧬️schema/🔣️.json", root)), "utf8"));
-const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("🧪️fixtures/🔣️.json", root)), "utf8"));
+const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("🧫️fixtures/🔣️.json", root)), "utf8"));
 const oracle = createOraclePort(new Ajv2020({ strict: true }).compile(schema));
 const expected = oracle.emit(fixture);
 
@@ -17,7 +17,7 @@ const expected = oracle.emit(fixture);
 
 const memory = new WebAssembly.Memory({ initial: 2 });
 const bridge = new CaptureBridge(memory);
-const features = await createSequenceFeatures(createSequenceHost({ exports: bridge.exports, memory }));
+const features = await createSequenceBrowserFeatures({ source: Uint8Array.of(0, 97, 115, 109), instantiate: async () => ({ instance: { exports: { ...bridge.exports, memory } } }) });
 const task = features.editing.addStepDropped(fixture.input.kind, fixture.input.x, fixture.input.y, fixture.input.picked);
 const semantic = await task.result;
 

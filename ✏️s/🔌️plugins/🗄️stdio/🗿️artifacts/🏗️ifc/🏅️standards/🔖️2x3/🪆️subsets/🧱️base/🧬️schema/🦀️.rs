@@ -3,7 +3,7 @@
 //! distinct schema id `s.stdio.ifc.2x3` so the two standards' descriptors never collide in the
 //! flat `::framework_schema::register_artifact_schema_descriptor` registry.
 
-use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
+use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3Snapshot};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -398,3 +398,8 @@ pub fn register_pilot_languages() {
 // `4`'s own `IfcSnapshot`/`IfcDiff` doc comment documents for the isomorphic shape) — filed as a
 // `mechanism_gaps` entry rather than fabricating an unrelated spec.
 //#endregion 🔖️Register
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3EdmPreamble;
+//#endregion 🔁️Re-exports

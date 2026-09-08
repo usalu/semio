@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/gltf/2.0/material/artifact.json",
+  "title": "GltfArtifact",
+  "description": "gltf 2.0/material is a per-domain view over the any subset's GltfArtifact; the artifact contract is that scope's and is referenced, never restated.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "https://semio.tech/schema/s/stdio/gltf/2.0/any/artifact.json"
+    }
+  ],
+  "x-semio-formats": [
+    "🔣️jsonschema"
+  ]
+}

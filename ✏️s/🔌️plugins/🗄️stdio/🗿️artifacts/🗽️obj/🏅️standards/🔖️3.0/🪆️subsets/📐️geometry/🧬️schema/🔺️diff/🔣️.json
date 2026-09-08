@@ -33,88 +33,23 @@
     "usemtl": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/ObjUsemtlRange"
+        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjUsemtlRange"
       }
     },
     "smoothingGroups": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/ObjSmoothingRange"
+        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjSmoothingRange"
       }
     },
     "unknownStatements": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/ObjUnknownStatement"
+        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjUnknownStatement"
       }
     }
   },
   "$defs": {
-    "ObjFaceVertex": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "vertex"
-      ],
-      "properties": {
-        "vertex": {
-          "type": "integer"
-        },
-        "texcoord": {
-          "type": "integer"
-        },
-        "normal": {
-          "type": "integer"
-        }
-      }
-    },
-    "ObjUsemtlRange": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "faceIndexFrom",
-        "material"
-      ],
-      "properties": {
-        "faceIndexFrom": {
-          "type": "integer"
-        },
-        "material": {
-          "type": "string"
-        }
-      }
-    },
-    "ObjSmoothingRange": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "faceIndexFrom"
-      ],
-      "properties": {
-        "faceIndexFrom": {
-          "type": "integer"
-        },
-        "group": {
-          "type": "integer"
-        }
-      }
-    },
-    "ObjUnknownStatement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "lineIndex",
-        "raw"
-      ],
-      "properties": {
-        "lineIndex": {
-          "type": "integer"
-        },
-        "raw": {
-          "type": "string"
-        }
-      }
-    },
     "ObjVertexDiff": {
       "type": "object",
       "additionalProperties": false,
@@ -344,7 +279,7 @@
         "vertices": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ObjFaceVertex"
+            "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjFaceVertex"
           }
         }
       }

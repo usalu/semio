@@ -1,12 +1,11 @@
-
 use super::*;
-mod native_codec_send_tests {
-    include!("../../📦️codec/🧵️send/🧪️tests/🦀️.rs");
-}
+#[cfg(test)]
+#[path = "../../📦️codec/🧵️send/🧪️tests/🧵️send/🦀️.rs"]
+mod native_codec_send_tests;
 
-mod backbone_detach_refusal_tests {
-    include!("../../🔗️backbone/✂️detach/🧪️tests/🦀️.rs");
-}
+#[cfg(test)]
+#[path = "../../🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs"]
+mod backbone_detach_refusal_tests;
 
 use super::fixture_mutations::{
     demo::{AddN, DeleteN, DemoMutation, RestoreN, SetN},
@@ -206,7 +205,11 @@ impl SerdeOneItemPublicationOracle {
     }
 
     fn freshness(base_generation: u64, live_generation: u64, base_revision: u64, live_revision: u64) -> &'static str {
-        if base_generation == live_generation && base_revision == live_revision { "accepted" } else { "fault" }
+        if base_generation == live_generation && base_revision == live_revision {
+            "accepted"
+        } else {
+            "fault"
+        }
     }
 
     fn retry(&self, attempts: u8, acknowledged: bool) -> &'static str {
@@ -6649,10 +6652,18 @@ async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pin
     }
     impl MemberDirectory for FixtureDirectory {
         async fn head_pack(&self, artifact_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
-            if artifact_id == "linked-doc" { Some(self.member.document_pack_bytes().await) } else { None }
+            if artifact_id == "linked-doc" {
+                Some(self.member.document_pack_bytes().await)
+            } else {
+                None
+            }
         }
         async fn checkpoint_pack(&self, artifact_id: &str, checkpoint_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
-            if artifact_id == "linked-doc" { Some(self.member.pack_at_checkpoint(checkpoint_id).await) } else { None }
+            if artifact_id == "linked-doc" {
+                Some(self.member.pack_at_checkpoint(checkpoint_id).await)
+            } else {
+                None
+            }
         }
     }
 

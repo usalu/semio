@@ -3,7 +3,7 @@ import Ajv from "ajv";
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact } = dependencies;
+  const { DOCUMENT_BACKBONE_RETENTION_LIMITS, DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact } = dependencies;
   const { describe, expect, it } = vitest;
 
   type Limits = Readonly<{
@@ -27,6 +27,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
   type Fixture = Readonly<{
     schema: string;
     wire: string;
+    retention: Readonly<{ maximumBytes: number; maximumMessages: number }>;
     cases: readonly Readonly<{
       id: string;
       rawHex: string;
@@ -66,6 +67,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
       expect(fixture.schema).toBe("semio.replication.document-backbone-batch.v1");
       expect(fixture.wire).toBe("causal-envelope-batch-v1");
+      expect(fixture.retention).toEqual(DOCUMENT_BACKBONE_RETENTION_LIMITS);
 
       for (const row of fixture.cases) {
         const bytes = new Uint8Array(Buffer.from(row.rawHex, "hex"));

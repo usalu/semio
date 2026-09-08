@@ -8,17 +8,9 @@ VS Code extension source for repo tooling workflows.
 
 VS Code test-cli configuration entrypoint that defines the compiled test glob and Electron launch arguments for extension tests.
 
-## 🗂️technologies.json
+## Entity kind catalog
 
-The technology catalog this module owns: one entry per entity kind with its emoji, icon id, label and filterability, in declaration order. It is the single source of the CLI's Go catalog, the Rust catalog and the generated TypeScript catalog, and the only instance document of `🧬️schema/🔣️.json`.
-
-## 🧬️schema
-
-The `repo.client.vscode` scope (`https://semio.tech/schema/repo/client/vscode/schema.json`). `🔣️.json` declares the draft-07 exports `TechnologyCatalog` and `TechnologyCatalogEntry`; `🟦️.ts` is their hand-written TypeScript projection with one `parse<Export>` function each.
-
-## 🧪️tests/🔬️schema/🟦️.ts
-
-Vitest case asserting that `🗂️technologies.json` satisfies the module under both our own parsers and an independent ajv draft-07 oracle, and that the two agree case for case.
+This module owns no catalog. The entity-kind catalog is the `framework.schema` scope (`https://semio.tech/schema/framework/schema/schema.json`, exports `EntityKindCatalog` and `EntityKind`, data in `🧰️framework/🔨️modules/🧬️schema/🔣️entity-kinds.json`). The extension consumes its generated TypeScript projection `🧰️framework/🔨️modules/🧬️schema/🤖️generated/🟦️entity-kinds.ts` and derives `ENTITY_EMOJIS` from the projection's first-wins emoji index.
 
 ## 🧪️tests/🧩️extension/🟦️.ts
 

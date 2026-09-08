@@ -9,7 +9,7 @@ struct SerdeJsonProcedureChildOwnerOracle;
 
 impl ProcedureChildOwnerOracle for SerdeJsonProcedureChildOwnerOracle {
     fn expected() -> serde_json::Value {
-        serde_json::from_str(include_str!("../../🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Imperative child-owner fixture")
+        serde_json::from_str(include_str!("../../🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Imperative child-owner fixture")
     }
 }
 

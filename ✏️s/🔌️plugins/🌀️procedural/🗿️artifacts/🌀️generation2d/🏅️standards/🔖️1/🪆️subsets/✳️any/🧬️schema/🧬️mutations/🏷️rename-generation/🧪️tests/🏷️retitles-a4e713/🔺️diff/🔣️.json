@@ -7,7 +7,7 @@
         "id": "gen-1",
         "name": "Baseline, revised",
         "values": {
-          "height": 3.0
+          "height": 3
         }
       }
     ],
@@ -17,6 +17,5 @@
   "graphCamera": null,
   "showMode": null,
   "selectedGenerationId": null,
-  "generationPreviewText": null,
-  "locale": null
+  "generationPreviewText": null
 }

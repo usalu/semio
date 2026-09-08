@@ -10,9 +10,6 @@
     }
   },
   "$defs": {
-    "JsonValue": {
-      "$ref": "../📸️snapshot/🔣️.json#/$defs/JsonValue"
-    },
     "JsonValueDiff": {
       "oneOf": [
         {
@@ -26,7 +23,7 @@
               "const": "replace"
             },
             "value": {
-              "$ref": "#/$defs/JsonValue"
+              "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue"
             }
           }
         },
@@ -149,7 +146,7 @@
                 "type": "integer"
               },
               "item": {
-                "$ref": "#/$defs/JsonValue"
+                "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue"
               }
             }
           },
@@ -201,7 +198,7 @@
                 "type": "string"
               },
               "item": {
-                "$ref": "#/$defs/JsonValue"
+                "$ref": "https://semio.tech/schema/s/stdio/json/rfc8259/base/snapshot.json#/$defs/JsonValue"
               }
             }
           }

@@ -15,15 +15,6 @@ import {
   Button,
   bootstrapElementsSurfaceChromeDocument,
   builtinUiThemes,
-  readStoredUiChromeAppearance,
-  readStoredUiChromeLayout,
-  readStoredUiChromeLocale,
-  readStoredUiChromeTerminology,
-  readStoredUiChromeThemeId,
-  readStoredUiCustomDrivers,
-  readStoredUiCustomThemes,
-  readStoredUiDriverId,
-  readStoredUiKeybindingOverrides,
   uiI18n,
   type Anchor,
   type ElementsSurfaceAppearance,
@@ -77,6 +68,7 @@ import { FrameworkOsShell } from "../🏛️ShellHost/🟦️.tsx";
 import type { WindowFault } from "../🏛️ShellHost/🩺️fault/🟦️.ts";
 import { type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
 import { PRESENCE_CLIENT_STORAGE_KEY, EMPTY_APP_LABELS_OVERLAY } from "../🛠️ShellHelpers/🟦️.tsx";
+import { readUiPreferences, resolveUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️types
@@ -251,7 +243,7 @@ export function resolveShellLocks(locks: FrameworkOsLocks | undefined): Resolved
     }
   }
   if (locks.themeId !== undefined) {
-    const known = new Set([...builtinUiThemes().map((t) => t.id), ...Object.keys(readStoredUiCustomThemes(createBrowserStoragePort()))]);
+    const known = new Set([...builtinUiThemes().map((t) => t.id), ...Object.keys(resolveUiPreferences(readUiPreferences(createBrowserStoragePort()), { appearance: "system", layout: "desktop", driverId: "default", locale: "en", terminology: "native", themeId: "semio" }).customThemes)]);
     if (known.has(locks.themeId)) {
       resolved.themeId = locks.themeId;
     } else {
@@ -1124,6 +1116,14 @@ export function initialShellState(_props: {
   const locks = _props.locks ?? {};
   const defaults = _props.defaults ?? {};
   const storage = _props.storage;
+  const preferences = resolveUiPreferences(readUiPreferences(storage), {
+    appearance: "system",
+    layout: "desktop",
+    driverId: "default",
+    locale: uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en",
+    terminology: "native",
+    themeId: "semio",
+  });
   return {
     pluginRuntime: { loadedPlugins: [], pluginStatusById: {}, pluginSupervisorById: {}, session: null, error: null, sessionFault: null, instanceFault: null },
     windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, toolMeasuresByToolId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
@@ -1148,20 +1148,17 @@ export function initialShellState(_props: {
     tutorial: { activeTutorialId: null, playing: false, rate: 1, muted: false, captionsOn: true, recording: false, deviated: false },
     interaction: EMPTY_INTERACTION_STATE,
     uiPrefs: {
-      // 🐚️ No more `ephemeral ? default : readStored...()` branching here — `storage` already resolves
-      // to an empty, this-shell-only memory store for an ephemeral shell (see `resolveShellScopeStorage`),
-      // so a fresh read naturally falls through to each reader's own built-in default.
-      uiAppearance: locks.appearance ?? readStoredUiChromeAppearance(storage),
-      uiLayout: readStoredUiChromeLayout(storage),
-      uiDriverId: readStoredUiDriverId(storage),
-      uiCustomDrivers: readStoredUiCustomDrivers(storage),
+      uiAppearance: locks.appearance ?? preferences.appearance,
+      uiLayout: preferences.layout,
+      uiDriverId: preferences.driverId,
+      uiCustomDrivers: preferences.customDrivers,
       uiDriverDraft: null,
-      uiLocale: locks.locale ?? readStoredUiChromeLocale(storage) ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"),
-      uiTerminology: locks.terminology ?? readStoredUiChromeTerminology(storage),
-      uiThemeId: locks.themeId ?? readStoredUiChromeThemeId(storage) ?? "semio",
-      uiCustomThemes: readStoredUiCustomThemes(storage),
+      uiLocale: locks.locale ?? preferences.locale,
+      uiTerminology: locks.terminology ?? preferences.terminology,
+      uiThemeId: locks.themeId ?? preferences.themeId,
+      uiCustomThemes: preferences.customThemes,
       uiThemeDraft: null,
-      uiKeybindingOverrides: readStoredUiKeybindingOverrides(storage),
+      uiKeybindingOverrides: preferences.keybindingOverrides,
     },
     sync: { syncBackboneUri: null, syncCardKind: null, syncDraftPath: "", syncStatusByDocumentId: {} },
     inference: { portByRuntimeKey: {}, operationEpoch: null, operationRuntimeKey: null },
@@ -1181,7 +1178,8 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
   if (options.brand) document.title = options.brand.windowTitle;
   // 🐚️ This pre-paint bootstrap runs before any `ShellScope` exists (React hasn't mounted yet), so it
   // resolves storage the same way `resolveShellScopeStorage` will once the shell below actually mounts.
-  bootstrapElementsSurfaceChromeDocument(locks.appearance ?? readStoredUiChromeAppearance(ephemeral ? createMemoryStoragePort() : createBrowserStoragePort()));
+  const storage = ephemeral ? createMemoryStoragePort() : createBrowserStoragePort();
+  bootstrapElementsSurfaceChromeDocument(locks.appearance ?? readUiPreferences(storage).appearance ?? "system");
   // 🐢️ No hardcoded fallback app — an omitted `plugins` list boots the shell with an explicit
   // "no plugins available" state rather than silently picking one app.
   const appRole = resolveBootAppRole(options.appRole);

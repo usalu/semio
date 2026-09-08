@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 

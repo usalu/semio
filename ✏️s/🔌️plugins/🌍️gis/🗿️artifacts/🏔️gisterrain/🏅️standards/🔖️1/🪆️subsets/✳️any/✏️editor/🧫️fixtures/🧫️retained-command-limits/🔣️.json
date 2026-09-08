@@ -1,0 +1,9 @@
+{
+  "maximumTextBytes": 8192,
+  "rejectedAdditionalBytes": 1,
+  "expectedWorkItems": 1,
+  "toolIds": [
+    "setExaggeration",
+    "setCamera"
+  ]
+}

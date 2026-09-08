@@ -35,3 +35,43 @@ message Fem3dArtifact {
   string mesh_preview_json = 15;
 }
 
+message FemCamera {
+  string json = 1;
+}
+
+message FemAnalysisSettings {
+  uint32 modal_count = 1;
+  uint32 buckling_count = 2;
+  double deformation_scale = 3;
+}
+
+message FemNode {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+}
+
+message FemMaterial {
+  string id = 1;
+  string name = 2;
+  double e = 3;
+  double g = 4;
+  double nu = 5;
+  double rho = 6;
+}
+
+message FemSection {
+  string id = 1;
+  string name = 2;
+  double area = 3;
+  double iy = 4;
+  double iz = 5;
+  double j = 6;
+}
+
+message FemSupport {
+  string id = 1;
+  string node_id = 2;
+  repeated string fixed = 3;
+}

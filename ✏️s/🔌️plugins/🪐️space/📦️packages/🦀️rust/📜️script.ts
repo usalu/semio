@@ -5,7 +5,6 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 
@@ -36,7 +35,7 @@ class TestScript extends BundleScript {
 /** 📇️ Proves Home projection persistence is document-complete and corruption-explicit. */
 export function homeDirectoryProjectionPersistenceOracle(repoRoot: string): number {
   const base = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/📇️projection-persistence-v1/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/📇️projection-persistence-v1/🔣️.json"), "utf8"));
   const module = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: false, allErrors: true });
   ajv.addSchema(module);
@@ -94,8 +93,9 @@ class HomeDirectoryProjectionPersistenceCheckScript extends BundleScript {
         cwd: this.root,
         ...homeExactCargoEnvironment(),
         groups: [{
-          package: "semio-s-plugin-space",
+          package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
+          cargoArgs: ["--features", "component-app-assembly"],
           laws: ["editor::home::config::tests::directory_projection_round_trip_preserves_documents_and_rejects_corruption"],
         }],
         progress(event) { console.log(`home-directory-projection-persistence ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
@@ -112,14 +112,16 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
   const schemaPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json");
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
   const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
-  const validate = new Ajv2020({ strict: false, allErrors: true, discriminator: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
+  const directoryAjv = new Ajv({ strict: false, allErrors: true, discriminator: true });
+  directoryAjv.addSchema(schema);
+  const validate = directoryAjv.compile({ $ref: `${schema.$id}#/$defs/DirectoryEventPageV1` });
   assert(validate(fixture.valid), JSON.stringify(validate.errors));
   assert.equal(createHash("sha256").update(fixture.canonicalUnsigned).digest("hex"), fixture.expectedReceiptSha256);
   const base = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
   const configSchema = JSON.parse(readFileSync(join(base, "🎚️config/🧬️schema/🔣️.json"), "utf8"));
   const validateConfig = new Ajv({ strict: false, allErrors: true }).compile(configSchema);
   const configVector = {
-    activePanelTab: "", locale: "de-DE", directoryJson: JSON.stringify({ spaces: {}, cursor: 5, users: {} }),
+    activePanelTab: "", directoryJson: JSON.stringify({ spaces: {}, cursor: 5, users: {} }),
     directorySessionBindingSha256: "a".repeat(64), directoryAuthorizationGeneration: 7,
     directoryReceiptSha256: fixture.expectedReceiptSha256, clientId: "u-1", clientName: "Ada",
   };
@@ -129,7 +131,7 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
     delete hostile[field];
     assert.equal(validateConfig(hostile), false, `config schema accepted missing ${field}`);
   }
-  const retainedFixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🧫️retained-command-limits/🔣️.json"), "utf8"));
+  const retainedFixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🧫️retained-command-limits/🔣️.json"), "utf8"));
   const validateRetained = compileRetainedCommandLimits(repoRoot, join(base, ".."), "HomeRetainedCommandLimits");
   assert(validateRetained(retainedFixture), JSON.stringify(validateRetained.errors));
   assert.equal(retainedFixture.routes.find((route: any) => route.id === "applyDirectoryEventPage")?.lanes?.[0], "config");
@@ -137,8 +139,9 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
   const command = existsSync(commandPath) ? readFileSync(commandPath, "utf8") : "";
   const receiptRoot = join(base, "🎮️commands/📬️apply-directory-event-page/🧬️receipt");
   const receiptFixture = JSON.parse(readFileSync(join(receiptRoot, "🔣️.json"), "utf8"));
-  const receiptSchema = JSON.parse(readFileSync(join(receiptRoot, "🧬️.schema.json"), "utf8"));
-  const validateReceipt = new Ajv2020({ strict: true, allErrors: true }).compile(receiptSchema);
+  const receiptAjv = new Ajv({ strict: true, allErrors: true });
+  receiptAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
+  const validateReceipt = receiptAjv.compile(configSchema.$defs.HomeDirectoryProjectionReceipt);
   assert(validateReceipt(receiptFixture.valid), JSON.stringify(validateReceipt.errors));
   for (const row of receiptFixture.hostile) {
     const hostile = { ...structuredClone(receiptFixture.valid), ...row.patch };
@@ -146,7 +149,7 @@ export function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
   }
   const config = readFileSync(join(base, "🎚️config/🦀️.rs"), "utf8");
   const editor = readFileSync(join(base, "🦀️.rs"), "utf8");
-  const crate = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/🦀️.rs"), "utf8");
+  const crate = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs"), "utf8");
   const exact = (commandSource: string, configSource: string, editorSource: string, crateSource: string): boolean =>
     commandSource.includes("DirectoryEventPageV1::parse_canonical_json")
     && commandSource.includes("apply_directory_event_page")
@@ -186,8 +189,9 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
         cwd: this.root,
         ...homeExactCargoEnvironment(),
         groups: [{
-          package: "semio-s-plugin-space",
+          package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
+          cargoArgs: ["--features", "component-app-assembly"],
           laws: ["editor::home::commands::apply_directory_event_page::tests::sealed_page_replaces_projection_once_and_rejects_races"],
         }],
         progress(event) { console.log(`home-directory-event-page-owner ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
@@ -201,59 +205,123 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
 /** 🪪️ Proves only the current Hub author identity receives Home administration affordances. */
 export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   const base = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any");
+  const readSources = (paths: string[]): string => paths.map((path) => readFileSync(join(repoRoot, path), "utf8")).join("\n");
   const controller = readFileSync(join(base, "✏️editor/🦀️.rs"), "utf8");
   const editor = readFileSync(join(base, "✏️editor/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️.rs"), "utf8");
+  const editorTests = readFileSync(join(base, "✏️editor/🎭️modes/🔎️explore/🪟️windows/🏠️main/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
   const viewer = readFileSync(join(base, "👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🦀️.rs"), "utf8");
-  const homeViewerApp = readFileSync(join(base, "👁️viewer/🦀️.rs"), "utf8");
-  const homeOperations = readFileSync(join(base, "🧬️schema/⚙️operations/🦀️.rs"), "utf8");
-  const homeBinary = readFileSync(join(base, "🧬️schema/🧬️mutations/💾️binary/🦀️.rs"), "utf8");
-  const spaceOperations = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"), "utf8");
+  const viewerTests = readFileSync(join(base, "👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+  const homeViewerApp = readSources([
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const homeOperations = readFileSync(join(base, "🧬️schema/⚙️operations/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+  const homeBinary = readFileSync(join(base, "🧬️schema/🧬️mutations/💾️binary/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+  const spaceOperations = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
   const spaceEditor = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏠️main/🦀️.rs"), "utf8");
-  const spaceViewer = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🦀️.rs"), "utf8");
-  const spaceViewerApp = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"), "utf8");
-  const spaceMembers = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/👥️members/🦀️.rs"), "utf8");
-  const spaceIndexController = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), "utf8");
-  const spaceEngine = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️.rs"), "utf8");
-  const spaceCrateRoot = join(repoRoot, "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust");
-  const spaceCrate = readFileSync(join(spaceCrateRoot, "🦀️.rs"), "utf8");
-  const spaceShared = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🦀️.rs"), "utf8");
-  const spaceConfig = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/🦀️.rs"), "utf8");
-  const exportMedia = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/📤️export-media/🦀️.rs"), "utf8");
-  const setAppRegistrations = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/📇️set-app-registrations/🦀️.rs"), "utf8");
+  const spaceViewer = readSources([
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const spaceViewerApp = readSources([
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const spaceMembers = readSources([
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/👥️members/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/👥️members/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const spaceIndexController = readSources([
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️testkit/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const spaceEngine = [
+    "🧪️tests/🔬️unit/🦀️.rs",
+    "🧪️tests/🔬️testkit/🦀️.rs",
+  ].map((path) => readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space", path), "utf8")).join("\n");
+  const homeCrateRoot = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home");
+  const homeCrate = readFileSync(join(homeCrateRoot, "🦀️.rs"), "utf8");
+  const spaceIndexCrateRoot = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space");
+  const spaceIndexCrate = readFileSync(join(spaceIndexCrateRoot, "🦀️.rs"), "utf8");
+  const spaceShared = readSources([
+    "✏️s/🔌️plugins/🪐️space/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🫀️core/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🧪️tests/🔬️surface/🦀️.rs",
+  ]);
+  const spaceConfig = readSources([
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const exportMedia = readSources([
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/📤️export-media/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/📤️export-media/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const setAppRegistrations = readSources([
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/📇️set-app-registrations/🦀️.rs",
+  ]);
   const createStudio = readFileSync(join(base, "✏️editor/🎮️commands/🏗️create-studio/🦀️.rs"), "utf8");
-  const cataloguePanel = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🛍️catalogue/🦀️.rs"), "utf8");
-  const inspectionPanel = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🔍️inspection/🦀️.rs"), "utf8");
-  const parametersPanel = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🔢️parameters/🦀️.rs"), "utf8");
-  const nodeGraphEdit = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/✏️node-graph-edit/🦀️.rs"), "utf8");
-  const setActiveExample = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/🎬️set-active-example/🦀️.rs"), "utf8");
-  const setActivePanelTab = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/⚙️set-active-panel-tab/🦀️.rs"), "utf8");
-  const workflowWindow = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🔄️workflow/🦀️.rs"), "utf8");
-  const compiledDagWindow = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️compiled-dag/🦀️.rs"), "utf8");
-  const spawnApp = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/🚀️spawn-app/🦀️.rs"), "utf8");
+  const cataloguePanel = readSources([
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🛍️catalogue/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const inspectionPanel = readSources([
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🔍️inspection/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const parametersPanel = readSources([
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🔢️parameters/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/📌️panels/🔢️parameters/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const nodeGraphEdit = readSources([
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/✏️node-graph-edit/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const setActiveExample = readSources([
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/🎬️set-active-example/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/🎬️set-active-example/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const setActivePanelTab = readSources([
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/⚙️set-active-panel-tab/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/⚙️set-active-panel-tab/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const workflowWindow = readSources([
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🔄️workflow/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🔄️workflow/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const compiledDagWindow = readSources([
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️compiled-dag/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🕸️compiled-dag/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
+  const spawnApp = readSources([
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/🚀️spawn-app/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/🚀️spawn-app/🧪️tests/🔬️unit/🦀️.rs",
+  ]);
   const ownerScript = readFileSync(import.meta.filename, "utf8");
-  const osHost = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"), "utf8");
-  const exact = (editorSource: string, viewerSource: string): boolean => editorSource.includes("row.role == Some(crate::DirectorySpaceRole::Author)")
+  const osHost = readSources(["🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs", "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️workflow-unit/🦀️.rs"]);
+  const exact = (editorSource: string, editorTestSource: string, viewerTestSource: string): boolean => editorSource.includes("row.role == Some(crate::DirectorySpaceRole::Author)")
     && editorSource.includes('home_row_action(IconName::Users, labels.action_manage, "manageSpace", &row.id)')
-    && editorSource.includes('assert_eq!(buttons.len(), 5')
-    && editorSource.includes('text_arg(manage_button, "spaceId")')
-    && editorSource.includes("spectator_and_unbound_hub_rows_only_carry_open")
-    && editorSource.includes("role: Some(crate::DirectorySpaceRole::Spectator)")
-    && editorSource.includes("role: None")
-    && viewerSource.includes('origin: "hub", role: None');
+    && editorTestSource.includes('assert_eq!(buttons.len(), 5')
+    && editorTestSource.includes('text_arg(manage_button, "spaceId")')
+    && editorTestSource.includes("spectator_and_unbound_hub_rows_only_carry_open")
+    && editorTestSource.includes("role: Some(crate::DirectorySpaceRole::Spectator)")
+    && editorTestSource.includes("role: None")
+    && viewerTestSource.includes('origin: "hub", role: None');
   assert(controller.includes("fold_directory_events, manage_space, presence_heartbeat"), "Home controller does not import the manageSpace command module");
-  assert(exact(editor, viewer), "Home identity rows expose administration without current author authority");
+  assert(exact(editor, editorTests, viewerTests), "Home identity rows expose administration without current author authority");
   const catalogGenerationFixture = "🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/📇️bumps-the-36f82f/🦀️.rs";
   const catalogGenerationSource = readFileSync(join(base, catalogGenerationFixture), "utf8");
   assert(existsSync(join(base, catalogGenerationFixture)), "Home catalog-generation fixture is not present at its canonical bounded physical path");
-  assert(spaceCrate.includes(`../../🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/${catalogGenerationFixture}`), "Space crate mounts a stale logical path instead of the canonical bounded fixture path");
+  assert(homeCrate.includes(`🏅️standards/🔖️1/🪆️subsets/✳️any/${catalogGenerationFixture}`), "Home artifact crate misses the canonical bounded fixture path");
   const spaceBase = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any");
   const createArtifactFixture = "🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🗿️appends-artifact-3-4665d4/🦀️.rs";
   assert(existsSync(join(spaceBase, createArtifactFixture)), "Space create-artifact fixture is not present at its canonical bounded physical path");
-  assert(spaceCrate.includes(`../../🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/${createArtifactFixture}`), "Space crate mounts a stale logical create-artifact fixture path");
-  const missingMounts = [...spaceCrate.matchAll(/#\[path = "([^"]+)"\]/g)]
-    .map((match) => match[1])
-    .filter((mount) => !existsSync(join(spaceCrateRoot, mount)));
-  assert.deepEqual(missingMounts, [], `Space crate mounts missing physical paths: ${missingMounts.join(", ")}`);
+  assert(spaceIndexCrate.includes(`🏅️standards/🔖️1/🪆️subsets/✳️any/${createArtifactFixture}`), "Space Index artifact crate misses the canonical create-artifact fixture path");
+  const missingMounts = [
+    ...[...homeCrate.matchAll(/#\[path = "([^"]+)"\]/g)].map((match) => [homeCrateRoot, match[1]] as const),
+    ...[...spaceIndexCrate.matchAll(/#\[path = "([^"]+)"\]/g)].map((match) => [spaceIndexCrateRoot, match[1]] as const),
+  ].filter(([root, mount]) => !existsSync(join(root, mount)));
+  assert.deepEqual(missingMounts, [], `Space artifact crates mount missing physical paths: ${missingMounts.map(([, mount]) => mount).join(", ")}`);
   assert(homeOperations.includes("use protocol::os_spr::testkit::{") && spaceOperations.includes("use protocol::os_spr::testkit::{"), "Home or Space mutation laws import the Pack testkit instead of the current SPR testkit");
   const operationSources = `${homeOperations}\n${spaceOperations}`;
   assert(!operationSources.includes("protocol::testkit::assert_"), "Home or Space mutation laws retain the removed Pack testkit path");
@@ -266,10 +334,10 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   assert(!spaceViewer.includes("let UiNode::") && spaceViewer.includes("BuiltTreeRetirement::new"), "Space viewer rows bypass the current fixed BuiltNode projection and retirement boundary");
   assert(homeViewerApp.includes("create_home_viewer().await") && homeViewerApp.includes("project_and_retire_fixture_tree(tree)"), "Home viewer fixtures do not await and retire the current manifest/render boundaries");
   assert(spaceViewerApp.includes("let def = create_space_index_viewer();") && !spaceViewerApp.includes("create_space_index_viewer().await") && spaceViewerApp.includes("project_and_retire_fixture_tree(tree)"), "Space viewer fixtures do not use the synchronous manifest and current retained render boundary");
-  assert(editor.includes("fn render_rows_wrapped(") && editor.includes("render_rows_wrapped(rows, &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)"), "Home production and injected-row composition do not share the current fallible node builder");
-  assert(!editor.includes("async fn one_local_row()") && !editor.includes("async fn one_hub_row()"), "Pure Home row fixtures are needlessly async");
-  assert(controller.includes("semio_framework_plugin::testkit::new_app::<EditorApp<HomeApp>>().await"), "Home testkit does not await async app construction");
-  assert(spaceEngine.includes("semio_framework_plugin::testkit::new_app::<SpaceApp>().await"), "Space testkit does not await bare async app construction");
+  assert(editor.includes("fn render_rows_wrapped(") && editorTests.includes("render_rows_wrapped(rows, &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)"), "Home production and injected-row composition do not share the current fallible node builder");
+  assert(!editorTests.includes("async fn one_local_row()") && !editorTests.includes("async fn one_hub_row()"), "Pure Home row fixtures are needlessly async");
+  assert(controller.includes("pub async fn create_home_app()"), "Home editor does not expose its async app-definition constructor");
+  assert(spaceEngine.includes("pub(crate) async fn app_with_registry()") && !spaceEngine.includes("new_app::<SpaceApp>()"), "Space testkit bypasses its registered async app constructor");
   assert(spaceEngine.includes("new_registered_app::<SpaceApp, _>(create_space_app()).await"), "Space testkit does not await its async manifest through the registered constructor");
   assert(spaceEngine.includes("SpaceApp::initial_snapshot().await.graph.nodes.is_empty()"), "Space snapshot fixture dereferences the current async initial snapshot before awaiting it");
   assert(spaceEngine.match(/VcsArtifactApp::<SpaceApp>::new\(SpaceApp::default\(\)\)\.await/g)?.length === 2 && !spaceEngine.includes("pack::to_json_string(&SpaceApp::render(") && spaceEngine.match(/plugin_testkit::project_and_retire_fixture_tree\(/g)?.length === 4, "Space fixtures do not select the current member type or await and retire rendered component trees");
@@ -282,7 +350,7 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   assert(!spaceIndexController.includes("pack::to_json_string(&<SpaceIndexEditor") && spaceIndexController.includes("project_and_retire_fixture_tree"), "Space index fixtures do not admit and retire the current fallible component tree");
   assert(spaceMembers.includes("wire_and_retire(render(") && !spaceMembers.includes("pack::to_json_string(&node)"), "Space members fixtures bypass the current fallible BuiltNode and retirement boundary");
   assert(spaceShared.includes("Some(document_backbone_ref(backbone_uri).await)"), "Space document synchronization does not await its typed backbone reference");
-  assert(spaceConfig.match(/round_trip\(&config, &operation\)\.await/g)?.length === 2 && exportMedia.includes("register_format_descriptors([") && exportMedia.includes(".await\n        .expect(\"register neutral format descriptor\")"), "Space config or format-registration fixtures do not await their current async boundaries");
+  assert(spaceConfig.match(/round_trip\(&config, &operation\)\.await/g)?.length === 2 && exportMedia.includes("register_format_descriptors([") && /\.await\s*\.expect\(\"register neutral format descriptor\"\)/.test(exportMedia), "Space config or format-registration fixtures do not await their current async boundaries");
   assert(cataloguePanel.includes(').await.expect("catalogue tree")') && setActivePanelTab.includes(').await.expect("catalogue tree")') && setActiveExample.includes("register_studio_port_for_test(&entry.id, port).await") && cataloguePanel.includes("project_and_retire_fixture_tree") && setActivePanelTab.includes("project_and_retire_fixture_tree"), "Space catalogue or studio-port fixtures bypass current async ownership and component retirement");
   assert(nodeGraphEdit.includes("serde_json::Value::as_object_mut") && nodeGraphEdit.includes("serde_json::Value::Object(position)") && !nodeGraphEdit.includes("fixture.get_mut(\"layout\").and_then(pack::JsonValue::as_object_mut)"), "Space node-graph fixture crosses serde JSON through the first-party Pack value family");
   assert(setActiveExample.includes("OsBackbonePorts::Store(store::BackbonePorts::Memory") && setActiveExample.match(/empty_workflow_snapshot\(\)\.await/g)?.length === 5 && setActivePanelTab.includes("let projection = empty_workflow_snapshot().await;"), "Space fixtures retain a stale backbone enum or unresolved workflow snapshot future");
@@ -300,11 +368,11 @@ export function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   ]) assert(ownerScript.includes(law), `Home native gate omitted the current exact selector ${law}`);
   assert(ownerScript.includes('RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432"'), "Home exact builds do not bound compiler worker stacks");
   assert(ownerScript.includes('nativeEnv: { RUST_MIN_STACK: "268435456" }'), "Home exact laws lost their native runtime stack");
-  for (const hostile of [
-    editor.replace("row.role == Some(crate::DirectorySpaceRole::Author)", 'row.origin == "hub"'),
-    editor.replace('assert_eq!(buttons.len(), 5', 'assert_eq!(buttons.len(), 4'),
-    editor.replace("role: Some(crate::DirectorySpaceRole::Spectator)", "role: Some(crate::DirectorySpaceRole::Author)"),
-  ]) assert.equal(exact(hostile, viewer), false);
+  for (const [editorSource, editorTestSource] of [
+    [editor.replace("row.role == Some(crate::DirectorySpaceRole::Author)", 'row.origin == "hub"'), editorTests],
+    [editor, editorTests.replace('assert_eq!(buttons.len(), 5', 'assert_eq!(buttons.len(), 4')],
+    [editor, editorTests.replace("role: Some(crate::DirectorySpaceRole::Spectator)", "role: Some(crate::DirectorySpaceRole::Author)")],
+  ]) assert.equal(exact(editorSource, editorTestSource, viewerTests), false);
   for (const law of ["workflow::tests::svg_path_extraction_preserves_transformed_geometry"]) {
     assert(ownerScript.includes(law), `Home native gate omitted ${law}`);
     const name = law.slice(law.lastIndexOf("::") + 2);
@@ -336,8 +404,9 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
             ],
           },
           {
-            package: "semio-s-plugin-space",
+            package: "semio-s-artifact-space-home",
             target: { kind: "lib" },
+            cargoArgs: ["--features", "component-app-assembly"],
             laws: [
               "editor::home::modes::explore::windows::main::component::tests::a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions",
               "editor::home::modes::explore::windows::main::component::tests::spectator_and_unbound_hub_rows_only_carry_open",
@@ -354,7 +423,7 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
 }
 
 /** 🪪️ Proves every authority that names the OS host plugin names the SAME identity — the
- * language-agnostic tuple in `🧪️fixtures/🧫️plugin-identity/🔣️.json`, validated against its own schema by
+ * language-agnostic tuple in `🧫️fixtures/🧫️plugin-identity/🔣️.json`, validated against its own schema by
  * a third-party oracle (ajv 2020), then joined to: the Cargo `[package.metadata.component] package`, the
  * plugin root's `builder(…)`/`package_id(…)` literals, the hand-authored deployment catalog row (public
  * id + physical module directory), and the generated registry row (`pluginId`/`packageId`/`packageName`/
@@ -365,9 +434,10 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
 export function spacePluginIdentityOracle(repoRoot: string): number {
   const plugin = join(repoRoot, "✏️s/🔌️plugins/🪐️space");
   const registryRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
-  const fixture = JSON.parse(readFileSync(join(plugin, "🧪️fixtures/🧫️plugin-identity/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(plugin, "🧫️fixtures/🧫️plugin-identity/🔣️.json"), "utf8"));
   const module = JSON.parse(readFileSync(join(plugin, "🧬️schema/🔣️.json"), "utf8"));
   const identityAjv = new Ajv({ strict: true, allErrors: true });
+  identityAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   identityAjv.addSchema(module);
   assert(identityAjv.compile({ $ref: `${module.$id}#/$defs/SpacePluginIdentity` })(fixture), "plugin-identity fixture violates its owner scope export");
 
@@ -424,7 +494,7 @@ export function interactiveJobCatalogOracle(repoRoot: string): number {
   let checks = spacePluginIdentityOracle(repoRoot);
   let staleRows = 0;
   for (const surface of surfaces) {
-    const fixtureRoot = join(surface.owner, "🧪️fixtures/🧫️retained-command-limits");
+    const fixtureRoot = join(surface.owner, "🧫️fixtures/🧫️retained-command-limits");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const validate = compileRetainedCommandLimits(repoRoot, surface.scope, surface.export);
     assert(validate(fixture), `${surface.appId} fixture violates ${surface.export}: ${JSON.stringify(validate.errors)}`);

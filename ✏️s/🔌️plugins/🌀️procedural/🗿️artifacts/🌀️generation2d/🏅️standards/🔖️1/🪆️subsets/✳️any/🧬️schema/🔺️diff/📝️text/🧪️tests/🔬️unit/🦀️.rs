@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::empty_generation2d_snapshot;
 fn diff_absorb_prefers_incoming_fixture_and_scalars() {
     let base = empty_generation2d_snapshot();
     let mut first = diff_fixture_from_helpers(&base, WidgetsDiff { removed: vec!["w1".into()], set: vec![] }, SynapsesDiff::default(), LayoutDiff::default(), Some(CameraJson { x: 1.0, y: 1.0, zoom: 1.0 }), None);
-    let second = Generation2dDiff { show_mode: Some("wire".into()), locale: Some("de-DE".into()), ..Generation2dDiff::default() };
+    let second = Generation2dDiff { show_mode: Some("wire".into()), ..Generation2dDiff::default() };
     first.absorb(second);
     assert!(first.fixture.is_some());
     assert_eq!(first.show_mode.as_deref(), Some("wire"));

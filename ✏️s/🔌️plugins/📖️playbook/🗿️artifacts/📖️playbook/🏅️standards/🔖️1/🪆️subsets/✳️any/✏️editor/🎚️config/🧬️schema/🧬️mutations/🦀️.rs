@@ -4,9 +4,6 @@ use super::PlaybookConfig;
 #[path = "📸️replace-config/🦀️.rs"]
 mod replace_config;
 pub use replace_config::ReplaceConfig;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 #[path = "🧩️set-contributions/🦀️.rs"]
 mod set_contributions;
 pub use set_contributions::SetContributions;
@@ -16,8 +13,6 @@ pub use set_contributions::SetContributions;
 pub enum PlaybookConfigMutation {
     #[dsl(key = "replace-config")]
     ReplaceConfig(ReplaceConfig),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
     #[dsl(key = "set-contributions")]
     SetContributions(SetContributions),
 }
@@ -46,4 +41,3 @@ impl protocol::OpBinary for PlaybookConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
 }
-

@@ -7,20 +7,20 @@
       "url": "/mesh/hero.glb",
       "format": "glb",
       "origin": [
-        1.0,
-        2.0,
-        3.0
+        1,
+        2,
+        3
       ],
       "orientation": [
-        0.0,
-        0.0,
-        0.0,
-        1.0
+        0,
+        0,
+        0,
+        1
       ],
       "scale": [
-        2.0,
-        2.0,
-        2.0
+        2,
+        2,
+        2
       ]
     },
     {
@@ -29,9 +29,9 @@
       "url": "/mesh/prop.glb",
       "format": "glb",
       "origin": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
       ],
       "orientation": null,
       "scale": null
@@ -43,17 +43,17 @@
       "label": "Wide",
       "camera": {
         "position": [
-          10.0,
-          -10.0,
-          6.0
+          10,
+          -10,
+          6
         ],
         "target": [
-          0.0,
-          0.0,
-          1.0
+          0,
+          0,
+          1
         ],
-        "zoom": 1.0,
-        "fov": 50.0
+        "zoom": 1,
+        "fov": 50
       }
     },
     {
@@ -61,17 +61,17 @@
       "label": "Close",
       "camera": {
         "position": [
-          1.0,
-          -1.0,
+          1,
+          -1,
           0.75
         ],
         "target": [
-          0.0,
-          0.0,
-          1.0
+          0,
+          0,
+          1
         ],
-        "zoom": 4.0,
-        "fov": 20.0
+        "zoom": 4,
+        "fov": 20
       }
     }
   ],
@@ -79,8 +79,8 @@
     "background": "#101014",
     "sun": {
       "enabled": true,
-      "azimuth": 45.0,
-      "elevation": 35.0,
+      "azimuth": 45,
+      "elevation": 35,
       "intensity": 2.4,
       "color": "#ffffff"
     },
@@ -91,14 +91,14 @@
     "shadow": {
       "enabled": true,
       "opacity": 0.35,
-      "softness": 1.0
+      "softness": 1
     },
     "material": {
       "color": "#9aa0ab",
-      "metalness": 0.0,
-      "roughness": 1.0,
+      "metalness": 0,
+      "roughness": 1,
       "emissive": "#000000",
-      "emissiveIntensity": 0.0
+      "emissiveIntensity": 0
     }
   },
   "shots": [

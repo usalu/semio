@@ -9,13 +9,13 @@ use std::collections::HashSet;
 async fn space_command_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SpawnApp(SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::MoveMediaNode(crate::engine::space::commands::move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(crate::engine::space::commands::remove_app_instance::RemoveAppInstance { node_id: Some("n1".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(crate::engine::space::commands::remove_app_instance::RemoveAppInstance { node_id: None }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(crate::engine::space::commands::remove_app_instance::RemoveAppInstance { node_id: Some("n1".into()), surface_contexts: Default::default() }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(crate::engine::space::commands::remove_app_instance::RemoveAppInstance { node_id: None, surface_contexts: Default::default() }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DeleteSelection(crate::engine::space::commands::delete_selection::DeleteSelection {}));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::CopyAppInstance(crate::engine::space::commands::copy_app_instance::CopyAppInstance {}));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DuplicateAppInstance(crate::engine::space::commands::duplicate_app_instance::DuplicateAppInstance {}));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PasteAppInstance(crate::engine::space::commands::paste_app_instance::PasteAppInstance {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RenameAppInstance(crate::engine::space::commands::rename_app_instance::RenameAppInstance { label: Some("Renamed".into()) }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RenameAppInstance(crate::engine::space::commands::rename_app_instance::RenameAppInstance { label: Some("Renamed".into()), surface_contexts: Default::default() }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchMediaNodes(crate::engine::space::commands::patch_media_nodes::PatchMediaNodes {
         node_ids: vec!["n1".into()],
         field: "position".into(),

@@ -4,7 +4,6 @@ message HomeConfig {
   // @state config
   string active_panel_tab = 1;
   // @state config
-  string locale = 2;
   // @state config
   string directory_json = 3;
   // @state config

@@ -14,8 +14,7 @@
     "graphCamera",
     "previewCamera",
     "sunJson",
-    "activeUtilityId",
-    "locale"
+    "activeUtilityId"
   ],
   "properties": {
     "fixture": {
@@ -73,10 +72,6 @@
     "activeUtilityId": {
       "type": "string",
       "x-semio-state": "presence"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

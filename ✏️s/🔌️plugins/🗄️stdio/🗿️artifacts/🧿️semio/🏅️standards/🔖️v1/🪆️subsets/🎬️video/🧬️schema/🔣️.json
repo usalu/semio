@@ -13,7 +13,7 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "./📸️snapshot/🔣️.json#/properties/streams/items"
+        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/video/snapshot.json#/$defs/SemioVideoStream"
       }
     }
   },

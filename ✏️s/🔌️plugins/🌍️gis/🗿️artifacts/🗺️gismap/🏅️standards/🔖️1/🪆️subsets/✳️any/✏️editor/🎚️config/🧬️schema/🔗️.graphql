@@ -6,7 +6,6 @@ type Gis2dConfig {
   vectorStyle: String! @state(class: CONFIG)
   lodMode: String! @state(class: CONFIG)
   layerStrokeScale: [Gis2dNumberEntry!]! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 
 type Gis2dBoolEntry {

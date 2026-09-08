@@ -42,8 +42,6 @@ pub struct Block5dDiff {
     pub meta: Option<BlockMeta>,
     #[state(presence)]
     pub selected_ids: Option<Block5dStringList>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
 

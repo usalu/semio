@@ -43,8 +43,6 @@ type CadArtifact {
   dislocateBuilding: CadDislocateOptions! @state(class: CONFIG)
   dislocateEnergy: CadDislocateOptions! @state(class: CONFIG)
   dislocateStructureClassic: CadDislocateOptions! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
-  terminology: String! @state(class: CONFIG)
   contributionsJson: String! @state(class: CONFIG)
   hoveredObjectId: String @state(class: ARTIFACT)
   hoveredTargetObjectId: String @state(class: ARTIFACT)
@@ -60,3 +58,7 @@ type CadGeometry { anchorsJson: String }
 type CadCamera { zoom: Float }
 type CadComponentSelection { mode: String! }
 type CadDislocateOptions { moveEnabled: Boolean! rotateEnabled: Boolean! }
+
+type CadStringList {
+  values: [String!]!
+}

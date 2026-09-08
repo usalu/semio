@@ -25,7 +25,7 @@ pub mod imports;
 #[path = "📥️ui-patch/🦀️.rs"]
 mod ui_patch;
 #[cfg(test)]
-#[path = "📥️ui-patch/🧪️component/🦀️.rs"]
+#[path = "📥️ui-patch/🧪️tests/🧪️component/🦀️.rs"]
 mod ui_patch_component_tests;
 // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-runtime-rewrite): `WasmtimeAsyncRuntime` — one
 // pooled `tokio::spawn`ed task per actor, driving `📥️imports/🦀️.rs`'s host-async import layer against a
@@ -34,8 +34,8 @@ mod ui_patch_component_tests;
 pub mod runtime;
 
 use semio_framework::{
-    DslValue, PluginManifest,
     kernel::{ArtifactHandle, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, Effect, Event, JobPlacement, MessageEndpoint, RequestId, RequestOutcome, TurnResult, TurnStatus, WindowHandle, WindowKindId},
+    DslValue, PluginManifest,
 };
 use semio_framework_actor::ActorId as RuntimeActorId;
 // 🌉️ `pub use`, not a plain `use` — `PackageRef`'s own fields are `PackageId`/`PackageHash`
@@ -422,9 +422,7 @@ pub async fn store_compiled_component(component: &Component, path: &Path) -> std
 }
 
 #[cfg(test)]
-fn minimal_component_without_actor_world() -> &'static [u8] {
-    b"\0asm\x0d\0\x01\0"
-}
+include!("🧪️tests/🔬️standalone/🦀️.rs");
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️shared-wasmtime-engine/🦀️.rs"]
@@ -598,7 +596,7 @@ fn retryable_lifecycle_turn(fault: &TurnFault, events: &[Event]) -> bool {
 }
 
 #[cfg(test)]
-#[path = "🔁️lifecycle/🧪️tests/🦀️.rs"]
+#[path = "🔁️lifecycle/🧪️tests/🔁️lifecycle/🦀️.rs"]
 mod guest_fault_tests;
 
 #[path = "📥️cold-pair/🦀️.rs"]
@@ -1952,8 +1950,7 @@ impl GuestRuntime for WasmtimeRuntime {
             effects.push(wit_effect_to_kernel(effect).await.map_err(TurnFault::Host)?);
         }
         let ui_patch_receipt = wit_turn_result.ui_patch_receipt.map(wit_patch_receipt_to_kernel);
-        let ui_patches = ui_patch::wit_ui_patches_to_kernel(*instance_id, budget.max_patch_bytes, emitted_patches, wit_turn_result.ui_patches, ui_patch_receipt)
-            .map_err(|error| TurnFault::Host(PluginHostError::Plugin(error)))?;
+        let ui_patches = ui_patch::wit_ui_patches_to_kernel(*instance_id, budget.max_patch_bytes, emitted_patches, wit_turn_result.ui_patches, ui_patch_receipt).map_err(|error| TurnFault::Host(PluginHostError::Plugin(error)))?;
         Ok(TurnResult {
             ui_patches,
             effects,
@@ -2651,7 +2648,9 @@ async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Eve
         Event::ColdDocumentPairPage(_) => unreachable!("cold pages use the dedicated poll input"),
         Event::CommandIngressPage { .. } => unreachable!("command pages are lifted through reactor.poll's dedicated page argument"),
         Event::UiIntent { instance, intent } => wit_events::Event::UiIntent(wit_events::UiIntentEvent { instance: instance.0.parse().unwrap_or(instance_id), intent: intent.clone() }),
-        Event::SurfaceVisible { surface } => wit_events::Event::SurfaceVisible(wit_events::SurfaceVisibleEvent { surface: wit_surface_ref(instance_id, surface).await }),
+        Event::SurfaceVisible { surface, body_key, view_state } => {
+            wit_events::Event::SurfaceVisible(wit_events::SurfaceVisibleEvent { surface: wit_surface_ref(instance_id, surface).await, body_key: body_key.clone(), view_state: view_state.clone() })
+        }
         Event::SurfaceHidden { surface } => wit_events::Event::SurfaceHidden(wit_events::SurfaceHiddenEvent { surface: wit_surface_ref(instance_id, surface).await }),
         Event::SurfaceResized { surface, width, height } => wit_events::Event::SurfaceResized(wit_events::SurfaceResizedEvent { surface: wit_surface_ref(instance_id, surface).await, width: *width, height: *height }),
         Event::PatchAck { receipt, surface, revision } => wit_events::Event::PatchAck(wit_events::PatchAckEvent { receipt: kernel_patch_receipt_to_wit(*receipt), surface: wit_surface_ref(instance_id, surface).await, revision: *revision }),
@@ -2874,21 +2873,6 @@ impl GuestRelayOwnedBytes {
 
     fn into_source(self) -> Vec<u8> {
         self.source
-    }
-}
-
-#[cfg(test)]
-async fn wait_for_scripted_guest_relay_release(runtime: &GuestRuntimes, completion: &GuestRelayCompletion) {
-    let GuestRuntimes::Mock(mock) = runtime else {
-        return;
-    };
-    let barrier = match completion {
-        GuestRelayCompletion::Started(Err(_)) => mock.take_relay_start_failure_release(),
-        GuestRelayCompletion::Stepped(Err(_)) => mock.take_relay_step_failure_release(),
-        _ => None,
-    };
-    if let Some(barrier) = barrier {
-        barrier.wait().await;
     }
 }
 
@@ -4800,14 +4784,6 @@ mod guest_cold_relay_tests;
 /// `WasmPluginRuntime`. Kept (not deleted) because that fixture still needs it; `cfg_attr` silences
 /// the resulting "never used" warning on a plain (non-test) `--lib` build without hiding a REAL
 /// dead-code case under a blanket `#[allow]`.
-#[cfg_attr(not(test), allow(dead_code))]
-// 🚫️async: E1 — pure in-memory encoder, no suspension point; reverted per R9 (its only
-// consumer FakeCluster::exchange must itself be sync to satisfy run_transaction/undo_group
-// production FnMut(...) -> Result<...> closure signature).
-fn host_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
-    let code = code.into();
-    dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new(code), message))
-}
 
 //#region 📈️RuntimeMetricsPublisher
 /// 📈️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): native-side sampling + 2Hz cadence gate for bus

@@ -6,19 +6,19 @@
       "name": "Hull",
       "transform": {
         "position": [
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ],
         "rotation": [
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ],
         "scale": [
-          1.0,
-          1.0,
-          1.0
+          1,
+          1,
+          1
         ]
       },
       "smoothShading": false,
@@ -37,14 +37,14 @@
         {
           "name": "Base",
           "visible": true,
-          "opacity": 1.0,
+          "opacity": 1,
           "blendMode": "normal",
           "pixels": "//////////8="
         },
         {
           "name": "Detail",
           "visible": true,
-          "opacity": 1.0,
+          "opacity": 1,
           "blendMode": "normal",
           "pixels": "AAAAAAAAAAA="
         }
@@ -55,19 +55,19 @@
       "name": "Fin",
       "transform": {
         "position": [
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ],
         "rotation": [
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ],
         "scale": [
-          1.0,
-          1.0,
-          1.0
+          1,
+          1,
+          1
         ]
       },
       "smoothShading": true,

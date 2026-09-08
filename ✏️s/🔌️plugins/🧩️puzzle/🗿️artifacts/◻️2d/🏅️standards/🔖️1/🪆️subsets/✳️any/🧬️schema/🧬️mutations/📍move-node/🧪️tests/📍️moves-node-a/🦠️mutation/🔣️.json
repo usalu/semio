@@ -1,6 +1,6 @@
 {
   "mutation": "moveNode",
   "id": "node-a",
-  "newX": 5.0,
-  "newY": 7.0
+  "newX": 5,
+  "newY": 7
 }

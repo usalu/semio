@@ -132,3 +132,15 @@ message PngSnapshot {
   repeated PngChunkMarker chunk_order = 17;
   repeated PngChunk unknown_chunks = 18;
 }
+
+message PngColorType {
+  string value = 1;
+}
+
+message PngSrgbIntent {
+  string value = 1;
+}
+
+message PngTextKind {
+  string value = 1;
+}

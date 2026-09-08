@@ -29,7 +29,6 @@ message DrawingArtifact {
   // @state config
   double camera_zoom = 12;
   // @state config
-  string locale = 13;
   // @state artifact
   optional string hovered_id = 14;
 }

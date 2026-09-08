@@ -107,7 +107,7 @@ mod subject {
     use crate::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, inverse_bmp_mutation, BmpMutation};
     use crate::standards::v_v3::subsets::any::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
     use crate::BmpSnapshot;
-    use semio_s_plugin_stdio::ArtifactDsl;
+    use semio_framework_os_kernel::ArtifactDsl;
 
     //#region 🔖️Json
     fn num(params: &Json, key: &str) -> Option<f64> {

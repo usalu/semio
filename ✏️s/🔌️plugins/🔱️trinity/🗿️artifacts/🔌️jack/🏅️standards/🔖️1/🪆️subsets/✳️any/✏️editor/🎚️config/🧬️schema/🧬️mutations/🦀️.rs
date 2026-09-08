@@ -7,39 +7,18 @@ pub use replace_config::ReplaceConfig;
 #[path = "🎥️set-camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
-#[path = "🗿️set-active-fixture/🦀️.rs"]
-mod set_active_fixture;
-pub use set_active_fixture::SetActiveFixture;
 #[path = "🔎️set-query/🦀️.rs"]
 mod set_query;
 pub use set_query::SetQuery;
 #[path = "📊️set-result/🦀️.rs"]
 mod set_result;
 pub use set_result::SetResult;
-#[path = "📝️set-editor-engagement-input/🦀️.rs"]
-mod set_editor_engagement_input;
-pub use set_editor_engagement_input::SetEditorEngagementInput;
-#[path = "🌐️set-graph-engagement-input/🦀️.rs"]
-mod set_graph_engagement_input;
-pub use set_graph_engagement_input::SetGraphEngagementInput;
-#[path = "📈️set-results-engagement-input/🦀️.rs"]
-mod set_results_engagement_input;
-pub use set_results_engagement_input::SetResultsEngagementInput;
-#[path = "🔄️set-reorganize-epoch/🦀️.rs"]
-mod set_reorganize_epoch;
-pub use set_reorganize_epoch::SetReorganizeEpoch;
 #[path = "🔤️set-editor-selection/🦀️.rs"]
 mod set_editor_selection;
 pub use set_editor_selection::SetEditorSelection;
 #[path = "🔍️set-lod-mode/🦀️.rs"]
 mod set_lod_mode;
 pub use set_lod_mode::SetLodMode;
-#[path = "🔢️set-revision/🦀️.rs"]
-mod set_revision;
-pub use set_revision::SetRevision;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = JackConfig, diff = JackConfig, schema = "trinity.jackcfg")]
@@ -48,28 +27,14 @@ pub enum JackConfigMutation {
     ReplaceConfig(ReplaceConfig),
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),
-    #[dsl(key = "set-active-fixture")]
-    SetActiveFixture(SetActiveFixture),
     #[dsl(key = "set-query")]
     SetQuery(SetQuery),
     #[dsl(key = "set-result")]
     SetResult(SetResult),
-    #[dsl(key = "set-editor-engagement-input")]
-    SetEditorEngagementInput(SetEditorEngagementInput),
-    #[dsl(key = "set-graph-engagement-input")]
-    SetGraphEngagementInput(SetGraphEngagementInput),
-    #[dsl(key = "set-results-engagement-input")]
-    SetResultsEngagementInput(SetResultsEngagementInput),
-    #[dsl(key = "set-reorganize-epoch")]
-    SetReorganizeEpoch(SetReorganizeEpoch),
     #[dsl(key = "set-editor-selection")]
     SetEditorSelection(SetEditorSelection),
     #[dsl(key = "set-lod-mode")]
     SetLodMode(SetLodMode),
-    #[dsl(key = "set-revision")]
-    SetRevision(SetRevision),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
 }
 
 impl protocol::OpText for JackConfigMutation {
@@ -96,4 +61,3 @@ impl protocol::OpBinary for JackConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
 }
-

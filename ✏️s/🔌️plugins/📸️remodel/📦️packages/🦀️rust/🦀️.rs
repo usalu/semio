@@ -47,12 +47,5 @@ mod plugin;
 pub use plugin::RemodelApps;
 semio_framework_plugin::plugin_exports!(plugin::plugin, RemodelApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_remodeling_demo_session;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

@@ -37,12 +37,5 @@ mod viewer { pub use semio_s_artifact_shooting_shooting::viewer::*; }
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ShootingApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_shooting_demo_session;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

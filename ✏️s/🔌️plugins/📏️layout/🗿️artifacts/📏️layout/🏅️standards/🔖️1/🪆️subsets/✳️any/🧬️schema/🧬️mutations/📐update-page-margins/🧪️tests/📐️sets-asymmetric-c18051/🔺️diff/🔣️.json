@@ -19,10 +19,10 @@
           "name": null,
           "width": null,
           "height": null,
-          "margin_top": 12.0,
-          "margin_right": 18.0,
-          "margin_bottom": 24.0,
-          "margin_left": 6.0,
+          "margin_top": 12,
+          "margin_right": 18,
+          "margin_bottom": 24,
+          "margin_left": 6,
           "columns_count": null,
           "columns_gutter": null,
           "frame_added": null,
@@ -47,6 +47,5 @@
   "previewCameraY": null,
   "previewCameraZoom": null,
   "dropPreview": null,
-  "locale": null,
   "hoveredId": null
 }

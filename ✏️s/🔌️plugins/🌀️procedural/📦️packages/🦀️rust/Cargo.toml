@@ -3,7 +3,7 @@ name = "semio-s-plugin-procedural"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Procedural plugin - one crate for the generation2d/generation3d artifacts (diff/op/dsl/pack/spr/engine) and the 2d/3d play apps (commands/modes/windows/panels)"
+description = "Procedural plugin composition for independently packaged generation2d, generation3d, and assembly artifacts"
 
 [lints]
 workspace = true
@@ -48,45 +48,9 @@ plugin-entry = []
 semio-s-artifact-procedural-assembly = { workspace = true }
 semio-s-artifact-procedural-generation2d = { workspace = true, features = ["component-app-assembly"] }
 semio-s-artifact-procedural-generation3d = { workspace = true, features = ["component-app-assembly"] }
-semio-framework-artifact-playbook-playbook = { workspace = true }
-# 🚦️ O1 de-dyn: `#[dyn_enum]`/`dyn_enum_close!` generate `Constraints` (⛓️constraint), replacing
-# the crate's 12 `Box<dyn Constraint>`/`&dyn SoftConstraint` seams — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME.
-semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-semio-s-artifact-stdio-dwg = { workspace = true }
-semio-s-artifact-stdio-dxf = { workspace = true }
-semio-s-artifact-stdio-gltf = { workspace = true }
-semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-las = { workspace = true }
-semio-s-artifact-stdio-obj = { workspace = true }
-semio-s-artifact-stdio-pdf = { workspace = true }
-semio-s-artifact-stdio-ply = { workspace = true }
-semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
-semio-s-artifact-stdio-stl = { workspace = true }
-semio-s-artifact-stdio-svg = { workspace = true }
-semio-s-artifact-stdio-txt = { workspace = true }
-semio-framework-geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
-semio-framework-graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
-semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-flow = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", default-features = false, package = "semio-framework-os-flow" }
-infinite_canvas = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
-ui_wgpu = {path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
-ui_styling = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
-semio-framework-job = { workspace = true }
-semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-serde.workspace = true
-serde_json = { workspace = true, features = ["float_roundtrip"] }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 
 [dev-dependencies]
-semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-# 🎬️ `EngineComputeTests` (below, in the generation3d editor's root component.rs) exercises frustum-cull/AABB scene
-# math that now lives at `ui_wgpu`'s `kernel_3d_scene` mount (ticket
-# 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH — `semio-framework-3d`
-# no longer has a `scene` module to depend on). Same crate-rename as the normal `["wgpu"]` dependency
-# above (Cargo rejects depending on one crate under two different names) with the extra
-# `wgpu-engine` features cargo's resolver unifies in for dev/test builds only.
-ui_wgpu = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu-engine"] }
+semio-framework-async-macros = { workspace = true }

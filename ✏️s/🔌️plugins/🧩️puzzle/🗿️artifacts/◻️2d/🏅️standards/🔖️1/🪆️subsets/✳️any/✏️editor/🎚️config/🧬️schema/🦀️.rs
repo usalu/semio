@@ -75,10 +75,6 @@ pub struct Puzzle2dConfig {
     #[state(config)]
     pub active_utility_by_window_id: BTreeMap<String, String>,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
-    pub terminology: String,
-    #[state(config)]
     pub example_load_generation: u64,
     #[state(config)]
     pub example_load_id: Option<String>,
@@ -94,11 +90,7 @@ pub fn app_schema_descriptor() -> ::semio_framework_schema::AppSchemaDescriptor 
     ::semio_framework_schema::AppSchemaDescriptor {
         id: "s.puzzle.puzzle2d",
         config: ::semio_framework_schema::FacetLeaves {
-            rust: include_str!("🦀️.rs"),
-            typescript: include_str!("🟦️.ts"),
-            graphql: include_str!("🔗️.graphql"),
-            json_schema: include_str!("🔣️.json"),
-            proto: include_str!("🛰️.proto"),
+            rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
         presence: ::semio_framework_schema::FacetLeaves {
             rust: include_str!("../../👥️presence/🧬️schema/🦀️.rs"),

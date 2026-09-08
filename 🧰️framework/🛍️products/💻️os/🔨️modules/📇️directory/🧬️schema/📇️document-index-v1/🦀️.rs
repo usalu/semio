@@ -14,8 +14,13 @@ impl DocumentIndexEntryV1 {
     /// 🛡️ Validates bounded presentation fields without introducing executable authority.
     pub fn validate(&self) -> bool {
         let identity = |value: &str| !value.is_empty() && value.len() <= 256 && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"._:/-".contains(&byte)) && value.as_bytes()[0].is_ascii_alphanumeric();
-        !self.name.is_empty() && self.name.chars().count() <= 128 && self.name.trim_matches(' ') == self.name && !self.name.chars().any(char::is_control)
-            && identity(&self.dialect.artifact_kind) && identity(&self.dialect.standard) && identity(&self.dialect.subset)
+        !self.name.is_empty()
+            && self.name.chars().count() <= 128
+            && self.name.trim_matches(' ') == self.name
+            && !self.name.chars().any(char::is_control)
+            && identity(&self.dialect.artifact_kind)
+            && identity(&self.dialect.standard)
+            && identity(&self.dialect.subset)
     }
 }
 

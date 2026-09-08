@@ -185,3 +185,8 @@ pub fn diff_set_snapshot(snapshot: &Din4108Snapshot) -> Din4108Diff {
     Din4108Diff { artifact: Some(Box::new(Din4108Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Din4108DiffText = String;
+//#endregion 🚚️Carrier

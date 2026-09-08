@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::Filters;
+
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
@@ -8,8 +8,6 @@ use framework_schema::ArtifactSchema;
 pub struct SourcingCurationConfig {
     #[state(config)]
     pub filters: Filters,
-    #[state(config)]
-    pub locale: String,
     #[state(config)]
     pub contributions_json: String,
 }
@@ -42,3 +40,8 @@ pub fn app_schema_descriptor() -> ::framework_schema::AppSchemaDescriptor {
     }
 }
 //#endregion 🔖️AppSchemaDescriptor
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::Filters;
+//#endregion 🔁️Re-exports

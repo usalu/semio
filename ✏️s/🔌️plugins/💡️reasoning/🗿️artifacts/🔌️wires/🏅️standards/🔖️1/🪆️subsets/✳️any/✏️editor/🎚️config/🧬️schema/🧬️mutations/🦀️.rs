@@ -4,17 +4,12 @@ use super::*;
 #[path = "🖱️set-drag/🦀️.rs"]
 mod set_drag;
 pub use set_drag::SetDrag;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = WiresConfig, diff = WiresConfig, schema = "wires.config")]
 pub enum WiresConfigMutation {
     #[dsl(key = "set-drag")]
     SetDrag(SetDrag),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
 }
 
 impl protocol::OpText for WiresConfigMutation {

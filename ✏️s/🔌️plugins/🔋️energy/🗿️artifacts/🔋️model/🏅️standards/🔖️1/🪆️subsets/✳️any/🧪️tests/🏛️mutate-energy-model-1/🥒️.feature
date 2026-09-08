@@ -410,8 +410,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-plant-loop-type-refuses-an-absent-row | ♻️change-plant-loop-type | ⛔️refuses-an-absent-row |
       | change-plant-loop-supply-temperature-cools-the-supply | ☕️change-plant-loop-supply-temperature | ✅️cools-the-supply |
       | change-plant-loop-supply-temperature-refuses-a-hot-supply | ☕️change-plant-loop-supply-temperature | ⛔️refuses-a-hot-supply |
-      | change-plant-loop-return-temperature-cools-the-return | 🧫️change-plant-loop-return-temperature | ✅️cools-the-return |
-      | change-plant-loop-return-temperature-refuses-a-cold-return | 🧫️change-plant-loop-return-temperature | ⛔️refuses-a-cold-return |
+      | change-plant-loop-return-temperature-cools-the-return | 🫖️change-plant-loop-return-temperature | ✅️cools-the-return |
+      | change-plant-loop-return-temperature-refuses-a-cold-return | 🫖️change-plant-loop-return-temperature | ⛔️refuses-a-cold-return |
       | change-plant-loop-design-flow-uprates-the-flow | 🚤️change-plant-loop-design-flow | ✅️uprates-the-flow |
       | change-plant-loop-design-flow-refuses-no-flow | 🚤️change-plant-loop-design-flow | ⛔️refuses-no-flow |
       | add-plant-loop-equipment-names-equipment | 🔩️add-plant-loop-equipment | ✅️names-equipment |
@@ -975,8 +975,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-plant-loop-type-refuses-an-absent-row | ♻️change-plant-loop-type | ⛔️refuses-an-absent-row |
       | change-plant-loop-supply-temperature-cools-the-supply | ☕️change-plant-loop-supply-temperature | ✅️cools-the-supply |
       | change-plant-loop-supply-temperature-refuses-a-hot-supply | ☕️change-plant-loop-supply-temperature | ⛔️refuses-a-hot-supply |
-      | change-plant-loop-return-temperature-cools-the-return | 🧫️change-plant-loop-return-temperature | ✅️cools-the-return |
-      | change-plant-loop-return-temperature-refuses-a-cold-return | 🧫️change-plant-loop-return-temperature | ⛔️refuses-a-cold-return |
+      | change-plant-loop-return-temperature-cools-the-return | 🫖️change-plant-loop-return-temperature | ✅️cools-the-return |
+      | change-plant-loop-return-temperature-refuses-a-cold-return | 🫖️change-plant-loop-return-temperature | ⛔️refuses-a-cold-return |
       | change-plant-loop-design-flow-uprates-the-flow | 🚤️change-plant-loop-design-flow | ✅️uprates-the-flow |
       | change-plant-loop-design-flow-refuses-no-flow | 🚤️change-plant-loop-design-flow | ⛔️refuses-no-flow |
       | add-plant-loop-equipment-names-equipment | 🔩️add-plant-loop-equipment | ✅️names-equipment |

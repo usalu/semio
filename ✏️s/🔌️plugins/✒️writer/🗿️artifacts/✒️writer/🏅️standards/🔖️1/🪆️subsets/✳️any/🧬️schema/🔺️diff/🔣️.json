@@ -28,7 +28,7 @@
       "x-semio-state": "artifact"
     },
     "text": {
-      "$ref": "#/$defs/WriterTextDelta",
+      "$ref": "https://semio.tech/schema/s/writer/writer/artifact.json#/$defs/WriterTextDelta",
       "x-semio-state": "artifact"
     },
     "editorSelection": {
@@ -37,13 +37,13 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/WriterEditorSelection"
+          "$ref": "https://semio.tech/schema/s/writer/writer/artifact.json#/$defs/WriterEditorSelection"
         }
       ],
       "x-semio-state": "presence"
     },
     "editorSettings": {
-      "$ref": "#/$defs/WriterEditorSettings",
+      "$ref": "https://semio.tech/schema/s/writer/writer/artifact.json#/$defs/WriterEditorSettings",
       "x-semio-state": "presence"
     },
     "formatSignal": {
@@ -82,110 +82,6 @@
       "type": "number",
       "format": "double",
       "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    }
-  },
-  "$defs": {
-    "WriterEditorSelection": {
-      "title": "WriterEditorSelection",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "start",
-        "end"
-      ],
-      "properties": {
-        "start": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "end": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        }
-      }
-    },
-    "WriterEditorSettings": {
-      "title": "WriterEditorSettings",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "showLineNumbers",
-        "fontPx",
-        "lineHeight",
-        "tabSize"
-      ],
-      "properties": {
-        "showLineNumbers": {
-          "type": "boolean"
-        },
-        "fontPx": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "lineHeight": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "tabSize": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        }
-      }
-    },
-    "WriterTextRangeEdit": {
-      "title": "WriterTextRangeEdit",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "start",
-        "end",
-        "insert"
-      ],
-      "properties": {
-        "start": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "end": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "insert": {
-          "type": "string"
-        }
-      }
-    },
-    "WriterTextDelta": {
-      "title": "WriterTextDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "replacement": {
-          "type": "string"
-        },
-        "edits": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/WriterTextRangeEdit"
-          }
-        }
-      }
-    },
-    "WriterArtifact": {
-      "title": "WriterArtifact",
-      "type": "object",
-      "additionalProperties": true
     }
   }
 }

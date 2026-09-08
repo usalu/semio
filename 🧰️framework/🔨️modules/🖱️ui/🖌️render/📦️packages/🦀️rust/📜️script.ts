@@ -23,6 +23,7 @@ class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
     runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest]);
+    runCmd("bun", ["../../🧪️tests/🖼️webgpu-surface/🟨️.js"], { cwd: packageRoot, budgetMs: buildBudgetMs() });
   }
 }
 //#endregion 🔖️test

@@ -9,8 +9,7 @@
     "nodes",
     "edges",
     "selectedNodeIds",
-    "camera",
-    "locale"
+    "camera"
   ],
   "properties": {
     "schema": {
@@ -40,10 +39,6 @@
     },
     "camera": {
       "$ref": "#/$defs/DagCamera",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   },

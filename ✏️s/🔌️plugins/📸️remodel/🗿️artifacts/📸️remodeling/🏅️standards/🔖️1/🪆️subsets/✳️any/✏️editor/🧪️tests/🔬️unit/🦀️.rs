@@ -48,7 +48,7 @@ impl RemodelingRetainedCatalogOracle for SerdeJsonRemodelingRetainedCatalogOracl
 
 #[semio_framework_async_macros::async_test]
 async fn retained_command_catalog_matches_the_serde_json_oracle() {
-    let oracle = SerdeJsonRemodelingRetainedCatalogOracle.summarize(include_str!("../../🧪️fixtures/🚧️retained-command-limits/🔣️.json"));
+    let oracle = SerdeJsonRemodelingRetainedCatalogOracle.summarize(include_str!("../../🧫️fixtures/🚧️retained-command-limits/🔣️.json"));
     let command_ids: std::collections::BTreeSet<&str> = every_command().iter().map(RemodelingCommand::command_id).collect();
     let bounded_ids: std::collections::BTreeSet<&str> = REMODELING_RETAINED_TOOL_IDS.iter().copied().collect();
     let bounded_owned = bounded_ids.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
@@ -72,7 +72,7 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
-    let fixture = include_str!("../../🧪️fixtures/🚧️retained-command-limits/🔣️.json");
+    let fixture = include_str!("../../🧫️fixtures/🚧️retained-command-limits/🔣️.json");
     let expected = ["exportQcReport", "importFrames", "importVideo"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
     let wrong_lane = fixture.replacen("\"hostOnly\"", "\"artifact\"", 1);
     let wrong_tool = fixture.replacen("\"importFrames\"", "\"forgedImport\"", 1);

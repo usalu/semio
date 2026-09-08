@@ -5,8 +5,8 @@
     "name": "Handheld Pass",
     "kind": "image-sequence",
     "cameraId": null,
-    "syncOffsetMs": 0.0,
-    "fpsHint": 1.0,
+    "syncOffsetMs": 0,
+    "fpsHint": 1,
     "frames": [],
     "source": null
   }

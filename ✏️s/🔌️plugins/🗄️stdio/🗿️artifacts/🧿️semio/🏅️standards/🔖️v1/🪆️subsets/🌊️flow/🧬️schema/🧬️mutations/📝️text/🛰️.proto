@@ -46,3 +46,18 @@ message SemioFlowMutation {
   PortRef from = 11;
   PortRef to = 12;
 }
+
+message SemioFlowMutationText {
+  string mutation = 1;
+  optional SemioFlowSnapshot snapshot = 2;
+  optional FlowNode node = 3;
+  optional FlowEdge edge = 4;
+  optional string id = 5;
+  optional string kind = 6;
+  optional string label = 7;
+  optional SemioPoint2 position = 8;
+  optional string key = 9;
+  optional string value = 10;
+  optional PortRef from = 11;
+  optional PortRef to = 12;
+}

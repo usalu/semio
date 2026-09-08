@@ -30,7 +30,6 @@ type LowpolyArtifact {
   selectionMethod: String! @state(class: CONFIG)
   selectionModeDefault: String! @state(class: CONFIG)
   engagementInput: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
   hoveredObjectId: String @state(class: ARTIFACT)
   hoveredTargetObjectId: String @state(class: ARTIFACT)
   hoveredTargetMode: String @state(class: ARTIFACT)

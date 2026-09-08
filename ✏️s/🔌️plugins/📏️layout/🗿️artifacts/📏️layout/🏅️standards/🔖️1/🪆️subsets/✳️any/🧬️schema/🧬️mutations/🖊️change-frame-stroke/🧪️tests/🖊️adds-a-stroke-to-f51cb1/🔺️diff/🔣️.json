@@ -36,10 +36,10 @@
               "height": null,
               "fill": null,
               "stroke": [
-                0.0,
-                0.0,
-                0.0,
-                1.0
+                0,
+                0,
+                0,
+                1
               ],
               "wrap_mode": null,
               "columns": null
@@ -64,6 +64,5 @@
   "previewCameraY": null,
   "previewCameraZoom": null,
   "dropPreview": null,
-  "locale": null,
   "hoveredId": null
 }

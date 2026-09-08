@@ -3,15 +3,15 @@
   "extrinsic": {
     "cameraId": "orbit-cam-primary",
     "rotationWxyz": [
-      1.0,
-      0.0,
-      0.0,
-      0.0
+      1,
+      0,
+      0,
+      0
     ],
     "translationM": [
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
     ]
   }
 }

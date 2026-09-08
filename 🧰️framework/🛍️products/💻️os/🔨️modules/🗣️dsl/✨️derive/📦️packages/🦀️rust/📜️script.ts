@@ -16,11 +16,11 @@ class ExportTestScript extends BundleScript {
 }
 
 class ExportSourceTestScript extends BundleScript {
-  async run(): Promise<void> { await import("../../🧪️tests/📤️macro-exports/📜️script.ts"); }
+  async run(): Promise<void> { await import("../../🧪️tests/📤️macro-exports/🟦️.ts"); }
 }
 
 class SourceAuthorityTestScript extends BundleScript {
-  async run(): Promise<void> { await import("../../🧪️tests/🛂️mutation-source-authority/📜️script.ts"); }
+  async run(): Promise<void> { await import("../../🧪️tests/🛂️mutation-source-authority/🟦️.ts"); }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-exports", ExportTestScript).register("test-exports-source", ExportSourceTestScript).register("test-source-authority-source", SourceAuthorityTestScript);

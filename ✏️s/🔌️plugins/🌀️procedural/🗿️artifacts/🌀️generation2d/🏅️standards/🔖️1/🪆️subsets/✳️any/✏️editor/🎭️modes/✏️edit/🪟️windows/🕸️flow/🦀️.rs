@@ -40,7 +40,7 @@ pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, sess
     let host = host_from_fixture(fixture);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
-    let flow_extras = flow_backed_node_graph_extras(fixture, "", 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
+    let flow_extras = flow_backed_node_graph_extras(fixture, "", 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     // 🕹️ `render` carries no `InteractionView` and `NodeGraphScene` has no `interaction_domain` field
     // for the wrapper to stamp post-render either (see the `🧊️3d` sibling window's identical note,
     // ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `selection` is left at

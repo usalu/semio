@@ -16,7 +16,6 @@ message LayoutConfig {
   // @state config
   LayoutCamera preview_camera = 7;
   // @state config
-  string locale = 8;
 }
 message LayoutDropPreviewState {
   string kind = 1;

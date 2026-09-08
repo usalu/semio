@@ -12,3 +12,8 @@ type Fem2dSnapshot {
   analysis: FemAnalysisSettings! @state(class: ARTIFACT)
 }
 
+type FemAnalysisSettings {
+  modalCount: Int!
+  bucklingCount: Int!
+  deformationScale: Float!
+}

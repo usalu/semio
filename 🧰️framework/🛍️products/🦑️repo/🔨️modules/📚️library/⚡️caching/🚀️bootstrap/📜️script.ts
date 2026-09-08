@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { spawn as spawnNxProcess, spawnSync as stopNxProcessTree } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { Script, ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
@@ -13,6 +13,11 @@ const WORKSPACE_ROOT = getWorkspaceRoot();
 /** 🧭️ Loads domain selection helpers only for commands that request them. */
 function nxRoutingServices(): typeof import("../../📦️packages/🟦️typescript/🟦️.ts") {
   return createRequire(import.meta.url)("../../📦️packages/🟦️typescript/🟦️.ts");
+}
+
+/** 🛠️ Loads acquisition only when the selected Nx installation needs it. */
+function nxBootstrapServices(): typeof import("./🛠️tools/📜️script.ts") {
+  return createRequire(import.meta.url)("./🛠️tools/📜️script.ts");
 }
 
 //#region 🔖️NxScript
@@ -28,9 +33,23 @@ export class NxScript extends Script {
     return owned.sort((a, b) => a - b);
   }
   async run(segments: string[]): Promise<void> {
-    const nxCli = createRequire(join(this.root, "package.json")).resolve("nx/bin/nx.js");
+    let tooling: { cli: string; modulePath: string } | undefined;
+    if (!existsSync(join(this.root, "node_modules/nx/package.json")) || segments.some(argument => /(?:^|[:,=])(?:deps-javascript|setup)(?:$|[,:])/.test(argument))) {
+      const controller = new AbortController();
+      let stopped: NodeJS.Signals | undefined;
+      const stop = (signal: NodeJS.Signals): void => { stopped ??= signal; controller.abort(); };
+      const interrupt = (): void => stop("SIGINT"), terminate = (): void => stop("SIGTERM");
+      process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
+      try {
+        const api = nxBootstrapServices();
+        tooling = await api.provisionNxTools(this.root, controller.signal);
+        await api.activateNxTools(this.root, tooling, controller.signal);
+      } catch (error) { if (!stopped) throw error; process.exitCode = stopped === "SIGINT" ? 130 : 143; return; }
+      finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
+    }
+    const nxCli = tooling?.cli ?? createRequire(join(this.root, existsSync(join(this.root, ".nx/installation/package.json")) ? ".nx/installation/package.json" : "package.json")).resolve("nx/bin/nx.js");
     const invocation = resolveNxInvocation(segments), children: ReturnType<typeof spawnNxProcess>[] = [];
-    const env = devToolingEnv({ ...invocation.env, NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY || join(this.root, ".nx", "workspace-data"), NX_SOCKET_DIR: undefined, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined });
+    const env = devToolingEnv({ ...invocation.env, ...(tooling ? { NODE_PATH: tooling.modulePath } : {}), NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY || join(this.root, ".nx", "workspace-data"), NX_SOCKET_DIR: undefined, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined });
     let cancelled: NodeJS.Signals | undefined, cancellationDeadline = 0, watchFailure = 0, finishing = false;
     let force: ReturnType<typeof setTimeout> | undefined, watcher: ReturnType<typeof spawnNxProcess> | undefined;
     const descendants = new Set<number>();
@@ -39,7 +58,7 @@ export class NxScript extends Script {
       const snapshot = stopNxProcessTree(windows ? "powershell.exe" : "ps", windows ? ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine | ConvertTo-Json -Compress"] : ["-axo", "pid=,ppid=,command="], { encoding: "utf8", windowsHide: true, timeout: 5000 });
       if (snapshot.status !== 0) { console.error("Could not capture Nx descendants for cancellation"); return; }
       const rows = windows ? [JSON.parse(snapshot.stdout)].flat().filter((row) => row && Number.isSafeInteger(row.ProcessId) && row.ProcessId > 0 && Number.isSafeInteger(row.ParentProcessId)).map((row) => ({ pid: row.ProcessId, parent: row.ParentProcessId, command: typeof row.CommandLine === "string" ? row.CommandLine : "" })) : snapshot.stdout.trim().split("\n").flatMap((row) => { const match = row.trim().match(/^(\d+)\s+(\d+)\s+(.*)$/); return match ? [{ pid: Number(match[1]), parent: Number(match[2]), command: match[3] }] : []; });
-      const daemon = createRequire(join(this.root, "package.json")).resolve("nx/src/daemon/server/start.js");
+      const daemon = createRequire(nxCli).resolve("nx/src/daemon/server/start.js");
       for (const pid of NxScript.ownedDescendants(children.flatMap((child) => child.pid ? [child.pid] : []), rows, daemon)) descendants.add(pid);
     };
     const kill = (child: ReturnType<typeof spawnNxProcess>, signal: NodeJS.Signals): void => {
@@ -152,7 +171,7 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     const release = demonstrator[1] === "build" || demonstrator[2] === "release";
     return { args: segments, env: { SEMIO_BUILD_MODE: release ? "ship" : "dev", SEMIO_RENDERER: "react" }, ...(demonstrator[1] === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/mit-bestand-demonstrator:activate-dev" } : {}) };
   }
-  const preparation = target?.match(/^@semio-tech\/framework-os-dev:(prepare|activate|serve|dev)-(.+)-react-(dev|release)$/);
+  const preparation = target?.match(/^@semio-tech\/framework-os-dev:(prepare|activate|serve|dev|build)-(.+)-react-(dev|release)$/);
   if (preparation) return { args: segments, env: { SEMIO_BUILD_MODE: preparation[3] === "release" ? "ship" : "dev", SEMIO_PLUGIN: preparation[2], SEMIO_RENDERER: "react" }, ...(preparation[1] === "dev" && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${preparation[2]}-react-${preparation[3]}` } : {}) };
   if (["@semio-tech/framework-renderer-wgpu:native", "@semio-tech/framework-renderer-wgpu:native-build"].includes(target) && selected.some((argument) => argument === "--release" || argument === "--dist")) {
     const args = selected.filter((argument) => argument !== "--release" && argument !== "--dist");

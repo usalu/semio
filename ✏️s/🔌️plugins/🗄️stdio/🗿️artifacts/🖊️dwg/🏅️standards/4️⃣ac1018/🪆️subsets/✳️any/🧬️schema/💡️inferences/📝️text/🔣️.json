@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/dwg/ac1018/any/inference/text.json",
   "title": "DwgAc1018InferenceText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of DwgAc1018Inference: the instance is the serialized document this facet's grammar and codec speak."
 }

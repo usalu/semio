@@ -8,7 +8,7 @@
  * in-memory `Cursor` test structurally cannot observe. */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { requireMcpBinary, spawnRawMcp } from "../../🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -20,7 +20,7 @@ describe("document descriptor schema oracle", () => {
   it("accepts the shared Rust and TypeScript fixture with AJV", () => {
     const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📇️directory", "🧬️schema", "🔣️.json"), "utf8")) as object;
     const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: object; conflictingSchemaHash: object; crossSpaceSameDocument: object };
-    const validate = new Ajv2020({ strict: false }).compile({ ...schema, $ref: "#/$defs/DocumentDescriptor" });
+    const validate = new Ajv({ strict: false }).compile({ ...schema, $ref: "#/$defs/DocumentDescriptor" });
     expect(validate(fixture.valid), JSON.stringify(validate.errors)).toBe(true);
     expect(validate(fixture.conflictingSchemaHash), JSON.stringify(validate.errors)).toBe(true);
     expect(validate(fixture.crossSpaceSameDocument), JSON.stringify(validate.errors)).toBe(true);
@@ -35,7 +35,7 @@ describe("document descriptor schema oracle", () => {
       scopeBoundaries: Record<string, object>;
       invalidBoundaries: { shortHash: number[]; overflowHashByte: number[]; zeroHash: number[]; unsafeInteger: number };
     };
-    const compile = (reference: string) => new Ajv2020({ strict: false }).compile({ ...schema, $ref: reference });
+    const compile = (reference: string) => new Ajv({ strict: false }).compile({ ...schema, $ref: reference });
     const checkpoint = compile("#/$defs/ArtifactCheckpoint");
     const retention = compile("#/$defs/ArtifactRetention");
     const scope = compile("#/$defs/DocumentScope");

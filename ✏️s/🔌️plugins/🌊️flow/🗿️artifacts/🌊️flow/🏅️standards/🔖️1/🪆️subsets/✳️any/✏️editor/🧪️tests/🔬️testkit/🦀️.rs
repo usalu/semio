@@ -116,7 +116,7 @@ fn saturated_rejected_fixture_tree(pages: usize, capacity: usize) -> semio_frame
 #[test]
 fn flow_render_fixture_projection_retires_populated_and_rejected_pages() {
     use semio_framework_plugin::testkit::{FIXTURE_TREE_MAX_DEPTH, FIXTURE_TREE_MAX_NODES, FIXTURE_TREE_RETIRE_STEPS, project_and_retire_fixture_tree};
-    let fixture: Value = serde_json::from_str(include_str!("../../🧪️fixtures/🖼️tree-projection/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖼️tree-projection/🔣️.json")).unwrap();
     assert_eq!(fixture["contractId"], "semio.fixture.tree-projection/v1");
     assert_eq!(fixture["maximumDepth"], FIXTURE_TREE_MAX_DEPTH);
     assert_eq!(fixture["maximumNodes"], FIXTURE_TREE_MAX_NODES);

@@ -94,10 +94,6 @@ pub struct CadDiff {
     #[state(config)]
     pub dislocate_structure_classic: Option<CadDislocateOptions>,
     #[state(config)]
-    pub locale: Option<String>,
-    #[state(config)]
-    pub terminology: Option<String>,
-    #[state(config)]
     pub contributions_json: Option<String>,
     #[state(artifact)]
     pub hovered_object_id: Option<Option<String>>,

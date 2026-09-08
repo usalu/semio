@@ -304,7 +304,8 @@
       ],
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts schema verify"
+        "command": "bun ./📜️script.ts schema verify",
+        "forwardAllArgs": true
       }
     },
     "schema-audit": {
@@ -808,6 +809,49 @@
         "command": "bun ./📜️script.ts verify dependencies write-baseline"
       }
     },
+    "verify-abstraction-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify abstraction-ownership",
+        "forwardAllArgs": true
+      }
+    },
+    "test-resolved-host-context": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify resolved-host-context"
+      }
+    },
+    "test-surface-view-context": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify surface-view-context"
+      }
+    },
+    "test-window-view-context": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify window-view-context"
+      }
+    },
+    "test-window-view-context-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify window-view-context native"
+      }
+    },
+    "test-abstraction-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify abstraction-ownership test"
+      }
+    },
     "verify-layering": {
       "executor": "nx:run-commands",
       "dependsOn": [],
@@ -966,7 +1010,7 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./📜️script.ts setup deps javascript"
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" sync"
       }
     },
     "deps-python": {
@@ -1095,6 +1139,27 @@
       ],
       "options": {
         "command": "bun ./📜️script.ts test fundamental"
+      }
+    },
+    "test-browser-actor-host-context": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify browser-actor-host-context"
+      }
+    },
+    "test-browser-actor-host-context-worker": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify browser-actor-host-context worker"
+      }
+    },
+    "test-context-menu-view-context": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify surface-view-context menu"
       }
     }
   }

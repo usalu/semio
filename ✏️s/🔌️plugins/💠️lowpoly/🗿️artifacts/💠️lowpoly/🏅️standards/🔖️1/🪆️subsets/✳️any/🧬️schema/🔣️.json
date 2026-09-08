@@ -33,7 +33,6 @@
     "selectionMethod",
     "selectionModeDefault",
     "engagementInput",
-    "locale",
     "strokeDragActive",
     "transformDragActive",
     "previewSeq"
@@ -179,10 +178,6 @@
       "x-semio-state": "config"
     },
     "engagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
       "type": "string",
       "x-semio-state": "config"
     },

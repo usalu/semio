@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/puzzle/puzzle5d/snapshot/text.json",
   "title": "Puzzle5dSnapshotText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of Puzzle5dSnapshot: the instance is the serialized document this facet's grammar and codec speak."
 }

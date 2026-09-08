@@ -24,7 +24,6 @@ message LayoutArtifact {
   double preview_camera_y = 20; // @state config
   double preview_camera_zoom = 21; // @state config
   LayoutDropPreviewState drop_preview = 22; // @state config
-  string locale = 23; // @state config
   optional string hovered_id = 24; // @state artifact
 }
 
@@ -47,3 +46,7 @@ message ImageLink { string id = 1; }
 message ParentPage { string id = 1; }
 message Spread { string id = 1; }
 message Page { string id = 1; }
+
+message LayoutStringList {
+  repeated string values = 1;
+}

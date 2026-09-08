@@ -113,7 +113,7 @@ async fn segment_bytes(storage: &impl WalStorage, document: &ArtifactId, index: 
 }
 
 fn recovery_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧪️fixtures/🚑️recovery/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🚑️recovery/🔣️.json")).unwrap()
 }
 
 pub(crate) async fn committed_fixture_storage(row: &serde_json::Value, document: &ArtifactId) -> MemoryStorage {
@@ -191,7 +191,7 @@ async fn assert_no_committed_transaction(storage: &impl WalStorage, document: &A
 
 #[semio_framework_async_macros::async_test]
 async fn wal_recovery_aborts_only_incomplete_active_transactions_idempotently() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for name in ["active-incomplete-needs-durable-abort", "active-empty-begin-needs-durable-abort", "sealed-incomplete-is-corrupt", "cross-segment-open-transaction-is-corrupt"] {
         let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == name).unwrap();
         let document = ArtifactId::from("abort-recovery");
@@ -242,7 +242,7 @@ async fn wal_recovery_aborts_only_incomplete_active_transactions_idempotently() 
 #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
 #[semio_framework_async_macros::async_test]
 async fn wal_recovery_abort_fsync_survives_two_independent_filesystem_reopens() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for (ordinal, name) in ["active-incomplete-needs-durable-abort", "active-empty-begin-needs-durable-abort"].iter().enumerate() {
         let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == *name).unwrap();
         let document = ArtifactId::from("abort-filesystem");
@@ -290,9 +290,9 @@ async fn wal_recovery_abort_fsync_survives_two_independent_filesystem_reopens() 
 
 #[semio_framework_async_macros::async_test]
 async fn wal_recovery_abort_faults_retry_without_duplicate_abort() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "active-incomplete-needs-durable-abort").unwrap();
-    let faults: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🛑️fail-stop/🔣️.json")).unwrap();
+    let faults: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛑️fail-stop/🔣️.json")).unwrap();
     for case in faults["cases"].as_array().unwrap().iter().filter(|case| case["fault"] != "successorAppendError") {
         for (tail, fail_tail_sync) in [(false, false), (true, false), (true, true)] {
             if fail_tail_sync && case["fault"] != "syncError" {
@@ -414,7 +414,7 @@ impl WalStorage for AbortCancellationStorage<'_> {
 
 #[semio_framework_async_macros::async_test]
 async fn wal_recovery_abort_cancellation_has_one_durable_boundary() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "active-incomplete-needs-durable-abort").unwrap();
     let document = ArtifactId::from("abort-cancel");
     let storage = committed_fixture_storage(row, &document).await;
@@ -526,7 +526,7 @@ fn committed_fixture_kind(kind: u8) -> &'static str {
 
 #[semio_framework_async_macros::async_test]
 async fn wal_transaction_gate_matches_neutral_committed_spans() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let document = ArtifactId::from("committed-fixture");
         let storage = committed_fixture_storage(row, &document).await;
@@ -628,7 +628,7 @@ async fn wal_immutable_source_fragmentation_matches_neutral_transactions() {
             Ok(&self.bytes[offset..limit.min((offset / self.chunk + 1) * self.chunk)])
         }
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["expected"]["accepted"] == true && row["expected"]["recoverAbort"].is_null()) {
         let document = ArtifactId::from("committed-fragmented-source");
         let storage = committed_fixture_storage(row, &document).await;
@@ -712,7 +712,7 @@ async fn wal_immutable_source_fragmentation_matches_neutral_transactions() {
 
 #[semio_framework_async_macros::async_test]
 async fn wal_committed_cursor_single_fuel_and_expired_turns_match_neutral_transactions() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["expected"]["accepted"] == true && row["expected"]["recoverAbort"].is_null()) {
         let document = ArtifactId::from("committed-one-fuel");
         let storage = committed_fixture_storage(row, &document).await;
@@ -754,7 +754,7 @@ async fn wal_committed_cursor_single_fuel_and_expired_turns_match_neutral_transa
 #[semio_framework_async_macros::async_test]
 async fn wal_retained_varints_match_neutral_exact_u64_and_atomic_interruption() {
     let _pool = crate::db_storage::db_io_test_pool();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📖️retained-decoder/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📖️retained-decoder/🔣️.json")).unwrap();
     for row in fixture["varints"].as_array().unwrap() {
         let hex = row["hex"].as_str().unwrap();
         let input: Vec<_> = (0..hex.len()).step_by(2).map(|offset| u8::from_str_radix(&hex[offset..offset + 2], 16).unwrap()).collect();
@@ -833,7 +833,7 @@ async fn wal_retained_decoder_cancel_close_preserves_source_and_returns_owner() 
 
 #[semio_framework_async_macros::async_test]
 async fn wal_committed_cursor_cancel_resume_keeps_transaction_position() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "two-commands-only-after-logical-commit").unwrap();
     let document = ArtifactId::from("committed-cancel");
     let storage = committed_fixture_storage(row, &document).await;
@@ -875,7 +875,7 @@ async fn wal_committed_cursor_cancel_resume_keeps_transaction_position() {
 
 #[semio_framework_async_macros::async_test]
 async fn wal_committed_cursor_unfinished_borrow_poison_and_cancelled_close() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "two-commands-only-after-logical-commit").unwrap();
     let document = ArtifactId::from("committed-drop");
     let storage = committed_fixture_storage(row, &document).await;
@@ -957,7 +957,7 @@ async fn capacity_backend(storage: &impl WalStorage, fixture: &serde_json::Value
 
 #[semio_framework_async_macros::async_test]
 async fn wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📏️capacity/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📏️capacity/🔣️.json")).unwrap();
     for (ordinal, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         capacity_backend(&storage, &fixture, case).await;

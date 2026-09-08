@@ -1,12 +1,12 @@
 {
   "mutation": "replaceAttractionGeometry",
   "id": "attraction-1",
-  "newGap": 2.0,
-  "newShift": 1.0,
+  "newGap": 2,
+  "newShift": 1,
   "newRise": 0.5,
-  "newRotation": 0.0,
-  "newTurn": 0.0,
-  "newTilt": 0.0,
-  "newX": 3.0,
-  "newY": 4.0
+  "newRotation": 0,
+  "newTurn": 0,
+  "newTilt": 0,
+  "newX": 3,
+  "newY": 4
 }

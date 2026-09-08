@@ -8,7 +8,7 @@ fn retained_operation() -> AppOperationContext {
 }
 
 fn retained_context(transient: LowpolyTransient, transient_generation: u64) -> std::sync::Arc<ArtifactOwnedToolJobContext<EditorApp<LowpolyPlayApp>>> {
-    std::sync::Arc::new(ArtifactOwnedToolJobContext::new(7, [17; 32], 0, transient_generation, std::sync::Arc::new(semio_framework_plugin::ChildContentView::EMPTY), std::sync::Arc::new(NoDraft::default()), std::sync::Arc::new(transient)))
+    std::sync::Arc::new(ArtifactOwnedToolJobContext::new(7, None, [17; 32], 0, transient_generation, std::sync::Arc::new(semio_framework_plugin::ChildContentView::EMPTY), std::sync::Arc::new(NoDraft::default()), std::sync::Arc::new(transient)))
 }
 
 #[test]
@@ -254,7 +254,6 @@ pub(super) fn every_command() -> Vec<LowpolyCommand> {
         LowpolyCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { object_id: None, u: None, v: None, x: Some(0.0), y: Some(0.0) }),
         LowpolyCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { object_id: None, u: None, v: None, x: Some(1.0), y: Some(1.0) }),
         LowpolyCommand::TransformBegin(transform_begin::TransformBegin {}),
-        LowpolyCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }),
     ]
 }
 //#endregion 🔖️CommandSurface

@@ -20,7 +20,7 @@ Assignment: the four row-98 decisions (keep `schema-export-format-undeclared`; a
 | Q4 | new code **`schema-export-parser-missing`**, activated. TypeScript completeness is the exported type **and** `parse<Export>()` |
 | Row 97 | the code table is one exported constant, `SCHEMA_DIAGNOSTIC_CODE_TABLE`, code → one-line description; import path in §4 |
 | Vector | `🧪️tests/🧬️schema-invariants/🔣️.json` 21 → **30** catalog cases (2 expectations re-coded, 9 added) |
-| Invariants suite | **90 pass / 1 fail** (91 tests, 358 expect() calls, 4.1 s). The red is unchanged: W1c's R-3 generator-vector policy disagreement, outside this partition |
+| Invariants suite | **93 pass / 1 fail** (94 tests, 416 expect() calls) on the tree as it stands, a peer having extended the same describe meanwhile. The red is unchanged: W1c's R-3 generator-vector policy disagreement, outside this partition |
 | `test schema` | **5 166 findings** (was 3 493), of which **1 696 × `schema-export-parser-missing`** — the large new count row 98 anticipated. Per-code and per-owner tables in §5.4 |
 
 ---
@@ -189,14 +189,25 @@ $ bun test --timeout 60000 ./🧪️tests/🧬️schema-invariants/🟦️.ts   
 Ran 91 tests across 1 file. [4.09s]
 ```
 
+Re-measured at the end of the session, after a peer extended the same `🔠️ the diagnostic code table is the
+single vocabulary` describe with a `schemaDiagnosticCodesEmittedBy` split (three more tests, their work,
+left untouched):
+
+```
+ 93 pass
+ 1 fail
+ 416 expect() calls
+Ran 94 tests across 1 file. [56.85s]
+```
+
 Every new case passes, both false-positive guards included. The single red is unchanged and is **not** in
 this partition:
 
 ```
 (fail) 🤝️ parity with the catalog generator's own vector > every generator case places the same files and levels as this harness does
-Expected: "fixture-defines-schema:🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️.schema.json"
-Received: "fixture-defines-schema:🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️.schema.json,
-                                  🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️schema/🔣️.json"
+Expected: "schema-fixture-defines-schema:🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️.schema.json"
+Received: "schema-fixture-defines-schema:🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️.schema.json,
+                                         🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️schema/🔣️.json"
 ```
 
 W1b's R-4 / W1c's R-3, still open: the generator's case expects no placement finding for a schema inside a
@@ -205,46 +216,61 @@ the adapter the ticket exists to remove.
 
 ### 5.3 The partition's full `bun test`
 
-The partition holds four suites. Three of them complete and are reported here in full; the fourth,
-`🧪️tests/🧪️test-platform/🟦️.ts`, does **not** complete on this box and is reported honestly as such.
-
 ```
-$ bun test --timeout 60000 ./🧪️tests/📐️test-layout/🟦️.ts ./🧪️tests/🖥️host-protocol-parity/🟦️.ts
- 14 pass
- 0 fail
- 46 expect() calls
-Ran 14 tests across 2 files. [4.21s]
-
-$ bun test --timeout 60000 ./🧪️tests/🧬️schema-invariants/🟦️.ts
- 90 pass / 1 fail / 358 expect() calls        (§5.2)
+$ bun test --timeout 60000 ./🧪️tests/📐️test-layout/🟦️.ts ./🧪️tests/🖥️host-protocol-parity/🟦️.ts \
+      ./🧪️tests/🧪️test-platform/🟦️.ts ./🧪️tests/🧬️schema-invariants/🟦️.ts
+ 102 pass
+ 22 fail
+ 1 error
+ 3150 expect() calls
+Ran 124 tests across 4 files. [3366.67s]
+exit 1
 ```
 
-`🧪️tests/🧪️test-platform/🟦️.ts` ran for **20+ minutes without reaching its summary** and was still
-running when this report was written; its individual tests walk the whole repository (one of them,
-`🔍️ discovery and contract > every committed case satisfies the frozen contract`, took 487 s on its own,
-`🚫️ oracle purity` 129 s), a peer session was running the same suite concurrently, and after
-`🚫️ oracle purity` the log stopped advancing for 30 minutes. **No pass/fail total for that suite is
-claimed.** What it did report before stalling — 11 failures, none of them in a schema-contract check and
-none reachable from anything this work-package touched:
+Fifty-six minutes, and it has to be read carefully:
+
+- **The 1 error is a mid-edit race, not a defect.** `🧪️tests/🧬️schema-invariants/🟦️.ts` failed to *load* in
+  this run — `SyntaxError: Export named 'schemaDiagnosticCodesEmittedBy' not found in module …/🟦️.ts` —
+  because a peer was adding that symbol to the test file and the package at that moment (row 62). On the
+  tree as it now stands the file loads and the suite runs: §5.2's second block. So its 94 tests are
+  **absent** from the 124 above.
+- `📐️test-layout` + `🖥️host-protocol-parity`, measured on their own: **14 pass / 0 fail**, 46 expect(),
+  4.2 s. Which makes `🧪️tests/🧪️test-platform/🟦️.ts` **88 pass / 22 fail of 110** — the first complete
+  measurement of that suite in this ticket (W1c left the slot empty; it takes ~55 min because its tests
+  walk the whole repository — `every committed case satisfies the frozen contract` alone took 487 s).
+- **All 22 failures are in `🧪️test-platform`, none in a schema-contract check**, and none is reachable
+  from anything this work-package touched:
 
 ```
-(fail) ⚖️ comparison profiles > semantic-pdf-v1 canonicalizes the nondeterministic artefacts …
+(fail) ⚖️ comparison profiles > semantic-pdf-v1 canonicalizes the nondeterministic artefacts and keeps the normative fields
 (fail) 📇️ oracle registry > every registered oracle is test-only and declares its license and capabilities
 (fail) 📇️ oracle registry > every recorded no-oracle decision names its rationale and its substitutes
 (fail) 🔍️ discovery and contract > discovery is idempotent
 (fail) 🔍️ discovery and contract > every committed case satisfies the frozen contract
 (fail) 🧹️ clean safety > no tracked fixture, source file or compose path is ever a clean candidate
-(fail) 🔒️ dependency ratchet > the committed baseline classifies every ecosystem it tracks …
-(fail) 📈️ non-aggregate metrics > oracle coverage counts every discovered case as backed by an oracle …
-(fail) 🪆️ case above subset > the only live case-above-subset violation is the one C4 documented …
-(fail) 🧫️ mutation without fixture > the live registry retains the independent Stdio declaration census …
+(fail) 🔒️ dependency ratchet > the committed baseline classifies every ecosystem it tracks and keeps oracles out of production
+(fail) 📈️ non-aggregate metrics > oracle coverage counts every discovered case as backed by an oracle or a recorded decision
+(fail) 🪆️ case above subset > the only live case-above-subset violation is the one C4 documented as deliberately blocked
+(fail) 🧫️ mutation without fixture > the live registry retains the independent Stdio declaration census and has no declared fixture debt
 (fail) 🚫️ oracle purity > no production source imports a registered oracle
+(fail) 🚫️ oracle purity > narrowing a run to one case must not make other cases' adapters look like production source
+(fail) 🧩️ cross-language oracle hosts > a contributed host package is selected for whichever implementation declares it, not for Rust alone
+(fail) 🧩️ cross-language oracle hosts > the committed baseline classifies every external host package as a test-only dependency
+(fail) 🔒️ recorded production debt > an oracle claiming testOnly while already production-reachable must record the debt, not hide it
+(fail) 🔒️ recorded production debt > only the recorded paths are excused — any other production import is still a breach
+(fail) 🔒️ recorded production debt > every registered oracle names its capabilities, comparison profiles and a rationale that scopes it
+(fail) ⚖️ artifact comparison profiles > semantic-raster-v1 ignores encoder choices and keeps the decoded samples
+(fail) ⚖️ artifact comparison profiles > semantic-archive-v1 compares members as a set and ignores writer metadata
+(fail) ⚖️ artifact comparison profiles > semantic-audio-v1 keeps the format block and every sample
+(fail) 🧭️ contribution directory ownership > the handpicked kernel oracle remains discoverable at runtime
 ```
 
-Two of them are W1b's R-1/R-2 (`loadOracleRegistry` reading a registry whose rows have no `substitutes`),
-the rest are repo-state assertions owned by other partitions mid-migration. W1c left this suite's slot
-empty for the same reason; recording the observed reds and the non-completion is the most this box
-supports today.
+(21 named lines plus one counted failure the reporter folded into an `# Unhandled error between tests`
+block.) Two are W1b's R-1/R-2 — `loadOracleRegistry` reading a registry whose rows carry no `substitutes`
+— and the rest are repo-state assertions owned by other partitions mid-migration
+(`serde_json is production-reachable but records no debt`, an unrecorded oracle import under
+`♻️mit-bestand/🔎️recherche`, comparison profiles, the dependency ratchet). None of them moved in either
+direction as a result of this work-package.
 
 ### 5.4 `test schema` over the live tree
 
@@ -355,7 +381,7 @@ report: `emitted − table = ∅`).
 |---|---|---|
 | **R-1** | W2u (tooling, `📚️library/🔍️discovery/🟦️.ts`) | Row 97 is ready on this side: import `SCHEMA_DIAGNOSTIC_CODE_TABLE` (§4) instead of the literal codes at `:3273` (`mutation-leaf-id-grammar` → `schema-mutation-leaf-id`) and `:3346` (`export-format-missing` → `schema-export-incomplete`), and update `📚️library/🧪️tests/🧬️schema-scope-catalog/🧫️fixtures/🔣️.json`. Note the table has **no** `schema-mutation-leaf-id` yet — the harness derives leaf ids and does not diagnose them; say the word and I add the code so your rename has a target. |
 | **R-2** | W2u (tooling) | `schema-export-parser-missing` is new and the generator has no counterpart. Do not fold it into `export-format-missing`/`schema-export-incomplete`: those two are "no entity at all". |
-| **R-3** | W2c (`📚️library/🧪️tests/🧬️schema-scope-catalog/🧫️fixtures/🔣️.json`) | **W1b R-4 / W1c R-3, still the only red.** Case `fixture-defines-schema` expects `placementPaths` without `🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️schema/🔣️.json`, contradicting contract §C. Either expect both paths, or have the case declare `inertSchemaData`. |
+| **R-3** | W2c (`📚️library/🧪️tests/🧬️schema-scope-catalog/🧫️fixtures/🔣️.json`) | **W1b R-4 / W1c R-3, still the only red.** Case `schema-fixture-defines-schema` expects `placementPaths` without `🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️schema/🔣️.json`, contradicting contract §C. Either expect both paths, or have the case declare `inertSchemaData`. |
 | **R-4** | wave 3, per partition | 1 696 `schema-export-parser-missing` over 734 files, per-owner rows in §5.4. Each owner either writes `parse<Export>()` beside the type, or annotates the export with `x-semio-formats` naming the formats it honestly supports (which, per Q1, must include `🔣️jsonschema`). |
 | **R-5** | W6c (plugins) | Unchanged from W1c R-4: `x-semio-formats` is implemented, tested and still carried by **no** export in the tree. Row 55's annotations can land now, and they are the cheap half of R-4. |
 | **R-6** | the peer refactoring this partition (row 62) | `📦️packages/🟦️typescript/tsconfig.json` still `include`s only `🟦️.ts`, so the relocated suites are not type-checked by the package's `lint` target (W1b R-6, W1c R-6 — unchanged). |

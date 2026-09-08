@@ -52,9 +52,7 @@ message Puzzle2dConfig {
   // @state config
   map<string, string> active_utility_by_window_id = 25;
   // @state config
-  string locale = 26;
   // @state config
-  string terminology = 27;
   // @state config
   uint64 example_load_generation = 28;
   // @state config

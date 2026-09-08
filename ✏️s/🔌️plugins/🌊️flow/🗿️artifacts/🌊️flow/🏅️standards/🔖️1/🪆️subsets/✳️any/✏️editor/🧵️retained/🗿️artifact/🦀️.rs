@@ -1,12 +1,12 @@
 //! 🗿️ App-owned scene assembly delegates selected payload copying to the shared Flow cursor.
 
+use super::super::FlowWorkingScene;
 use super::{Owner, Retirement};
 use crate::retirement::SceneRetirementFactory;
-use super::super::FlowWorkingScene;
-use semio_framework_artifact_flow_flow::Widget;
 #[cfg(test)]
 use flow::neural;
 use semio_framework_artifact_flow_flow::retained::{FlowCopyAllocationBudget, FlowSynapseCopy, FlowWidgetCopy};
+use semio_framework_artifact_flow_flow::Widget;
 use std::mem::ManuallyDrop;
 use std::sync::Arc;
 
@@ -14,7 +14,7 @@ use std::sync::Arc;
 pub(super) mod recipe;
 
 #[cfg(test)]
-#[path = "📸️snapshot/🦀️.rs"]
+#[path = "📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"]
 pub(super) mod snapshot;
 
 #[path = "📬️preparation/🦀️.rs"]
@@ -34,54 +34,90 @@ pub(super) struct SceneCopyState {
     closing: bool,
 }
 
-pub(super) struct SceneCopy { state: ManuallyDrop<SceneCopyState> }
-impl std::ops::Deref for SceneCopy { type Target = SceneCopyState; fn deref(&self) -> &Self::Target { &self.state } }
-impl std::ops::DerefMut for SceneCopy { fn deref_mut(&mut self) -> &mut Self::Target { &mut self.state } }
+pub(super) struct SceneCopy {
+    state: ManuallyDrop<SceneCopyState>,
+}
+impl std::ops::Deref for SceneCopy {
+    type Target = SceneCopyState;
+    fn deref(&self) -> &Self::Target {
+        &self.state
+    }
+}
+impl std::ops::DerefMut for SceneCopy {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.state
+    }
+}
 impl Drop for SceneCopy {
     fn drop(&mut self) {
-        if self.terminal_is_empty() { unsafe { ManuallyDrop::drop(&mut self.state); } }
-        else if !std::thread::panicking() { panic!("Flow scene copy must close before drop"); }
+        if self.terminal_is_empty() {
+            unsafe {
+                ManuallyDrop::drop(&mut self.state);
+            }
+        } else if !std::thread::panicking() {
+            panic!("Flow scene copy must close before drop");
+        }
     }
 }
 
 impl SceneCopy {
     pub(super) fn new(source: Arc<FlowWorkingScene>) -> Self {
-        Self { state: ManuallyDrop::new(SceneCopyState {
-            source: Some(source), widget: None, synapse: None, result: Some(FlowWorkingScene::default()),
-            retirement: Retirement::default(), phase: 0, index: 0, closing: false,
-        }) }
+        Self { state: ManuallyDrop::new(SceneCopyState { source: Some(source), widget: None, synapse: None, result: Some(FlowWorkingScene::default()), retirement: Retirement::default(), phase: 0, index: 0, closing: false }) }
     }
 
     pub(super) fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Option<usize>, String> {
         use store::SnapshotRetirementStep;
-        if self.closing || maximum_items == 0 || maximum_bytes == 0 { return Ok(None); }
+        if self.closing || maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(None);
+        }
         let state = &mut *self.state;
         let source = state.source.as_ref().ok_or("Flow scene copier lost source")?;
         let result = state.result.as_mut().ok_or("Flow scene copier lost output")?;
         match state.phase {
             0 => {
                 let count = source.widgets.len();
-                if count > super::super::FLOW_STORE_MAX_SCENE_ITEMS { return Err("Flow scene widget count exceeds admitted envelope".into()); }
+                if count > super::super::FLOW_STORE_MAX_SCENE_ITEMS {
+                    return Err("Flow scene widget count exceeds admitted envelope".into());
+                }
                 let bytes = count.checked_mul(size_of::<Widget>()).ok_or("Flow widget allocation overflow")?;
-                if bytes > FLOW_SCENE_COPY_ALLOCATION_BYTES { return Err("Flow widget allocation exceeds admitted envelope".into()); }
+                if bytes > FLOW_SCENE_COPY_ALLOCATION_BYTES {
+                    return Err("Flow widget allocation exceeds admitted envelope".into());
+                }
                 result.widgets.try_reserve_exact(count).map_err(|_| "Flow widget allocation failed")?;
                 state.phase = 1;
             }
             1 => {
                 if let Some(cursor) = state.widget.as_mut() {
                     if cursor.complete() {
-                        result.widgets.push(cursor.take().unwrap()); cursor.begin_close(); state.phase = 2;
-                    } else { return cursor.advance(1, maximum_bytes); }
+                        result.widgets.push(cursor.take().unwrap());
+                        cursor.begin_close();
+                        state.phase = 2;
+                    } else {
+                        return cursor.advance(1, maximum_bytes);
+                    }
                 } else if state.index < source.widgets.len() {
-                    state.widget = Some(FlowWidgetCopy::new(Arc::clone(source), state.index, |scene, index| scene.widgets.get(index), Arc::new(SceneRetirementFactory), FlowCopyAllocationBudget::new(FLOW_SCENE_COPY_ALLOCATION_BYTES, FLOW_SCENE_COPY_ALLOCATION_BYTES)));
-                } else { state.index = 0; state.phase = 3; }
+                    state.widget = Some(FlowWidgetCopy::new(
+                        Arc::clone(source),
+                        state.index,
+                        |scene, index| scene.widgets.get(index),
+                        Arc::new(SceneRetirementFactory),
+                        FlowCopyAllocationBudget::new(FLOW_SCENE_COPY_ALLOCATION_BYTES, FLOW_SCENE_COPY_ALLOCATION_BYTES),
+                    ));
+                } else {
+                    state.index = 0;
+                    state.phase = 3;
+                }
             }
             2 => {
                 let cursor = state.widget.as_mut().unwrap();
                 match cursor.close_step(1, maximum_bytes)? {
                     SnapshotRetirementStep::Complete => {
-                        if !cursor.terminal_is_empty() { return Err("Flow selected widget retained an owner after close".into()); }
-                        state.widget = None; state.index += 1; state.phase = 1;
+                        if !cursor.terminal_is_empty() {
+                            return Err("Flow selected widget retained an owner after close".into());
+                        }
+                        state.widget = None;
+                        state.index += 1;
+                        state.phase = 1;
                     }
                     SnapshotRetirementStep::Pending { released_bytes, .. } => return Ok(Some(released_bytes)),
                     SnapshotRetirementStep::Blocked => return Ok(None),
@@ -89,68 +125,113 @@ impl SceneCopy {
             }
             3 => {
                 let count = source.synapses.len();
-                if count > super::super::FLOW_STORE_MAX_SCENE_ITEMS { return Err("Flow scene synapse count exceeds admitted envelope".into()); }
+                if count > super::super::FLOW_STORE_MAX_SCENE_ITEMS {
+                    return Err("Flow scene synapse count exceeds admitted envelope".into());
+                }
                 let bytes = count.checked_mul(size_of::<semio_framework_artifact_flow_flow::SynapseSpec>()).ok_or("Flow synapse allocation overflow")?;
-                if bytes > FLOW_SCENE_COPY_ALLOCATION_BYTES { return Err("Flow synapse allocation exceeds admitted envelope".into()); }
+                if bytes > FLOW_SCENE_COPY_ALLOCATION_BYTES {
+                    return Err("Flow synapse allocation exceeds admitted envelope".into());
+                }
                 result.synapses.try_reserve_exact(count).map_err(|_| "Flow synapse allocation failed")?;
                 state.phase = 4;
             }
             4 => {
                 if let Some(cursor) = state.synapse.as_mut() {
                     if cursor.complete() {
-                        result.synapses.push(cursor.take().unwrap()); cursor.begin_close(); state.phase = 5;
-                    } else { return cursor.advance(1, maximum_bytes); }
+                        result.synapses.push(cursor.take().unwrap());
+                        cursor.begin_close();
+                        state.phase = 5;
+                    } else {
+                        return cursor.advance(1, maximum_bytes);
+                    }
                 } else if state.index < source.synapses.len() {
-                    state.synapse = Some(FlowSynapseCopy::new(Arc::clone(source), state.index, |scene, index| scene.synapses.get(index), Arc::new(SceneRetirementFactory), FlowCopyAllocationBudget::new(FLOW_SCENE_COPY_ALLOCATION_BYTES, FLOW_SCENE_COPY_ALLOCATION_BYTES)));
-                } else { state.phase = 6; }
+                    state.synapse = Some(FlowSynapseCopy::new(
+                        Arc::clone(source),
+                        state.index,
+                        |scene, index| scene.synapses.get(index),
+                        Arc::new(SceneRetirementFactory),
+                        FlowCopyAllocationBudget::new(FLOW_SCENE_COPY_ALLOCATION_BYTES, FLOW_SCENE_COPY_ALLOCATION_BYTES),
+                    ));
+                } else {
+                    state.phase = 6;
+                }
             }
             5 => {
                 let cursor = state.synapse.as_mut().unwrap();
                 match cursor.close_step(1, maximum_bytes)? {
                     SnapshotRetirementStep::Complete => {
-                        if !cursor.terminal_is_empty() { return Err("Flow selected synapse retained an owner after close".into()); }
-                        state.synapse = None; state.index += 1; state.phase = 4;
+                        if !cursor.terminal_is_empty() {
+                            return Err("Flow selected synapse retained an owner after close".into());
+                        }
+                        state.synapse = None;
+                        state.index += 1;
+                        state.phase = 4;
                     }
                     SnapshotRetirementStep::Pending { released_bytes, .. } => return Ok(Some(released_bytes)),
                     SnapshotRetirementStep::Blocked => return Ok(None),
                 }
             }
-            6 => { result.layout = source.layout.clone(); state.phase = 7; }
+            6 => {
+                result.layout = source.layout.clone();
+                state.phase = 7;
+            }
             7 => {}
             _ => return Err("Flow scene copier phase is invalid".into()),
         }
         Ok(Some(0))
     }
 
-    pub(super) fn complete(&self) -> bool { self.phase == 7 && self.result.is_some() }
-    pub(super) fn take(&mut self) -> Option<FlowWorkingScene> { if self.phase == 7 { self.result.take() } else { None } }
+    pub(super) fn complete(&self) -> bool {
+        self.phase == 7 && self.result.is_some()
+    }
+    pub(super) fn take(&mut self) -> Option<FlowWorkingScene> {
+        if self.phase == 7 {
+            self.result.take()
+        } else {
+            None
+        }
+    }
     pub(super) fn begin_close(&mut self) {
         self.closing = true;
-        if let Some(cursor) = self.widget.as_mut() { cursor.begin_close(); }
-        if let Some(cursor) = self.synapse.as_mut() { cursor.begin_close(); }
+        if let Some(cursor) = self.widget.as_mut() {
+            cursor.begin_close();
+        }
+        if let Some(cursor) = self.synapse.as_mut() {
+            cursor.begin_close();
+        }
     }
 
     pub(super) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_job::InteractiveJobCloseStep, String> {
         use semio_framework_job::InteractiveJobCloseStep as Step;
         use store::SnapshotRetirementStep as SnapshotStep;
-        if !self.closing || maximum_items == 0 || maximum_bytes == 0 { return Ok(Step::Blocked); }
+        if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(Step::Blocked);
+        }
         let state = &mut *self.state;
-        if !state.retirement.is_empty() { return Ok(state.retirement.step(maximum_items, maximum_bytes)); }
+        if !state.retirement.is_empty() {
+            return Ok(state.retirement.step(maximum_items, maximum_bytes));
+        }
         let step = if let Some(cursor) = state.widget.as_mut() {
             let step = cursor.close_step(1, maximum_bytes)?;
             if step == SnapshotStep::Complete {
-                if !cursor.terminal_is_empty() { return Err("Flow selected widget close is nonterminal".into()); }
+                if !cursor.terminal_is_empty() {
+                    return Err("Flow selected widget close is nonterminal".into());
+                }
                 state.widget = None;
             }
             Some(step)
         } else if let Some(cursor) = state.synapse.as_mut() {
             let step = cursor.close_step(1, maximum_bytes)?;
             if step == SnapshotStep::Complete {
-                if !cursor.terminal_is_empty() { return Err("Flow selected synapse close is nonterminal".into()); }
+                if !cursor.terminal_is_empty() {
+                    return Err("Flow selected synapse close is nonterminal".into());
+                }
                 state.synapse = None;
             }
             Some(step)
-        } else { None };
+        } else {
+            None
+        };
         if let Some(step) = step {
             return Ok(match step {
                 SnapshotStep::Blocked => Step::Blocked,
@@ -158,13 +239,21 @@ impl SceneCopy {
                 SnapshotStep::Complete => Step::Pending { released_items: 1, released_bytes: 0 },
             });
         }
-        if let Some(result) = state.result.take() { state.retirement.push(Owner::Scene(result)); }
-        else if let Some(source) = state.source.take() { if let Some(source) = Arc::into_inner(source) { state.retirement.push(Owner::Scene(source)); } }
-        else { return Ok(Step::Complete); }
+        if let Some(result) = state.result.take() {
+            state.retirement.push(Owner::Scene(result));
+        } else if let Some(source) = state.source.take() {
+            if let Some(source) = Arc::into_inner(source) {
+                state.retirement.push(Owner::Scene(source));
+            }
+        } else {
+            return Ok(Step::Complete);
+        }
         Ok(Step::Pending { released_items: 1, released_bytes: 0 })
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool { self.closing && self.source.is_none() && self.widget.is_none() && self.synapse.is_none() && self.result.is_none() && self.retirement.is_empty() }
+    pub(super) fn terminal_is_empty(&self) -> bool {
+        self.closing && self.source.is_none() && self.widget.is_none() && self.synapse.is_none() && self.result.is_none() && self.retirement.is_empty()
+    }
 }
 //#endregion 🗿️SceneCursor
 
@@ -184,13 +273,19 @@ impl SceneHash {
     }
 
     pub(super) fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<usize, String> {
-        if self.failed { return Err("Flow canonical scene encoding failed".into()); }
-        if !grant.permits_one() || self.digest.is_some() || self.hash.is_none() { return Ok(0); }
+        if self.failed {
+            return Err("Flow canonical scene encoding failed".into());
+        }
+        if !grant.permits_one() || self.digest.is_some() || self.hash.is_none() {
+            return Ok(0);
+        }
         let domain = crate::FLOW_CONTENT_ID_DOMAIN;
         if self.domain_offset < domain.len() {
             let end = (self.domain_offset + grant.maximum_bytes).min(domain.len());
             self.hash.as_mut().unwrap().update(&domain[self.domain_offset..end]);
-            let bytes = end - self.domain_offset; self.domain_offset = end; return Ok(bytes);
+            let bytes = end - self.domain_offset;
+            self.domain_offset = end;
+            return Ok(bytes);
         }
         let mut chunk = [0; 256];
         let bytes = match self.reader.encode_chunk(grant, &mut chunk) {
@@ -198,24 +293,40 @@ impl SceneHash {
             Err(error) => {
                 self.failed = true;
                 self.hash = None;
-                self.reader.cancel(); self.reader.begin_close();
+                self.reader.cancel();
+                self.reader.begin_close();
                 self.retirement.push(Owner::Bytes(error.reason.into_bytes()));
                 return Ok(error.written_bytes);
             }
         };
         self.hash.as_mut().unwrap().update(&chunk[..bytes]);
-        if self.reader.is_complete() { self.digest = Some(self.hash.take().unwrap().finalize()); }
+        if self.reader.is_complete() {
+            self.digest = Some(self.hash.take().unwrap().finalize());
+        }
         Ok(bytes)
     }
 
-    pub(super) fn complete(&self) -> bool { self.digest.is_some() }
-    pub(super) fn take(&mut self) -> Option<(Arc<FlowWorkingScene>, [u8; 32])> { let digest = self.digest.take()?; Some((self.reader.take_root()?, digest)) }
-    pub(super) fn begin_close(&mut self) { self.reader.begin_close(); self.hash = None; self.digest = None; }
+    pub(super) fn complete(&self) -> bool {
+        self.digest.is_some()
+    }
+    pub(super) fn take(&mut self) -> Option<(Arc<FlowWorkingScene>, [u8; 32])> {
+        let digest = self.digest.take()?;
+        Some((self.reader.take_root()?, digest))
+    }
+    pub(super) fn begin_close(&mut self) {
+        self.reader.begin_close();
+        self.hash = None;
+        self.digest = None;
+    }
     pub(super) fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.retirement.is_empty() { return store::ErasedSnapshotRetirement::close_step(&mut self.retirement, grant.maximum_items, grant.maximum_bytes); }
+        if !self.retirement.is_empty() {
+            return store::ErasedSnapshotRetirement::close_step(&mut self.retirement, grant.maximum_items, grant.maximum_bytes);
+        }
         self.reader.close_step(grant)
     }
-    pub(super) fn terminal_is_empty(&self) -> bool { self.reader.terminal_is_empty() && self.hash.is_none() && self.digest.is_none() && self.retirement.is_empty() }
+    pub(super) fn terminal_is_empty(&self) -> bool {
+        self.reader.terminal_is_empty() && self.hash.is_none() && self.digest.is_none() && self.retirement.is_empty()
+    }
 }
 //#endregion 🪪️SceneIdentity
 

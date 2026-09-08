@@ -50,7 +50,7 @@ async fn carrier_fixture_contains_child_state_and_rejects_a_wire_only_parent() {
 
 #[semio_framework_async_macros::async_test]
 async fn scene_owner_fixture_proves_identity_isolation_aba_wire_omission_and_bounded_close() {
-    let fixture: dsl::os_pack::json::Value = dsl::os_pack::json::parse(include_str!("../../🧪️fixtures/👑️equation-scene-owner-law.json")).expect("language-neutral equation scene fixture");
+    let fixture: dsl::os_pack::json::Value = dsl::os_pack::json::parse(include_str!("../../🧫️fixtures/👑️equation-scene-owner-law.json")).expect("language-neutral equation scene fixture");
     let cases = fixture["cases"].as_array().expect("fixture cases");
     assert_eq!(fixture["schemaVersion"], 1);
     assert_eq!(fixture["ownedSlots"], 3);

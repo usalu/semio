@@ -13,7 +13,6 @@ type FormsDiff {
   selectedIds: FormsStringList @state(class: PRESENCE)
   currentStepIndex: Int @state(class: CONFIG)
   tryValues: [FormsTryValuesEntry!] @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
   contributionsJson: String @state(class: CONFIG)
 }
 

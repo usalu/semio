@@ -45,8 +45,6 @@ pub struct FormsDiff {
     #[state(config)]
     pub try_values: Option<BTreeMap<String, Vec<String>>>,
     #[state(config)]
-    pub locale: Option<String>,
-    #[state(config)]
     pub contributions_json: Option<String>,
 }
 //#endregion 🔖️Diff

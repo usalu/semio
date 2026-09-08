@@ -32,13 +32,6 @@ fn default_true() -> bool {
     true
 }
 
-fn default_terminology() -> String {
-    "native".into()
-}
-
-fn default_locale() -> String {
-    "en-US".into()
-}
 //#endregion 🔖️Defaults
 
 //#region 🔖️Cameras
@@ -102,12 +95,6 @@ pub struct Puzzle5dConfig {
     /// now real VCS'd config (see `SET_ACTIVE_UTILITY_ACTION_ID` in `🎮️commands/🧰️set-active`).
     #[value(default)]
     pub active_utility_by_window_id: BTreeMap<String, String>,
-    /// 🗣️ B1: terminology overlay (native/reuse) — was host-pushed `view_state.terminology`.
-    #[value(default = "default_terminology")]
-    pub terminology: String,
-    /// 🗣️ B1: BCP-47 locale tag — was host-pushed `view_state.locale`.
-    #[value(default = "default_locale")]
-    pub locale: String,
 }
 
 /// ⚠️ Explicit impl (not `#[derive(Default)]`) so Rust construction matches the serde field defaults above.
@@ -128,8 +115,6 @@ impl Default for Puzzle5dConfig {
             vortex_kind_weights: HashMap::new(),
             sun: WorldSunConfig::default(),
             active_utility_by_window_id: BTreeMap::new(),
-            terminology: default_terminology(),
-            locale: default_locale(),
         }
     }
 }

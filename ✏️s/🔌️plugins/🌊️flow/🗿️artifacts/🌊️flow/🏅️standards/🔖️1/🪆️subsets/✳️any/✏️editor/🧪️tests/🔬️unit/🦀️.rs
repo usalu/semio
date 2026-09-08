@@ -28,7 +28,7 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     use semio_framework_plugin::app::TypedOperationResultLane;
     use store::{ArtifactPack, SpaceMember};
 
-    let fixture: Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧵️add-widget-retained/🔣️.json")).expect("retained addWidget fixture");
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️add-widget-retained/🔣️.json")).expect("retained addWidget fixture");
     let mut app = flow_app_with_registry().await;
     PluginApp::bind_instance_id(&mut app, 1).await;
     let parent_before = app.snapshot().expect("Flow parent before retained addWidget");
@@ -90,7 +90,7 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
 /// ↩️ Nonadjacent severed edges regain their exact original indices and large authored content.
 #[test]
 fn delete_cascade_inverse_restores_exact_edge_order_and_label() {
-    let fixture: Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧹️delete-cascade/🔣️.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️delete-cascade/🔣️.json")).unwrap();
     let mut scene = fixture["scene"].clone();
     let label = fixture["label"]["unit"].as_str().unwrap().repeat(fixture["label"]["repetitions"].as_u64().unwrap() as usize);
     assert_eq!(label.len(), fixture["label"]["expectedBytes"].as_u64().unwrap() as usize);

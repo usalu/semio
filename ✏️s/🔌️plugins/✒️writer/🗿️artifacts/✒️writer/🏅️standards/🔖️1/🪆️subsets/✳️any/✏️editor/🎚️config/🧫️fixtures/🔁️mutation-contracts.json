@@ -1,0 +1,289 @@
+{
+  "base": {
+    "editorSelection": {
+      "start": 1,
+      "end": 3
+    },
+    "formatSignal": 0,
+    "lintSignal": 1,
+    "revision": 7,
+    "editorSettings": {
+      "showLineNumbers": true,
+      "fontPx": 14,
+      "lineHeight": 20,
+      "tabSize": 4
+    },
+    "engagementInput": "format",
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "cases": [
+    {
+      "kind": "replace-config",
+      "mutation": {
+        "ReplaceConfig": {
+          "config": {
+            "editorSelection": {
+              "start": 1,
+              "end": 3
+            },
+            "formatSignal": 0,
+            "lintSignal": 1,
+            "revision": 7,
+            "editorSettings": {
+              "showLineNumbers": true,
+              "fontPx": 14,
+              "lineHeight": 20,
+              "tabSize": 4
+            },
+            "engagementInput": "format",
+            "camera": {
+              "x": 0,
+              "y": 0,
+              "zoom": 1
+            }
+          }
+        }
+      },
+      "expected": {
+        "editorSelection": {
+          "start": 1,
+          "end": 3
+        },
+        "formatSignal": 0,
+        "lintSignal": 1,
+        "revision": 7,
+        "editorSettings": {
+          "showLineNumbers": true,
+          "fontPx": 14,
+          "lineHeight": 20,
+          "tabSize": 4
+        },
+        "engagementInput": "format",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "kind": "set-editor-selection",
+      "mutation": {
+        "SetEditorSelection": {
+          "selection": {
+            "start": 2,
+            "end": 4
+          }
+        }
+      },
+      "expected": {
+        "editorSelection": {
+          "start": 2,
+          "end": 4
+        },
+        "formatSignal": 0,
+        "lintSignal": 1,
+        "revision": 7,
+        "editorSettings": {
+          "showLineNumbers": true,
+          "fontPx": 14,
+          "lineHeight": 20,
+          "tabSize": 4
+        },
+        "engagementInput": "format",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "kind": "set-format-signal",
+      "mutation": {
+        "SetFormatSignal": {
+          "value": 2
+        }
+      },
+      "expected": {
+        "editorSelection": {
+          "start": 1,
+          "end": 3
+        },
+        "formatSignal": 2,
+        "lintSignal": 1,
+        "revision": 7,
+        "editorSettings": {
+          "showLineNumbers": true,
+          "fontPx": 14,
+          "lineHeight": 20,
+          "tabSize": 4
+        },
+        "engagementInput": "format",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "kind": "set-lint-signal",
+      "mutation": {
+        "SetLintSignal": {
+          "value": 3
+        }
+      },
+      "expected": {
+        "editorSelection": {
+          "start": 1,
+          "end": 3
+        },
+        "formatSignal": 0,
+        "lintSignal": 3,
+        "revision": 7,
+        "editorSettings": {
+          "showLineNumbers": true,
+          "fontPx": 14,
+          "lineHeight": 20,
+          "tabSize": 4
+        },
+        "engagementInput": "format",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "kind": "set-revision",
+      "mutation": {
+        "SetRevision": {
+          "value": 8
+        }
+      },
+      "expected": {
+        "editorSelection": {
+          "start": 1,
+          "end": 3
+        },
+        "formatSignal": 0,
+        "lintSignal": 1,
+        "revision": 8,
+        "editorSettings": {
+          "showLineNumbers": true,
+          "fontPx": 14,
+          "lineHeight": 20,
+          "tabSize": 4
+        },
+        "engagementInput": "format",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "kind": "set-editor-settings",
+      "mutation": {
+        "SetEditorSettings": {
+          "settings": {
+            "showLineNumbers": false,
+            "fontPx": 16,
+            "lineHeight": 24,
+            "tabSize": 2
+          }
+        }
+      },
+      "expected": {
+        "editorSelection": {
+          "start": 1,
+          "end": 3
+        },
+        "formatSignal": 0,
+        "lintSignal": 1,
+        "revision": 7,
+        "editorSettings": {
+          "showLineNumbers": false,
+          "fontPx": 16,
+          "lineHeight": 24,
+          "tabSize": 2
+        },
+        "engagementInput": "format",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "kind": "set-engagement-input",
+      "mutation": {
+        "SetEngagementInput": {
+          "value": "prüfen"
+        }
+      },
+      "expected": {
+        "editorSelection": {
+          "start": 1,
+          "end": 3
+        },
+        "formatSignal": 0,
+        "lintSignal": 1,
+        "revision": 7,
+        "editorSettings": {
+          "showLineNumbers": true,
+          "fontPx": 14,
+          "lineHeight": 20,
+          "tabSize": 4
+        },
+        "engagementInput": "prüfen",
+        "camera": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        }
+      }
+    },
+    {
+      "kind": "set-camera",
+      "mutation": {
+        "SetCamera": {
+          "camera": {
+            "x": 5,
+            "y": -2,
+            "zoom": 1.5
+          }
+        }
+      },
+      "expected": {
+        "editorSelection": {
+          "start": 1,
+          "end": 3
+        },
+        "formatSignal": 0,
+        "lintSignal": 1,
+        "revision": 7,
+        "editorSettings": {
+          "showLineNumbers": true,
+          "fontPx": 14,
+          "lineHeight": 20,
+          "tabSize": 4
+        },
+        "engagementInput": "format",
+        "camera": {
+          "x": 5,
+          "y": -2,
+          "zoom": 1.5
+        }
+      }
+    }
+  ]
+}

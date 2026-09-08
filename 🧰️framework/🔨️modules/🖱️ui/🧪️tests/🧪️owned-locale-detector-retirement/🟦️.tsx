@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, testSource: TestSource): Promise<void> {
   const { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchInlineCompletion, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef } = dependencies;
   type Anchor = any;
   type Camera = any;
@@ -55,7 +55,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("keeps source and public initialization free of the retired detector", async () => {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
-      const source = readFileSync(fileURLToPath(source.url), "utf8");
+      const source = readFileSync(fileURLToPath(testSource.url), "utf8");
       const retiredPackage = ["i18next", "browser", "languagedetector"].join("-");
       const retiredBinding = ["Language", "Detector"].join("");
       expect(source).not.toContain(retiredPackage);
@@ -141,7 +141,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("keeps the source and public barrel free of the retired router boundary", async () => {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
-      const source = readFileSync(fileURLToPath(source.url), "utf8");
+      const source = readFileSync(fileURLToPath(testSource.url), "utf8");
       const retiredPackage = ["react", "router"].join("-");
       const retiredBindings = [
         ["Browser", "Router"],
@@ -381,7 +381,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(source.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
       expect(css).toMatch(/@property --celebrate-border-angle[\s\S]*?inherits:\s*true/);
       expect(css).toMatch(/\[data-celebrated="true"\][\s\S]*?--celebrate-conic:/);
       expect(css).not.toMatch(/\[data-celebrated="true"\][\s\S]*?animation:\s*celebrate-border-spin/);
@@ -413,7 +413,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(source.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
       const unlayeredRoot = css.match(/^:root \{[\s\S]*?\n\}/m)?.[0] ?? "";
       expect(unlayeredRoot).toMatch(/animation:[\s\S]*?loading-border-spin/);
       expect(unlayeredRoot).toMatch(/animation:[\s\S]*?waiting-border-spin/);
@@ -1200,7 +1200,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(source.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
       expect(css).toContain('[data-slot="introduction-info-box"]');
       expect(css).toContain('[data-slot="dialog-box"]');
       expect(css).toContain("data-window-silhouette-border");
@@ -1346,7 +1346,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(source.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
       expect(css).toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="introduction-body-paragraph"\]:hover\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
       expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="window-chrome-body"\]:hover/);
       expect(css).toMatch(
@@ -2683,7 +2683,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      return readFileSync(resolve(dirname(fileURLToPath(source.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      return readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
     }
 
     it("gives every vendored icon id and non-catalog kind a hover keyframes block and animation assignment", async () => {
@@ -3111,7 +3111,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(source.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
       expect(css).toContain("[data-window-silhouette-gap]");
       expect(css).toMatch(/\[data-window-silhouette-gap\][\s\S]*backdrop-filter:\s*none/);
       render(
@@ -7397,4 +7397,3872 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
   });
 
+}
+
+export async function registerTests2(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: Record<string, any>, testSource: { directory: string; url: string }): Promise<void> {
+  const { applyChromeRevealAtPoint, applyDockSkeleton, applyElementsSurfaceChrome, bootstrapElementsSurfaceChromeDocument, borderNormalBottomClass, borderNormalClass, borderNormalTopClass, buildVirtualFileSystemDescriptorColumns, buildVirtualFileSystemVisibleRows, Button, ButtonGroup, ButtonGroupItem, catalogueTreeDragController, CheckIcon, ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, cn, COLLAPSED_FIELD_ELLIPSIS, Command, CommandItem, CommandList, COMPACT_UI_DRIVER, composeControlKeybindings, composeTutorialUi, computeTabDockDropZone, ControlTree, createBrowserStoragePort, createTreeHighlightStore, createTreeSelectionStore, createTutorialClock, DEFAULT_UI_DRIVER, defaultControlRenderer, deriveTreeDragRoles, dockSkeletonOf, dockSkeletonsEqual, DragHandle, FindInViewIcon, fitCollapsedFieldText, flowChevronIconName, FlowProvider, Footer, formatControlTooltipText, formatKeybindingShortcut, formatTutorialTime, formatVirtualFileSystemTime, getElementById, getTreeItemOrderedIds, getTreeNextSelectionState, getTreeSiblingGapPx, getVirtualFileSystemNextSelectionState, GhostProvider, GhostRegionShell, HistoryTable, humanizeControlId, humanizeControlSegment, Icon, Input, interactionMergeFromModifiers, interpolateTutorialCamera, isInternalChromeControlId, isPanelTabInSubtree, isTreeReorderDragEvent, Label, LevelProvider, loadingBorderActiveClass, loadingBorderClass, loadingBorderStateClass, markGhostTreeInteraction, measureWindowSilhouetteMetrics, Mode, modeDockTabClassName, moveTabInDock, moveTreeUnitInDock, Navbar, NavbarExampleSelect, navbarFillItem, normalizeTreeSelectedIds, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockContext, panelKindFromPanelToggleControlId, PanelRightIcon, panelTabButtonDividerClass, parseUiDriver, PresenceBar, presenceColor, presenceCssVar, pruneEmptyPanelBranches, React, readStoredUiChromeLayout, reconcileActivePath, renderToStaticMarkup, resetElementsSurfaceChromeForTests, resolveCollapsedFieldDisplayState, resolveControlLabelId, resolveSceneGizmoSnapTarget, resolveSceneGizmoViewportPlacement, resolveTranslationLabel, resolveTreeDropPosition, resolveUiDriver, resolveVirtualFileSystemSchemaIcon, resolveWindowSilhouetteBorderKind, Ribbon, RibbonItem, RibbonZone, Ring, SCENE_GIZMO_LABELS, Search, SearchIcon, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, serializeUiDriver, shellChromeBorderClass, shellChromeFrameLayerClass, shouldBeginAutomaticGhostInteraction, shouldDispatchTreeRowPointerLeave, singleTreeLeaf, Slider, Stepper, syncTreeSelectionPath, Table, Textarea, THREE, Toggle, ToggleGroup, Tree, TreeAlignedRow, TreeCheckbox, treeCompactSiblingGapPx, TreeContent, TreeContext, treeFoldChevronIcon, TreeItem, treeItemSecondaryTextClassName, TreeRow, TreeRowAlignmentContext, treeRowChromeClasses, treeRowChromeContentFillClasses, treeRowChromeShellClasses, TreeSection, TreeStateProvider, TutorialBar, tutorialCameraAt, tutorialCuesBetween, tutorialSlice, UI_CHROME_LAYOUT_STORAGE_KEY, uiDataLabel, UiDriverProvider, uiI18n, UIIntroduction, UiKeybindingsProvider, useCanvasAppearanceSync, validateTutorial, VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS, VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA, VirtualFileSystem, waitingBorderActiveClass, waitingBorderClass, waitingBorderStateClass, Window, WINDOW_PANE_MEASURES_ICON, WindowMeasuresTree, windowMeasureToggleClass, windowMeasureToggleCompactClass, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowPaneChromeToggle, windowSilhouettePath, writeStoredUiChromeLayout } = dependencies;
+  const { describe, expect, it, vi } = vitest;
+  
+    describe("tree helpers", () => {
+      it("resolves tree drop positions from pointer location", () => {
+        const event = {
+          clientY: 10,
+          currentTarget: { getBoundingClientRect: () => ({ top: 0, height: 100 }) },
+        } as unknown as React.DragEvent<HTMLElement>;
+        expect(resolveTreeDropPosition(event)).toBe("before");
+      });
+  
+      it("detects internal tree reorder drags without palette mime", () => {
+        const reorder = { dataTransfer: { types: ["application/vnd.code.tree.item"] } } as unknown as React.DragEvent;
+        const palette = { dataTransfer: { types: ["application/vnd.code.tree.item", "application/x-semio-forms-question"] } } as unknown as React.DragEvent;
+        expect(isTreeReorderDragEvent(reorder)).toBe(true);
+        expect(isTreeReorderDragEvent(palette)).toBe(false);
+      });
+  
+      it("builds catalogue drag payloads", () => {
+        const controller = catalogueTreeDragController("application/x-test");
+        const payload = controller.pointerPaletteDrag?.readEncodedDragPayload({ "application/x-test": '{"kind":"text"}' });
+        expect(payload).toBe('{"kind":"text"}');
+      });
+  
+      it("uses a single compact sibling gap for every row-kind transition", () => {
+        expect(getTreeSiblingGapPx("leaf", "group")).toBe(treeCompactSiblingGapPx);
+        expect(getTreeSiblingGapPx("property", "group")).toBe(treeCompactSiblingGapPx);
+        expect(getTreeSiblingGapPx("property", "property")).toBe(treeCompactSiblingGapPx);
+        expect(getTreeSiblingGapPx("group", "group")).toBe(treeCompactSiblingGapPx);
+        expect(getTreeSiblingGapPx("content", "group")).toBe(treeCompactSiblingGapPx);
+      });
+  
+      it("treeFoldChevronIcon mirrors the closed-state chevron for rtl and keeps the open-state chevron on the block axis", () => {
+        expect(treeFoldChevronIcon("down", "ltr", false)).toBe(ChevronRightIcon);
+        expect(treeFoldChevronIcon("down", "rtl", false)).toBe(ChevronLeftIcon);
+        expect(treeFoldChevronIcon("up", "ltr", false)).toBe(ChevronLeftIcon);
+        expect(treeFoldChevronIcon("up", "rtl", false)).toBe(ChevronRightIcon);
+        expect(treeFoldChevronIcon("down", "ltr", true)).toBe(ChevronDownIcon);
+        expect(treeFoldChevronIcon("down", "rtl", true)).toBe(ChevronDownIcon);
+        expect(treeFoldChevronIcon("up", "ltr", true)).toBe(ChevronUpIcon);
+        expect(treeFoldChevronIcon("up", "rtl", true)).toBe(ChevronUpIcon);
+      });
+  
+      it("flowChevronIconName mirrors a fold affordance's chevron for rtl", () => {
+        expect(flowChevronIconName("ltr", true)).toBe("chevron-left");
+        expect(flowChevronIconName("ltr", false)).toBe("chevron-right");
+        expect(flowChevronIconName("rtl", true)).toBe("chevron-right");
+        expect(flowChevronIconName("rtl", false)).toBe("chevron-left");
+      });
+  
+      it("normalizes selected ids for single and multiple selection", () => {
+        expect(normalizeTreeSelectedIds(["a", "a", "b"], "single")).toEqual(["a"]);
+        expect(normalizeTreeSelectedIds(["a", "a", "b"], "multiple")).toEqual(["a", "b"]);
+      });
+  
+      it("formats keybinding shortcuts for display", () => {
+        expect(formatKeybindingShortcut("mod+p")).toMatch(/p/i);
+        expect(formatKeybindingShortcut("escape")).toBeTruthy();
+      });
+  
+      it("formats control tooltip text with optional hotkeys", () => {
+        expect(formatControlTooltipText({ label: "Find" })).toBe("Find");
+        expect(formatControlTooltipText({ label: "Find", hotkey: "⌘P" })).toBe("Find (⌘P)");
+      });
+  
+      it("tree highlight store notifies subscribers only when highlighted ids change", () => {
+        const store = createTreeHighlightStore();
+        let calls = 0;
+        const unsub = store.subscribe(() => {
+          calls++;
+        });
+        store.setHighlightedIds(["a"]);
+        expect(calls).toBe(1);
+        expect(store.isHighlighted("a")).toBe(true);
+        store.setHighlightedIds(["a"]);
+        expect(calls).toBe(1);
+        store.setHighlightedIds([]);
+        expect(calls).toBe(2);
+        expect(store.isHighlighted("a")).toBe(false);
+        unsub();
+      });
+  
+      it("shouldDispatchTreeRowPointerLeave skips leave when moving between tree rows", () => {
+        document.body.innerHTML = `
+          <div data-slot="tree-item-row" id="row-a"></div>
+          <div data-slot="tree-item-row" id="row-b"></div>
+        `;
+        const rowA = document.getElementById("row-a")!;
+        const rowB = document.getElementById("row-b")!;
+        expect(shouldDispatchTreeRowPointerLeave(rowB)).toBe(false);
+        expect(shouldDispatchTreeRowPointerLeave(rowA)).toBe(false);
+        expect(shouldDispatchTreeRowPointerLeave(null)).toBe(true);
+        expect(shouldDispatchTreeRowPointerLeave(document.body)).toBe(true);
+      });
+  
+      it("shouldDispatchTreeRowPointerLeave skips leave when moving into nested tree branch content", () => {
+        document.body.innerHTML = `
+          <div data-slot="tree-item-row" id="row-a"></div>
+          <div data-slot="tree-item-content" id="branch-a"><span id="gap"></span></div>
+        `;
+        const branch = document.getElementById("branch-a")!;
+        const gap = document.getElementById("gap")!;
+        expect(shouldDispatchTreeRowPointerLeave(branch)).toBe(false);
+        expect(shouldDispatchTreeRowPointerLeave(gap)).toBe(false);
+      });
+  
+      it("syncTreeSelectionPath marks ancestor section rows for selected tree items", () => {
+        document.body.innerHTML = `
+          <div id="tree-root">
+            <div data-slot="tree-section-row" id="section-a"></div>
+            <div data-slot="collapsible-content">
+              <div data-slot="tree-section-content">
+                <div data-slot="tree-item-row" id="item-a"></div>
+              </div>
+            </div>
+          </div>
+        `;
+        const root = document.getElementById("tree-root")!;
+        syncTreeSelectionPath(root, ["item-a"]);
+        expect(document.getElementById("item-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+        expect(document.getElementById("section-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+        syncTreeSelectionPath(root, []);
+        expect(document.getElementById("item-a")?.hasAttribute("data-tree-selection-path")).toBe(false);
+        expect(document.getElementById("section-a")?.hasAttribute("data-tree-selection-path")).toBe(false);
+      });
+  
+      it("syncTreeSelectionPath marks ancestor rows when the branch renders above the parent (direction=up)", () => {
+        document.body.innerHTML = `
+          <div id="tree-root">
+            <div data-slot="collapsible-content">
+              <div data-slot="tree-section-content" id="section-branch">
+                <div data-slot="tree-item-content" id="group-branch">
+                  <div data-slot="tree-item-row" id="item-a"></div>
+                </div>
+                <div data-slot="tree-item-row" id="group-a"></div>
+              </div>
+            </div>
+            <div data-slot="tree-section-row" id="section-a"></div>
+          </div>
+        `;
+        const root = document.getElementById("tree-root")!;
+        syncTreeSelectionPath(root, ["item-a"]);
+        expect(document.getElementById("item-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+        expect(document.getElementById("group-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+        expect(document.getElementById("group-branch")?.getAttribute("data-tree-selection-path")).toBe("branch");
+        expect(document.getElementById("section-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+        expect(document.getElementById("section-branch")?.getAttribute("data-tree-selection-path")).toBe("branch");
+      });
+  
+      it("syncTreeSelectionPath marks property-layout parent rows when nested content is a sibling branch", () => {
+        document.body.innerHTML = `
+          <div id="tree-root">
+            <div data-slot="tree-property-item" id="object-a"></div>
+            <div data-slot="tree-property-content" id="object-branch">
+              <div data-slot="tree-property-item" id="vortex-a"></div>
+              <div data-slot="tree-property-item" id="vortex-b"></div>
+            </div>
+          </div>
+        `;
+        const root = document.getElementById("tree-root")!;
+        syncTreeSelectionPath(root, ["vortex-a"]);
+        expect(document.getElementById("vortex-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+        expect(document.getElementById("object-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+        expect(document.getElementById("object-branch")?.getAttribute("data-tree-selection-path")).toBe("branch");
+        expect(document.getElementById("vortex-b")?.hasAttribute("data-tree-selection-path")).toBe(false);
+      });
+  
+      it("markGhostTreeInteraction keeps only the active tree ancestry and guides visible", () => {
+        document.body.innerHTML = `
+          <div data-ghost-region id="region">
+            <div data-slot="tree-section-row" data-dim id="section-a">
+              <div data-slot="tree-gutter" data-dim id="section-gutter"></div>
+            </div>
+            <div data-slot="collapsible-content">
+              <div data-slot="tree-section-content" id="section-branch">
+                <div data-slot="tree-guide" data-dim id="section-guide"></div>
+                <div data-slot="tree-item-row" data-dim id="item-a">
+                  <div data-slot="tree-gutter" data-dim id="item-gutter"></div>
+                  <span id="item-target"></span>
+                </div>
+                <div data-slot="tree-item-row" data-dim id="item-b"></div>
+              </div>
+            </div>
+          </div>
+        `;
+        const region = document.getElementById("region")!;
+        const target = document.getElementById("item-target")!;
+        const marked = markGhostTreeInteraction(target, region);
+  
+        expect(document.getElementById("item-a")?.hasAttribute("data-active-interaction")).toBe(true);
+        expect(document.getElementById("section-a")?.hasAttribute("data-active-ancestor")).toBe(true);
+        expect(document.getElementById("item-gutter")?.hasAttribute("data-active-ancestor")).toBe(true);
+        expect(document.getElementById("section-gutter")?.hasAttribute("data-active-ancestor")).toBe(true);
+        expect(document.getElementById("section-guide")?.hasAttribute("data-active-ancestor")).toBe(true);
+        expect(document.getElementById("item-b")?.hasAttribute("data-active-ancestor")).toBe(false);
+        expect(marked.length).toBe(6);
+      });
+  
+      it("markGhostTreeInteraction leaves non-tree controls hidden", () => {
+        document.body.innerHTML = `<div data-ghost-region id="region"><button data-dim id="command">Command</button></div>`;
+        const region = document.getElementById("region")!;
+        const command = document.getElementById("command")!;
+  
+        expect(markGhostTreeInteraction(command, region)).toEqual([]);
+        expect(command.hasAttribute("data-active-interaction")).toBe(false);
+      });
+  
+      it("automatic ghosting ignores nested controls while preserving canvas and direct tree-row drags", () => {
+        document.body.innerHTML = `
+          <div data-ghost-region id="region">
+            <div id="canvas"></div>
+            <div data-slot="control-tree-row" data-dim id="row">
+              <span id="row-label">Size</span>
+              <div data-slot="slider-content" data-dim>
+                <div data-slot="slider" id="slider"></div>
+              </div>
+            </div>
+            <div data-slot="window-measures-stack" data-dim>
+              <button id="window-option">Option</button>
+            </div>
+            <div data-slot="panel-resize-handle" id="panel-resize"></div>
+            <div data-slot="pane-resize-handle" id="pane-resize"></div>
+            <div data-slot="resizable-handle" id="mode-resize"></div>
+            <div data-slot="resizable-corner" id="mode-corner-resize"></div>
+            <div data-slot="window-measures-resize-left" id="measures-resize"></div>
+          </div>
+        `;
+  
+        expect(shouldBeginAutomaticGhostInteraction(document.getElementById("canvas"))).toBe(true);
+        expect(shouldBeginAutomaticGhostInteraction(document.getElementById("row-label"))).toBe(true);
+        expect(shouldBeginAutomaticGhostInteraction(document.getElementById("slider"))).toBe(false);
+        expect(shouldBeginAutomaticGhostInteraction(document.getElementById("window-option"))).toBe(false);
+        expect(shouldBeginAutomaticGhostInteraction(document.getElementById("panel-resize"))).toBe(false);
+        expect(shouldBeginAutomaticGhostInteraction(document.getElementById("pane-resize"))).toBe(false);
+        expect(shouldBeginAutomaticGhostInteraction(document.getElementById("mode-resize"))).toBe(false);
+        expect(shouldBeginAutomaticGhostInteraction(document.getElementById("mode-corner-resize"))).toBe(false);
+        expect(shouldBeginAutomaticGhostInteraction(document.getElementById("measures-resize"))).toBe(false);
+      });
+  
+      it("GhostProvider keeps panel chrome visible while a panel resize handle is dragged", async () => {
+        const { fireEvent, render } = await import("@testing-library/react");
+        const StubIcon = (): null => null;
+        const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+        const onSizeChange = vi.fn();
+        const { container } = render(
+          <GhostProvider>
+            <Panel anchor="top-left" visible tabs={tabs} size={300} minSize={100} maxSize={1000} onSizeChange={onSizeChange} />
+          </GhostProvider>,
+        );
+        const panel = container.querySelector('[data-slot="panel"]') as HTMLElement;
+        const handle = container.querySelector('[data-slot="panel-resize-handle"]') as HTMLElement;
+        expect(handle).toBeTruthy();
+        expect(panel.querySelectorAll("[data-dim]").length).toBeGreaterThan(0);
+  
+        fireEvent.pointerDown(handle, { button: 0, clientX: 100, clientY: 10 });
+        fireEvent.pointerMove(document, { clientX: 160, clientY: 10 });
+        fireEvent.pointerMove(handle, { clientX: 160, clientY: 10 });
+  
+        expect(panel.hasAttribute("data-ghost")).toBe(false);
+        expect(onSizeChange).toHaveBeenCalled();
+        expect(panel.querySelectorAll("[data-dim]").length).toBeGreaterThan(0);
+        fireEvent.pointerUp(document);
+      });
+  
+      it("GhostProvider keeps pane chrome visible while a pane resize handle is dragged", async () => {
+        const { fireEvent, render } = await import("@testing-library/react");
+        const onSizeChange = vi.fn();
+        const { container } = render(
+          <GhostProvider>
+            <GhostRegionShell>
+              <PaneHost>
+                <Pane id="resize-pane" anchor="top-left" icon="box" label={uiDataLabel("Resize")} resizable size={300} onSizeChange={onSizeChange} minSize={200} maxSize={600} folded={false}>
+                  <div>Content</div>
+                </Pane>
+              </PaneHost>
+            </GhostRegionShell>
+          </GhostProvider>,
+        );
+        const region = container.querySelector("[data-ghost-region]") as HTMLElement;
+        const handle = container.querySelector('[data-slot="pane-resize-handle"]') as HTMLElement;
+        expect(handle).toBeTruthy();
+        expect(container.querySelector('[data-slot="pane"] [data-dim]')).toBeTruthy();
+  
+        fireEvent.pointerDown(handle, { button: 0, pointerId: 3, clientX: 100, clientY: 0 });
+        fireEvent.pointerMove(document, { clientX: 160, clientY: 0 });
+        fireEvent.pointerMove(handle, { pointerId: 3, clientX: 160, clientY: 0 });
+  
+        expect(region.hasAttribute("data-ghost")).toBe(false);
+        expect(container.querySelector('[data-slot="pane"] [data-dim]')).toBeTruthy();
+        expect(onSizeChange).toHaveBeenCalledWith(360);
+        fireEvent.pointerUp(document);
+      });
+  
+      it("GhostProvider keeps sibling window UI visible while a nested slider moves", async () => {
+        const { fireEvent, render } = await import("@testing-library/react");
+        render(
+          <GhostProvider>
+            <GhostRegionShell>
+              <div data-dim id="window-ui">
+                Window UI
+              </div>
+              <div data-slot="control-tree-row" data-dim>
+                <div data-slot="slider-content" data-dim>
+                  <div data-slot="slider" id="nested-slider"></div>
+                </div>
+              </div>
+            </GhostRegionShell>
+          </GhostProvider>,
+        );
+        const slider = document.getElementById("nested-slider")!;
+        const region = slider.closest("[data-ghost-region]")!;
+  
+        fireEvent.pointerDown(slider, { button: 0, clientX: 10, clientY: 10 });
+        fireEvent.pointerMove(document, { clientX: 20, clientY: 10 });
+  
+        expect(region.hasAttribute("data-ghost")).toBe(false);
+        expect(document.getElementById("window-ui")).not.toBeNull();
+        fireEvent.pointerUp(document);
+      });
+  
+      it("GhostProvider dims navbar/footer PanelChromeTabBar toggles and open panels including borders on interaction", async () => {
+        const { fireEvent, render } = await import("@testing-library/react");
+        const StubIcon = (): null => null;
+        const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+        const { container } = render(
+          <GhostProvider>
+            <PanelChromeTabBar anchor="top-left" tabs={tabs} visible={false} />
+            <PanelChromeTabBar anchor="bottom-middle" tabs={tabs} visible />
+            <Panel anchor="bottom-middle" tabBarHost="chrome" visible tabs={tabs} size={300} minSize={100} maxSize={1000} />
+            <GhostRegionShell>
+              <div id="canvas" />
+            </GhostRegionShell>
+          </GhostProvider>,
+        );
+        const foldedChromeBar = container.querySelector('[data-slot="panel-chrome-tab-bar"][data-anchor="top-left"]') as HTMLElement;
+        const openChromeBar = container.querySelector('[data-slot="panel-chrome-tab-bar"][data-anchor="bottom-middle"]');
+        const panel = container.querySelector('[data-slot="panel"]') as HTMLElement;
+        const canvas = container.querySelector("#canvas") as HTMLElement;
+        expect(foldedChromeBar).toBeTruthy();
+        expect(openChromeBar).toBeTruthy();
+        expect(openChromeBar?.getAttribute("data-panel-chrome-tab-bar-placeholder")).toBe("true");
+        expect(panel).toBeTruthy();
+        expect(panel.querySelector('[data-slot="panel-content"]')?.hasAttribute("data-dim")).toBe(true);
+        expect(panel.querySelector('[data-slot="window-chrome-cap"]')?.hasAttribute("data-dim")).toBe(true);
+        expect(panel.querySelector("[data-window-silhouette-border]")?.hasAttribute("data-dim")).toBe(true);
+  
+        fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
+        fireEvent.pointerMove(document, { clientX: 40, clientY: 10 });
+  
+        expect(panel.getAttribute("data-ghost")).toBe("true");
+        expect(foldedChromeBar.hasAttribute("data-ghost")).toBe(false);
+        expect(foldedChromeBar.querySelector('[data-slot="panel-tabs"]')?.hasAttribute("data-dim")).toBe(true);
+        fireEvent.pointerUp(document);
+      });
+  
+      it("GhostProvider dims open and folded pane toggles, borders, chrome, and body on interaction", async () => {
+        const { fireEvent, render } = await import("@testing-library/react");
+        const { container } = render(
+          <GhostProvider>
+            <GhostRegionShell>
+              <div id="canvas" />
+              <PaneHost>
+                <Pane id="open-pane" anchor="top-left" icon="box" label={uiDataLabel("Open")} folded={false}>
+                  <div>Open body</div>
+                </Pane>
+                <Pane id="folded-pane" anchor="top-right" icon="box" label={uiDataLabel("Folded")} folded />
+              </PaneHost>
+            </GhostRegionShell>
+          </GhostProvider>,
+        );
+        const panes = container.querySelectorAll('[data-slot="pane"]');
+        expect(panes.length).toBe(2);
+        const open = Array.from(panes).find((pane) => pane.querySelector('[data-slot="pane-body"]')) as HTMLElement;
+        const folded = Array.from(panes).find((pane) => !pane.querySelector('[data-slot="pane-body"]')) as HTMLElement;
+        expect(open.querySelector('[data-slot="window-chrome-cap"]')?.hasAttribute("data-dim")).toBe(true);
+        expect(open.querySelector('[data-slot="pane-body"]')?.hasAttribute("data-dim")).toBe(true);
+        expect(folded.querySelector('[data-slot="window-chrome-chip-cap"]')?.hasAttribute("data-dim")).toBe(true);
+  
+        const canvas = container.querySelector("#canvas") as HTMLElement;
+        fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
+        fireEvent.pointerMove(document, { clientX: 40, clientY: 10 });
+        expect(open.closest("[data-ghost-region]")?.getAttribute("data-ghost")).toBe("true");
+        expect(folded.querySelector('[data-slot="window-pane-chrome-toggle"]')).toBeTruthy();
+        fireEvent.pointerUp(document);
+      });
+  
+      it("treeRowChromeClasses uses hover tokens for highlight and active tokens for selection", () => {
+        expect(treeRowChromeClasses(false, false)).toContain("text-element");
+        expect(treeRowChromeClasses(false, true)).toContain("bg-hover-interactive-fill");
+        expect(treeRowChromeClasses(false, true)).toContain("text-emphasized");
+        expect(treeRowChromeClasses(true, true)).toContain("bg-active-base");
+        expect(treeRowChromeClasses(true, false)).toContain("bg-active-base");
+        expect(treeRowChromeClasses(true, false)).toContain("text-emphasized");
+        expect(treeRowChromeClasses(true, false)).not.toContain("bg-hover-interactive-fill");
+        expect(treeRowChromeClasses(false, false, true)).toContain("opacity-50");
+        expect(treeRowChromeClasses(true, false, true)).toContain("opacity-50");
+      });
+  
+      it("loadingBorderStateClass returns the active ring only when both loading and active are true", () => {
+        expect(loadingBorderStateClass(false)).toBe("");
+        expect(loadingBorderStateClass(false, true)).toBe("");
+        expect(loadingBorderStateClass(true, false)).toBe(loadingBorderClass);
+        expect(loadingBorderStateClass(true, true)).toBe(loadingBorderActiveClass);
+      });
+  
+      it("waitingBorderStateClass returns the active ring only when both waiting and active are true", () => {
+        expect(waitingBorderStateClass(false)).toBe("");
+        expect(waitingBorderStateClass(false, true)).toBe("");
+        expect(waitingBorderStateClass(true, false)).toBe(waitingBorderClass);
+        expect(waitingBorderStateClass(true, true)).toBe(waitingBorderActiveClass);
+      });
+  
+      it("treeRowChromeContentFillClasses adds the loading ring in the row's own color", () => {
+        expect(treeRowChromeContentFillClasses(true, false, true)).toContain("border-loading-active");
+        expect(treeRowChromeContentFillClasses(false, false, true)).toContain("border-loading");
+        expect(treeRowChromeContentFillClasses(false, false, true)).not.toContain("border-loading-active");
+        expect(treeRowChromeContentFillClasses(false, false, false)).not.toContain("border-loading");
+      });
+  
+      it("treeRowChromeContentFillClasses adds the waiting ring in the row's own color", () => {
+        expect(treeRowChromeContentFillClasses(true, false, false, true)).toContain("border-waiting-active");
+        expect(treeRowChromeContentFillClasses(false, false, false, true)).toContain("border-waiting");
+        expect(treeRowChromeContentFillClasses(false, false, false, true)).not.toContain("border-waiting-active");
+        expect(treeRowChromeContentFillClasses(false, false, false, false)).not.toContain("border-waiting");
+      });
+  
+      it("treeRowChromeContentFillClasses prefers the loading ring over waiting when both are set", () => {
+        expect(treeRowChromeContentFillClasses(false, false, true, true)).toContain("border-loading");
+        expect(treeRowChromeContentFillClasses(false, false, true, true)).not.toContain("border-waiting");
+      });
+  
+      it("scopes tree hover chrome to the row that owns the content", () => {
+        expect(treeRowChromeShellClasses(false, false).split(" ")).toContain("group/tree-row");
+        expect(treeRowChromeShellClasses(false, false).split(" ")).not.toContain("group");
+        expect(treeRowChromeContentFillClasses(false, false)).toContain("group-hover/tree-row:");
+      });
+  
+      it("applies tree row fill on tree-row-content so gutter guides stay visible", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeSection id="tooltip.manual" label="Section" defaultOpen>
+              <TreeItem id="tooltip.group" label="Group" defaultOpen>
+                <TreeItem id="tooltip.first" label="First" />
+                <TreeItem id="tooltip.second" label="Second" isSelected />
+              </TreeItem>
+            </TreeSection>
+          </TreeContext.Provider>,
+        );
+        expect(markup.match(/data-tree-guide-line/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+        expect(markup).toContain('data-slot="tree-row-content"');
+        expect(markup).toMatch(/data-slot="tree-row-content"[^>]*bg-active-base/);
+        expect(markup).not.toMatch(/data-slot="tree-item-row"[^>]*bg-active-base/);
+      });
+  
+      it("renders selected tree item rows with emphasized text instead of hover gray", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeItem id="tooltip.alpha" label="Alpha" isSelected />
+          </TreeContext.Provider>,
+        );
+        expect(markup).toContain("bg-active-base");
+        expect(markup).toContain("text-emphasized");
+        expect(markup).not.toContain("text-active-foreground");
+        expect(markup).not.toMatch(/data-slot="tree-label"[^>]*text-element/);
+      });
+  
+      it("tree selection store notifies subscribers only when selection changes", () => {
+        const store = createTreeSelectionStore();
+        let calls = 0;
+        const unsub = store.subscribe(() => {
+          calls++;
+        });
+        store.setSelectedIds(["a"]);
+        expect(calls).toBe(1);
+        expect(store.isSelected("a")).toBe(true);
+        store.setSelectedIds(["a"]);
+        expect(calls).toBe(1);
+        store.setSelectedIds([]);
+        expect(calls).toBe(2);
+        expect(store.isSelected("a")).toBe(false);
+        unsub();
+      });
+  
+      it("computes additive and range multi selection", () => {
+        expect(
+          getTreeNextSelectionState({
+            selectionMode: "multiple",
+            selectedIds: ["a"],
+            orderedIds: ["a", "b", "c", "d"],
+            targetId: "c",
+            anchorId: "a",
+            additiveKey: false,
+            rangeKey: true,
+          }),
+        ).toEqual({ selectedIds: ["a", "b", "c"], anchorId: "a" });
+  
+        expect(
+          getTreeNextSelectionState({
+            selectionMode: "multiple",
+            selectedIds: ["a"],
+            orderedIds: ["a", "b", "c", "d"],
+            targetId: "c",
+            anchorId: "a",
+            additiveKey: true,
+            rangeKey: false,
+          }),
+        ).toEqual({ selectedIds: ["a", "c"], anchorId: "c" });
+      });
+  
+      // 🕹️wave-2b: `getTreeNextSelectionState`/`normalizeTreeSelectedIds` now delegate to `🕹️interaction`'s
+      // `nextSelection`/`validateState` (wave 0) — these extend the same two `it` blocks above rather than
+      // adding new files, asserting the delegation preserves exact prior behavior for single mode (LAST
+      // target wins, ignores modifiers), additive toggle-off, and `normalizeTreeSelectedIds`'s FIRST-id
+      // clamp for externally-supplied ids (the two deliberately different clamps — see the functions' docs).
+      it("single-selection-mode picks ignore additive/range keys, keeping the LAST target (nextSelection delegation)", () => {
+        expect(
+          getTreeNextSelectionState({
+            selectionMode: "single",
+            selectedIds: ["a"],
+            orderedIds: ["a", "b", "c", "d"],
+            targetId: "c",
+            anchorId: "a",
+            additiveKey: true,
+            rangeKey: true,
+          }),
+        ).toEqual({ selectedIds: ["c"], anchorId: "c" });
+      });
+  
+      it("additive key toggles an already-selected id back off (nextSelection invertive delegation)", () => {
+        expect(
+          getTreeNextSelectionState({
+            selectionMode: "multiple",
+            selectedIds: ["a", "c"],
+            orderedIds: ["a", "b", "c", "d"],
+            targetId: "c",
+            anchorId: "c",
+            additiveKey: true,
+            rangeKey: false,
+          }),
+        ).toEqual({ selectedIds: ["a"], anchorId: "c" });
+      });
+  
+      it("normalizeTreeSelectedIds clamps to the FIRST id in single mode (validateState delegation, distinct from the picks above's LAST-target clamp)", () => {
+        expect(normalizeTreeSelectedIds(["c", "a", "c", "", "b"], "single")).toEqual(["c"]);
+        expect(normalizeTreeSelectedIds(["c", "a", "c", "", "b"], "multiple")).toEqual(["c", "a", "b"]);
+      });
+  
+      it("interactionMergeFromModifiers: shift wins Range even with ctrl/meta also held; alt is Subtractive; no modifier is Replace", () => {
+        expect(interactionMergeFromModifiers({})).toBe("replace");
+        expect(interactionMergeFromModifiers({ shiftKey: true })).toBe("range");
+        expect(interactionMergeFromModifiers({ ctrlKey: true })).toBe("invertive");
+        expect(interactionMergeFromModifiers({ metaKey: true })).toBe("invertive");
+        expect(interactionMergeFromModifiers({ altKey: true })).toBe("subtractive");
+        expect(interactionMergeFromModifiers({ shiftKey: true, ctrlKey: true })).toBe("range");
+        expect(interactionMergeFromModifiers({ ctrlKey: true, altKey: true })).toBe("invertive");
+      });
+  
+      it("orders nested tree items across sections", () => {
+        const sections: TreeDataSection[] = [
+          {
+            id: "section-a",
+            label: "Section A",
+            items: [
+              { id: "item-a", label: "Item A", items: [{ id: "item-a-1", label: "Item A1" }] },
+              { id: "item-b", label: "Item B" },
+            ],
+          },
+          {
+            id: "section-b",
+            label: "Section B",
+            items: [{ id: "item-c", label: "Item C" }],
+          },
+        ];
+  
+        expect(getTreeItemOrderedIds(sections, {}, {})).toEqual(["item-a", "item-a-1", "item-b", "item-c"]);
+      });
+  
+      it("does not render an extra placeholder gap for tree property labels", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 1, isLastAtLevel: [true], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <Label id="tooltip.manual">
+              <span>Control</span>
+            </Label>
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup).toContain('data-slot="property-label-tree"');
+        expect(markup).toContain('data-slot="tree-row-layout"');
+        expect(markup).toContain('data-slot="tree-gutter"');
+        expect(markup).toContain("grid-template-columns:calc(");
+        expect(markup).toContain("minmax(0, 1fr)");
+        expect(markup).toContain('data-slot="property-label-tree" class="min-w-0"');
+        expect(markup).toContain('data-slot="property-row"');
+        expect(markup).toContain("margin-inline-start:calc(-1 *");
+        expect(markup).toContain("var(--layout-label)");
+        expect(markup).toContain('data-slot="property-control"');
+        expect(markup).toContain("justify-end");
+        expect(markup).toContain("self-start");
+        expect(markup).toContain("data-detail-panel-control");
+        expect(markup).toContain("var(--spacing-double)");
+        expect(markup).not.toContain("margin-left:13px");
+        expect(markup).toContain('data-slot="tree-branch-elbow"');
+        expect(markup).toContain("calc(var(--size-workbench) / 2)");
+        expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
+      });
+  
+      it("renders explicit property labels on the shared property-row wrapper", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 1, isLastAtLevel: [true], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <Label id="tooltip.manual" rowId="custom-row" label="piece">
+              <span>Control</span>
+            </Label>
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup).toContain('id="custom-row"');
+        expect(markup).toContain('data-slot="property-control"');
+        expect(markup).toContain('data-slot="tree-row-layout"');
+        expect(markup).toContain('data-slot="property-control"');
+        expect(markup).toContain("justify-end");
+        expect(markup).toContain("self-start");
+        expect(markup).toContain("data-detail-panel-control");
+        expect(markup).toContain(">piece<");
+      });
+  
+      it("anchors TreeRow property-control children to the fixed header line", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 1, isLastAtLevel: [true], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeRow>
+              <Textarea id="tooltip.manual" value="Long value" showLabel />
+            </TreeRow>
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup).toContain('data-slot="tree-row"');
+        expect(markup).toContain('data-tree-row-kind="property"');
+        expect(markup).toContain('data-slot="property-row"');
+        expect(markup).toContain("calc(var(--size-workbench) / 2)");
+        expect(markup).not.toContain('style="top:50%;left:7px;width:10px"');
+      });
+  
+      it("marks unlabeled non-property TreeRow wrappers as content rows", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 1, isLastAtLevel: [true], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeRow>
+              <span>Note</span>
+            </TreeRow>
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup).toContain('data-slot="tree-row"');
+        expect(markup).toContain('data-tree-row-kind="content"');
+      });
+  
+      it("renders Tree data rows with inline controls in the same row as the label", () => {
+        const markup = renderToStaticMarkup(
+          <TreeStateProvider>
+            <Tree
+              sections={[
+                {
+                  id: "inspector.objects",
+                  label: "Objects (1)",
+                  defaultOpen: true,
+                  items: [
+                    {
+                      id: "inspector.object.id",
+                      label: "Id",
+                      control: <input id="inspector.object.id.input" value="seed-left-001" readOnly />,
+                    },
+                  ],
+                },
+              ]}
+            />
+          </TreeStateProvider>,
+        );
+  
+        expect(markup).toContain('data-slot="tree-item-control"');
+        expect(markup).not.toContain('data-slot="tree-property-content"');
+        expect(markup).toContain('id="inspector.object.id.input"');
+        expect(markup).toContain("seed-left-001");
+      });
+  
+      it("gives tree property sliders enough width for the track, not just the thumb", () => {
+        const markup = renderToStaticMarkup(
+          <TreeStateProvider>
+            <Tree
+              sections={[
+                {
+                  id: "tool.fill.options",
+                  label: "",
+                  defaultOpen: true,
+                  items: [{ id: "puzzle3d-fill-count", label: "Count", control: <Slider id="puzzle3d-fill-count" value={[3]} min={0} max={100} /> }],
+                },
+              ]}
+            />
+          </TreeStateProvider>,
+        );
+  
+        expect(markup).toContain('data-slot="tree-item-control"');
+        expect(markup).toContain('data-slot="slider-track"');
+        expect(markup).toContain("grid-template-columns:minmax(0, 1fr) calc(50 * var(--ui-spacing))");
+      });
+  
+      it("keeps leaf inspector controls visible without manual expand", () => {
+        const markup = renderToStaticMarkup(
+          <TreeStateProvider>
+            <Tree
+              sections={[
+                {
+                  id: "procedural-play-inspector.widget",
+                  label: "Widget",
+                  defaultOpen: true,
+                  items: [
+                    {
+                      id: "procedural-play-inspector.value",
+                      label: "Value",
+                      control: <input id="procedural-play-inspector.value.input" defaultValue="2.2" readOnly />,
+                    },
+                  ],
+                },
+              ]}
+            />
+          </TreeStateProvider>,
+        );
+        expect(markup).toContain('id="procedural-play-inspector.value.input"');
+        expect(markup).toContain("2.2");
+      });
+  
+      it("renders property-layout tree items with a dedicated control column", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeItem id="tooltip.manual" layoutKind="property" defaultOpen={true}>
+              <Label id="tooltip.manual">
+                <span>Control</span>
+              </Label>
+            </TreeItem>
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup).toContain('data-slot="tree-property-item"');
+        expect(markup).toContain('data-slot="tree-row-content"');
+        expect(markup).toContain('data-slot="tree-item-control"');
+        expect(markup).toContain('data-slot="tree-row-layout"');
+        expect(markup).toContain('data-slot="tree-gutter"');
+        expect(markup).toContain("grid-template-columns:calc(");
+        expect(markup).toContain("var(--spacing-double)");
+        expect(markup).toContain('data-slot="tree-property-content"');
+        expect(markup).not.toContain('data-slot="tree-header-actions"');
+        expect(markup).toContain('data-slot="property-row"');
+        expect(markup.indexOf('data-slot="tree-property-item"')).toBeLessThan(markup.indexOf('data-slot="tree-property-content"'));
+        expect(markup).toMatch(/data-slot="tree-property-item"[\s\S]*?<\/div><div[^>]*data-slot="tree-property-content"/);
+      });
+  
+      it("keeps nested property-layout children outside the parent hover group so sibling rows do not share group-hover fill", () => {
+        const markup = renderToStaticMarkup(
+          <TreeStateProvider>
+            <Tree
+              sections={[
+                {
+                  id: "tool.fill.options",
+                  label: "",
+                  defaultOpen: true,
+                  items: [
+                    {
+                      id: "puzzle3d-fill-object-capsule",
+                      label: "Capsule",
+                      defaultOpen: true,
+                      control: <Slider id="puzzle3d-fill-object-capsule-slider" value={[0.5]} min={0} max={1} step={0.01} />,
+                      items: [
+                        { id: "puzzle3d-fill-vortex-a", label: "Joint A", control: <Slider id="puzzle3d-fill-vortex-a-slider" value={[0.25]} min={0} max={0.5} step={0.01} /> },
+                        { id: "puzzle3d-fill-vortex-b", label: "Joint B", control: <Slider id="puzzle3d-fill-vortex-b-slider" value={[0.25]} min={0} max={0.5} step={0.01} /> },
+                      ],
+                    },
+                  ],
+                },
+              ]}
+            />
+          </TreeStateProvider>,
+        );
+  
+        document.body.innerHTML = markup;
+        const parentRow = document.getElementById("puzzle3d-fill-object-capsule");
+        const branch = document.querySelector('[data-slot="tree-property-content"]');
+        const childA = document.getElementById("puzzle3d-fill-vortex-a");
+        const childB = document.getElementById("puzzle3d-fill-vortex-b");
+        expect(parentRow?.getAttribute("data-slot")).toBe("tree-property-item");
+        expect(parentRow?.className).toContain("group/tree-row");
+        expect(branch).not.toBeNull();
+        expect(parentRow?.contains(branch)).toBe(false);
+        expect(branch?.contains(childA)).toBe(true);
+        expect(branch?.contains(childB)).toBe(true);
+        expect(childA?.closest('[data-slot="tree-property-item"]')?.className).toContain("group/tree-row");
+        expect(childA?.closest('[data-slot="tree-property-item"]')).not.toBe(parentRow);
+        expect(childB?.closest('[data-slot="tree-property-item"]')).not.toBe(parentRow);
+        expect(childA?.closest('[data-slot="tree-property-item"]')).not.toBe(childB?.closest('[data-slot="tree-property-item"]'));
+      });
+  
+      it("keeps leaf and expandable sibling rows on the same gutter rhythm", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeSection id="tooltip.manual" defaultOpen={true}>
+              <TreeItem id="tooltip.tutorial" defaultOpen={true}>
+                <TreeContent>
+                  <span>Nested content</span>
+                </TreeContent>
+              </TreeItem>
+              <TreeItem id="tooltip.docs" />
+            </TreeSection>
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup.match(/grid-template-columns:calc\(/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
+        expect(markup).not.toContain("margin-left:-10px");
+        expect(markup).not.toContain("padding-left:10px");
+      });
+  
+      it("renders default icons before tree section and item labels when icon is omitted", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeSection id="tooltip.manual" label="Section" defaultOpen={true}>
+              <TreeItem id="tooltip.tutorial" label="Folder" defaultOpen>
+                <TreeItem id="tooltip.docs" label="Leaf" />
+              </TreeItem>
+            </TreeSection>
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup.match(/data-slot="tree-icon"/g)?.length ?? 0).toBe(3);
+        expect(markup).toContain('data-slot="tree-section-row"');
+        expect(markup).toContain('data-tree-row-kind="group"');
+        expect(markup).toContain('data-tree-row-kind="leaf"');
+      });
+  
+      it("renders unlabeled data-tree sections without a folder header row", () => {
+        const markup = renderToStaticMarkup(
+          <Tree
+            sections={[
+              {
+                id: "command.category.general.form",
+                items: [{ id: "command.os.setDriver.arg.driver", label: "Driver", control: <span>compact</span> }],
+              },
+            ]}
+          />,
+        );
+  
+        expect(markup).not.toContain('data-slot="tree-section-row"');
+        expect(markup).toContain("Driver");
+      });
+  
+      it("renders tree item descriptions inline on one row with muted secondary text", () => {
+        const markup = renderToStaticMarkup(
+          <Tree
+            sections={[
+              {
+                id: "tree.inline-description",
+                items: [{ id: "tree.inline-description.item", label: "Capsule J", description: "capsule-j" }],
+              },
+            ]}
+          />,
+        );
+  
+        expect(markup).not.toContain("flex-col gap-0.5");
+        expect(markup).not.toContain(" - ");
+        expect(markup).toContain(treeItemSecondaryTextClassName);
+        expect(markup).toContain("Capsule J");
+        expect(markup).toContain("capsule-j");
+        expect(markup).toContain('data-slot="tree-item-row"');
+        expect(markup).toContain("h-workbench");
+        expect(markup).toContain('data-slot="tree-row-layout"');
+        expect(markup).toMatch(/data-slot="tree-row-layout"[^>]*class="[^"]*\bh-full\b[^"]*\bw-full\b/);
+        expect(markup).toMatch(/data-slot="tree-row-content"[^>]*class="[^"]*\bh-full\b[^"]*\bflex\b[^"]*\bitems-center\b/);
+      });
+  
+      it("renders parent-level vertical guides through expanded last-sibling branches", () => {
+        const markup = renderToStaticMarkup(
+          <TreeStateProvider>
+            <Tree
+              sections={[
+                {
+                  id: "objects",
+                  label: "Objects",
+                  defaultOpen: true,
+                  items: [
+                    {
+                      id: "object-only",
+                      label: "Hexagonal Cut Concrete",
+                      defaultOpen: true,
+                      items: [
+                        { id: "vortex-a", label: "a" },
+                        { id: "vortex-b", label: "b" },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  id: "references",
+                  label: "References",
+                  defaultOpen: false,
+                  items: [],
+                },
+              ]}
+            />
+          </TreeStateProvider>,
+        );
+  
+        const objectBranch = markup.split('data-slot="tree-item-content"')[1]?.slice(0, 1_500) ?? "";
+        expect(objectBranch.match(/data-tree-guide-line/g)?.length ?? 0).toBe(2);
+        expect(objectBranch.match(/inset-inline-start:/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+        expect(objectBranch).not.toMatch(/(?:^|;)left:/);
+      });
+  
+      it("renders steppers at full control width with the current numeric value visible", () => {
+        const markup = renderToStaticMarkup(<Stepper id="ui.stepper.demo" value={12.5} />);
+  
+        expect(markup).toContain('data-slot="stepper-group"');
+        expect(markup).toContain('data-detail-panel-control="fill"');
+        expect(markup).toContain('data-stepper-input="true"');
+        expect(markup).toContain("w-full");
+        expect(markup).toContain("min-w-0");
+        expect(markup).toContain('value="12.5"');
+      });
+  
+      it("renders sliders with element gray range and thumb at rest", () => {
+        const markup = renderToStaticMarkup(<Slider id="ui.slider.demo" value={[42]} min={0} max={100} />);
+  
+        expect(markup).toContain('data-slot="slider-range"');
+        expect(markup).toContain("bg-element");
+        expect(markup).toContain("group-hover:bg-emphasized");
+        expect(markup).toContain("data-[dragging=true]:bg-active-base");
+        expect(markup).toContain("has-[[data-slot=slider-thumb]:hover]:[&amp;_[data-slot=slider-range]]:bg-emphasized");
+        expect(markup).toContain("h-full");
+        expect(markup).not.toContain("bg-foreground");
+        expect(markup).toContain('data-slot="slider-thumb"');
+        expect(markup).toContain("rounded-[9999px]");
+        expect(markup).toContain("hover:bg-emphasized");
+        expect(markup).toContain("group-hover:bg-emphasized");
+        expect(markup).toContain('data-slot="slider-value"');
+        expect(markup).toContain("text-element");
+        expect(markup).not.toContain('data-slot="slider-ready"');
+        expect(markup).toContain('data-slot="slider-track-wrap"');
+        expect(markup).not.toContain("border-loading");
+      });
+  
+      it("can omit the numeric readout for track-only graph overlays", () => {
+        const markup = renderToStaticMarkup(<Slider id="ui.slider.track-only" className="h-full w-full min-w-0" value={[42]} min={0} max={100} showValue={false} />);
+  
+        expect(markup).toContain('data-slot="slider-track"');
+        expect(markup).toContain('data-slot="slider-thumb"');
+        expect(markup).toContain("h-full w-full min-w-0");
+        expect(markup).not.toContain('data-slot="slider-value"');
+        expect(markup).not.toContain('data-slot="slider-row"');
+      });
+  
+      it("renders a ready extent highlight to the right of the knob on a fixed range", () => {
+        const markup = renderToStaticMarkup(<Slider id="ui.slider.ready" value={[20]} min={0} max={100} ready={55} />);
+  
+        expect(markup).toContain('data-slot="slider-ready"');
+        expect(markup).toContain("bg-[var(--accent-secondary)]");
+        expect(markup).not.toContain('data-slot="slider-ready" class="bg-emphasized');
+        expect(markup).toMatch(/left:\s*20%/);
+        expect(markup).toMatch(/width:\s*35%/);
+        expect(markup).toContain('data-slot="slider-thumb"');
+        expect(markup).toContain("group-hover:bg-emphasized");
+      });
+  
+      it("keeps the full fixed range interactive beyond the ready extent", async () => {
+        const { fireEvent, render } = await import("@testing-library/react");
+        const onValueChange = vi.fn();
+        const { container } = render(<Slider id="ui.slider.ready-interactive" value={[55]} min={0} max={100} ready={55} step={1} onValueChange={onValueChange} />);
+        const thumb = container.querySelector('[data-slot="slider-thumb"]');
+        expect(thumb).not.toBeNull();
+  
+        fireEvent.keyDown(thumb!, { key: "ArrowRight" });
+        expect(onValueChange).toHaveBeenLastCalledWith([56]);
+      });
+  
+      it("clampToReady suppresses a no-op attempt at the ready extent", async () => {
+        // 🪣️ Opt-in: most `ready` consumers (the test above) want the highlight without a hard limit;
+        // a background-planned count (e.g. puzzle3d's fill slider) needs `clampToReady` to make the
+        // un-planned tail physically unreachable.
+        const { fireEvent, render } = await import("@testing-library/react");
+        const onValueChange = vi.fn();
+        const { container } = render(<Slider id="ui.slider.ready-clamped" value={[55]} min={0} max={100} ready={55} step={1} clampToReady onValueChange={onValueChange} />);
+        const thumb = container.querySelector('[data-slot="slider-thumb"]');
+        expect(thumb).not.toBeNull();
+  
+        fireEvent.keyDown(thumb!, { key: "ArrowRight" });
+        expect(onValueChange).not.toHaveBeenCalled();
+      });
+  
+      it("forwards fractional step to the owned root so 0–1 probability sliders are not stuck at 0/1", async () => {
+        const { fireEvent, render } = await import("@testing-library/react");
+        const onValueChange = vi.fn();
+        const { container } = render(<Slider id="ui.slider.probability-step" value={[0.5]} min={0} max={1} step={0.01} onValueChange={onValueChange} />);
+        const thumb = container.querySelector('[data-slot="slider-thumb"]');
+        expect(thumb).not.toBeNull();
+  
+        fireEvent.keyDown(thumb!, { key: "ArrowRight" });
+        expect(onValueChange).toHaveBeenLastCalledWith([0.51]);
+      });
+  
+      it("puts the loading ring on the track wrap only so the knob and hover chrome stay visible", () => {
+        const markup = renderToStaticMarkup(<Slider id="ui.slider.loading" value={[10]} min={0} max={100} ready={40} loading />);
+  
+        expect(markup).toContain('data-slot="slider-track-wrap"');
+        expect(markup).toContain('data-loading="true"');
+        expect(markup).toContain("border-loading");
+        expect(markup).toContain('data-slot="slider-thumb"');
+        expect(markup).toContain("group-hover:bg-emphasized");
+        expect(markup).toContain("hover:bg-emphasized");
+        expect(markup).toContain('data-slot="slider-ready"');
+        const trackWrapIdx = markup.indexOf('data-slot="slider-track-wrap"');
+        const thumbIdx = markup.indexOf('data-slot="slider-thumb"');
+        expect(trackWrapIdx).toBeGreaterThan(-1);
+        expect(thumbIdx).toBeGreaterThan(trackWrapIdx);
+        expect(markup.indexOf("border-loading")).toBeGreaterThan(trackWrapIdx);
+        expect(markup.indexOf("border-loading")).toBeLessThan(thumbIdx);
+      });
+  
+      it("puts the waiting ring on the track wrap only so the knob and hover chrome stay visible", () => {
+        const markup = renderToStaticMarkup(<Slider id="ui.slider.waiting" value={[10]} min={0} max={100} ready={40} waiting />);
+  
+        expect(markup).toContain('data-slot="slider-track-wrap"');
+        expect(markup).toContain('data-waiting="true"');
+        expect(markup).toContain("border-waiting");
+        expect(markup).toContain('data-slot="slider-thumb"');
+        const trackWrapIdx = markup.indexOf('data-slot="slider-track-wrap"');
+        const thumbIdx = markup.indexOf('data-slot="slider-thumb"');
+        expect(markup.indexOf("border-waiting")).toBeGreaterThan(trackWrapIdx);
+        expect(markup.indexOf("border-waiting")).toBeLessThan(thumbIdx);
+      });
+  
+      it("prefers the loading ring over waiting on the slider track wrap when both are set", () => {
+        const markup = renderToStaticMarkup(<Slider id="ui.slider.both" value={[10]} min={0} max={100} ready={40} loading waiting />);
+  
+        expect(markup).toContain("border-loading");
+        expect(markup).not.toContain("border-waiting");
+      });
+  
+      it("renders shared field roots that stretch within the property value column", () => {
+        const inputMarkup = renderToStaticMarkup(<Input id="tooltip.manual" value="value" />);
+        const textareaMarkup = renderToStaticMarkup(<Textarea id="tooltip.manual" value="value" />);
+  
+        expect(inputMarkup).toContain('data-slot="input-root"');
+        expect(inputMarkup).toContain('data-detail-panel-control="fill"');
+        expect(inputMarkup).toContain("flex min-w-0 w-full flex-1 items-stretch");
+        expect(inputMarkup).toContain('autoComplete="off"');
+        expect(inputMarkup).toContain('spellCheck="false"');
+        expect(textareaMarkup).toContain('data-slot="textarea-root"');
+        expect(textareaMarkup).toContain('data-detail-panel-control="fill"');
+        expect(textareaMarkup).toContain("flex min-w-0 w-full flex-1 items-stretch");
+        expect(textareaMarkup).toContain('autoComplete="off"');
+        expect(textareaMarkup).toContain('spellCheck="false"');
+      });
+  
+      it("anchors fit-content button and toggle controls to the shared property edge", () => {
+        const buttonMarkup = renderToStaticMarkup(
+          <Label id="tooltip.manual">
+            <Button text="Apply" icon="check" />
+          </Label>,
+        );
+        const toggleMarkup = renderToStaticMarkup(<Toggle id="tooltip.manual" icon={<CheckIcon />} showLabel />);
+  
+        expect(buttonMarkup).toContain('data-slot="property-control"');
+        expect(buttonMarkup).toContain("justify-end");
+        expect(buttonMarkup).toContain('data-slot="button-group"');
+        expect(buttonMarkup).toContain('data-detail-panel-control="fit"');
+        expect(buttonMarkup).toContain("w-fit shrink-0");
+        expect(toggleMarkup).toContain('data-slot="property-control"');
+        expect(toggleMarkup).toContain("justify-end");
+        expect(toggleMarkup).toContain('data-slot="toggle-group"');
+        expect(toggleMarkup).toContain('data-detail-panel-control="fit"');
+        expect(toggleMarkup).toContain("w-fit shrink-0");
+      });
+  
+      it("renders ring inside tree-aligned property row with label and fit control", () => {
+        const ringMarkup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 1, isLastAtLevel: [true], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeRowAlignmentContext.Provider value={true}>
+              <div data-slot="tree-row">
+                <TreeAlignedRow level={1} isLastAtLevel={[true]} showLines={true} connectCurrentLevel={true} contentClassName="min-w-0">
+                  <Ring id="ui.ring.demo" orbs={[{ id: "connector-1", t: 0.25, selected: true }]} showLabel />
+                </TreeAlignedRow>
+              </div>
+            </TreeRowAlignmentContext.Provider>
+          </TreeContext.Provider>,
+        );
+  
+        expect(ringMarkup).toContain('data-slot="tree-row-layout"');
+        expect(ringMarkup).toContain('data-slot="tree-gutter"');
+        expect(ringMarkup).toContain('data-slot="property-row"');
+        expect(ringMarkup).toContain('data-slot="property-label"');
+        expect(ringMarkup).toContain('data-slot="property-control"');
+        expect(ringMarkup).toContain('data-slot="ring"');
+        expect(ringMarkup).toContain('data-detail-panel-control="fit"');
+        expect(ringMarkup).toContain("w-fit shrink-0");
+        expect(ringMarkup).toContain('id="ui.ring.demo-label"');
+        expect(ringMarkup).toContain(">Ring<");
+      });
+  
+      it("marks select triggers as fill-width detail controls", () => {
+        const selectMarkup = renderToStaticMarkup(
+          <Select id="tooltip.manual" showLabel defaultValue="alpha">
+            <SelectTrigger>
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alpha">Alpha</SelectItem>
+            </SelectContent>
+          </Select>,
+        );
+  
+        expect(selectMarkup).toContain('data-slot="select-trigger"');
+        expect(selectMarkup).toContain('data-detail-panel-control="fill"');
+      });
+  
+      it("keeps select chevrons and mounts playground example options only while open", async () => {
+        const { render } = await import("@testing-library/react");
+        const userEvent = (await import("@testing-library/user-event")).default;
+        const user = userEvent.setup();
+        const selectMarkup = renderToStaticMarkup(
+          <Select id="tooltip.manual" defaultValue="alpha">
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alpha">A very long option label that must not clip the chevron</SelectItem>
+            </SelectContent>
+          </Select>,
+        );
+        render(
+          <NavbarExampleSelect
+            id="playground.navbar.fixture"
+            value="nakagin"
+            options={[
+              { id: "nakagin", label: "Nakagin Capsule Tower with an intentionally long label", icon: "building" },
+              { id: "villa", label: "Villa Savoye", icon: "landmark" },
+            ]}
+            onValueChange={() => undefined}
+            includeNoExample={false}
+          />,
+        );
+        expect(document.querySelector('[data-slot="select-content"]')).toBeNull();
+        await user.click(document.getElementById("playground.navbar.fixture.trigger")!);
+        const exampleMarkup = document.body.innerHTML;
+  
+        expect(selectMarkup).toContain('data-slot="select-chevron"');
+        expect(selectMarkup).toContain('data-icon="chevron-down"');
+        expect(selectMarkup).toContain("*:data-[slot=select-value]:min-w-0");
+        expect(selectMarkup).toContain("*:data-[slot=select-value]:flex-1");
+        expect(selectMarkup).toContain("shrink-0");
+        expect(exampleMarkup).toContain('data-slot="select-trigger"');
+        expect(exampleMarkup).toContain('data-slot="select-chevron"');
+        expect(exampleMarkup).toContain('data-icon="chevron-down"');
+        expect(exampleMarkup).toContain('data-slot="navbar-example-icon"');
+        expect(exampleMarkup.match(/data-slot="navbar-example-icon"/g)?.length).toBe(1);
+        expect(exampleMarkup).toContain('data-slot="select-item-icon"');
+        expect(exampleMarkup).not.toMatch(/data-slot="select-item"[\s\S]*?<span className="flex items-center gap-single">[\s\S]*?data-icon-kind/);
+      });
+  
+      it("renders section and item content slots flush under their headers", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeSection id="tooltip.manual" defaultOpen={true}>
+              <TreeItem id="tooltip.tutorial" defaultOpen={true}>
+                <Label id="tooltip.manual">
+                  <span>Control</span>
+                </Label>
+              </TreeItem>
+            </TreeSection>
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup).toContain('data-slot="tree-item-content"');
+        expect(markup).toContain('data-slot="property-row"');
+        expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex w-full min-w-0 flex-col"');
+        expect(markup).not.toContain("padding-top:6px");
+        expect(markup).not.toContain("padding-top:2px");
+        expect(markup).not.toContain("margin-bottom:12px");
+      });
+  
+      it("keeps guide wrappers continuous and pushes labels farther from the guide stroke", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeSection id="tooltip.manual" defaultOpen={true}>
+              <TreeItem id="tooltip.tutorial" defaultOpen={true}>
+                <TreeContent>
+                  <span>Nested content</span>
+                </TreeContent>
+                <TreeItem id="tooltip.docs">
+                  <TreeContent>
+                    <span>Leaf content</span>
+                  </TreeContent>
+                </TreeItem>
+              </TreeItem>
+            </TreeSection>
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup).toContain('data-slot="tree-content" data-tree-row-kind="content" class="relative w-full min-w-0"');
+        expect(markup).toContain('data-slot="tree-gutter"');
+        expect(markup).toContain('data-slot="tree-branch-elbow"');
+        expect(markup).toContain('data-slot="tree-gutter-slot"');
+        expect(markup).toContain("grid-template-columns:calc(");
+        expect(markup).toContain("minmax(0, 1fr)");
+        expect(markup).toContain("var(--spacing-double)");
+        expect(markup).not.toMatch(/data-slot="tree-gutter"[^>]*><div class="absolute left-0 top-0 bottom-0 pointer-events-none"/);
+        expect(markup).not.toContain('data-slot="tree-gutter-slot" class="absolute inset-y-0 left-0 flex items-center justify-center"');
+        expect(markup).toContain('data-slot="tree-gutter-slot"');
+        expect(markup).toContain('data-slot="tree-gutter-slot" class="absolute flex -translate-y-1/2 items-center justify-center"');
+        expect(markup).toContain("calc(var(--size-workbench) / 2)");
+        expect(markup).toContain('data-slot="tree-branch-elbow"');
+        expect(markup).not.toContain('style="top:50%;left:7px;width:3px"');
+        expect(markup).toContain('data-slot="tree-branch-stem"');
+        expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover\/tree-row:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
+        expect(markup).not.toContain('data-slot="tree-content" class="relative" style="padding-top:3px;padding-bottom:3px;padding-left:');
+        expect(markup).not.toContain('data-slot="tree-property-label" class="relative min-w-0" style="padding-left:');
+        expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex w-full min-w-0 flex-col"');
+      });
+  
+      it("keeps tree gutter/guide geometry identical under an rtl FlowProvider — logical insets, not a direction-conditional physical side", () => {
+        const build = () => (
+          <TreeContext.Provider value={{ level: 1, isLastAtLevel: [false], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeItem id="rtl-check">
+              <TreeContent>
+                <span>Content</span>
+              </TreeContent>
+            </TreeItem>
+          </TreeContext.Provider>
+        );
+        const ltrMarkup = renderToStaticMarkup(build());
+        const rtlMarkup = renderToStaticMarkup(<FlowProvider inline="rtl">{build()}</FlowProvider>);
+        expect(ltrMarkup).toBe(rtlMarkup);
+        expect(rtlMarkup).toContain('data-slot="tree-gutter"');
+        expect(rtlMarkup).toContain("inset-inline-start:");
+        expect(rtlMarkup).not.toContain("left:");
+        expect(rtlMarkup).not.toContain("right:");
+      });
+  
+      it("renders sortable drag handles without bordered action chrome", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeItem id="tooltip.manual" sortable={true} sortableId="sortable-manual" isDragHandle={true} />
+          </TreeContext.Provider>,
+        );
+  
+        const handleClassName = markup.match(/data-slot="drag-handle"[^>]*class="([^"]+)"/)?.[1] ?? "";
+        expect(markup).toContain('data-slot="drag-handle"');
+        expect(handleClassName).toContain("cursor-grab");
+        expect(handleClassName).not.toContain("hover:bg-hover");
+        expect(markup).not.toContain('data-slot="drag-handle" class="text-foreground');
+      });
+  
+      it("under the compact driver, sortable tree items render no drag handle (whole row is the surface)", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+            <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+              <TreeItem id="tooltip.manual" sortable={true} sortableId="sortable-manual" isDragHandle={true} />
+            </TreeContext.Provider>
+          </UiDriverProvider>,
+        );
+        expect(markup).not.toContain('data-slot="drag-handle"');
+        expect(markup).toContain("cursor-grab");
+      });
+  
+      it("renders control-tree folder branches inside the same continuous guide wrapper", () => {
+        const markup = renderToStaticMarkup(
+          <ControlTree
+            controls={[
+              {
+                path: "Folder/Value",
+                controlKind: "number",
+                value: 3,
+                onChange: () => undefined,
+              },
+            ]}
+          />,
+        );
+  
+        expect(markup).toContain('data-slot="control-tree-folder-content" data-tree-owner-expanded="false" class="relative flex w-full min-w-0 flex-col"');
+        expect(markup).toContain('data-slot="control-tree-folder-label"');
+        expect(markup).toContain('data-slot="control-tree-control-label"');
+        expect(markup).toContain('data-slot="tree-row-layout"');
+        expect(markup).toContain('data-slot="tree-gutter"');
+        expect(markup).toContain("grid-template-columns:calc(");
+        expect(markup).toContain("minmax(0, 1fr)");
+        expect(markup).toContain("var(--spacing-double)");
+        expect(markup).not.toContain("margin-left:13px");
+      });
+  
+      it("truncates collapsed field text on word boundaries before falling back to characters", () => {
+        const measureText = (value: string) => value.length * 8;
+  
+        expect(
+          fitCollapsedFieldText({
+            value: "Alpha beta gamma delta",
+            maxWidth: measureText("Alpha beta..."),
+            measureText,
+          }),
+        ).toBe("Alpha beta...");
+  
+        expect(
+          fitCollapsedFieldText({
+            value: "Supercalifragilisticexpialidocious",
+            maxWidth: measureText("Supercali..."),
+            measureText,
+          }),
+        ).toBe("Supercali...");
+      });
+  
+      it("uses stacked overflow when enabled and inline ellipsis when disabled", () => {
+        const measureText = (value: string) => value.length * 8;
+        const stackedState = resolveCollapsedFieldDisplayState({
+          allowStackedOverflow: true,
+          value: "Alpha beta gamma delta",
+          maxWidth: measureText("Alpha beta gamma"),
+          measureText,
+        });
+        const inlineState = resolveCollapsedFieldDisplayState({
+          value: "Alpha beta gamma delta",
+          maxWidth: measureText("Alpha beta gamma"),
+          measureText,
+        });
+  
+        expect(stackedState.value).toBe("Alpha beta gamma");
+        expect(stackedState.isOverflowing).toBe(true);
+        expect(stackedState.layoutKind).toBe("stacked-overflow");
+        expect(stackedState.value.endsWith(COLLAPSED_FIELD_ELLIPSIS)).toBe(false);
+  
+        expect(inlineState.value).toBe("Alpha beta...");
+        expect(inlineState.isOverflowing).toBe(true);
+        expect(inlineState.layoutKind).toBe("single-line");
+        expect(inlineState.value.endsWith(COLLAPSED_FIELD_ELLIPSIS)).toBe(true);
+      });
+  
+      it("keeps single-line text fields in the normal state when the text still fits", () => {
+        const measureText = (value: string) => value.length * 8;
+        const fittingState = resolveCollapsedFieldDisplayState({
+          allowStackedOverflow: true,
+          value: "Nakagin Capsule Tower",
+          maxWidth: measureText("Nakagin Capsule Tower"),
+          measureText,
+        });
+  
+        expect(fittingState.isOverflowing).toBe(false);
+        expect(fittingState.layoutKind).toBe("single-line");
+        expect(fittingState.value).toBe("Nakagin Capsule Tower");
+      });
+  
+      it("enables stacked overflow only after the rendered value exceeds the inner field width", () => {
+        const measureText = (value: string) => value.length * 8;
+        const exactFitState = resolveCollapsedFieldDisplayState({
+          allowStackedOverflow: true,
+          value: "Nakagin Capsule Tower",
+          maxWidth: measureText("Nakagin Capsule Tower"),
+          measureText,
+        });
+        const overflowingState = resolveCollapsedFieldDisplayState({
+          allowStackedOverflow: true,
+          value: "Nakagin Capsule Tower",
+          maxWidth: measureText("Nakagin Capsule Towe"),
+          measureText,
+        });
+  
+        expect(exactFitState.isOverflowing).toBe(false);
+        expect(exactFitState.layoutKind).toBe("single-line");
+        expect(overflowingState.isOverflowing).toBe(true);
+        expect(overflowingState.layoutKind).toBe("stacked-overflow");
+        expect(overflowingState.value).toBe("Nakagin Capsule");
+      });
+  
+      it("keeps tree section actions inline with the header row when isTree is true", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeSection id="tooltip.manual" defaultOpen={false} actions={[{ icon: <span data-testid="add-icon" />, onClick: () => undefined }]} />
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup).toContain('class="flex h-full items-center gap-double min-w-0 w-full"');
+        expect(markup).toContain('data-slot="tree-header-actions"');
+        expect(markup).not.toContain('data-slot="property-control"');
+        const rowContentIdx = markup.indexOf('data-slot="tree-row-content"');
+        const actionsIdx = markup.indexOf('data-testid="add-icon"');
+        expect(rowContentIdx).toBeGreaterThan(-1);
+        expect(actionsIdx).toBeGreaterThan(-1);
+        expect(actionsIdx).toBeGreaterThan(rowContentIdx);
+      });
+  
+      it("keeps tree item actions inline with the header row when isTree is true", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeItem id="tooltip.manual" actions={[{ icon: <span data-testid="remove-icon" />, onClick: () => undefined }]} />
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup).toContain('class="flex h-full items-center gap-double min-w-0 w-full"');
+        expect(markup).toContain('data-slot="tree-header-actions"');
+        expect(markup).not.toContain('data-slot="property-control"');
+        expect(markup).toContain('data-testid="remove-icon"');
+      });
+  
+      it("keeps row-placement actions visible and routes menu-placement actions to the context menu", async () => {
+        const { render } = await import("@testing-library/react");
+        const { container } = render(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeItem
+              id="tooltip.manual"
+              actions={[
+                { id: "persistent", icon: <span data-testid="persistent-icon" />, onClick: () => undefined },
+                { id: "menu-only", icon: <span data-testid="menu-icon" />, onClick: () => undefined, placement: "menu" },
+              ]}
+            />
+          </TreeContext.Provider>,
+        );
+  
+        const actions = container.querySelector<HTMLElement>('[data-slot="tree-header-actions"]');
+        expect(actions).toBeTruthy();
+        expect(container.querySelector('[data-slot="tree-header-reveal-actions"]')).toBeNull();
+        expect(actions?.querySelector('[data-testid="persistent-icon"]')).toBeTruthy();
+        expect(actions?.querySelector('[data-testid="menu-icon"]')).toBeNull();
+        expect(actions?.getAttribute("data-ui-reveal-region")).toBe("");
+      });
+  
+      it("uses the same inline tree header actions when isTree is false", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: false, isTree: false, indentMultiplier: 1 }}>
+            <TreeItem id="tooltip.manual" actions={[{ icon: <span data-testid="add-icon" />, onClick: () => undefined }]} />
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup).toContain('data-slot="tree-header-actions"');
+        expect(markup).not.toContain('data-slot="property-control"');
+        expect(markup).toContain('data-testid="add-icon"');
+      });
+  
+      it("renders checkbox actions inline with tree headers", () => {
+        const markup = renderToStaticMarkup(
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeItem
+              id="tooltip.manual"
+              actions={[
+                {
+                  kind: "checkbox",
+                  id: "tree-checkbox-action",
+                  checked: true,
+                  title: uiDataLabel("Toggle item"),
+                  onCheckedChange: () => undefined,
+                },
+              ]}
+            />
+          </TreeContext.Provider>,
+        );
+  
+        expect(markup).toContain('data-slot="tree-header-actions"');
+        expect(markup).toContain('data-slot="tree-action-checkbox-wrapper"');
+        expect(markup).toContain('data-slot="tree-action-checkbox"');
+        expect(markup).toContain('id="tree-checkbox-action"');
+        expect(markup).toContain('type="checkbox"');
+        expect(markup).toContain('checked=""');
+        expect(markup).toContain('aria-label="Toggle item"');
+      });
+  
+      it("renders empty Input inside a Label property row with muted opacity and full opacity when value is present", () => {
+        const emptyMarkup = renderToStaticMarkup(
+          <Label id="tooltip.manual">
+            <Input id="tooltip.manual" value="" />
+          </Label>,
+        );
+        const filledMarkup = renderToStaticMarkup(
+          <Label id="tooltip.manual">
+            <Input id="tooltip.manual" value="hello" />
+          </Label>,
+        );
+        const standaloneMarkup = renderToStaticMarkup(<Input id="tooltip.manual" value="" />);
+  
+        expect(emptyMarkup).toContain('data-slot="input-root"');
+        expect(emptyMarkup).toContain("opacity:0.6");
+        expect(filledMarkup).toContain("opacity:1");
+        // outside Label (not in property value column) — no muted opacity
+        expect(standaloneMarkup).not.toContain("opacity:0.6");
+      });
+  
+      it("renders empty Textarea inside a Label property row with muted opacity and full opacity when value is present", () => {
+        const emptyMarkup = renderToStaticMarkup(
+          <Label id="tooltip.manual">
+            <Textarea id="tooltip.manual" value="" />
+          </Label>,
+        );
+        const filledMarkup = renderToStaticMarkup(
+          <Label id="tooltip.manual">
+            <Textarea id="tooltip.manual" value="some text" />
+          </Label>,
+        );
+        const standaloneMarkup = renderToStaticMarkup(<Textarea id="tooltip.manual" value="" />);
+  
+        expect(emptyMarkup).toContain('data-slot="textarea-root"');
+        expect(emptyMarkup).toContain("opacity:0.6");
+        expect(filledMarkup).toContain("opacity:1");
+        expect(standaloneMarkup).not.toContain("opacity:0.6");
+      });
+  
+      it("renders Stepper with undefined value inside a Label property row with muted opacity and full opacity when value is defined", () => {
+        const emptyMarkup = renderToStaticMarkup(
+          <Label id="tooltip.manual">
+            <Stepper id="ui.stepper.demo" value={undefined} />
+          </Label>,
+        );
+        const filledMarkup = renderToStaticMarkup(
+          <Label id="tooltip.manual">
+            <Stepper id="ui.stepper.demo" value={5} />
+          </Label>,
+        );
+        const standaloneMarkup = renderToStaticMarkup(<Stepper id="ui.stepper.demo" value={undefined} />);
+  
+        expect(emptyMarkup).toContain('data-slot="stepper-group"');
+        expect(emptyMarkup).toContain("opacity:0.6");
+        expect(filledMarkup).toContain("opacity:1");
+        expect(standaloneMarkup).not.toContain("opacity:0.6");
+      });
+    });
+  
+    describe("VirtualFileSystem", () => {
+      it("buildVirtualFileSystemVisibleRows only includes children of expanded parents", () => {
+        const root: VirtualFileSystemNode = { id: "root", fileNodeKindId: "root", name: "Root", hasChildren: true };
+        const childrenByParentId = new Map<string, readonly VirtualFileSystemNode[]>([
+          [
+            "root",
+            [
+              { id: "f1", fileNodeKindId: "branch", name: "Models", parentId: "root", hasChildren: true },
+              { id: "d1", fileNodeKindId: "leaf", name: "Tower", parentId: "root", hasChildren: false },
+            ],
+          ],
+          ["f1", [{ id: "t1", fileNodeKindId: "leaf", name: "Capsule", parentId: "f1", hasChildren: false }]],
+        ]);
+        const collapsed = buildVirtualFileSystemVisibleRows("root", childrenByParentId, new Set(["root"]), root);
+        expect(collapsed.map((row) => row.id)).toEqual(["f1", "d1"]);
+        const expanded = buildVirtualFileSystemVisibleRows("root", childrenByParentId, new Set(["root", "f1"]), root);
+        expect(expanded.map((row) => row.id)).toEqual(["f1", "t1", "d1"]);
+      });
+  
+      it("buildVirtualFileSystemDescriptorColumns renders avatar and time cells", () => {
+        const schemaWithMeta: VirtualFileSystemSchema = {
+          ...VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA,
+          descriptorColumnIds: ["updated", "createdBy", "path", "fileNodeKind"],
+          fileNodeKinds: {
+            ...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS,
+            root: {
+              ...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.root,
+              descriptors: [...VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS.root.descriptors, { id: "updated", descriptorKindId: "time", label: uiDataLabel("Updated") }, { id: "createdBy", descriptorKindId: "avatar", label: uiDataLabel("Created by") }],
+            },
+          },
+        };
+        const columns = buildVirtualFileSystemDescriptorColumns(schemaWithMeta, "en");
+        const createdBy = columns.find((column) => column.id === "createdBy");
+        expect(createdBy?.header).toBe("Created by");
+        const updated = columns.find((column) => column.id === "updated");
+        expect(updated?.header).toBe("Updated");
+        const row: VirtualFileSystemRow = {
+          id: "root:1",
+          fileNodeKindId: "root",
+          name: "Alpha",
+          level: 0,
+          descriptorValues: {
+            updated: { presentation: "time", iso: "2026-05-01T12:00:00.000Z" },
+            createdBy: { presentation: "avatar", name: "Ada", icon: "https://example.com/a.png" },
+          },
+        };
+        const updatedMarkup = renderToStaticMarkup(<>{updated?.accessor(row)}</>);
+        expect(updatedMarkup).toContain("2026");
+        const avatarColumn = buildVirtualFileSystemDescriptorColumns(
+          {
+            ...schemaWithMeta,
+            descriptorColumnIds: ["createdBy"],
+          },
+          "en",
+        )[0];
+        const avatarMarkup = renderToStaticMarkup(<>{avatarColumn?.accessor(row)}</>);
+        expect(avatarMarkup).toContain("avatar-fallback");
+        expect(avatarMarkup).toContain(">A<");
+      });
+  
+      it("formats calendar and relative timestamps through the owned locale-explicit formatter", () => {
+        const calendar = new Date(2026, 4, 1, 12, 34);
+        expect(formatVirtualFileSystemTime(calendar, "date", "en")).toBe("2026-05-01");
+        expect(formatVirtualFileSystemTime(calendar, "datetime", "de")).toBe("2026-05-01 12:34");
+        const now = new Date("2026-05-01T12:00:00.000Z");
+        const future = new Date("2026-05-01T14:00:00.000Z");
+        const past = new Date("2026-05-01T10:00:00.000Z");
+        expect(formatVirtualFileSystemTime(future, "relative", "en", now)).toContain("2 hours");
+        expect(formatVirtualFileSystemTime(past, "relative", "de", now)).toContain("2 Stunden");
+      });
+  
+      it("renders expand affordance only for rows with children", () => {
+        const markup = renderToStaticMarkup(
+          <VirtualFileSystem
+            schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA}
+            rows={[
+              { id: "root", fileNodeKindId: "root", name: "Root", level: 0, hasChildren: true, isExpanded: true },
+              { id: "file", fileNodeKindId: "leaf", name: "readme.md", level: 1, hasChildren: false },
+            ]}
+          />,
+        );
+        expect(markup).toContain("data-vfs-expand");
+        expect(markup).toContain("readme.md");
+        expect(markup).toContain("cursor-selectable");
+        expect(markup).toContain("text-element");
+        expect(markup).not.toContain("text-muted-foreground");
+      });
+  
+      it("renders file node kind vendored icons instead of avatars for schema icon ids", () => {
+        const markup = renderToStaticMarkup(<VirtualFileSystem schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA} rows={[{ id: "root", fileNodeKindId: "root", name: "Alpha", level: 0, hasChildren: false }]} />);
+        expect(markup).toContain('data-icon="layout-grid"');
+        expect(markup).not.toContain("avatar-fallback");
+      });
+  
+      it("resolveVirtualFileSystemSchemaIcon maps sketchpad vfs icon ids", () => {
+        expect(resolveVirtualFileSystemSchemaIcon("component")).toBe("component");
+        expect(resolveVirtualFileSystemSchemaIcon("circle-dot")).toBe("circle-dot");
+        expect(resolveVirtualFileSystemSchemaIcon("type")).toBe("component");
+      });
+  
+      it("resolveVirtualFileSystemSchemaIcon maps file extension ids", () => {
+        expect(resolveVirtualFileSystemSchemaIcon("glb")).toBe("box");
+        expect(resolveVirtualFileSystemSchemaIcon("pdf")).toBe("file-type");
+        expect(resolveVirtualFileSystemSchemaIcon("json")).toBe("file-json");
+      });
+  
+      it("renders per-row extension icons for kit files", () => {
+        const markup = renderToStaticMarkup(<VirtualFileSystem schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA} rows={[{ id: "f1", fileNodeKindId: "leaf", name: "Tower", icon: "glb", level: 0, hasChildren: false }]} />);
+        expect(markup).toContain('data-icon="box"');
+        expect(markup).not.toContain("avatar-fallback");
+      });
+  
+      it("invokes onRowDoubleClick on double-click", async () => {
+        const { render } = await import("@testing-library/react");
+        const userEvent = (await import("@testing-library/user-event")).default;
+        const user = userEvent.setup();
+        const onRowDoubleClick = vi.fn();
+        const { container } = render(
+          <VirtualFileSystem schema={VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA} rows={[{ id: "leaf-a", fileNodeKindId: "leaf", name: "Alpha", level: 0, hasChildren: false, navigateUri: "/alpha" }]} onRowDoubleClick={onRowDoubleClick} />,
+        );
+        const leafRow = container.querySelector('tr[data-row-id="leaf-a"]');
+        expect(leafRow).toBeTruthy();
+        await user.dblClick(leafRow!);
+        expect(onRowDoubleClick).toHaveBeenCalledWith(expect.objectContaining({ id: "leaf-a", navigateUri: "/alpha" }), 0);
+      });
+  
+      it("computes shift range and ctrl toggle selection for visible rows", () => {
+        const orderedRowIds = ["root", "branch", "leaf-a", "leaf-b"];
+        expect(
+          getVirtualFileSystemNextSelectionState({
+            selectionMode: "multiple",
+            selectedRowIds: ["root"],
+            orderedRowIds,
+            targetRowId: "leaf-b",
+            anchorRowId: "root",
+            additiveKey: false,
+            rangeKey: true,
+          }).selectedRowIds,
+        ).toEqual(["root", "branch", "leaf-a", "leaf-b"]);
+        expect(
+          getVirtualFileSystemNextSelectionState({
+            selectionMode: "multiple",
+            selectedRowIds: ["root"],
+            orderedRowIds,
+            targetRowId: "leaf-b",
+            anchorRowId: "root",
+            additiveKey: true,
+            rangeKey: false,
+          }).selectedRowIds,
+        ).toEqual(["root", "leaf-b"]);
+        expect(
+          getVirtualFileSystemNextSelectionState({
+            selectionMode: "single",
+            selectedRowIds: ["root"],
+            orderedRowIds,
+            targetRowId: "leaf-a",
+            additiveKey: true,
+            rangeKey: true,
+          }).selectedRowIds,
+        ).toEqual(["leaf-a"]);
+      });
+    });
+  
+    describe("scene helpers", () => {
+      it("keeps the 3d gizmo label-free", () => {
+        expect(SCENE_GIZMO_LABELS).toEqual(["", "", ""]);
+      });
+  
+      it("maps dominant gizmo axes to blender-style orthographic snap targets", () => {
+        expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(1, 0.2, 0.1))).toEqual({
+          axis: "x",
+          sign: 1,
+          view: "side",
+          cameraDirection: { x: 1, y: 0, z: 0 },
+          up: { x: 0, y: 1, z: 0 },
+        });
+  
+        expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(0.1, 1, 0.2))).toEqual({
+          axis: "y",
+          sign: 1,
+          view: "top",
+          cameraDirection: { x: 0, y: 1, z: 0 },
+          up: { x: 0, y: 0, z: -1 },
+        });
+  
+        expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(0.1, 0.2, -1))).toEqual({
+          axis: "z",
+          sign: -1,
+          view: "back",
+          cameraDirection: { x: 0, y: 0, z: -1 },
+          up: { x: 0, y: 1, z: 0 },
+        });
+      });
+  
+      it("preserves the complementary blender views for negative axis clicks", () => {
+        expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(-1, 0, 0))).toEqual({
+          axis: "x",
+          sign: -1,
+          view: "opposite-side",
+          cameraDirection: { x: -1, y: 0, z: 0 },
+          up: { x: 0, y: 1, z: 0 },
+        });
+  
+        expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(0, -1, 0))).toEqual({
+          axis: "y",
+          sign: -1,
+          view: "bottom",
+          cameraDirection: { x: 0, y: -1, z: 0 },
+          up: { x: 0, y: 0, z: 1 },
+        });
+  
+        expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(0, 0, 1))).toEqual({
+          axis: "z",
+          sign: 1,
+          view: "front",
+          cameraDirection: { x: 0, y: 0, z: 1 },
+          up: { x: 0, y: 1, z: 0 },
+        });
+      });
+  
+      it("keeps the gizmo in the bottom-right corner above the folded projection pane chrome", () => {
+        expect(resolveSceneGizmoViewportPlacement({ width: 1280, height: 720 })).toEqual({
+          alignment: "bottom-right",
+          margin: [32, 58],
+        });
+  
+        expect(resolveSceneGizmoViewportPlacement({ width: 120, height: 160 })).toEqual({
+          alignment: "bottom-right",
+          margin: [32, 53],
+        });
+  
+        expect(resolveSceneGizmoViewportPlacement({ width: 40, height: 48 })).toEqual({
+          alignment: "bottom-right",
+          margin: [22, 22],
+        });
+      });
+    });
+  
+    describe("ElementsSurfaceChrome", () => {
+      it("keeps dark class while nested leases are active", () => {
+        resetElementsSurfaceChromeForTests();
+        const outer = applyElementsSurfaceChrome({ appearance: "dark", device: "desktop", driver: DEFAULT_UI_DRIVER });
+        const inner = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: DEFAULT_UI_DRIVER });
+        expect(document.documentElement.classList.contains("dark")).toBe(false);
+        inner();
+        expect(document.documentElement.classList.contains("dark")).toBe(true);
+        outer();
+        expect(document.documentElement.classList.contains("dark")).toBe(true);
+        resetElementsSurfaceChromeForTests();
+        expect(document.documentElement.classList.contains("dark")).toBe(false);
+      });
+  
+      it("reapplies the previous lease after the top lease releases", () => {
+        resetElementsSurfaceChromeForTests();
+        const outer = applyElementsSurfaceChrome({ appearance: "dark", device: "desktop", driver: DEFAULT_UI_DRIVER });
+        const inner = applyElementsSurfaceChrome({ appearance: "dark", device: "tablet", driver: COMPACT_UI_DRIVER });
+        expect(document.documentElement.dataset.uiDevice).toBe("tablet");
+        expect(document.documentElement.dataset.uiDriver).toBe("compact");
+        inner();
+        expect(document.documentElement.dataset.uiDevice).toBe("desktop");
+        expect(document.documentElement.dataset.uiDriver).toBe("default");
+        outer();
+        resetElementsSurfaceChromeForTests();
+      });
+  
+      it("defers clearing dark until the next animation frame when the last lease releases", () => {
+        resetElementsSurfaceChromeForTests();
+        let scheduled: FrameRequestCallback | undefined;
+        const raf = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((callback: FrameRequestCallback) => {
+          scheduled = callback;
+          return 1;
+        });
+        const release = applyElementsSurfaceChrome({ appearance: "dark", device: "desktop", driver: DEFAULT_UI_DRIVER });
+        release();
+        expect(document.documentElement.classList.contains("dark")).toBe(true);
+        expect(raf).toHaveBeenCalled();
+        scheduled?.(0);
+        expect(document.documentElement.classList.contains("dark")).toBe(false);
+        raf.mockRestore();
+        resetElementsSurfaceChromeForTests();
+      });
+  
+      it("bootstrapElementsSurfaceChromeDocument applies explicit dark before leases exist", () => {
+        resetElementsSurfaceChromeForTests();
+        bootstrapElementsSurfaceChromeDocument("dark");
+        expect(document.documentElement.classList.contains("dark")).toBe(true);
+        expect(document.documentElement.dataset.uiAppearance).toBe("dark");
+        resetElementsSurfaceChromeForTests();
+      });
+  
+      it("applies touch chrome and the mobile device attribute for the mobile device", () => {
+        resetElementsSurfaceChromeForTests();
+        const release = applyElementsSurfaceChrome({ appearance: "light", device: "mobile", driver: DEFAULT_UI_DRIVER });
+        expect(document.documentElement.classList.contains("touch")).toBe(true);
+        expect(document.documentElement.dataset.uiDevice).toBe("mobile");
+        release();
+        resetElementsSurfaceChromeForTests();
+      });
+  
+      it("clears touch chrome for the desktop device", () => {
+        resetElementsSurfaceChromeForTests();
+        const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: DEFAULT_UI_DRIVER });
+        expect(document.documentElement.classList.contains("touch")).toBe(false);
+        expect(document.documentElement.dataset.uiDevice).toBe("desktop");
+        release();
+        resetElementsSurfaceChromeForTests();
+      });
+  
+      it("applies every driver axis attribute and clears them on release", async () => {
+        resetElementsSurfaceChromeForTests();
+        const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: COMPACT_UI_DRIVER });
+        const root = document.documentElement;
+        expect(root.dataset.uiDriver).toBe("compact");
+        expect(root.dataset.uiLabels).toBe("icons");
+        expect(root.dataset.uiDrag).toBe("surface");
+        expect(root.dataset.uiChromeReveal).toBe("hover");
+        expect(root.dataset.uiGumballReveal).toBe("hover");
+        expect(root.dataset.uiTooltips).toBe("none");
+        release();
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        expect(root.dataset.uiDriver).toBeUndefined();
+        expect(root.dataset.uiLabels).toBeUndefined();
+        expect(root.dataset.uiDrag).toBeUndefined();
+        expect(root.dataset.uiChromeReveal).toBeUndefined();
+        expect(root.dataset.uiGumballReveal).toBeUndefined();
+        expect(root.dataset.uiTooltips).toBeUndefined();
+        resetElementsSurfaceChromeForTests();
+      });
+  
+      it("reveals a hover-reveal chrome region only while the pointer is near its edge band", () => {
+        resetElementsSurfaceChromeForTests();
+        const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: COMPACT_UI_DRIVER });
+        const region = document.createElement("nav");
+        region.dataset.uiRevealRegion = "navbar";
+        region.getBoundingClientRect = () => ({ left: 0, right: 100, top: 200, bottom: 240, width: 100, height: 40 }) as DOMRect;
+        document.body.appendChild(region);
+        applyChromeRevealAtPoint(document.documentElement, 50, 2);
+        expect(region.dataset.uiRevealed).toBe("true");
+        applyChromeRevealAtPoint(document.documentElement, 50, 400);
+        expect(region.dataset.uiRevealed).toBeUndefined();
+        applyChromeRevealAtPoint(document.documentElement, 50, 220);
+        expect(region.dataset.uiRevealed).toBe("true");
+        document.body.removeChild(region);
+        release();
+        resetElementsSurfaceChromeForTests();
+      });
+  
+      it("reveals a footer hover-reveal region near the bottom screen edge", () => {
+        resetElementsSurfaceChromeForTests();
+        const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: COMPACT_UI_DRIVER });
+        const innerHeight = window.innerHeight;
+        Object.defineProperty(window, "innerHeight", { value: 800, configurable: true });
+        const region = document.createElement("footer");
+        region.dataset.uiRevealRegion = "footer";
+        region.getBoundingClientRect = () => ({ left: 0, right: 100, top: 760, bottom: 800, width: 100, height: 40 }) as DOMRect;
+        document.body.appendChild(region);
+        applyChromeRevealAtPoint(document.documentElement, 50, 795);
+        expect(region.dataset.uiRevealed).toBe("true");
+        applyChromeRevealAtPoint(document.documentElement, 50, 400);
+        expect(region.dataset.uiRevealed).toBeUndefined();
+        Object.defineProperty(window, "innerHeight", { value: innerHeight, configurable: true });
+        document.body.removeChild(region);
+        release();
+        resetElementsSurfaceChromeForTests();
+      });
+  
+      it("reveals a window-cap region when the pointer is near the stack top edge", () => {
+        resetElementsSurfaceChromeForTests();
+        const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: COMPACT_UI_DRIVER });
+        const stack = document.createElement("div");
+        stack.setAttribute("data-slot", "window-chrome-stack");
+        stack.getBoundingClientRect = () => ({ left: 100, right: 400, top: 50, bottom: 350, width: 300, height: 300 }) as DOMRect;
+        const cap = document.createElement("div");
+        cap.dataset.uiRevealRegion = "window-cap";
+        cap.getBoundingClientRect = () => ({ left: 100, right: 400, top: 50, bottom: 50, width: 300, height: 0 }) as DOMRect;
+        stack.appendChild(cap);
+        document.body.appendChild(stack);
+        applyChromeRevealAtPoint(document.documentElement, 250, 55);
+        expect(cap.dataset.uiRevealed).toBe("true");
+        applyChromeRevealAtPoint(document.documentElement, 250, 100);
+        expect(cap.dataset.uiRevealed).toBeUndefined();
+        applyChromeRevealAtPoint(document.documentElement, 250, 58);
+        expect(cap.dataset.uiRevealed).toBe("true");
+        document.body.removeChild(stack);
+        release();
+        resetElementsSurfaceChromeForTests();
+      });
+  
+      it("reveals a hover-reveal region on focus and clears on blur", () => {
+        resetElementsSurfaceChromeForTests();
+        const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: COMPACT_UI_DRIVER });
+        const region = document.createElement("nav");
+        region.dataset.uiRevealRegion = "navbar";
+        const button = document.createElement("button");
+        region.appendChild(button);
+        document.body.appendChild(region);
+        button.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+        expect(region.dataset.uiRevealed).toBe("true");
+        button.dispatchEvent(new FocusEvent("focusout", { bubbles: true, relatedTarget: null }));
+        expect(region.dataset.uiRevealed).toBeUndefined();
+        document.body.removeChild(region);
+        release();
+        resetElementsSurfaceChromeForTests();
+      });
+  
+      it("useCanvasAppearanceSync does not re-run sync when the callback identity changes each render", async () => {
+        const { render } = await import("@testing-library/react");
+        const sync = vi.fn();
+        function Harness({ n }: { readonly n: number }) {
+          useCanvasAppearanceSync(() => {
+            sync(n);
+          });
+          return <span data-testid="harness">{n}</span>;
+        }
+        const { rerender } = render(<Harness n={1} />);
+        expect(sync).toHaveBeenCalledTimes(1);
+        rerender(<Harness n={2} />);
+        rerender(<Harness n={3} />);
+        expect(sync).toHaveBeenCalledTimes(1);
+        document.documentElement.dataset.uiAppearance = "dark";
+        await vi.waitFor(() => expect(sync.mock.calls.length).toBeGreaterThan(1));
+        delete document.documentElement.dataset.uiAppearance;
+      });
+    });
+  
+    describe("UiDriver", () => {
+      it("round-trips a custom driver through parseUiDriver/serializeUiDriver", () => {
+        const custom: UiDriver = { id: "custom.mine", label: "Mine", labels: "icons", labelTier: "beginner", drag: "surface", chrome: "hover", gumball: "always", tooltips: "minimal", hotkeys: "tooltip" };
+        const parsed = parseUiDriver(JSON.parse(serializeUiDriver(custom)));
+        expect(parsed).toEqual(custom);
+      });
+  
+      it("shows introduction footer hotkey badges under the default driver", async () => {
+        const { render } = await import("@testing-library/react");
+        const steps: IntroductionStepDefinition[] = [
+          { id: "a", title: "A", body: "One", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
+          { id: "b", title: "B", body: "Two", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
+        ];
+        const { container } = render(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            <UIIntroduction introduction={{ title: "T", steps }} stepIndex={1} onStepIndexChange={() => undefined} onDismiss={() => undefined} />
+          </UiDriverProvider>,
+        );
+        expect(container.querySelector('[data-slot="control-hotkey"]')).toBeTruthy();
+      });
+  
+      it("throws on an invalid axis value", () => {
+        expect(() => parseUiDriver({ ...DEFAULT_UI_DRIVER, labels: "both" })).toThrow();
+        expect(() => parseUiDriver({ ...DEFAULT_UI_DRIVER, tooltips: "verbose" })).toThrow();
+      });
+  
+      it("resolveUiDriver prefers a custom driver over a builtin id, then falls back to default", () => {
+        const custom: UiDriver = { ...COMPACT_UI_DRIVER, id: "compact", label: "My Compact", tooltips: "full" };
+        expect(resolveUiDriver("compact", { compact: custom })).toEqual(custom);
+        expect(resolveUiDriver("compact", {})).toEqual(COMPACT_UI_DRIVER);
+        expect(resolveUiDriver("unknown.id", {})).toEqual(DEFAULT_UI_DRIVER);
+      });
+  
+      it("deriveTreeDragRoles separates catalogue transfer from in-tree sort", () => {
+        expect(deriveTreeDragRoles({ draggable: true, dragData: { "application/x-test": "{}" } }, true)).toEqual(["transfer"]);
+        expect(deriveTreeDragRoles({ draggable: true }, false)).toEqual(["sort"]);
+        expect(deriveTreeDragRoles({ draggable: true, dragData: { "application/x-test": "{}" }, isDragHandle: true }, true)).toEqual(["sort", "transfer"]);
+      });
+  
+      it("default driver keeps catalogue transfer on the move handle only", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+              <TreeItem id="tooltip.manual" label="Kind" draggable dragRoles={["transfer"]} dragInitiation="handle" />
+            </TreeContext.Provider>
+          </UiDriverProvider>,
+        );
+        expect(markup).toContain('data-drag-role="transfer"');
+        expect(markup).not.toContain('data-drag-role="sort"');
+        expect(markup).toContain('data-slot="tree-item-row"');
+        expect(markup).toMatch(/data-slot="tree-item-row"[^>]*draggable="false"/);
+        expect(markup).toContain('data-slot="drag-handle"');
+      });
+  
+      it("compact driver collapses drag roles onto the row surface", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+            <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+              <TreeItem id="tooltip.manual" label="Kind" draggable dragRoles={["sort", "transfer"]} dragInitiation="handle" />
+            </TreeContext.Provider>
+          </UiDriverProvider>,
+        );
+        expect(markup).not.toContain('data-slot="drag-handle"');
+        expect(markup).toContain('draggable="true"');
+      });
+  
+      it("table HTML5 drag rows expose a transfer handle under the default driver", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            <Table
+              columns={[{ id: "name", header: "Name", accessor: (row: { name: string }) => row.name }]}
+              data={[{ id: "r1", name: "Row", _drag: { kind: "x" } }]}
+              getRowId={(row) => row.id}
+              rowDragProps={(row) =>
+                row._drag
+                  ? {
+                      draggable: true,
+                      onDragStart: () => undefined,
+                    }
+                  : {}
+              }
+            />
+          </UiDriverProvider>,
+        );
+        expect(markup).toContain('data-slot="drag-handle"');
+        expect(markup).toContain('data-drag-role="transfer"');
+        expect(markup).not.toMatch(/<tr[^>]*draggable="true"/);
+        expect(markup).not.toMatch(/<tr[^>]*cursor-grab/);
+      });
+  
+      it("compact driver keeps table rows surface-draggable without a transfer handle", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+            <Table
+              columns={[{ id: "name", header: "Name", accessor: (row: { name: string }) => row.name }]}
+              data={[{ id: "r1", name: "Row", _drag: { kind: "x" } }]}
+              getRowId={(row) => row.id}
+              rowDragProps={(row) =>
+                row._drag
+                  ? {
+                      draggable: true,
+                      onDragStart: () => undefined,
+                    }
+                  : {}
+              }
+            />
+          </UiDriverProvider>,
+        );
+        expect(markup).not.toContain('data-slot="drag-handle"');
+        expect(markup).toContain('draggable="true"');
+      });
+  
+      it("useControlInlineText hides labels only under an icons-only driver", () => {
+        const iconsMarkup = renderToStaticMarkup(
+          <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+            <Button id="settings.driver.compact" icon={<CheckIcon />} />
+          </UiDriverProvider>,
+        );
+        expect(iconsMarkup).not.toContain(">Compact<");
+        const fullMarkup = renderToStaticMarkup(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            <Button id="settings.driver.compact" icon={<CheckIcon />} />
+          </UiDriverProvider>,
+        );
+        expect(fullMarkup).toContain(">Compact<");
+      });
+  
+      it("icon-only controls expose tooltip titles with hotkeys when the driver shows them", () => {
+        const tooltipDriver: UiDriver = { ...COMPACT_UI_DRIVER, tooltips: "minimal", hotkeys: "tooltip" };
+        const markup = renderToStaticMarkup(
+          <UiKeybindingsProvider bindings={composeControlKeybindings(new Map(), {})}>
+            <UiDriverProvider driver={tooltipDriver}>
+              <Button id="ui.search.toggle" icon={<CheckIcon />} />
+            </UiDriverProvider>
+          </UiKeybindingsProvider>,
+        );
+        expect(markup).toMatch(/title="Search.*\(/);
+      });
+  
+      it("drag handles with a subject render contextual drag instructions", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            <DragHandle subject="Perspective Window" />
+          </UiDriverProvider>,
+        );
+        expect(markup).toContain('title="Click and hold left click to drag Perspective Window"');
+      });
+    });
+  
+    describe("UiChromeLayout storage", () => {
+      const storage = createBrowserStoragePort();
+  
+      it("defaults to desktop when nothing is stored", () => {
+        storage.remove(UI_CHROME_LAYOUT_STORAGE_KEY);
+        expect(readStoredUiChromeLayout(storage)).toBe("desktop");
+      });
+  
+      it("round-trips a written tablet preference", () => {
+        writeStoredUiChromeLayout(storage, "tablet");
+        expect(readStoredUiChromeLayout(storage)).toBe("tablet");
+        writeStoredUiChromeLayout(storage, "desktop");
+        expect(readStoredUiChromeLayout(storage)).toBe("desktop");
+      });
+  
+      it("falls back to desktop for a garbage stored value", () => {
+        storage.set(UI_CHROME_LAYOUT_STORAGE_KEY, "giant-monitor");
+        expect(readStoredUiChromeLayout(storage)).toBe("desktop");
+        storage.remove(UI_CHROME_LAYOUT_STORAGE_KEY);
+      });
+    });
+  
+    describe("Mode mobile", () => {
+      const windows: ModeWindowDescriptor[] = [
+        { id: "a", title: uiDataLabel("A"), iconId: "app-window", children: <div>A body</div> },
+        { id: "b", title: uiDataLabel("B"), iconId: "app-window", children: <div>B body</div> },
+      ];
+      const splitLayout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          { kind: "stack", children: [{ kind: "window", id: "a" }], activeId: "a" },
+          { kind: "stack", children: [{ kind: "window", id: "b" }], activeId: "b" },
+        ],
+      };
+  
+      it("collapses split panes into one tab stack with the regular window chrome, dropping Focus but keeping Close", () => {
+        const markup = renderToStaticMarkup(<Mode mobile windows={windows} activeWindowId="b" layout={splitLayout} />);
+        expect(markup).toContain('data-slot="mode-dock-tabbar"');
+        expect(markup).toContain('data-slot="mode-dock-tab"');
+        expect(markup).not.toContain('data-slot="mode-dock-tab-focus"');
+        expect(markup).toContain('data-slot="mode-dock-tab-close"');
+        expect(markup).toContain("A");
+        expect(markup).toContain("B body");
+        expect(markup).not.toContain("A body");
+      });
+  
+      it("falls back to the first ordered window when activeWindowId is stale", () => {
+        const markup = renderToStaticMarkup(<Mode mobile windows={windows} activeWindowId="missing" layout={splitLayout} />);
+        expect(markup).toContain("A body");
+        expect(markup).not.toContain("B body");
+      });
+  
+      it("drops the Focus control out of the unshrinkable per-tab chrome grid even with many windows — windows always take the full space on mobile", () => {
+        const manyWindows: ModeWindowDescriptor[] = ["a", "b", "c", "d"].map((id) => ({ id, title: uiDataLabel(`semio · cad · ${id}`), iconId: "app-window", children: <div>{id} body</div> }));
+        const manyLayout: WindowLayoutNode = {
+          kind: "row",
+          children: manyWindows.map((window) => ({ kind: "stack", children: [{ kind: "window", id: window.id }], activeId: window.id })),
+        };
+        const markup = renderToStaticMarkup(<Mode mobile windows={manyWindows} activeWindowId="a" layout={manyLayout} />);
+        expect(markup).not.toContain('data-slot="mode-dock-chrome-column"');
+        expect(markup).toContain('data-slot="mode-dock-tab-cap"');
+        expect(markup).not.toContain('data-slot="mode-dock-tab-focus"');
+        expect(markup.match(/data-slot="mode-dock-tab"/g)?.length).toBe(4);
+      });
+  
+      it("keeps the Focus control on desktop for the same layout", () => {
+        const markup = renderToStaticMarkup(<Mode windows={windows} activeWindowId="b" layout={splitLayout} />);
+        expect(markup).toContain('data-slot="mode-dock-tab-focus"');
+        expect(markup).toContain('data-slot="mode-dock-tab-close"');
+      });
+    });
+  
+    describe("WindowMeasuresTree", () => {
+      it("renders inline label and control on one measure row", () => {
+        const markup = renderToStaticMarkup(
+          <WindowMeasuresTree>
+            <WindowMeasureTreeLeaf label={uiDataLabel("LOD")}>
+              <Select id="lod-mode.select" defaultValue="automatic">
+                <SelectTrigger id="lod-mode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="automatic">Auto</SelectItem>
+                </SelectContent>
+              </Select>
+            </WindowMeasureTreeLeaf>
+          </WindowMeasuresTree>,
+        );
+        expect(markup).toContain("LOD");
+        expect(markup).toContain('data-slot="select-trigger"');
+        expect(markup).toContain('data-slot="window-measure-tree-row-right"');
+        expect(markup).not.toContain("ring-[3px]");
+        expect(markup).not.toContain("border-emphasized");
+        expect(markup).not.toContain('data-slot="tree-section-row"');
+      });
+  
+      it("puts the toggle icon before the label and a checkbox on the right", () => {
+        const markup = renderToStaticMarkup(
+          <WindowMeasuresTree>
+            <WindowMeasureTreeLeaf label={uiDataLabel("Grid")} icon={<Icon icon="layout-grid" size={12} />}>
+              <TreeCheckbox id="grid-visible" checked title={uiDataLabel("Grid")} onCheckedChange={() => undefined} />
+            </WindowMeasureTreeLeaf>
+          </WindowMeasuresTree>,
+        );
+        const iconIdx = markup.indexOf('data-slot="tree-icon"');
+        const labelIdx = markup.indexOf('data-slot="tree-label"');
+        const checkboxIdx = markup.indexOf('data-slot="tree-action-checkbox"');
+        const rightIdx = markup.indexOf('data-slot="window-measure-tree-row-right"');
+        expect(iconIdx).toBeGreaterThan(-1);
+        expect(labelIdx).toBeGreaterThan(iconIdx);
+        expect(checkboxIdx).toBeGreaterThan(labelIdx);
+        expect(rightIdx).toBeGreaterThan(-1);
+        expect(checkboxIdx).toBeGreaterThan(rightIdx);
+        expect(markup).toContain('type="checkbox"');
+        expect(markup).toContain('id="grid-visible"');
+        expect(markup).toContain("Grid");
+        expect(markup).toContain('data-icon="layout-grid"');
+      });
+  
+      it("keeps measure-row hover fill and puts slider loading on the track wrap only", () => {
+        const markup = renderToStaticMarkup(
+          <WindowMeasuresTree>
+            <WindowMeasureTreeGroup id="fill" label="Fill" defaultOpen>
+              <WindowMeasureTreeLeaf label={uiDataLabel("Count")}>
+                <Slider id="puzzle3d-fill-count" value={[0]} min={0} max={1000} ready={120} loading />
+              </WindowMeasureTreeLeaf>
+            </WindowMeasureTreeGroup>
+          </WindowMeasuresTree>,
+        );
+        expect(markup).toContain('data-slot="window-measure-tree-row"');
+        expect(markup).toContain("hover:bg-hover-interactive-fill");
+        expect(markup).toContain('data-slot="slider-thumb"');
+        expect(markup).toContain("group-hover:bg-emphasized");
+        expect(markup).toContain('data-slot="slider-track-wrap"');
+        expect(markup).toContain('data-loading="true"');
+        expect(markup).toContain("border-loading");
+        expect(markup).not.toMatch(/data-slot="window-measure-tree-row"[^>]*border-loading/);
+        expect(markup).toContain('data-tree-guide-line=""');
+        expect(markup).toMatch(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover\/tree-row:bg-emphasized/);
+      });
+  
+      it("puts a waiting ring on a window measure tree leaf's own row", () => {
+        const markup = renderToStaticMarkup(
+          <WindowMeasuresTree>
+            <WindowMeasureTreeGroup id="fill" label="Fill" defaultOpen>
+              <WindowMeasureTreeLeaf label={uiDataLabel("Count")} waiting>
+                <span>0</span>
+              </WindowMeasureTreeLeaf>
+            </WindowMeasureTreeGroup>
+          </WindowMeasuresTree>,
+        );
+        expect(markup).toMatch(/data-slot="window-measure-tree-row"[^>]*data-waiting="true"/);
+        expect(markup).toMatch(/data-slot="window-measure-tree-row"[^>]*border-waiting/);
+      });
+  
+      it("renders nested measure groups with branch guide lines", () => {
+        const markup = renderToStaticMarkup(
+          <WindowMeasuresTree>
+            <WindowMeasureTreeGroup id="display" label="Display" defaultOpen={true}>
+              <WindowMeasureTreeLeaf label={uiDataLabel("LOD")}>
+                <span>Auto</span>
+              </WindowMeasureTreeLeaf>
+            </WindowMeasureTreeGroup>
+          </WindowMeasuresTree>,
+        );
+        expect(markup).toContain('data-slot="window-measure-tree-content"');
+        expect(markup).toContain('data-slot="tree-guide"');
+        expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover\/tree-row:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
+        expect(markup).toContain('data-slot="tree-branch-elbow"');
+      });
+  
+      it("renders bottom-pane measure trees upward with children above their group row", () => {
+        const markup = renderToStaticMarkup(
+          <WindowMeasuresTree direction="up">
+            <WindowMeasureTreeGroup id="fill" label="Fill" defaultOpen>
+              <WindowMeasureTreeLeaf label={uiDataLabel("Count")}>
+                <span>1000</span>
+              </WindowMeasureTreeLeaf>
+              <WindowMeasureTreeLeaf label={uiDataLabel("Mode")}>
+                <span>Voxel</span>
+              </WindowMeasureTreeLeaf>
+            </WindowMeasureTreeGroup>
+          </WindowMeasuresTree>,
+        );
+        expect(markup).toContain('data-direction="up"');
+        expect(markup.indexOf("Voxel")).toBeLessThan(markup.indexOf("Count"));
+        expect(markup.indexOf("Count")).toBeLessThan(markup.indexOf("Fill"));
+        expect(markup).toContain('data-icon="chevron-up"');
+        const stemStyle = markup.match(/data-slot="tree-branch-stem"[^>]*style="([^"]*)"/)?.[1] ?? "";
+        expect(stemStyle).toContain("top:0");
+        expect(stemStyle).toContain("bottom:calc(var(--size-workbench) / 2)");
+      });
+  
+      it("stretches full-width measure toggles so active fill spans the tree row", () => {
+        const markup = renderToStaticMarkup(
+          <WindowMeasuresTree>
+            <WindowMeasureTreeLeaf fullWidth>
+              <Toggle id="move-axes" className={cn(windowMeasureToggleClass, windowMeasureToggleCompactClass)} pressed icon={<CheckIcon className="size-small" />} text="Move Axes" />
+            </WindowMeasureTreeLeaf>
+          </WindowMeasuresTree>,
+        );
+        expect(markup).toContain('data-slot="toggle-group"');
+        expect(markup).toContain("!w-full");
+        expect(markup).toContain("[&amp;_[data-slot=toggle-group-item]]:!flex-1");
+        expect(markup).toContain("[&amp;_[data-slot=toggle-group-item]]:!shrink");
+        expect(markup).toContain('data-state="on"');
+      });
+    });
+  
+    describe("control chrome", () => {
+      it("shows inline labels on buttons for the default driver", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            <Button id="settings.driver.compact" icon={<CheckIcon />} />
+          </UiDriverProvider>,
+        );
+        expect(markup).toContain("Compact");
+        expect(markup).toContain("aspect-auto");
+      });
+  
+      it("hides inline labels on buttons for the compact driver", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+            <Button id="settings.driver.compact" icon={<CheckIcon />} />
+          </UiDriverProvider>,
+        );
+        expect(markup).not.toContain(">Compact<");
+      });
+  
+      it("renders panel toggles with icons including display", () => {
+        const markup = renderToStaticMarkup(<Toggle id="ui.panelToggle.display" pressed={false} onPressedChange={() => undefined} icon="layout-grid" />);
+        expect(markup).toContain('id="ui.panelToggle.display"');
+        expect(markup).toContain('data-icon="layout-grid"');
+        expect(markup).toContain('width="7"');
+        expect(markup).not.toContain("data-missing-icon");
+      });
+  
+      it("PanelChromeTabBar renders only the root row for a nested tree, and a press on a closed host opens it without changing the active path", async () => {
+        const { render, screen, fireEvent } = await import("@testing-library/react");
+        const StubIcon = (): null => null;
+        const tabs: PanelTabNode[] = [
+          {
+            kind: "branch",
+            id: "framework.category.workbench",
+            icon: StubIcon,
+            name: "Workbench",
+            children: [singleTreeLeaf({ id: "framework.panel.artifact", icon: StubIcon, name: "Artifact", tree: { sections: [] } }), singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } })],
+          },
+        ];
+        let visible = false;
+        let path: readonly string[] = ["framework.category.workbench", "framework.panel.artifact"];
+        const { container, rerender } = render(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={path} onActiveTabPathChange={(next) => (path = next)} />);
+        expect(container.querySelectorAll('[data-slot="panel-tabs"]').length).toBe(1);
+        expect(screen.getByText("Workbench")).toBeTruthy();
+        expect(screen.queryByText("Artifact")).toBeNull();
+        fireEvent.click(screen.getByText("Workbench"));
+        expect(visible).toBe(true);
+        expect(path).toEqual(["framework.category.workbench", "framework.panel.artifact"]);
+        rerender(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={path} onActiveTabPathChange={(next) => (path = next)} />);
+        const placeholder = container.querySelector('[data-slot="panel-chrome-tab-bar"]');
+        expect(placeholder?.getAttribute("data-panel-chrome-tab-bar-placeholder")).toBe("true");
+        expect(placeholder?.querySelector('[data-slot="panel-tabs"]')).toBeNull();
+      });
+  
+      it("PanelChromeTabBar at middle anchors uses panel level and window-chrome chip cap glass", () => {
+        const StubIcon = (): null => null;
+        const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "search", icon: StubIcon, name: "Search", tree: { sections: [] } })];
+        for (const anchor of ["top-middle", "bottom-middle"] as const) {
+          const markup = renderToStaticMarkup(<PanelChromeTabBar anchor={anchor} tabs={tabs} visible={false} />);
+          expect(markup).toContain('data-level="panel"');
+          expect(markup).toContain('data-slot="window-chrome-chip-cap"');
+          expect(markup).toContain("ui-glass");
+        }
+      });
+  
+      it("folded PanelChromeTabBar matches folded Panel chip tab button styling", async () => {
+        const { render } = await import("@testing-library/react");
+        const StubIcon = (): null => null;
+        const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+        const { container: chromeBarContainer } = render(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={false} activeTabPath={["tab-a"]} onActiveTabPathChange={() => undefined} />);
+        const { container: foldedPanelContainer } = render(<Panel anchor="top-left" visible={false} tabs={tabs} activeTabPath={["tab-a"]} />);
+        const chromeBarButton = chromeBarContainer.querySelector('[data-slot="panel-tab-button"]') as HTMLElement;
+        const foldedPanelButton = foldedPanelContainer.querySelector('[data-slot="panel-tab-button"]') as HTMLElement;
+        expect(chromeBarButton.className).toBe(foldedPanelButton.className);
+        expect(chromeBarContainer.querySelector('[data-slot="window-chrome-chip-cap"]')).toBeTruthy();
+        expect(foldedPanelContainer.querySelector('[data-slot="window-chrome-chip-cap"]')).toBeTruthy();
+        expect(chromeBarContainer.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+        expect(foldedPanelContainer.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+      });
+  
+      it("button and toggle groups share chrome control group glass styling", () => {
+        const buttonMarkup = renderToStaticMarkup(
+          <ButtonGroup>
+            <Button id="test.button" icon="x" />
+          </ButtonGroup>,
+        );
+        const toggleMarkup = renderToStaticMarkup(<Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon="search" text="Search" />);
+        expect(buttonMarkup).toContain("ui-glass");
+        expect(toggleMarkup).toContain("ui-glass");
+      });
+  
+      it("PanelChromeTabBar does not celebrate an unrelated tab press outside introduction completion", async () => {
+        const { render, screen, fireEvent } = await import("@testing-library/react");
+        const StubIcon = (): null => null;
+        const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Katalog", tree: { sections: [] } })];
+        let visible = false;
+        const { container } = render(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={["framework.panel.catalogue"]} onActiveTabPathChange={() => undefined} />);
+        fireEvent.click(screen.getByText("Katalog"));
+        expect(visible).toBe(true);
+        expect(container.querySelector('[id="framework.panel.catalogue"]')?.getAttribute("data-celebrated")).toBeNull();
+      });
+  
+      it("Toggle does not celebrate on an ordinary press outside introduction completion", async () => {
+        const { render, fireEvent } = await import("@testing-library/react");
+        const { container } = render(<Toggle id="ui.panelToggle.display" pressed={false} onPressedChange={() => undefined} icon="layout-grid" text="Display" />);
+        const item = container.querySelector('[data-slot="toggle-group-item"]');
+        expect(item).toBeTruthy();
+        fireEvent.click(item!);
+        expect(item?.getAttribute("data-celebrated")).toBeNull();
+      });
+  
+      it("exposes navbar fill helper for trailing chrome alignment", () => {
+        const markup = renderToStaticMarkup(<Navbar items={[navbarFillItem(), { key: "trailing", content: <span>Trailing</span> }]} />);
+        expect(markup).toContain("flex-1 min-w-0");
+        expect(markup).toContain("Trailing");
+      });
+  
+      it("renders fullscreen toggle on the trailing navbar edge by default", () => {
+        const markup = renderToStaticMarkup(<Navbar items={[{ key: "title", content: <span>App</span> }]} />);
+        expect(markup).toContain('data-slot="navbar-fullscreen-toggle"');
+        expect(markup).toContain('id="ui.fullscreen.toggle"');
+      });
+  
+      it("maps fullscreen toggle id to ui i18n key", () => {
+        expect(resolveControlLabelId("ui.fullscreen.toggle")).toBe("ui.fullscreen.toggle");
+      });
+  
+      it("keeps emphasized label styling on pressed navbar toggles", () => {
+        const markup = renderToStaticMarkup(<Toggle id="ui.panelToggle.display" pressed={true} onPressedChange={() => undefined} icon="layout-grid" text="Display" />);
+        expect(markup).toContain('data-state="on"');
+        expect(markup).toContain("data-[state=on]:bg-active-base");
+        expect(markup).toContain("data-[state=on]:border-active-base");
+        expect(markup).toContain("data-[state=on]:text-emphasized");
+        expect(markup).not.toContain("data-[state=on]:bg-hover-interactive-fill");
+      });
+  
+      it("surfaces missing icons at runtime when control icon is absent", () => {
+        const markup = renderToStaticMarkup(
+          <ToggleGroup
+            items={[
+              {
+                value: "on",
+                id: "ui.panelToggle.display",
+                icon: undefined as unknown as ControlIcon,
+              },
+            ]}
+          />,
+        );
+        expect(markup).toContain("data-missing-icon");
+      });
+  
+      it("maps ui shell ids to domain-neutral ui i18n keys by default", () => {
+        expect(resolveControlLabelId("ui.nav.back")).toBe("ui.nav.back");
+        expect(resolveControlLabelId("ui.panelToggle.workbench")).toBe("ui.panelToggle.workbench");
+        expect(resolveControlLabelId("playground.panel.details")).toBe("ui.panelToggle.details");
+        expect(panelKindFromPanelToggleControlId("playground.panel.workbench")).toBe("workbench");
+      });
+  
+      it("resolves ribbon collection ids in en and de", () => {
+        const categories: readonly UiRibbonParentCategory[] = [
+          "history",
+          "hand",
+          "selection",
+          "lasso",
+          "filter",
+          "open",
+          "save",
+          "transfer",
+          "transform",
+          "create",
+          "view",
+          "actions",
+          "settings",
+          "methods",
+          "mode",
+          "targets",
+          "export",
+          "utilities",
+          "sync",
+        ];
+        for (const locale of ["en", "de"] as const) {
+          void uiI18n.changeLanguage(locale);
+          for (const category of categories) {
+            const key = `ui.ribbon.parent.${category}` as UiTranslationKey;
+            const label = resolveTranslationLabel(uiI18n.t(key as UiTranslationKey));
+            expect(label, `${locale}:${key}`).toBeTruthy();
+            expect(label).not.toBe(key);
+          }
+          expect(resolveControlLabelId(`ui.ribbon.group.${categories[0]}`)).toBe(`ui.ribbon.parent.${categories[0]}`);
+          expect(resolveControlLabelId(`ui.ribbon.example-window.group.${categories[0]}`)).toBe(`ui.ribbon.parent.${categories[0]}`);
+        }
+        void uiI18n.changeLanguage("en");
+      });
+  
+      it("renders navbar navigation buttons with inline labels when compact is off", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            <ButtonGroup id="ui.nav.back">
+              <ButtonGroupItem id="ui.nav.back" icon="arrow-left" />
+            </ButtonGroup>
+          </UiDriverProvider>,
+        );
+        expect(markup).toContain("Go back");
+        expect(markup).toContain("aspect-auto");
+      });
+  
+      it("threads ButtonGroup level into ButtonGroupItem hover tokens", () => {
+        const markup = renderToStaticMarkup(
+          <LevelProvider level="window">
+            <ButtonGroup>
+              <ButtonGroupItem id="ui.engagement.actions" text="Next" icon="arrow-right" />
+            </ButtonGroup>
+          </LevelProvider>,
+        );
+        expect(markup).toContain("hover:bg-hover-interactive-fill");
+        expect(markup).not.toContain("hover:bg-hover-base");
+        expect(markup).not.toContain("hover:bg-hover-window");
+      });
+  
+      it("renders command menu rows with hover feedback", () => {
+        const commandMarkup = renderToStaticMarkup(
+          <Command>
+            <CommandList>
+              <CommandItem value="alpha">Alpha</CommandItem>
+            </CommandList>
+          </Command>,
+        );
+        expect(commandMarkup).toContain("hover:bg-hover-interactive-fill");
+      });
+  
+      it("renders select items with hover feedback", async () => {
+        const { render } = await import("@testing-library/react");
+        render(
+          <Select id="compute-mode.select" open defaultValue="fast">
+            <SelectTrigger id="compute-mode">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="fast">Fast</SelectItem>
+            </SelectContent>
+          </Select>,
+        );
+        const item = document.querySelector('[data-slot="select-item"]');
+        expect(item?.className).toContain("hover:bg-hover-interactive-fill");
+      });
+  
+      it("renders select menus with popover surface tokens", async () => {
+        const { render } = await import("@testing-library/react");
+        render(
+          <Select id="compute-mode.select" open defaultValue="fast">
+            <SelectTrigger id="compute-mode">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="fast">Fast</SelectItem>
+            </SelectContent>
+          </Select>,
+        );
+        const content = document.querySelector('[data-slot="select-content"]');
+        expect(content?.getAttribute("data-level")).toBe("menu");
+        expect(content?.className).toContain("z-menu");
+        expect(content?.className).toContain("ui-glass");
+        expect(content?.className).toContain("text-popover-foreground");
+        expect(content?.className).not.toContain("bg-transparent");
+      });
+  
+      it("renders toggles with inline labels from the toggle group id when compact is off", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            <Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon={<SearchIcon className="size-small" />} />
+          </UiDriverProvider>,
+        );
+        expect(markup).toContain("Search");
+        expect(markup).toContain("aspect-auto");
+      });
+  
+      it("renders search and find toggles with distinct labels", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            <Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon={<SearchIcon className="size-small" />} />
+            <Toggle id="ui.find.toggle" pressed={false} onPressedChange={() => undefined} icon={<FindInViewIcon className="size-small" />} />
+          </UiDriverProvider>,
+        );
+        expect(markup).toContain("Search");
+        expect(markup).toContain("Find");
+        expect(resolveControlLabelId("ui.search.toggle")).not.toBe(resolveControlLabelId("ui.find.toggle"));
+      });
+  
+      it("humanizes unknown control ids when no i18n entry exists", () => {
+        expect(humanizeControlId("ui.panelToggle.details")).toBe("Details");
+        expect(humanizeControlSegment("puzzle2dGridSnap")).toBe("Puzzle2d Grid Snap");
+      });
+  
+      it("maps internal engagement/search control ids to their ui.* i18n keys", () => {
+        expect(isInternalChromeControlId("search-possibles-toggle")).toBe(true);
+        expect(resolveControlLabelId("ui.windowSearch.suggestions")).toBe("ui.windowSearch.suggestions");
+        expect(resolveControlLabelId("ui.engagement.actions")).toBe("ui.engagement.actions");
+        expect(resolveControlLabelId("search-input")).toBe("ui.windowSearch.action");
+      });
+  
+      it("uses normal shell edges on panel/pane frame, navbar bottom, and footer top with CSS hover emphasis", () => {
+        expect(shellChromeBorderClass).toContain("border-normal");
+        expect(shellChromeBorderClass).not.toContain("border-emphasized");
+        expect(shellChromeFrameLayerClass).not.toContain("border-normal");
+        expect(shellChromeFrameLayerClass).not.toContain("border-emphasized");
+        const navbarMarkup = renderToStaticMarkup(<Navbar items={[{ key: "a", content: "Nav" }]} />);
+        expect(navbarMarkup).toContain('data-slot="navbar"');
+        expect(navbarMarkup).not.toContain(borderNormalBottomClass);
+        expect(navbarMarkup).not.toContain("border-emphasized");
+        expect(navbarMarkup).not.toContain("border-border");
+        const footerMarkup = renderToStaticMarkup(<Footer items={[{ key: "a", content: "Footer" }]} />);
+        expect(footerMarkup).toContain('data-slot="footer"');
+        expect(footerMarkup).not.toContain(borderNormalTopClass);
+        expect(footerMarkup).not.toContain("border-emphasized");
+        const ribbonMarkup = renderToStaticMarkup(
+          <RibbonZone>
+            <RibbonItem>
+              <ToggleGroup kind="single" value="tool" items={[{ value: "tool", id: "ui.ribbon.group.tool", icon: "save", text: "Tool" }]} />
+            </RibbonItem>
+          </RibbonZone>,
+        );
+        expect(ribbonMarkup).toMatch(/\bborder\b/);
+        expect(ribbonMarkup).toContain(borderNormalClass);
+        expect(ribbonMarkup).not.toContain("border-emphasized");
+        const panelMarkup = renderToStaticMarkup(<Panel anchor="top-left" visible tabs={[singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } })]} />);
+        expect(panelMarkup).toContain('data-slot="panel"');
+        expect(panelMarkup).toContain('data-slot="window-chrome-silhouette-border"');
+        expect(panelMarkup).toContain('data-slot="window-chrome-cap"');
+        expect(panelMarkup).not.toContain("border-emphasized");
+        expect(panelMarkup).not.toContain("border-b-current");
+        expect(panelMarkup).not.toMatch(/panel-tabs[^>]*border-emphasized/);
+        expect(panelMarkup).toMatch(/panel-tabs[^>]*z-40/);
+        const paneMarkup = renderToStaticMarkup(
+          <PaneHost>
+            <Pane id="hover-pane" anchor="top-left" icon="box" label={uiDataLabel("Pane")} folded={false}>
+              <div>Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(paneMarkup).toContain('data-slot="pane"');
+        expect(paneMarkup).toContain('data-slot="window-chrome-silhouette-border"');
+        expect(paneMarkup).toContain('data-slot="window-chrome-cap"');
+        expect(paneMarkup).not.toContain("border-emphasized");
+        const measuresMarkup = renderToStaticMarkup(
+          <Window id="measures-markup-window" measures={<div>LOD</div>} measuresFolded={false}>
+            <div>Body</div>
+          </Window>,
+        );
+        expect(measuresMarkup).toContain('data-slot="window-chrome-silhouette-border"');
+        expect(measuresMarkup).toContain('data-slot="window-chrome-gap"');
+        expect(measuresMarkup).not.toContain("border-emphasized");
+      });
+  
+      it("keeps inactive window chrome neutral while controls emphasize only on direct hover", async () => {
+        const { readFileSync } = await import("node:fs");
+        const { fileURLToPath } = await import("node:url");
+        const { dirname, resolve } = await import("node:path");
+        const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui.css"), "utf8");
+        expect(css).toContain('[data-slot="navbar"]::after');
+        expect(css).toContain('[data-slot="footer"]::before');
+        expect(css).toMatch(/\[data-slot="navbar"\]:hover::after/);
+        expect(css).toMatch(/\[data-slot="footer"\]:hover::before/);
+        expect(css).not.toMatch(/\[data-slot="navbar"\]:focus-within::after/);
+        expect(css).not.toMatch(/\[data-slot="footer"\]:focus-within::before/);
+        expect(css).toContain("background-color: var(--border-emphasized-color)");
+        expect(css).not.toMatch(/\[data-window-silhouette\]:not\(\[data-active="true"\]\):hover \[data-window-silhouette-border\]\[data-kind="normal"\] path/);
+        expect(css).toMatch(/:is\(\[data-slot="panel"\]\[data-panel="mobilePanel"\]\):hover\s*\[data-slot="chrome-frame"\]/);
+        expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):hover\s*\[data-slot="chrome-frame"\]/);
+        expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):focus-within\s*\[data-slot="chrome-frame"\]/);
+        expect(css).toContain('[data-hover-scope]:hover [data-slot="drag-handle"]');
+        expect(css).toMatch(/\[data-hover-scope\]:hover\s*\[data-slot="drag-handle"\]\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
+        expect(css).not.toContain(':has([data-slot="mode-dock-stack-body"]:hover)');
+        expect(css).not.toContain(') [data-slot="mode-dock-tab"][data-stack-active="true"]:not([data-handle-hovered="true"])');
+        expect(css).not.toContain(') [data-slot="mode-dock-tab"][data-stack-active="true"] [data-slot="drag-handle"]');
+        expect(css).not.toContain(') [data-slot$="-tab-button"][data-active="true"]:not([data-handle-hovered="true"])');
+        expect(css).not.toContain(') [data-slot$="-tab-button"][data-active="true"] [data-slot="drag-handle"]');
+        expect(css).not.toContain(') [data-slot="window-pane-chrome-toggle"]:not([data-handle-hovered="true"])');
+        expect(css).not.toContain(') [data-slot="window-pane-chrome-toggle"] [data-slot="drag-handle"]');
+        expect(modeDockTabClassName).toContain("hover:not-data-[handle-hovered=true]:text-emphasized");
+      });
+  
+      it("panel and pane silhouettes stay normal until the surface receives focus and expose fold controls", async () => {
+        const { fireEvent, render, waitFor } = await import("@testing-library/react");
+        const tabs = [singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } })];
+        const onVisibleChange = vi.fn();
+        const onFoldToggle = vi.fn();
+        const { container: panelContainer } = render(<Panel anchor="top-left" visible onVisibleChange={onVisibleChange} tabs={tabs} activeTabPath={["tab-a"]} />);
+        const panelStack = panelContainer.querySelector('[data-slot="panel"] [data-slot="window-chrome-stack"]') as HTMLElement;
+        expect(panelStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+        expect(panelContainer.querySelector('[data-slot="panel-fold"]')).toBeTruthy();
+        fireEvent.pointerDown(panelStack.querySelector('[data-slot="panel-tab-button"]')!);
+        await waitFor(() => {
+          expect(panelStack.getAttribute("data-active")).toBe("true");
+          expect(panelStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+        });
+        fireEvent.click(panelContainer.querySelector('[data-slot="panel-fold"]')!);
+        expect(onVisibleChange).toHaveBeenCalledWith(false);
+  
+        const { container: paneContainer } = render(
+          <PaneHost>
+            <Pane id="focus-pane" anchor="top-right" icon="box" label={uiDataLabel("Pane")} folded={false} onFoldToggle={onFoldToggle}>
+              <div>Pane body</div>
+            </Pane>
+          </PaneHost>,
+        );
+        const paneStack = paneContainer.querySelector('[data-slot="pane"] [data-slot="window-chrome-stack"]') as HTMLElement;
+        expect(paneStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+        expect(paneContainer.querySelector('[data-slot="pane-fold"]')).toBeTruthy();
+        fireEvent.pointerDown(paneStack.querySelector('[data-slot="pane-body"]')!);
+        await waitFor(() => {
+          expect(paneStack.getAttribute("data-active")).toBe("true");
+          expect(paneStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+        });
+        fireEvent.click(paneContainer.querySelector('[data-slot="pane-fold"]')!);
+        expect(onFoldToggle).toHaveBeenCalled();
+      });
+  
+      it("activating a surface clears its introduced stamps so the active stroke can win", async () => {
+        const { fireEvent, render, waitFor } = await import("@testing-library/react");
+        const { container } = render(
+          <div className="h-layout-story w-layout-story-md">
+            <Mode
+              windows={[{ id: "main", title: uiDataLabel("Main"), iconId: "app-window", children: <div id="framework.window.main">Main Body</div> }]}
+              layout={{ kind: "stack", children: [{ kind: "window", id: "main" }], activeId: "main" }}
+              activeWindowId="main"
+              onActiveWindowChange={() => {}}
+            />
+          </div>,
+        );
+        const stack = container.querySelector('[data-slot="mode-dock-stack"]') as HTMLElement;
+        const scroll = container.querySelector("#framework\\.window\\.main") as HTMLElement;
+        scroll.setAttribute("data-introduced", "true");
+        expect(resolveWindowSilhouetteBorderKind(stack.querySelector('[data-slot="window"]'))).toBe("introduced");
+        stack.setAttribute("data-silhouette-remeasure", "introduced");
+        await waitFor(() => {
+          expect(stack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("introduced");
+        });
+        fireEvent.pointerDown(stack.querySelector('[data-slot="mode-dock-stack-body"]')!);
+        await waitFor(() => {
+          expect(scroll.getAttribute("data-introduced")).toBeNull();
+          expect(stack.getAttribute("data-active")).toBe("true");
+          expect(stack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+        });
+      });
+  
+      it("panel window-variant tabs use mode-dock pill chrome, normal toggle dividers, and a U-gap", () => {
+        const tabs = [singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } })];
+        const markup = renderToStaticMarkup(<Panel anchor="top-left" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
+        expect(markup).toContain("bg-active-base");
+        expect(markup).toContain("border-0");
+        expect(markup).toContain("data-window-silhouette");
+        expect(markup).toContain('data-slot="window-chrome-gap"');
+        expect(markup).toContain(panelTabButtonDividerClass);
+        expect(markup).toContain("ui-glass");
+        expect(markup).not.toContain("ui-glass-chrome");
+      });
+  
+      it("panel chip-cap and controls paint glass above one transparent clipped payload", async () => {
+        const { render } = await import("@testing-library/react");
+        const tabs = [singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } })];
+        const { container } = render(<Panel anchor="top-left" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
+        const chip = container.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
+        const body = container.querySelector('[data-slot="panel-content"]') as HTMLElement;
+        const controls = container.querySelector('[data-slot="window-chrome-controls"]') as HTMLElement;
+        expect(chip.className).toContain("ui-glass");
+        expect(body.hasAttribute("data-window-silhouette-content")).toBe(true);
+        expect(body.className).not.toContain("ui-glass");
+        expect(controls.className).toContain("ui-glass");
+        expect(chip.className).not.toContain("ui-glass-chrome");
+        expect(chip.hasAttribute("data-window-silhouette-chip")).toBe(true);
+        expect(container.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+        const inactive = container.querySelector('[data-slot="panel-tab-button"]:not([data-active="true"])') as HTMLElement;
+        const active = container.querySelector('[data-slot="panel-tab-button"][data-active="true"]') as HTMLElement;
+        expect(inactive.className).toContain("bg-transparent");
+        expect(inactive.className).not.toContain("ui-surface");
+        expect(inactive.className).toContain("border-e");
+        expect(inactive.className).toContain("!border-normal");
+        expect(active.className).toContain("bg-active-base");
+        expect(active.className).toContain("border-e");
+        expect(active.className).toContain("!border-normal");
+        expect(active.className).toContain("border-0");
+        expect(body.className).toContain("z-[1]");
+      });
+  
+      it("measureWindowSilhouetteMetrics reads RTL top caps from painted chip spans instead of assuming LTR gap order", () => {
+        const stack = document.createElement("div");
+        stack.innerHTML = `
+          <div data-slot="window-chrome-cap">
+            <div data-slot="window-chrome-controls" data-window-silhouette-chip data-dock="top"></div>
+            <div data-slot="window-chrome-gap"></div>
+            <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="top"></div>
+          </div>
+        `;
+        const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
+          if (!(el instanceof HTMLElement)) return;
+          vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+            x: rect.left ?? 0,
+            y: rect.top ?? 0,
+            top: rect.top ?? 0,
+            left: rect.left ?? 0,
+            bottom: rect.bottom ?? 0,
+            right: rect.right ?? 0,
+            width: rect.width ?? 0,
+            height: rect.height ?? 0,
+            toJSON: () => ({}),
+            ...rect,
+          } as DOMRect);
+        };
+        mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
+        mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 0, right: 40, width: 40, height: 24, top: 0, bottom: 24 });
+        mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 40, right: 140, width: 100, height: 24, top: 0, bottom: 24 });
+        mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 140, right: 200, width: 60, height: 24, top: 0, bottom: 24 });
+        mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, right: 200, width: 200, height: 24, top: 0, bottom: 24 });
+        expect(measureWindowSilhouetteMetrics(stack)).toEqual({
+          width: 200,
+          height: 100,
+          top: {
+            depth: 24,
+            chips: [
+              { left: 0, right: 40 },
+              { left: 140, right: 200 },
+            ],
+          },
+          bottom: { depth: 0, chips: [] },
+        });
+      });
+  
+      it("measureWindowSilhouetteMetrics places bottom-docked caps on the bottom silhouette edge", () => {
+        const stack = document.createElement("div");
+        stack.innerHTML = `
+          <div data-slot="window-chrome-body"></div>
+          <div data-slot="window-chrome-cap">
+            <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="bottom"></div>
+            <div data-slot="window-chrome-gap"></div>
+            <div data-slot="window-chrome-controls" data-window-silhouette-chip data-dock="bottom"></div>
+          </div>
+        `;
+        const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
+          if (!(el instanceof HTMLElement)) return;
+          vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+            x: rect.left ?? 0,
+            y: rect.top ?? 0,
+            top: rect.top ?? 0,
+            left: rect.left ?? 0,
+            bottom: rect.bottom ?? 0,
+            right: rect.right ?? 0,
+            width: rect.width ?? 0,
+            height: rect.height ?? 0,
+            toJSON: () => ({}),
+            ...rect,
+          } as DOMRect);
+        };
+        mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
+        mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 0, right: 60, width: 60, height: 24, top: 76, bottom: 100 });
+        mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 60, right: 160, width: 100, height: 24, top: 76, bottom: 100 });
+        mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 160, right: 200, width: 40, height: 24, top: 76, bottom: 100 });
+        mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, right: 200, width: 200, height: 24, top: 76, bottom: 100 });
+        const metrics = measureWindowSilhouetteMetrics(stack);
+        expect(metrics?.top).toEqual({ depth: 0, chips: [] });
+        expect(metrics?.bottom).toEqual({
+          depth: 24,
+          chips: [
+            { left: 0, right: 60 },
+            { left: 160, right: 200 },
+          ],
+        });
+        expect(windowSilhouettePath(metrics!)).toBe(
+          windowSilhouettePath({
+            width: 200,
+            height: 100,
+            top: { depth: 0, chips: [] },
+            bottom: {
+              depth: 24,
+              chips: [
+                { left: 0, right: 60 },
+                { left: 160, right: 200 },
+              ],
+            },
+          }),
+        );
+      });
+  
+      it("measureWindowSilhouetteMetrics ignores nested pane silhouette chips so the window bottom stays rectangular", () => {
+        const stack = document.createElement("div");
+        stack.setAttribute("data-window-silhouette", "");
+        stack.setAttribute("data-slot", "mode-dock-stack");
+        stack.innerHTML = `
+          <div data-slot="mode-dock-tabbar">
+            <div data-slot="mode-dock-tab-cap" data-window-silhouette-chip data-dock="top"></div>
+            <div data-slot="mode-dock-tab-gap"></div>
+            <div data-slot="mode-dock-controls-cap" data-window-silhouette-chip data-dock="top"></div>
+          </div>
+          <div data-slot="mode-dock-stack-body">
+            <div data-window-silhouette data-slot="window-chrome-stack">
+              <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="bottom"></div>
+              <div data-slot="window-chrome-gap"></div>
+              <div data-slot="window-chrome-controls" data-window-silhouette-chip data-dock="bottom"></div>
+            </div>
+          </div>
+        `;
+        const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
+          if (!(el instanceof HTMLElement)) return;
+          vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+            x: rect.left ?? 0,
+            y: rect.top ?? 0,
+            top: rect.top ?? 0,
+            left: rect.left ?? 0,
+            bottom: rect.bottom ?? 0,
+            right: rect.right ?? 0,
+            width: rect.width ?? 0,
+            height: rect.height ?? 0,
+            toJSON: () => ({}),
+            ...rect,
+          } as DOMRect);
+        };
+        mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
+        mockRect(stack.querySelector('[data-slot="mode-dock-tab-cap"]'), { left: 0, right: 60, width: 60, height: 24, top: 0, bottom: 24 });
+        mockRect(stack.querySelector('[data-slot="mode-dock-tab-gap"]'), { left: 60, right: 160, width: 100, height: 24, top: 0, bottom: 24 });
+        mockRect(stack.querySelector('[data-slot="mode-dock-controls-cap"]'), { left: 160, right: 200, width: 40, height: 24, top: 0, bottom: 24 });
+        mockRect(stack.querySelector('[data-slot="mode-dock-tabbar"]'), { left: 0, right: 200, width: 200, height: 24, top: 0, bottom: 24 });
+        mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 140, right: 200, width: 60, height: 24, top: 76, bottom: 100 });
+        mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 0, right: 140, width: 140, height: 24, top: 76, bottom: 100 });
+        mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 0, right: 0, width: 0, height: 24, top: 76, bottom: 100 });
+        expect(measureWindowSilhouetteMetrics(stack)).toEqual({
+          width: 200,
+          height: 100,
+          top: {
+            depth: 24,
+            chips: [
+              { left: 0, right: 60 },
+              { left: 160, right: 200 },
+            ],
+          },
+          bottom: { depth: 0, chips: [] },
+        });
+      });
+  
+      it("bottom-anchored panels stamp capDock=bottom on WindowChrome and keep rtl on the panel root for top-right", () => {
+        const StubIcon = (): null => null;
+        const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } })];
+        const bottomMarkup = renderToStaticMarkup(<Panel anchor="bottom-right" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
+        expect(bottomMarkup).toContain('data-dock="bottom"');
+        expect(bottomMarkup).toContain("flex-col-reverse");
+        const rightMarkup = renderToStaticMarkup(<Panel anchor="top-right" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
+        expect(rightMarkup).toContain('dir="rtl"');
+        expect(rightMarkup).toContain('data-dock="top"');
+        expect(rightMarkup).not.toMatch(/data-slot="window-chrome-stack"[^>]*flex-col-reverse/);
+      });
+  
+      it("pane and panel chrome toggles emphasize only their own hovered content", () => {
+        const paneMarkup = renderToStaticMarkup(<WindowPaneChromeToggle id="ui.pane.toggle.hover" icon={WINDOW_PANE_MEASURES_ICON} label="Options" dragPointerProps={{ onPointerDown: () => {} }} />);
+        expect(paneMarkup).toContain("data-hover-scope");
+        expect(paneMarkup).toContain('data-slot="drag-handle"');
+        expect(paneMarkup).toMatch(/data-hover-scope[\s\S]*data-slot="drag-handle"/);
+        const toggleClassName = paneMarkup.match(/data-slot="window-pane-chrome-toggle"[^>]*class="([^"]+)"/)?.[1] ?? "";
+        expect(toggleClassName).toContain("hover:not-data-[handle-hovered=true]:text-emphasized");
+        const handleClassName = paneMarkup.match(/data-slot="drag-handle"[^>]*class="([^"]+)"/)?.[1] ?? "";
+        expect(handleClassName).toContain("text-muted-foreground");
+        expect(handleClassName).toContain("hover:text-emphasized");
+      });
+  
+      it("draws exactly one border around the Stepper group, never a second one on its buttons", () => {
+        const stepperMarkup = renderToStaticMarkup(<Stepper id="ui.stepper.regression" value={5} min={0} max={10} />);
+        expect(stepperMarkup).not.toContain("border-border");
+        expect(stepperMarkup.match(/data-slot="stepper-(group|minus|plus)"/g)?.length).toBe(3);
+        const groupMatch = stepperMarkup.match(/<div data-slot="stepper-group"[^>]*class="([^"]*)"/);
+        expect(groupMatch?.[1]).toContain("border");
+      });
+  
+      it("renders adjacent ribbon toggle group items for segmented focus borders", () => {
+        const markup = renderToStaticMarkup(
+          <RibbonZone>
+            <RibbonItem>
+              <ToggleGroup
+                kind="single"
+                value="save"
+                items={[
+                  { value: "transform", id: "ui.ribbon.group.transform", icon: "move-3d", text: "Transform" },
+                  { value: "save", id: "ui.ribbon.group.save", icon: "save", text: "Save" },
+                  { value: "transfer", id: "ui.ribbon.group.transfer", icon: "arrow-right-left", text: "Transfer" },
+                ]}
+              />
+            </RibbonItem>
+          </RibbonZone>,
+        );
+        expect(markup).toContain('data-slot="toggle-group-item"');
+        expect(markup.match(/data-slot="toggle-group-item"/g)?.length).toBe(3);
+        expect(markup).toContain('data-state="on"');
+      });
+  
+      it("Ribbon stacks rows upward for direction=up and downward for direction=down, inline keeps one line", () => {
+        const rows: RibbonRow[] = [
+          { key: "base", content: <span>Base</span> },
+          { key: "nested", content: <span>Nested</span> },
+        ];
+        const upMarkup = renderToStaticMarkup(<Ribbon direction="up" rows={rows} />);
+        expect(upMarkup).toContain('data-direction="up"');
+        expect(upMarkup).toContain("flex-col-reverse");
+        expect(upMarkup.match(/data-slot="ribbon-row"/g)?.length).toBe(2);
+        expect(upMarkup.match(/data-slot="ribbon-row"[^>]*shrink-0/g)?.length).toBe(2);
+        expect(upMarkup.indexOf("Base")).toBeLessThan(upMarkup.indexOf("Nested"));
+  
+        const downMarkup = renderToStaticMarkup(<Ribbon direction="down" rows={rows} />);
+        expect(downMarkup).toContain('data-direction="down"');
+        expect(downMarkup).not.toContain("flex-col-reverse");
+        expect(downMarkup).not.toContain("gap-single");
+        const rowMatches = [...downMarkup.matchAll(/data-slot="ribbon-row"[^>]*class="([^"]*)"/g)];
+        expect(rowMatches.length).toBe(2);
+        for (const match of rowMatches) expect(match[1]).not.toMatch(/\bgap-single\b/);
+  
+        const inlineMarkup = renderToStaticMarkup(<Ribbon id="ui.ribbon" direction="inline" rows={rows} />);
+        expect(inlineMarkup).toContain('role="toolbar"');
+        expect(inlineMarkup).toContain('data-slot="ribbon-zone"');
+        expect(inlineMarkup).not.toContain('data-slot="ribbon-row"');
+  
+        const variableMarkup = renderToStaticMarkup(
+          <RibbonZone variableHeight>
+            <div>Intrinsic content</div>
+          </RibbonZone>,
+        );
+        expect(variableMarkup).toContain('data-variable-height="true"');
+        const variableZoneClass = variableMarkup.match(/data-variable-height="true" class="([^"]*)"/)?.[1].split(" ") ?? [];
+        expect(variableZoneClass).toContain("h-auto");
+        expect(variableZoneClass).toContain("min-h-medium");
+        expect(variableZoneClass).not.toContain("h-medium");
+      });
+  
+      it("reconcileActivePath validates each segment and truncates at the first invalid one — no first-sibling substitution, no auto-descend", () => {
+        type Node = { readonly id: string; readonly children?: readonly Node[] };
+        const tree: Node[] = [
+          { id: "workbench", children: [{ id: "document" }, { id: "catalogue" }] },
+          { id: "display", children: [{ id: "windows" }] },
+        ];
+        const childrenOf = (node: Node) => node.children;
+        expect(reconcileActivePath(tree, [], childrenOf)).toEqual([]);
+        expect(reconcileActivePath(tree, ["display"], childrenOf)).toEqual(["display"]);
+        expect(reconcileActivePath(tree, ["workbench", "catalogue"], childrenOf)).toEqual(["workbench", "catalogue"]);
+        expect(reconcileActivePath(tree, ["unknown"], childrenOf)).toEqual([]);
+        expect(reconcileActivePath(tree, ["workbench", "nope"], childrenOf)).toEqual(["workbench"]);
+      });
+  
+      it("dockSkeletonOf/dockSkeletonsEqual round-trip a PanelDock (incl. a populated middle anchor) and detect structural equality", () => {
+        const StubIcon = (): null => null;
+        const dock: PanelDock = {
+          anchors: {
+            "top-left": [
+              {
+                kind: "branch",
+                id: "workbench",
+                icon: StubIcon,
+                name: "Workbench",
+                children: [singleTreeLeaf({ id: "document", icon: StubIcon, name: "Artifact", tree: { sections: [] } })],
+              },
+            ],
+            "top-middle": [singleTreeLeaf({ id: "search", icon: StubIcon, name: "Search", tree: { sections: [] } })],
+            "top-right": [],
+            "right-middle": [],
+            "bottom-right": [singleTreeLeaf({ id: "settings", icon: StubIcon, name: "Settings", tree: { sections: [] } })],
+            "bottom-middle": [],
+            "bottom-left": [],
+            "left-middle": [],
+          },
+        };
+        const skeleton = dockSkeletonOf(dock);
+        expect(skeleton).toEqual({
+          version: 3,
+          anchors: {
+            "top-left": [{ id: "workbench", children: [{ id: "document", trees: ["document.tree"] }] }],
+            "top-middle": [{ id: "search", trees: ["search.tree"] }],
+            "top-right": [],
+            "right-middle": [],
+            "bottom-right": [{ id: "settings", trees: ["settings.tree"] }],
+            "bottom-middle": [],
+            "bottom-left": [],
+            "left-middle": [],
+          },
+        });
+        expect(dockSkeletonsEqual(skeleton, dockSkeletonOf(dock))).toBe(true);
+        expect(dockSkeletonsEqual(skeleton, null)).toBe(false);
+        expect(dockSkeletonsEqual(null, null)).toBe(true);
+      });
+  
+      it("applyDockSkeleton reuses default object identity, drops unknown ids, appends new defaults, and falls back on kind mismatch", () => {
+        const StubIcon = (): null => null;
+        const documentLeaf = singleTreeLeaf({ id: "document", icon: StubIcon, name: "Artifact", tree: { sections: [] } });
+        const catalogueLeaf = singleTreeLeaf({ id: "catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } });
+        const workbenchBranch: PanelTabNode = { kind: "branch", id: "workbench", icon: StubIcon, name: "Workbench", children: [documentLeaf, catalogueLeaf] };
+        const settingsLeaf = singleTreeLeaf({ id: "settings", icon: StubIcon, name: "Settings", tree: { sections: [] } });
+        const defaultDock: PanelDock = {
+          anchors: { "top-left": [workbenchBranch], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [settingsLeaf], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+        };
+  
+        // Untouched anchor/branch: identical arrangement reuses every object by reference.
+        const untouchedSkeleton = dockSkeletonOf(defaultDock);
+        const untouched = applyDockSkeleton(defaultDock, untouchedSkeleton);
+        expect(untouched.anchors["top-left"][0]).toBe(workbenchBranch);
+        expect(untouched.anchors["bottom-right"][0]).toBe(settingsLeaf);
+  
+        // Moving `catalogue` to bottom-right (ahead of settings): dropped from workbench's children (appended-back
+        // logic doesn't apply since it's explicitly listed elsewhere), workbench still reuses `documentLeaf` by reference.
+        const moved: DockSkeleton = {
+          version: 3,
+          anchors: {
+            "top-left": [{ id: "workbench", children: [{ id: "document", trees: ["document.tree"] }] }],
+            "top-middle": [],
+            "top-right": [],
+            "right-middle": [],
+            "bottom-right": [
+              { id: "catalogue", trees: ["catalogue.tree"] },
+              { id: "settings", trees: ["settings.tree"] },
+            ],
+            "bottom-middle": [],
+            "bottom-left": [],
+            "left-middle": [],
+          },
+        };
+        const afterMove = applyDockSkeleton(defaultDock, moved);
+        const movedWorkbench = afterMove.anchors["top-left"][0];
+        expect(movedWorkbench?.kind).toBe("branch");
+        expect(movedWorkbench?.kind === "branch" ? movedWorkbench.children : []).toEqual([documentLeaf]);
+        expect(afterMove.anchors["bottom-right"].map((tab) => tab.id)).toEqual(["catalogue", "settings"]);
+        expect(afterMove.anchors["bottom-right"][0]).toBe(catalogueLeaf);
+  
+        // Unknown id in the persisted skeleton is dropped; a default tab the skeleton never mentions is appended.
+        const withUnknown: DockSkeleton = {
+          version: 3,
+          anchors: { "top-left": [{ id: "ghost-tab" }], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+        };
+        const afterUnknown = applyDockSkeleton(defaultDock, withUnknown);
+        expect(afterUnknown.anchors["top-left"].map((tab) => tab.id)).toEqual(["workbench"]);
+        expect(afterUnknown.anchors["top-left"][0]).toBe(workbenchBranch);
+        expect(afterUnknown.anchors["bottom-right"].map((tab) => tab.id)).toEqual(["settings"]);
+  
+        // Kind mismatch: skeleton claims the leaf `settings` has branch `children` — ignored, falls back to the default leaf shape.
+        const kindMismatch: DockSkeleton = {
+          version: 3,
+          anchors: { "top-left": [], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [{ id: "settings", children: [{ id: "document" }] }], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+        };
+        const afterMismatch = applyDockSkeleton(defaultDock, kindMismatch);
+        expect(afterMismatch.anchors["bottom-right"][0]).toBe(settingsLeaf);
+        expect(afterMismatch.anchors["top-left"].map((tab) => tab.id)).toEqual(["workbench"]);
+      });
+  
+      it("applyDockSkeleton keeps a deliberately-emptied branch empty instead of resurrecting its default children", () => {
+        const StubIcon = (): null => null;
+        const documentLeaf = singleTreeLeaf({ id: "document", icon: StubIcon, name: "Artifact", tree: { sections: [] } });
+        const workbenchBranch: PanelTabNode = { kind: "branch", id: "workbench", icon: StubIcon, name: "Workbench", children: [documentLeaf] };
+        const defaultDock: PanelDock = {
+          anchors: { "top-left": [workbenchBranch], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+        };
+        // `document` moved out to bottom-right; `workbench` explicitly persisted with an empty children list.
+        const emptiedWorkbench: DockSkeleton = {
+          version: 3,
+          anchors: {
+            "top-left": [{ id: "workbench", children: [] }],
+            "top-middle": [],
+            "top-right": [],
+            "right-middle": [],
+            "bottom-right": [{ id: "document", trees: ["document.tree"] }],
+            "bottom-middle": [],
+            "bottom-left": [],
+            "left-middle": [],
+          },
+        };
+        const result = applyDockSkeleton(defaultDock, emptiedWorkbench);
+        const resultWorkbench = result.anchors["top-left"][0];
+        expect(resultWorkbench?.kind === "branch" ? resultWorkbench.children : null).toEqual([]);
+        expect(result.anchors["bottom-right"][0]).toBe(documentLeaf);
+      });
+  
+      it("isPanelTabInSubtree matches the node itself and any descendant, but not unrelated siblings", () => {
+        const StubIcon = (): null => null;
+        const child = singleTreeLeaf({ id: "child", icon: StubIcon, name: "Child", tree: { sections: [] } });
+        const branch: PanelTabNode = { kind: "branch", id: "parent", icon: StubIcon, name: "Parent", children: [child] };
+        expect(isPanelTabInSubtree(branch, "parent")).toBe(true);
+        expect(isPanelTabInSubtree(branch, "child")).toBe(true);
+        expect(isPanelTabInSubtree(branch, "unrelated")).toBe(false);
+        expect(isPanelTabInSubtree(child, "parent")).toBe(false);
+      });
+  
+      it("moveTabInDock reorders within a row, moves across anchors (incl. into a middle anchor), appends as a child, and no-operations on own-subtree drops", () => {
+        const StubIcon = (): null => null;
+        const a = singleTreeLeaf({ id: "a", icon: StubIcon, name: "A", tree: { sections: [] } });
+        const b = singleTreeLeaf({ id: "b", icon: StubIcon, name: "B", tree: { sections: [] } });
+        const c = singleTreeLeaf({ id: "c", icon: StubIcon, name: "C", tree: { sections: [] } });
+        const branch: PanelTabNode = { kind: "branch", id: "branch", icon: StubIcon, name: "Branch", children: [] };
+        const dock: PanelDock = {
+          anchors: { "top-left": [a, b], "top-middle": [], "top-right": [branch], "right-middle": [], "bottom-right": [c], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+        };
+  
+        // Same-row reorder: move `b` before `a` (removal-first — index 0 in the post-removal row). Both items'
+        // `order` is reassigned to match their new position, so neither keeps its exact object reference here.
+        const reordered = moveTabInDock(dock, { tabId: "b", fromAnchor: "top-left", target: { kind: "insert", anchor: "top-left", parentPath: [], index: 0 } });
+        expect(reordered.anchors["top-left"].map((tab) => tab.id)).toEqual(["b", "a"]);
+        expect(reordered.anchors["top-left"].map((tab) => tab.order)).toEqual([0, 1]);
+  
+        // Cross-anchor move: `c` from bottom-right to top-left, at the end.
+        const moved = moveTabInDock(dock, { tabId: "c", fromAnchor: "bottom-right", target: { kind: "insert", anchor: "top-left", parentPath: [], index: 2 } });
+        expect(moved.anchors["bottom-right"]).toEqual([]);
+        expect(moved.anchors["top-left"].map((tab) => tab.id)).toEqual(["a", "b", "c"]);
+  
+        // Cross-anchor move into a previously-empty middle anchor.
+        const movedToMiddle = moveTabInDock(dock, { tabId: "c", fromAnchor: "bottom-right", target: { kind: "insert", anchor: "top-middle", parentPath: [], index: 0 } });
+        expect(movedToMiddle.anchors["bottom-right"]).toEqual([]);
+        expect(movedToMiddle.anchors["top-middle"].map((tab) => tab.id)).toEqual(["c"]);
+  
+        // Child-append: `c` becomes a child of the empty `branch` tab in top-right.
+        const nested = moveTabInDock(dock, { tabId: "c", fromAnchor: "bottom-right", target: { kind: "child", anchor: "top-right", parentId: "branch" } });
+        const nestedBranch = nested.anchors["top-right"][0];
+        expect(nestedBranch?.kind === "branch" ? nestedBranch.children.map((child) => child.id) : null).toEqual(["c"]);
+        expect(nested.anchors["bottom-right"]).toEqual([]);
+  
+        // Own-subtree guard: dropping `branch` as a child of itself, or inserting it under its own path, is a no-operation (same reference).
+        expect(moveTabInDock(dock, { tabId: "branch", fromAnchor: "top-right", target: { kind: "child", anchor: "top-right", parentId: "branch" } })).toBe(dock);
+        expect(moveTabInDock(dock, { tabId: "branch", fromAnchor: "top-right", target: { kind: "insert", anchor: "top-right", parentPath: ["branch"], index: 0 } })).toBe(dock);
+      });
+  
+      it("moveTabInDock recursively prunes a branch left empty by the move", () => {
+        const StubIcon = (): null => null;
+        const onlyChild = singleTreeLeaf({ id: "only-child", icon: StubIcon, name: "Only Child", tree: { sections: [] } });
+        const innerBranch: PanelTabNode = { kind: "branch", id: "inner", icon: StubIcon, name: "Inner", children: [onlyChild] };
+        const outerBranch: PanelTabNode = { kind: "branch", id: "outer", icon: StubIcon, name: "Outer", children: [innerBranch] };
+        const dock: PanelDock = {
+          anchors: { "top-left": [outerBranch], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+        };
+        const result = moveTabInDock(dock, { tabId: "only-child", fromAnchor: "top-left", target: { kind: "insert", anchor: "top-right", parentPath: [], index: 0 } });
+        // Both `inner` (emptied) and `outer` (left with no children once `inner` is pruned) disappear from top-left.
+        expect(result.anchors["top-left"]).toEqual([]);
+        expect(result.anchors["top-right"].map((tab) => tab.id)).toEqual(["only-child"]);
+      });
+  
+      it("pruneEmptyPanelBranches drops branches left with zero children at any depth, and returns the same reference when nothing changes", () => {
+        const StubIcon = (): null => null;
+        const leaf = singleTreeLeaf({ id: "leaf", icon: StubIcon, name: "Leaf", tree: { sections: [] } });
+        const emptyInner: PanelTabNode = { kind: "branch", id: "empty-inner", icon: StubIcon, name: "Empty Inner", children: [] };
+        const outer: PanelTabNode = { kind: "branch", id: "outer", icon: StubIcon, name: "Outer", children: [emptyInner] };
+        const tabs: readonly PanelTabNode[] = [leaf, outer];
+        expect(pruneEmptyPanelBranches(tabs).map((tab) => tab.id)).toEqual(["leaf"]);
+        const unchanged: readonly PanelTabNode[] = [leaf];
+        expect(pruneEmptyPanelBranches(unchanged)).toBe(unchanged);
+      });
+  
+      it("moveTreeUnitInDock reorders units within a tab and moves a unit across tabs", () => {
+        const StubIcon = (): null => null;
+        const tabA: PanelTabNode = {
+          kind: "leaf",
+          id: "tab-a",
+          icon: StubIcon,
+          name: "Tab A",
+          trees: [
+            { id: "unit-1", tree: { sections: [] } },
+            { id: "unit-2", tree: { sections: [] } },
+          ],
+        };
+        const tabB: PanelTabNode = { kind: "leaf", id: "tab-b", icon: StubIcon, name: "Tab B", trees: [{ id: "unit-3", tree: { sections: [] } }] };
+        const dock: PanelDock = {
+          anchors: { "top-left": [tabA, tabB], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+        };
+  
+        const reordered = moveTreeUnitInDock(dock, { unitId: "unit-2", fromTabId: "tab-a", target: { anchor: "top-left", tabId: "tab-a", index: 0 } });
+        const reorderedTabA = reordered.anchors["top-left"][0];
+        expect(reorderedTabA?.kind === "leaf" ? reorderedTabA.trees.map((unit) => unit.id) : null).toEqual(["unit-2", "unit-1"]);
+  
+        const crossTab = moveTreeUnitInDock(dock, { unitId: "unit-1", fromTabId: "tab-a", target: { anchor: "top-left", tabId: "tab-b", index: 0 } });
+        const crossTabA = crossTab.anchors["top-left"][0];
+        const crossTabB = crossTab.anchors["top-left"][1];
+        expect(crossTabA?.kind === "leaf" ? crossTabA.trees.map((unit) => unit.id) : null).toEqual(["unit-2"]);
+        expect(crossTabB?.kind === "leaf" ? crossTabB.trees.map((unit) => unit.id) : null).toEqual(["unit-1", "unit-3"]);
+      });
+  
+      it("computeTabDockDropZone resolves midpoint inserts and a branch's nest band; misses resolve to null", () => {
+        const fabricateRect = (element: HTMLElement, rect: { left: number; right: number; top: number; bottom: number }) => {
+          element.getBoundingClientRect = () => ({ ...rect, width: rect.right - rect.left, height: rect.bottom - rect.top, x: rect.left, y: rect.top, toJSON: () => ({}) });
+        };
+  
+        const rowElement = document.createElement("div");
+        fabricateRect(rowElement, { left: 0, right: 200, top: 0, bottom: 20 });
+        const leafButton = document.createElement("button");
+        leafButton.dataset.tabId = "leaf-a";
+        leafButton.dataset.tabKind = "leaf";
+        fabricateRect(leafButton, { left: 0, right: 100, top: 0, bottom: 20 });
+        const branchButton = document.createElement("button");
+        branchButton.dataset.tabId = "branch-a";
+        branchButton.dataset.tabKind = "branch";
+        fabricateRect(branchButton, { left: 100, right: 200, top: 0, bottom: 20 });
+        rowElement.append(leafButton, branchButton);
+  
+        const rows: readonly PanelTabRowDropTarget[] = [{ anchor: "top-left", parentPath: [], rowElement }];
+  
+        // Left half of the leaf button: insert-before (index 0).
+        expect(computeTabDockDropZone(20, 10, rows, new Set())).toEqual({ kind: "insert", anchor: "top-left", parentPath: [], index: 0 });
+        // Right half of the leaf button: insert-after (index 1).
+        expect(computeTabDockDropZone(80, 10, rows, new Set())).toEqual({ kind: "insert", anchor: "top-left", parentPath: [], index: 1 });
+        // Center 30–70% band of the branch button (100–200 wide -> 130..170): nest as a child.
+        expect(computeTabDockDropZone(150, 10, rows, new Set())).toEqual({ kind: "child", anchor: "top-left", parentId: "branch-a" });
+        // Excluding the branch button (e.g. it's the dragged subtree) falls through to append-at-end of the row.
+        expect(computeTabDockDropZone(150, 10, rows, new Set(["branch-a"]))).toEqual({ kind: "insert", anchor: "top-left", parentPath: [], index: 1 });
+  
+        // Outside every registered surface: no drop.
+        expect(computeTabDockDropZone(9999, 9999, rows, new Set())).toBeNull();
+      });
+  
+      it("Panel renders nothing for an empty anchor at rest, but shows a drop zone while a dock drag is in flight", () => {
+        const contextValue: PanelDockContextValue = {
+          dragTabId: "tab-a",
+          draggedSubtreeIds: null,
+          dropTarget: { kind: "insert", anchor: "top-middle", parentPath: [], index: 0 },
+          startTabDrag: () => {},
+          registerTabRowDropTarget: () => {},
+          onTreeUnitDockDrop: () => {},
+        };
+        const atRest = renderToStaticMarkup(<Panel anchor="top-middle" visible={false} tabs={[]} />);
+        expect(atRest).toBe("");
+  
+        const midDrag = renderToStaticMarkup(
+          <PanelDockContext.Provider value={contextValue}>
+            <Panel anchor="top-middle" visible={false} tabs={[]} />
+          </PanelDockContext.Provider>,
+        );
+        expect(midDrag).toContain('data-slot="panel-empty-drop-zone"');
+        expect(midDrag).toContain('data-panel-empty="true"');
+        expect(midDrag).toContain("border-accent");
+      });
+  
+      it("PanelChromeTabBar owns the empty-anchor drop zone for chrome-hosted middle anchors", () => {
+        const contextValue: PanelDockContextValue = {
+          dragTabId: "tab-a",
+          draggedSubtreeIds: null,
+          dropTarget: { kind: "insert", anchor: "bottom-middle", parentPath: [], index: 0 },
+          startTabDrag: () => {},
+          registerTabRowDropTarget: () => {},
+          onTreeUnitDockDrop: () => {},
+        };
+        expect(renderToStaticMarkup(<PanelChromeTabBar anchor="bottom-middle" tabs={[]} visible={false} />)).toBe("");
+        const midDrag = renderToStaticMarkup(
+          <PanelDockContext.Provider value={contextValue}>
+            <PanelChromeTabBar anchor="bottom-middle" tabs={[]} visible={false} />
+          </PanelDockContext.Provider>,
+        );
+        expect(midDrag).toContain('data-slot="panel-empty-drop-zone"');
+        expect(midDrag).toContain('data-anchor="bottom-middle"');
+      });
+  
+      it("Panel's middle anchor centers with translateX(-50%), grows both ways, and gets two independent resize handles", async () => {
+        const { render } = await import("@testing-library/react");
+        const StubIcon = (): null => null;
+        const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+        const { container } = render(<Panel anchor="top-middle" visible tabs={tabs} onSizeChange={() => {}} />);
+        const root = container.querySelector('[data-slot="panel"]') as HTMLElement;
+        expect(root.style.left).toBe("50%");
+        expect(root.style.transform).toBe("translateX(-50%)");
+        expect(root.getAttribute("dir")).toBeNull();
+        const handles = container.querySelectorAll('[data-slot="panel-resize-handle"]');
+        expect(handles.length).toBe(2);
+        const sides = [...handles].map((handle) => ((handle as HTMLElement).className.includes("left-0") ? "left" : "right"));
+        expect(sides.sort()).toEqual(["left", "right"]);
+      });
+  
+      it("dragging a middle panel's resize handles changes size by 2x the pointer delta (both edges move to keep it centered); a corner panel changes 1x on its single inner handle", async () => {
+        const { render, fireEvent } = await import("@testing-library/react");
+        const StubIcon = (): null => null;
+        const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+        const onSizeChange = vi.fn();
+        const { container } = render(<Panel anchor="top-middle" visible tabs={tabs} size={300} minSize={100} maxSize={1000} onSizeChange={onSizeChange} />);
+        const rightHandle = [...container.querySelectorAll('[data-slot="panel-resize-handle"]')].find((handle) => (handle as HTMLElement).className.includes("right-0")) as HTMLElement;
+        fireEvent.pointerDown(rightHandle, { clientX: 100 });
+        fireEvent.pointerMove(rightHandle, { clientX: 150 });
+        expect(onSizeChange).toHaveBeenCalledWith(400);
+  
+        onSizeChange.mockClear();
+        const { container: cornerContainer } = render(<Panel anchor="top-left" visible tabs={tabs} size={300} minSize={100} maxSize={1000} onSizeChange={onSizeChange} />);
+        const cornerHandle = cornerContainer.querySelector('[data-slot="panel-resize-handle"]') as HTMLElement;
+        fireEvent.pointerDown(cornerHandle, { clientX: 100 });
+        fireEvent.pointerMove(cornerHandle, { clientX: 150 });
+        expect(onSizeChange).toHaveBeenCalledWith(350);
+      });
+  
+      it("edge-middle panels (left-middle, right-middle) grow from a single inner handle, clamp to the region, and mirror dir on the right", async () => {
+        const { render } = await import("@testing-library/react");
+        const StubIcon = (): null => null;
+        const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+  
+        const { container: leftContainer } = render(<Panel anchor="left-middle" visible tabs={tabs} onSizeChange={() => {}} />);
+        const leftRoot = leftContainer.querySelector('[data-slot="panel"]') as HTMLElement;
+        expect(leftRoot.getAttribute("dir")).toBeNull();
+        expect(leftRoot.style.top).toBe("50%");
+        expect(leftRoot.style.transform).toBe("translateY(-50%)");
+        expect(leftRoot.style.maxHeight).toBe("calc(100% - (var(--spacing-single) * 2))");
+        expect(leftContainer.querySelectorAll('[data-slot="panel-resize-handle"]').length).toBe(1);
+        expect((leftContainer.querySelector('[data-slot="panel-resize-handle"]') as HTMLElement).className).toContain("right-0");
+  
+        const { container: rightContainer } = render(<Panel anchor="right-middle" visible tabs={tabs} onSizeChange={() => {}} />);
+        const rightRoot = rightContainer.querySelector('[data-slot="panel"]') as HTMLElement;
+        expect(rightRoot.getAttribute("dir")).toBe("rtl");
+        expect(rightRoot.style.top).toBe("50%");
+        expect(rightContainer.querySelectorAll('[data-slot="panel-resize-handle"]').length).toBe(1);
+        expect((rightContainer.querySelector('[data-slot="panel-resize-handle"]') as HTMLElement).className).toContain("left-0");
+      });
+  
+      it("navbar hides inline labels under the compact driver", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+            <Navbar
+              items={[
+                {
+                  key: "search",
+                  content: <Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon={<SearchIcon className="size-small" />} />,
+                },
+              ]}
+            />
+          </UiDriverProvider>,
+        );
+        expect(markup).not.toContain(">Search<");
+        expect(markup).toContain('id="ui.search.toggle"');
+      });
+  
+      it("renders search suggestions toggle without internal-id humanized labels", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            <Search input={{ placeholder: uiDataLabel("Action") }} possibles={[{ id: "primitive.box", label: uiDataLabel("Box"), detail: "b", onSelect: () => {} }]} />
+          </UiDriverProvider>,
+        );
+        expect(markup).toContain('id="ui.windowSearch.suggestions"');
+        expect(markup).not.toMatch(/Search Possibles/i);
+        expect(markup).not.toMatch(/Possibles Toggle/i);
+      });
+  
+      it("renders panel toggle details with inline label when compact is off", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            <Toggle id="ui.panelToggle.details" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} />
+          </UiDriverProvider>,
+        );
+        expect(markup).toContain("Details");
+        expect(markup).toContain("aspect-auto");
+        expect(markup).toContain('data-slot="inline-label"');
+      });
+  
+      it("navbar hides workbench and details panel toggle labels under the compact driver", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+            <Navbar
+              items={[
+                {
+                  key: "panels",
+                  content: (
+                    <div className="flex min-w-0 items-stretch border h-medium">
+                      <Toggle id="ui.panelToggle.workbench" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 shrink-0" />
+                      <Toggle id="ui.panelToggle.details" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 border-l shrink-0" />
+                      <Toggle id="ui.panelToggle.settings" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} className="rounded-none border-0 border-l shrink-0" />
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </UiDriverProvider>,
+        );
+        expect(markup).not.toContain(">Workbench<");
+        expect(markup).not.toContain(">Details<");
+        expect(markup).not.toContain(">Settings<");
+      });
+  
+      it("renders control-tree boolean toggles with inline labels when compact is off", () => {
+        const markup = renderToStaticMarkup(
+          <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+            {defaultControlRenderer({
+              path: "folder/enabled",
+              key: "Enabled",
+              controlKind: "boolean",
+              value: true,
+              onChange: () => undefined,
+            })}
+          </UiDriverProvider>,
+        );
+        expect(markup).toContain("Enabled");
+        expect(markup).toContain("aspect-auto");
+      });
+    });
+  
+    describe("HistoryTable", () => {
+      it("renders swimlane guides and fork elbows", () => {
+        const columns: HistoryColumn[] = [
+          {
+            checkpointId: "c3",
+            timestamp: "3",
+            labels: ["feature-b"],
+            authors: [],
+            parentCheckpointId: "c2",
+            description: "branch b",
+            lane: 2,
+            alternativeIds: ["b"],
+          },
+          {
+            checkpointId: "c2",
+            timestamp: "2",
+            labels: ["feature-a"],
+            authors: [],
+            parentCheckpointId: "c1",
+            description: "branch a",
+            lane: 1,
+            alternativeIds: ["a"],
+          },
+          {
+            checkpointId: "c1",
+            timestamp: "1",
+            labels: ["main"],
+            authors: [],
+            parentCheckpointId: undefined,
+            description: "root",
+            lane: 0,
+            alternativeIds: [],
+          },
+        ];
+        const markup = renderToStaticMarkup(<HistoryTable id="test.history.table" columns={columns} />);
+        expect(markup).toContain('id="test.history.table"');
+        expect(markup).toContain('d="M ');
+        expect(markup.match(/<line /g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+        expect(markup.match(/<circle /g)?.length).toBe(3);
+        expect(markup).toMatch(/grid-template-columns:auto \d+px minmax\(0, 1fr\)/);
+        expect(markup).toContain("branch b");
+        expect(markup).toContain("feature-b");
+        expect(markup).toMatch(/width:\d+px/);
+      });
+  
+      it("renders an em dash placeholder for an empty history", () => {
+        const markup = renderToStaticMarkup(<HistoryTable id="test.history.table" columns={[]} />);
+        expect(markup).toContain('id="test.history.table"');
+        expect(markup).toContain("—");
+      });
+  
+      it("falls back to a checkpoint chip and unknown avatar when a row has no labels or authors", () => {
+        const columns: HistoryColumn[] = [
+          {
+            checkpointId: "c1",
+            timestamp: "1",
+            labels: [],
+            authors: [],
+            parentCheckpointId: undefined,
+            description: undefined,
+            lane: 0,
+            alternativeIds: [],
+          },
+        ];
+        const markup = renderToStaticMarkup(<HistoryTable id="test.history.table" columns={columns} />);
+        expect(markup).toContain("checkpoint");
+      });
+    });
+  
+    describe("tutorial engine", () => {
+      const minimalTutorial = (): TutorialDefinition => ({
+        id: "welcome-tour",
+        title: "Welcome Tour",
+        durationMs: 10_000,
+        chapters: [{ id: "start", at: 0, title: "Start" }],
+        base: { exampleId: "concrete-forest", ui: { activeUtilityByWindowId: {}, activePanelTabByGroup: {}, interactionSelection: {}, expandedTreeIds: [], commandPanelOpen: false }, cameras: [] },
+        tracks: { narration: [], video: [], events: [], ui: [], document: [], camera: [], gestures: [] },
+      });
+  
+      //#region 🏠️LocalInteractionCompositionTests
+      it("TutorialLocalInteraction preserves exact three-map authored changes against Immer", async () => {
+        const source = await import("../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts");
+        const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../../🛂️manifest/🧪️fixtures/🖱️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../🛂️manifest/🧬️schema/🔣️.json"); const { default: localSchema } = await import("../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json");
+        const { default: Ajv } = await import("ajv"); const { produce, enableMapSet } = await import("immer"); const assert: typeof import("node:assert") = (await import("node:assert")).default;
+        type State = import("../../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionState; type Change = import("../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts").TutorialLocalInteractionChange;
+        const validate = new Ajv({ strict: true, allErrors: true }).addSchema(localSchema).addSchema(schema).compile<{ cases: Array<{ name: string; before: State; after: State; changes: Change[] }> }>({ $ref: `${schema.$id}#/$defs/TutorialLocalInteractionFixture` }); expect(validate(fixture)).toBe(true); if (!validate(fixture)) throw new Error("Invalid tutorial local interaction fixture"); enableMapSet();
+        expect(typeof source.diffTutorialLocalInteractionCold).toBe("function"); expect(typeof source.applyTutorialLocalInteractionCold).toBe("function");
+        for (const row of fixture.cases) {
+          const before = JSON.stringify(row.before); const changes = source.diffTutorialLocalInteractionCold(row.before, row.after); assert.deepStrictEqual(changes, row.changes, row.name);
+          let actual = row.before; let oracle = { selection: new Map(Object.entries(row.before.selection)), activeMode: new Map(Object.entries(row.before.activeMode)), activeGranularity: new Map(Object.entries(row.before.activeGranularity)) };
+          for (const change of changes) {
+            actual = source.applyTutorialLocalInteractionCold(actual, change);
+            oracle = produce(oracle, draft => { if (change.patch.selection === null) draft.selection.delete(change.domainId); else draft.selection.set(change.domainId, { ...change.patch.selection, ids: [...change.patch.selection.ids] }); if (change.patch.activeMode === null) draft.activeMode.delete(change.domainId); else draft.activeMode.set(change.domainId, change.patch.activeMode); if (change.patch.activeGranularity === null) draft.activeGranularity.delete(change.domainId); else draft.activeGranularity.set(change.domainId, change.patch.activeGranularity); });
+          }
+          assert.deepStrictEqual(actual, { selection: Object.fromEntries(oracle.selection), activeMode: Object.fromEntries(oracle.activeMode), activeGranularity: Object.fromEntries(oracle.activeGranularity) }, row.name); assert.deepStrictEqual(actual, row.after, row.name); expect(JSON.stringify(row.before)).toBe(before); expect(source.diffTutorialLocalInteractionCold(row.after, row.after)).toEqual([]);
+        }
+      });
+      //#endregion 🏠️LocalInteractionCompositionTests
+  
+      it("formatTutorialTime formats mm:ss and floors sub-second/negative offsets", () => {
+        expect(formatTutorialTime(0)).toBe("0:00");
+        expect(formatTutorialTime(1_500)).toBe("0:01");
+        expect(formatTutorialTime(65_000)).toBe("1:05");
+        expect(formatTutorialTime(-100)).toBe("0:00");
+      });
+  
+      it("tutorialCuesBetween returns only cues whose [at, at+durationMs) window covers atMs", () => {
+        const cues = [
+          { at: 0, durationMs: 100 },
+          { at: 100, durationMs: 50 },
+        ];
+        expect(tutorialCuesBetween(cues, 50)).toEqual([cues[0]]);
+        expect(tutorialCuesBetween(cues, 100)).toEqual([cues[1]]);
+        expect(tutorialCuesBetween(cues, 200)).toEqual([]);
+      });
+  
+      it("interpolateTutorialCamera lerps position/target and clamps to endpoints", () => {
+        const prev: TutorialCameraKeyframe = { at: 0, windowId: "w", camera: { kind: "orbit", position: [0, 0, 0], target: [0, 0, 0], up: [0, 0, 1], fov: 40 }, easing: "linear" };
+        const next: TutorialCameraKeyframe = { at: 1000, windowId: "w", camera: { kind: "orbit", position: [10, 0, 0], target: [0, 0, 0], up: [0, 0, 1], fov: 60 }, easing: "linear" };
+        const mid = interpolateTutorialCamera(prev, next, 500);
+        expect(mid.kind).toBe("orbit");
+        if (mid.kind === "orbit") {
+          expect(mid.position[0]).toBeCloseTo(5, 9);
+          expect(mid.fov).toBe(50);
+        }
+        expect(interpolateTutorialCamera(prev, next, 0)).toEqual(prev.camera);
+        expect(interpolateTutorialCamera(prev, next, 1000)).toEqual(next.camera);
+      });
+  
+      it("interpolateTutorialCamera zooms canvas cameras in log space", () => {
+        const prev: TutorialCameraKeyframe = { at: 0, windowId: "w", camera: { kind: "canvas", x: 0, y: 0, zoom: 1 }, easing: "linear" };
+        const next: TutorialCameraKeyframe = { at: 1000, windowId: "w", camera: { kind: "canvas", x: 0, y: 0, zoom: 4 }, easing: "linear" };
+        const mid = interpolateTutorialCamera(prev, next, 500);
+        expect(mid.kind).toBe("canvas");
+        if (mid.kind === "canvas") expect(mid.zoom).toBeCloseTo(2, 9);
+      });
+  
+      it("interpolateTutorialCamera holds the previous pose until the keyframe, then snaps", () => {
+        const prev: TutorialCameraKeyframe = { at: 0, windowId: "w", camera: { kind: "canvas", x: 0, y: 0, zoom: 1 }, easing: "hold" };
+        const next: TutorialCameraKeyframe = { at: 1000, windowId: "w", camera: { kind: "canvas", x: 0, y: 0, zoom: 4 }, easing: "hold" };
+        expect(interpolateTutorialCamera(prev, next, 999)).toEqual(prev.camera);
+        expect(interpolateTutorialCamera(prev, next, 1000)).toEqual(next.camera);
+      });
+  
+      it("tutorialCameraAt holds the first pose before the first keyframe and the last pose after", () => {
+        const def = {
+          ...minimalTutorial(),
+          tracks: {
+            ...minimalTutorial().tracks,
+            camera: [
+              { at: 100, windowId: "w", camera: { kind: "canvas" as const, x: 0, y: 0, zoom: 1 }, easing: "linear" as const },
+              { at: 900, windowId: "w", camera: { kind: "canvas" as const, x: 0, y: 0, zoom: 9 }, easing: "linear" as const },
+            ],
+          },
+        };
+        expect(tutorialCameraAt(def, "w", 0)).toEqual({ kind: "canvas", x: 0, y: 0, zoom: 1 });
+        expect(tutorialCameraAt(def, "w", 10_000)).toEqual({ kind: "canvas", x: 0, y: 0, zoom: 9 });
+        expect(tutorialCameraAt(def, "other-window", 500)).toBeUndefined();
+      });
+  
+      it("composeTutorialUi applies the latest snapshot then replays deltas after it", () => {
+        const base = minimalTutorial();
+        const def: TutorialDefinition = {
+          ...base,
+          base: { ...base.base, ui: { ...base.base.ui, activeToolId: "fill" } },
+          tracks: {
+            ...base.tracks,
+            ui: [
+              { at: 100, sample: { kind: "snapshot", state: { activeModeId: "edit", activeUtilityByWindowId: {}, activePanelTabByGroup: {}, interactionSelection: {}, expandedTreeIds: [], commandPanelOpen: false } } },
+              { at: 200, sample: { kind: "delta", changes: [{ kind: "activeTool", id: "brush" }] } },
+              { at: 300, sample: { kind: "delta", changes: [{ kind: "panelTab", group: "top-left", tabId: "catalogue" }] } },
+            ],
+          },
+        };
+        expect(composeTutorialUi(def, 0).activeToolId).toBe("fill");
+        const at100 = composeTutorialUi(def, 100);
+        expect(at100.activeModeId).toBe("edit");
+        expect(at100.activeToolId).toBeUndefined();
+        expect(composeTutorialUi(def, 250).activeToolId).toBe("brush");
+        const at300 = composeTutorialUi(def, 300);
+        expect(at300.activeToolId).toBe("brush");
+        expect(at300.activePanelTabByGroup["top-left"]).toBe("catalogue");
+      });
+  
+      it("tutorialSlice crosses document events forward oldest-first and backward newest-first", () => {
+        const base = minimalTutorial();
+        const def: TutorialDefinition = {
+          ...base,
+          tracks: {
+            ...base.tracks,
+            document: [
+              { at: 100, kind: { kind: "edit", forwards: [{ op: "add", id: "a" }], backwards: [{ op: "remove", id: "a" }] } },
+              { at: 200, kind: { kind: "edit", forwards: [{ op: "add", id: "b" }], backwards: [{ op: "remove", id: "b" }] } },
+            ],
+          },
+        };
+        const forward = tutorialSlice(def, 0, 250);
+        expect(forward.forward).toBe(true);
+        expect(forward.document).toHaveLength(2);
+        expect((forward.document[0].kind as { forwards: readonly { id: string }[] }).forwards[0].id).toBe("a");
+  
+        const backward = tutorialSlice(def, 250, 0);
+        expect(backward.forward).toBe(false);
+        expect(backward.document).toHaveLength(2);
+        expect((backward.document[0].kind as { backwards: readonly { id: string }[] }).backwards[0].id).toBe("b");
+  
+        expect(tutorialSlice(def, 250, 250).document).toHaveLength(0);
+      });
+  
+      it("validateTutorial rejects unsorted/out-of-range tracks and passes a minimal valid tutorial", () => {
+        const unsorted = {
+          ...minimalTutorial(),
+          tracks: {
+            ...minimalTutorial().tracks,
+            narration: [
+              { id: "b", at: 500, durationMs: 100, text: "b", rate: 1, captions: [] },
+              { id: "a", at: 100, durationMs: 100, text: "a", rate: 1, captions: [] },
+            ],
+          },
+        };
+        expect(validateTutorial(unsorted)).not.toBeNull();
+  
+        const outOfRange = { ...minimalTutorial(), tracks: { ...minimalTutorial().tracks, narration: [{ id: "a", at: 999_999, durationMs: 100, text: "a", rate: 1, captions: [] }] } };
+        expect(validateTutorial(outOfRange)).not.toBeNull();
+  
+        const dupChapters = { ...minimalTutorial(), chapters: [...minimalTutorial().chapters, { id: "start", at: 0, title: "Dup" }] };
+        expect(validateTutorial(dupChapters)).not.toBeNull();
+  
+        const badBaseCamera = { ...minimalTutorial(), base: { ...minimalTutorial().base, cameras: [{ at: 5, windowId: "w", camera: { kind: "canvas" as const, x: 0, y: 0, zoom: 1 }, easing: "linear" as const }] } };
+        expect(validateTutorial(badBaseCamera)).not.toBeNull();
+  
+        expect(validateTutorial(minimalTutorial())).toBeNull();
+      });
+    });
+  
+    describe("TutorialBar", () => {
+      it("renders its element ids and chapter ticks", () => {
+        const clock: TutorialClockPort = { getTimeMs: () => 1000, subscribe: () => () => {} };
+        const markup = renderToStaticMarkup(
+          <TutorialBar
+            title="Welcome Tour"
+            durationMs={10_000}
+            playing={false}
+            rate={1}
+            muted={false}
+            captionsOn
+            recording
+            recordAvailable
+            chapters={[{ id: "start", title: "Start", atMs: 0 }]}
+            clock={clock}
+            onPlayPause={() => {}}
+            onStop={() => {}}
+            onSeek={() => {}}
+            onRateChange={() => {}}
+            onMutedChange={() => {}}
+            onCaptionsChange={() => {}}
+            onRecordToggle={() => {}}
+            onAddChapter={() => {}}
+          />,
+        );
+        expect(markup).toContain('id="ui.tutorial.bar"');
+        expect(markup).toContain('id="ui.tutorial.play"');
+        expect(markup).toContain('id="ui.tutorial.stop"');
+        expect(markup).toContain('id="ui.tutorial.scrubber"');
+        expect(markup).toContain('id="ui.tutorial.chapter.start"');
+        expect(markup).toContain('id="ui.tutorial.record"');
+        expect(markup).toContain('id="ui.tutorial.recordingIndicator"');
+      });
+    });
+  
+    describe("TutorialClock", () => {
+      it("seek/setRate/play/pause update state synchronously (rAF ticking itself is not exercised here)", () => {
+        const clock = createTutorialClock(1000);
+        expect(clock.getTimeMs()).toBe(0);
+        expect(clock.isPlaying()).toBe(false);
+        clock.seek(400);
+        expect(clock.getTimeMs()).toBe(400);
+        clock.setRate(2);
+        expect(clock.getRate()).toBe(2);
+        clock.play();
+        expect(clock.isPlaying()).toBe(true);
+        clock.pause();
+        expect(clock.isPlaying()).toBe(false);
+        clock.seek(-50);
+        expect(clock.getTimeMs()).toBe(0);
+        clock.seek(5000);
+        expect(clock.getTimeMs()).toBe(1000);
+        clock.dispose();
+      });
+  
+      it("notifies subscribers on seek/rate/play/pause", () => {
+        const clock = createTutorialClock(1000);
+        const listener = vi.fn();
+        const unsubscribe = clock.subscribe(listener);
+        clock.seek(100);
+        clock.setRate(1.5);
+        expect(listener).toHaveBeenCalledTimes(2);
+        unsubscribe();
+        clock.seek(200);
+        expect(listener).toHaveBeenCalledTimes(2);
+      });
+    });
+  
+    describe("PresenceBar", () => {
+      const peers = (n: number): PresencePeer[] => Array.from({ length: n }, (_, i) => ({ actor: `user:p${i}#s`, label: `Peer ${i}`, role: i % 2 === 0 ? ("author" as const) : ("spectator" as const) }));
+  
+      it("renders one listitem per peer under max, each carrying its own peer data-row-id", async () => {
+        const { render } = await import("@testing-library/react");
+        const { container } = render(<PresenceBar id="s-presence-peers" peers={peers(3)} />);
+        const root = container.querySelector("#s-presence-peers")!;
+        expect(root.getAttribute("role")).toBe("list");
+        expect(root.querySelectorAll('[role="listitem"]')).toHaveLength(3);
+        expect(container.querySelector('[data-row-id="peer:user:p0#s"]')).not.toBeNull();
+        expect(container.querySelector('[data-row-id="peer:user:p2#s"]')).not.toBeNull();
+      });
+  
+      it("collapses past max into a single overflow chip", async () => {
+        const { render } = await import("@testing-library/react");
+        const { container } = render(<PresenceBar id="s-presence-peers" peers={peers(7)} max={5} />);
+        expect(container.querySelectorAll('[role="listitem"]')).toHaveLength(6);
+        expect(container.querySelector('[data-row-id="peer:overflow"]')?.textContent).toBe("+2");
+      });
+  
+      it("renders an empty state with no listitems when there are no peers", async () => {
+        const { render } = await import("@testing-library/react");
+        const { container } = render(<PresenceBar id="s-presence-peers" peers={[]} />);
+        expect(container.querySelectorAll('[role="listitem"]')).toHaveLength(0);
+        expect(container.querySelector("#s-presence-peers")?.textContent).toBeTruthy();
+      });
+  
+      it("resolves every ui.presence.* key in both en and de", () => {
+        // 🐚️ Mirrors the ribbon-category coverage test above: reads `uiI18n.t` directly instead of round-tripping
+        // through a React render, since this huge in-source suite shares one global i18next instance and a
+        // full-render assertion racing another test's own in-flight `changeLanguage` is exactly the kind of
+        // cross-test flake that pattern avoids.
+        const keys: UiTranslationKey[] = ["ui.presence.roster", "ui.presence.empty", "ui.presence.overflow", "ui.presence.role.author", "ui.presence.role.spectator"];
+        const seenByLocale: Record<string, string[]> = {};
+        for (const locale of ["en", "de"] as const) {
+          void uiI18n.changeLanguage(locale);
+          seenByLocale[locale] = keys.map((key) => {
+            const label = resolveTranslationLabel(uiI18n.t(key));
+            expect(label, `${locale}:${key}`).toBeTruthy();
+            expect(label, `${locale}:${key}`).not.toBe(key);
+            return label!;
+          });
+        }
+        expect(seenByLocale.en).not.toEqual(seenByLocale.de);
+        void uiI18n.changeLanguage("en");
+      });
+  
+      // 👥️ Pinned index/appearance table (contract freeze §C7.5) — the Rust twin's
+      // `presence_color_wraps_after_twelve_with_lightness_then_saturation_shift` (`🧊️component.rs`)
+      // pins the same formula against the same `ui_styling::presence`-generated constants
+      // (`hues`/`light`/`dark` from `🎨️styling/🔣️tokens.json`), so identical inputs here prove the two
+      // implementations compute byte-identical HSL — this is the "TS twin" half of that cross-check.
+      it("presenceColor matches the Rust twin's pinned index/appearance table", () => {
+        const cases: readonly [index: number, appearance: PresenceAppearance, expected: PresenceHsl][] = [
+          [0, "light", { h: 0, s: 0.68, l: 0.32 }],
+          [5, "light", { h: 180, s: 0.68, l: 0.32 }],
+          [11, "dark", { h: 90, s: 0.72, l: 0.62 }],
+          [12, "light", { h: 0, s: 0.68, l: 0.46 }], // k=1 (odd, <2): lightness +0.14, no desaturation
+          [12, "dark", { h: 0, s: 0.72, l: 0.48 }], // k=1: dark shifts lightness DOWN instead
+          [24, "light", { h: 0, s: 0.43, l: 0.32 }], // k=2 (even, >=2): desaturate -0.25, no lightness shift
+          [25, "dark", { h: 210, s: 0.47, l: 0.62 }], // k=2
+          [37, "light", { h: 210, s: 0.43, l: 0.46 }], // k=3 (odd, >=2): both shifts apply
+        ];
+        for (const [index, appearance, expected] of cases) {
+          const resolved = presenceColor(index, appearance);
+          expect(resolved.h, `index=${index} ${appearance} h`).toBe(expected.h);
+          expect(resolved.s, `index=${index} ${appearance} s`).toBeCloseTo(expected.s, 10);
+          expect(resolved.l, `index=${index} ${appearance} l`).toBeCloseTo(expected.l, 10);
+        }
+      });
+  
+      it("presenceCssVar addresses only the base cycle, wrapping modulo 12", () => {
+        expect(presenceCssVar(0)).toBe("var(--presence-0)");
+        expect(presenceCssVar(11)).toBe("var(--presence-11)");
+        expect(presenceCssVar(12)).toBe("var(--presence-0)");
+      });
+    });
 }

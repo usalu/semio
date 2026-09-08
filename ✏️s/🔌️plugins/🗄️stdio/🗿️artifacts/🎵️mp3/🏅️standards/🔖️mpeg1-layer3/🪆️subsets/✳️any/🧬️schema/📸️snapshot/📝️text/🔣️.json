@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/mp3/mpeg1-layer3/any/snapshot/text.json",
-  "title": "Semio_mp3_snapshot",
+  "title": "Mp3SnapshotText",
   "description": "🚧 scaffolded by W1b — generic facet mirror.",
   "type": "object",
   "properties": {

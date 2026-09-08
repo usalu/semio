@@ -5,8 +5,8 @@
     "name": "Top",
     "kind": "image-sequence",
     "cameraId": "cam-b",
-    "syncOffsetMs": 0.0,
-    "fpsHint": 12.0,
+    "syncOffsetMs": 0,
+    "fpsHint": 12,
     "frames": [],
     "source": null
   }

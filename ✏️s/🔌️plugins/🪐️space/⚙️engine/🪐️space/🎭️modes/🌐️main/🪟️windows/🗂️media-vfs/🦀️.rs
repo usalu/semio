@@ -3,7 +3,7 @@
 
 use crate::engine::space::terminology::SStudioLabels;
 use semio_framework_os::{WorkflowSnapshot, OS_WORKFLOW_VFS_ROOT_ID};
-use semio_framework_plugin::{resolve_labels_for_locale, LocalizedLabel, SurfaceKind, WindowKindDefinition};
+use semio_framework_plugin::{resolve_labels, LocalizedLabel, SurfaceKind, ViewModel, WindowKindDefinition};
 use semio_framework_ui_scene::VirtualFileSystemScene;
 
 //#region 🔖️Constants
@@ -38,8 +38,8 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Render
-pub async fn render(projection: &WorkflowSnapshot, locale: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let labels = resolve_labels_for_locale::<SStudioLabels>(locale);
+pub async fn render(projection: &WorkflowSnapshot, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let labels = resolve_labels::<SStudioLabels>(view_state);
     let mut rows = vec![pack::json_object([
         ("id".to_string(), pack::JsonValue::from(OS_WORKFLOW_VFS_ROOT_ID)),
         ("fileNodeKindId".to_string(), pack::JsonValue::from("root")),

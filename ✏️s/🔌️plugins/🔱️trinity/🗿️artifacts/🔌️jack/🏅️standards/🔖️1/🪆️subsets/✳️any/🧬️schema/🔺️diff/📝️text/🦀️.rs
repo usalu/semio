@@ -45,9 +45,6 @@ impl JackDiff {
             if let Some(value) = &self.root_node_id {
                 next.root_node_id = value.clone();
             }
-            if let Some(value) = &self.active_fixture_id {
-                next.active_fixture_id = value.clone();
-            }
             if let Some(value) = &self.jack_query {
                 next.jack_query = value.clone();
             }
@@ -74,26 +71,8 @@ impl JackDiff {
             if let Some(value) = &self.jack_result_json {
                 next.jack_result_json = value.clone();
             }
-            if let Some(value) = &self.editor_engagement_input {
-                next.editor_engagement_input = value.clone();
-            }
-            if let Some(value) = &self.graph_engagement_input {
-                next.graph_engagement_input = value.clone();
-            }
-            if let Some(value) = &self.results_engagement_input {
-                next.results_engagement_input = value.clone();
-            }
-            if let Some(value) = self.reorganize_epoch {
-                next.reorganize_epoch = value;
-            }
             if let Some(value) = &self.editor_selection {
                 next.editor_selection = value.clone();
-            }
-            if let Some(value) = self.revision {
-                next.revision = value;
-            }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
             }
             next
         })
@@ -143,18 +122,11 @@ impl MutationDiff<JackSnapshot> for JackDiff {
         take!(camera);
         take!(content);
         take!(root_node_id);
-        take!(active_fixture_id);
         take!(jack_query);
         take!(lod_mode_by_window);
         take!(viewport_camera);
         take!(jack_result_json);
-        take!(editor_engagement_input);
-        take!(graph_engagement_input);
-        take!(results_engagement_input);
-        take!(reorganize_epoch);
         take!(editor_selection);
-        take!(revision);
-        take!(locale);
     }
 }
 
@@ -171,3 +143,8 @@ pub fn diff_replace_content(nodes: Vec<Node>, edges: Vec<Edge>) -> JackDiff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion ️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type JackDiffText = String;
+//#endregion 🚚️Carrier

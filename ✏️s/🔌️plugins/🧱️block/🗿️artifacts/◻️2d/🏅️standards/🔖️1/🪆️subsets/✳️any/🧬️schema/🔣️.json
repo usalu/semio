@@ -15,8 +15,7 @@
     "authors",
     "camera2d",
     "meta",
-    "selectedIds",
-    "locale"
+    "selectedIds"
   ],
   "properties": {
     "schema": {
@@ -80,10 +79,6 @@
         "type": "string"
       },
       "x-semio-state": "presence"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

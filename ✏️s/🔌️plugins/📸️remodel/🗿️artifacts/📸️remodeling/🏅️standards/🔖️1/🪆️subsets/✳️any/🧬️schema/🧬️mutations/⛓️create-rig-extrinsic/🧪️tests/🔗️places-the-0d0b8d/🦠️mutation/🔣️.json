@@ -4,13 +4,13 @@
     "cameraId": "orbit-cam-tertiary",
     "rotationWxyz": [
       0.99609375,
-      0.0,
+      0,
       0.087890625,
-      0.0
+      0
     ],
     "translationM": [
       -0.125,
-      0.0,
+      0,
       0.03125
     ]
   }

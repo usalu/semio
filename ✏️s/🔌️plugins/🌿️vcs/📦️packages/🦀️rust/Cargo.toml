@@ -24,11 +24,11 @@ path = "🦀️.rs"
 
 [[test]]
 name = "native_openable_identity"
-path = "🧪️tests/🪪️native-openable-identity/🦀️.rs"
+path = "../../🧪️tests/🪪️native-openable-identity/🦀️.rs"
 
 [[test]]
 name = "native_codecs"
-path = "../../📇️native-codecs/🧪️tests/🦀️.rs"
+path = "../../📇️native-codecs/🧪️tests/📇️native-codecs/🦀️.rs"
 
 [dependencies]
 semio-s-artifact-vcs-vcs = { workspace = true }

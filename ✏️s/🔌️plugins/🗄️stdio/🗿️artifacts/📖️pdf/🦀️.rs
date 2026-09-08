@@ -23,7 +23,7 @@ pub const STDIO_PDF_DOCUMENT_SCHEMA: &str = "stdio.pdf";
 pub const PDF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pdf";
 
 /// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     let factories = native_codecs();
@@ -676,7 +676,7 @@ pub mod examples {
         mod component;
         pub use component::*;
         #[cfg(test)]
-        #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/📚️examples/🎓️bachelor-thesis/🧪️tests/🦀️.rs"]
+        #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/📚️examples/🎓️bachelor-thesis/🧪️tests/🧩️example/🦀️.rs"]
         mod bachelor_thesis_tests;
     }
 }

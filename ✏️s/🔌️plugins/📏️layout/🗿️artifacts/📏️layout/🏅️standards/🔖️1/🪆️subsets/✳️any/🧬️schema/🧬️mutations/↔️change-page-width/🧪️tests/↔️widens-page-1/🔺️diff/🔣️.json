@@ -17,7 +17,7 @@
         "id": "page-1",
         "patch": {
           "name": null,
-          "width": 240.0,
+          "width": 240,
           "height": null,
           "margin_top": null,
           "margin_right": null,
@@ -47,6 +47,5 @@
   "previewCameraY": null,
   "previewCameraZoom": null,
   "dropPreview": null,
-  "locale": null,
   "hoveredId": null
 }

@@ -12378,7 +12378,7 @@
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 22.0,
+                    "size": 22,
                     "children": [
                       {
                         "kind": "window",
@@ -12389,7 +12389,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 43.0,
+                    "size": 43,
                     "children": [
                       {
                         "kind": "window",
@@ -12400,7 +12400,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 35.0,
+                    "size": 35,
                     "children": [
                       {
                         "kind": "window",
@@ -12421,7 +12421,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 55.0,
+                "size": 55,
                 "children": [
                   {
                     "kind": "window",
@@ -12432,7 +12432,7 @@
               },
               {
                 "kind": "stack",
-                "size": 45.0,
+                "size": 45,
                 "children": [
                   {
                     "kind": "window",
@@ -14923,51 +14923,6 @@
                   "reuse": {
                     "en": "Set Generation",
                     "de": "Generation auswählen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "en": "Set Locale",
-                    "de": "Sprache festlegen"
-                  },
-                  "reuse": {
-                    "en": "Set Locale",
-                    "de": "Sprache festlegen"
                   }
                 },
                 "kind": "view",
@@ -17844,51 +17799,6 @@
                   "reuse": {
                     "en": "Set Generation",
                     "de": "Generation auswählen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "en": "Set Locale",
-                    "de": "Sprache festlegen"
-                  },
-                  "reuse": {
-                    "en": "Set Locale",
-                    "de": "Sprache festlegen"
                   }
                 },
                 "kind": "view",
@@ -20805,51 +20715,6 @@
                 }
               },
               {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "en": "Set Locale",
-                    "de": "Sprache festlegen"
-                  },
-                  "reuse": {
-                    "en": "Set Locale",
-                    "de": "Sprache festlegen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -23688,51 +23553,6 @@
                   "reuse": {
                     "en": "Set Generation",
                     "de": "Generation auswählen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "en": "Set Locale",
-                    "de": "Sprache festlegen"
-                  },
-                  "reuse": {
-                    "en": "Set Locale",
-                    "de": "Sprache festlegen"
                   }
                 },
                 "kind": "view",
@@ -26643,51 +26463,6 @@
                 }
               },
               {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "en": "Set Locale",
-                    "de": "Sprache festlegen"
-                  },
-                  "reuse": {
-                    "en": "Set Locale",
-                    "de": "Sprache festlegen"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
                 "id": "undo",
                 "label": {
                   "native": {
@@ -28509,7 +28284,7 @@
                 "children": [
                   {
                     "kind": "stack",
-                    "size": 22.0,
+                    "size": 22,
                     "children": [
                       {
                         "kind": "window",
@@ -28520,7 +28295,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 43.0,
+                    "size": 43,
                     "children": [
                       {
                         "kind": "window",
@@ -28531,7 +28306,7 @@
                   },
                   {
                     "kind": "stack",
-                    "size": 35.0,
+                    "size": 35,
                     "children": [
                       {
                         "kind": "window",
@@ -28552,7 +28327,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 68.0,
+                "size": 68,
                 "children": [
                   {
                     "kind": "window",
@@ -28563,7 +28338,7 @@
               },
               {
                 "kind": "stack",
-                "size": 32.0,
+                "size": 32,
                 "children": [
                   {
                     "kind": "window",

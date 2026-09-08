@@ -8,16 +8,16 @@
         "id": "node-c",
         "nodeKind": "node-kind-c",
         "shape": "circle",
-        "x": 80.0,
-        "y": 0.0,
-        "radius": 6.0,
+        "x": 80,
+        "y": 0,
+        "radius": 6,
         "text": "Gamma",
         "anchor": "fixed",
         "handles": [
           {
             "id": "handle-3",
             "handleKind": "handle-kind-a",
-            "angle": 0.0
+            "angle": 0
           }
         ]
       }
@@ -40,8 +40,6 @@
   "fillCount": null,
   "brushCandidateIndex": null,
   "brushCandidateSourceHandleId": null,
-  "locale": null,
-  "terminology": null,
   "lodModeByPaneJson": null,
   "engagementInputByPaneJson": null,
   "brushCandidatesJson": null,

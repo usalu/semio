@@ -4,9 +4,6 @@ use super::{EquationCamera, EquationConfig};
 #[path = "🎥️set-camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps, dsl::Mutations)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -14,8 +11,6 @@ pub use set_locale::SetLocale;
 pub enum EquationConfigMutation {
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
 }
 
 impl protocol::OpText for EquationConfigMutation {

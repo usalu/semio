@@ -8,8 +8,7 @@ use crate::Generation2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
-use super::topology::{compute_generation2d_topology, Generation2dTopology};
-
+use super::topology::{compute_generation2d_topology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a generation2d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
@@ -73,3 +72,8 @@ pub fn generation2d_artifact_inference_descriptor() -> ::semio_framework_schema:
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::topology::Generation2dTopology;
+//#endregion 🔁️Re-exports

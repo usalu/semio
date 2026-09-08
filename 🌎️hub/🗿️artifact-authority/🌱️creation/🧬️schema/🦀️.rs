@@ -8,6 +8,50 @@ use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCrea
 use directory::os_io::ArtifactDialect;
 use semio_framework_hash::Sha256;
 
+//#region 🔖️ScopeSchemaExports
+use semio_framework_schema_registry::{register_scope_schema_exports, FacetLeaves, SchemaExport, ScopeSchemaExports};
+
+/// 🧬️ The scope id every export of this module resolves under.
+pub const SCHEMA_SCOPE: &str = "hub.artifact-authority.creation";
+
+/// 🏷️ The leaves of an export that is only ever validated, never transported by a Rust decoder —
+/// exactly the set its `"x-semio-formats"` annotation declares (contract §B).
+const VALIDATED_ONLY: FacetLeaves = FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: "" };
+
+/// 📚️ The module document the annotation is read from, so the law never restates it.
+#[cfg(test)]
+const MODULE_JSON: &str = include_str!("🔣️.json");
+
+/// 🏷️ `$defs` of `🔣️.json`, in declaration order.
+const EXPORTS: [SchemaExport; 12] = [
+    SchemaExport { id: "ArtifactCreationPhaseV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "ArtifactCreationFactKindV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "ArtifactCreationOperationStateV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "ArtifactCreationTransitionV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "ArtifactCreationCancellationDecisionV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "ArtifactCreationTransactionKindV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "ArtifactCreationTransactionOutcomeV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "ArtifactCreationAcceptedRecoveryV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "ArtifactCreationHttpLimitsV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "ArtifactCreationHttpRouteV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "ArtifactCreationHttpAuthorityV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "ArtifactCreationHttpResponseV1", leaves: VALIDATED_ONLY },
+];
+
+/// 📌️ Registers `hub.artifact-authority.creation`'s named exports into the process-wide export catalog.
+/// See `📋️execution-contract.md` §C and `semio_framework_schema_registry::resolve_schema_export`.
+// 🚫️async: pure registration helper (no I/O)
+pub fn register_scope_exports() {
+    register_scope_schema_exports(ScopeSchemaExports { scope: SCHEMA_SCOPE, exports: &EXPORTS }).expect("hub.artifact-authority.creation scope schema exports");
+}
+/// 🔬 Proves the registration at runtime rather than by inspection: it registers, resolves every
+/// export in exactly the formats its `"x-semio-formats"` annotation names and in no other, and
+/// asserts the scope is visible in the process-wide catalog.
+#[cfg(test)]
+#[path = "🧪️tests/🔬️scope-schema-export-law-standalone/🦀️.rs"]
+mod scope_schema_export_law;
+//#endregion 🔖️ScopeSchemaExports
+
 pub const ARTIFACT_CREATION_DEADLINE_MS: u64 = 30_000;
 pub const ARTIFACT_CREATION_PAIR_MAX_BYTES: usize = 1024 * 1024;
 pub const ARTIFACT_CREATION_FACTS_MAX: usize = 3;

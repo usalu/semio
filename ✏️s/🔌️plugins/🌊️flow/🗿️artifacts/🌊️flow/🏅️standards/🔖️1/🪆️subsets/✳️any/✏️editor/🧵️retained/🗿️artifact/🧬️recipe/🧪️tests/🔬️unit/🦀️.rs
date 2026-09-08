@@ -1,4 +1,3 @@
-
 use super::*;
 use store::SnapshotRetirementStep;
 
@@ -75,7 +74,7 @@ fn apply_inverse(post: &mut serde_json::Value, inverse: &serde_json::Value) {
 
 #[test]
 fn retained_recipes_match_immer_fixture_and_exact_inverse_at_one_and_production_bytes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️fixtures/🧬️artifact-recipes.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️artifact-recipes.json")).unwrap();
     let label = fixture["label"]["unit"].as_str().unwrap().repeat(fixture["label"]["repetitions"].as_u64().unwrap() as usize);
     for bytes in fixture["grants"].as_array().unwrap() {
         let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes.as_u64().unwrap() as usize };
@@ -109,7 +108,7 @@ fn retained_recipes_match_immer_fixture_and_exact_inverse_at_one_and_production_
 
 #[test]
 fn recipe_cancellation_retires_every_partial_frontier_without_losing_original_root() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️fixtures/🧬️artifact-recipes.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️artifact-recipes.json")).unwrap();
     let label = fixture["label"]["unit"].as_str().unwrap().repeat(fixture["label"]["repetitions"].as_u64().unwrap() as usize);
     for bytes in fixture["grants"].as_array().unwrap() {
         let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes.as_u64().unwrap() as usize };

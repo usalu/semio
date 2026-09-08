@@ -1,9 +1,8 @@
-
 use super::*;
 use std::net::TcpListener;
 use std::process::Command;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 
 static NEXT_CONTAINER: AtomicU64 = AtomicU64::new(1);

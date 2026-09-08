@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 💡️ Keeps the async host's schema conversion aligned with the typed kernel proposal intent.

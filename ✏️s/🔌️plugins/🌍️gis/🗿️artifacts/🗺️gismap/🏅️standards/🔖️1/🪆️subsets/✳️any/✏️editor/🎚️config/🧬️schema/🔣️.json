@@ -10,8 +10,7 @@
     "renderMode",
     "vectorStyle",
     "lodMode",
-    "layerStrokeScale",
-    "locale"
+    "layerStrokeScale"
   ],
   "properties": {
     "layerVisibility": {
@@ -42,10 +41,6 @@
       "additionalProperties": {
         "type": "number"
       },
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   }

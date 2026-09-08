@@ -1442,7 +1442,9 @@ impl ValueMaterialization {
 }
 
 fn copy_decoded_string(value: &str, materialization: Option<&ValueMaterialization>) -> Result<String, PackError> {
-    if let Some(budget) = materialization { budget.charge(value.len() as u64)?; }
+    if let Some(budget) = materialization {
+        budget.charge(value.len() as u64)?;
+    }
     let mut owned = String::new();
     owned.try_reserve_exact(value.len()).map_err(|_| PackError::LimitExceeded("decoded string allocation"))?;
     owned.push_str(value);
@@ -1460,10 +1462,14 @@ impl DecCtx<'_> {
     fn value_slots<T>(&self, count: u64) -> Result<Vec<T>, PackError> {
         self.check_items(count)?;
         let capacity = if let Some(budget) = &self.materialization {
-            if size_of::<T>() > 64 { return Err(PackError::LimitExceeded("wire value slot representation")); }
+            if size_of::<T>() > 64 {
+                return Err(PackError::LimitExceeded("wire value slot representation"));
+            }
             budget.charge(count.checked_mul(64).ok_or(PackError::LimitExceeded("wire value slot overflow"))?)?;
             usize::try_from(count).map_err(|_| PackError::LimitExceeded("wire value slot count"))?
-        } else { count.min(4096) as usize };
+        } else {
+            count.min(4096) as usize
+        };
         let mut slots = Vec::new();
         slots.try_reserve_exact(capacity).map_err(|_| PackError::LimitExceeded("wire value slot allocation"))?;
         Ok(slots)
@@ -1473,7 +1479,11 @@ impl DecCtx<'_> {
 fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
     let value = match &ctx.source {
         DecSource::File(pack_file) => pack_file.symbol(symref)?,
-        DecSource::Inline { symbols } => symbols.get(usize::try_from(symref).map_err(|_| PackError::LimitExceeded("symbol reference index"))?).map(String::as_str).ok_or_else(|| PackError::Malformed { what: "symref", offset: 0, detail: format!("symref {symref} out of range for inline table of {}", symbols.len()) })?,
+        DecSource::Inline { symbols } => symbols.get(usize::try_from(symref).map_err(|_| PackError::LimitExceeded("symbol reference index"))?).map(String::as_str).ok_or_else(|| PackError::Malformed {
+            what: "symref",
+            offset: 0,
+            detail: format!("symref {symref} out of range for inline table of {}", symbols.len()),
+        })?,
     };
     copy_decoded_string(value, ctx.materialization.as_ref())
 }
@@ -2237,7 +2247,9 @@ fn decode_inline_symbols(reader: &mut ByteReader<'_>, limits: &PackLimits, mater
         return Err(PackError::LimitExceeded("record-body symbol count exceeds max_symbols"));
     }
     if let Some(budget) = materialization {
-        if size_of::<String>() > 32 { return Err(PackError::LimitExceeded("wire symbol slot representation")); }
+        if size_of::<String>() > 32 {
+            return Err(PackError::LimitExceeded("wire symbol slot representation"));
+        }
         budget.charge(symbol_count.checked_mul(32).ok_or(PackError::LimitExceeded("wire symbol slot overflow"))?)?;
     }
     let count = usize::try_from(symbol_count).map_err(|_| PackError::LimitExceeded("wire symbol slot count"))?;
@@ -2260,7 +2272,9 @@ fn decode_inline_symbols(reader: &mut ByteReader<'_>, limits: &PackLimits, mater
 /// Credits cover owned UTF-8 bytes, 32 bytes per symbol slot and 64 per list/map slot;
 /// allocator bookkeeping and generic record, expression, table and chunk decoding are excluded.
 pub fn decode_value_record_body_exact(bytes: &[u8], field_id: u16, limits: &PackLimits) -> Result<DslValue, PackError> {
-    if bytes.len() as u64 > limits.max_file_len { return Err(PackError::LimitExceeded("wire value exceeds max_file_len")); }
+    if bytes.len() as u64 > limits.max_file_len {
+        return Err(PackError::LimitExceeded("wire value exceeds max_file_len"));
+    }
     let mut reader = ByteReader::new(bytes);
     let budget = ValueMaterialization { used: std::cell::Cell::new(0), maximum: limits.max_total_alloc };
     let symbols = decode_inline_symbols(&mut reader, limits, Some(&budget))?;
@@ -2269,7 +2283,9 @@ pub fn decode_value_record_body_exact(bytes: &[u8], field_id: u16, limits: &Pack
     }
     let mut ctx = DecCtx { source: DecSource::Inline { symbols }, limits: limits.clone(), verification: crate::os_pack::format::VerificationLevel::Standard, preserve_unknown: false, unknown_field_ids: Vec::new(), materialization: Some(budget) };
     let value = decode_dsl_value(&mut reader, &mut ctx, 0)?;
-    if reader.position() != bytes.len() { return Err(PackError::Malformed { what: "wire value", offset: reader.position() as u64, detail: "trailing bytes after the terminal value".into() }); }
+    if reader.position() != bytes.len() {
+        return Err(PackError::Malformed { what: "wire value", offset: reader.position() as u64, detail: "trailing bytes after the terminal value".into() });
+    }
     Ok(value)
 }
 

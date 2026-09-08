@@ -232,14 +232,23 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                     }
                 }
             }
-            Event::SurfaceVisible { surface } => {
+            Event::SurfaceVisible { surface, body_key, view_state } => {
                 if let Some(instance) = parse_surface_instance(&surface) {
+                    native_close_key(runtime, instance)?;
+                    crate::plugin_runtime::plugin_mount_surface(runtime, instance, surface.clone(), body_key, &view_state).await?;
                     let surface =
                         ui_contract::SurfaceId::try_from(surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
                     dirty.try_surface(instance, surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
                 }
             }
-            Event::SurfaceHidden { .. } | Event::SurfaceResized { .. } => {}
+            Event::SurfaceHidden { surface } => {
+                if let Some(instance) = parse_surface_instance(&surface) {
+                    if native_close_key(runtime, instance).is_ok() {
+                        crate::plugin_runtime::plugin_hide_surface(runtime, instance, &surface).await?;
+                    }
+                }
+            }
+            Event::SurfaceResized { .. } => {}
             Event::PatchAck { receipt, surface, revision } => {
                 if !live_patch_receipt(runtime, receipt) {
                     continue;
@@ -706,13 +715,13 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
         if native_close_key(runtime, instance).is_err() {
             continue;
         }
-        let body_key = surface_body_key(surface.as_ref()).to_owned();
+        let surface_key = surface.as_ref().to_owned();
         let mounted = match native_close_key(runtime, instance) {
             Ok(key) => PATCHES.with(|patches| patches.reserve_mounted(surface, key)),
             Err(_) => Err(surface),
         };
         match mounted {
-            Ok(grant) => match crate::plugin_runtime::plugin_render(runtime, instance, &body_key, "{}").await {
+            Ok(grant) => match crate::plugin_runtime::plugin_render_surface(runtime, instance, &surface_key).await {
                 Ok(tree) => {
                     let _ = grant.commit_source(tree.root);
                 }
@@ -905,10 +914,6 @@ fn same_command_cursor(left: &semio_framework::kernel::CommandPageCursor, right:
 }
 
 use super::pending::{parse_surface_instance, with_state as with_pending_patches};
-
-fn surface_body_key(surface: &str) -> &str {
-    surface.split_once(':').map_or(surface, |(_, body_key)| body_key)
-}
 
 /// 🔀️ `AppFrame::UiPatch` → a real `kernel::UiPatch` passthrough into `PENDING_PATCHES` (the wire
 /// frame is already `UiPatch`-shaped field-for-field — channel v12/A4 — so this is a decode, not a

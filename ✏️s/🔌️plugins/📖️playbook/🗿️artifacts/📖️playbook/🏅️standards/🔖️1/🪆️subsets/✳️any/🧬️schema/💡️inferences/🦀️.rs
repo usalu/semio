@@ -8,9 +8,7 @@ use crate::PlaybookSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
-
-use super::topology::{compute_playbook_topology, PlaybookTopology};
-
+use super::topology::{compute_playbook_topology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a playbook snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
@@ -76,3 +74,8 @@ pub fn playbook_artifact_inference_descriptor() -> framework_schema::ArtifactInf
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::topology::PlaybookTopology;
+//#endregion 🔁️Re-exports

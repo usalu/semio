@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::DrawingCamera;
+
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
@@ -13,3 +13,8 @@ pub struct DrawingPresence {
     #[state(presence)]
     pub active_utility_id: String,
 }
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::DrawingCamera;
+//#endregion 🔁️Re-exports

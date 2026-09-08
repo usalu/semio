@@ -106,7 +106,7 @@ mod pending_whole_patch;
 pub use pending_whole_patch::UiPendingPatch;
 
 #[cfg(test)]
-#[path = "../../♻️retirement/🩹️patch/🧪️tests/🦀️.rs"]
+#[path = "../../♻️retirement/🩹️patch/🧪️tests/🩹️patch/🦀️.rs"]
 mod patch_storage_tests;
 
 pub fn credited_bindings(source: &UiNodeBindings) -> Option<UiNodeBindings> {
@@ -441,7 +441,7 @@ impl<'a> Iterator for UiSubtreeIter<'a> {
 mod resident;
 pub use resident::*;
 #[cfg(test)]
-#[path = "../../🎟️resident/🌳️root/🧪️tests/🦀️.rs"]
+#[path = "../../🎟️resident/🌳️root/🧪️tests/🌳️root/🦀️.rs"]
 mod resident_root_tests;
 pub const UI_DOCUMENT_LEASE_SLOTS: usize = UI_RESIDENT_SLOTS;
 pub const UI_DOCUMENT_LEASE_ALIASES: u64 = 8;
@@ -541,7 +541,23 @@ impl Default for UiDocumentSlot {
 
 impl UiDocumentSlot {
     const fn empty() -> Self {
-        Self { resident: None, epoch: 0, generation: 0, surface: None, revision: UiRevision(0), root: None, layout_epoch: 0, nodes: UiNodeTable { entries: UiSnapshotNodes::empty() }, aliases: 0, occupied: false, complete: false, retiring: false, retire_scalar: 0, retirement_claimed: false, retirement: crate::UiTypedRetirementCursor::empty() }
+        Self {
+            resident: None,
+            epoch: 0,
+            generation: 0,
+            surface: None,
+            revision: UiRevision(0),
+            root: None,
+            layout_epoch: 0,
+            nodes: UiNodeTable { entries: UiSnapshotNodes::empty() },
+            aliases: 0,
+            occupied: false,
+            complete: false,
+            retiring: false,
+            retire_scalar: 0,
+            retirement_claimed: false,
+            retirement: crate::UiTypedRetirementCursor::empty(),
+        }
     }
 }
 
@@ -584,7 +600,9 @@ impl UiDocumentArena {
             return Err((UiDocumentBuildError::InvalidGeneration, surface));
         }
         let mut resident = None;
-        if !matches!(UiResidentPermit::try_reserve(UiResidentLimits { items: UI_RESIDENT_SURFACE_ITEMS, bytes: UI_RESIDENT_SURFACE_BYTES }, &mut resident, UiResidentPermit::required_reservation_bytes()), Ok(true)) { return Err((UiDocumentBuildError::ArenaFull, surface)); }
+        if !matches!(UiResidentPermit::try_reserve(UiResidentLimits { items: UI_RESIDENT_SURFACE_ITEMS, bytes: UI_RESIDENT_SURFACE_BYTES }, &mut resident, UiResidentPermit::required_reservation_bytes()), Ok(true)) {
+            return Err((UiDocumentBuildError::ArenaFull, surface));
+        }
         let key = resident.as_ref().unwrap().root_key().unwrap();
         let slot_index = key.slot;
         let epoch = key.epoch;
@@ -777,21 +795,21 @@ pub use typed_retirement::close_ui_document_page_with_grant;
 use typed_retirement::{close_document_owner, hand_back_document_owner};
 #[path = "../../⚖️compare/📃️document/🦀️.rs"]
 mod document_component_compare;
-pub use document_component_compare::{UiDocumentComponentCompare, UiDocumentCompareAdmission, UiDocumentCompareError};
+pub use document_component_compare::{UiDocumentCompareAdmission, UiDocumentCompareError, UiDocumentComponentCompare};
 #[path = "../../📃️document/🎟️assembly/🦀️.rs"]
 mod document_assembly;
-pub use document_assembly::{UiDocumentAssemblyIdentity, UiDocumentAssembly, UiDocumentAssemblyError, UiDocumentAssemblyErrorKind, UiDocumentAssemblyProgress, UiDocumentRead, UiDocumentRootIdentity};
+pub use document_assembly::{UiDocumentAssembly, UiDocumentAssemblyError, UiDocumentAssemblyErrorKind, UiDocumentAssemblyIdentity, UiDocumentAssemblyProgress, UiDocumentRead, UiDocumentRootIdentity};
 //#endregion 🪪️DocumentLease
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "../../📃️document/🎟️assembly/🧪️tests/🦀️.rs"]
+#[path = "../../📃️document/🎟️assembly/🧪️tests/🎟️assembly/🦀️.rs"]
 mod document_assembly_tests;
 #[cfg(test)]
-#[path = "../../⚖️compare/📃️document/🧪️tests/🦀️.rs"]
+#[path = "../../⚖️compare/📃️document/🧪️tests/📃️document/🦀️.rs"]
 mod document_component_compare_tests;
 #[cfg(test)]
-#[path = "../../♻️retirement/🩹️patch/📨️pending/📦️whole/🧪️tests/🦀️.rs"]
+#[path = "../../♻️retirement/🩹️patch/📨️pending/📦️whole/🧪️tests/📦️whole/🦀️.rs"]
 mod pending_whole_patch_tests;
 
 #[cfg(test)]

@@ -88,9 +88,7 @@ export interface CadDiff {
   /** @state config */
   dislocateStructureClassic?: CadDislocateOptions;
   /** @state config */
-  locale?: string;
   /** @state config */
-  terminology?: string;
   /** @state config */
   contributionsJson?: string;
   /** @state artifact */

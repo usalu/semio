@@ -7,9 +7,8 @@
 use crate::GisTerrainSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 
-use super::bounds::{imported_lon_lat_positions, lon_lat_bounds, GisTerrainBounds};
+use super::bounds::{imported_lon_lat_positions, lon_lat_bounds};
 use semio_framework_value_derive::{FromValue, ToValue};
-
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a gisterrain snapshot. Today: the geographic bounding box and
 /// position count of the `map:in` overlay decoded from `imported_features_json` (see
@@ -66,7 +65,6 @@ impl semio_framework_plugin::ArtifactInferrer for crate::standards::v1::subsets:
 /// `crate::schema`'s `🔖️TerrainDescriptor` region — a one-line path
 /// correction, not an engine-dissolution rewrite.
 use crate::schema::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
-
 /// 📜️ Hand-rolled reader for the `.gisterrain` fixture's `origin`/`position` scenery lines — the
 /// read-only pins/project-origin data rendered alongside the document; the `gisterrain
 /// exaggeration=...` header line those same files start with is instead read by
@@ -223,3 +221,8 @@ pub fn gisterrain_artifact_inference_descriptor() -> ::semio_framework_schema::A
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::bounds::GisTerrainBounds;
+//#endregion 🔁️Re-exports

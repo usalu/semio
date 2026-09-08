@@ -1,17 +1,16 @@
-
 use super::*;
 
-mod ownership {
-    include!("../../📏️ownership/🧪️tests/🦀️.rs");
-}
+#[cfg(test)]
+#[path = "../../📏️ownership/🧪️tests/📏️ownership/🦀️.rs"]
+mod ownership;
 
-mod canonical_document_tests {
-    include!("../../📃️document/🧪️tests/🦀️.rs");
-}
+#[cfg(test)]
+#[path = "../../📃️document/🧪️tests/📃️document/🦀️.rs"]
+mod canonical_document_tests;
 
-mod output_pool_tests {
-    include!("../../📤️output/🧪️tests/🦀️.rs");
-}
+#[cfg(test)]
+#[path = "../../📤️output/🧪️tests/📤️output/🦀️.rs"]
+mod output_pool_tests;
 
 //#region 🔖️Fixtures
 fn ui_text(value: &str) -> ui_contract::UiText {

@@ -16,7 +16,6 @@ export interface WiresDiff {
   /** @state artifact */
   dragLastY?: number;
   /** @state config */
-  locale?: string;
 }
 
 export interface WiresArtifact {
@@ -31,5 +30,4 @@ export interface WiresArtifact {
   /** @state artifact */
   dragLastY: number;
   /** @state config */
-  locale: string;
 }

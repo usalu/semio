@@ -16,8 +16,6 @@ type Puzzle5dConfig {
   vortexKindWeights: [FloatEntry!]! @state(class: CONFIG)
   sun: WorldSunConfig! @state(class: CONFIG)
   activeUtilityByWindowId: [StringEntry!]! @state(class: CONFIG)
-  terminology: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 
 type SelectionSet {

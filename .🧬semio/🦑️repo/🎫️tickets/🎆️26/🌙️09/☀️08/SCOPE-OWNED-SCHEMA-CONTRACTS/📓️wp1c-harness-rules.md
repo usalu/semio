@@ -17,8 +17,8 @@ object shape), rows 21/44 verification, vector + test updates, real runs.
 | Rules landed | row 56 (two new diagnostic codes), row 77 (three legal reference shapes, JSON-pointer resolution), row 78 leaf-`$id` grammar as a derived helper |
 | Catalog shape | row 43 **landed on both sides during this work-package**: the harness already read the new shape (W1b), and the tooling worker regenerated `🔣️schema-catalog.json` into it at 19:51 — 3 011 scopes, `exports: {Id: {file, facet}}`, nested facet files included. The live `test schema` run below is therefore a real measurement, not a shape refusal |
 | Vector | `🧪️tests/🧬️schema-invariants/🔣️.json` +9 catalog cases, +1 new collection (`mutationLeafIdCases`, 3 cases) |
-| Invariants suite | **90 pass / 1 fail** (91 tests, 356 expect() calls, 17.8 s) after a peer extended the same suite mid-session (§7). The one red is W1b's R-4 policy disagreement, deliberately left red |
-| `test schema` | 5 165 findings over the tree, 0 × `schema-catalog-malformed` (was 2 583), per-owner table in §5.3 |
+| Invariants suite | **93 pass / 1 fail** (94 tests, 416 expect() calls) — 61 at W1, 76 after this work-package's cases, then a peer kept extending the same suite mid-session (§6). The one red is W1b's R-4 policy disagreement, deliberately left red |
+| `test schema` | 3 082 findings on the final run (5 165 ninety minutes earlier — the tree is migrating under WP4-WP7); `schema-export-unknown` 1 377 → 166 and `schema-ref-unresolved` 506 → 48 are this work-package's two rules landing. Per-owner table in §5.3 |
 | Rows 21 / 44 | verified on disk; row 44 now migrated on **both** sides |
 
 ---
@@ -77,7 +77,7 @@ and disagree only on the code vocabulary, which is the open coordinator call W1 
 **Live effect today: zero.** No export in the tree carries the annotation yet (`grep -rl x-semio-formats`
 over `✏️s`, `🌎️hub`, `🧰️framework` returns the two vectors and nothing else); annotating the law/contract
 exports is row 55 (W6c). The rule is therefore proved on the vector and inert on the tree — which is the
-correct state for it, and it means the 2 891 live `schema-export-incomplete` findings in §5.3 are all the
+correct state for it, and it means the 1 955 live `schema-export-incomplete` findings in §5.3 are all the
 unannotated rule, not the new one.
 
 ### 2.2 Row 77 — module-internal refs are never findings
@@ -129,10 +129,12 @@ Measured effect on the real tree (`wp1c-shadow-probe.ts`, 3 655 normative docume
 
 **556 of the 684 non-`#/$defs/` references stop being findings**, and the ones that remain are the real
 ones — broken pointers, private-helper reaches and file paths. §5.3's run reports
-`115 schema-ref-unresolved + 5 schema-ref-broken-internal`, split `68 cross-document fragment not
-#/$defs/ · 45 relative file path · 5 internal pointer lands on nothing · 2 target $id no catalog scope
-declares`. (A peer split the broken-pointer case into its own code `schema-ref-broken-internal` after
-this work-package landed the rule — see §7 and open question 3, which it answers.)
+`48 schema-ref-unresolved + 5 schema-ref-broken-internal`, split `45 relative file path · 5 internal
+pointer lands on nothing · 2 cross-document fragment not #/$defs/ · 1 target $id no catalog scope
+declares` — the 68 cross-document `#/definitions/` reaches measured an hour earlier have since been
+migrated by their owners down to 2. (A peer split the broken-pointer case into its own code
+`schema-ref-broken-internal` after this work-package landed the rule — see §6 and open question 3, which
+it answers.)
 
 ### 2.3 Row 78 — the leaf `$id` grammar, derived and never restated
 
@@ -243,13 +245,14 @@ this package's `include`.)
 
 ```
 $ bun test --timeout 60000 ./🧪️tests/🧬️schema-invariants/🟦️.ts    # cwd …/🔨️modules/🧪️test
- 90 pass
+ 90 pass                      # and, re-run after the peer's next batch: 93 pass / 1 fail, 94 tests
  1 fail
  356 expect() calls
 Ran 91 tests across 1 file. [17.82s]
 ```
 
-61 tests (W1) → 76 after this work-package's cases → 91 after a peer extended the same suite (§7). Every
+61 tests (W1) → 76 after this work-package's cases → 91, then 94, as a peer kept extending the same
+suite (§6). Every
 case this work-package added passes, including all five false-positive guards. The single failure is
 `🤝️ parity with the catalog generator's own vector > every generator case places the same files and
 levels as this harness does`, on generator case `fixture-defines-schema`:
@@ -274,87 +277,99 @@ $ bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/�
       > <ticket>/🗑️generated/wp1c-test-schema.json
 exit 1
 
-findings 5165   schema-bound fixtures 0
-  2891 x schema-export-incomplete
-  1696 x schema-export-parser-missing      <- the peer's parse<Export>() rule (§7), not this work-package
-   162 x schema-dialect-not-draft-07
-   155 x schema-fixture-defines-schema
-   115 x schema-ref-unresolved
-    69 x schema-owner-ineligible
-    51 x schema-placement-outside-module
-    18 x schema-placement-forbidden-filename
+findings 3082   schema-bound fixtures 0
+  1955 x schema-export-incomplete
+   577 x schema-export-parser-missing        <- the peer's parse<Export>() rule (§6), not this work-package
+   166 x schema-export-unknown
+   156 x schema-fixture-defines-schema
+   117 x schema-placement-outside-module
+    48 x schema-ref-unresolved
+    17 x schema-owner-ineligible
+    17 x schema-cross-scope-dependency-forbidden
+    15 x schema-dialect-not-draft-07
+     5 x schema-catalog-malformed
      5 x schema-ref-broken-internal
      3 x schema-file-missing
+     1 x schema-placement-forbidden-filename
 ```
 
-**Read against W1b (3 386 findings, 2 583 of them `schema-catalog-malformed`).** That row is now **zero**:
-the tooling worker regenerated the catalog into the row-43 shape mid-session, so resolution, completeness
-and cross-scope `$ref` checking run for the first time since W1's measurement — the codes that read 0
-under W1b are measured again, not absent. Against W1's 4 111 (the last full measurement of these rules):
+**Treat the number as a snapshot, not a baseline.** Three measurements were taken over roughly ninety
+minutes while WP4-WP7 migrate the tree and the catalog is regenerated repeatedly, and they differ a lot:
+5 165 → 3 082 findings, `schema-dialect-not-draft-07` 162 → 15, `schema-placement-forbidden-filename`
+18 → 1, `schema-owner-ineligible` 69 → 17, cross-document `#/definitions/` refs 68 → 2. What is stable is
+the shape of the answer, and what the earlier numbers prove is that the *rules* measured them.
+
+Against W1's 4 111 (the last full measurement before the catalog gap was closed):
 
 | code | W1 | now | why |
 |---|---|---|---|
-| `schema-export-unknown` | 1 377 | **0** | row 43: the catalog names each export's carrier file, so a facet-child export is looked up in the document that declares it |
-| `schema-ref-unresolved` | 506 | 115 (+5 `schema-ref-broken-internal`) | row 77: 541 internal `#/definitions/` refs and 15 aggregate-branch `$id` refs stop being findings; the rest are real |
-| `schema-export-incomplete` | 1 006 | 2 891 | the completeness check now reaches every export of all 3 011 scopes; before, 1 341 of them could not be located at all |
-| `schema-dialect-not-draft-07` | 287 | 162 | other partitions migrating |
-| `schema-fixture-defines-schema` | 254 | 155 | other partitions migrating |
-| `schema-placement-forbidden-filename` | 158 | 18 | other partitions migrating |
+| `schema-export-unknown` | 1 377 | 166 | row 43: the catalog names each export's carrier file, so a facet-child export is looked up in the document that declares it. The remainder is real — 70 of them in one plugin subtree mid-migration |
+| `schema-ref-unresolved` | 506 | 48 (+5 `schema-ref-broken-internal`) | row 77: 541 internal `#/definitions/` refs and 15 aggregate-branch `$id` refs stop being findings; of what remains, 45 are relative file paths |
+| `schema-export-incomplete` | 1 006 | 1 955 | the completeness check now reaches every export of every scope; before, 1 341 could not be located at all |
+| `schema-dialect-not-draft-07` | 287 | 15 | other partitions migrating |
+| `schema-fixture-defines-schema` | 254 | 156 | other partitions migrating |
+| `schema-placement-forbidden-filename` | 158 | 1 | other partitions migrating |
 | `schema-contracts-directory-forbidden` | 1 | 0 | the ShellHost per-contract directory is gone (master-plan seed 2) |
-| `schema-owner-ineligible` | 460 | 69 | W2c's `schemaScopeOwnerLevels` restructure |
+| `schema-owner-ineligible` | 460 | 17 | W2c's `schemaScopeOwnerLevels` restructure |
+| `schema-catalog-malformed` | 0 | 5 | five catalog rows were mid-regeneration at read time; W1b's "one defect reported once" containment holds — five rows, five findings, no derived thousands |
 
 Per partition owner (full rows in `🗑️generated/wp1c-test-schema.json`; code names abbreviated by
 dropping the `schema-` prefix):
 
 | owner root | findings | by code |
 |---|---|---|
-| `✏️s/🔌️plugins/🗄️stdio` | 1243 | export-parser-missing=570 export-incomplete=521 dialect-not-draft-07=64 ref-unresolved=46 owner-ineligible=38 placement-outside-module=2 ref-broken-internal=2 |
-| `✏️s/🔌️plugins/🏛️architect` | 713 | export-incomplete=566 export-parser-missing=142 dialect-not-draft-07=5 |
-| `🧰️framework/🛍️products/💻️os` | 454 | export-incomplete=275 fixture-defines-schema=79 export-parser-missing=68 placement-outside-module=21 owner-ineligible=7 dialect-not-draft-07=4 |
-| `✏️s/🔌️plugins/📕️norm` | 375 | export-incomplete=203 export-parser-missing=138 dialect-not-draft-07=16 owner-ineligible=15 ref-broken-internal=3 |
-| `✏️s/🔌️plugins/🧩️puzzle` | 258 | export-incomplete=131 export-parser-missing=123 dialect-not-draft-07=4 |
-| `✏️s/🔌️plugins/🌊️flow` | 217 | export-incomplete=195 export-parser-missing=21 dialect-not-draft-07=1 |
-| `✏️s/🔌️plugins/🧱️block` | 201 | export-incomplete=109 export-parser-missing=85 dialect-not-draft-07=6 owner-ineligible=1 |
-| `✏️s/🔌️plugins/🏗️fem` | 162 | export-incomplete=96 export-parser-missing=58 dialect-not-draft-07=8 |
-| `✏️s/🔌️plugins/📸️remodel` | 137 | export-incomplete=75 export-parser-missing=59 ref-unresolved=2 dialect-not-draft-07=1 |
-| `🧰️framework/🔨️modules` | 105 | ref-unresolved=67 export-incomplete=32 export-parser-missing=2 placement-outside-module=1 placement-forbidden-filename=1 owner-ineligible=1 fixture-defines-schema=1 |
-| `🧰️framework/🛍️products/🦑️repo` | 105 | fixture-defines-schema=72 placement-forbidden-filename=16 placement-outside-module=8 dialect-not-draft-07=8 owner-ineligible=1 |
-| `✏️s/🔌️plugins/🔱️trinity` | 98 | export-incomplete=51 export-parser-missing=43 dialect-not-draft-07=4 |
-| `✏️s/🔌️plugins/🌀️procedural` | 94 | export-incomplete=52 export-parser-missing=38 dialect-not-draft-07=4 |
-| `✏️s/🔌️plugins/🌍️gis` | 83 | export-incomplete=42 export-parser-missing=26 dialect-not-draft-07=8 file-missing=3 owner-ineligible=2 fixture-defines-schema=2 |
-| `✏️s/🔌️plugins/📏️layout` | 77 | export-incomplete=61 export-parser-missing=14 dialect-not-draft-07=2 |
-| `✏️s/🔌️plugins/🎥️shooting` | 73 | export-incomplete=42 export-parser-missing=30 dialect-not-draft-07=1 |
-| `✏️s/🔌️plugins/📐️cad` | 64 | export-incomplete=42 export-parser-missing=21 dialect-not-draft-07=1 |
-| `✏️s/🔌️plugins/💠️lowpoly` | 64 | export-incomplete=34 export-parser-missing=28 dialect-not-draft-07=2 |
-| `✏️s/🔌️plugins/🪐️space` | 63 | export-incomplete=52 export-parser-missing=9 owner-ineligible=2 |
-| `✏️s/🔌️plugins/🎬️sequence` | 49 | export-incomplete=28 export-parser-missing=17 owner-ineligible=2 placement-outside-module=1 dialect-not-draft-07=1 |
-| `✏️s/🔌️plugins/🏭️process` | 49 | export-incomplete=31 export-parser-missing=17 dialect-not-draft-07=1 |
-| `✏️s/🔌️plugins/📜️imperative` | 41 | export-incomplete=23 export-parser-missing=17 dialect-not-draft-07=1 |
-| `🌎️hub/💡️inference` | 39 | export-incomplete=39 |
-| `✏️s/🔌️plugins/🪵️sourcing` | 38 | export-parser-missing=21 export-incomplete=14 dialect-not-draft-07=2 placement-outside-module=1 |
-| `✏️s/🔌️plugins/🖨️raster` | 35 | export-incomplete=18 export-parser-missing=15 dialect-not-draft-07=2 |
-| `✏️s/🔌️plugins/📖️playbook` | 34 | export-incomplete=21 export-parser-missing=12 dialect-not-draft-07=1 |
-| `✏️s/🔌️plugins/🕸️dag` | 33 | export-parser-missing=18 export-incomplete=12 dialect-not-draft-07=2 placement-outside-module=1 |
-| `✏️s/🔌️plugins/✒️writer` | 31 | export-incomplete=16 export-parser-missing=13 placement-outside-module=1 dialect-not-draft-07=1 |
-| `✏️s/🔌️plugins/➗️mathematical` | 28 | export-incomplete=14 export-parser-missing=12 placement-outside-module=1 dialect-not-draft-07=1 |
-| `✏️s/🔌️plugins/🎞️animate` | 26 | export-parser-missing=13 export-incomplete=11 placement-outside-module=1 dialect-not-draft-07=1 |
-| `✏️s/🔌️plugins/🔋️energy` | 26 | export-incomplete=13 export-parser-missing=10 placement-outside-module=1 fixture-defines-schema=1 dialect-not-draft-07=1 |
-| `🌎️hub/🗿️artifact-authority` | 26 | export-incomplete=26 |
-| `✏️s/🔌️plugins/🎪️demonstrator` | 22 | export-incomplete=12 export-parser-missing=9 dialect-not-draft-07=1 |
-| `✏️s/🔌️plugins/🗒️note` | 21 | export-parser-missing=14 export-incomplete=4 dialect-not-draft-07=2 placement-outside-module=1 |
-| `✏️s/🔌️plugins/📋️forms` | 20 | export-incomplete=9 export-parser-missing=8 dialect-not-draft-07=2 placement-outside-module=1 |
-| `✏️s/🔌️plugins/🖍️draw` | 20 | export-parser-missing=10 export-incomplete=7 dialect-not-draft-07=2 placement-outside-module=1 |
-| `✏️s/🔌️plugins/🌿️vcs` | 15 | export-parser-missing=8 export-incomplete=5 placement-outside-module=1 dialect-not-draft-07=1 |
-| `✏️s/🔌️plugins/💡️reasoning` | 15 | export-parser-missing=7 export-incomplete=6 placement-outside-module=1 dialect-not-draft-07=1 |
+| `✏️s/🔌️plugins/🗄️stdio` | 806 | export-incomplete=571 export-parser-missing=171 ref-unresolved=46 dialect-not-draft-07=12 placement-outside-module=2 owner-ineligible=2 ref-broken-internal=2 |
+| `🧰️framework/🛍️products/💻️os` | 451 | export-incomplete=276 fixture-defines-schema=79 export-parser-missing=68 placement-outside-module=21 owner-ineligible=7 |
+| `✏️s/🔌️plugins/🏛️architect` | 355 | export-incomplete=217 export-unknown=70 export-parser-missing=68 |
+| `✏️s/🔌️plugins/📕️norm` | 235 | export-incomplete=197 export-parser-missing=34 ref-broken-internal=3 export-unknown=1 |
+| `✏️s/🔌️plugins/🧱️block` | 192 | export-incomplete=106 export-parser-missing=85 owner-ineligible=1 |
+| `🧰️framework/🛍️products/🦑️repo` | 150 | placement-outside-module=75 fixture-defines-schema=75 |
+| `✏️s/🔌️plugins/🧩️puzzle` | 139 | export-incomplete=95 export-parser-missing=44 |
+| `✏️s/🔌️plugins/📸️remodel` | 76 | export-incomplete=69 export-parser-missing=6 ref-unresolved=1 |
+| `✏️s/🔌️plugins/🌀️procedural` | 61 | export-incomplete=30 export-unknown=19 export-parser-missing=8 cross-scope-dependency-forbidden=4 |
+| `✏️s/🔌️plugins/🔱️trinity` | 61 | export-incomplete=47 export-parser-missing=9 catalog-malformed=5 |
+| `✏️s/🔌️plugins/🏗️fem` | 58 | export-incomplete=29 export-unknown=21 export-parser-missing=6 cross-scope-dependency-forbidden=2 |
+| `✏️s/🔌️plugins/🎥️shooting` | 46 | export-incomplete=25 export-unknown=11 export-parser-missing=8 cross-scope-dependency-forbidden=2 |
+| `✏️s/🔌️plugins/📏️layout` | 45 | export-incomplete=45 |
+| `✏️s/🔌️plugins/🌍️gis` | 39 | export-incomplete=25 export-parser-missing=4 file-missing=3 dialect-not-draft-07=2 owner-ineligible=2 fixture-defines-schema=2 export-unknown=1 |
+| `✏️s/🔌️plugins/📐️cad` | 35 | export-incomplete=16 export-unknown=11 export-parser-missing=4 cross-scope-dependency-forbidden=4 |
+| `✏️s/🔌️plugins/🌊️flow` | 34 | export-incomplete=18 export-parser-missing=8 export-unknown=6 cross-scope-dependency-forbidden=2 |
+| `✏️s/🔌️plugins/💠️lowpoly` | 32 | export-incomplete=18 export-parser-missing=8 export-unknown=6 |
+| `✏️s/🔌️plugins/🎬️sequence` | 26 | export-incomplete=9 export-parser-missing=6 export-unknown=5 owner-ineligible=2 cross-scope-dependency-forbidden=2 dialect-not-draft-07=1 placement-outside-module=1 |
+| `✏️s/🔌️plugins/🏭️process` | 24 | export-incomplete=17 export-unknown=5 export-parser-missing=2 |
+| `✏️s/🔌️plugins/📜️imperative` | 21 | export-incomplete=19 export-parser-missing=2 |
+| `✏️s/🔌️plugins/🪵️sourcing` | 20 | export-incomplete=10 export-parser-missing=9 placement-outside-module=1 |
+| `✏️s/🔌️plugins/🕸️dag` | 19 | export-incomplete=12 export-parser-missing=6 placement-outside-module=1 |
+| `✏️s/🔌️plugins/🪐️space` | 19 | export-incomplete=15 owner-ineligible=2 export-parser-missing=2 |
+| `✏️s/🔌️plugins/🔋️energy` | 17 | export-incomplete=13 export-parser-missing=3 placement-outside-module=1 |
+| `✏️s/🔌️plugins/🖨️raster` | 17 | export-incomplete=17 |
+| `✏️s/🔌️plugins/📖️playbook` | 15 | export-incomplete=15 |
+| `✏️s/🔌️plugins/✒️writer` | 14 | export-incomplete=9 export-parser-missing=2 placement-outside-module=1 export-unknown=1 cross-scope-dependency-forbidden=1 |
+| `✏️s/🔌️plugins/🎞️animate` | 12 | export-incomplete=4 export-parser-missing=4 export-unknown=3 placement-outside-module=1 |
+| `✏️s/🔌️plugins/🎪️demonstrator` | 12 | export-incomplete=12 |
+| `✏️s/🔌️plugins/🗒️note` | 11 | export-parser-missing=6 export-incomplete=4 placement-outside-module=1 |
+| `✏️s/🔌️plugins/➗️mathematical` | 10 | export-unknown=5 export-incomplete=2 export-parser-missing=2 placement-outside-module=1 |
 | `♻️mit-bestand/🔎️recherche` | 8 | placement-outside-module=7 placement-forbidden-filename=1 |
-| `🌎️hub/🔐️auth` | 3 | export-incomplete=3 |
+| `✏️s/🔌️plugins/🖍️draw` | 7 | export-incomplete=6 placement-outside-module=1 |
+| `✏️s/🔌️plugins/📋️forms` | 6 | export-incomplete=4 placement-outside-module=1 export-parser-missing=1 |
+| `✏️s/🔌️plugins/💡️reasoning` | 4 | export-incomplete=2 placement-outside-module=1 export-parser-missing=1 |
+| `🧰️framework/🔨️modules` | 3 | owner-ineligible=1 export-unknown=1 ref-unresolved=1 |
+| `✏️s/🔌️plugins/🌿️vcs` | 2 | placement-outside-module=1 export-incomplete=1 |
 
-The repository test module's own subtree carries **0** findings (asserted as an empty list by
-`🩹️ the test platform's own subtree carries no schema-contract finding`, green).
+The repository test module's own subtree carries **0** findings — measured directly on this run
+(`findings in my partition: 0`) and asserted as an empty list by
+`🩹️ the test platform's own subtree carries no schema-contract finding`, green. The
+`🧰️framework/🛍️products/🦑️repo` rows above are all `🔨️modules/📚️library`, another partition.
 
 `0/0 schema-bound fixture(s)` — nothing in the tree declares a `schemaFixtures` block yet; that is WP5
-work in the fixture partitions (W1 §6.5), and the mechanism stays covered by the 8 synthetic pipeline
+work in the fixture partitions (W1 §6.5), and the mechanism stays covered by the synthetic pipeline
 cases.
+
+**Note on `🗑️generated/`.** The folder was swept by a peer between this work-package's first and final
+runs (W1d/W1e are also working in this partition), taking `wp1c-test-schema.json`,
+`wp1c-shadow-catalog.json` and `wp1c-shadow-findings.json` with it. `wp1c-test-schema.json` above is the
+regenerated one; the shadow projections in §5.4 are quoted from their run output and their scripts are
+kept in the ticket folder, so they can be reproduced in one command.
 
 ### 5.4 The shadow-catalog probe (row 43, independent projection)
 
@@ -372,12 +387,59 @@ tree. It measured 3 011 scopes / 11 308 exports, of which **1 349 are declared i
 — a *nested* facet child, the case that made W1's `schema://` unusable for 1 341 exports. The scripts are
 kept as ticket inputs; the numbers now corroborate the generator rather than substitute for it (its
 independent projection and the regenerated catalog agree on the shape, and their finding counts differ
-only where the generator's `file` differs from mine: `export-incomplete` 2 925 vs 2 841,
-`ref-unresolved` 128 vs 128).
+only where the generator's `file` differs from mine — measured against the same tree state that hour,
+`export-incomplete` 2 925 vs 2 841 and `ref-unresolved` 128 vs 128).
 
 ### 5.5 The partition's full `bun test`
 
-<!-- WP1C_FULL_RUN -->
+```
+$ bun test --timeout 60000 ./../../🧪️tests/🧪️test-platform/🟦️.ts \
+                           ./../../🧪️tests/🧬️schema-invariants/🟦️.ts \
+                           ./../../🧪️tests/📐️test-layout/🟦️.ts
+ 102 pass
+ 24 fail
+ 1 error
+ 3152 expect() calls
+Ran 126 tests across 3 files. [4404.53s]
+```
+
+(The package's own `test` target runs exactly these three files; `bun test` with no argument matches
+nothing here, because none of the suites carries `.test.` in its name any more after the relocation W1b
+recorded.)
+
+**The `1 error` is a torn read, not a defect:**
+`SyntaxError: Export named 'schemaDiagnosticCodesEmittedBy' not found in module '…/🟦️.ts'` — the peer of
+§6 was mid-edit, the invariants file already imported a symbol the package had not exported yet, and that
+suite aborted between tests. Its authoritative numbers are therefore the standalone re-run above (§5.2)
+and a second one taken after the run finished: **93 pass / 1 fail, 94 tests, 416 expect() calls, 56.0 s**
+— the count keeps growing because the peer keeps adding cases; the one failure is the same parity red
+each time.
+
+The 23 distinct failures, classified (class letters as W1b defined them: **a** caused by this ticket's
+migrations, **b** peer churn, **c** pre-existing at ticket baseline `0a0bb74380`):
+
+| # | Test | Class | Owner |
+|---|---|---|---|
+| 1-4 | `⚖️ comparison profiles > semantic-pdf-v1`, `⚖️ artifact comparison profiles > semantic-raster-v1 / -audio-v1 / -archive-v1` | c | oracle-registry `comparisonProfiles` contributions |
+| 5-6 | `📇️ oracle registry > every registered oracle is test-only…` / `> every recorded no-oracle decision…` | c | oracle registries (`oracle.comparisonProfiles`, `decision.substitutes` undefined) |
+| 7 | `📈️ non-aggregate metrics > oracle coverage…` | c | other partitions (unbacked cases) |
+| 8-9 | `🔍️ discovery and contract > every committed case satisfies the frozen contract` / `> discovery is idempotent` | c / d | other partitions; the second is a load timeout (it passes alone) |
+| 10 | `🔒️ dependency ratchet > the committed baseline classifies every ecosystem…` | c | `🔒️dependencies.json` + oracle registries (`serde_json`) |
+| 11-13 | `🔒️ recorded production debt` ×3 | c | other partitions |
+| 14-15 | `🚫️ oracle purity` ×2 | c/d | other partitions; both also time out under load |
+| 16-17 | `🧩️ cross-language oracle hosts` ×2 | c | `js:fast-json-patch` absent from the dependency baseline |
+| 18 | `🧫️ mutation without fixture > the live registry retains the independent Stdio census…` | c | W1b's R-2 (`testContributionDirectoryOverrides` pruned 176 → 2) |
+| 19 | `🧹️ clean safety > no tracked fixture, source file or compose path…` | c | other partition (`compose/` does not exist) |
+| 20 | `🪆️ case above subset > the only live case-above-subset violation…` | c | other partition (ratchet literal) |
+| 21 | `🧭️ contribution directory ownership > the handpicked kernel oracle remains discoverable at runtime` | b | new since W1b's triage; kernel oracle registration, other partition |
+| 22-23 | `📐️ canonical test layout > Nx discovers the same canonical names…` / `> generated-build-output-is-not-authored` | b | the peer's own new case (§6), authored today |
+
+**None is reachable from anything this work-package changed**: no failing assertion reads
+`schemaResolutionDiagnostics`, `schemaExportCompletenessDiagnostics`, `schemaPlacementDiagnostics`, the
+catalog, or the invariant vector. Since W1b's triage, four rows went green
+(`🔣️ contract > every exempt area…`, `🧬️ physical mutation vector registry` ×3) and four appeared
+(21-23 above plus one cross-language-host row).
+
 
 ---
 
@@ -389,15 +451,15 @@ survived, verified by reading the current files rather than by trusting the diff
 
 | what the peer added | relation to this work-package |
 |---|---|
-| `SCHEMA_DIAGNOSTIC_CODE_TABLE` (code → one-line description; `SCHEMA_DIAGNOSTIC_CODES` derived from it) | both codes added here are in it, with the descriptions the rules imply |
+| `SCHEMA_DIAGNOSTIC_CODE_TABLE` (code → `{emitters, description}`; `SCHEMA_DIAGNOSTIC_CODES` derived from it) | both codes added here are in it, with the descriptions the rules imply; `emitters` names which of harness / `schema check` is expected to emit each — the first half of this report's R-2 |
 | `schema-ref-broken-internal`, split out of `schema-ref-unresolved` | **answers this work-package's open question 3.** The addressing refusals and the broken-pointer defect now have separate codes |
 | `GRAPHQL_EXPORT_KEYWORDS` + five vector cases | answers W1's open question 2 (the six-keyword vocabulary stands, and is now declared once) |
-| `declaresSchemaExportParser` + `schema-export-parser-missing` + two vector cases | lands W1's open question 3 (`parse<Export>()`); 1 696 live findings, all in other partitions |
+| `declaresSchemaExportParser` + `schema-export-parser-missing` + two vector cases | lands W1's open question 3 (`parse<Export>()`); 577 live findings on the final run (1 696 an hour earlier), all in other partitions |
 | vector case `export-annotation-that-omits-the-normative-format` | **answers this work-package's open question 1**, and confirms the implementation: an annotation that omits `🔣️jsonschema` while the export is defined there is `schema-export-format-undeclared` |
 | vector case `a-format-the-annotation-restricted-away-is-never-asked-for-a-parser` | the parser rule is subordinate to `x-semio-formats`: a format the annotation restricted away is never asked for a parser |
 
 Per `CLAUDE.md` nothing of theirs was reverted and none of their work was chased. The consequence for
-this report is that §5.3's counts include their rule (`schema-export-parser-missing`, 1 696) and their
+this report is that §5.3's counts include their rule (`schema-export-parser-missing`, 577) and their
 code split (`schema-ref-broken-internal`, 5) — both are marked as theirs in the table above and in §5.3.
 
 ## 7. Cross-partition requests
@@ -405,11 +467,11 @@ code split (`schema-ref-broken-internal`, 5) — both are marked as theirs in th
 | id | To | Request |
 |---|---|---|
 | **R-1** | W2c (catalog generator) | `facet` labels are inconsistent: 11 297 exports use an ASCII label (`"diff/text"`) and **11 use the emoji directory chain** (`"📸️snapshot/📝️text"`, `"🔺️diff/📝️text"`, `"🔺️diff"`, `"🔺️diff/💾️binary"`, `"📸️snapshot/💾️binary"`). Harmless here — this harness validates `facet` as a non-empty label and resolves strictly from `file` — but a consumer that decodes the label will break on those 11. Pick one form. |
-| **R-2** | coordinator | **Diagnostic-code vocabulary.** The two implementations of one rule set name their findings differently (`export-format-missing` vs `schema-export-incomplete`, `ref-not-export-addressed` vs `schema-ref-unresolved`, `mutation-leaf-id-grammar` vs the harness's derivation helper). The parity test can therefore compare only the code-free halves. Decide whose vocabulary is canonical and the parity test can compare codes too — which is the only way a rule change in one implementation is caught by the other. |
-| **R-3** | W2c (`📚️library/🧪️tests/🧬️schema-scope-catalog/🧫️fixtures/🔣️.json`) | **W1b's R-4, still open and still the only red in the invariants suite.** Case `fixture-owned-schema` expects `placementPaths: []` for a schema inside `🌎️hub/💡️inference/🧪️fixtures/`, contradicting contract §C and retiring master-plan seed 1. Either expect the two paths, or have the case declare `inertSchemaData`. |
-| **R-4** | W6c (plugins) | Row 55's `x-semio-formats` annotations can land now: the rule is implemented and tested on both sides, and today it is inert because no export carries the keyword. Annotate the law/contract exports rather than letting them sit in the 2 841 `schema-export-incomplete`. |
+| **R-2** | coordinator + W2c | **Diagnostic-code vocabulary — now half-answered from this side.** The two implementations still name one rule differently (`export-format-missing` vs `schema-export-incomplete`, `ref-not-export-addressed` vs `schema-ref-unresolved`, `mutation-leaf-id-grammar` vs the harness's derivation helper), so the parity test can compare only the code-free halves. The peer of §6 has meanwhile given `SCHEMA_DIAGNOSTIC_CODE_TABLE` an `emitters` list (`harness` 14, `harness`+`check` 13, `check` 6) — i.e. this side now declares which codes `schema check` is expected to emit under the same name. W2c adopting those 19 names is what lets the parity test compare codes, which is the only way a rule change in one implementation is caught by the other. |
+| **R-3** | W2c (`📚️library/🧪️tests/🧬️schema-scope-catalog/🧫️fixtures/🔣️.json`) | **W1b's R-4, narrowed and still the only red in the invariants suite.** The case is now `fixture-defines-schema` and does expect the retired filename — but it still expects `🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️schema/🔣️.json`, a schema MODULE inside a fixture tree, to be silent. Contract §C admits no such exemption without `inertSchemaData`. Either add the second path to `placementPaths`, or have the case declare `inertSchemaData`. |
+| **R-4** | W6c (plugins) | Row 55's `x-semio-formats` annotations can land now: the rule is implemented and tested on both sides, and today it is inert because no export carries the keyword. Annotate the law/contract exports rather than letting them sit in the 1 955 `schema-export-incomplete`. The peer's `parse<Export>()` rule (§6) makes this more urgent: a law export restricted to `🔣️jsonschema` is also excused from the parser rule, so annotating shrinks two codes at once. |
 | **R-5** | W2c (taxonomy) + coordinator | W1b's R-1/R-2/R-3 are unchanged and still red in the test-platform suite (`taxonomy.areas` has no `exempt` entry; `testContributionDirectoryOverrides` pruned 176 → 2; the root `📜️script.ts` still contains the literal `taxonomy.testDomainPath`). None is reachable from anything WP1c touched. |
-| **R-6** | the peer refactoring this partition (row 62) | `📦️packages/🟦️typescript/tsconfig.json` still `include`s only `🟦️.ts`, so the three relocated suites are not type-checked by the package's `lint` target (W1b R-6, unchanged). The removal of `loadMigrationBaseline`/`surveyUnmanagedTests` is complete on both sides — the suites load, and nothing was re-added. |
+| **R-6** | the peer editing this partition (row 62, and §6) | `📦️packages/🟦️typescript/tsconfig.json` still `include`s only `🟦️.ts`, so the three suites are not type-checked by the package's `lint` target (W1b R-6, unchanged). Row 62 itself is **closed**: `loadMigrationBaseline`/`surveyUnmanagedTests` are gone on both sides, the suites load, and nothing was re-added. What is not closed is coordination — a `bun test` of this partition ran into a `SyntaxError` from a half-landed export (§5.5); land the package export before the suite that imports it. |
 
 ---
 
@@ -428,8 +490,9 @@ code split (`schema-ref-broken-internal`, 5) — both are marked as theirs in th
    `schema-ref-broken-internal`, 5 live findings, all in other partitions
    (`📕️norm` 3, `🗄️stdio` 2).
 4. ~~W1's GraphQL vocabulary and `parse<Export>()` questions~~ — both **landed by the peer** (§6). The
-   parser rule's 1 696 findings are now the largest single code after `schema-export-incomplete`, and
-   they are entirely other partitions' work; the coordinator may want to route them as one request.
+   parser rule's findings (577 on the final run) are the second-largest code after
+   `schema-export-incomplete`, and they are entirely other partitions' work; the coordinator may want to
+   route them as one request.
 5. **Still open, and the only rule question this work-package leaves:** whether an export the annotation
    restricts away should still be required to EXIST in the formats it named when the scope provides no
    file for one of them. Today that is `schema-export-incomplete` with a `format` and no `path`; the

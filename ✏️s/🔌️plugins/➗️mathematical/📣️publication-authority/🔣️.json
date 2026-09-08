@@ -26,10 +26,6 @@
     {
       "id": "setPoints",
       "lane": "artifact"
-    },
-    {
-      "id": "setLocale",
-      "lane": "config"
     }
   ],
   "laws": {

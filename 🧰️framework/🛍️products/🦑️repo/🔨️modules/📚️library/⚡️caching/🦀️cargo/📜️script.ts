@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import assert from "node:assert/strict";
-import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -11,6 +11,12 @@ import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 import { buildBudgetMs, runCmdStatus } from "../../🏃️process/🟦️.ts";
 import { stageArtifacts } from "../📦️artifacts/🟦️.ts";
 const slash = (path: string): string => path.split(sep).join("/");
+
+/** ⏱️ Keeps long native queue waits observable until the owning operation completes. */
+export function startNativeProgress(label: string, intervalMs = 10_000, output: (line: string) => void = (line) => console.log(line)): () => void {
+  const started = Date.now(), progress = setInterval(() => output(`[${label}] running elapsedMs=${Date.now() - started}`), intervalMs);
+  return () => clearInterval(progress);
+}
 
 /** 🏃️ Runs a bounded owned command with progress and process-tree cancellation. */
 async function runOwnedCommand(command: string, args: string[], cwd: string, label: string, timeoutMs = buildBudgetMs()): Promise<void> {
@@ -30,15 +36,14 @@ async function runOwnedCommand(command: string, args: string[], cwd: string, lab
   const stop = (): void => terminate("SIGTERM");
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", stop);
-  const started = Date.now();
-  const progress = setInterval(() => console.log(`[${label}] running elapsedMs=${Date.now() - started}`), 10_000);
+  const stopProgress = startNativeProgress(label);
   const timeout = timeoutMs > 0 ? setTimeout(() => terminate(`timeout ${timeoutMs}ms`), timeoutMs) : undefined;
   try {
     const status = await new Promise<number>((accept) => { child.once("error", (error) => { console.error(error.message); accept(1); }); child.once("close", (code) => accept(code ?? 1)); });
     if (stopped) throw new Error(`${label} stopped: ${stopped}`);
     if (status !== 0) throw new Error(`${label} failed (${status})`);
   } finally {
-    clearInterval(progress);
+    stopProgress();
     if (timeout) clearTimeout(timeout);
     if (forceKill) clearTimeout(forceKill);
     process.off("SIGINT", interrupt);
@@ -50,6 +55,15 @@ async function runOwnedCommand(command: string, args: string[], cwd: string, lab
 export function validateNativeCargoArguments(operation: "build" | "check" | "test", args: readonly string[]): void {
   const delimiter = args.indexOf("--"), cargo = delimiter < 0 ? args : args.slice(0, delimiter);
   for (const argument of cargo) if (/^(?:--(?:workspace|package|manifest-path|exclude|config)(?:=|$)|-p)/.test(argument) || operation !== "test" && /^--(?:all-targets|tests?|examples?|benches|bench)(?:=|$)/.test(argument)) throw new Error(`Argument ${argument} changes the native input contract; use a dedicated Nx target for that selection`);
+}
+
+/** 🎯️ Normalizes an artifact router invocation before Cargo can observe caller-controlled selectors. */
+export function artifactRustCargoArguments(operation: "build" | "check" | "test", segments: readonly string[]): { cargoArgs: string[]; testLevel?: string } {
+  const levels = new Set(["fundamental", "quick", "long", "exhaustive"]), [first, ...rest] = segments;
+  const testLevel = operation === "test" && first && levels.has(first) ? first : undefined;
+  const cargoArgs = testLevel ? rest : [...segments];
+  validateNativeCargoArguments(operation, cargoArgs);
+  return { cargoArgs, testLevel };
 }
 
 /** 📦️ Captures Cargo's declared deliverables, including link dependencies, without copying compiler state. */
@@ -79,6 +93,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
   };
   process.once("SIGINT", cancel);
   process.once("SIGTERM", cancel);
+  const stopProgress = startNativeProgress(`artifact-rust:${owner}:build`);
   const status = new Promise<number>((accept) => { child.once("error", (error) => { console.error(error.message); accept(1); }); child.once("close", (code) => accept(code ?? 1)); });
   try {
     for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) {
@@ -98,7 +113,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
       }
     }
     if (await status !== 0 || cancelled) throw new Error(`Cargo artifact build ${cancelled ? "cancelled" : "failed"}: ${owner}`);
-  } finally { if (forceKill) clearTimeout(forceKill); process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
+  } finally { stopProgress(); if (forceKill) clearTimeout(forceKill); process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
   if (files.size === 0) throw new Error(`Cargo emitted no final artifacts for ${owner}`);
   if (hasLibrary) for (const [name, file] of dependencies) files.set(name, file);
   options.validate?.(files);
@@ -110,20 +125,21 @@ export async function buildCargoArtifacts(manifest: string, args: string[] = [],
 export async function runArtifactRustPackageMain(packageRoot: string, cargoName: string): Promise<void> {
   class BuildScript extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      await buildCargoArtifacts(relative(this.repoRoot, resolve(this.root, "Cargo.toml")), segments, this.repoRoot);
+      const { cargoArgs } = artifactRustCargoArguments("build", segments);
+      await buildCargoArtifacts(relative(this.repoRoot, resolve(this.root, "Cargo.toml")), cargoArgs, this.repoRoot);
     }
   }
   class CheckScript extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      await runOwnedCommand("cargo", ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml"), ...segments], this.repoRoot, `artifact-rust:${cargoName}:check`);
+      const { cargoArgs } = artifactRustCargoArguments("check", segments);
+      await runOwnedCommand("cargo", ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml"), ...cargoArgs], this.repoRoot, `artifact-rust:${cargoName}:check`);
     }
   }
   class TestScript extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      const levels = new Set(["fundamental", "quick", "long", "exhaustive"]), [first, ...rest] = segments;
-      const extra = first && levels.has(first) ? rest : segments;
-      if (first && levels.has(first)) process.env.SEMIO_TEST_LEVEL = first;
-      await runOwnedCommand("cargo", ["test", "--locked", "-p", cargoName, ...extra], this.repoRoot, `artifact-rust:${cargoName}:test`);
+      const { cargoArgs, testLevel } = artifactRustCargoArguments("test", segments);
+      if (testLevel) process.env.SEMIO_TEST_LEVEL = testLevel;
+      await runOwnedCommand("cargo", ["test", "--locked", "-p", cargoName, ...cargoArgs], this.repoRoot, `artifact-rust:${cargoName}:test`);
     }
   }
   const packageRouter = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
@@ -139,16 +155,23 @@ export async function runArtifactTypeScriptPackageMain(packageRoot: string, pack
   };
   const copyDeclarationAssets = (): number => {
     const declaration = join(output, "🟦️.d.ts"), compiler = createRequire(import.meta.url)("typescript");
-    let count = 0;
+    const copied = new Set<string>();
     for (const imported of compiler.preProcessFile(readFileSync(declaration, "utf8"), true, true).importedFiles) {
-      if (!imported.fileName.startsWith(".") || !imported.fileName.endsWith(".json")) continue;
-      const from = resolve(dirname(source), imported.fileName), to = resolve(dirname(declaration), imported.fileName), local = relative(output, to);
+      if (!imported.fileName.startsWith(".")) continue;
+      const sourceImport = resolve(dirname(source), imported.fileName);
+      const candidates = imported.fileName.endsWith(".json") || /\.d\.[cm]?ts$/.test(imported.fileName) ? [[sourceImport, imported.fileName]] : [
+        [sourceImport.replace(/\.(?:[cm]?[jt]s)$/, ".d.ts"), imported.fileName.replace(/\.(?:[cm]?[jt]s)$/, ".d.ts")],
+        [`${sourceImport}.d.ts`, `${imported.fileName}.d.ts`],
+      ];
+      const selected = candidates.find(([from]) => existsSync(from));
+      if (!selected) continue;
+      const [from, destination] = selected, to = resolve(dirname(declaration), destination), local = relative(output, to);
       if (local === ".." || local.startsWith(`..${sep}`)) throw new Error(`Declaration asset escapes ${packageName}: ${imported.fileName}`);
       mkdirSync(dirname(to), { recursive: true });
       copyFileSync(from, to);
-      count++;
+      copied.add(to);
     }
-    return count;
+    return copied.size;
   };
   const build = async (): Promise<void> => {
     rmSync(output, { recursive: true, force: true });

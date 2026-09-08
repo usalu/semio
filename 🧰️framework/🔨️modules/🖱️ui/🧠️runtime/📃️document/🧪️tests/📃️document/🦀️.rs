@@ -1,18 +1,29 @@
 use super::*;
 
 //#region 🧪️CanonicalRootLaws
-fn document_fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap() }
+fn document_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+}
 
 fn complete_document_job(current: SurfaceReconciler, name: &str, generation: u64) -> SurfaceReconciler {
     let mut job = SurfaceReconcileJob::try_new(current, tree(leaf(name)), generation).expect("real reconciliation admission");
     let mut sequence = 0;
     for _ in 0..100_000 {
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence);
+        let mut cx = semio_framework_job::StepContext::new(
+            semio_framework_job::allocate_operation_id(),
+            semio_framework_job::Generation(generation),
+            semio_framework_job::StepBudget::new(1, u64::MAX),
+            semio_framework_job::root_cancel_token(),
+            semio_framework_job::default_now_us,
+            &mut sequence,
+        );
         match job.drive_one(&mut cx) {
             SurfaceReconcileJobStep::MoreWork => {}
             SurfaceReconcileJobStep::Ready => {
                 let (current, output) = job.take_ready().unwrap_or_else(|_| panic!("completed job retains its exact ready output"));
-                if let Some(mut output) = output { while !output.close_step() {} }
+                if let Some(mut output) = output {
+                    while !output.close_step() {}
+                }
                 return current;
             }
             SurfaceReconcileJobStep::Fault => panic!("real reconciliation fault: {:?}", job.fault()),
@@ -33,12 +44,19 @@ fn surface_canonical_document_nine_live_reconcilers_share_the_original_root_with
         let reader = reader.unwrap();
         assert!(owner.document.as_ref().unwrap().same_root(&reader));
         assert_eq!(reader.try_read().unwrap().len(), 1);
-        owners.push(owner); readers.push(reader);
+        owners.push(owner);
+        readers.push(reader);
     }
     assert_eq!(owners.len(), 9);
-    for owner in &mut owners { while !owner.retire_one() {} }
-    for reader in &readers { assert_eq!(reader.try_read().unwrap().len(), 1); }
-    for reader in &mut readers { while !reader.close_read_step_with_grant(1, 64).unwrap().complete {} }
+    for owner in &mut owners {
+        while !owner.retire_one() {}
+    }
+    for reader in &readers {
+        assert_eq!(reader.try_read().unwrap().len(), 1);
+    }
+    for reader in &mut readers {
+        while !reader.close_read_step_with_grant(1, 64).unwrap().complete {}
+    }
     eprintln!("[DEBUG] canonical-reconcilers actual-surfaces=9 exact-root-readers=9 roots-after-owner-close=9 typed-reader-close=true");
 }
 
@@ -88,34 +106,62 @@ fn surface_canonical_document_completion_transfers_do_not_borrow_the_child_grant
         let diff = cursor.record_diff.as_ref().unwrap();
         let comparing = matches!(&diff.owned_copy, Some(RecordOwnedCopy::Comparison(owner)) if owner.changed.is_none() && owner.lease.is_some() && owner.cursor.result().is_none());
         let closing = matches!(&diff.owned_copy, Some(RecordOwnedCopy::Comparison(owner)) if owner.changed.is_some() && owner.lease.is_some());
-        if closing && !old_retired { while !current.retire_one() {} old_retired = true; }
+        if closing && !old_retired {
+            while !current.retire_one() {}
+            old_retired = true;
+        }
         let copying = matches!(&diff.owned_copy, Some(RecordOwnedCopy::Component(owner)) if owner.candidate().is_none() && owner.source().is_some());
         let returning_source = matches!(&diff.owned_copy, Some(RecordOwnedCopy::Component(owner)) if owner.candidate().is_some() && owner.source().is_some());
         let returning_candidate = matches!(&diff.owned_copy, Some(RecordOwnedCopy::Component(owner)) if owner.candidate().is_some() && owner.source().is_none());
         assert!(matches!(cursor.advance_existing_component_with_grant(&current, 0), SurfaceReconcileStep::Yield { bytes: 0, .. }));
-        let SurfaceReconcileStep::Yield { bytes, .. } = cursor.advance_existing_component(&current) else { panic!("retained completion fixture fault"); };
+        let SurfaceReconcileStep::Yield { bytes, .. } = cursor.advance_existing_component(&current) else {
+            panic!("retained completion fixture fault");
+        };
         assert!(bytes <= fixture["physicalBytes"].as_u64().unwrap() as usize);
         let diff = cursor.record_diff.as_ref().unwrap();
         if comparing {
             assert_eq!(&diff.record.component as *const _, incoming);
-            let Some(RecordOwnedCopy::Comparison(owner)) = &diff.owned_copy else { panic!("child must retain the comparison owner"); };
+            let Some(RecordOwnedCopy::Comparison(owner)) = &diff.owned_copy else {
+                panic!("child must retain the comparison owner");
+            };
             assert!(owner.changed.is_none() && owner.lease.is_some());
-            if owner.cursor.result().is_some() { assert_eq!(bytes, 4096); comparison_completed = true; }
+            if owner.cursor.result().is_some() {
+                assert_eq!(bytes, 4096);
+                comparison_completed = true;
+            }
         }
-        if closing && bytes == 4096 { full_close_grant = true; assert!(matches!(&diff.owned_copy, Some(RecordOwnedCopy::Comparison(_)))); }
+        if closing && bytes == 4096 {
+            full_close_grant = true;
+            assert!(matches!(&diff.owned_copy, Some(RecordOwnedCopy::Comparison(_))));
+        }
         if copying && matches!(&diff.owned_copy, Some(RecordOwnedCopy::Component(owner)) if owner.candidate().is_some()) {
             assert!(bytes <= 4096 && cursor.pending_op.get().is_none());
             copy_completed = true;
         }
-        if returning_source { assert_eq!(bytes, size_of::<ui_contract::Component>()); assert!(cursor.pending_op.get().is_none()); source_returned = true; }
-        if returning_candidate { assert_eq!(bytes, size_of::<ui_contract::UiPatchOp>()); assert!(cursor.pending_op.get().is_some()); candidate_returned = true; }
-        if diff.field != 0 { break; }
+        if returning_source {
+            assert_eq!(bytes, size_of::<ui_contract::Component>());
+            assert!(cursor.pending_op.get().is_none());
+            source_returned = true;
+        }
+        if returning_candidate {
+            assert_eq!(bytes, size_of::<ui_contract::UiPatchOp>());
+            assert!(cursor.pending_op.get().is_some());
+            candidate_returned = true;
+        }
+        if diff.field != 0 {
+            break;
+        }
     }
     while !cursor.retire_one() {}
     while !current.retire_one() {}
     assert!(comparison_completed && copy_completed && source_returned && candidate_returned && full_close_grant);
     assert!(size_of::<ExistingComponentComparison>() <= 4096);
-    eprintln!("[DEBUG] parent-child-grants compare-final=4096 lease-close=4096 comparison-owner={} source-return={} candidate-physical={} separate-turns=true", size_of::<ExistingComponentComparison>(), size_of::<ui_contract::Component>(), size_of::<ui_contract::UiPatchOp>());
+    eprintln!(
+        "[DEBUG] parent-child-grants compare-final=4096 lease-close=4096 comparison-owner={} source-return={} candidate-physical={} separate-turns=true",
+        size_of::<ExistingComponentComparison>(),
+        size_of::<ui_contract::Component>(),
+        size_of::<ui_contract::UiPatchOp>()
+    );
 }
 
 #[test]
@@ -140,7 +186,9 @@ fn surface_canonical_document_existing_pair_stays_structurally_owned_across_unwi
                 ("candidate-returned", Some(RecordOwnedCopy::Component(owner))) => owner.terminal_is_empty(),
                 _ => false,
             };
-            if reached { break; }
+            if reached {
+                break;
+            }
             assert!(matches!(cursor.step(&current), SurfaceReconcileStep::Yield { .. }));
         }
         assert!(reached);
@@ -162,12 +210,15 @@ fn surface_canonical_document_fresh_children_retain_completed_roots_for_a_separa
         let field = field.as_str().unwrap();
         let component: ui_contract::Component = serde_json::from_value(serde_json::json!({"type":"surface","kind":"canvas-2d","docSchema":"wire","doc":{"bytes":vec![17u8;32768]},"bindings":[]})).unwrap();
         let mut node = crate::TreeNode::try_new("source", component).unwrap();
-        for index in 0..32 { node = with_binding(node, "fixture", &format!("action-{index}")); }
+        for index in 0..32 {
+            node = with_binding(node, "fixture", &format!("action-{index}"));
+        }
         let mut current = SurfaceReconciler::new("fresh-child-grant");
         let mut cursor = SurfaceReconcileCursor::new(tree(leaf("unused")), &current);
         cursor.stage = SurfaceReconcileStage::DiffRecords;
         let start = if field == "component" { 1 } else { 5 };
-        cursor.record_diff = Some(RecordDiffCursor { id: ui_contract::UiNodeId(1), record: build_record_owned(ui_contract::UiNodeId(1), node, Default::default(), None).into(), field: start, fresh: Some(FreshRecordClone::default()), owned_copy: None });
+        cursor.record_diff =
+            Some(RecordDiffCursor { id: ui_contract::UiNodeId(1), record: build_record_owned(ui_contract::UiNodeId(1), node, Default::default(), None).into(), field: start, fresh: Some(FreshRecordClone::default()), owned_copy: None });
         let mut separate = false;
         for _ in 0..100_000 {
             let step = cursor.step(&current);
@@ -178,7 +229,9 @@ fn surface_canonical_document_fresh_children_retain_completed_roots_for_a_separa
                 Some(RecordOwnedCopy::Bindings(owner)) => owner.candidate().is_some_and(|candidate| candidate.len() == 32) && owner.source_allocated_bytes() != 0,
                 _ => false,
             };
-            if separate || diff.field != start { break; }
+            if separate || diff.field != start {
+                break;
+            }
         }
         while !cursor.retire_one() {}
         while !current.retire_one() {}

@@ -4,10 +4,10 @@
     "enabled": true,
     "originLon": 8.5,
     "originLat": 47.375,
-    "originAlt": 408.0,
+    "originAlt": 408,
     "gsdM": 0.05078125,
     "dsmCellM": 0.099609375,
-    "dtmFilterRadiusM": 2.0,
+    "dtmFilterRadiusM": 2,
     "orthoMaxPx": 0
   }
 }

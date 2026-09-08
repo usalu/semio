@@ -42,7 +42,6 @@ pub struct SequenceConfig {
     #[dsl(block)]
     pub camera: SequenceCamera,
     /// 🗣️ BCP-47 locale tag — was read off the host-pushed `ViewModel.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -91,7 +90,7 @@ impl store::ArtifactPack for SequenceConfig {
 
 impl Default for SequenceConfig {
     fn default() -> Self {
-        Self { last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() }
+        Self { last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default(), }
     }
 }
 

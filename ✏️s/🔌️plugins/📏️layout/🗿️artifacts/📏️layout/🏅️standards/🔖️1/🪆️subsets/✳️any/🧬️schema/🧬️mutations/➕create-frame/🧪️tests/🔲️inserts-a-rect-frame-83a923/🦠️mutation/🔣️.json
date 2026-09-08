@@ -6,19 +6,19 @@
       "id": "frame-badge",
       "layerId": "layer-1",
       "bounds": {
-        "x": 120.0,
-        "y": 30.0,
-        "w": 40.0,
-        "h": 40.0,
-        "rotation": 0.0
+        "x": 120,
+        "y": 30,
+        "w": 40,
+        "h": 40,
+        "rotation": 0
       },
       "locked": null,
       "visible": null,
       "fill": [
-        0.0,
+        0,
         0.5,
-        1.0,
-        1.0
+        1,
+        1
       ],
       "stroke": null
     },

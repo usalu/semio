@@ -84,9 +84,6 @@ impl WiresDiff {
             if let Some(value) = self.drag_last_y {
                 next.drag_last_y = value;
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -133,7 +130,6 @@ impl MutationDiff<WiresSnapshot> for WiresDiff {
         take!(drag_node_id);
         take!(drag_last_x);
         take!(drag_last_y);
-        take!(locale);
     }
 }
 //#endregion 🔖️Apply

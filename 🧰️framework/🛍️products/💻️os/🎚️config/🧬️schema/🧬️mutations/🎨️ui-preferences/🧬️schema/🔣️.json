@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/config/mutation/ui-preferences.json",
+  "title": "UiPreferencesConfigMutation",
+  "oneOf": [
+    { "$ref": "#/$defs/SetAppearance" },
+    { "$ref": "#/$defs/SetLayout" },
+    { "$ref": "#/$defs/SetDriver" },
+    { "$ref": "#/$defs/SetCustomDriver" },
+    { "$ref": "#/$defs/SetLocale" },
+    { "$ref": "#/$defs/SetTerminology" },
+    { "$ref": "#/$defs/SetTheme" },
+    { "$ref": "#/$defs/SetCustomTheme" },
+    { "$ref": "#/$defs/SetKeybindingOverride" }
+  ],
+  "$defs": {
+    "SetAppearance": { "type": "object", "additionalProperties": false, "required": ["mutation", "appearance"], "properties": { "mutation": { "type": "string", "const": "setAppearance" }, "appearance": { "anyOf": [{ "type": "string", "enum": ["system", "light", "dark"] }, { "type": "null" }] } } },
+    "SetLayout": { "type": "object", "additionalProperties": false, "required": ["mutation", "layout"], "properties": { "mutation": { "type": "string", "const": "setLayout" }, "layout": { "anyOf": [{ "type": "string", "enum": ["desktop", "tablet"] }, { "type": "null" }] } } },
+    "SetDriver": { "type": "object", "additionalProperties": false, "required": ["mutation", "driverId"], "properties": { "mutation": { "const": "setDriver" }, "driverId": { "anyOf": [{ "type": "string" }, { "type": "null" }] } } },
+    "SetCustomDriver": { "type": "object", "additionalProperties": false, "required": ["mutation", "driverId", "driver"], "properties": { "mutation": { "const": "setCustomDriver" }, "driverId": { "type": "string" }, "driver": { "anyOf": [{ "$ref": "#/$defs/UiDriver" }, { "type": "null" }] } } },
+    "SetLocale": { "type": "object", "additionalProperties": false, "required": ["mutation", "locale"], "properties": { "mutation": { "type": "string", "const": "setLocale" }, "locale": { "anyOf": [{ "type": "string", "enum": ["en", "de"] }, { "type": "null" }] } } },
+    "SetTerminology": { "type": "object", "additionalProperties": false, "required": ["mutation", "terminology"], "properties": { "mutation": { "const": "setTerminology" }, "terminology": { "anyOf": [{ "type": "string" }, { "type": "null" }] } } },
+    "SetTheme": { "type": "object", "additionalProperties": false, "required": ["mutation", "themeId"], "properties": { "mutation": { "const": "setTheme" }, "themeId": { "anyOf": [{ "type": "string" }, { "type": "null" }] } } },
+    "SetCustomTheme": { "type": "object", "additionalProperties": false, "required": ["mutation", "themeId", "theme"], "properties": { "mutation": { "const": "setCustomTheme" }, "themeId": { "type": "string" }, "theme": { "anyOf": [{ "$ref": "#/$defs/UiTheme" }, { "type": "null" }] } } },
+    "SetKeybindingOverride": { "type": "object", "additionalProperties": false, "required": ["mutation", "controlId", "keys"], "properties": { "mutation": { "const": "setKeybindingOverride" }, "controlId": { "type": "string" }, "keys": { "anyOf": [{ "type": "string" }, { "type": "null" }] } } },
+    "UiDriver": { "type": "object", "additionalProperties": false, "required": ["driverId", "label", "config"], "properties": { "driverId": { "type": "string" }, "label": { "type": "string" }, "config": {} } },
+    "UiTheme": { "type": "object", "additionalProperties": false, "required": ["themeId", "label", "config"], "properties": { "themeId": { "type": "string" }, "label": { "type": "string" }, "config": {} } }
+  }
+}

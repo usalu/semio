@@ -2,7 +2,6 @@ type NoteConfig {
   engagementInput: String! @state(class: CONFIG)
   camera: NoteCamera! @state(class: CONFIG)
   activeUtilityId: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 
 type NoteCamera {

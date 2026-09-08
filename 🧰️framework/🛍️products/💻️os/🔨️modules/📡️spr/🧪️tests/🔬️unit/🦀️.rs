@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧪️ Builds a tiny in-memory `.spr` buffer with `edit_count` edits (ids `"e0".."eN"`), each in

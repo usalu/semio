@@ -29,7 +29,6 @@ type Process3dDiff {
   sunElevation: Float @state(class: CONFIG)
   sunIntensity: Float @state(class: CONFIG)
   sunColor: String @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
   contributionsJson: String @state(class: CONFIG)
   hoveredId: String @state(class: ARTIFACT)
 }

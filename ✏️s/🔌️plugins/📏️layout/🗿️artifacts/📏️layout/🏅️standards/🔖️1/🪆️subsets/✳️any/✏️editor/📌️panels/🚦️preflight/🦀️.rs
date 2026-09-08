@@ -202,8 +202,7 @@ fn layout_tree_item(
     Ok(item)
 }
 
-pub fn render(doc: &LayoutSnapshot, cfg: &crate::editor::layout::config::LayoutConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let labels = layout_labels(cfg);
+pub fn render(doc: &LayoutSnapshot, labels: &LayoutLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let issues = run_layout_preflight(doc, labels);
     let mut items = UiFixedList::default();
     if issues.is_empty() {

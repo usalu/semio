@@ -67,7 +67,6 @@ message Puzzle5dDiff {
   // @state config
   optional string lod_mode = 31;
   // @state config
-  optional string locale = 32;
   // @state config
   optional string runtime_extras_json = 33;
   // @state artifact

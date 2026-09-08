@@ -1,0 +1,386 @@
+{
+  "base": {
+    "camera": {
+      "position": [
+        7,
+        8,
+        9
+      ],
+      "target": [
+        1,
+        2,
+        3
+      ],
+      "fov": 55
+    },
+    "layers": {
+      "mesh": true,
+      "dense": true,
+      "sparse": false,
+      "cameras": true,
+      "gcps": false
+    },
+    "frameCursor": {
+      "streamId": "baseline",
+      "frameIndex": 3
+    },
+    "reportTable": "tracks",
+    "activeUtilityId": "measure"
+  },
+  "cases": [
+    {
+      "mutation": {
+        "ReplaceConfig": {
+          "config": {
+            "camera": {
+              "position": [
+                7,
+                8,
+                9
+              ],
+              "target": [
+                1,
+                2,
+                3
+              ],
+              "fov": 55
+            },
+            "layers": {
+              "mesh": true,
+              "dense": true,
+              "sparse": false,
+              "cameras": true,
+              "gcps": false
+            },
+            "frameCursor": {
+              "streamId": "baseline",
+              "frameIndex": 3
+            },
+            "reportTable": "tracks",
+            "activeUtilityId": "measure"
+          }
+        }
+      },
+      "expected": {
+        "camera": {
+          "position": [
+            7,
+            8,
+            9
+          ],
+          "target": [
+            1,
+            2,
+            3
+          ],
+          "fov": 55
+        },
+        "layers": {
+          "mesh": true,
+          "dense": true,
+          "sparse": false,
+          "cameras": true,
+          "gcps": false
+        },
+        "frameCursor": {
+          "streamId": "baseline",
+          "frameIndex": 3
+        },
+        "reportTable": "tracks",
+        "activeUtilityId": "measure"
+      }
+    },
+    {
+      "mutation": {
+        "SetCamera": {
+          "camera": {
+            "position": [
+              4,
+              5,
+              6
+            ],
+            "target": [
+              0,
+              0,
+              0
+            ],
+            "fov": 60
+          }
+        }
+      },
+      "expected": {
+        "camera": {
+          "position": [
+            4,
+            5,
+            6
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "fov": 60
+        },
+        "layers": {
+          "mesh": true,
+          "dense": true,
+          "sparse": false,
+          "cameras": true,
+          "gcps": false
+        },
+        "frameCursor": {
+          "streamId": "baseline",
+          "frameIndex": 3
+        },
+        "reportTable": "tracks",
+        "activeUtilityId": "measure"
+      }
+    },
+    {
+      "mutation": {
+        "SetLayerVisibility": {
+          "layer": "dense",
+          "visible": false
+        }
+      },
+      "expected": {
+        "camera": {
+          "position": [
+            7,
+            8,
+            9
+          ],
+          "target": [
+            1,
+            2,
+            3
+          ],
+          "fov": 55
+        },
+        "layers": {
+          "mesh": true,
+          "dense": false,
+          "sparse": false,
+          "cameras": true,
+          "gcps": false
+        },
+        "frameCursor": {
+          "streamId": "baseline",
+          "frameIndex": 3
+        },
+        "reportTable": "tracks",
+        "activeUtilityId": "measure"
+      }
+    },
+    {
+      "mutation": {
+        "SetLayerVisibility": {
+          "layer": "unknown",
+          "visible": false
+        }
+      },
+      "expected": {
+        "camera": {
+          "position": [
+            7,
+            8,
+            9
+          ],
+          "target": [
+            1,
+            2,
+            3
+          ],
+          "fov": 55
+        },
+        "layers": {
+          "mesh": true,
+          "dense": true,
+          "sparse": false,
+          "cameras": true,
+          "gcps": false
+        },
+        "frameCursor": {
+          "streamId": "baseline",
+          "frameIndex": 3
+        },
+        "reportTable": "tracks",
+        "activeUtilityId": "measure"
+      }
+    },
+    {
+      "mutation": {
+        "SetFrameCursor": {
+          "stream_id": "next",
+          "frame_index": 4
+        }
+      },
+      "expected": {
+        "camera": {
+          "position": [
+            7,
+            8,
+            9
+          ],
+          "target": [
+            1,
+            2,
+            3
+          ],
+          "fov": 55
+        },
+        "layers": {
+          "mesh": true,
+          "dense": true,
+          "sparse": false,
+          "cameras": true,
+          "gcps": false
+        },
+        "frameCursor": {
+          "streamId": "next",
+          "frameIndex": 4
+        },
+        "reportTable": "tracks",
+        "activeUtilityId": "measure"
+      }
+    },
+    {
+      "mutation": {
+        "SetFrameCursor": {
+          "stream_id": null,
+          "frame_index": 5
+        }
+      },
+      "expected": {
+        "camera": {
+          "position": [
+            7,
+            8,
+            9
+          ],
+          "target": [
+            1,
+            2,
+            3
+          ],
+          "fov": 55
+        },
+        "layers": {
+          "mesh": true,
+          "dense": true,
+          "sparse": false,
+          "cameras": true,
+          "gcps": false
+        },
+        "frameCursor": {
+          "streamId": "baseline",
+          "frameIndex": 5
+        },
+        "reportTable": "tracks",
+        "activeUtilityId": "measure"
+      }
+    },
+    {
+      "mutation": {
+        "SetReportTable": {
+          "table": "frames"
+        }
+      },
+      "expected": {
+        "camera": {
+          "position": [
+            7,
+            8,
+            9
+          ],
+          "target": [
+            1,
+            2,
+            3
+          ],
+          "fov": 55
+        },
+        "layers": {
+          "mesh": true,
+          "dense": true,
+          "sparse": false,
+          "cameras": true,
+          "gcps": false
+        },
+        "frameCursor": {
+          "streamId": "baseline",
+          "frameIndex": 3
+        },
+        "reportTable": "frames",
+        "activeUtilityId": "measure"
+      }
+    },
+    {
+      "mutation": {
+        "SetActiveUtility": {
+          "utility_id": "select"
+        }
+      },
+      "expected": {
+        "camera": {
+          "position": [
+            7,
+            8,
+            9
+          ],
+          "target": [
+            1,
+            2,
+            3
+          ],
+          "fov": 55
+        },
+        "layers": {
+          "mesh": true,
+          "dense": true,
+          "sparse": false,
+          "cameras": true,
+          "gcps": false
+        },
+        "frameCursor": {
+          "streamId": "baseline",
+          "frameIndex": 3
+        },
+        "reportTable": "tracks",
+        "activeUtilityId": "select"
+      }
+    },
+    {
+      "mutation": {},
+      "expected": {
+        "camera": {
+          "position": [
+            7,
+            8,
+            9
+          ],
+          "target": [
+            1,
+            2,
+            3
+          ],
+          "fov": 55
+        },
+        "layers": {
+          "mesh": true,
+          "dense": true,
+          "sparse": false,
+          "cameras": true,
+          "gcps": false
+        },
+        "frameCursor": {
+          "streamId": "baseline",
+          "frameIndex": 3
+        },
+        "reportTable": "tracks",
+        "activeUtilityId": "measure"
+      }
+    }
+  ]
+}

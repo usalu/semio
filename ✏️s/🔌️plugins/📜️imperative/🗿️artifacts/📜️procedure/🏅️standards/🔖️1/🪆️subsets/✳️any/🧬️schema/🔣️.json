@@ -9,7 +9,6 @@
     "path",
     "seed",
     "selectedStepIds",
-    "locale",
     "contributionsJson",
     "runOutputJson"
   ],
@@ -33,10 +32,6 @@
         "type": "string"
       },
       "x-semio-state": "presence"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",

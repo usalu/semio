@@ -3,7 +3,7 @@ use super::*;
 
 #[test]
 fn shooting_window_actions_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️window-actions.json")).expect("neutral window vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️window-actions.json")).expect("neutral window vectors");
     let document = crate::schema::default_snapshot();
     let config = ShootingConfig::default();
     for locale in ["en-US", "de-DE"] {

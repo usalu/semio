@@ -41,7 +41,7 @@ pub const STDIO_BINARY_DOCUMENT_SCHEMA: &str = "stdio.binary";
 pub const BINARY_ARTIFACT_SCHEMA_ID: &str = "s.stdio.binary";
 
 /// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
 pub fn definition() -> Result<ArtifactDefinition, PluginAssemblyError> {
     semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
@@ -77,7 +77,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, P
 /// 🌳️ New tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P pilot): the whole
 /// `s.stdio.binary` artifact through the declaration tree — one standard, `raw`, one subset,
 /// `any`. `localization: &[]` — the real en/de localized descriptors already live in
-/// `🧬️schema/📜️artifact-definition.json` (the OLD `ArtifactDefinition` channel this artifact stays
+/// `📜️artifact-definition.json` (the OLD `ArtifactDefinition` channel this artifact stays
 /// on for `📇️registry`'s catalog, kept per `assembly()` below); wiring them into this NEW field
 /// too is a follow-up, not required for the carrier law or for this tree to register cleanly
 /// (see `📓️w2-p-report.md` `## openQuestions`).

@@ -1,6 +1,6 @@
 //! 🧬️ Direct unbind-node-child mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::structure_geometry::checked_index;
+use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.unbind-node-child.v1";
@@ -44,7 +44,10 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeChi
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => { match apply(payload, base) { Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)), Err(error) => rejection_outcome(&error.code, &error.path, error.detail) } }
+            Self::Apply(payload) => match apply(payload, base) {
+                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+                Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
+            },
             Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
                 Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
                 Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
@@ -76,3 +79,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeChi
 #[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
 mod direct_leaf_tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "📜️contract/🧪️tests/🔬️unit/🦀️.rs"]
+mod contract;

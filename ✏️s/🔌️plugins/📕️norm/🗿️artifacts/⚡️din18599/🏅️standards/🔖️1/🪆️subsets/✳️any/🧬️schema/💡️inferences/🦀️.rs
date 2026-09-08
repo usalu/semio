@@ -8,7 +8,6 @@ use crate::Din18599Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::Din18599Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a din18599 snapshot. One field per named inference under
@@ -81,7 +80,6 @@ use crate::BalancingInputs;
 /// `⚙️engine`. `evaluate` is the `Din18599Snapshot -> CheckReport` projection; `balance_annual`
 /// composes every `part_N::check` (pure helpers living in the parent `🧬️schema`).
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, Quantity};
-
 /// 📋️ Full annual balancing per DIN V 18599.
 pub fn balance_annual(inputs: &BalancingInputs) -> Result<CheckReport, NormError> {
     let mut report = CheckReport::default();
@@ -121,3 +119,8 @@ pub fn evaluate(document: &Din18599Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::Din18599Outline;
+//#endregion 🔁️Re-exports

@@ -198,6 +198,14 @@
         "forwardAllArgs": true
       }
     },
+    "test-group-visibility-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-group-visibility-source",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
     "member-dialect-check": {
       "executor": "nx:run-commands",
       "cache": false,

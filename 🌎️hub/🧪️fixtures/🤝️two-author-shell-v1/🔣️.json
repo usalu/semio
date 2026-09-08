@@ -39,10 +39,10 @@
     "materialize-and-validate-current",
     "stage-ticket-owned-space-and-selected-gis-browser-host",
     "start-hub-with-receipt-data-root",
-    "create-shared-map-and-admit-author-b",
+    "create-shared-space-and-admit-author-b",
+    "mount-author-a-real-shell-and-create-map",
     "open-two-authenticated-mcp-clients",
     "open-two-authenticated-document-sockets",
-    "mount-author-a-real-shell-worker-map",
     "mount-author-b-real-shell-worker-map",
     "author-b-submit-running-inference",
     "checkpoint-gate-entered",
@@ -81,7 +81,6 @@
     ],
     "restart": [
       "same-current-receipt",
-      "no-retained-running-job",
       "same-durable-post-undo-frontier"
     ]
   },
@@ -100,6 +99,7 @@
   "nonclaims": [
     "external-model-provider",
     "browser-qualified-current-publication",
-    "durable-collaborative-redo"
+    "durable-collaborative-redo",
+    "private-job-restart-recovery"
   ]
 }

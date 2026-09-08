@@ -120,10 +120,7 @@ impl crate::value::FromValue for ArtifactDiff {
                 _ => {}
             }
         }
-        Ok(ArtifactDiff {
-            schema: schema.ok_or_else(|| crate::value::ValueError::new("ArtifactDiff missing schema"))?,
-            payload: payload.ok_or_else(|| crate::value::ValueError::new("ArtifactDiff missing payload"))?,
-        })
+        Ok(ArtifactDiff { schema: schema.ok_or_else(|| crate::value::ValueError::new("ArtifactDiff missing schema"))?, payload: payload.ok_or_else(|| crate::value::ValueError::new("ArtifactDiff missing payload"))? })
     }
 }
 
@@ -153,10 +150,7 @@ impl crate::value::FromValue for InverseMutation {
                 _ => {}
             }
         }
-        Ok(InverseMutation {
-            schema: schema.ok_or_else(|| crate::value::ValueError::new("InverseMutation missing schema"))?,
-            payload: payload.ok_or_else(|| crate::value::ValueError::new("InverseMutation missing payload"))?,
-        })
+        Ok(InverseMutation { schema: schema.ok_or_else(|| crate::value::ValueError::new("InverseMutation missing schema"))?, payload: payload.ok_or_else(|| crate::value::ValueError::new("InverseMutation missing payload"))? })
     }
 }
 //#endregion 🔖️Envelope
@@ -890,6 +884,138 @@ pub fn encode_envelopes(envelopes: &[MutationEnvelope]) -> Vec<u8> {
         encode_envelope(envelope, &mut out);
     }
     out
+}
+
+pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES: usize = 262_144;
+pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES: usize = 8_192;
+pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES: usize = 8_192;
+pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES: usize = 256;
+pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES: usize = 256;
+pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES: usize = 262_144;
+pub const DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES: usize = 1_048_576;
+pub const DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES: usize = 64;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DocumentBackboneBatchLimitsV1 {
+    pub maximum_bytes: usize,
+    pub maximum_envelopes: usize,
+    pub maximum_dependencies_per_envelope: usize,
+    pub maximum_total_dependencies: usize,
+    pub maximum_identifier_bytes: usize,
+    pub maximum_schema_bytes: usize,
+    pub maximum_payload_bytes: usize,
+}
+
+impl Default for DocumentBackboneBatchLimitsV1 {
+    fn default() -> Self {
+        Self {
+            maximum_bytes: DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES,
+            maximum_envelopes: DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES,
+            maximum_dependencies_per_envelope: DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES,
+            maximum_total_dependencies: DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES,
+            maximum_identifier_bytes: DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES,
+            maximum_schema_bytes: DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES,
+            maximum_payload_bytes: DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES,
+        }
+    }
+}
+
+fn document_backbone_batch_limit(limit: &'static str) -> crate::ProtocolError {
+    crate::ProtocolError::LimitExceeded(limit)
+}
+
+fn document_backbone_batch_malformed(offset: usize, detail: impl Into<String>) -> crate::ProtocolError {
+    crate::ProtocolError::Malformed { what: "document backbone batch", offset: offset as u64, detail: detail.into() }
+}
+
+fn read_document_backbone_u64(bytes: &[u8], position: &mut usize) -> Result<u64, crate::ProtocolError> {
+    let start = *position;
+    let value = crate::wire::read_varint_u64(bytes, position)?;
+    let mut canonical = Vec::new();
+    crate::wire::write_varint_u64(&mut canonical, value);
+    if bytes.get(start..*position) != Some(canonical.as_slice()) {
+        return Err(document_backbone_batch_malformed(start, "nonminimal-varint"));
+    }
+    Ok(value)
+}
+
+fn read_document_backbone_count(bytes: &[u8], position: &mut usize, maximum: usize, limit: &'static str) -> Result<usize, crate::ProtocolError> {
+    let value = read_document_backbone_u64(bytes, position)?;
+    if value > maximum as u64 {
+        return Err(document_backbone_batch_limit(limit));
+    }
+    Ok(value as usize)
+}
+
+fn read_document_backbone_bytes(bytes: &[u8], position: &mut usize, maximum: usize, limit: &'static str) -> Result<Vec<u8>, crate::ProtocolError> {
+    let length = read_document_backbone_count(bytes, position, maximum, limit)?;
+    let end = (*position).checked_add(length).ok_or_else(|| document_backbone_batch_malformed(*position, "length-overflow"))?;
+    let value = bytes.get(*position..end).ok_or_else(|| document_backbone_batch_malformed(*position, "truncated"))?.to_vec();
+    *position = end;
+    Ok(value)
+}
+
+fn read_document_backbone_text(bytes: &[u8], position: &mut usize, maximum: usize, limit: &'static str) -> Result<String, crate::ProtocolError> {
+    let start = *position;
+    String::from_utf8(read_document_backbone_bytes(bytes, position, maximum, limit)?).map_err(|_| document_backbone_batch_malformed(start, "utf8"))
+}
+
+/// @emoji 🪢️ Decodes one terminal canonical causal batch under the shared hot-port limits,
+/// checking every count and length before allocating its retained owner.
+pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits: DocumentBackboneBatchLimitsV1) -> Result<Vec<MutationEnvelope>, crate::ProtocolError> {
+    let ceiling = DocumentBackboneBatchLimitsV1::default();
+    if limits.maximum_bytes > ceiling.maximum_bytes
+        || limits.maximum_envelopes > ceiling.maximum_envelopes
+        || limits.maximum_dependencies_per_envelope > ceiling.maximum_dependencies_per_envelope
+        || limits.maximum_total_dependencies > ceiling.maximum_total_dependencies
+        || limits.maximum_identifier_bytes > ceiling.maximum_identifier_bytes
+        || limits.maximum_schema_bytes > ceiling.maximum_schema_bytes
+        || limits.maximum_payload_bytes > ceiling.maximum_payload_bytes
+    {
+        return Err(document_backbone_batch_limit("invalid-limits"));
+    }
+    if bytes.len() > limits.maximum_bytes {
+        return Err(document_backbone_batch_limit("batch-bytes"));
+    }
+    let mut position = 0usize;
+    let count = read_document_backbone_count(bytes, &mut position, limits.maximum_envelopes, "envelopes")?;
+    let mut envelopes = Vec::with_capacity(count);
+    let mut total_dependencies = 0usize;
+    let mut total_payload_bytes = 0usize;
+    for _ in 0..count {
+        let mutation_id = crate::ids::MutationId(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?);
+        let document_id = crate::ids::ArtifactId(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?);
+        let actor = crate::ids::ActorId(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?);
+        let dependency_count = read_document_backbone_count(bytes, &mut position, limits.maximum_dependencies_per_envelope, "dependencies")?;
+        total_dependencies = total_dependencies.checked_add(dependency_count).ok_or_else(|| document_backbone_batch_limit("dependencies"))?;
+        if total_dependencies > limits.maximum_total_dependencies {
+            return Err(document_backbone_batch_limit("dependencies"));
+        }
+        let mut dependencies = Vec::with_capacity(dependency_count);
+        for _ in 0..dependency_count {
+            dependencies.push(crate::ids::MutationId(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?));
+        }
+        let diff_schema = crate::ids::SchemaId(read_document_backbone_text(bytes, &mut position, limits.maximum_schema_bytes, "schema-bytes")?);
+        let diff_payload = read_document_backbone_bytes(bytes, &mut position, limits.maximum_payload_bytes.saturating_sub(total_payload_bytes), "payload-bytes")?;
+        total_payload_bytes += diff_payload.len();
+        let inverse_schema = crate::ids::SchemaId(read_document_backbone_text(bytes, &mut position, limits.maximum_schema_bytes, "schema-bytes")?);
+        let inverse_payload = read_document_backbone_bytes(bytes, &mut position, limits.maximum_payload_bytes.saturating_sub(total_payload_bytes), "payload-bytes")?;
+        total_payload_bytes += inverse_payload.len();
+        let timestamp = crate::ids::HybridLogicalTimestamp { actor: read_document_backbone_u64(bytes, &mut position)?, physical_ms: read_document_backbone_u64(bytes, &mut position)?, logical: read_document_backbone_u64(bytes, &mut position)? };
+        envelopes.push(MutationEnvelope { mutation_id, document_id, actor, dependencies, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp });
+    }
+    if position != bytes.len() {
+        return Err(document_backbone_batch_malformed(position, "trailing-bytes"));
+    }
+    if encode_envelopes(&envelopes) != bytes {
+        return Err(document_backbone_batch_malformed(0, "noncanonical"));
+    }
+    Ok(envelopes)
+}
+
+/// @emoji 🔐️ Shared production-limit decoder for one hot document-backbone mutation batch.
+pub fn decode_document_backbone_envelopes_exact(bytes: &[u8]) -> Result<Vec<MutationEnvelope>, crate::ProtocolError> {
+    decode_document_backbone_envelopes_exact_with_limits(bytes, DocumentBackboneBatchLimitsV1::default())
 }
 
 /// @emoji 🎯️ Inverse of [`encode_envelopes`].

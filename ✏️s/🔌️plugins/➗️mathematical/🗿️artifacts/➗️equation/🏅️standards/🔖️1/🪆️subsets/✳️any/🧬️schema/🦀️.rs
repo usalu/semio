@@ -1,10 +1,9 @@
 //! 🧬️ Equation artifact schema — every field with its state class.
 
 use crate::standards::v1::subsets::any::schema::snapshot::EquationExprSnapshot;
-use crate::{EquationComputedChild, EquationGeometry, EquationGraph, EquationNotationChild, EquationResultsChild};
+use crate::{EquationComputedChild, EquationNotationChild, EquationResultsChild};
 use framework_schema::ArtifactSchema;
 use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
-
 //#region 🔖️Artifact
 /// 🧬️ Full equation artifact across the artifact and config lanes. `notation`/`results`/
 /// `computed` mirror `EquationSnapshot`'s own composed-child slots (ticket
@@ -31,8 +30,6 @@ pub struct EquationArtifact {
     pub camera_y: f64,
     #[state(config)]
     pub camera_zoom: f64,
-    #[state(config)]
-    pub locale: String,
 }
 
 // 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `store::ArtifactChild<S>`
@@ -49,7 +46,6 @@ impl ToValue for EquationArtifact {
             ("cameraX".to_string(), self.camera_x.to_value()),
             ("cameraY".to_string(), self.camera_y.to_value()),
             ("cameraZoom".to_string(), self.camera_zoom.to_value()),
-            ("locale".to_string(), self.locale.to_value()),
         ])
     }
 }
@@ -65,7 +61,6 @@ impl FromValue for EquationArtifact {
             camera_x: f64::from_value(field("cameraX"))?,
             camera_y: f64::from_value(field("cameraY"))?,
             camera_zoom: f64::from_value(field("cameraZoom"))?,
-            locale: String::from_value(field("locale"))?,
         })
     }
 }
@@ -91,7 +86,7 @@ impl EquationArtifact {
 
     fn default_ui() -> Self {
         let default_snapshot = crate::equation_snapshot_with_state(EquationGraph::default(), EquationGeometry::default());
-        Self { notation: default_snapshot.notation, results: default_snapshot.results, computed: default_snapshot.computed, equation: default_snapshot.equation, camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0, locale: "en-US".into() }
+        Self { notation: default_snapshot.notation, results: default_snapshot.results, computed: default_snapshot.computed, equation: default_snapshot.equation, camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0 }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -140,3 +135,9 @@ pub fn equation_artifact_schema_descriptor() -> framework_schema::ArtifactSchema
     }
 }
 //#endregion 🔖️Descriptor
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::EquationGraph;
+pub use crate::EquationGeometry;
+//#endregion 🔁️Re-exports

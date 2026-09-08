@@ -151,20 +151,19 @@ fn processed_volume_cached(fixture: &Process3dSnapshot) -> f64 {
 //#endregion 🔖️PreviewCache
 
 //#region 🔖️Render
-pub fn render(fixture: &Process3dSnapshot, config: &Process3dConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(fixture: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
     let (meshes_json, instances_json) = preview_payload_cached(fixture);
     MeshWindowKit::render(&MeshView {
         camera_json: world3d_camera_json(config.camera_position, config.camera_target, config.camera_fov),
         meshes_json,
         instances_json,
-        selection_json: process3d_selection_json(config.active_utility()),
+        selection_json: process3d_selection_json(active_utility),
     })
 }
 //#endregion 🔖️Render
 
 //#region 🔖️Engagement
-pub fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, labels: &crate::editor::process3d::terminology::Process3dLabels) -> WindowEngagement {
-    let active_utility = config.active_utility();
+pub fn engagement(fixture: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, labels: &crate::editor::process3d::terminology::Process3dLabels) -> WindowEngagement {
     let len = fixture.step_payloads.len();
     let cursor = fixture.resolved_up_to.unwrap_or(len);
     let volume = processed_volume_cached(fixture);

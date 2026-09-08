@@ -6,20 +6,20 @@
     "board": {
       "schema": "reasoning.mindmap.fixture",
       "camera": {
-        "x": 0.0,
-        "y": 0.0,
-        "zoom": 1.0
+        "x": 0,
+        "y": 0,
+        "zoom": 1
       },
       "nodes": [
         {
           "id": "node-nucleus",
           "nodeKind": "identity",
           "shape": "circle",
-          "x": 0.0,
-          "y": 0.0,
-          "radius": 24.0,
-          "width": 96.0,
-          "height": 48.0,
+          "x": 0,
+          "y": 0,
+          "radius": 24,
+          "width": 96,
+          "height": 48,
           "text": "Nucleus",
           "handles": []
         }
@@ -40,9 +40,9 @@
     }
   },
   "camera": {
-    "x": 0.0,
-    "y": 0.0,
-    "zoom": 1.0
+    "x": 0,
+    "y": 0,
+    "zoom": 1
   },
   "meta": null
 }

@@ -1,6 +1,6 @@
 import {readFileSync, existsSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
@@ -14,21 +14,23 @@ import { semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuard
 import { semioExtensionStoreVitePlugin } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts";
 import { developmentRuntimeRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { resolveTestBrowserHostRootsV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
+import { productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents } from "../../🚚️distribution/🔌️components/🟦️.ts";
 import { DISTRIBUTION_LAYOUT, distributionChunkName, distributionAssetName } from "../../🚚️distribution/🟦️.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = path.resolve(configDir, "../..");
 const repoRoot = path.resolve(playDir, "../../../../..");
 const rendererModulesDir = path.join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules");
+export default defineConfig(async ({ command }) => {
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
-const profile = process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
+const profile = command === "build" || process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
 const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile);
-const testBrowserHost = resolveTestBrowserHostRootsV1(process.env);
+const testBrowserHost = command === "serve" ? resolveTestBrowserHostRootsV1(process.env) : undefined;
 const receiptDirectory = testBrowserHost?.activationRoot ?? path.join(runtimeRoot, "activation");
-const activated = readActivationReceipt(receiptDirectory);
+const activated = command === "serve" ? readActivationReceipt(receiptDirectory) : undefined;
 const pluginModulesDir = testBrowserHost?.moduleRoot ?? path.resolve(configDir, "../../../🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
-const installedExtensionsDir = testBrowserHost ? path.join(testBrowserHost.browserHostRoot, "extensions") : path.join(runtimeRoot, "extensions");
+const installedExtensionsDir = command === "build" ? pluginModulesDir : testBrowserHost ? path.join(testBrowserHost.browserHostRoot, "extensions") : path.join(runtimeRoot, "extensions");
 const fontsDir = path.resolve(configDir, "../../../♾️infinite/📦️packages/🦀️rust/dist/fonts");
 const sessionPath = path.resolve(configDir, "../../../🔌️plugin/📇️registry/dist/sessions", plugin, "🟦️session.ts");
 const brandId = process.env.SEMIO_BRAND ?? PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.brand;
@@ -85,10 +87,11 @@ const resolvedPluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.varian
 // copied and every single-variant production build 404s the shard worker at first plugin activation.
 if (!resolvedPluginId) throw new Error(`Unknown playground module identity: ${plugin}`);
 const extensionIds = new Set(EXTENSION_TARGETS.map((target) => target.pluginId));
-const pluginModuleDirNames = [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...activated.plugins.filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId))];
+const productionComponents = command === "build" ? selectProductionBrowserComponents((await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION, plugin, resolvedPluginId, PLUGIN_BUILD_TARGETS) : undefined;
+const pluginModuleDirNames = [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...(activated?.plugins ?? []).filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId))];
 //#endregion 🔖️RegistryDrivenAssetsAndEngines
 
-export default defineConfig({
+return {
   root: playDir,
   cacheDir: playgroundCacheDir,
   publicDir: path.join(playDir, "public"),
@@ -164,24 +167,13 @@ export default defineConfig({
     ]),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
-    semioActivationVitePlugin({ receiptDirectory }),
-    semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot }),
+    ...(command === "serve" ? [semioActivationVitePlugin({ receiptDirectory }), semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot })] : []),
     ...semioAssetsVitePlugin(repoRoot),
-    // 🔌️ `resolve.alias`'s `/🔌️plugin-modules` entry above only covers *bundler* resolution (static imports
-    // Vite can inline) — the shell also fetches wasm plugin modules at runtime via plain absolute-URL
-    // `import()`s, which a production build never bundles. Without an explicit static-dir copy, a
-    // production `dist/` simply never contains `🔌️plugin-modules/` at all, so every wasm plugin 404s once
-    // deployed (only ever worked in dev, where the dev server can serve arbitrary filesystem paths).
-    // Copied per-crate-dir rather than the whole tree so a single-variant build doesn't ship every plugin
-    // crate this shared dev directory happens to have accumulated from other variants' past builds — see
-    // `pluginModuleDirNames` above. (`renderer-modules/wgpu` needs no equivalent copy: it's a wholly
-    // separate wgpu-renderer trunk build — `BuildScript.run` skips `vite build` entirely for that
-    // renderer — and nothing in the react app ever fetches `/renderer-modules` at runtime.)
-    ...(pluginModuleDirNames
-      ? pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) }))
-      : staticDirVitePlugin(repoRoot, { kind: "static-dir", route: MODULE_PLUGIN_ROUTE, root: path.relative(repoRoot, pluginModulesDir) })),
-    staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${MODULE_VENDOR_DIRECTORY}`, root: path.relative(repoRoot, fontsDir) }),
-    staticDirVitePlugin(repoRoot, { kind: "static-dir", route: MODULE_EXTENSION_ROUTE, root: path.relative(repoRoot, installedExtensionsDir) }),
+    ...(productionComponents ? [productionBrowserArtifactsVitePlugin(repoRoot, productionComponents)] : [
+      ...pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
+      staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${MODULE_VENDOR_DIRECTORY}`, root: path.relative(repoRoot, fontsDir) }),
+      staticDirVitePlugin(repoRoot, { kind: "static-dir", route: MODULE_EXTENSION_ROUTE, root: path.relative(repoRoot, installedExtensionsDir) }),
+    ]),
     // 🏷️ A brand's own static assets (e.g. the Aggregator's funding/partner logos) mount at `/<assetsDir>`
     // alongside the shared `framework/ui/asset` mount above.
     ...(brand?.assetsDir ? staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${brand.assetsDir}`, root: brand.assetsDir }) : []),
@@ -203,4 +195,5 @@ export default defineConfig({
     "import.meta.env.VITE_S_HUB_URL": JSON.stringify(process.env.S_HUB_URL ?? ""),
     "import.meta.env.VITE_S_DATA_DIR": JSON.stringify(process.env.S_DATA_DIR ?? ""),
   },
+};
 });

@@ -17,8 +17,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
-import technologyCatalogDocument from "../../🗂️technologies.json";
-import { parseTechnologyCatalog, type TechnologyCatalog } from "../../🧬️schema/🟦️";
+import { ENTITY_KIND_BY_EMOJI } from "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🤖️generated/🟦️entity-kinds";
 
 /**
  * execAsync holds the data fields for a execAsync record.
@@ -1253,31 +1252,17 @@ const UI_STRINGS = {
 };
 
 // #region 🌪️Entity Emoji Registry
-// Entity Emoji Registry MUST be derived from the owned technology catalog, never restated here.
+// Entity Emoji Registry MUST be projected from the framework-owned entity-kind catalog
+// (`framework.schema` export `EntityKindCatalog`), never restated here.
 // This registry drives CodeLens detection, gutter decorations, and ID parsing.
 // The CLI's AllEntityEmojis() reads the same catalog through its generated Go projection.
 
 /**
- * The `repo.client.vscode` technology catalog this extension owns, parsed through
- * `🧬️schema/🟦️.ts` so a malformed `🗂️technologies.json` fails at load instead of at first use.
- **/
-export const TECHNOLOGY_CATALOG: TechnologyCatalog = ((): TechnologyCatalog => {
-  const parsed = parseTechnologyCatalog(technologyCatalogDocument);
-  if (!parsed.success) throw new Error(`🗂️technologies.json violates ${"https://semio.tech/schema/repo/client/vscode/schema.json"}: ${parsed.error.message}`);
-  return parsed.data;
-})();
-
-/**
  * Complete set of entity-identifying emojis that appear as kind prefixes in entity IDs.
- * Derived from TECHNOLOGY_CATALOG in declaration order; when two kinds share one emoji
- * (technology-mono/interaction-started, draft/todo) the first declared kind wins.
- * Regex patterns are derived from it.
+ * Projected from the framework-owned entity-kind catalog; the generated index is already FIRST-WINS,
+ * so 🌱️ resolves to technology-mono and 📝️ to draft. Regex patterns are derived from it.
  **/
-export const ENTITY_EMOJIS: ReadonlyMap<string, string> = ((): ReadonlyMap<string, string> => {
-  const index = new Map<string, string>();
-  for (const entry of TECHNOLOGY_CATALOG) if (!index.has(entry.emoji)) index.set(entry.emoji, entry.id);
-  return index;
-})();
+export const ENTITY_EMOJIS: ReadonlyMap<string, string> = new Map([...ENTITY_KIND_BY_EMOJI].map(([emoji, kind]) => [emoji, kind.id]));
 
 /**
  * Escapes a string for safe use inside a regular expression character class or alternation.

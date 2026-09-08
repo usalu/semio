@@ -18,7 +18,6 @@ type ShootingDiff {
   fitRevision: Int @state(class: CONFIG)
   cameraDraftLabel: String @state(class: CONFIG)
   camera: ShootingCamera @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
 }
 
 type ShootingStringList {
@@ -99,7 +98,6 @@ type ShootingArtifact {
   fitRevision: Int!
   cameraDraftLabel: String!
   camera: ShootingCamera!
-  locale: String!
 }
 
 type ShootingCamera {

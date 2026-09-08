@@ -2,7 +2,7 @@
 
 use crate::{FlowContentChild, FlowSnapshot};
 use flow::{FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_artifact_flow_flow::{CameraJson, Widget};
+
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Constants
@@ -114,8 +114,6 @@ pub struct FlowArtifact {
     pub contributions_json: String,
     #[state(config)]
     pub generation_json: String,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔹Artifact
 
@@ -151,7 +149,6 @@ impl FlowArtifact {
             automation_enabled_json: String::new(),
             contributions_json: "[]".into(),
             generation_json: String::new(),
-            locale: "en-US".into(),
         }
     }
 
@@ -319,3 +316,9 @@ semio_framework_plugin::derive_artifact_facets!(
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use semio_framework_artifact_flow_flow::CameraJson;
+pub use semio_framework_artifact_flow_flow::Widget;
+//#endregion 🔁️Re-exports

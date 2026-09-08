@@ -1,8 +1,7 @@
 //! 🧮️ Lowpoly play app — view state (`LowpolyConfig`) and its patch operations
 //! (`LowpolyConfigMutation`). Absorbs every field that used to live in the old ui crate's
 //! `LowpolyPlayRuntime` app-struct `RefCell` (selection, active object, paint utility/layer, selection
-//! method/mode, hover, world camera, sun, show-edges) plus the two `ViewModel` fields lowpoly actually
-//! read (`active_utility_id`/`locale`) — session-only view state round-trips through the config
+//! method/mode, hover, world camera, sun, and show-edges) — session-only editor settings round-trip through the config
 //! `ArtifactStore` exactly like document content, with a real `backwards` per
 //! `LowpolyConfigMutation`, mirroring the `shooting_engine::ShootingConfig` pilot. Nested value types
 //! (`LowpolySelection`, the world camera, hover target, sun, paint color) are flattened into scalar
@@ -53,10 +52,6 @@ pub struct LowpolyConfig {
     pub sun_elevation: f64,
     pub sun_intensity: f64,
     pub sun_color: String,
-    /// 🧰️ Was read off the host-pushed `ViewModel::active_utility_id` (deleted for migrated apps).
-    pub active_utility_id: String,
-    /// 🗣️ Was read off `ViewModel::locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -124,8 +119,6 @@ impl Default for LowpolyConfig {
             sun_elevation: 35.0,
             sun_intensity: 0.85,
             sun_color: "#ffffff".into(),
-            active_utility_id: "move".into(),
-            locale: "en-US".into(),
         }
     }
 }
@@ -199,10 +192,6 @@ pub enum LowpolyConfigMutation {
     SetShowEdges { value: bool },
     #[dsl(key = "sun")]
     SetSun { enabled: bool, azimuth: f64, elevation: f64, intensity: f64, color: String },
-    #[dsl(key = "active-utility")]
-    SetActiveUtility { utility_id: String },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
@@ -278,8 +267,6 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-engagement-input", semantic_kind: "set-engagement-input", display_name: "Set Engagement Input", emoji: "⚙️", aggregate_variant: "SetEngagementInput", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-show-edges", semantic_kind: "set-show-edges", display_name: "Set Show Edges", emoji: "⚙️", aggregate_variant: "SetShowEdges", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-sun", semantic_kind: "set-sun", display_name: "Set Sun", emoji: "⚙️", aggregate_variant: "SetSun", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-active-utility", semantic_kind: "set-active-utility", display_name: "Set Active Utility", emoji: "⚙️", aggregate_variant: "SetActiveUtility", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "⚙️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -294,8 +281,6 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
             LowpolyConfigMutation::SetEngagementInput { .. } => &Self::DESCRIPTORS[7],
             LowpolyConfigMutation::SetShowEdges { .. } => &Self::DESCRIPTORS[8],
             LowpolyConfigMutation::SetSun { .. } => &Self::DESCRIPTORS[9],
-            LowpolyConfigMutation::SetActiveUtility { .. } => &Self::DESCRIPTORS[10],
-            LowpolyConfigMutation::SetLocale { .. } => &Self::DESCRIPTORS[11],
         }
     }
 
@@ -330,8 +315,6 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
                 next.sun_intensity = *intensity;
                 next.sun_color = color.clone();
             }
-            LowpolyConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
-            LowpolyConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         protocol::MutationOutcome::new(next)
     }

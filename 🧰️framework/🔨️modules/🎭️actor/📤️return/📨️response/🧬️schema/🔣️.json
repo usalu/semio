@@ -30,7 +30,7 @@
           ]
         },
         "activationGeneration": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/U64"
+          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
         },
         "transportRequestSequence": {
           "$ref": "#/$defs/TransportRequestSequence"
@@ -51,7 +51,7 @@
           "const": "result"
         },
         "activationGeneration": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/U64"
+          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
         },
         "transportRequestSequence": {
           "$ref": "#/$defs/TransportRequestSequence"
@@ -75,7 +75,7 @@
           "const": "fault"
         },
         "activationGeneration": {
-          "$ref": "https://semio.tech/schema/framework/actor/return/schema.json#/$defs/U64"
+          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
         },
         "transportRequestSequence": {
           "$ref": "#/$defs/TransportRequestSequence"

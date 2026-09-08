@@ -39,7 +39,6 @@ pub struct LayoutConfig {
     #[dsl(block)]
     pub preview_camera: LayoutCamera,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -88,7 +87,7 @@ impl store::ArtifactPack for LayoutConfig {
 
 impl Default for LayoutConfig {
     fn default() -> Self {
-        Self { active_page_id: "page-1".into(), drop_preview: LayoutDropPreviewState::default(), engagement_input: String::new(), camera: LayoutCamera::default(), preview_camera: LayoutCamera::default(), locale: "en-US".into() }
+        Self { active_page_id: "page-1".into(), drop_preview: LayoutDropPreviewState::default(), engagement_input: String::new(), camera: LayoutCamera::default(), preview_camera: LayoutCamera::default(), }
     }
 }
 

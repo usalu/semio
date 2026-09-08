@@ -26,7 +26,6 @@ export interface FormsDiff {
   /** @state config */
   tryValues?: Record<string, string[]>;
   /** @state config */
-  locale?: string;
   /** @state config */
   contributionsJson?: string;
 }
@@ -123,4 +122,59 @@ export interface FormsStepPatch {
   title?: string;
   description?: string | null;
   blocks?: FormQuestion[];
+}
+
+//#region 🚪️Parsers
+/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
+export class formsFormsDiffGuardRefusal extends Error {
+  constructor(readonly at: string, readonly why: string) {
+    super(`${at}: ${why}`);
+  }
+}
+
+const formsFormsDiffGuardReject = (at: string, why: string): never => {
+  throw new formsFormsDiffGuardRefusal(at, why);
+};
+
+type formsFormsDiffGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
+type formsFormsDiffGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
+type formsFormsDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
+
+export const formsFormsDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : formsFormsDiffGuardReject(at, "value is not an object");
+export const formsFormsDiffGuardArray = (value: unknown, at: string, bounds: formsFormsDiffGuardSizeBounds = {}): readonly unknown[] => {
+  if (!Array.isArray(value)) return formsFormsDiffGuardReject(at, "value is not an array");
+  if (bounds.minItems !== undefined && value.length < bounds.minItems) formsFormsDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
+  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) formsFormsDiffGuardReject(at, `array has more than ${bounds.maxItems} items`);
+  return value;
+};
+export const formsFormsDiffGuardString = (value: unknown, at: string, bounds: formsFormsDiffGuardTextBounds = {}): string => {
+  if (typeof value !== "string") return formsFormsDiffGuardReject(at, "value is not a string");
+  const length = [...value].length;
+  if (bounds.minLength !== undefined && length < bounds.minLength) formsFormsDiffGuardReject(at, `string is shorter than ${bounds.minLength}`);
+  if (bounds.maxLength !== undefined && length > bounds.maxLength) formsFormsDiffGuardReject(at, `string is longer than ${bounds.maxLength}`);
+  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) formsFormsDiffGuardReject(at, `string does not match ${bounds.pattern}`);
+  return value;
+};
+export const formsFormsDiffGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : formsFormsDiffGuardReject(at, "value is not a boolean"));
+export const formsFormsDiffGuardNumber = (value: unknown, at: string, bounds: formsFormsDiffGuardRangeBounds = {}): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return formsFormsDiffGuardReject(at, "value is not a finite number");
+  if (bounds.minimum !== undefined && value < bounds.minimum) formsFormsDiffGuardReject(at, `number is below ${bounds.minimum}`);
+  if (bounds.maximum !== undefined && value > bounds.maximum) formsFormsDiffGuardReject(at, `number is above ${bounds.maximum}`);
+  return value;
+};
+export const formsFormsDiffGuardInteger = (value: unknown, at: string, bounds: formsFormsDiffGuardRangeBounds = {}): number =>
+  Number.isSafeInteger(value) ? formsFormsDiffGuardNumber(value, at, bounds) : formsFormsDiffGuardReject(at, "value is not an integer");
+export const formsFormsDiffGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
+  members.includes(value as T) ? (value as T) : formsFormsDiffGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const formsFormsDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
+  value === expected ? expected : formsFormsDiffGuardReject(at, `value is not ${String(expected)}`);
+//#endregion 🚪️Parsers
+
+export function parseFormsDiff(value: unknown, at = "$"): FormsDiff {
+  const row = formsFormsDiffGuardObject(value, at);
+  return {
+    schema: row["schema"] === undefined ? undefined : formsFormsDiffGuardString(row["schema"], `${at}.schema`),
+    value: row["value"] === undefined ? undefined : formsFormsDiffGuardString(row["value"], `${at}.value`),
+  };
 }

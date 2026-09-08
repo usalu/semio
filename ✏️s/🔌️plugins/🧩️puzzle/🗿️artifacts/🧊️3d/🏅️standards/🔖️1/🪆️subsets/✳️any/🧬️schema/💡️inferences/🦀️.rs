@@ -4,14 +4,13 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📍️flat-position/`).
 
-use crate::standards::v1::subsets::any::schema::inferences::flatten::{flatten_snapshot, plane_to_orientation, FlattenPose};
+use crate::standards::v1::subsets::any::schema::inferences::flatten::{flatten_snapshot, plane_to_orientation};
 use crate::Puzzle3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use std::collections::BTreeMap;
 
 use super::flat_position::{Puzzle3dFlatCenter, Puzzle3dFlatPlane};
-
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a puzzle3d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `flatPositions`, backed by the `📍️flat-position/` slug dir).
@@ -89,3 +88,8 @@ pub fn puzzle3d_artifact_inference_descriptor() -> ::semio_framework_schema::Art
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::standards::v1::subsets::any::schema::inferences::flatten::FlattenPose;
+//#endregion 🔁️Re-exports

@@ -3,10 +3,10 @@
   "job": {
     "id": "orbit-run-7",
     "stage": "done",
-    "progress01": 1.0,
+    "progress01": 1,
     "cancelRequested": false,
     "stageCursor": 17,
-    "startedAtMs": 1738368000000.0,
+    "startedAtMs": 1738368000000,
     "error": null,
     "cameraPosesPreview": [
       {

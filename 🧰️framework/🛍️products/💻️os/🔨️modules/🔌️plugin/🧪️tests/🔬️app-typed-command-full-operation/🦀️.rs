@@ -266,7 +266,7 @@ mod typed_command_full_operation_tests {
             let before = app.presence_store.local_read().unwrap();
             let mut mounted = MountedTypedCommandFullOperation::<A> {
                 verb: "setGraphParameter".into(),
-                meta: ActionMeta { actor: "fixture".into(), instance_id: 7 },
+                meta: ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None },
                 operation,
                 canonical_revision: revision,
                 artifact_generation: operation.generation.0,
@@ -460,7 +460,7 @@ mod typed_command_full_operation_tests {
                     .unwrap();
                 let mut mounted = MountedTypedCommandFullOperation::<A> {
                     verb: "setGraphParameter".into(),
-                    meta: ActionMeta { actor: "fixture".into(), instance_id: 7 },
+                    meta: ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None },
                     operation,
                     canonical_revision: revision,
                     artifact_generation: generation,
@@ -843,7 +843,7 @@ mod typed_command_full_operation_tests {
                 id,
                 MountedTypedCommandFullOperation::<A> {
                     verb: "setGraphParameter".into(),
-                    meta: ActionMeta { actor: "fixture".into(), instance_id: 7 },
+                    meta: ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None },
                     operation,
                     canonical_revision: revision,
                     artifact_generation: 0,
@@ -891,7 +891,7 @@ mod typed_command_full_operation_tests {
                 id,
                 MountedTypedCommandFullOperation::<A> {
                     verb: String::new(),
-                    meta: ActionMeta { actor: String::new(), instance_id: 7 },
+                    meta: ActionMeta { actor: String::new(), instance_id: 7, view_state: None },
                     operation,
                     canonical_revision: revision,
                     artifact_generation: 0,

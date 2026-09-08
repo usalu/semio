@@ -36,9 +36,7 @@ message Puzzle5dConfig {
   // @state config
   map<string, string> active_utility_by_window_id = 17;
   // @state config
-  string terminology = 18;
   // @state config
-  string locale = 19;
 }
 
 message SelectionSet {

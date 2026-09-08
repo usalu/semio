@@ -2,7 +2,7 @@
 
 ## Layout
 
-All 99 production artifact owners have dedicated Rust declarations. The two shared registry contracts are separate packages. Existing TypeScript entry points have 39 package declarations. The independent static audit reconciles the inventory; compiler, runtime and cache acceptance are still in progress.
+All 99 production artifact owners have dedicated Rust declarations. The two shared registry contracts are separate packages. TypeScript implementations have 40 artifact package declarations, including the newly separated Sequence browser API. The independent static audit reconciles the inventory; compiler, runtime and cache acceptance are still in progress.
 
 For PDF, the artifact implementation remains at `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs` and its standards, subsets, schema, operations and tests stay in their domain taxonomy. `📦️packages/🦀️rust/Cargo.toml` points to that source using `[lib] path = "../../🦀️.rs"`. Its neighboring Nx declaration and `📜️script.ts` only declare and route package tasks. TypeScript similarly builds the taxonomy-root source into package-local JavaScript and declaration outputs.
 

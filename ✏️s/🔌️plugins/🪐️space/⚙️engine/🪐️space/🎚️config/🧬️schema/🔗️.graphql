@@ -13,7 +13,6 @@ type SpaceConfig {
   spaceId: String @state(class: CONFIG)
   clientId: String @state(class: CONFIG)
   clientName: String @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 
 type SpaceWindowCameraEntry {

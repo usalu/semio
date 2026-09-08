@@ -1,12 +1,12 @@
-import { policyReadFileSafe, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, INTERACTIVITY_AUDIT_UI_VALUE_FILE, INTERACTIVITY_AUDIT_KERNEL_FILE, INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE, INTERACTIVITY_AUDIT_UI_BUILDER_FILE, INTERACTIVITY_AUDIT_UI_COMPONENT_FILE, INTERACTIVITY_AUDIT_UI_ACCESSIBILITY_FILE, INTERACTIVITY_AUDIT_UI_SURFACE_FILE, INTERACTIVITY_AUDIT_UI_DOCUMENT_FILE, INTERACTIVITY_AUDIT_UI_LIMITS_FILE, INTERACTIVITY_AUDIT_UI_LAYOUT_FILE, INTERACTIVITY_AUDIT_UI_PRESENT_FILE, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE, INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE, interactivityLiveReconcileFailures } from "../../../../../../../../📜️script.ts";
+import { policyReadRustPolicySource, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, INTERACTIVITY_AUDIT_UI_VALUE_FILE, INTERACTIVITY_AUDIT_KERNEL_FILE, INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE, INTERACTIVITY_AUDIT_UI_BUILDER_FILE, INTERACTIVITY_AUDIT_UI_COMPONENT_FILE, INTERACTIVITY_AUDIT_UI_ACCESSIBILITY_FILE, INTERACTIVITY_AUDIT_UI_SURFACE_FILE, INTERACTIVITY_AUDIT_UI_DOCUMENT_FILE, INTERACTIVITY_AUDIT_UI_LIMITS_FILE, INTERACTIVITY_AUDIT_UI_LAYOUT_FILE, INTERACTIVITY_AUDIT_UI_PRESENT_FILE, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE, INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE, interactivityLiveReconcileFailures } from "../../../../../../../../📜️script.ts";
 
 /** 🧪️ Executes interactivity live reconcile policy assertions. */
 export function interactivityLiveReconcileSelfTests(repoRoot: string): void {
-  const reconcile = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE);
-  const value = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_UI_VALUE_FILE);
-  const kernel = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_KERNEL_FILE);
+  const reconcile = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE);
+  const value = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_UI_VALUE_FILE);
+  const kernel = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_KERNEL_FILE);
   const kernelTurn = kernel.slice(kernel.indexOf("//#region 🔖️TurnResult"), kernel.indexOf("//#endregion 🔖️TurnResult"));
-  const pluginCentral = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE);
+  const pluginCentral = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE);
   const tableKit = pluginCentral.slice(pluginCentral.indexOf("pub const TABLE_WINDOW_COLUMNS"), pluginCentral.indexOf("//#endregion 🔖️TableWindowKit"));
   const tableKitFixtures = ["table_rows_max_plus_one_returns_the_exact_row_owner", "abandoned_table_rows_retire_one_row_action_or_cell_per_opportunity"].filter((fixture) => pluginCentral.includes(`fn ${fixture}`)).join("\n");
   const commandBridge = pluginCentral.slice(pluginCentral.indexOf("pub const UI_COMMAND_VALUE_DEPTH"), pluginCentral.indexOf("//#endregion 🔖️ActionFactory"));
@@ -20,9 +20,9 @@ export function interactivityLiveReconcileSelfTests(repoRoot: string): void {
     INTERACTIVITY_AUDIT_UI_LIMITS_FILE,
     INTERACTIVITY_AUDIT_UI_LAYOUT_FILE,
     INTERACTIVITY_AUDIT_UI_PRESENT_FILE,
-  ].map((file) => policyReadFileSafe(repoRoot, file)).join("\n") + kernelTurn + tableKit + tableKitFixtures + commandBridge + commandBridgeFixtures;
-  const patches = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
-  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
+  ].map((file) => policyReadRustPolicySource(repoRoot, file)).join("\n") + kernelTurn + tableKit + tableKitFixtures + commandBridge + commandBridgeFixtures;
+  const patches = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
+  const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadRustPolicySource(repoRoot, file)).join("\n");
   const mutations: [string, string, string, string][] = [
     ["per-surface-credit-cap", reconcile.replace("SURFACE_RECONCILE_SURFACE_BYTES: usize = 8 * 1_024 * 1_024", "SURFACE_RECONCILE_SURFACE_BYTES: usize = 16 * 1_024 * 1_024"), patches, reactor],
     ["aggregate-credit-cap", reconcile.replace("SURFACE_RECONCILE_AGGREGATE_BYTES: usize = SURFACE_RECONCILE_SURFACE_BYTES * 4", "SURFACE_RECONCILE_AGGREGATE_BYTES: usize = SURFACE_RECONCILE_SURFACE_BYTES * 8"), patches, reactor],

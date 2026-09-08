@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"https://semio.tech/schema/os/config/mutation/set-layout/schema.json","title":"SetLayout","type":"object","additionalProperties":false,"required":["layout"],"properties":{"layout":{"anyOf":[{"type":"string","enum":["desktop","tablet"]},{"type":"null"}]}}}

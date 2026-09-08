@@ -1055,3 +1055,316 @@ for the same active binding.  This correction supersedes the illustrative
 top-level `document-backbone-send`/`receive` shapes above; their exact field
 set remains the ownership model carried by the existing surrounding
 `send`/`event` envelopes.
+
+## Shell Cold Pair and Two-Author Composition Follow-Up (Source Audit)
+
+The new `OpenDocumentSession` path has the right owner boundary: the session
+retains a private port and a bounded pre-bind input queue, `snapshotReplaced`
+does the cold load, and `entry.ready` settles only after the binding method
+returns.  In particular, the 64-message/4 MiB queue in
+[`ShellHost:2001-2010`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2001>) is a legitimate bounded pre-Bound reservation: the actual port serializes its delivery behind `bind()`.
+
+Four defects existed at this audit point and were handed to the Shell owner:
+
+1. `runDocumentOpeningAttemptV1` cleared its only deadline immediately after
+   `socket()` ([`document opening:36-42`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts:36>)), while a Hub opening subsequently awaited `entry.ready`
+   ([`ShellHost:4686`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:4686>)).  A socket actor with no first
+   snapshot could retain the document admission forever.  The deadline must
+   cover socket, cold-ready attach, and commit; the regression needs a
+   socket-success/ready-never-settles row proving close, exact lane retirement,
+   and no residual timer/session.
+2. A second snapshot during an active cold replacement raised
+   `document-backbone.snapshot-overlap`
+   ([`ShellHost:2053`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2053>)) and was converted into a nonretryable bootstrap failure
+   ([`ShellHost:2436-2457`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2436>)).  Rebootstrap and watcher traffic can naturally overlap.  The
+   replacement owner needs one active pair plus one latest bounded pending pair,
+   with close/rebootstrap invalidation and a paused-first/second-wins law.
+3. `DocumentAttachmentLaneV1.replace` marked `#attached` before `apply`
+   ([`document opening:101-102`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts:101>)); the owned cold-load branch did not release that exact owner on
+   loader/bind failure ([`ShellHost:2059-2066`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2059>)).  A failure can leave the lane logically attached
+   without a live port.  Cleanup must use an intent token so it cannot release a
+   same-string successor; add failing cold-load and refused-bind retry rows.
+4. The Shell's `prepared` callback publishes its port and map before Bound
+   ([`ShellHost:2026-2034`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:2026>)).  If the bind later refuses, PluginRuntime can retire its
+   private map while Shell retains the failed candidate.  The exact candidate
+   must be removed from Shell only after the binding method has completed its
+   own refusal/indeterminate reconciliation.
+
+The two-author acceptance command is deliberately stronger than its source
+fixture.  `trusted-stdio-gis-bundle-check --two-author-shell` performs one
+combined Hub/MCP build, a real verified-GIS seed law, materialization,
+candidate/current validation, Chromium closed-actor proof, and then the
+same-data-root Browser/MCP/Shell process
+([`Hub script:12629-12670`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:12629>)).  The staged browser host rejects non-ticket-owned or digest-mismatched GIS
+component/descriptor inputs before it creates module roots
+([`dev script:457-488`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts:457>)).  Thus its first practical prerequisite is a fresh exact artifact/binary
+closure; the neutral fixture is not evidence that an actual map mounted.
+
+Two acceptance-contract discrepancies remain to be corrected before claiming
+that process journey:
+
+- The fixture says the two MCP clients and sockets open before either Shell
+  mounts, but real code mounts Author A's ordinary creation Shell first—only
+  then can it discover the Directory-issued artifact id, open clients/sockets,
+  and mount Author B ([`Hub script:11704-11736`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11704>)).  Update the fixture's ordering rather than
+  documenting an impossible sequence.
+- The fixture claims restart proves `no-retained-running-job`; after restart
+  the harness proves only the durable checkpoint equality and both mounted maps
+  ([`Hub script:11811-11816`](</Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:11811>)).  It correctly disposes private MCP handles before
+  restart, so it cannot read the old job.  Make this an explicit nonclaim for
+  the browser journey, rely on the separate native supervisor-recovery law, or
+  add a bounded server-owned terminal-count diagnostic that exposes neither a
+  handle nor job contents.
+
+No build, browser, or native process was run during this audit.
+
+## P0: Bootstrap Deadline Needs an Actual Owner-Tied Timer
+
+The worker currently stores `artifactBootstrapDeadlineMs` when a Bootstrap
+frame arrives ([`backbone-worker:2872-2875`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2872>)) and clears it on abort or successful finish
+([`backbone-worker:2678-2685`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2678>), [`backbone-worker:2840-2845`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2840>)).  There is no timer, scheduled watchdog, or other reader of
+that state outside construction of `ArtifactBootstrapAssembler`.  Therefore a
+server that sends Bootstrap and then sends no chunk/done frame leaves the
+15-second deadline unobserved indefinitely.  This affects both initial
+bootstrap and a `artifact-rebootstrap-required` recovery: the Shell's new
+60-second opening deadline covers initial attach, but not a later open session
+whose port has been deliberately retired for rebootstrap.
+
+The minimal repair is an owner-tied timer: capture the exact
+`DocumentArtifactBootstrapOwner`, assembler, and deadline when starting; when
+it fires, first prove all three are still current, then call
+`rejectArtifactBootstrap(state, Error("artifact bootstrap deadline exceeded"),
+owner)`.  Clear precisely that timer in both `abortArtifactBootstrap` and the
+success path.  A generic state lookup is unsafe because a late first timer
+could otherwise reject a successor transfer.  The worker law needs a
+non-inline Bootstrap with no further frames, one `deadline-exceeded` event,
+cleared assembler/owner/deadline and closed socket; then a successor bootstrap
+must complete after the old timer would have fired.
+
+The binding contract has since clarified that Ack is a guest-to-Shell ingest
+receipt, not a new actor command completion.  It must be made an explicit
+terminal Shell consumption rather than falling through a generic
+`kind !== "mutations"` drop.  Foreign-URI backbone effects must fail their
+own old turn, and a stale/closing exact port must not retry through a successor
+owner.  These semantics need a final effect-path law.
+
+## P0 Follow-Up: Rebootstrap Must Be Timed Before Bootstrap Exists
+
+The downstream Bootstrap watchdog has since been repaired in current source:
+[`backbone-worker:2681-2701`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2681>) schedules an exact
+owner/assembler/deadline timer, and the abort and successful-install paths
+clear it.  That closes the no-chunk/no-done transfer hole, but it deliberately
+cannot cover the earlier **no Bootstrap at all** recovery state.
+
+`requireArtifactRebootstrap` drops the verified pair, pack, SPR, frontier and
+resume token, emits the rebootstrap event, then closes the live socket
+([`backbone-worker:2778-2792`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2778>)).  Its reconnect loop retries `connectHubOnce` until document close
+([`backbone-worker:2306-2407`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2306>),
+[`backbone-worker:2415-2417`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2415>)).  The individual grant requests have their own 10-second limit, but no
+single owner or deadline spans repeated grants, socket establishment, Hello,
+and the first Welcome.  The existing Shell opening deadline cannot help: the
+opening already committed when a later rebootstrap retires its port.
+
+There is also a concrete fail-open successor state.  After those fields are
+dropped, `Welcome.None` still marks the transport live at
+[`backbone-worker:2952-2959`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2952>), and `Welcome.Tail` installs a tail request at
+[`backbone-worker:2961-2966`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2961>) despite no retained verified pair from which that tail can be
+applied.  Neither result is a valid recovery after `RebootstrapRequired`.
+
+The narrow repair is a distinct `DocumentRebootstrapOwner` (or an explicitly
+separate phase of the existing Bootstrap owner) retained on `ArtifactState`
+and armed **before** closing the old socket.  It must capture the exact state
+identity, runtime key, client instance, config/binding selection, execution
+lease/open generation, and an incrementing rebootstrap epoch.  Its single
+overall timer rechecks that retained owner/epoch before emitting one
+`deadline-exceeded` bootstrap failure and closing only the socket that is
+current for that epoch.  It is cleared by document close/config replacement,
+an explicit newer rebootstrap, or only after an authenticated new canonical
+pair has installed; it must not clear on socket open, Hello, or a bare
+Welcome.  `None` and `Tail` while this recovery owner exists and no pair is
+present must be rejected rather than transition to live.
+
+Required worker rows are: rebootstrap then no Welcome reaches one terminal
+failure; an old epoch timer cannot close a successor that receives and installs
+a pair; `None` and `Tail` after pair erasure are refused; a valid replacement
+pair clears the timer; and close/config replacement clears the timer without a
+post-close event.  This conclusion is source-only; no worker runtime was run
+for this audit.
+
+## Plugin Runtime Disposal Must Retain Pending Opens
+
+The current raw runtime `dispose` is not a physical retirement boundary.
+`createApp` publishes `actorIdByInstance` before awaiting activation
+([`PluginRuntime:1257-1262`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1257>)), then captures the lifecycle and performs guest open only after
+that await ([`PluginRuntime:1263-1275`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1263>)).  Meanwhile, `dispose` starts unretained
+`destroyApp` tasks for the current map and immediately completes the outcome
+broadcast ([`PluginRuntime:1301-1304`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1301>)).
+Disposal during activation can therefore remove the provisional actor, then
+let the suspended create path resume, open a guest instance, and return it
+after the handle's outcomes are already terminal.
+
+`ActorDocumentBindingV1` itself has the right local sequencing: its port
+retirement waits for the bind promise, then performs the exact retire exchange
+([`backbone binding`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📡️backbone/🟦️.ts:168>)).  The outer runtime must not bypass that
+ownership by closing its observable handle first.
+
+The smallest sound refactor changes the kernel and rich handle `dispose`
+contracts from synchronous void to one idempotent `Promise<void>`
+([`kernel handle`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🟦️.ts:218>),
+[`rich adapter`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1596>)).  It needs a synchronous Closing bit and a retained
+`disposePromise`, plus an `InstanceOpenOwner` captured before activation.
+After every asynchronous create step, that owner must prove it remains current;
+if invalidated before an open was sent it only disposes the actor, while an
+already-issued open schedules its one exact retirement after its own attempt
+settles.  Per-instance `retirementByInstance` must return the same promise to
+concurrent destroy/dispose calls.  Only after every opening and retirement
+owner is settled may the raw layer complete `turnOutcomes`; the rich adapter
+also disposes its `AppChannelClient`s exactly once around the same retained
+shutdown promise.
+
+Required regression rows: paused activation then dispose, released activation
+with no guest open/returned instance; paused bind or retire, with terminal
+outcomes delayed until the exact retire settles; duplicate dispose/destroy
+sharing one physical close; post-close create/bind/enqueue refusal; and a
+retired old port unable to send to a successor.  React cleanup can initiate the
+promise without awaiting it, but must retain it as the handle's terminal
+lifetime rather than describe that initiation as completed disposal.
+
+### Lifecycle Close Is a Required Precondition, Not a Best-Effort Cleanup
+
+The new ShardClient guard makes the missing composition observable:
+`disposeActivation` rejects while an instance or close owner remains
+([`shard-client:1949-1952`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1949>)).  A real instance must therefore use its existing
+`ShardInstanceLifecycleLease`, whose exact lawful phases are already pinned by
+the lifecycle scheduler fixture
+([`lifecycle-scheduler.json:6-8`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧪️fixtures/⏱️lifecycle-scheduler.json:6>)):
+
+1. Retire the document port while its captured operational activation still
+   exists.  `beginClose` increments the operation generation, so binding
+   retirement after that point cannot lawfully exchange its exact guest
+   `retire` command.
+2. Call `lease.beginClose()` synchronously, which blocks new ordinary actor
+   work but preserves the separately captured close authority.
+3. Submit lifecycle `close`, acknowledge `Accepted`, then obtain `Retired`.
+4. Begin and drain the exact host `OwnedUiInstance`; only its retirement
+   witness may acknowledge `Retired`.
+5. Once the lease reports `complete`, call `lease.dispose()` / ShardClient
+   disposal.
+
+The host proof is mandatory: a retired acknowledgement rejects unless it
+matches a host bound to the exact lease/lifetime and that host is fully retired
+([`shard-client:1515-1522`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1515>)).  Production PluginRuntime currently has no
+`bindHostRetirement` call (only tests do); its separate `retainedWindowByActor`
+map cannot be replaced by a freshly created empty close-time owner.  The
+lifecycle capture/open path must instead bind an owner that represents the
+actual retained UI descendants, and closing must drain that same owner.
+
+There is an independent return barrier.  `activation.returned` prevents both
+lifecycle turns and final actor disposal
+([`shard-client:1724-1730`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1724>),
+[`shard-client:1949-1952`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1949>)).  Although `lease.pendingReturn` exposes the exact
+return owner, source audit found no production terminal release that clears
+`activation.returned`: accepting a return merely sets `state.retired`
+([`shard-client:1700-1702`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1700>)).  A disposition cannot invent a replacement response
+owner.  It must retain the original return supervisor, cancel/poll and
+physically retire its exact response/page/content, then use a narrowly owned
+empty-proof release that clears the activation return slot.  Until that exists,
+async dispose must correctly remain pending/fail rather than remove maps or
+pretend the actor was released.
+
+### Production UI Ownership Is Not Yet Connected to the Lifecycle Witness
+
+There is no production construction of `OwnedUiInstance`: a source-wide
+`new OwnedUiInstance` search finds the owner implementation and test suites
+only.  Plugin Runtime instead retains a separate plain
+`Map<string, UiDocumentState>` in
+[`PluginRuntime:1058-1125`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1058>).
+Its render path decodes guest patch operations and applies them to that plain
+map at
+[`PluginRuntime:1519-1521`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1519>),
+while `patchAckEvents` constructs generic acknowledgements.  Consequently it
+does not use `lease.captureUiPatchAuthority`, `OwnedUiInstance.beginPatch`,
+input-retirement, or `lease.submitUiAcknowledgement`.  Merely binding a new
+empty host at destruction would therefore certify a different object from the
+one that actually retained/rendered guest UI.
+
+The smallest non-synthetic integration starts immediately after the captured
+lifecycle receipt was acknowledged and its exact guest lifetime is available:
+construct one `OwnedUiInstance` with the captured lifecycle activation,
+lifetime, selected document limits and host profile, then call
+`lease.bindHostRetirement(owner)`.  The runtime must retain that same owner
+per instance.  Each actual guest `uiPatch` is admitted through
+`lease.captureUiPatchAuthority(turn, index)`, its matching instance surface
+and `owner.beginPatch`; its input receipt is released and its exact
+acknowledgement submitted through the lease.  The renderer must read the
+owner's issued `OwnedUiInstanceSurface` rather than maintain an independent
+plain map.  The existing `useOwnedUiView`/`useOwnedUiNode` consumers in the
+UiDocumentStore tests demonstrate the intended read surface without a second
+state projection.
+
+That makes the real close sequence feasible: first retire the document port
+under the still-live operational activation; then `lease.beginClose`, guest
+close/Accepted acknowledgement, `owner.beginClose` and bounded
+`owner.closeStep`, extract its sole witness, acknowledge Retired, and only
+then dispose the completed lease.  The exact owner and witness APIs are at
+[`instance owner:221-289`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts:221>)
+and the lifecycle identity gate is at
+[`shard-client:1515-1523`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1515>).
+An open cancelled before its captured receipt needs a separate pre-open
+reservation reconciliation; the host cannot be constructed before that
+receipt defines the guest lifetime.
+
+### Captured Return Still Has No Physical Terminal Release
+
+No existing return-discharge primitive can clear `activation.returned`.
+`OwnedShardReturn` exposes execute/retry/poll/cancel and accessors only
+([`shard-client:683-707`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:683>));
+its page has no release method
+([`shard-client:709-729`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:709>)).
+`OwnedActorTurnOutputs` only marks itself closed at
+[`output:156`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts:156>),
+without a roster close/terminal witness.  Likewise return content and fields
+only expose `beginClose`, not a physical close progression
+([`return content:47-97`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts:47>)).
+
+The required owner is a private, original-return supervisor retained by the
+same `ShardInstanceOwner`, not a synthetic replacement.  It must reject a
+release while a request is in flight, a result is retryable/refused/faulted,
+a page/content/input is retained, or any response roster/cell/record/facade
+is non-terminal.  It drives only the original `OwnedShardReturn` through
+cancel/poll until the actor supplies its `retired` result, then physically
+drains those exact page, content/field, and response roots under their
+existing resident accounting.  Only after all those conditions and the exact
+`state.retired` are true may a private compare-and-clear remove
+`activation.returned`.  `acceptCapturedReturn` currently only records
+`state.retired = true`
+([`shard-client:1700-1703`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1700>));
+both lifecycle sends and actor disposal intentionally refuse while the slot is
+non-null ([`1724-1730`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1724>),
+[`1949-1952`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1949>)).
+
+This remains source-only.  The focused disposal result currently exercises a
+fake shard sequence and does not establish real host/return retirement.
+
+### Audit: Empty Actor-Output Roster Retirement
+
+The new `OwnedActorTurnOutputs.closeStep` is appropriately narrow.  It
+refuses pending, response-bearing, returned, and faulted slots before touching
+their roots ([`output:164-171`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts:164>)).
+Only a reserved unused slot is first changed to `cancelled`; its facade/owner
+links are detached before the exact resident record is detached, retired and
+then unlinked ([`174-202`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts:174>)).
+The record detachment is tied to the original queue, and the final predicate
+retains every admission/root/fault field until it is empty
+([`191-204`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts:191>)).
+
+Source review found no lost-prefix, stale-record-alias, or raw-root discharge
+in that narrow path.  In particular, a formerly reserved external output
+facade becomes non-matching before record detachment, but it has no outcome,
+response, or fault and therefore cannot expose a returned root; a returned
+facade instead remains the head and blocks at the first guard.  The new
+fixture correctly exercises unused admission prefixes and separately checks
+pending/returned/faulted roots remain retained.  It does not, and must not,
+qualify the still-missing page/content/returned-data discharge or final
+`activation.returned` release.  No test result is claimed here; the requested
+runner was still blocked in graph construction at review time.

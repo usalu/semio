@@ -1,6 +1,6 @@
 {
   "limits": { "controlBytes": 4096, "uriBytes": 1280, "codeBytes": 256 },
-  "dataLimits": { "hotMessageBytes": 262144, "snapshotMessageBytes": 4194304, "pendingBytes": 4194304, "pendingMessages": 64, "snapshotTransport": "cold-pair" },
+  "dataLimits": { "hotMessageBytes": 262144, "snapshotMessageBytes": 4194304, "pendingBytes": 1048576, "pendingMessages": 64, "snapshotTransport": "cold-pair" },
   "cases": [
     {
       "id": "first-bind",

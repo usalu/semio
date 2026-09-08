@@ -65,7 +65,7 @@ async fn fold_directory_event_ignores_malformed_json() {
 
 #[semio_framework_async_macros::async_test]
 async fn directory_projection_round_trip_preserves_documents_and_rejects_corruption() {
-    let fixture: pack::JsonValue = pack::parse_json(include_str!("../../🧪️fixtures/📇️projection-persistence-v1/🔣️.json")).expect("language-neutral projection fixture");
+    let fixture: pack::JsonValue = pack::parse_json(include_str!("../../🧫️fixtures/📇️projection-persistence-v1/🔣️.json")).expect("language-neutral projection fixture");
     let wire = fixture.get("wire").expect("fixture wire").to_string();
     let model = directory_from_json(&wire).expect("fixture directory projection");
     let document_ids = model.spaces.values().flat_map(|space| space.documents.iter().map(|document| document.document_id.as_str())).collect::<Vec<_>>();

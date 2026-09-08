@@ -11,11 +11,7 @@ pub struct JackEditorSelection {
     pub end: u64,
 }
 
-/// 🧮️ Jack's `ArtifactApp::Config` — node selection, the live node-graph viewport camera (seeded once
-/// from the initial fixture's seed-only `camera` field, then only ever written by
-/// `nodeGraphViewport`), the active fixture/example id, the jack query draft + its last result, the
-/// three engagement-input drafts, the reorganize epoch, the editor's text selection, the per-window
-/// LOD mode, a completion-request revision counter, and the BCP-47 locale tag.
+/// 🧮️ Jack editor configuration contains its viewport, query, result, text selection, LOD.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "trinity.jackcfg")]
@@ -23,18 +19,11 @@ pub struct JackEditorSelection {
 pub struct JackConfig {
     #[dsl(block)]
     pub camera: Camera,
-    pub active_fixture_id: String,
     pub jack_query: String,
     pub jack_result_json: String,
-    pub editor_engagement_input: String,
-    pub graph_engagement_input: String,
-    pub results_engagement_input: String,
-    pub reorganize_epoch: u64,
     #[dsl(block)]
     pub editor_selection: Option<JackEditorSelection>,
     pub lod_mode_by_window: BTreeMap<String, String>,
-    pub revision: u64,
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -85,17 +74,10 @@ impl Default for JackConfig {
     fn default() -> Self {
         Self {
             camera: Camera::default(),
-            active_fixture_id: String::new(),
             jack_query: String::new(),
             jack_result_json: String::new(),
-            editor_engagement_input: String::new(),
-            graph_engagement_input: String::new(),
-            results_engagement_input: String::new(),
-            reorganize_epoch: 0,
             editor_selection: None,
             lod_mode_by_window: BTreeMap::new(),
-            revision: 0,
-            locale: "en-US".into(),
         }
     }
 }

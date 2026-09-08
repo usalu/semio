@@ -1,18 +1,18 @@
 {
   "schema": "puzzle.2d.fixture",
   "camera": {
-    "x": 0.0,
-    "y": 0.0,
-    "zoom": 1.0
+    "x": 0,
+    "y": 0,
+    "zoom": 1
   },
   "nodes": [
     {
       "id": "node-a",
       "nodeKind": "node-kind-a",
       "shape": "circle",
-      "x": 0.0,
-      "y": 0.0,
-      "radius": 10.0,
+      "x": 0,
+      "y": 0,
+      "radius": 10,
       "text": "Alpha Prime",
       "iconKind": "icon-alpha",
       "anchor": "fixed",
@@ -20,7 +20,7 @@
         {
           "id": "handle-1",
           "handleKind": "handle-kind-a",
-          "angle": 0.0
+          "angle": 0
         },
         {
           "id": "handle-spare",
@@ -33,16 +33,16 @@
       "id": "node-b",
       "nodeKind": "node-kind-b",
       "shape": "rectangle",
-      "x": 40.0,
-      "y": 20.0,
-      "width": 30.0,
-      "height": 12.0,
+      "x": 40,
+      "y": 20,
+      "width": 30,
+      "height": 12,
       "anchor": "fixed",
       "handles": [
         {
           "id": "handle-2",
           "handleKind": "handle-kind-b",
-          "angle": 3.0
+          "angle": 3
         }
       ]
     }
@@ -53,14 +53,14 @@
       "source": "handle-1",
       "target": "handle-2",
       "edgeKind": "edge-kind-a",
-      "gap": 1.0,
-      "shift": 0.0,
-      "rise": 0.0,
-      "rotation": 0.0,
-      "turn": 0.0,
-      "tilt": 0.0,
-      "x": 0.0,
-      "y": 0.0,
+      "gap": 1,
+      "shift": 0,
+      "rise": 0,
+      "rotation": 0,
+      "turn": 0,
+      "tilt": 0,
+      "x": 0,
+      "y": 0,
       "sourceTip": "none",
       "targetTip": "arrow"
     }

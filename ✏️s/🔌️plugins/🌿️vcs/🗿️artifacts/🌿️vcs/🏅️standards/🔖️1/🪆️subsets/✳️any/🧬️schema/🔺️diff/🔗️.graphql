@@ -9,7 +9,6 @@ type VcsDiff {
   status: String @state(class: ARTIFACT)
   tags: VcsTagsDelta @state(class: ARTIFACT)
   selectedCheckpointIds: VcsStringList @state(class: PRESENCE)
-  locale: String @state(class: CONFIG)
 }
 
 type VcsStringList {

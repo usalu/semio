@@ -1,4 +1,3 @@
-
 //! 🔒️ Byte-level `OpBinary` round-trip guard for the semantic-mutations-overhaul vocabulary
 //! (ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`). The pre-overhaul whole-record-upsert / whole-document-replace wire
 //! bytes this guard used to freeze no longer exist — that vocabulary is banned outright, not
@@ -6,8 +5,8 @@
 //! (`print_op`/`parse_op`, `encode_op`/`decode_op`) instead of pinning byte literals for a wire
 //! shape this ticket deliberately changed.
 use super::*;
-use crate::Puzzle2dNode;
 use crate::standards::v1::subsets::any::schema::mutations::{change_manifest_id, connect_handles, create_node, delete_node, disconnect_handles, move_node};
+use crate::Puzzle2dNode;
 use protocol::OpText;
 
 fn ops() -> Vec<Puzzle2dMutation> {

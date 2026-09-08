@@ -7,8 +7,7 @@
 use crate::JpgSnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::dimensions::{compute_jpg_dimensions, JpgDimensions};
-
+use super::dimensions::{compute_jpg_dimensions};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a jpg snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `dimensions`, backed by the `📐dimensions/` slug dir).
@@ -82,3 +81,8 @@ pub fn jpg_artifact_inference_descriptor() -> framework_schema::ArtifactInferenc
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::dimensions::JpgDimensions;
+//#endregion 🔁️Re-exports

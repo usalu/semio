@@ -293,6 +293,8 @@ function relativeScriptInputs(entries, workspaceRoot) {
       const resolved = createRequire(path).resolve(entry.fileName);
       if (nxPath(relative(workspaceRoot, resolved)).startsWith("../")) throw new Error(`Command import escapes workspace: ${resolved}`);
       visit(resolved);
+      const declaration = resolved.replace(/\.(?:[cm]?js)$/, ".d.ts");
+      if (declaration !== resolved && existsSync(declaration)) visit(declaration);
     }
   };
   for (const entry of entries) visit(resolve(entry));
@@ -706,6 +708,14 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} react ${profile}` },
       };
     }
+    const name = `build-${playground.variant}-react-release`;
+    result[name] = {
+      cache: true,
+      outputs: [`{projectRoot}/dist/${name}`],
+      inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*", transitive: true }, { runtime: `bun ${JSON.stringify(nxPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
+      dependsOn: [...result[`prepare-${playground.variant}-react-release`].dependsOn, "@semio-tech/assets:build"],
+      options: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react release`, forwardAllArgs: true },
+    };
   }
   return result;
 }

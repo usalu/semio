@@ -1,7 +1,7 @@
 //! 🧬️ Block5d artifact schema — every field with its state class.
 
-use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, Block5dSnapshot};
-use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
+use crate::{Block5dSnapshot};
+
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -40,8 +40,6 @@ pub struct Block5dArtifact {
     pub meta: BlockMeta,
     #[state(presence)]
     pub selected_ids: Vec<String>,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -89,7 +87,6 @@ impl Block5dArtifact {
             camera3d: snapshot.camera3d,
             meta: snapshot.meta,
             selected_ids: Vec::new(),
-            locale: "en-US".into(),
         }
     }
 
@@ -300,3 +297,19 @@ pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> Str
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::BlockKindIdentity;
+pub use crate::Block5dPart2d;
+pub use crate::Block5dPart3d;
+pub use crate::BlockRepresentation;
+pub use crate::Block5dGripKind;
+pub use crate::Block5dGripTemplate;
+pub use crate::BlockCompatibilityRule;
+pub use crate::BlockAttribute;
+pub use crate::BlockAuthor;
+pub use crate::BlockCamera2d;
+pub use crate::BlockCamera3d;
+pub use crate::BlockMeta;
+//#endregion 🔁️Re-exports

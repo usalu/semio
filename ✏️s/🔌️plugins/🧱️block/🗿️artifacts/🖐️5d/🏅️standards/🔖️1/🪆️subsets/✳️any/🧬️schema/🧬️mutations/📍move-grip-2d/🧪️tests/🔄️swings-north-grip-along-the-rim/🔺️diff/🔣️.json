@@ -19,14 +19,14 @@
             "angle": 1.5,
             "radius2d": 0.45,
             "position": [
-              0.0,
-              1.0,
-              0.0
+              0,
+              1,
+              0
             ],
             "direction": [
-              0.0,
-              1.0,
-              0.0
+              0,
+              1,
+              0
             ],
             "radius3d": 0.25
           }
@@ -41,6 +41,5 @@
   "camera2d": null,
   "camera3d": null,
   "meta": null,
-  "selectedIds": null,
-  "locale": null
+  "selectedIds": null
 }

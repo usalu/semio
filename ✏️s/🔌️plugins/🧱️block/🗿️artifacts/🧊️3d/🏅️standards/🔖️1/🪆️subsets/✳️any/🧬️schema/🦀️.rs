@@ -1,8 +1,7 @@
 //! 🧬️ Block3d artifact schema — every field with its state class.
 
-use crate::{Block3dBrushPreview, Block3dWindowView};
-use crate::{Block3dSnapshot, Block3dVortexKindExtra, Block3dVortexTemplate};
-use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
+
+use crate::{Block3dSnapshot, Block3dVortexKindExtra};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 
@@ -41,8 +40,6 @@ pub struct Block3dArtifact {
     pub active_representation_id: Option<String>,
     #[state(presence)]
     pub wanted_tags: Vec<String>,
-    #[state(config)]
-    pub locale: String,
     #[state(config)]
     pub windows: Vec<Block3dWindowView>,
     #[state(config)]
@@ -102,7 +99,6 @@ impl Block3dArtifact {
             selected_ids: Vec::new(),
             active_representation_id: None,
             wanted_tags: Vec::new(),
-            locale: "en-US".into(),
             windows: Vec::new(),
             brush_vortex_kind_id: None,
             brush_radius: 0.25,
@@ -305,3 +301,17 @@ pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> Str
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::BlockKindIdentity;
+pub use crate::BlockRepresentation;
+pub use crate::Block3dVortexTemplate;
+pub use crate::BlockCompatibilityRule;
+pub use crate::BlockAttribute;
+pub use crate::BlockAuthor;
+pub use crate::BlockCamera3d;
+pub use crate::BlockMeta;
+pub use crate::Block3dWindowView;
+pub use crate::Block3dBrushPreview;
+//#endregion 🔁️Re-exports

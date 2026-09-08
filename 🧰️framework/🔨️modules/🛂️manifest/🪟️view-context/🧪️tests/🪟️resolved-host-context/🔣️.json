@@ -1,0 +1,77 @@
+{
+  "valid": {
+    "locale": "de",
+    "terminology": "reuse",
+    "activeModeId": "edit",
+    "windowInstances": [
+      {
+        "id": "left",
+        "windowKindId": "graph"
+      },
+      {
+        "id": "right",
+        "windowKindId": "graph"
+      }
+    ],
+    "activeUtilityByWindowId": {
+      "right": "measure"
+    }
+  },
+  "invalid": [
+    {
+      "name": "missing-locale",
+      "remove": [
+        "locale"
+      ]
+    },
+    {
+      "name": "missing-terminology",
+      "remove": [
+        "terminology"
+      ]
+    },
+    {
+      "name": "unsupported-locale",
+      "set": {
+        "locale": "fr"
+      }
+    },
+    {
+      "name": "unknown-field",
+      "set": {
+        "pluginLocale": "en"
+      }
+    },
+    {
+      "name": "invalid-window",
+      "set": {
+        "windowInstances": [
+          {
+            "id": "",
+            "windowKindId": "graph"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unknown-window-field",
+      "set": {
+        "windowInstances": [
+          {
+            "id": "left",
+            "windowKindId": "graph",
+            "locale": "en"
+          }
+        ]
+      }
+    },
+    {
+      "name": "invalid-utility",
+      "set": {
+        "activeUtilityByWindowId": {
+          "right": 32
+        }
+      }
+    }
+  ]
+}

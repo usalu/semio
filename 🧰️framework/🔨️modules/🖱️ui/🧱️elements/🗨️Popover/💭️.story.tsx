@@ -10,7 +10,7 @@
 
 import { Button, Input, Popover, PopoverContent, PopoverTrigger } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️story.ts";
+import type { Meta, StoryObj } from "../../🧪️tests/📚️storybook-types/🟦️.ts";
 
 // 🔷️#region 🌐️Popover
 const Settings = createIconComponent("settings");

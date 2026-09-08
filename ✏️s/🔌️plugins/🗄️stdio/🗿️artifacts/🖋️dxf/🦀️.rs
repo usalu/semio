@@ -23,7 +23,7 @@ pub const STDIO_DXF_DOCUMENT_SCHEMA: &str = "stdio.dxf";
 pub const DXF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.dxf";
 
 /// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     let factories = native_codecs();

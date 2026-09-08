@@ -1,10 +1,9 @@
 //! 📚️ Trinity Jack app — Catalogue panel (fixture presets, example queries, manifest kinds).
 
-use crate::editor::jack::config::JackConfig;
 use crate::editor::jack::terminology::TrinityJackLabels;
 use semio_framework_plugin::{tree_item, tree_item_with_action, PanelTreeBuilder};
 
-pub(crate) fn render(cfg: &JackConfig, labels: &TrinityJackLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub(crate) fn render(labels: &TrinityJackLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let jack_action = crate::editor::jack::jack_action;
     let preset_query = crate::editor::jack::commands::query::preset_query;
     let fixtures = [("nakagin", "Nakagin — Table"), ("branch-chain", "Branch — Graph")];
@@ -36,11 +35,5 @@ pub(crate) fn render(cfg: &JackConfig, labels: &TrinityJackLabels) -> semio_fram
         .section("trinity-jack-catalogue.fixtures", Some(crate::editor::jack::ui_label(labels.fixtures.as_str())?), true, fixture_items)?
         .section("trinity-jack-catalogue.examples", Some(crate::editor::jack::ui_label(labels.example_queries.as_str())?), true, example_items)?
         .section("trinity-jack-catalogue.kinds", Some(crate::editor::jack::ui_label(labels.manifest_kinds.as_str())?), false, kind_items)?;
-    let builder = if cfg.active_fixture_id.is_empty() {
-        builder
-    } else {
-        let selected_id = builder.item_id("fixture", &cfg.active_fixture_id)?;
-        builder.selected([selected_id.as_str().to_string()])?
-    };
     builder.build()
 }

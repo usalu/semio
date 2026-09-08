@@ -44,3 +44,7 @@ type Din4108Artifact {
   declaredApplicationClass: String
   selectedCheckIndex: Int
 }
+
+type Din4108LayerList {
+  values: [String!]!
+}

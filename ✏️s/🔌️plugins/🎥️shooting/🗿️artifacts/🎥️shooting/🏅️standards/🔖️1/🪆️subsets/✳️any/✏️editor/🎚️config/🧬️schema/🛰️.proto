@@ -20,7 +20,6 @@ message ShootingConfig {
   // @state config
   string active_utility_id = 12;
   // @state config
-  string locale = 13;
 }
 
 message ShootingCamera {

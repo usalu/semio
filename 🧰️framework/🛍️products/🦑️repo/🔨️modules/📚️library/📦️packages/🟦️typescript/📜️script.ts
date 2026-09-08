@@ -60,25 +60,25 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "mutation-ticket-role-routing") {
       if (segments.length !== 1) throw new Error("Expected test mutation-ticket-role-routing");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📋️mutation-inventory/🎫️ticket-role-routing/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎫️ticket-role-routing/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "mutation-source-index-capture") {
       if (segments.length !== 1) throw new Error("Expected test mutation-source-index-capture");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📋️mutation-inventory/📸️source-index-capture/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📸️source-index-capture/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "mutation-source-roster-roles") {
       if (segments.length !== 1) throw new Error("Expected test mutation-source-roster-roles");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📋️mutation-inventory/🎭️source-roster-roles/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎭️source-roster-roles/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
     if (segments[0] === "mutation-source-file-facts") {
       if (segments.length > 2 || segments[1] !== undefined && segments[1] !== "reference") throw new Error("Expected test mutation-source-file-facts [reference]");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📋️mutation-inventory/🧾️source-file-facts/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧾️source-file-facts/🟦️.ts");
       const selection = segments[1] === "reference" ? ["-t", "^mutation source-file facts (vectors|independent suffix reference|reference oracle)"] : [];
       await runTestBudgeted(process.execPath, ["test", source, ...selection], { cwd: this.repoRoot });
       return;
@@ -108,7 +108,7 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "metadata-source-provider") {
       const { rest } = resolveTestLevel(segments.slice(1));
-      await runTestBudgeted(process.execPath, ["test", "./🔬️index.test.ts", "-t", "mutation metadata source provider", ...rest], { cwd: this.root });
+      await runTestBudgeted(process.execPath, ["test", "../../🧪️tests/🔬️workspace-contract/🟦️.ts", "-t", "mutation metadata source provider", ...rest], { cwd: this.root });
       return;
     }
     if (segments[0] === "rust-physical-reference-context") {
@@ -312,19 +312,19 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "artifact-source-residue") {
       if (segments.length !== 1) throw new Error("Artifact source residue accepts no extra arguments");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🔬️index.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source, "--timeout", "120000", "-t", "rejects ignored and unplanned residual children in a projected source owner without following links"], { cwd: this.repoRoot, budgetMs: 120000 });
       return;
     }
     if (segments[0] === "artifact-source-commit") {
       if (segments.length !== 1) throw new Error("Artifact source commit accepts no extra arguments");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🔬️index.test.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source, "--timeout", "120000", "-t", "rolls back and atomically applies CAD and Draw projections to an empty second plan"], { cwd: this.repoRoot, budgetMs: 120000 });
       return;
     }
     if (segments[0] === "transaction-process-observer") {
       if (segments.length !== 1) throw new Error("Transaction process observer accepts no extra arguments");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🧪️tests/🧪️transaction-process-ownership/🧪️test/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🧪️tests/⚙️transaction-process-ownership/🟦️.ts");
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
@@ -430,7 +430,7 @@ class TestScript extends BundleScript {
       return;
     }
     const { rest } = resolveTestLevel(segments);
-    await runTestBudgeted(process.execPath, ["test", "./🔬️index.test.ts", ...rest], { cwd: this.root });
+    await runTestBudgeted(process.execPath, ["test", "../../🧪️tests/🔬️workspace-contract/🟦️.ts", ...rest], { cwd: this.root });
   }
 }
 

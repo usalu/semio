@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/dxf/r12/header/inference/text.json",
   "title": "DxfInferenceText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of DxfInference: the instance is the serialized document this facet's grammar and codec speak."
 }

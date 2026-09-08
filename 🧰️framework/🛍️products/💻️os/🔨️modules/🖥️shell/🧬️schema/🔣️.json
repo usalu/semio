@@ -2606,11 +2606,11 @@
     },
     "UiChromeLayout": {
       "title": "UiChromeLayout",
-      "description": "📐️ UI chrome density.",
+      "description": "📐️ User-selected desktop/tablet chrome layout.",
       "type": "string",
       "enum": [
-        "default",
-        "compact"
+        "desktop",
+        "tablet"
       ]
     },
     "UiDriver": {
@@ -2644,6 +2644,64 @@
         "de"
       ]
     },
+    "UiPreferences": {
+      "title": "UiPreferences",
+      "description": "⚙️ Persisted local-only OS UI preferences. Null selected values mean the user has not chosen a value yet.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "appearance",
+        "layout",
+        "driverId",
+        "customDrivers",
+        "locale",
+        "terminology",
+        "themeId",
+        "customThemes",
+        "keybindingOverrides"
+      ],
+      "properties": {
+        "appearance": {
+          "anyOf": [
+            { "$ref": "#/$defs/UiAppearance" },
+            { "type": "null" }
+          ]
+        },
+        "layout": {
+          "anyOf": [
+            { "$ref": "#/$defs/UiChromeLayout" },
+            { "type": "null" }
+          ]
+        },
+        "driverId": {
+          "type": ["string", "null"]
+        },
+        "customDrivers": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/UiDriver" }
+        },
+        "locale": {
+          "anyOf": [
+            { "$ref": "#/$defs/UiLocale" },
+            { "type": "null" }
+          ]
+        },
+        "terminology": {
+          "type": ["string", "null"]
+        },
+        "themeId": {
+          "type": ["string", "null"]
+        },
+        "customThemes": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/UiTheme" }
+        },
+        "keybindingOverrides": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
     "UiTheme": {
       "title": "UiTheme",
       "description": "🎨️ A user-defined UI theme.",
@@ -2652,7 +2710,7 @@
       "required": [
         "themeId",
         "label",
-        "tokens"
+        "config"
       ],
       "properties": {
         "themeId": {
@@ -2661,11 +2719,8 @@
         "label": {
           "type": "string"
         },
-        "tokens": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+        "config": {
+          "description": "Theme-specific configuration; any JSON value."
         }
       }
     }

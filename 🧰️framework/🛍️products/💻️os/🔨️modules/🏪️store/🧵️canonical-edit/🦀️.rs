@@ -10,7 +10,7 @@ pub use borrowed::{ArtifactCanonicalJsonArray, ArtifactCanonicalJsonObject, Arti
 mod reader;
 pub use reader::ArtifactCanonicalJsonReader;
 #[cfg(test)]
-#[path = "🧵️borrowed/🧪️tests/🦀️.rs"]
+#[path = "🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs"]
 mod borrowed_tests;
 
 //#region 🧬️TypedCanonicalSource

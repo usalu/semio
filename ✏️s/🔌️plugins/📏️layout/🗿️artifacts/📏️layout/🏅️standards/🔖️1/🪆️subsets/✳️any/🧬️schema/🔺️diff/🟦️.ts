@@ -53,7 +53,6 @@ export interface LayoutDiff {
   /** @state config */
   dropPreview?: LayoutDropPreviewState;
   /** @state config */
-  locale?: string;
   /** @state artifact */
   hoveredId?: string | null;
 }
@@ -426,4 +425,59 @@ export interface FramePatch {
   stroke?: [number, number, number, number] | null;
   wrap_mode?: string;
   columns?: number;
+}
+
+//#region 🚪️Parsers
+/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
+export class layoutLayoutDiffGuardRefusal extends Error {
+  constructor(readonly at: string, readonly why: string) {
+    super(`${at}: ${why}`);
+  }
+}
+
+const layoutLayoutDiffGuardReject = (at: string, why: string): never => {
+  throw new layoutLayoutDiffGuardRefusal(at, why);
+};
+
+type layoutLayoutDiffGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
+type layoutLayoutDiffGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
+type layoutLayoutDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
+
+export const layoutLayoutDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : layoutLayoutDiffGuardReject(at, "value is not an object");
+export const layoutLayoutDiffGuardArray = (value: unknown, at: string, bounds: layoutLayoutDiffGuardSizeBounds = {}): readonly unknown[] => {
+  if (!Array.isArray(value)) return layoutLayoutDiffGuardReject(at, "value is not an array");
+  if (bounds.minItems !== undefined && value.length < bounds.minItems) layoutLayoutDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
+  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) layoutLayoutDiffGuardReject(at, `array has more than ${bounds.maxItems} items`);
+  return value;
+};
+export const layoutLayoutDiffGuardString = (value: unknown, at: string, bounds: layoutLayoutDiffGuardTextBounds = {}): string => {
+  if (typeof value !== "string") return layoutLayoutDiffGuardReject(at, "value is not a string");
+  const length = [...value].length;
+  if (bounds.minLength !== undefined && length < bounds.minLength) layoutLayoutDiffGuardReject(at, `string is shorter than ${bounds.minLength}`);
+  if (bounds.maxLength !== undefined && length > bounds.maxLength) layoutLayoutDiffGuardReject(at, `string is longer than ${bounds.maxLength}`);
+  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) layoutLayoutDiffGuardReject(at, `string does not match ${bounds.pattern}`);
+  return value;
+};
+export const layoutLayoutDiffGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : layoutLayoutDiffGuardReject(at, "value is not a boolean"));
+export const layoutLayoutDiffGuardNumber = (value: unknown, at: string, bounds: layoutLayoutDiffGuardRangeBounds = {}): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return layoutLayoutDiffGuardReject(at, "value is not a finite number");
+  if (bounds.minimum !== undefined && value < bounds.minimum) layoutLayoutDiffGuardReject(at, `number is below ${bounds.minimum}`);
+  if (bounds.maximum !== undefined && value > bounds.maximum) layoutLayoutDiffGuardReject(at, `number is above ${bounds.maximum}`);
+  return value;
+};
+export const layoutLayoutDiffGuardInteger = (value: unknown, at: string, bounds: layoutLayoutDiffGuardRangeBounds = {}): number =>
+  Number.isSafeInteger(value) ? layoutLayoutDiffGuardNumber(value, at, bounds) : layoutLayoutDiffGuardReject(at, "value is not an integer");
+export const layoutLayoutDiffGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
+  members.includes(value as T) ? (value as T) : layoutLayoutDiffGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const layoutLayoutDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
+  value === expected ? expected : layoutLayoutDiffGuardReject(at, `value is not ${String(expected)}`);
+//#endregion 🚪️Parsers
+
+export function parseLayoutDiff(value: unknown, at = "$"): LayoutDiff {
+  const row = layoutLayoutDiffGuardObject(value, at);
+  return {
+    schema: row["schema"] === undefined ? undefined : layoutLayoutDiffGuardString(row["schema"], `${at}.schema`),
+    value: row["value"] === undefined ? undefined : layoutLayoutDiffGuardString(row["value"], `${at}.value`),
+  };
 }

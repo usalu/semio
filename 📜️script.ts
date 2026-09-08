@@ -432,8 +432,7 @@ export class SetupScript extends Script {
 
   private runDependencies(kind: string): void {
     const opts = { cwd: this.root, ...orchestratorBudgetOpts() };
-    if (kind === "javascript") runCmd("bun", ["install", "--frozen-lockfile"], opts);
-    else if (kind === "python") runCmd("uv", ["sync", "--locked", "--all-packages", "--all-groups"], opts);
+    if (kind === "python") runCmd("uv", ["sync", "--locked", "--all-packages", "--all-groups"], opts);
     else if (kind === "cargo") runCmd("cargo", ["fetch", "--locked", "--manifest-path", "Cargo.toml"], opts);
     else if (kind === "go") runCmd("go", ["mod", "download"], { ...opts, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
     else if (kind === "dotnet") console.log("[deps-dotnet] Nx project restores completed");
@@ -1036,15 +1035,21 @@ export class LintScript extends Script {
 
 //#region 🔖️VerifyScript
 /** 🦀️ Shipping plugins, extensions, and their artifact libraries from the repository's package catalog. */
-function pluginCrateNames(root: string): string[] {
-  const names = discoverPackages(root)
-    .filter((pkg) => pkg.lang === "🦀️rust")
-    .flatMap((pkg) => {
-      const manifest = Bun.TOML.parse(readFileSync(join(root, pkg.manifestPath), "utf8"));
-      const name = (manifest.package as { name?: string } | undefined)?.name;
-      if (!name) throw new Error(`[verify rust-warnings] package name missing in ${pkg.manifestPath}.`);
-      return pkg.role === "plugin" || pkg.role === "extension" || name.startsWith("semio-s-artifact-") ? [name] : [];
-    });
+function pluginCrateNames(root: string, includeSupport = false): string[] {
+  const workspace = Bun.TOML.parse(readFileSync(join(root, "Cargo.toml"), "utf8")).workspace as { members: string[]; exclude?: string[] };
+  const excluded = (workspace.exclude ?? []).map((pattern) => new Bun.Glob(pattern));
+  const manifests = workspace.members.flatMap((member) => {
+    const paths = [...new Bun.Glob(`${member}/Cargo.toml`).scanSync({ cwd: root, onlyFiles: true })];
+    if (!paths.length) throw new Error(`[verify rust-warnings] member manifest missing for ${member}.`);
+    return paths.filter((path) => !excluded.some((pattern) => pattern.match(path.slice(0, -"/Cargo.toml".length))));
+  });
+  const names = manifests.flatMap((path) => {
+    const manifest = Bun.TOML.parse(readFileSync(join(root, path), "utf8"));
+    const pkg = manifest.package as { name?: string; metadata?: { semio?: { role?: string } } } | undefined;
+    const name = pkg?.name;
+    if (!name) throw new Error(`[verify rust-warnings] package name missing in ${path}.`);
+    return ["plugin", "extension"].includes(pkg?.metadata?.semio?.role ?? "") || name.startsWith("semio-s-artifact-") || name.startsWith("semio-framework-artifact-") || (includeSupport && name.startsWith("semio-s-plugin-")) ? [name] : [];
+  });
   return [...new Set(names)].sort();
 }
 
@@ -1054,7 +1059,7 @@ export function rustWarningTargetScope(root: string, target: string | undefined)
   if (target === "wasm32-wasip2") return { packages: pluginCrateNames(root), scopeArgs: ["--lib"], targetArgs: ["--target", target], packageArgs: {} };
   if (target === "wasm32-unknown-unknown") return { packages: ["semio-framework-actor", renderer], scopeArgs: ["--lib"], targetArgs: ["--target", target], packageArgs: {} };
   if (target && target !== "native") throw new Error(`[verify rust-warnings] unknown target ${target} (expected native | wasm32-wasip2 | wasm32-unknown-unknown).`);
-  return { packages: ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", renderer, ...pluginCrateNames(root)], scopeArgs: ["--all-targets"], targetArgs: [], packageArgs: { [renderer]: ["--features", "native-bin"] } };
+  return { packages: ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", renderer, ...pluginCrateNames(root, true)], scopeArgs: ["--all-targets"], targetArgs: [], packageArgs: { [renderer]: ["--features", "native-bin"] } };
 }
 
 /** 🧪️ Validates language-neutral target vectors and independently compares shipping coverage with Cargo metadata. */
@@ -1079,7 +1084,7 @@ export function rustWarningScopeChecks(root: string): number {
   const cargo = Bun.spawnSync(["cargo", "metadata", "--no-deps", "--format-version=1"], { cwd: root });
   if (cargo.exitCode !== 0) throw new Error(`[verify rust-warnings] Cargo metadata failed: ${cargo.stderr.toString()}`);
   const metadata = JSON.parse(cargo.stdout.toString()) as { packages: { name: string; metadata?: { semio?: { role?: string } } | null }[] };
-  const oracle = metadata.packages.filter((pkg) => ["plugin", "extension"].includes(pkg.metadata?.semio?.role ?? "") || pkg.name.startsWith("semio-s-artifact-")).map((pkg) => pkg.name).sort();
+  const oracle = metadata.packages.filter((pkg) => ["plugin", "extension"].includes(pkg.metadata?.semio?.role ?? "") || (pkg.name.startsWith("semio-s-artifact-") || pkg.name.startsWith("semio-framework-artifact-"))).map((pkg) => pkg.name).sort();
   const components = rustWarningTargetScope(root, "wasm32-wasip2").packages;
   if (JSON.stringify(components) !== JSON.stringify(oracle)) throw new Error(`[verify rust-warnings] repository discovery differs from Cargo's shipping package catalog.`);
   console.log(`[verify rust-warnings] ${fixture.cases.length} target vectors, ${fixture.rejectedTargets.length} rejection vectors, ${oracle.length} Cargo-verified component crates.`);
@@ -6887,7 +6892,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   try {
     fixedOperationFixture = toolJobFixedOperationFixtureRun(root);
     fixedOperationRustFixtureFresh =
-      policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/🧪️fixed-operation-registry-cases.rs") === toolJobFixedOperationRustFixtureSource(root);
+      policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧪️fixed-operation-registry-cases/🦀️.rs") === toolJobFixedOperationRustFixtureSource(root);
   } catch {
     fixedOperationFixture = undefined;
   }
@@ -7159,6 +7164,45 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "layering") {
       this.runLayering(segments.slice(1));
+      return;
+    }
+    if (segments[0] === "browser-actor-host-context") {
+      if (segments[1] === "worker") {
+        const result = Bun.spawn(["bun", join(this.root, "node_modules/vitest/vitest.mjs"), "run", "--config", join(this.root, "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/vitest.config.ts"), "-t", "browser document actor transfers one verified cold pair", "--maxWorkers=1", "--testTimeout=300000", "--silent=false", "--disableConsoleIntercept"], { cwd: this.root, stdout: "inherit", stderr: "inherit" });
+        if (await result.exited !== 0) throw new Error("Browser actor host context worker test failed");
+        return;
+      }
+      const { testBrowserActorHostContext } = await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🧪️tests/🪟️host-opening-context/🟦️.ts");
+      testBrowserActorHostContext();
+      return;
+    }
+    if (segments[0] === "resolved-host-context") {
+      const { testResolvedHostContext } = await import("./🧰️framework/🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/🪟️resolved-host-context/🟦️.ts");
+      testResolvedHostContext();
+      return;
+    }
+    if (segments[0] === "surface-view-context") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", segments[1] === "menu" ? "context_menu_wire" : "surface_context", "--", "--nocapture"], join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"));
+      return;
+    }
+    if (segments[0] === "window-view-context") {
+      if (segments[1] === "native") {
+        const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "window_view_context_uses_the_addressed_instance"], join(this.root, "🧰️framework/📦️packages/🦀️rust"));
+        return;
+      }
+      const { testWindowViewContext } = await import("./🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🔬️window-view-context/🟦️.ts");
+      testWindowViewContext();
+      return;
+    }
+    if (segments[0] === "abstraction-ownership") {
+      abstractionOwnershipChecks(this.root);
+      if (segments[1] === "test") return;
+      const breaches = policyAbstractionOwnershipBreaches(this.root);
+      for (const breach of breaches) console.log(`[verify abstraction-ownership] ${breach.scope}: ${breach.summary}`);
+      console.log(`[verify abstraction-ownership] ${breaches.length} misplaced declarations.`);
+      if (breaches.length && segments[1] !== "report") throw new Error("OS-owned preferences or host controls are declared by plugin surfaces.");
       return;
     }
     await this.runGate();
@@ -7532,7 +7576,7 @@ export class VerifyScript extends Script {
       const jobRuntime = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
       const artifactRetainedCommand = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs");
       const fixture = toolJobFixedOperationFixtureRun(this.root);
-      const rustFixture = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️fixtures/🧪️fixed-operation-registry-cases.rs");
+      const rustFixture = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧪️fixed-operation-registry-cases/🦀️.rs");
       if (rustFixture !== toolJobFixedOperationRustFixtureSource(this.root)) throw new Error("[verify interactivity tool-jobs] generated fixed-operation Rust fixture is stale.");
       const plugin = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
       const activation = toolJobFactoryProofActivationScan(this.root);
@@ -8325,7 +8369,7 @@ const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE = "✏️s/🔌️plugin
 const INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs";
 const INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs";
-const INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧪️fixtures/🔣️.json";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧫️fixtures/🔣️.json";
 const INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts";
 const INTERACTIVITY_AUDIT_UI_RECONCILE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/♻️reconcile.rs";
 const INTERACTIVITY_AUDIT_UI_VALUE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🎬️action.rs";
@@ -8596,39 +8640,39 @@ type InteractivityAuditReport = {
 function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const findings = interactivityAuditScan(repoRoot);
   interactivityShardExecutorSelfTests();
-  const executor = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES[0]);
+  const executor = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES[0]);
   const shard = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
   for (const failure of interactivityShardExecutorFailures(executor, shard)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES[0], line: 0, text: failure });
   interactivityMcpHttpTransportSelfTests();
-  const mcpTransport = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE);
-  const mcpBridge = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_MCP_BRIDGE_FILE);
-  const mcpRoot = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_MCP_ROOT_FILE);
+  const mcpTransport = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE);
+  const mcpBridge = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_MCP_BRIDGE_FILE);
+  const mcpRoot = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_MCP_ROOT_FILE);
   for (const failure of interactivityMcpHttpTransportFailures(mcpTransport, mcpBridge, mcpRoot)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE, line: 0, text: failure });
   interactivityStoreSyncSelfTests();
-  const storeSync = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_STORE_SYNC_FILE);
+  const storeSync = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_STORE_SYNC_FILE);
   for (const failure of interactivityStoreSyncFailures(storeSync)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_STORE_SYNC_FILE, line: 0, text: failure });
   interactivityDbIoSelfTests();
-  const dbStorage = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_STORAGE_FILE);
-  const dbSqlite = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_SQLITE_FILE);
-  const dbPostgres = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_POSTGRES_FILE);
-  const dbNeo4j = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_NEO4J_FILE);
-  const dbEngine = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
-  const dbSync = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_SYNC_FILE);
-  const dbArtifact = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE);
-  const dbWal = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_WAL_FILE);
-  const sprFormat = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_SPR_FORMAT_FILE);
-  const packFormat = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PACK_FORMAT_FILE);
-  const dbSnapshot = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE);
-  const dbIndex = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_INDEX_FILE);
-  const dbCompact = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_COMPACT_FILE);
-  const dbCluster = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_CLUSTER_FILE);
-  const dbState = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_STATE_FILE);
-  const dbQuery = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_QUERY_FILE);
-  const dbProjection = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_PROJECTION_FILE);
-  const dbRoot = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_ROOT_FILE);
-  const dbCli = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_CLI_FILE);
-  const dbTestkit = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_TESTKIT_FILE);
-  const hubBin = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_HUB_BIN_FILE);
+  const dbStorage = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_STORAGE_FILE);
+  const dbSqlite = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_SQLITE_FILE);
+  const dbPostgres = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_POSTGRES_FILE);
+  const dbNeo4j = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_NEO4J_FILE);
+  const dbEngine = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
+  const dbSync = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_SYNC_FILE);
+  const dbArtifact = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE);
+  const dbWal = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_WAL_FILE);
+  const sprFormat = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_SPR_FORMAT_FILE);
+  const packFormat = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PACK_FORMAT_FILE);
+  const dbSnapshot = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE);
+  const dbIndex = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_INDEX_FILE);
+  const dbCompact = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_COMPACT_FILE);
+  const dbCluster = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_CLUSTER_FILE);
+  const dbState = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_STATE_FILE);
+  const dbQuery = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_QUERY_FILE);
+  const dbProjection = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_PROJECTION_FILE);
+  const dbRoot = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_ROOT_FILE);
+  const dbCli = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_CLI_FILE);
+  const dbTestkit = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_TESTKIT_FILE);
+  const hubBin = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_HUB_BIN_FILE);
   for (const failure of interactivityDbIoFailures(dbStorage, dbSqlite, dbEngine, dbTestkit, hubBin)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_STORAGE_FILE, line: 0, text: failure });
   interactivityDbIoB1B6SelfTests();
   for (const failure of interactivityDbIoB1B6Failures(dbStorage, dbSqlite, dbPostgres, dbNeo4j, hubBin)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_STORAGE_FILE, line: 0, text: failure });
@@ -8667,39 +8711,39 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   interactivityVcsBridgeSelfTests();
   for (const failure of interactivityVcsBridgeFailures(dbEngine, dbCli)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
   interactivityPreparedRasterProducerSelfTests();
-  const preparedRaster = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE);
-  const preparedRasterDraw = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE);
-  const preparedRasterGpu = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE);
-  const canvasRaster = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE);
-  const interpreterRaster = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE);
-  const rendererGlue = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE);
-  const rendererHost = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE);
+  const preparedRaster = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE);
+  const preparedRasterDraw = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE);
+  const preparedRasterGpu = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE);
+  const canvasRaster = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE);
+  const interpreterRaster = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE);
+  const rendererGlue = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE);
+  const rendererHost = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE);
   for (const failure of interactivityPreparedRasterProducerFailures(preparedRaster, preparedRasterDraw, preparedRasterGpu, canvasRaster, interpreterRaster, rendererGlue, rendererHost)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, line: 0, text: failure });
   interactivityPuzzleFillEnvelopeSelfTests(repoRoot);
-  const puzzleFillEnvelope = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE);
-  const puzzleFillState = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE);
-  const puzzleFillGeometry = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE);
-  const puzzleFillAction = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE);
+  const puzzleFillEnvelope = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE);
+  const puzzleFillState = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE);
+  const puzzleFillGeometry = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE);
+  const puzzleFillAction = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE);
   for (const failure of interactivityPuzzleFillEnvelopeFailures(puzzleFillEnvelope, puzzleFillState, puzzleFillGeometry, puzzleFillAction)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, line: 0, text: failure });
-  const puzzleFillSchema = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE);
-  const puzzleFillTransport = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE);
-  const puzzleFillRenderer = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE);
+  const puzzleFillSchema = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE);
+  const puzzleFillTransport = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE);
+  const puzzleFillRenderer = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE);
   interactivityPuzzleFillP4eSelfTests(repoRoot);
   for (const failure of interactivityPuzzleFillP4eFailures(puzzleFillEnvelope, puzzleFillState, puzzleFillGeometry, puzzleFillSchema, puzzleFillTransport, puzzleFillRenderer)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, line: 0, text: failure });
-  const puzzle5dFillPrecompute = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE);
-  const puzzle5dFillWindow = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE);
-  const puzzle3dTerminology = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE);
-  const puzzle5dTerminology = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE);
-  const puzzleFillPreviewFixture = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE);
-  const puzzleFillRendererTest = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE);
+  const puzzle5dFillPrecompute = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE5D_FILL_PRECOMPUTE_FILE);
+  const puzzle5dFillWindow = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE5D_FILL_WINDOW_FILE);
+  const puzzle3dTerminology = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE3D_TERMINOLOGY_FILE);
+  const puzzle5dTerminology = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE5D_TERMINOLOGY_FILE);
+  const puzzleFillPreviewFixture = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_PREVIEW_FIXTURE_FILE);
+  const puzzleFillRendererTest = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_TEST_FILE);
   interactivityPuzzleFillPreviewJsonSelfTests(repoRoot);
   for (const failure of interactivityPuzzleFillPreviewJsonFailures(puzzleFillEnvelope, puzzleFillState, puzzleFillTransport, puzzle5dFillPrecompute, puzzle5dFillWindow, puzzleFillRenderer, puzzle3dTerminology, puzzle5dTerminology, puzzleFillPreviewFixture, puzzleFillRendererTest)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, line: 0, text: failure });
   interactivityLiveReconcileSelfTests(repoRoot);
-  const uiReconcile = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE);
-  const uiValue = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_UI_VALUE_FILE);
-  const kernel = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_KERNEL_FILE);
+  const uiReconcile = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE);
+  const uiValue = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_UI_VALUE_FILE);
+  const kernel = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_KERNEL_FILE);
   const kernelTurn = kernel.slice(kernel.indexOf("//#region 🔖️TurnResult"), kernel.indexOf("//#endregion 🔖️TurnResult"));
-  const pluginCentral = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE);
+  const pluginCentral = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE);
   const tableKit = pluginCentral.slice(pluginCentral.indexOf("pub const TABLE_WINDOW_COLUMNS"), pluginCentral.indexOf("//#endregion 🔖️TableWindowKit"));
   const tableKitFixtures = ["table_rows_max_plus_one_returns_the_exact_row_owner", "abandoned_table_rows_retire_one_row_action_or_cell_per_opportunity"].filter((fixture) => pluginCentral.includes(`fn ${fixture}`)).join("\n");
   const commandBridge = pluginCentral.slice(pluginCentral.indexOf("pub const UI_COMMAND_VALUE_DEPTH"), pluginCentral.indexOf("//#endregion 🔖️ActionFactory"));
@@ -8714,7 +8758,7 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
     INTERACTIVITY_AUDIT_UI_LAYOUT_FILE,
     INTERACTIVITY_AUDIT_UI_PRESENT_FILE,
   ].map((file) => policyReadFileSafe(repoRoot, file)).join("\n") + kernelTurn + tableKit + tableKitFixtures + commandBridge + commandBridgeFixtures;
-  const reactorPatches = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
+  const reactorPatches = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
   const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => policyReadFileSafe(repoRoot, file)).join("\n");
   for (const failure of interactivityLiveReconcileFailures(uiReconcile, reactorPatches, reactor, uiValue, uiSchema)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, line: 0, text: failure });
   interactivityMountedLayoutTextSelfTests(repoRoot);
@@ -8731,10 +8775,10 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const mountedFrameHost = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
   const mountedFrameSnapshot = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs");
   const headlessUiRuntimeGlue = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️.rs");
-  const mountedFrameShell = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_SHELL_FILE);
-  const mountedFrameServices = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_OS_SERVICES_FILE);
-  const mountedFrameEngineCanvas = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE);
-  const mountedFrameWorld3d = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_WORLD3D_FILE);
+  const mountedFrameShell = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_SHELL_FILE);
+  const mountedFrameServices = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_OS_SERVICES_FILE);
+  const mountedFrameEngineCanvas = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE);
+  const mountedFrameWorld3d = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_WORLD3D_FILE);
   const mountedFrameScenes = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
   for (const failure of interactivityMountedFrameTransactionFailures(rendererGlue, mountedFrameJob, mountedFrameHost, mountedFrameSnapshot, headlessUiRuntimeGlue, mountedFrameShell, mountedFrameEngineCanvas, mountedFrameWorld3d, preparedRaster, preparedRasterGpu, preparedRasterDraw, mountedInterpreter, mountedEngine, mountedPaint, mountedSlots, mountedFrameScenes, mountedFrameServices)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
@@ -10950,7 +10994,7 @@ function interactivityShardExecutorFailures(executorSource: string, shardSource:
 
 
 function interactivityProductionSource(source: string): string {
-  const lines = source.split(/\r?\n/);
+  const lines = source.split(POLICY_RUST_TEST_EVIDENCE_BOUNDARY, 1)[0].split(/\r?\n/);
   const spans = [...policyTestModSpans(lines), ...interactivityCfgTestItemSpans(lines)];
   return lines.filter((_, index) => !policyLineInTestMod(spans, index + 1)).join("\n");
 }
@@ -17322,17 +17366,20 @@ class CleanMechanismNewScript extends Script {
 //#endregion 🔖️CleanMechanismNewScript
 
 //#region 🔖️SchemaScript
-/** 🧪️ The third-party draft-07 oracle that keeps `semio_framework_schema`'s owned validator honest. */
-const SCHEMA_DRAFT07_ORACLE_SPEC = "🧰️framework/🔨️modules/🧬️schema/🧪️tests/✅️draft07-oracle/🟦️.ts";
+/** 🧪️ The tracked vitest project of `framework.schema`, which declares the module's own third-party oracle specs. */
+const SCHEMA_ORACLE_VITEST_CONFIG = "🧰️framework/🔨️modules/🧬️schema/vitest.config.ts";
 
 /** 🦀️ The crate whose registered test binaries produce the Rust-side evidence the schema gate consumes. */
 const SCHEMA_RUST_CRATE = "semio-framework-schema";
 
+/** 📤️ The tracked `(scope, export, format)` registry dump `schema entries` writes and `schema verify` reads. */
+const SCHEMA_RUST_ENTRIES_REFERENCE = "🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/📤️schema-export-entries-dump.json";
+
 /** 🧩️ Compiles every schema module against the owned draft-07 validator; `--out` keeps the JSON report. */
 const SCHEMA_MODULE_COMPILE_TEST = { test: "schema-module-compile", variable: "SEMIO_SCHEMA_MODULE_COMPILE_OUT" } as const;
 
-/** 📤️ Dumps every `(scope, export, format)` triple the linked crates register, for `verify --rust-entries`. */
-const SCHEMA_EXPORT_ENTRIES_TEST = { test: "schema-export-entries", variable: "SEMIO_SCHEMA_EXPORT_ENTRIES_OUT" } as const;
+/** 📤️ Dumps every `(scope, export, format)` triple the linked crates register, over the tracked reference dump. */
+const SCHEMA_EXPORT_ENTRIES_TEST = { test: "schema-export-entries", variable: "SEMIO_SCHEMA_EXPORT_ENTRIES_OUT", tracked: SCHEMA_RUST_ENTRIES_REFERENCE } as const;
 
 /** 🧬️ Scope-owned schema contracts: catalog generation, invariant checking and the generated index. */
 export class SchemaScript extends Script {
@@ -17461,9 +17508,11 @@ export class SchemaScript extends Script {
   }
 
   /**
-   * 🔒️ Proves the tracked catalog and index are exactly what the current sources render, and — with
-   * `--rust-entries <file>` — that the `(scope, export, format)` triples of
-   * `semio_framework_schema::schema_export_catalog_entries()` agree with the catalog rows.
+   * 🔒️ Proves the tracked catalog and index are exactly what the current sources render, and that the
+   * `(scope, export, format)` triples of `semio_framework_schema::schema_export_catalog_entries()` agree
+   * with the catalog rows. The triples come from the committed reference dump unless `--rust-entries <file>`
+   * names a fresh one, so the Rust half of the gate runs by default instead of only when a caller remembers
+   * the flag; `bun ./📜️script.ts schema entries` regenerates that reference from the crate.
    * `--rust-entries-complete` additionally demands that every catalogued scope registers its exports.
    */
   private verify(args: string[]): void {
@@ -17478,14 +17527,10 @@ export class SchemaScript extends Script {
     if (stale.length > 0) console.error(`[schema verify] stale generated output: ${stale.join(", ")}. Run bun ./📜️script.ts schema generate && bun ./📜️script.ts schema docs.`);
     else console.log(`[schema verify] catalog and index are current (${Object.keys(inventory.catalog.scopes).length} scopes, generator ${inventory.catalog.generator}).`);
     const entriesIndex = args.indexOf("--rust-entries");
-    if (entriesIndex < 0) {
-      if (stale.length > 0) process.exit(1);
-      return;
-    }
-    const target = args[entriesIndex + 1];
-    if (!target) throw new Error("[schema verify] --rust-entries requires a path to the registry dump.");
+    if (entriesIndex >= 0 && !args[entriesIndex + 1]) throw new Error("[schema verify] --rust-entries requires a path to the registry dump.");
+    const target = entriesIndex >= 0 ? args[entriesIndex + 1]! : SCHEMA_RUST_ENTRIES_REFERENCE;
     const dumpPath = isAbsolute(target) ? target : join(this.root, target);
-    if (!existsSync(dumpPath)) throw new Error(`[schema verify] --rust-entries ${target} does not exist; emit it from semio_framework_schema::schema_export_catalog_entries().`);
+    if (!existsSync(dumpPath)) throw new Error(`[schema verify] ${target} does not exist; run bun ./📜️script.ts schema entries to emit it from semio_framework_schema::schema_export_catalog_entries().`);
     const dump = JSON.parse(readFileSync(dumpPath, "utf8")) as SchemaRustEntryDump;
     const findings = schemaRustEntryDiagnostics(inventory.catalog, dump, loadCatalogTaxonomy(), args.includes("--rust-entries-complete"));
     const registered = new Set(dump.entries.map((entry) => entry.scope));
@@ -17499,13 +17544,14 @@ export class SchemaScript extends Script {
 
   /**
    * ⚙️ Vitest matches spec files against its configured `include`, and the repository names a test case
-   * `🧪️tests/<case>/🟦️.ts` rather than `*.test.ts`, so the run needs a config that names the exact file.
-   * The config is generated beside the run, never tracked: the spec path stays the single declaration.
+   * `🧪️tests/<case>/🟦️.ts` rather than `*.test.ts`, so the run needs a config that names them. That config
+   * is the module's own tracked vitest project, so adding an oracle spec to `framework.schema` needs no
+   * edit here: the module declares its specs once, and this command only points vitest at that declaration.
+   * @see `🧰️framework/🔨️modules/🧬️schema/vitest.config.ts` — an emoji filename is unresolvable to the
+   * esbuild pass vitest loads its config through, which is why this one file carries an ASCII name.
    */
   private oracleArguments(): string[] {
-    const config = join(tmpdir(), `semio-schema-oracle-${process.pid}.vitest.config.mjs`);
-    writeFileSync(config, `export default { root: ${JSON.stringify(this.root)}, test: { include: [${JSON.stringify(SCHEMA_DRAFT07_ORACLE_SPEC)}] } };\n`);
-    return ["vitest", "run", "--config", config];
+    return ["vitest", "run", "--config", join(this.root, SCHEMA_ORACLE_VITEST_CONFIG)];
   }
 
   /** 🧪️ Runs the ajv draft-07 oracle spec that validates the owned Rust structural validator. */
@@ -17515,12 +17561,13 @@ export class SchemaScript extends Script {
 
   /**
    * 🦀️ Runs one registered `semio-framework-schema` test binary with the environment variable that makes it
-   * write its JSON report, and answers where that report landed. `--out <path>` keeps it; otherwise it is
-   * a scratch file, because the exit status is the gate and the report is only evidence.
+   * write its JSON report, and answers where that report landed. `--out <path>` redirects it; otherwise it
+   * lands on the binary's declared `tracked` home, or — when the report is evidence rather than a contract,
+   * the exit status being the gate — on a scratch file.
    */
-  private rustReport({ test, variable }: { readonly test: string; readonly variable: string }, args: string[]): string {
+  private rustReport({ test, variable, tracked }: { readonly test: string; readonly variable: string; readonly tracked?: string }, args: string[]): string {
     const outIndex = args.indexOf("--out");
-    const target = outIndex >= 0 ? args[outIndex + 1] : undefined;
+    const target = outIndex >= 0 ? args[outIndex + 1] : tracked;
     if (outIndex >= 0 && !target) throw new Error(`[schema] --out requires a path.`);
     const path = target ? (isAbsolute(target) ? target : join(this.root, target)) : join(tmpdir(), `semio-${test}-${process.pid}.json`);
     mkdirSync(dirname(path), { recursive: true });
@@ -17534,7 +17581,7 @@ export class SchemaScript extends Script {
     console.log(`[schema compile] cargo test -p ${SCHEMA_RUST_CRATE} --test ${SCHEMA_MODULE_COMPILE_TEST.test} passed; report at ${report}`);
   }
 
-  /** 📤️ Produces the runtime registry dump and cross-checks it against the tracked catalog in one step. */
+  /** 📤️ Regenerates the tracked registry dump from the crate and cross-checks it against the catalog in one step. */
   private entries(args: string[]): void {
     const report = this.rustReport(SCHEMA_EXPORT_ENTRIES_TEST, args);
     this.verify(["--rust-entries", report, ...(args.includes("--rust-entries-complete") ? ["--rust-entries-complete"] : [])]);
@@ -20062,9 +20109,10 @@ function policyReadRustSourceEvidence(repoRoot: string, sourcePath: string): Pol
   for (const module of inspectRustModuleGraphFacts(source).modules) {
     if (module.inline || !module.conditional || module.pathTarget === null) continue;
     const target = posix.normalize(posix.join(owner, module.pathTarget));
-    const relativeTarget = posix.relative(owner, target);
-    const segments = relativeTarget.split("/");
-    if (segments.length !== 3 || segments[0] !== "🧪️tests" || segments[2] !== "🦀️.rs" || segments[1] === "" || segments[1] === ".") {
+    const segments = target.split("/");
+    const testsAt = segments.lastIndexOf("🧪️tests");
+    if (testsAt < 0) continue;
+    if (testsAt !== segments.length - 3 || segments.at(-1) !== "🦀️.rs" || !segments.at(-2)) {
       throw new Error(`[policy rust evidence] conditional external module ${module.modulePath.join("::")} is not canonical: ${target}`);
     }
     const targetSource = policyReadFileSafe(repoRoot, target);
@@ -20084,6 +20132,15 @@ function policyMutateRustSourceEvidence(evidence: PolicyRustSourceEvidence, from
   const { entryIndex, index } = matches[0];
   const changed = entries.map((entry, candidateIndex) => candidateIndex === entryIndex ? { ...entry, source: entry.source.slice(0, index) + to + entry.source.slice(index + from.length) } : entry);
   return { production: changed[0], tests: changed.slice(1) };
+}
+
+const POLICY_RUST_TEST_EVIDENCE_BOUNDARY = "\n//#region 🧪️DeclaredCanonicalTestEvidence:";
+
+function policyReadRustPolicySource(repoRoot: string, sourcePath: string): string {
+  const source = policyReadFileSafe(repoRoot, sourcePath);
+  if (!source || posix.extname(sourcePath) !== ".rs") return source;
+  const evidence = policyReadRustSourceEvidence(repoRoot, sourcePath);
+  return evidence.production.source + evidence.tests.map((entry) => `${POLICY_RUST_TEST_EVIDENCE_BOUNDARY}${entry.path}\n${entry.source}`).join("");
 }
 
 /**
@@ -26048,9 +26105,69 @@ function policyAppSchemaConfigRelocationBreaches(repoRoot: string): BreachRecord
   return breaches;
 }
 
+/** 🏛️ A language-independent declaration of configuration and command ownership. */
+export type AbstractionOwnership = { owner: "os" | "surface" | "artifact"; fields: readonly string[]; commands: readonly string[] };
+
+type AbstractionOwnershipSchema = { $defs: { OsField: { enum: string[] }; OsCommand: { enum: string[] } } };
+
+/** 📜️ Loads the normative OS versus surface ownership contract. */
+function abstractionOwnershipSchema(root: string): AbstractionOwnershipSchema {
+  return JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧬️schema/🔣️.json"), "utf8"));
+}
+
+/** ⚖️ Reports OS-owned declarations incorrectly stored or executed by a surface. */
+export function abstractionOwnershipViolations(declaration: AbstractionOwnership, schema: AbstractionOwnershipSchema): string[] {
+  if (declaration.owner !== "surface") return [];
+  const fields = new Set(schema.$defs.OsField.enum), commands = new Set(schema.$defs.OsCommand.enum);
+  return [...declaration.fields.filter((field) => fields.has(field)).map((field) => `field:${field}`), ...declaration.commands.filter((command) => commands.has(command)).map((command) => `command:${command}`)];
+}
+
+/** 🧪️ Compares language-independent ownership vectors with the independent Ajv schema evaluator. */
+export function abstractionOwnershipChecks(root: string): number {
+  const schema = abstractionOwnershipSchema(root);
+  const fixture = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { cases: (AbstractionOwnership & { name: string; expected: string[] })[] };
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  for (const row of fixture.cases) {
+    const declaration = { owner: row.owner, fields: row.fields, commands: row.commands };
+    const actual = abstractionOwnershipViolations(declaration, schema);
+    if (JSON.stringify(actual) !== JSON.stringify(row.expected)) throw new Error(`[verify abstraction-ownership] ${row.name}: expected ${JSON.stringify(row.expected)}, got ${JSON.stringify(actual)}.`);
+    if (validate(declaration) !== (actual.length === 0)) throw new Error(`[verify abstraction-ownership] ${row.name}: implementation disagrees with Ajv.`);
+  }
+  console.log(`[verify abstraction-ownership] ${fixture.cases.length} ownership vectors agree with Ajv.`);
+  return fixture.cases.length;
+}
+
+/** 🔎️ Checks every authored surface config schema and direct command/mutation owner. */
+export function policyAbstractionOwnershipBreaches(repoRoot: string): BreachRecord[] {
+  const schema = abstractionOwnershipSchema(repoRoot), taxonomy = loadTaxonomy(), breaches = new Map<string, BreachRecord>();
+  const report = (path: string, declaration: AbstractionOwnership): void => {
+    for (const violation of abstractionOwnershipViolations(declaration, schema)) {
+      const key = `${path}:${violation}`;
+      breaches.set(key, { id: `abstraction-ownership-${key}`, summary: `${violation} belongs to the OS or host window state`, kind: "app-schema/abstraction-ownership", scope: path, priority: "high", reason: "A surface must consume OS preferences and host control state without owning duplicate config or command contracts.", solution: "Remove the surface declaration and consume the shared OS preference or host window context." });
+    }
+  };
+  const scanCommands = (root: string): void => {
+    for (const entry of policyReaddirSafe(repoRoot, root).filter((entry) => entry.isDirectory)) report(`${root}/${entry.name}`, { owner: "surface", fields: [], commands: [policyStripEmoji(entry.name)] });
+  };
+  for (const owner of policyDiscoverAppSchemaOwners(repoRoot)) {
+    for (const leaf of policyLoadAppSchemaFacetLeaves(repoRoot, `${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}`, owner.configType)) {
+      if (leaf.extract) report(leaf.relPath, { owner: "surface", fields: leaf.extract.fields.map((field) => field.name), commands: [] });
+    }
+    const source = `${owner.ownerRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
+    report(source, { owner: "surface", fields: policyExtractRustSchemaFields(policyReadFileSafe(repoRoot, source), owner.configType).fields.map((field) => field.name), commands: [] });
+    scanCommands(`${owner.ownerRel}/${POLICY_APP_SCHEMA_FACET}/🧬️mutations`);
+  }
+  for (const plugin of policyReaddirSafe(repoRoot, "✏️s/🔌️plugins").filter((entry) => entry.isDirectory)) {
+    for (const surface of policySurfaceRoots(repoRoot, `✏️s/🔌️plugins/${plugin.name}`, taxonomy)) scanCommands(`${surface}/🎮️commands`);
+  }
+  return [...breaches.values()].sort((left, right) => left.scope.localeCompare(right.scope) || left.id.localeCompare(right.id));
+}
+
 /** ⚖️Aggregates app-schema facet scanners (completeness, parity, fidelity, purity, relocation). */
 export function policyAppSchemaBreaches(repoRoot: string): BreachRecord[] {
   return [
+    ...policyAbstractionOwnershipBreaches(repoRoot),
     ...policyAppSchemaFacetCompletenessBreaches(repoRoot),
     ...policyAppSchemaFieldParityBreaches(repoRoot),
     ...policyAppSchemaConfigFidelityBreaches(repoRoot),
@@ -30404,7 +30521,9 @@ export {
   toolJobMountedDispatchOneTurnExact,
   toolJobArtifactEnvelopeRejectionTransferExact,
   policyReadRustSourceEvidence,
+  policyReadRustPolicySource,
   policyMutateRustSourceEvidence,
+  interactivityProductionSource,
   type PolicyRustSourceEvidence,
   toolJobPuzzleReservedRoutesExact,
   toolJobLiveFixedReplayExact,

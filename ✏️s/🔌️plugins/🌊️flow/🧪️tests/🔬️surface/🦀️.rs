@@ -5,7 +5,7 @@ use crate::viewer::flow::FlowViewer;
 #[semio_framework_async_macros::async_test]
 async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants() {
     use semio_framework_plugin::{AppRole, PluginApp, PluginCloseStep};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧹️surface-owners/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️surface-owners/🔣️.json")).unwrap();
     let plugin = super::plugin().expect("the actual Flow package must assemble every registered surface");
     assert_eq!(plugin.manifest.apps.len(), fixture["expected"]["factories"].as_u64().unwrap() as usize);
     let roles = plugin

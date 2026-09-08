@@ -27,9 +27,6 @@ impl SHomeDiff {
             if let Some(tab) = &self.active_panel_tab {
                 next.active_panel_tab = tab.clone();
             }
-            if let Some(locale) = &self.locale {
-                next.locale = locale.clone();
-            }
             next
         })
     }
@@ -59,7 +56,11 @@ impl MutationDiff<SHomeSnapshot> for SHomeDiff {
         take!(schema);
         take!(catalog_generation);
         take!(active_panel_tab);
-        take!(locale);
     }
 }
 //#endregion 🔖️Apply
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type SHomeDiffText = String;
+//#endregion 🚚️Carrier

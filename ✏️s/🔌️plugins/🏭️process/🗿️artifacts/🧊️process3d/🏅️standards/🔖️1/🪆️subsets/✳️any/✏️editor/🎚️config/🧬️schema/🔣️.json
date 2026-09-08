@@ -14,8 +14,6 @@
     "sunElevation",
     "sunIntensity",
     "sunColor",
-    "activeUtilityId",
-    "locale",
     "contributionsJson"
   ],
   "properties": {
@@ -62,14 +60,6 @@
       "x-semio-state": "config"
     },
     "sunColor": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
       "type": "string",
       "x-semio-state": "config"
     },

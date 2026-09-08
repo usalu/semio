@@ -211,7 +211,6 @@ semio_framework_plugin::app_commands! {
         "setCamera" as "camera" => set_camera::SetCamera,
         "setCameraZoom" as "camera-zoom" => set_camera_zoom::SetCameraZoom,
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
     }
 }
@@ -220,7 +219,6 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use crate::editor::raster::commands::set_active_example;
 use crate::editor::raster::commands::set_active_utility;
-use crate::editor::raster::commands::set_locale;
 use crate::editor::raster::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
 use crate::editor::raster::commands::{set_brush_opacity, set_brush_size};
 use crate::editor::raster::commands::{set_camera, set_camera_zoom, set_composite_viewport};
@@ -247,8 +245,7 @@ const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
     "setCamera",
     "setCameraZoom",
     "setActiveUtility",
-    "setLocale",
-    "setActiveExample",
+        "setActiveExample",
 ];
 const RASTER_RETAINED_PAYLOAD_SCHEMA: &str = "raster.tool-command.v1";
 const RASTER_RETAINED_RAW_BYTES: usize = 65_536;
@@ -264,7 +261,6 @@ const RASTER_RETAINED_WORK_ITEMS: usize = 4_096;
 /// real `RasterMutation`s (delete every root layer, re-point the asset pool, plant the example forest)
 /// — the Artifact lane, exactly like every other layer verb.
 ///
-/// 🎥️ `setCamera`/`setCameraZoom`/`setCompositeViewport`/`setActiveUtility`/`setLocale` stay session-only
 /// `ActionKind::View` declarations in `🔖️Manifest` (ticket 26/07/31 — camera is runtime state, never a
 /// document field, and there is no `RasterOperation::SetCamera`); `Config` is precisely the lane that
 /// says "this route publishes into the config store, not into artifact history".
@@ -284,7 +280,6 @@ const RASTER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
@@ -311,6 +306,7 @@ fn raster_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<RasterMutation, RasterConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
@@ -514,7 +510,6 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
 
 /// 📬️ The config lane's twin of {@link RasterStorePreparationFactory} — raster's seven session verbs
 /// (`setBrushSize`/`setBrushOpacity`/`setCompositeViewport`/`setCamera`/`setCameraZoom`/
-/// `setActiveUtility`/`setLocale`) publish into the config store, and the runtime rejects a `Config`
 /// publication contract outright when this factory is absent. `RasterConfig` is a whole-record config
 /// (`store::impl_whole_record_config!`), so its `Diff` is the config value itself.
 struct RasterConfigStorePreparationFactory;
@@ -694,8 +689,7 @@ impl ArtifactEditor for RasterPlayApp {
         contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
             "addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer",
-            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveUtility", "setLocale",
-            "setActiveExample"
+            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveUtility",             "setActiveExample"
         ]
     }
 
@@ -809,21 +803,21 @@ impl ArtifactEditor for RasterPlayApp {
         command: &RasterCommand,
         doc: &ArtifactView<'_, RasterSnapshot>,
         cfg: &ConfigView<'_, RasterConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(composite::RASTER_PLAY_WINDOW_COMPOSITE.into(), composite::window_measures(cfg.snapshot))])
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = raster_play_labels(config);
+        let labels = raster_play_labels(view_state);
         let node = match body_key {
             composite::RASTER_PLAY_BODY_COMPOSITE => composite::render(document, config)?,
             navigator::RASTER_PLAY_BODY_NAVIGATOR => navigator::render(document, config)?,
@@ -999,7 +993,7 @@ pub fn create_raster_app() -> AppDefinition {
             .action_with(raster_internal_action("setCompositeViewport", LocalizedLabel::native("Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
-            .action_with(raster_internal_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
+            .action_with(raster_internal_action(LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
             // 📝️ Staged palette-form arguments for the two palette operations.
             .action_args("addLayer", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Layer Kind", "Ebenenart"), vec![
@@ -1033,7 +1027,6 @@ pub fn create_raster_app() -> AppDefinition {
             .action_interactive_job("setCompositeViewport", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCameraZoom", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             // 🧰️ Composite-window utilities — one exclusive set, active utility host-owned (never a document operation).
             .utility(raster_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))

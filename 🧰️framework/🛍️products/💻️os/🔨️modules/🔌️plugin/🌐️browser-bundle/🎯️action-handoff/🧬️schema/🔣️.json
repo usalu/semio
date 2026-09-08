@@ -1,16 +1,42 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/os/plugin/browser-bundle/action-handoff/component.json",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "request",
-    "acknowledged",
-    "rejected",
-    "invocation",
-    "hostileResults"
-  ],
+  "$ref": "#/$defs/BrowserActorActionHandoffV1",
   "$defs": {
+    "BrowserActorActionHandoffV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request",
+        "acknowledged",
+        "rejected",
+        "invocation",
+        "hostileResults"
+      ],
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/request"
+        },
+        "acknowledged": {
+          "$ref": "#/definitions/result"
+        },
+        "rejected": {
+          "$ref": "#/definitions/result"
+        },
+        "invocation": {
+          "$ref": "#/definitions/invocation"
+        },
+        "hostileResults": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "$ref": "#/definitions/result"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
     "scope": {
       "type": "object",
       "additionalProperties": false,
@@ -54,7 +80,7 @@
       ],
       "properties": {
         "scope": {
-          "$ref": "#/$defs/scope"
+          "$ref": "#/definitions/scope"
         },
         "verifiedSurfaceId": {
           "type": "string",
@@ -86,7 +112,7 @@
     "request": {
       "allOf": [
         {
-          "$ref": "#/$defs/owner"
+          "$ref": "#/definitions/owner"
         },
         {
           "type": "object",
@@ -108,7 +134,7 @@
               "const": "browser-actor-action"
             },
             "scope": {
-              "$ref": "#/$defs/scope"
+              "$ref": "#/definitions/scope"
             },
             "verifiedSurfaceId": {
               "type": "string"
@@ -129,10 +155,10 @@
               "type": "integer"
             },
             "command": {
-              "$ref": "#/$defs/bytes"
+              "$ref": "#/definitions/bytes"
             },
             "viewState": {
-              "$ref": "#/$defs/bytes"
+              "$ref": "#/definitions/bytes"
             }
           }
         }
@@ -141,7 +167,7 @@
     "result": {
       "allOf": [
         {
-          "$ref": "#/$defs/owner"
+          "$ref": "#/definitions/owner"
         },
         {
           "type": "object",
@@ -163,7 +189,7 @@
               "const": "browser-actor-action-result"
             },
             "scope": {
-              "$ref": "#/$defs/scope"
+              "$ref": "#/definitions/scope"
             },
             "verifiedSurfaceId": {
               "type": "string"
@@ -291,27 +317,6 @@
         "arguments": {
           "type": "object"
         }
-      }
-    }
-  },
-  "properties": {
-    "request": {
-      "$ref": "#/$defs/request"
-    },
-    "acknowledged": {
-      "$ref": "#/$defs/result"
-    },
-    "rejected": {
-      "$ref": "#/$defs/result"
-    },
-    "invocation": {
-      "$ref": "#/$defs/invocation"
-    },
-    "hostileResults": {
-      "type": "array",
-      "minItems": 4,
-      "items": {
-        "$ref": "#/$defs/result"
       }
     }
   }

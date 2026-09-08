@@ -6,17 +6,17 @@
     "board": {
       "schema": "reasoning.mindmap.fixture",
       "camera": {
-        "x": 0.0,
-        "y": 0.0,
-        "zoom": 1.0
+        "x": 0,
+        "y": 0,
+        "zoom": 1
       },
       "nodes": [
         {
           "id": "node-drifter",
           "nodeKind": "identity",
           "shape": "circle",
-          "x": 12.0,
-          "radius": 24.0,
+          "x": 12,
+          "radius": 24,
           "text": "Drifter",
           "handles": []
         }
@@ -37,9 +37,9 @@
     }
   },
   "camera": {
-    "x": 0.0,
-    "y": 0.0,
-    "zoom": 1.0
+    "x": 0,
+    "y": 0,
+    "zoom": 1
   },
   "meta": null
 }

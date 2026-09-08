@@ -18,65 +18,12 @@
       "x-semio-state": "presence"
     },
     "camera": {
-      "$ref": "#/$defs/ShootingCamera",
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/artifact.json#/$defs/ShootingCamera",
       "x-semio-state": "presence"
     },
     "activeUtilityId": {
       "type": "string",
       "x-semio-state": "presence"
-    }
-  },
-  "$defs": {
-    "ShootingCamera": {
-      "title": "ShootingCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "position",
-        "target",
-        "zoom",
-        "fov"
-      ],
-      "properties": {
-        "position": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "target": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        },
-        "fov": {
-          "type": "number",
-          "format": "double"
-        },
-        "up": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "projection": {
-          "type": "string"
-        }
-      }
     }
   }
 }

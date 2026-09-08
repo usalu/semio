@@ -159,7 +159,7 @@
             0.9375,
             -0.3515625,
             -0.00048828125,
-            0.0
+            0
           ],
           "translation": [
             -0.001953125,
@@ -208,7 +208,7 @@
         "id": "orbit-track-e",
         "length": 11,
         "class": "static",
-        "meanSpeedMS": 0.0
+        "meanSpeedMS": 0
       }
     ],
     "geo": {
@@ -221,7 +221,7 @@
       "gcpCheckpointRmse": 0.1875,
       "watertight": null,
       "meanTrackLength": 6.5,
-      "registeredFrameRatio": 1.0,
+      "registeredFrameRatio": 1,
       "denseCoverageRatio": 0.625,
       "warnings": [
         "only two streams observe gcp-south-pier"
@@ -233,6 +233,5 @@
   "reportTable": null,
   "frameCursor": null,
   "camera": null,
-  "layers": null,
-  "locale": null
+  "layers": null
 }

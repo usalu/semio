@@ -22,30 +22,23 @@ message JackDiff {
   optional JackEdgesDelta edges = 8;
   // @state artifact
   optional string root_node_id = 9;
-  // @state presence
-  optional string active_fixture_id = 11;
-  // @state presence
+  // @state config
+  // @state config
   optional string jack_query = 12;
-  // @state presence
+  // @state config
   optional map<string, string> lod_mode_by_window = 13;
   // @state config
   optional Camera viewport_camera = 14;
   // @state config
   optional string jack_result_json = 15;
   // @state config
-  optional string editor_engagement_input = 16;
   // @state config
-  optional string graph_engagement_input = 17;
   // @state config
-  optional string results_engagement_input = 18;
   // @state config
-  optional int64 reorganize_epoch = 19;
   // @state config
   optional JackEditorSelection editor_selection = 20;
   // @state config
-  optional int64 revision = 21;
   // @state config
-  optional string locale = 22;
 }
 
 message JackNodesDelta {

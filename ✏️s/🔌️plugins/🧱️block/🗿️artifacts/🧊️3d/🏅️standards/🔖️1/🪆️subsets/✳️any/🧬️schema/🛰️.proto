@@ -31,7 +31,6 @@ message Block3dArtifact {
   // @state presence
   repeated string wanted_tags = 13;
   // @state config
-  string locale = 14;
   // @state config
   repeated Block3dWindowView windows = 15;
   // @state config

@@ -10,10 +10,8 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::diff:
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::{create_node, inverse_semio_drawing_mutation, SemioDrawingMutation};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::{inverse_semio_value_mutation, SemioValueMutation};
-
-use super::bounds::{all_lon_lat_pairs, lon_lat_bounds, GisMapBounds};
+use super::bounds::{all_lon_lat_pairs, lon_lat_bounds};
 use semio_framework_value_derive::{FromValue, ToValue};
-
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a gismap snapshot. Today: per-collection feature counts and the
 /// geographic bounding box across every `positions`/`routes`/`regions` feature (see
@@ -211,3 +209,8 @@ pub fn gismap_artifact_inference_descriptor() -> ::semio_framework_schema::Artif
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::bounds::GisMapBounds;
+//#endregion 🔁️Re-exports

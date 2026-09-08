@@ -21,8 +21,6 @@ pub struct ProcedureArtifact {
     #[value(default)]
     pub selected_step_ids: Vec<String>,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
     #[value(default = "default_contributions_json")]
     pub contributions_json: String,
     #[state(transient)]
@@ -39,7 +37,7 @@ fn default_contributions_json() -> String {
 impl Default for ProcedureArtifact {
     fn default() -> Self {
         let empty = crate::schema::snapshot::ProcedureSnapshot::default();
-        Self { schema: empty.schema, flow: empty.flow, text: empty.text, selected_step_ids: Vec::new(), locale: "en-US".into(), contributions_json: default_contributions_json(), run_output_json: String::new() }
+        Self { schema: empty.schema, flow: empty.flow, text: empty.text, selected_step_ids: Vec::new(), contributions_json: default_contributions_json(), run_output_json: String::new() }
     }
 }
 

@@ -847,10 +847,13 @@ pub mod examples {
     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🦀️.rs"]
     pub mod art_2d_hexagonal_cut_concrete_forest_left;
     #[cfg(test)]
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🦀️.rs"]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🦀️.rs"]
     mod art_2d_hexagonal_cut_concrete_forest_left_tests;
     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/➡️hexagonal-cut-concrete-forest-right/🦀️.rs"]
     pub mod art_2d_hexagonal_cut_concrete_forest_right;
+    #[cfg(test)]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/➡️hexagonal-cut-concrete-forest-right/🧪️tests/🧩️example/🦀️.rs"]
+    mod art_2d_hexagonal_cut_concrete_forest_right_tests;
 }
 
 #[cfg(feature = "component-app-assembly")]

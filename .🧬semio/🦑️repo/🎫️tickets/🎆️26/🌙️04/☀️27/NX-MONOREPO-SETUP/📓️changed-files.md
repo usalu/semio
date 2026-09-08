@@ -537,3 +537,41 @@ Retained executable probes: `🔬️browser-imports/📜️script.ts` and `🔬�
 - `⚡️caching/🧫️fixtures/hub-build/🔣️.json` and `🛂️schema/🔣️.json`: neutral build contract.
 - `⚡️caching/🧪️tests/🌎️hub/📜️script.ts` and ticket `🔬️hub-build/📜️script.ts`: native Nx/esbuild validation.
 - Continuous-service, bootstrap and artifact-registry test readers follow current `🛂️schema` fixture paths after concurrent relocation.
+
+- `🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/⚙️vite.config.ts`: browser exclusion of in-source test branches, verified by the Hub build contract.
+
+## 2026-09-08 dependency setup and editor additions
+
+- `.vscode/🧩️launch.seed.jsonc`: added explicit os-hub and os-hub-admin build commands. Generated launch validation pending ongoing registry generation.
+- `📋️project.json`, `📜️script.ts`: isolated JavaScript dependency synchronization from the application router.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts`: new installer leaf.
+- Caching `🧫️fixtures/dependency-bootstrap/{🔣️.json,🛂️schema/🔣️.json}` and `🧪️tests/📦️dependencies/📜️script.ts`: language-neutral/native Bun/Nx/bootstrap and CI pin contract; registered in caching `📜️script.ts`.
+- `.github/workflows/{repo-test,playwright,play-sites,gh-pages}.yml`: repository Bun version-file selection.
+- Ticket `🔬️dependency-bootstrap/📜️script.ts` and `📓️ci-entrypoints.md`: focused proof and evidence.
+
+## 2026-09-08 tooling bootstrap qualification
+
+- Bootstrap `🚀️bootstrap/📜️script.ts`: pinned tooling acquisition path, native installation selection and cancellation handling.
+- Bootstrap `🛠️tools/{package.json,bun.lock,📜️script.ts}`: frozen tooling recipe, immutable staging/ownership and activation lease.
+- Bootstrap `📦️dependencies/📜️script.ts`: asynchronous Bun runner with owned process-tree cancellation.
+- Caching `🧫️fixtures/dependency-bootstrap` and `🧪️tests/📦️dependencies/🟦️.ts`: schema-first fixture plus native Bun/Nx, repository-plugin, ownership and cancellation tests. Test helpers were renamed from 📜️script.ts to 🟦️.ts by a concurrent taxonomy edit; references follow the new name.
+- Caching test runner: cancellation mock filesystem seam updated; new tooling/cancellation registration follows concurrent extraction into `🧪️tests/⚡️cache-contracts/🟦️.ts`.
+- Ticket bootstrap/cancellation/dependency probe scripts: adapted to renamed helper files; new tooling acquisition and native cancellation probes retained.
+- `.vscode/launch.json`: registry generation completed and os-hub/os-hub-admin build entries verified.
+- The four historical workflow files were removed by another operation and are absent from the current index; the earlier edits are not present in the final working tree. CI remains unfinished.
+
+## Production browser ownership and build targets
+
+Authored or edited in this continuation:
+
+- OS Dev `🚚️distribution/🔌️components/🟦️.ts`, its `🧬️schema/🔣️.json`, `🧪️tests/🔣️.json` and `🧪️tests/🟦️.ts`.
+- OS Dev `🚚️distribution/⚙️inputs/🟦️.ts`, `🔣️.json` and `🧬️schema/🔣️.json`; `🚚️distribution/📜️script.ts`.
+- OS Dev TypeScript `⚙️vite.config.ts`, the in-memory distribution config factory caller in `📜️script.ts`, and `📋️project.json` build-inputs target.
+- Repository library `🟨️.mjs` generated release build targets; bootstrap build variant environment selection; cache-contract test registration and build graph assertions; atomic materializer fixture PID readiness.
+- Plugin registry `🖥️launch.ts` generated build/input editor registrations; generated `.vscode/launch.json` was refreshed by its existing Nx producer.
+- Ticket production-browser probes (base, configuration, graph, entry), materializer-cancellation probe and ticket reports.
+
+The old default BuildScript and WGPU orchestration have not been removed yet. Native shared build artifacts are being produced by the explicit Note build prerequisites and are not authored inputs.
+
+- Repository library `🎮️playground/🔒️preferences/🟦️.ts`, `🔣️.json`, `🧬️schema/🔣️.json`, `🧪️tests/🟦️.ts` and `🧪️tests/🔣️.json`; `🎮️playground/🟦️.ts` and the TypeScript library barrel now share the pure preference implementation.
+- Ticket production-browser/preferences probe and additional runtime input/restoration verification records.

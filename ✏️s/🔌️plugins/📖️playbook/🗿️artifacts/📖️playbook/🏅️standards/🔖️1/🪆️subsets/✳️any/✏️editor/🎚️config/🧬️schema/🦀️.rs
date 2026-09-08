@@ -6,8 +6,6 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.playbook.playbook.config")]
 pub struct PlaybookConfig {
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub contributions_json: String,
 }
 

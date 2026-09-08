@@ -40,11 +40,11 @@ use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcom
 use semio_framework_actor::{ActorId, Envelope, JobCheckpoint, JobCommitCandidate, JobOperation, JobPublication, JobReplayRequest, JobStepOutcome, JobTurn, Payload, ShardTransport};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId, Watchdog};
 use std::collections::{BTreeSet, HashMap};
-use std::mem::{MaybeUninit, size_of};
+use std::mem::{size_of, MaybeUninit};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 #[cfg(test)]
 use std::sync::Mutex;
-use std::sync::atomic::{AtomicUsize, Ordering};
 
 //#region 📨️ShardFrame
 /// 📨️ terra-shard-grants: what actually crosses a [`ShardTransport`] INBOUND (host → shard) —

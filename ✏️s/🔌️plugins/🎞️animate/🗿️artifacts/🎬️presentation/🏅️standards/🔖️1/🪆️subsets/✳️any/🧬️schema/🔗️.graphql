@@ -5,7 +5,6 @@ type PresentationArtifact {
   tiles: [FigureTileDraft!]! @state(class: ARTIFACT)
   selectedIds: [String!]! @state(class: PRESENCE)
   engagementInput: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 type FigureTileFrame { x: Float! y: Float! width: Float! height: Float! }
 type FigureTileSource { src: String! kind: String! frame: FigureTileFrame! sourceAspect: Float pdfPage: Int }

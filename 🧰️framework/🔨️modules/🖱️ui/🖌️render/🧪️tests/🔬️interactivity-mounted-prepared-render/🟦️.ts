@@ -1,4 +1,4 @@
-import { INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, policyReadFileSafe, interactivityMountedPreparedRenderFailures } from "../../../../../../📜️script.ts";
+import { INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, policyReadRustPolicySource, interactivityMountedPreparedRenderFailures } from "../../../../../../📜️script.ts";
 
 /** 🧪️ Executes interactivity mounted prepared render policy assertions. */
 export function interactivityMountedPreparedRenderSelfTests(repoRoot: string): void {
@@ -10,7 +10,7 @@ export function interactivityMountedPreparedRenderSelfTests(repoRoot: string): v
     "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/🖼️frame.rs",
     "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/🎬️scene.rs",
   ] as const;
-  const clean = files.map((file) => policyReadFileSafe(repoRoot, file));
+  const clean = files.map((file) => policyReadRustPolicySource(repoRoot, file));
   const mutations: readonly [string, number, string, string][] = [
     ["blocking-process-ledger", 0, "static PREPARED_RENDER_PROCESS_PERMITS: AtomicU64", "static PREPARED_RENDER_PROCESS_PERMITS: Mutex<u64>"],
     ["wrapping-process-generation", 0, "current_generation.checked_add(1)", "Some(current_generation.wrapping_add(1))"],

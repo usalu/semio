@@ -11,7 +11,9 @@ fn instance_lifetime_ui_fixed_list_initializes_only_owned_payloads() {
         assert_eq!(serde_json::to_value(&values).unwrap(), row["values"]);
         let exact = values.storage.initialized_len() == values.len();
         let mut popped = Vec::new();
-        while let Some(value) = values.pop() { popped.push(value); }
+        while let Some(value) = values.pop() {
+            popped.push(value);
+        }
         assert_eq!(popped, *row["popped"].as_array().unwrap());
         assert_eq!(exact, fixture["ownership"]["initializedSlotsEqualLogicalLength"].as_bool().unwrap(), "{}", row["name"]);
     }
@@ -21,7 +23,9 @@ fn instance_lifetime_ui_fixed_list_initializes_only_owned_payloads() {
 struct CountedPayload(std::sync::Arc<std::sync::atomic::AtomicUsize>);
 
 impl Drop for CountedPayload {
-    fn drop(&mut self) { self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst); }
+    fn drop(&mut self) {
+        self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    }
 }
 
 #[test]
@@ -53,7 +57,9 @@ fn instance_lifetime_ui_fixed_list_reservation_preserves_fixed_envelope() {
     assert!(values.terminal_is_empty());
     assert!(values.try_reserve().unwrap());
     let identity = values.storage.backing_ptr(0).unwrap();
-    for value in 0..4 { values.try_push_reserved(value).unwrap(); }
+    for value in 0..4 {
+        values.try_push_reserved(value).unwrap();
+    }
     assert_eq!(identity != values.storage.backing_ptr(0).unwrap(), fixture["ownership"]["reservedPushChangesBacking"].as_bool().unwrap());
     assert_eq!(values.try_push_reserved(99) == Err(99), fixture["ownership"]["overflowPreservesRejectedOwner"].as_bool().unwrap());
     assert_eq!(values.capacity(), fixture["capacity"].as_u64().unwrap() as usize);

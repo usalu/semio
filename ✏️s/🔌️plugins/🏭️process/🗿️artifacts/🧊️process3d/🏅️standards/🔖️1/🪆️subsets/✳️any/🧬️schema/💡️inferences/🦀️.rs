@@ -27,9 +27,6 @@ use semio_framework_os_kernel::{FromValue, ToValue};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-
-use super::bounds::BoundingBox;
-
 /// 🕳️ Tessellation tolerance for kernel replay/export.
 const PROCESS3D_TESSELLATION_TOLERANCE: f64 = 0.05;
 /// 🧠️ Kernel replay memo capacity (prefix signatures kept per session).
@@ -423,3 +420,8 @@ pub fn process3d_artifact_inference_descriptor() -> framework_schema::ArtifactIn
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::bounds::BoundingBox;
+//#endregion 🔁️Re-exports

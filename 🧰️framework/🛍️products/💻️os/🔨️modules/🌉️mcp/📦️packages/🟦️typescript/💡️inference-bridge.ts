@@ -22,8 +22,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
-import draft07MetaSchema from "ajv/dist/refs/json-schema-draft-07.json" with { type: "json" };
 import { osMcpSchema } from "../../🧬️schema/🟦️.ts";
 
 //#region 🔖️Surface
@@ -40,6 +38,7 @@ export const jobsPath = (space: string, document: string): string => `/spaces/${
 export const eventsPath = (space: string, document: string, job: string, after: number): string => `${jobsPath(space, document)}/${encodeSegment(job)}/events?after=${after}`;
 export const cancelPath = (space: string, document: string, job: string): string => `${jobsPath(space, document)}/${encodeSegment(job)}/cancel`;
 export const approvalPath = (space: string, document: string, job: string): string => `${jobsPath(space, document)}/${encodeSegment(job)}/approval`;
+export const approvalUndosPath = (space: string, document: string): string => `/spaces/${encodeSegment(space)}/documents/${encodeSegment(document)}/inference/gis-map/approval-undos`;
 
 const JOB_STATES = ["accepted", "running", "succeeded", "failed", "cancelled"];
 const PROPOSAL_STATES = ["none", "offered", "approved", "stale", "cancelled"];
@@ -47,7 +46,7 @@ const HEX32 = "^[0-9a-f]{32}$";
 const HEX64 = "^[0-9a-f]{64}$";
 
 export const submitRequestSchema = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $schema: "http://json-schema.org/draft-07/schema#",
   type: "object",
   properties: {
     schema: { const: "semio.hub.inference-request/v1" },
@@ -69,7 +68,7 @@ export const submitRequestSchema = {
 export const approvalRequestSchema = { $schema: "http://json-schema.org/draft-07/schema#", ...(osMcpSchema("GisMapInferenceApprovalRequestV1") as object) };
 
 export const jobReceiptSchema = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $schema: "http://json-schema.org/draft-07/schema#",
   type: "object",
   properties: {
     schema: { const: "semio.hub.inference-job-receipt/v1" },
@@ -85,7 +84,7 @@ export const jobReceiptSchema = {
 };
 
 export const previewSchema = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $schema: "http://json-schema.org/draft-07/schema#",
   type: "object",
   properties: {
     schema: { const: "semio.hub.gis-map-inference-preview/v1" },
@@ -99,7 +98,7 @@ export const previewSchema = {
 };
 
 export const eventPageSchema = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $schema: "http://json-schema.org/draft-07/schema#",
   type: "object",
   properties: {
     schema: { const: "semio.hub.inference-job-events/v1" },
@@ -142,40 +141,24 @@ export const eventPageSchema = {
   additionalProperties: false,
 };
 
-export const approvalReceiptSchema = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
-  type: "object",
-  properties: {
-    schema: { const: "semio.hub.inference-approval-receipt/v1" },
-    jobId: { type: "string", pattern: HEX32 },
-    mutationId: { type: "string", pattern: HEX32 },
-    commandHash: { type: "string", pattern: HEX64 },
-    proposalHash: { type: "string", pattern: HEX64 },
-    applied: { type: "boolean" },
-    undo: {
-      type: "object",
-      properties: {
-        targetId: { type: "string", pattern: HEX32 },
-        expectedCurrent: {
-          type: "object",
-          properties: {
-            documentId: { type: "string", minLength: 1 },
-            headEditOrdinal: { type: "integer", minimum: 1 },
-            headEditId: { type: "string", minLength: 1 },
-            lastCommitSeq: { type: "integer", minimum: 1 },
-            chainSha256: { type: "string", pattern: HEX64 },
-          },
-          required: ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainSha256"],
-          additionalProperties: false,
-        },
-      },
-      required: ["targetId", "expectedCurrent"],
-      additionalProperties: false,
-    },
-  },
-  required: ["schema", "jobId", "mutationId", "commandHash", "proposalHash", "applied", "undo"],
-  additionalProperties: false,
-};
+/** ✅️ NOT declared here: the approval RECEIPT (with its undo handle and the checkpoint
+ * frontier inside it) is hub’s own authority, `https://semio.tech/schema/hub/inference/schema.json`
+ * `#/$defs/InferenceApprovalReceiptV1` → `#/$defs/GisMapApprovalUndoHandleV1` →
+ * `#/$defs/GisMapDocumentFrontierV1`. [`hubInferenceExport`] compiles that export straight out of
+ * hub’s document, so this oracle validates against the authority itself and a hub-side change
+ * fails here instead of drifting into a second copy. */
+export const HUB_INFERENCE_MODULE_PATH = "🌎️hub/💡️inference/🧬️schema/🔣️.json";
+
+/** 🔗️ One `hub.inference` export, compiled against hub’s whole draft-07 module so its internal
+ * `#/$defs/…` references resolve. */
+export function hubInferenceExport(repoRoot: string, exportId: string): ReturnType<Ajv["compile"]> {
+  const module = JSON.parse(readFileSync(resolve(repoRoot, HUB_INFERENCE_MODULE_PATH), "utf8")) as { $id: string; $defs: Record<string, unknown> };
+  must(exportId in module.$defs, `${HUB_INFERENCE_MODULE_PATH} publishes no ${exportId} export`);
+  const validate = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } }).addSchema(module).getSchema(`${module.$id}#/$defs/${exportId}`);
+  must(validate !== undefined, `${exportId} did not compile out of ${HUB_INFERENCE_MODULE_PATH}`);
+  return validate!;
+}
+
 //#endregion 🔖️Surface
 
 //#region 🔖️Oracle
@@ -189,8 +172,7 @@ export type InferenceBridgeReport = {
   readonly limits: number;
 };
 
-const compile = (schema: object) => new Ajv2020({ strict: true }).compile(schema);
-const compileDraft07 = (schema: object) => new Ajv({ strict: true }).compile(schema);
+const compile = (schema: object) => new Ajv({ strict: true }).compile(schema);
 
 /** 🔤️ Key-order-independent JSON — the os mirror is emitted by `serde_json` (whose maps sort keys)
  * while hub's document is hand-ordered, so only the key SET and the values may be compared. */
@@ -236,18 +218,25 @@ function must(condition: unknown, message: string): void {
 export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridgeReport {
   const fixtureRoot = resolve(repoRoot, "🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1");
   const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🔣️.json"), "utf8"));
-  const fixtureSchema = JSON.parse(readFileSync(resolve(fixtureRoot, "🧬️.schema.json"), "utf8"));
   const hubBinSource = readFileSync(resolve(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
 
   let ajv = 0;
-  const fixtureValidator = new Ajv2020({ strict: true });
-  // 🧬️ hub's own module document is draft-07 while this fixture schema is 2020-12; teaching the
-  // 2020-12 instance the draft-07 meta-schema is what lets ONE validator host both, instead of
-  // forking the corpus.
-  fixtureValidator.addMetaSchema(draft07MetaSchema);
-  fixtureValidator.addSchema(JSON.parse(readFileSync(resolve(repoRoot, "🌎️hub/💡️inference/🧬️schema/🔣️.json"), "utf8")));
-  const validateFixture = fixtureValidator.compile(fixtureSchema);
-  must(validateFixture(fixture), `the shared fixture failed its shared schema: ${JSON.stringify(validateFixture.errors)}`);
+  // 🧬️ The corpus no longer carries a fixture-local schema: its parts are validated against the
+  // exports `hub.inference` owns, so this oracle reads the authority instead of a fixture copy.
+  must(fixture.schema === "semio.hub.gis-map-proposal-approval-fixture/v1" && fixture.version === 1, "the shared fixture envelope drifted");
+  for (const [exportId, value] of [
+    ["InferenceBindingIdentityV1", fixture.binding],
+    ["InferenceLimitsV1", fixture.limits],
+    ["GisMapInferencePreviewV1", fixture.preview],
+    ["InferenceMapSummaryV1", fixture.base.expectedInference],
+  ] as const) {
+    const validate = hubInferenceExport(repoRoot, exportId);
+    must(validate(value), `the shared fixture's ${exportId} member was rejected by hub's own export: ${JSON.stringify(validate.errors)}`);
+    ajv += 1;
+  }
+  const validateLifecycleKind = hubInferenceExport(repoRoot, "InferenceLifecycleKindV1");
+  for (const event of [...fixture.lifecycle, ...fixture.cancelLifecycle] as Array<{ kind: string }>)
+    must(validateLifecycleKind(event.kind), `lifecycle kind ${event.kind} is not a hub.inference/InferenceLifecycleKindV1`);
   ajv += 1;
 
   const errorRows = fixture.errors as Array<{ name: string; code: string; status: number }>;
@@ -300,7 +289,7 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
   reject(submit, { ...submitBody, mapPack: "client-supplied" }, "smuggled-map-pack");
 
   proveOsMirrorsHubApprovalAuthority(repoRoot);
-  const approvalRequest = compileDraft07(approvalRequestSchema);
+  const approvalRequest = compile(approvalRequestSchema);
   ajv += 1;
   const approvalBody = { schema: "semio.hub.inference-approval/v1", version: 1, jobId, proposalHash };
   must(approvalRequest(approvalBody), `a well-formed approval was rejected: ${JSON.stringify(approvalRequest.errors)}`);
@@ -353,7 +342,7 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
   reject(page, { ...pageBody, proposal: "private bytes" }, "leaked-page-proposal");
   reject(page, { ...pageBody, events: [...events, ...events] }, "page-over-the-fixed-item-bound");
 
-  const approvalReceipt = compile(approvalReceiptSchema);
+  const approvalReceipt = hubInferenceExport(repoRoot, "InferenceApprovalReceiptV1");
   ajv += 1;
   const approvalReceiptBody = {
     schema: "semio.hub.inference-approval-receipt/v1",
@@ -367,8 +356,23 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
   must(approvalReceipt(approvalReceiptBody), `a well-formed approval receipt was rejected: ${JSON.stringify(approvalReceipt.errors)}`);
   reject(approvalReceipt, { ...approvalReceiptBody, command: "server bytes" }, "leaked-command-bytes");
 
+  // ↩️ The durable undo half of the approval: hub owns `GisMapApprovalUndoRequestV1` /
+  // `…ReceiptV1` and the `GisMapDocumentFrontierV1` inside them, so the client's bodies are
+  // validated against hub's exports instead of a second copy.
+  const undoRequest = hubInferenceExport(repoRoot, "GisMapApprovalUndoRequestV1");
+  ajv += 1;
+  const undoRequestBody = { schema: "semio.hub.gis-map-approval-undo/v1", version: 1, targetId: approvalReceiptBody.undo.targetId, idempotencyKey: "33".repeat(16), expectedCurrent: approvalReceiptBody.undo.expectedCurrent };
+  must(undoRequest(undoRequestBody), `a well-formed undo intent was rejected: ${JSON.stringify(undoRequest.errors)}`);
+  reject(undoRequest, { ...undoRequestBody, inverse: "client bytes" }, "undo-carrying-inverse-bytes");
+  reject(undoRequest, { ...undoRequestBody, expectedCurrent: { ...undoRequestBody.expectedCurrent, chainSha256: proposalHash.slice(0, 63) } }, "undo-with-a-short-chain-digest");
+  const undoReceipt = hubInferenceExport(repoRoot, "GisMapApprovalUndoReceiptV1");
+  ajv += 1;
+  const undoReceiptBody = { schema: "semio.hub.gis-map-approval-undo-receipt/v1", targetId: undoRequestBody.targetId, originalJobId: jobId, mutationId: jobId, commandHash: proposalHash, applied: true, replayed: false, frontier: undoRequestBody.expectedCurrent };
+  must(undoReceipt(undoReceiptBody), `a well-formed undo receipt was rejected: ${JSON.stringify(undoReceipt.errors)}`);
+  reject(undoReceipt, { ...undoReceiptBody, inverse: "server bytes" }, "undo-receipt-leaking-inverse-bytes");
+
   const errorBody = compile({
-    $schema: "https://json-schema.org/draft/2020-12/schema",
+    $schema: "http://json-schema.org/draft-07/schema#",
     type: "object",
     properties: { schema: { const: "semio.hub.inference-error/v1" }, code: { enum: errorRows.map((row) => row.code) } },
     required: ["schema", "code"],
@@ -381,6 +385,7 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
 
   const registered = [...hubBinSource.matchAll(/\.route\("(\/spaces\/\{space_id\}\/documents\/\{document_id\}\/inference\/[^"]+)"/g)].map((match) => match[1]).sort();
   const expected = [
+    "/spaces/{space_id}/documents/{document_id}/inference/gis-map/approval-undos",
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs",
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/approval",
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/cancel",
@@ -391,6 +396,7 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
   must(jobsPath("space:alpha", "doc:tokyo") === render(expected.find((route) => route.endsWith("/jobs"))!), "the submit path builder drifted from the registered route");
   must(cancelPath("space:alpha", "doc:tokyo", jobId) === render(expected.find((route) => route.endsWith("/cancel"))!), "the cancel path builder drifted");
   must(approvalPath("space:alpha", "doc:tokyo", jobId) === render(expected.find((route) => route.endsWith("/approval"))!), "the approval path builder drifted");
+  must(approvalUndosPath("space:alpha", "doc:tokyo") === render(expected.find((route) => route.endsWith("/approval-undos"))!), "the durable approval-undo path builder drifted");
   must(eventsPath("space:alpha", "doc:tokyo", jobId, 4) === `${render(expected.find((route) => route.endsWith("/events"))!)}?after=4`, "the events path builder drifted");
 
   return { ajv, hostile, errors: errorRows.length, visibility: visibility.length, lifecycle, routes: expected.length, limits: Object.keys(limits).length };

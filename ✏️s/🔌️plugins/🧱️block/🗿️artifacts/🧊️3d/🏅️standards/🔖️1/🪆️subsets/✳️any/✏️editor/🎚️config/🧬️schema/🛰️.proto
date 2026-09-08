@@ -8,7 +8,6 @@ message Block3dConfig {
   // @state config
   repeated string wanted_tags = 3;
   // @state config
-  string locale = 4;
   // @state config
   repeated Block3dWindowView windows = 5;
   // @state config

@@ -34,7 +34,6 @@ pub struct DagConfig {
     /// 🎥️ Viewport camera zoom — was `DagPlayRuntime::camera.zoom`.
     pub camera_zoom: f64,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -86,7 +85,7 @@ impl Default for DagConfig {
         // 🎥️ Matches `DagCamera`'s own implicit default (`x: 0.0, y: 0.0, zoom: 1.0`, see `DagFixture`'s
         // `Default` impl in the kernel crate) without needing to parse the bundled demo document just to
         // read a trivial camera default.
-        Self { camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0, locale: "en-US".into() }
+        Self { camera_x: 0.0, camera_y: 0.0, camera_zoom: 1.0, }
     }
 }
 

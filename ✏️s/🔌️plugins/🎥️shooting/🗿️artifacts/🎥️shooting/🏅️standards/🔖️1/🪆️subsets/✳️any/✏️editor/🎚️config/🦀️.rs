@@ -49,7 +49,6 @@ pub struct ShootingConfig {
     /// 🧰️ The active transform-gumball utility for the scene window.
     pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -108,7 +107,6 @@ impl Default for ShootingConfig {
             camera_draft_label: String::new(),
             camera: ShootingCamera::default(),
             active_utility_id: "move".into(),
-            locale: "en-US".into(),
         }
     }
 }

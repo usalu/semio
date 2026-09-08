@@ -19,7 +19,7 @@ use crate::editor::lowpoly::modes::{edit, paint as paint_mode};
 use crate::editor::lowpoly::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, layers as layers_panel};
 use crate::editor::lowpoly::session::{LowpolyScratch, LowpolyTransient, LowpolyTransientMutation};
 use crate::editor::lowpoly::terminology::LowpolyLabels;
-use crate::editor::lowpoly::view::{is_paint_utility, resolve_active_object_id, selection_from_interaction, selection_from_state, utility_param_f64, LowpolyView, MESH_INTERACTION_DOMAIN};
+use crate::editor::lowpoly::view::{resolve_active_object_id, selection_from_interaction, selection_from_state, utility_param_f64, LowpolyView, MESH_INTERACTION_DOMAIN};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionView};
@@ -328,7 +328,6 @@ semio_framework_plugin::app_commands! {
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "canvasPointerMove" as "canvas-pointer-move" => canvas_pointer_move::CanvasPointerMove,
         "transformBegin" as "transform-begin" => transform_begin::TransformBegin,
-        "setActiveUtility" as "set-active-utility" => set_active_utility::SetActiveUtility,
     }
 }
 
@@ -345,7 +344,7 @@ use paint::{add_paint_layer, canvas_pointer_down, canvas_pointer_move, fill_buck
 use selection::{set_active_object, set_active_paint_layer};
 use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use transform::{rotate_selection, scale_selection, transform_begin, transform_end, translate_selection};
-use utility::{set_active_utility, set_utility_param};
+use utility::set_utility_param;
 use uv::{clear_seam, mark_uv_seam, unwrap_active};
 //#endregion 🔖️Commands
 
@@ -378,7 +377,6 @@ const LOWPOLY_MIGRATED_TOOL_IDS: &[&str] = &[
     "paintSample",
     "paintStrokeBegin",
     "transformBegin",
-    "setActiveUtility",
     "extrude",
     "inset",
     "bevel",
@@ -463,11 +461,10 @@ fn lowpoly_command_disposition(tool_id: &str) -> Option<LowpolyCommandDispositio
         | "transformEnd" => LowpolyCommandDisposition::ArtifactTransient,
         "importSnapshotJson" | "setFixtureJson" => LowpolyCommandDisposition::HostOnly,
         "paintStrokeBegin" | "transformBegin" => LowpolyCommandDisposition::Transient,
-        // 🖌️ `setActiveUtility` plus every paint-tick command (`paint_tick` mutates the mid-drag
-        // `stroke`/`stroke_drag_active` scratch, or — eyedropper — emits a `Config` mutation instead):
+        // 🖌️ Every paint-tick command (`paint_tick` mutates the mid-drag stroke scratch, or — eyedropper — emits a `Config` mutation instead):
         // both outcomes need the same `[Config, Transient]` lane pair the tick's own disposition can't
         // statically distinguish between.
-        "setActiveUtility" | "paintStroke" | "paintAt" | "canvasPointerDown" | "canvasPointerMove" => LowpolyCommandDisposition::ConfigTransient,
+        "paintStroke" | "paintAt" | "canvasPointerDown" | "canvasPointerMove" => LowpolyCommandDisposition::ConfigTransient,
         // 🌱️ `addPrimitive`'s handler unconditionally emits both a `CreateObject` Artifact mutation and
         // a `SetActiveObject` Config mutation, and it reaches `session::build_doc` — same as every
         // `ArtifactTransient` command above — so it needs the identical scratch rehydration/republication.
@@ -507,7 +504,6 @@ fn lowpoly_command_admitted(command: &LowpolyCommand, snapshot: &LowpolySnapshot
         LowpolyCommand::SetFixtureJson(payload) => payload.json.len() <= LOWPOLY_RETAINED_RAW_BYTES,
         LowpolyCommand::PaintSample(payload) => payload.object_id.as_deref().is_none_or(field),
         LowpolyCommand::PaintStrokeEnd(_) => true,
-        LowpolyCommand::SetActiveUtility(payload) => field(&payload.utility_id),
         LowpolyCommand::PaintStrokeBegin(_) | LowpolyCommand::TransformBegin(_) => true,
         LowpolyCommand::SetActivePaintLayer(_)
         | LowpolyCommand::ToggleShowEdges(_)
@@ -643,17 +639,6 @@ fn lowpoly_retained_reduce(
         LowpolyCommand::TransformBegin(_) => {
             let transient = context.transient.begin_transform_drag();
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: EphemeralEmit { presence: Vec::new(), transient: vec![LowpolyTransientMutation::Snapshot { transient }] } });
-        }
-        LowpolyCommand::SetActiveUtility(payload) => {
-            let mut config_mutations = vec![LowpolyConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }];
-            if is_paint_utility(&payload.utility_id) {
-                config_mutations.push(LowpolyConfigMutation::SetPaintUtility { value: payload.utility_id.clone() });
-            }
-            let transient = context.transient.reset_gestures();
-            return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
-                emit: Emit::config(config_mutations),
-                ephemeral: EphemeralEmit { presence: Vec::new(), transient: vec![LowpolyTransientMutation::Snapshot { transient }] },
-            });
         }
         LowpolyCommand::Extrude(payload) => threaded!(|doc, cfg, ctx| extrude::handle(payload, doc, cfg, ctx)),
         LowpolyCommand::Inset(payload) => threaded!(|doc, cfg, ctx| inset::handle(payload, doc, cfg, ctx)),
@@ -1042,7 +1027,6 @@ impl ArtifactOwnedToolJobFactory for LowpolyCommandJobFactory {
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "paintSample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "paintStrokeBegin", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "transformBegin", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "extrude", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "inset", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "bevel", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
@@ -1165,18 +1149,15 @@ fn lowpoly_config_retained_bytes(config: &LowpolyConfig) -> usize {
         .saturating_add(config.utility_params_json.len())
         .saturating_add(config.engagement_input.len())
         .saturating_add(config.sun_color.len())
-        .saturating_add(config.active_utility_id.len())
-        .saturating_add(config.locale.len())
 }
 
 fn lowpoly_config_mutation_retained_bytes(mutation: &LowpolyConfigMutation) -> usize {
     match mutation {
         LowpolyConfigMutation::Snapshot { config } => lowpoly_config_retained_bytes(config),
         LowpolyConfigMutation::SetActiveObject { object_id } => object_id.len(),
-        LowpolyConfigMutation::SetPaintUtility { value } | LowpolyConfigMutation::SetEngagementInput { value } | LowpolyConfigMutation::SetLocale { value } => value.len(),
+        LowpolyConfigMutation::SetPaintUtility { value } | LowpolyConfigMutation::SetEngagementInput { value } => value.len(),
         LowpolyConfigMutation::SetUtilityParams { json } => json.len(),
         LowpolyConfigMutation::SetSun { color, .. } => color.len(),
-        LowpolyConfigMutation::SetActiveUtility { utility_id } => utility_id.len(),
         LowpolyConfigMutation::SetActivePaintLayer { .. }
         | LowpolyConfigMutation::SetPaintColor { .. }
         | LowpolyConfigMutation::SetWorldCamera { .. }
@@ -1533,11 +1514,11 @@ fn lowpoly_export_media(port: &str, doc: &ArtifactView<'_, LowpolySnapshot>, scr
     }
 }
 
-fn lowpoly_render(body_key: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, scratch: &mut LowpolyScratch) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+fn lowpoly_render(body_key: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel, scratch: &mut LowpolyScratch) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let projection = doc.snapshot;
     let config = cfg.snapshot;
-    let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(config);
-    let active_utility = config.active_utility_id.as_str();
+    let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
+    let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or("move");
     if matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV) {
         scratch.refresh_texture_cache(projection);
     }
@@ -1622,7 +1603,6 @@ impl ArtifactEditor for LowpolyPlayApp {
             "paintSample" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "paintStrokeBegin" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "transformBegin" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            "setActiveUtility" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "extrude" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "inset" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "bevel" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
@@ -1759,6 +1739,7 @@ impl ArtifactEditor for LowpolyPlayApp {
         doc: &ArtifactView<'_, LowpolySnapshot>,
         cfg: &ConfigView<'_, LowpolyConfig>,
         interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation, Self::DraftMutation>, Fault> {
@@ -1768,8 +1749,8 @@ impl ArtifactEditor for LowpolyPlayApp {
         command.dispatch(doc, cfg, &mut scratch)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        lowpoly_render(body_key, doc, cfg, &mut LowpolyScratch::default())
+    fn render(body_key: &str, doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        lowpoly_render(body_key, doc, cfg, view_state, &mut LowpolyScratch::default())
     }
 
     fn render_with_request_context(
@@ -1777,24 +1758,25 @@ impl ArtifactEditor for LowpolyPlayApp {
         body_key: &str,
         doc: &ArtifactView<'_, LowpolySnapshot>,
         cfg: &ConfigView<'_, LowpolyConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, LowpolyTransient>,
         _interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let mut scratch = LowpolyScratch::from_transient(transient.snapshot, crate::LowpolySelection::default()).map_err(|error| semio_framework_plugin::PluginAssemblyError::new("lowpoly.transient", error))?;
-        lowpoly_render(body_key, doc, cfg, &mut scratch)
+        lowpoly_render(body_key, doc, cfg, view_state, &mut scratch)
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
-        let active_utility = config.active_utility_id.as_str();
-        let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(config);
+        let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or("move");
+        let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
         let engagement = lowpoly_window_engagement(LowpolyView { snapshot: doc.snapshot, config }, active_utility, labels);
         HashMap::from([(edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()), (paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV.into(), engagement)])
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, LowpolySnapshot>, cfg: &ConfigView<'_, LowpolyConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
-        let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(config);
+        let labels = crate::editor::lowpoly::terminology::lowpoly_play_labels(view_state);
         let measures = lowpoly_window_measures(config, labels);
         HashMap::from([(edit::windows::model::LOWPOLY_PLAY_WINDOW_MAIN.into(), measures.clone()), (paint_mode::windows::uv::LOWPOLY_PLAY_WINDOW_UV.into(), measures)])
     }
@@ -2039,7 +2021,6 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
             .action_interactive_job("transformBegin", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveUtility", InteractiveJobClassification::Migrated)
             .build_definition()
 }
 //#endregion 🔖️Manifest

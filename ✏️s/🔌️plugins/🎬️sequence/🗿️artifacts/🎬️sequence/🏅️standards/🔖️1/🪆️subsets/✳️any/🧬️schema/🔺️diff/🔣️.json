@@ -36,11 +36,7 @@
       "x-semio-state": "config"
     },
     "camera": {
-      "$ref": "#/$defs/SequenceCamera",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
+      "$ref": "https://semio.tech/schema/s/sequence/sequence/artifact.json#/$defs/SequenceCamera",
       "x-semio-state": "config"
     }
   },
@@ -74,7 +70,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/SequenceStep"
+            "$ref": "https://semio.tech/schema/s/sequence/sequence/artifact.json#/$defs/SequenceStep"
           }
         },
         "removed": {
@@ -110,7 +106,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/SequenceEdge"
+            "$ref": "https://semio.tech/schema/s/sequence/sequence/artifact.json#/$defs/SequenceEdge"
           }
         },
         "removed": {
@@ -167,82 +163,6 @@
         }
       }
     },
-    "SequenceStep": {
-      "title": "SequenceStep",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "kind",
-        "params",
-        "x",
-        "y",
-        "collapsed"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string"
-        },
-        "params": {
-          "type": "object"
-        },
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "slot": {
-          "$ref": "#/$defs/SlotRef"
-        },
-        "collapsed": {
-          "type": "boolean"
-        }
-      }
-    },
-    "SequenceEdge": {
-      "title": "SequenceEdge",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "from",
-        "to"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "from": {
-          "type": "string"
-        },
-        "to": {
-          "type": "string"
-        }
-      }
-    },
-    "SlotRef": {
-      "title": "SlotRef",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "owner",
-        "name"
-      ],
-      "properties": {
-        "owner": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
     "SequenceStepPatch": {
       "title": "SequenceStepPatch",
       "type": "object",
@@ -274,30 +194,6 @@
         },
         "to": {
           "type": "string"
-        }
-      }
-    },
-    "SequenceCamera": {
-      "title": "SequenceCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
         }
       }
     }

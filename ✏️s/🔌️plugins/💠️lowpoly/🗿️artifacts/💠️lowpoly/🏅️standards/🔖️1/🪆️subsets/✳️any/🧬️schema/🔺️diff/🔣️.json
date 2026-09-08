@@ -35,7 +35,6 @@
     "selectionMethod",
     "selectionModeDefault",
     "engagementInput",
-    "locale",
     "hoveredObjectId",
     "hoveredTargetObjectId",
     "hoveredTargetMode",
@@ -95,7 +94,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/LowpolySelection"
+          "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/artifact.json#/$defs/LowpolySelection"
         }
       ],
       "x-semio-state": "presence"
@@ -396,17 +395,6 @@
       ],
       "x-semio-state": "config"
     },
-    "locale": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "type": "string"
-        }
-      ],
-      "x-semio-state": "config"
-    },
     "hoveredObjectId": {
       "oneOf": [
         {
@@ -519,7 +507,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/LowpolyObject"
+            "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/artifact.json#/$defs/LowpolyObject"
           }
         },
         "removed": {
@@ -614,7 +602,7 @@
               "type": "null"
             },
             {
-              "$ref": "#/$defs/LowpolyTransform"
+              "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/artifact.json#/$defs/LowpolyTransform"
             }
           ]
         },
@@ -624,7 +612,7 @@
               "type": "null"
             },
             {
-              "$ref": "#/$defs/LowpolyMeshHandle"
+              "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/artifact.json#/$defs/LowpolyMeshHandle"
             }
           ]
         }
@@ -684,7 +672,7 @@
           "minimum": 0
         },
         "layer": {
-          "$ref": "#/$defs/LowpolyPaintLayer"
+          "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/artifact.json#/$defs/LowpolyPaintLayer"
         }
       }
     },
@@ -818,234 +806,8 @@
         "objects": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/LowpolyObject"
+            "$ref": "https://semio.tech/schema/s/lowpoly/lowpoly/artifact.json#/$defs/LowpolyObject"
           }
-        }
-      }
-    },
-    "LowpolySelection": {
-      "title": "LowpolySelection",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "targets",
-        "keys",
-        "mode",
-        "ids"
-      ],
-      "properties": {
-        "targets": {
-          "$ref": "#/$defs/LowpolySelectionTargets"
-        },
-        "keys": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "mode": {
-          "type": "string"
-        },
-        "ids": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "uint32",
-            "minimum": 0
-          }
-        }
-      }
-    },
-    "LowpolySelectionTargets": {
-      "title": "LowpolySelectionTargets",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mesh",
-        "vertex",
-        "edge",
-        "face"
-      ],
-      "properties": {
-        "mesh": {
-          "type": "boolean"
-        },
-        "vertex": {
-          "type": "boolean"
-        },
-        "edge": {
-          "type": "boolean"
-        },
-        "face": {
-          "type": "boolean"
-        }
-      }
-    },
-    "LowpolyTransform": {
-      "title": "LowpolyTransform",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "position",
-        "rotation",
-        "scale"
-      ],
-      "properties": {
-        "position": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "rotation": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "scale": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "float"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        }
-      }
-    },
-    "LowpolyPaintLayer": {
-      "title": "LowpolyPaintLayer",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "visible",
-        "opacity",
-        "blendMode",
-        "pixels"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "visible": {
-          "type": "boolean"
-        },
-        "opacity": {
-          "type": "number",
-          "format": "float"
-        },
-        "blendMode": {
-          "type": "string"
-        },
-        "pixels": {
-          "type": "string",
-          "contentEncoding": "base64"
-        }
-      }
-    },
-    "LowpolyObject": {
-      "title": "LowpolyObject",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "name",
-        "transform",
-        "smoothShading",
-        "mesh",
-        "paintLayers"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "transform": {
-          "$ref": "#/$defs/LowpolyTransform"
-        },
-        "smoothShading": {
-          "type": "boolean"
-        },
-        "mesh": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "$ref": "#/$defs/LowpolyMeshHandle"
-            }
-          ]
-        },
-        "paintLayers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/LowpolyPaintLayer"
-          }
-        }
-      }
-    },
-    "LowpolyMeshHandle": {
-      "title": "LowpolyMeshHandle",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "childId",
-        "target"
-      ],
-      "properties": {
-        "childId": {
-          "type": "string"
-        },
-        "target": {
-          "$ref": "#/$defs/ArtifactRef"
-        }
-      }
-    },
-    "ArtifactRef": {
-      "title": "ArtifactRef",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "artifactId",
-        "dialect"
-      ],
-      "properties": {
-        "artifactId": {
-          "type": "string"
-        },
-        "dialect": {
-          "$ref": "#/$defs/ArtifactDialect"
-        }
-      }
-    },
-    "ArtifactDialect": {
-      "title": "ArtifactDialect",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "artifactKind",
-        "standard",
-        "subset"
-      ],
-      "properties": {
-        "artifactKind": {
-          "type": "string"
-        },
-        "standard": {
-          "type": "string"
-        },
-        "subset": {
-          "type": "string"
         }
       }
     }

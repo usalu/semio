@@ -9,8 +9,7 @@
 use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::dimensions::{compute_gif_dimensions, GifDimensions};
-
+use super::dimensions::{compute_gif_dimensions};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a gif89a snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `dimensions`, backed by the `📐dimensions/` slug dir).
@@ -84,3 +83,8 @@ pub fn gif89a_artifact_inference_descriptor() -> framework_schema::ArtifactInfer
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::dimensions::GifDimensions;
+//#endregion 🔁️Re-exports

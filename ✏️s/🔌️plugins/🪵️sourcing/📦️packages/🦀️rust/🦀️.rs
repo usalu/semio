@@ -50,12 +50,5 @@ pub use plugin::SourcingApps;
 #[cfg(feature = "plugin-entry")]
 semio_framework_plugin::plugin_exports!(plugin::plugin, SourcingApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_curation_demo_session;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

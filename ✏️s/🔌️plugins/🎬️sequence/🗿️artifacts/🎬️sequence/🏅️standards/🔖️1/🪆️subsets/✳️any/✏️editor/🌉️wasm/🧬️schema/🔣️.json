@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:sequence.browser-abi:editing",
+  "title": "Sequence Browser Editing Protocol Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "feature", "operation", "requestId", "generation", "session", "input", "semantic"],
+  "properties": {
+    "version": { "const": 1 },
+    "feature": { "const": "editing" },
+    "operation": { "const": 2305 },
+    "requestId": { "type": "string", "pattern": "^[1-9][0-9]{0,19}$" },
+    "generation": { "$ref": "#/$defs/generation" },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slot", "generation"],
+      "properties": {
+        "slot": { "$ref": "#/$defs/generation" },
+        "generation": { "$ref": "#/$defs/generation" }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "x", "y", "picked"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "picked": { "type": "null" }
+      }
+    },
+    "semantic": { "type": "string", "minLength": 1 }
+  },
+  "$defs": {
+    "generation": { "type": "integer", "minimum": 1, "maximum": 4294967295 }
+  }
+}

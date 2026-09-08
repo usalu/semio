@@ -4,3 +4,8 @@ message JsonDiff {
   string schema = 1;
   string value_wire = 2;
 }
+
+message DrawingDiff {
+  optional string schema = 1;
+  optional string value = 2;
+}

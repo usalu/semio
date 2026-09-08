@@ -1,7 +1,9 @@
 use super::*;
 
 //#region 🧪️WholePatchRetirement
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+}
 fn make(ops: UiPatchOps) -> UiPendingPatch {
     let fixture = fixture();
     let mut owner = UiPendingPatch::default();
@@ -16,7 +18,11 @@ fn close(owner: &mut UiPendingPatch, grant: usize) -> usize {
         assert!(step.released_items <= 1 && step.released_bytes <= grant);
         assert!(owner.retained_operation_bytes() <= before);
         bytes += step.released_bytes;
-        if step.complete { assert!(owner.terminal_is_empty()); assert_eq!(owner.retained_operation_bytes(), 0); return bytes; }
+        if step.complete {
+            assert!(owner.terminal_is_empty());
+            assert_eq!(owner.retained_operation_bytes(), 0);
+            return bytes;
+        }
     }
     panic!("whole patch did not retire");
 }
@@ -47,14 +53,19 @@ fn retained_pending_patch_keeps_empty_backing_and_partial_owner_through_unwind()
     let fixture = fixture();
     for frontier in fixture["frontiers"].as_array().unwrap() {
         let mut ops = UiPatchOps::default();
-        while !ops.has_reserved_slot() { let request = ops.next_allocation_bytes().unwrap(); ops.try_reserve_one(request).unwrap(); }
+        while !ops.has_reserved_slot() {
+            let request = ops.next_allocation_bytes().unwrap();
+            ops.try_reserve_one(request).unwrap();
+        }
         let backing = ops.allocated_bytes();
         assert!(backing > 0 && ops.is_empty());
         let mut owner = make(ops);
         assert_eq!(owner.retained_operation_bytes(), backing);
         let mut retired = 0;
         let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            for _ in 0..frontier.as_u64().unwrap() { retired += owner.close_step(1, 1).unwrap().released_bytes; }
+            for _ in 0..frontier.as_u64().unwrap() {
+                retired += owner.close_step(1, 1).unwrap().released_bytes;
+            }
             panic!("fixture producer failure with owner retained outside callback");
         }));
         assert!(panic.is_err());

@@ -20,7 +20,6 @@ type FlowDiff {
   automationEnabledJson: String @state(class: CONFIG)
   contributionsJson: String @state(class: CONFIG)
   generationJson: String @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
 }
 
 type FlowArtifact {
@@ -42,7 +41,6 @@ type FlowArtifact {
   automationEnabledJson: String!
   contributionsJson: String!
   generationJson: String!
-  locale: String!
 }
 
 type CameraJson {

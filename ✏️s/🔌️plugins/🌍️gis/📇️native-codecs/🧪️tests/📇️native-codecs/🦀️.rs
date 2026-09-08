@@ -24,7 +24,7 @@ fn assert_zero_history<P, M>(parsed: store::ParsedDocumentText<P, M>, document_i
 #[semio_framework_async_macros::async_test]
 async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_factory_substitution() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
-    let document_ids: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️fixtures/🌱️artifact-document-id-v1/🔣️.json")).unwrap();
+    let document_ids: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1/🔣️.json")).unwrap();
     let document_id = document_ids["cases"].as_array().unwrap().iter().find(|row| row["accepted"] == true).unwrap()["documentId"].as_str().unwrap();
     let snapshot = GisMapSnapshot::default();
     let pack = snapshot.encode_pack();
@@ -100,7 +100,7 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
 
 #[test]
 fn gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/💡️inference-control/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/💡️inference-control/🔣️.json")).unwrap();
     let features = &fixture["snapshot"];
     let snapshot = gis_map_snapshot_with_derived_children(GisMapSnapshot {
         positions: FromValue::from_value(DslValue::from(&features["positions"])).unwrap(),

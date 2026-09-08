@@ -18,7 +18,6 @@ message Generation3dConfig {
   // @state config
   string active_utility_id = 8;
   // @state config
-  string locale = 9;
   // @state config
   optional string preview_eval_text = 10;
 }

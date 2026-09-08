@@ -9,8 +9,7 @@ use dsl::DslValue;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::topology::{compute_wires_topology, WiresTopology};
-
+use super::topology::{compute_wires_topology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a wires snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir, read off the
@@ -127,3 +126,8 @@ pub fn wires_artifact_inference_descriptor() -> framework_schema::ArtifactInfere
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::topology::WiresTopology;
+//#endregion 🔁️Re-exports

@@ -1,8 +1,6 @@
 //! 🔺️ Sparse logical ZIP diffs over member names, decompressed payloads, ordering, and archive comment.
 
 use std::collections::{HashMap, HashSet};
-
-use crate::schema::snapshot::ZipEntry;
 use crate::ZipSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -301,3 +299,8 @@ pub(crate) fn demo_diff_cases() -> Vec<ZipDiff> {
     let other = ZipSnapshot { entries: vec![ZipEntry { name: "after.txt".into(), data: b"after".to_vec() }], comment: "archive".into(), ..Default::default() };
     vec![ZipDiff::default(), ZipDiff::between(&base, &other), ZipDiff::between(&other, &base)]
 }
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::schema::snapshot::ZipEntry;
+//#endregion 🔁️Re-exports

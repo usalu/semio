@@ -2,14 +2,14 @@
   "cases": [
     {
       "target": "native",
-      "requiredPackages": ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", "semio-framework-os-renderer-wgpu", "semio-s-plugin-dag", "semio-s-plugin-flow-extension-math", "semio-s-artifact-stdio-binary", "semio-s-artifact-norm-en1992", "semio-s-artifact-sequence-sequence"],
+      "requiredPackages": ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", "semio-framework-os-renderer-wgpu", "semio-s-plugin-dag", "semio-s-plugin-flow-extension-math", "semio-s-artifact-stdio-binary", "semio-s-artifact-norm-en1992", "semio-s-artifact-sequence-sequence", "semio-framework-artifact-flow-flow", "semio-framework-artifact-infinite-dag", "semio-framework-artifact-space-space", "semio-framework-artifact-space-collection", "semio-framework-artifact-playbook-playbook", "semio-framework-artifact-workflow-run", "semio-framework-artifact-workflow-workflow", "semio-s-plugin-draw-fsm", "semio-s-plugin-draw-fsm-macros", "semio-s-plugin-trinity-jack-lsp", "semio-s-plugin-trinity-jack-shell"],
       "scopeArgs": ["--all-targets"],
       "targetArgs": [],
       "rendererFeatures": ["--features", "native-bin"]
     },
     {
       "target": "wasm32-wasip2",
-      "requiredPackages": ["semio-s-plugin-dag", "semio-s-plugin-flow-extension-math", "semio-s-artifact-stdio-binary", "semio-s-artifact-norm-en1992", "semio-s-artifact-sequence-sequence"],
+      "requiredPackages": ["semio-s-plugin-dag", "semio-s-plugin-flow-extension-math", "semio-s-artifact-stdio-binary", "semio-s-artifact-norm-en1992", "semio-s-artifact-sequence-sequence", "semio-framework-artifact-flow-flow", "semio-framework-artifact-infinite-dag", "semio-framework-artifact-space-space", "semio-framework-artifact-space-collection", "semio-framework-artifact-playbook-playbook", "semio-framework-artifact-workflow-run", "semio-framework-artifact-workflow-workflow"],
       "scopeArgs": ["--lib"],
       "targetArgs": ["--target", "wasm32-wasip2"],
       "rendererFeatures": []

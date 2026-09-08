@@ -161,7 +161,7 @@ export function createDefaultShellState(): ShellState {
     openWithFocusRole: null,
     activeTutorialId: null,
     uiAppearance: "system",
-    uiLayout: "default",
+    uiLayout: "desktop",
     uiDriverId: "",
     uiCustomDrivers: {},
     uiDriverDraft: null,

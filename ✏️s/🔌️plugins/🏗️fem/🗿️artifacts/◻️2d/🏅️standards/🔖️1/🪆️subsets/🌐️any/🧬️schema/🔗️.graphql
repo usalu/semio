@@ -14,8 +14,57 @@ type Fem2dArtifact {
   resultMode: String! @state(class: PRESENCE)
   resultModeIndex: Int! @state(class: PRESENCE)
   camera: FemCamera! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
   solverResultsJson: String! @state(class: ARTIFACT)
   meshPreviewJson: String! @state(class: ARTIFACT)
 }
 
+type FemCamera {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+type FemAnalysisSettings {
+  modalCount: Int!
+  bucklingCount: Int!
+  deformationScale: Float!
+}
+
+type FemNode {
+  id: String!
+  x: Float!
+  y: Float!
+}
+
+scalar FemElement
+
+type FemRegion {
+  id: String!
+  name: String!
+  outline: [[Float!]!]!
+  holes: [[[Float!]!]!]!
+  thickness: Float!
+  materialId: String!
+  meshSize: Float!
+}
+
+type FemMaterial {
+  id: String!
+  name: String!
+  e: Float!
+  nu: Float!
+  rho: Float!
+}
+
+type FemSection {
+  id: String!
+  name: String!
+  area: Float!
+  iy: Float!
+}
+
+type FemSupport {
+  id: String!
+  nodeId: String!
+  fixed: [String!]!
+}

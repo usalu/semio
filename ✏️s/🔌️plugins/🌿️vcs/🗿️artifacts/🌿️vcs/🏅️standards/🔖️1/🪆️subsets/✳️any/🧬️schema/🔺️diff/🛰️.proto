@@ -21,7 +21,6 @@ message VcsDiff {
   // @state presence
   optional VcsStringList selected_checkpoint_ids = 8;
   // @state config
-  optional string locale = 9;
 }
 
 message VcsStringList {
@@ -41,5 +40,4 @@ message VcsArtifact {
   string status = 5;
   repeated string tags = 6;
   repeated string selected_checkpoint_ids = 7;
-  string locale = 8;
 }

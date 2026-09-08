@@ -5,7 +5,6 @@ type ProcedureArtifact {
   path: ProcedurePath! @state(class: ARTIFACT)
   seed: [ProcedureSeedEntry!]! @state(class: ARTIFACT)
   selectedStepIds: [String!]! @state(class: PRESENCE)
-  locale: String! @state(class: CONFIG)
   contributionsJson: String! @state(class: CONFIG)
   runOutputJson: String! @state(class: TRANSIENT)
 }

@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMut
 use crate::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
 use crate::editor::generation3d::commands::{
     add_generation, add_widget, delete_selection, flow_eval_tick, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget,
-    rename_generation, reorganize, rotate_selection, scale_selection, select_generation, set_active_example, set_active_utility, set_camera, set_locale, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun,
+    rename_generation, reorganize, rotate_selection, scale_selection, select_generation, set_active_example, set_active_utility, set_camera, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun,
     translate_selection, update_generation_values, world_pointer_down,
 };
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
@@ -88,7 +88,6 @@ semio_framework_plugin::app_commands! {
         "setCamera" as "camera" => set_camera::SetCamera,
         "selectGeneration" as "select-generation" => select_generation::SelectGeneration,
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick}
 }
 
@@ -140,13 +139,13 @@ fn generation3d_port_ids_by_node(fixture: &semio_framework_artifact_flow_flow::F
 /// `graph` marks. Shared by `render` (marks-free) and `render_with_request_context` (live marks) so
 /// there is exactly one body-key match in the app.
 fn generation3d_render_body(body_key: &str, document: &Generation3dSnapshot, config: &Generation3dConfig, marks: &PreviewInteractionMarks) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-    let labels = generation3d_labels(config);
+    let labels = generation3d_labels(view_state);
     let active_utility = config.active_utility_id.as_str();
     let session = FlowEvalSession::new();
     let node = match body_key {
         flow_window::GENERATION_3D_PLAY_BODY_MAIN => flow_window::render(document, config, &session, marks),
         edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session, active_utility, marks),
-        generations::GENERATION_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::default()),
+        generations::GENERATION_3D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, view_state.locale, semio_framework_plugin::Terminology::default()),
         form::GENERATION_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.fixture, &document.generation, labels),
         generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.fixture, &document.generation, config, labels, active_utility, marks),
         document_panel::GENERATION_3D_PLAY_BODY_DOCUMENT => document_panel::render(&document.fixture, labels),
@@ -189,8 +188,7 @@ const GENERATION3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setCamera",
     "selectGeneration",
     "setActiveUtility",
-    "setLocale",
-    "flowEvalTick",
+        "flowEvalTick",
 ];
 const GENERATION3D_RETAINED_PAYLOAD_SCHEMA: &str = "generation.3d.tool-command.v1";
 const GENERATION3D_RETAINED_RAW_BYTES: usize = 8_192;
@@ -225,6 +223,7 @@ fn generation3d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>, Fault> {
     if !GENERATION3D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
@@ -324,7 +323,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBounded
         ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "flowEvalTick", lanes: &[ArtifactToolPublicationLane::Config] },
     ];
 }
@@ -762,7 +760,6 @@ impl ArtifactEditor for Generation3dPlayApp {
             "setCamera" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "selectGeneration" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "setActiveUtility" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setLocale" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "flowEvalTick" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
     }
@@ -918,7 +915,6 @@ impl ArtifactEditor for Generation3dPlayApp {
             "setCamera" => Ok(Generation3dCommand::SetCamera(set_camera::SetCamera { camera: parse_preview_camera_json(&args) })),
             "selectGeneration" => Ok(Generation3dCommand::SelectGeneration(select_generation::SelectGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
             "setActiveUtility" => Ok(Generation3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: str_arg(&["utilityId", "utility_id"]).unwrap_or_default() })),
-            "setLocale" => Ok(Generation3dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
             "flowEvalTick" => Ok(Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {})),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
@@ -935,7 +931,8 @@ impl ArtifactEditor for Generation3dPlayApp {
         command: &Generation3dCommand,
         doc: &ArtifactView<'_, Generation3dSnapshot>,
         cfg: &ConfigView<'_, Generation3dConfig>,
-        interaction: &InteractionView<'_>,
+        _view_state: &semio_framework_plugin::ViewModel,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, Self::DraftMutation>, Fault> {
@@ -1004,7 +1001,7 @@ impl ArtifactEditor for Generation3dPlayApp {
 
     /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
     /// interaction) — every live window goes through `render_with_request_context` instead.
-    fn render(body_key: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, &PreviewInteractionMarks::default())
     }
 
@@ -1017,12 +1014,12 @@ impl ArtifactEditor for Generation3dPlayApp {
         doc: &ArtifactView<'_, Generation3dSnapshot>,
         cfg: &ConfigView<'_, Generation3dConfig>,
         _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
-        interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, &PreviewInteractionMarks::from_interaction(interaction))
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let measures = edit_preview::preview_window_measures(config, generation3d_action);
         HashMap::from([
@@ -1048,8 +1045,8 @@ impl ArtifactEditor for Generation3dPlayApp {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         {
             let config = cfg.snapshot;
-            let labels = generation3d_labels(config);
-            let is_de = config.locale.starts_with("de");
+            let labels = generation3d_labels(view_state);
+            let is_de = view_state.locale == semio_framework_plugin::Locale::De;
             let selected: Vec<String> = Vec::new();
             let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
             let has_selection = !nodes.is_empty() || !edges.is_empty();
@@ -1122,7 +1119,6 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .view_action("selectGeneration", LocalizedLabel::native("Set Generation", "Generation auswählen"))
-            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
             .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
@@ -1150,7 +1146,6 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("selectGeneration", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveUtility", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             .action_interactive_job("flowEvalTick", InteractiveJobClassification::Migrated)
             .action_args("addWidget", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![

@@ -9,7 +9,7 @@ struct SerdeJsonWiresChildOwnerOracle;
 
 impl WiresChildOwnerOracle for SerdeJsonWiresChildOwnerOracle {
     fn expected() -> serde_json::Value {
-        serde_json::from_str(include_str!("../../🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Wires child-owner fixture")
+        serde_json::from_str(include_str!("../../🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Wires child-owner fixture")
     }
 }
 

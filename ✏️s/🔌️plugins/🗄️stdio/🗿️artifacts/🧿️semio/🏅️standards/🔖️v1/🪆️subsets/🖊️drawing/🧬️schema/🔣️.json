@@ -16,21 +16,21 @@
       "x-semio-state": "artifact"
     },
     "canvas": {
-      "$ref": "📸️snapshot/🔣️.json#/$defs/DrawCanvas",
+      "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/DrawCanvas",
       "x-semio-state": "artifact"
     },
     "styles": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "📸️snapshot/🔣️.json#/$defs/DrawStyle"
+        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/DrawStyle"
       }
     },
     "layers": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "📸️snapshot/🔣️.json#/$defs/DrawLayer"
+        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/DrawLayer"
       }
     }
   }

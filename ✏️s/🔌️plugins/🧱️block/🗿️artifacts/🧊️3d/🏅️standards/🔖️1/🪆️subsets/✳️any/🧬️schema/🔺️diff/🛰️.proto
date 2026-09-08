@@ -33,7 +33,6 @@ message Block3dDiff {
   // @state presence
   optional Block3dStringList wanted_tags = 14;
   // @state config
-  optional string locale = 15;
   // @state config
   optional Block3dWindowsList windows = 16;
   // @state config

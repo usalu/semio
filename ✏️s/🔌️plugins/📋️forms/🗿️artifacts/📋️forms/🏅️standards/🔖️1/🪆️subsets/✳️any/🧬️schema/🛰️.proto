@@ -11,7 +11,6 @@ message FormsArtifact {
   repeated string selected_ids = 6;
   uint32 current_step_index = 7;
   map<string, FormsTryValueChunks> try_values = 8;
-  string locale = 9;
   string contributions_json = 10;
 }
 
@@ -26,4 +25,8 @@ message FormQuestion {
   string id = 1;
   string label = 2;
   string kind = 3;
+}
+
+message FormsStringList {
+  repeated string values = 1;
 }

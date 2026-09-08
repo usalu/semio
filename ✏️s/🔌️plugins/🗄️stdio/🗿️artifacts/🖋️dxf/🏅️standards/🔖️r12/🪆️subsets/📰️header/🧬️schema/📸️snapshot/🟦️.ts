@@ -101,3 +101,155 @@ export interface DxfSnapshot {
   blocks: DxfBlock[];
   entities: DxfEntity[];
 }
+
+//#region 🚪️Parsers
+/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
+export class stdioDxfR12HeaderSnapshotGuardRefusal extends Error {
+  constructor(readonly at: string, readonly why: string) {
+    super(`${at}: ${why}`);
+  }
+}
+
+const stdioDxfR12HeaderSnapshotGuardReject = (at: string, why: string): never => {
+  throw new stdioDxfR12HeaderSnapshotGuardRefusal(at, why);
+};
+
+type stdioDxfR12HeaderSnapshotGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
+type stdioDxfR12HeaderSnapshotGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
+type stdioDxfR12HeaderSnapshotGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
+
+export const stdioDxfR12HeaderSnapshotGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : stdioDxfR12HeaderSnapshotGuardReject(at, "value is not an object");
+export const stdioDxfR12HeaderSnapshotGuardArray = (value: unknown, at: string, bounds: stdioDxfR12HeaderSnapshotGuardSizeBounds = {}): readonly unknown[] => {
+  if (!Array.isArray(value)) return stdioDxfR12HeaderSnapshotGuardReject(at, "value is not an array");
+  if (bounds.minItems !== undefined && value.length < bounds.minItems) stdioDxfR12HeaderSnapshotGuardReject(at, `array has fewer than ${bounds.minItems} items`);
+  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) stdioDxfR12HeaderSnapshotGuardReject(at, `array has more than ${bounds.maxItems} items`);
+  return value;
+};
+export const stdioDxfR12HeaderSnapshotGuardString = (value: unknown, at: string, bounds: stdioDxfR12HeaderSnapshotGuardTextBounds = {}): string => {
+  if (typeof value !== "string") return stdioDxfR12HeaderSnapshotGuardReject(at, "value is not a string");
+  const length = [...value].length;
+  if (bounds.minLength !== undefined && length < bounds.minLength) stdioDxfR12HeaderSnapshotGuardReject(at, `string is shorter than ${bounds.minLength}`);
+  if (bounds.maxLength !== undefined && length > bounds.maxLength) stdioDxfR12HeaderSnapshotGuardReject(at, `string is longer than ${bounds.maxLength}`);
+  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) stdioDxfR12HeaderSnapshotGuardReject(at, `string does not match ${bounds.pattern}`);
+  return value;
+};
+export const stdioDxfR12HeaderSnapshotGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : stdioDxfR12HeaderSnapshotGuardReject(at, "value is not a boolean"));
+export const stdioDxfR12HeaderSnapshotGuardNumber = (value: unknown, at: string, bounds: stdioDxfR12HeaderSnapshotGuardRangeBounds = {}): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return stdioDxfR12HeaderSnapshotGuardReject(at, "value is not a finite number");
+  if (bounds.minimum !== undefined && value < bounds.minimum) stdioDxfR12HeaderSnapshotGuardReject(at, `number is below ${bounds.minimum}`);
+  if (bounds.maximum !== undefined && value > bounds.maximum) stdioDxfR12HeaderSnapshotGuardReject(at, `number is above ${bounds.maximum}`);
+  return value;
+};
+export const stdioDxfR12HeaderSnapshotGuardInteger = (value: unknown, at: string, bounds: stdioDxfR12HeaderSnapshotGuardRangeBounds = {}): number =>
+  Number.isSafeInteger(value) ? stdioDxfR12HeaderSnapshotGuardNumber(value, at, bounds) : stdioDxfR12HeaderSnapshotGuardReject(at, "value is not an integer");
+export const stdioDxfR12HeaderSnapshotGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
+  members.includes(value as T) ? (value as T) : stdioDxfR12HeaderSnapshotGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const stdioDxfR12HeaderSnapshotGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
+  value === expected ? expected : stdioDxfR12HeaderSnapshotGuardReject(at, `value is not ${String(expected)}`);
+//#endregion 🚪️Parsers
+
+export function parseDxfSnapshot(value: unknown, at = "$"): DxfSnapshot {
+  const row = stdioDxfR12HeaderSnapshotGuardObject(value, at);
+  return {
+    schema: stdioDxfR12HeaderSnapshotGuardString(row["schema"], `${at}.schema`),
+    headerVars: stdioDxfR12HeaderSnapshotGuardArray(row["headerVars"], `${at}.headerVars`).map((item, index) => parseDxfHeaderVar(item, `${at}.headerVars[${index}]`)),
+    tables: parseDxfTables(row["tables"], `${at}.tables`),
+    otherTables: stdioDxfR12HeaderSnapshotGuardArray(row["otherTables"], `${at}.otherTables`).map((item, index) => parseDxfOtherTable(item, `${at}.otherTables[${index}]`)),
+    blocks: stdioDxfR12HeaderSnapshotGuardArray(row["blocks"], `${at}.blocks`).map((item, index) => parseDxfBlock(item, `${at}.blocks[${index}]`)),
+    entities: stdioDxfR12HeaderSnapshotGuardArray(row["entities"], `${at}.entities`).map((item, index) => parseDxfEntity(item, `${at}.entities[${index}]`)),
+  };
+}
+
+export function parseDxfTag(value: unknown, at = "$"): DxfTag {
+  const row = stdioDxfR12HeaderSnapshotGuardObject(value, at);
+  return {
+    code: stdioDxfR12HeaderSnapshotGuardInteger(row["code"], `${at}.code`),
+    value: stdioDxfR12HeaderSnapshotGuardString(row["value"], `${at}.value`),
+  };
+}
+
+export function parseDxfHeaderVar(value: unknown, at = "$"): DxfHeaderVar {
+  const row = stdioDxfR12HeaderSnapshotGuardObject(value, at);
+  return {
+    name: stdioDxfR12HeaderSnapshotGuardString(row["name"], `${at}.name`),
+    groupCode: stdioDxfR12HeaderSnapshotGuardInteger(row["groupCode"], `${at}.groupCode`),
+    value: parseDxfValue(row["value"], `${at}.value`),
+    extraGroupCodes: row["extraGroupCodes"] === undefined ? undefined : stdioDxfR12HeaderSnapshotGuardArray(row["extraGroupCodes"], `${at}.extraGroupCodes`).map((item, index) => parseDxfGroupCode(item, `${at}.extraGroupCodes[${index}]`)),
+  };
+}
+
+export type Vec3 = readonly number[];
+
+export function parseVec3(value: unknown, at = "$"): Vec3 {
+  return stdioDxfR12HeaderSnapshotGuardArray(value, `${at}`, {"minItems": 3, "maxItems": 3}).map((item, index) => stdioDxfR12HeaderSnapshotGuardNumber(item, `${at}[${index}]`));
+}
+
+export function parseDxfLayer(value: unknown, at = "$"): DxfLayer {
+  const row = stdioDxfR12HeaderSnapshotGuardObject(value, at);
+  return {
+    name: stdioDxfR12HeaderSnapshotGuardString(row["name"], `${at}.name`),
+    color: stdioDxfR12HeaderSnapshotGuardInteger(row["color"], `${at}.color`),
+    linetype: stdioDxfR12HeaderSnapshotGuardString(row["linetype"], `${at}.linetype`),
+    flags: stdioDxfR12HeaderSnapshotGuardInteger(row["flags"], `${at}.flags`),
+    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : stdioDxfR12HeaderSnapshotGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`).map((item, index) => parseDxfGroupCode(item, `${at}.unknownGroupCodes[${index}]`)),
+  };
+}
+
+export function parseDxfStyle(value: unknown, at = "$"): DxfStyle {
+  const row = stdioDxfR12HeaderSnapshotGuardObject(value, at);
+  return {
+    name: stdioDxfR12HeaderSnapshotGuardString(row["name"], `${at}.name`),
+    flags: stdioDxfR12HeaderSnapshotGuardInteger(row["flags"], `${at}.flags`),
+    fontName: stdioDxfR12HeaderSnapshotGuardString(row["fontName"], `${at}.fontName`),
+    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : stdioDxfR12HeaderSnapshotGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`).map((item, index) => parseDxfGroupCode(item, `${at}.unknownGroupCodes[${index}]`)),
+  };
+}
+
+export function parseDxfLinetype(value: unknown, at = "$"): DxfLinetype {
+  const row = stdioDxfR12HeaderSnapshotGuardObject(value, at);
+  return {
+    name: stdioDxfR12HeaderSnapshotGuardString(row["name"], `${at}.name`),
+    flags: stdioDxfR12HeaderSnapshotGuardInteger(row["flags"], `${at}.flags`),
+    description: stdioDxfR12HeaderSnapshotGuardString(row["description"], `${at}.description`),
+    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : stdioDxfR12HeaderSnapshotGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`).map((item, index) => parseDxfGroupCode(item, `${at}.unknownGroupCodes[${index}]`)),
+  };
+}
+
+export function parseDxfTables(value: unknown, at = "$"): DxfTables {
+  const row = stdioDxfR12HeaderSnapshotGuardObject(value, at);
+  return {
+    layers: stdioDxfR12HeaderSnapshotGuardArray(row["layers"], `${at}.layers`).map((item, index) => parseDxfLayer(item, `${at}.layers[${index}]`)),
+    styles: stdioDxfR12HeaderSnapshotGuardArray(row["styles"], `${at}.styles`).map((item, index) => parseDxfStyle(item, `${at}.styles[${index}]`)),
+    linetypes: stdioDxfR12HeaderSnapshotGuardArray(row["linetypes"], `${at}.linetypes`).map((item, index) => parseDxfLinetype(item, `${at}.linetypes[${index}]`)),
+  };
+}
+
+export function parseDxfOtherTable(value: unknown, at = "$"): DxfOtherTable {
+  const row = stdioDxfR12HeaderSnapshotGuardObject(value, at);
+  return {
+    name: stdioDxfR12HeaderSnapshotGuardString(row["name"], `${at}.name`),
+    tags: stdioDxfR12HeaderSnapshotGuardArray(row["tags"], `${at}.tags`).map((item, index) => parseDxfTag(item, `${at}.tags[${index}]`)),
+  };
+}
+
+export function parseDxfVertex(value: unknown, at = "$"): DxfVertex {
+  const row = stdioDxfR12HeaderSnapshotGuardObject(value, at);
+  return {
+    x: stdioDxfR12HeaderSnapshotGuardNumber(row["x"], `${at}.x`),
+    y: stdioDxfR12HeaderSnapshotGuardNumber(row["y"], `${at}.y`),
+    z: stdioDxfR12HeaderSnapshotGuardNumber(row["z"], `${at}.z`),
+    bulge: stdioDxfR12HeaderSnapshotGuardNumber(row["bulge"], `${at}.bulge`),
+    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : stdioDxfR12HeaderSnapshotGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`).map((item, index) => parseDxfGroupCode(item, `${at}.unknownGroupCodes[${index}]`)),
+  };
+}
+
+export function parseDxfBlock(value: unknown, at = "$"): DxfBlock {
+  const row = stdioDxfR12HeaderSnapshotGuardObject(value, at);
+  return {
+    name: stdioDxfR12HeaderSnapshotGuardString(row["name"], `${at}.name`),
+    basePoint: parseVec3(row["basePoint"], `${at}.basePoint`),
+    entities: stdioDxfR12HeaderSnapshotGuardArray(row["entities"], `${at}.entities`).map((item, index) => parseDxfEntity(item, `${at}.entities[${index}]`)),
+    unknownGroupCodes: row["unknownGroupCodes"] === undefined ? undefined : stdioDxfR12HeaderSnapshotGuardArray(row["unknownGroupCodes"], `${at}.unknownGroupCodes`).map((item, index) => parseDxfGroupCode(item, `${at}.unknownGroupCodes[${index}]`)),
+  };
+}

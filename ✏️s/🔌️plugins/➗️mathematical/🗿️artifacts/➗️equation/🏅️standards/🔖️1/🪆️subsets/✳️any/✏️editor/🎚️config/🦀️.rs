@@ -27,7 +27,6 @@ pub struct EquationConfig {
     #[dsl(block)]
     pub camera: EquationCamera,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -76,7 +75,7 @@ impl store::ArtifactPack for EquationConfig {
 
 impl Default for EquationConfig {
     fn default() -> Self {
-        Self { camera: EquationCamera::default(), locale: "en-US".into() }
+        Self { camera: EquationCamera::default(), }
     }
 }
 
@@ -85,7 +84,7 @@ store::impl_whole_record_config!(EquationConfig);
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
-pub use mutations::{EquationConfigMutation, SetCamera, SetLocale};
+pub use mutations::{EquationConfigMutation, SetCamera};
 
 //#region 🧪️Tests
 #[cfg(test)]

@@ -2,9 +2,8 @@
 //! from `CadConfig`'s locale/terminology pair. Every taxonomy node that renders text reads its
 //! strings from here; there is deliberately no second label set anywhere in the plugin.
 
-use crate::editor::cad::config::CadConfig;
 use crate::editor::cad::TYPOLOGY_CATALOG;
-use semio_framework_plugin::{AppLabels, Locale, Terminology};
+use semio_framework_plugin::{Locale, ViewModel};
 
 //#region 🔖️Terminology
 semio_framework_plugin::app_labels! {
@@ -64,34 +63,14 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-/// 🗣️ B1: `cfg.locale`-driven counterpart of the deleted `ViewModel`-driven `is_de_locale`.
-pub fn cad_is_de_locale(cfg: &CadConfig) -> bool {
-    cfg.locale.starts_with("de")
-}
-/// 🗣️ `CadConfig.locale` (a BCP-47 tag, was shell-provided `ViewModel.locale` pre-B1) mapped onto the
-/// SDK's exhaustive `Locale` enum.
-pub fn cad_locale(cfg: &CadConfig) -> Locale {
-    if cad_is_de_locale(cfg) {
-        Locale::De
-    } else {
-        Locale::En
-    }
+/// 🗣️ Reports whether the OS-owned view context requests German labels.
+pub fn cad_is_de_locale(view_state: &ViewModel) -> bool {
+    view_state.locale == Locale::De
 }
 
-/// 🗣️ `CadConfig.terminology` mapped onto the SDK's exhaustive `Terminology` enum; unknown/empty ids
-/// fall back to `Native`.
-pub fn cad_terminology(cfg: &CadConfig) -> Terminology {
-    if cfg.terminology == "reuse" {
-        Terminology::Reuse
-    } else {
-        Terminology::Native
-    }
-}
-
-/// 🗣️ Resolves the active `CadLabels` cell from the config-carried locale/terminology (was
-/// shell-provided `ViewModel`, deleted by B1) via the SDK's two-axis `AppLabels::labels`.
-pub fn cad_labels(cfg: &CadConfig) -> &'static CadLabels {
-    CadLabels::labels(cad_locale(cfg), cad_terminology(cfg))
+/// 🗣️ Resolves the active CAD label set from the OS-owned view context.
+pub fn cad_labels(view_state: &ViewModel) -> &'static CadLabels {
+    semio_framework_plugin::resolve_labels::<CadLabels>(view_state)
 }
 
 /// 🗣️ Resolves a typology catalog entry's display label from its stable id; unknown ids fall back to the catalog's native English text or the raw id.

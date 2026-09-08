@@ -219,3 +219,8 @@ pub fn diff_set_snapshot(snapshot: &En1997Snapshot) -> En1997Diff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type En1997DiffText = String;
+//#endregion 🚚️Carrier

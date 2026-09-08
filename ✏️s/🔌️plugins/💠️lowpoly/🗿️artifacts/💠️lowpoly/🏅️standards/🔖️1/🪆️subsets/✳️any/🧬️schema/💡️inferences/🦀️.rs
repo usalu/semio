@@ -7,8 +7,7 @@
 use crate::LowpolySnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::bounds::{scene_bounds, LowpolyBounds};
-
+use super::bounds::{scene_bounds};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a lowpoly snapshot. Today: object count and the 3d bounding box
 /// across every object's `transform.position` (see `📦bounds/🦀️.rs`). A simple
@@ -71,3 +70,8 @@ pub fn lowpoly_artifact_inference_descriptor() -> framework_schema::ArtifactInfe
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::bounds::LowpolyBounds;
+//#endregion 🔁️Re-exports

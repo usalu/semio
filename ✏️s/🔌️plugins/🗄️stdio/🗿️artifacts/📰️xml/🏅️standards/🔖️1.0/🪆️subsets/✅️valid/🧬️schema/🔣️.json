@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/stdio/xml/1.0/valid/artifact.json",
+  "title": "XmlArtifact",
+  "description": "xml 1.0/valid re-exports the base subset's XmlArtifact; the artifact contract is that scope's and is referenced, never restated.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "https://semio.tech/schema/s/stdio/xml/1.0/base/artifact.json"
+    }
+  ],
+  "x-semio-formats": [
+    "🔣️jsonschema"
+  ]
+}

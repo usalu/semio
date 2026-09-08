@@ -24,8 +24,6 @@ pub struct ShootingConfig {
     pub camera: ShootingCamera,
     #[state(config)]
     pub active_utility_id: String,
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor

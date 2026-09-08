@@ -37,10 +37,5 @@ mod viewer { pub use semio_s_artifact_sequence_sequence::viewer::*; }
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::SequenceApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

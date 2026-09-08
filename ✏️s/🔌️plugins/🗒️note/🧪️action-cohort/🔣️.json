@@ -9,7 +9,6 @@
     "setCamera",
     "setCameraZoom",
     "setActiveUtility",
-    "setLocale",
     "engagementInput",
     "navigatorEngagementInput",
     "loadRequest"
@@ -90,7 +89,6 @@
         "setCamera",
         "setCameraZoom",
         "setActiveUtility",
-        "setLocale",
         "engagementInput"
       ]
     },

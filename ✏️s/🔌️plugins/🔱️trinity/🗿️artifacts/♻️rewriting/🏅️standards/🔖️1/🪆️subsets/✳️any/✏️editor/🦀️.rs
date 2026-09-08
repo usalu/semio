@@ -14,7 +14,6 @@ use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMuta
 use crate::standards::v1::subsets::any::schema::{ParameterKind, Rhs};
 use crate::{LayoutPoint, RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use crate::editor::rewriting::config::{RewritingConfig, RewritingConfigMutation};
-use crate::editor::rewriting::presence::{RewritingPresence, RewritingPresenceMutation};
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionKind, AppActionRegistry, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider,
     HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, NodeGraphViewport, PanelGroup, SelectionMethod,
@@ -345,7 +344,7 @@ fn rewriting_lod_json_for_window(cfg: &RewritingConfig, window_id: &str) -> Stri
 
 fn trinity_rewriting_lod_measure(window_id: &str, current_mode: &str) -> WindowMeasure {
     let mut items = vec![semio_framework_plugin::MeasureSelectItem { id: TRINITY_LOD_MODE_AUTOMATIC.into(), value: TRINITY_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
-    let rows: Vec<pack::JsonValue> = pack::parse_json(&crate::editor::rewriting::world::trinity_lod_scale_json()).ok().and_then(|value| value.as_array().map(|values| values.to_vec())).unwrap_or_default();
+    let rows: Vec<pack::JsonValue> = pack::parse_json(&semio_s_artifact_trinity_jack::editor::jack::lod::trinity_lod_scale_json()).ok().and_then(|value| value.as_array().map(|values| values.to_vec())).unwrap_or_default();
     items.extend(rows.into_iter().filter_map(|row| {
         let id = row.get("id")?.as_str()?.to_string();
         let name = row.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
@@ -403,8 +402,6 @@ pub enum TrinityRewritingCommand {
     Reorganize,
     #[dsl(key = "set-lod-mode")]
     SetLodMode { window_id: String, value: String },
-    #[dsl(key = "set-locale")]
-    SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
@@ -476,8 +473,8 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     type ConfigMutation = RewritingConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = RewritingPresence;
-    type PresenceMutation = RewritingPresenceMutation;
+    type Presence = semio_framework_plugin::NoPresence;
+    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
@@ -562,7 +559,6 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TrinityRewritingCommand::SetViewport { .. } => "setViewport",
             TrinityRewritingCommand::Reorganize => "reorganize",
             TrinityRewritingCommand::SetLodMode { .. } => "setLodMode",
-            TrinityRewritingCommand::SetLocale { .. } => "setLocale",
         }
     }
 
@@ -570,7 +566,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         command: &TrinityRewritingCommand,
         doc: &ArtifactView<'_, RewritingSnapshot>,
         cfg: &ConfigView<'_, RewritingConfig>,
-        interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<RewriteRuleMutation, RewritingConfigMutation, Self::DraftMutation>, Fault> {
@@ -585,16 +581,15 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TrinityRewritingCommand::ResetRule => crate::editor::rewriting::commands::reset_rule(state),
             TrinityRewritingCommand::PatchNodes { node_ids, field, value } => crate::editor::rewriting::commands::patch_nodes(state, node_ids, field, value),
             TrinityRewritingCommand::SetViewport { surface_id, viewport_json } => crate::editor::rewriting::commands::set_viewport(surface_id, viewport_json),
-            TrinityRewritingCommand::Reorganize => crate::editor::rewriting::commands::reorganize(config.reorganize_epoch),
+            TrinityRewritingCommand::Reorganize => crate::editor::rewriting::commands::reorganize(state),
             TrinityRewritingCommand::SetLodMode { window_id, value } => crate::editor::rewriting::commands::set_lod_mode(window_id, value),
-            TrinityRewritingCommand::SetLocale { value } => crate::editor::rewriting::commands::set_locale(value),
         })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, RewritingConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, RewritingConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let state = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::rewriting::terminology::TrinityRewritingLabels>(&config.locale);
+        let labels = semio_framework_plugin::resolve_labels::<crate::editor::rewriting::terminology::TrinityRewritingLabels>(view_state);
         let root = match body_key {
             TRINITY_REWRITING_PLAY_BODY_BEFORE => edit::windows::before::render(state, config),
             TRINITY_REWRITING_PLAY_BODY_AFTER => edit::windows::after::render(state, config),
@@ -610,7 +605,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         Ok(semio_framework_plugin::built_to_component_tree(root))
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, RewritingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, RewritingConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let mode_for = |window_id: &str| config.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
         HashMap::from([
@@ -621,10 +616,10 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         ])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, RewritingSnapshot>, cfg: &ConfigView<'_, RewritingConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, RewritingSnapshot>, _cfg: &ConfigView<'_, RewritingConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = cfg.snapshot.locale.starts_with("de");
+        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
         // 🕹️ Selection is framework-owned now (domain "graph") — `context_menu` has no `InteractionView`,
         // so the request's own surface-carried selection groups are the only source; no config fallback.
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
@@ -757,7 +752,7 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             // 👁️ Ephemeral view state — viewport, recompute/layout, LOD. Selection/hover/text-cursor
             // cross-highlighting is framework-owned now (domain "graph") — no app-declared verbs.
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("setViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"), ActionKind::View).with_category("view"))
-            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::View).with_category("view"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View).with_category("mode"))
             // 🕹️ Domain "graph": before/after/lhs/rhs graph nodes plus rule-clause nodes plus variable
             // references, transitive over each node's first incoming connection / variable binding

@@ -352,12 +352,7 @@ pub trait ToolJobFactory: Send + 'static {
 
     /// 🧬️ Takes the already-admitted raw page owner before application parsing or identity
     /// construction. Rejection returns every retained owner to the caller for bounded retirement.
-    fn create_job_from_wire_pages(
-        &mut self,
-        _operation: Operation,
-        input: RetainedToolWireInput,
-        checkpoint: Option<RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
+    fn create_job_from_wire_pages(&mut self, _operation: Operation, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
         Err((ToolJobFactoryError::new("tool factory does not own a retained wire page decoder"), input, checkpoint))
     }
 
@@ -443,12 +438,7 @@ impl Error for ToolDispatchError {}
 trait ErasedToolJobFactory: Send {
     fn create_job(&mut self, spec: &mut ToolOperationSpec) -> Result<ErasedToolJob, ToolJobFactoryError>;
     fn create_job_from_wire(&mut self, operation: Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<ErasedToolJob, ToolJobFactoryError>;
-    fn create_job_from_wire_pages(
-        &mut self,
-        operation: Operation,
-        input: RetainedToolWireInput,
-        checkpoint: Option<RetainedToolWireInput>,
-    ) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)>;
+    fn create_job_from_wire_pages(&mut self, operation: Operation, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)>;
     fn create_job_from_wire_pages_with_payload(
         &mut self,
         spec: &mut ToolOperationSpec,
@@ -475,12 +465,7 @@ impl<F: ToolJobFactory> ErasedToolJobFactory for ToolJobFactoryAdapter<F> {
         self.factory.create_job_from_wire(operation, payload, checkpoint).map(ErasedToolJob::new)
     }
 
-    fn create_job_from_wire_pages(
-        &mut self,
-        operation: Operation,
-        input: RetainedToolWireInput,
-        checkpoint: Option<RetainedToolWireInput>,
-    ) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
+    fn create_job_from_wire_pages(&mut self, operation: Operation, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>) -> Result<ErasedToolJob, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
         self.factory.create_job_from_wire_pages(operation, input, checkpoint).map(ErasedToolJob::new)
     }
 
@@ -634,13 +619,7 @@ impl ActionBus {
 
     /// 🛡️ Reserves the exact raw extent before any caller-specific decoder, command identity,
     /// or application allocation runs.
-    pub fn begin_exact_wire(
-        &self,
-        controller_id: impl Into<String>,
-        tool_id: impl Into<String>,
-        schema_id: impl Into<String>,
-        declared_bytes: usize,
-    ) -> Result<(ToolWireAdmission, RetainedToolWireInput), ToolDispatchError> {
+    pub fn begin_exact_wire(&self, controller_id: impl Into<String>, tool_id: impl Into<String>, schema_id: impl Into<String>, declared_bytes: usize) -> Result<(ToolWireAdmission, RetainedToolWireInput), ToolDispatchError> {
         let controller_id = controller_id.into();
         let tool_id = tool_id.into();
         let schema_id = schema_id.into();
@@ -654,11 +633,7 @@ impl ActionBus {
         if expected_schema != &schema_id {
             return Err(ToolDispatchError::Factory { controller_id, tool_id, detail: format!("expected payload schema '{expected_schema}', got '{schema_id}'") });
         }
-        let input = RetainedToolWireInput::try_new(declared_bytes, contract.max_raw_wire_bytes).map_err(|error| ToolDispatchError::Factory {
-            controller_id: controller_id.clone(),
-            tool_id: tool_id.clone(),
-            detail: error.detail,
-        })?;
+        let input = RetainedToolWireInput::try_new(declared_bytes, contract.max_raw_wire_bytes).map_err(|error| ToolDispatchError::Factory { controller_id: controller_id.clone(), tool_id: tool_id.clone(), detail: error.detail })?;
         Ok((ToolWireAdmission { key, factory_type_id: *factory_type_id, factory_type_name, schema_id, contract }, input))
     }
 
@@ -669,22 +644,12 @@ impl ActionBus {
 
     /// 🧬️ Moves one sealed raw-page owner into the exact registered application factory.
     /// No generic command or serialization value exists before this boundary.
-    pub fn dispatch_wire_retained(
-        &self,
-        admission: ToolWireAdmission,
-        input: RetainedToolWireInput,
-        checkpoint: Option<RetainedToolWireInput>,
-        operation: Operation,
-    ) -> Result<ToolJobDispatch, RetainedToolWireDispatchRejected> {
+    pub fn dispatch_wire_retained(&self, admission: ToolWireAdmission, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>, operation: Operation) -> Result<ToolJobDispatch, RetainedToolWireDispatchRejected> {
         let reject = |error, input, checkpoint| RetainedToolWireDispatchRejected { error, input, checkpoint };
         let controller_id = admission.key.controller_id.clone();
         let tool_id = admission.key.tool_id.clone();
         if !input.sealed || input.closing || input.declared_bytes != input.admitted_bytes || input.maximum_bytes != admission.contract.max_raw_wire_bytes {
-            return Err(reject(
-                ToolDispatchError::Factory { controller_id, tool_id, detail: "retained tool wire owner is not exactly sealed to its admission".to_string() },
-                input,
-                checkpoint,
-            ));
+            return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: "retained tool wire owner is not exactly sealed to its admission".to_string() }, input, checkpoint));
         }
         let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(index) = inner.factory_by_key.get(&admission.key).copied() else {
@@ -695,11 +660,7 @@ impl ActionBus {
         };
         let current_contract = *inner.contract_by_key.get(&admission.key).expect("factory contract is registered atomically with its key");
         if *factory_type_id != admission.factory_type_id || *factory_type_name != admission.factory_type_name || schema_id != &admission.schema_id || current_contract != admission.contract {
-            return Err(reject(
-                ToolDispatchError::Factory { controller_id, tool_id, detail: "tool wire admission became stale before factory transfer".to_string() },
-                input,
-                checkpoint,
-            ));
+            return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: "tool wire admission became stale before factory transfer".to_string() }, input, checkpoint));
         }
         let factory = inner.factories.get_mut(index).expect("factory index is registered atomically with its keys");
         let job = match factory.create_job_from_wire_pages(operation, input, checkpoint) {
@@ -716,29 +677,15 @@ impl ActionBus {
     /// 🧬️ Transfers a concrete app payload and its exact retained ingress pages through the
     /// same registered factory. This is the production route for factories whose worker performs the
     /// domain decode incrementally before it starts the prepared reducer payload.
-    pub fn dispatch_wire_retained_with_spec(
-        &self,
-        admission: &ToolWireAdmission,
-        input: RetainedToolWireInput,
-        checkpoint: Option<RetainedToolWireInput>,
-        mut spec: ToolOperationSpec,
-    ) -> Result<ToolJobDispatch, RetainedToolWireDispatchRejected> {
+    pub fn dispatch_wire_retained_with_spec(&self, admission: &ToolWireAdmission, input: RetainedToolWireInput, checkpoint: Option<RetainedToolWireInput>, mut spec: ToolOperationSpec) -> Result<ToolJobDispatch, RetainedToolWireDispatchRejected> {
         let reject = |error, input, checkpoint| RetainedToolWireDispatchRejected { error, input, checkpoint };
         let controller_id = admission.key.controller_id.clone();
         let tool_id = admission.key.tool_id.clone();
         if spec.key() != admission.key || spec.payload.schema_id != admission.schema_id {
-            return Err(reject(
-                ToolDispatchError::Factory { controller_id, tool_id, detail: "typed payload does not match its retained wire admission".to_string() },
-                input,
-                checkpoint,
-            ));
+            return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: "typed payload does not match its retained wire admission".to_string() }, input, checkpoint));
         }
         if !input.sealed || input.closing || input.declared_bytes != input.admitted_bytes || input.maximum_bytes != admission.contract.max_raw_wire_bytes {
-            return Err(reject(
-                ToolDispatchError::Factory { controller_id, tool_id, detail: "retained tool wire owner is not exactly sealed to its admission".to_string() },
-                input,
-                checkpoint,
-            ));
+            return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: "retained tool wire owner is not exactly sealed to its admission".to_string() }, input, checkpoint));
         }
         let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(index) = inner.factory_by_key.get(&admission.key).copied() else {
@@ -749,11 +696,7 @@ impl ActionBus {
         };
         let current_contract = *inner.contract_by_key.get(&admission.key).expect("factory contract is registered atomically with its key");
         if *factory_type_id != admission.factory_type_id || *factory_type_name != admission.factory_type_name || schema_id != &admission.schema_id || current_contract != admission.contract {
-            return Err(reject(
-                ToolDispatchError::Factory { controller_id, tool_id, detail: "tool wire admission became stale before concrete factory transfer".to_string() },
-                input,
-                checkpoint,
-            ));
+            return Err(reject(ToolDispatchError::Factory { controller_id, tool_id, detail: "tool wire admission became stale before concrete factory transfer".to_string() }, input, checkpoint));
         }
         let factory = inner.factories.get_mut(index).expect("factory index is registered atomically with its keys");
         let job = match factory.create_job_from_wire_pages_with_payload(&mut spec, input, checkpoint) {
@@ -812,7 +755,7 @@ pub fn optional_json_to_dsl(args: Option<serde_json::Value>) -> Option<DslValue>
 }
 
 #[cfg(test)]
-#[path = "🧹️wire-retirement/🦀️.rs"]
+#[path = "🧹️wire-retirement/🧪️tests/🔬️standalone/🦀️.rs"]
 mod wire_retirement_tests;
 
 #[cfg(test)]

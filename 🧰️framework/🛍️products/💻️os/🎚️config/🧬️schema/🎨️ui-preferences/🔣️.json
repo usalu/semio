@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/config/ui-preferences.json",
+  "title": "UiPreferences",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["appearance", "layout", "driverId", "customDrivers", "locale", "terminology", "themeId", "customThemes", "keybindingOverrides"],
+  "properties": {
+    "appearance": { "anyOf": [{ "type": "string", "enum": ["system", "light", "dark"] }, { "type": "null" }] },
+    "layout": { "anyOf": [{ "type": "string", "enum": ["desktop", "tablet"] }, { "type": "null" }] },
+    "driverId": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
+    "customDrivers": { "type": "object", "additionalProperties": { "$ref": "#/$defs/UiDriver" } },
+    "locale": { "anyOf": [{ "type": "string", "enum": ["en", "de"] }, { "type": "null" }] },
+    "terminology": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
+    "themeId": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
+    "customThemes": { "type": "object", "additionalProperties": { "$ref": "#/$defs/UiTheme" } },
+    "keybindingOverrides": { "type": "object", "additionalProperties": { "type": "string" } }
+  },
+  "$defs": {
+    "UiDriver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["driverId", "label", "config"],
+      "properties": { "driverId": { "type": "string" }, "label": { "type": "string" }, "config": {} }
+    },
+    "UiTheme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["themeId", "label", "config"],
+      "properties": {
+        "themeId": { "type": "string" },
+        "label": { "type": "string" },
+        "config": {}
+      }
+    }
+  }
+}

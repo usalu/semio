@@ -13,6 +13,18 @@ import { basename, dirname, join, relative } from "node:path";
 
 const TAXONOMY_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 const LEVELS = ["quick", "long", "exhaustive"];
+const CASE_SEGMENTER = new Intl.Segmenter("und", { granularity: "grapheme" });
+
+/** 🏷️ Resolves a single presented emoji and the taxonomy-defined case identifier. */
+function canonicalCase(vocabulary, owner, name) {
+  const first = CASE_SEGMENTER.segment(name)[Symbol.iterator]().next().value?.segment ?? "";
+  const fold = value => value.normalize("NFC").replaceAll("\uFE0E", "").replaceAll("\uFE0F", "");
+  return name === name.normalize("NFC") && /[\p{Extended_Pictographic}\p{Emoji_Presentation}\u20E3]/u.test(first)
+    && (/\p{Emoji_Presentation}/u.test([...first][0] ?? "") || first.includes("\uFE0F"))
+    && !vocabulary.pathEmojiPolicy.genericEmojiIdentities.some(emoji => fold(emoji) === fold(first))
+    && new RegExp(vocabulary.testCaseSlugPattern, "u").test(name.slice(first.length))
+    && !owner.split("/").some(segment => segment === vocabulary.testsDirName || vocabulary.testDeliveryScopeDirectoryNames.includes(segment));
+}
 
 /** 🔣️ Reads the frozen test vocabulary; the plugin never re-declares taxonomy strings. */
 function taxonomy(workspaceRoot) {
@@ -119,7 +131,7 @@ async function testCaseProjects(configFiles, _options, context) {
     if (basename(rel) !== featureFilename) continue;
     const ownerRel = dirname(testsRel);
     const caseSlug = basename(caseRel);
-    if (!new RegExp(vocabulary.testCaseSlugPattern).test(caseSlug)) continue;
+    if (!canonicalCase(vocabulary, ownerRel, caseSlug)) continue;
 
     const adapters = [];
     for (const fileKindId of Object.values(vocabulary.testAdapterFileKinds)) {
@@ -188,7 +200,7 @@ export function discoverCaseDirs(workspaceRoot) {
       if (isExcluded(vocabulary, rel) || entry === "node_modules" || entry === ".git") continue;
       if (entry === vocabulary.testsDirName) {
         for (const child of readdirSync(abs)) {
-          if (existsSync(join(abs, child, featureFilename))) found.push(nxPath(relative(workspaceRoot, join(abs, child))));
+          if (canonicalCase(vocabulary, nxPath(relative(workspaceRoot, dir)), child) && existsSync(join(abs, child, featureFilename))) found.push(nxPath(relative(workspaceRoot, join(abs, child))));
         }
         continue;
       }

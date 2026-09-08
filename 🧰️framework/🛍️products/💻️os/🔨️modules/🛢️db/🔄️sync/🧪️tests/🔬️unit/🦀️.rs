@@ -3,7 +3,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn sync_retained_reads_resume_neutral_varints_without_renewing_overall_deadline() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️fixtures/📖️retained-decoder/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/📖️retained-decoder/🔣️.json")).unwrap();
     let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let expired = std::sync::atomic::AtomicBool::new(false);
     for row in fixture["varints"].as_array().unwrap().iter().filter(|row| !row["value"].is_null()) {
@@ -34,7 +34,7 @@ async fn sync_retained_reads_resume_neutral_varints_without_renewing_overall_dea
 
 #[semio_framework_async_macros::async_test]
 async fn sync_replay_ignores_neutral_aborted_command_snapshot_and_cas() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "aborted-commands-snapshot-cas-have-no-effects").unwrap();
     let document = ArtifactId::from("committed-sync");
     let storage = db_wal::tests::committed_fixture_storage(row, &document).await;

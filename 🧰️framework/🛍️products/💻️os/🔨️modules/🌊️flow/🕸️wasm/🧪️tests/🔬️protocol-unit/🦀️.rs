@@ -184,7 +184,7 @@ fn stale_duplicate_controls_and_idempotent_close_do_not_leak() {
 
 #[test]
 fn session_close_retains_domain_until_child_and_exact_terminal_owners_retire() {
-    let text = include_str!("../../🧪️fixtures/🧹️session-close/🔣️.json");
+    let text = include_str!("../../🧫️fixtures/🧹️session-close/🔣️.json");
     let fixture = crate::os_pack::json::parse(text).unwrap();
     let independent: serde_json::Value = serde_json::from_str(text).unwrap();
     let close = fixture.get("close").unwrap();
@@ -349,7 +349,7 @@ fn session_close_cancels_an_unacknowledged_page_and_retires_its_exact_bytes() {
 
 #[test]
 fn session_close_receipt_retries_a_colliding_event_slot_and_preserves_sibling() {
-    let text = include_str!("../../🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json");
+    let text = include_str!("../../🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json");
     let fixture = crate::os_pack::json::parse(text).unwrap();
     let independent: serde_json::Value = serde_json::from_str(text).unwrap();
     let code = fixture.get("receipt").unwrap().get("event").unwrap().as_u64().unwrap() as u16;

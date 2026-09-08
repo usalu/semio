@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import { minimatch } from "minimatch";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { tmpdir } from "node:os";
+import { spawnSync } from "node:child_process";
 import ts from "typescript";
 import { inspectTestLayoutSources, repoRootFromHere, testTaxonomy, validateCaseContract, type DiscoveredCase, type OracleRegistry, type TestLayoutFinding, type TestLayoutSource } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import protocol from "../../🧬️schema/🔣️.json";
@@ -33,6 +35,29 @@ describe("📐️ canonical test layout", () => {
     const findings = inspectTestLayoutSources(taxonomy, sources);
     for (const path of vectors.filenameOracle.paths) expect(findings.some((finding) => finding.path === path && finding.code === "legacy-test-filename")).toBe(minimatch(path, vectors.filenameOracle.pattern));
   });
+
+  test("Rust module path bases agree with the compiler", () => {
+    const directory = mkdtempSync(join(tmpdir(), "semio-test-layout-"));
+    try {
+      for (const vector of (vectors.cases as readonly VectorCase[]).filter(vector => vector.id.startsWith("rust-module-base-"))) {
+        const root = join(directory, vector.id);
+        for (const source of vector.sources) {
+          const path = join(root, source.path);
+          mkdirSync(dirname(path), { recursive: true });
+          writeFileSync(path, source.source);
+        }
+        const binary = join(root, process.platform === "win32" ? "oracle.exe" : "oracle");
+        const compiled = spawnSync("rustc", ["--crate-name", "test_layout_path_oracle", "--edition=2024", "--test", join(root, vector.sources[0]!.path), "-o", binary], { cwd: repoRootFromHere(), encoding: "utf8" });
+        const valid = !vector.expected.some(finding => finding.code === "invalid-test-module-wiring");
+        expect(compiled.status === 0, compiled.stderr).toBe(valid);
+        if (valid) {
+          const executed = spawnSync(binary, ["--test-threads=1"], { encoding: "utf8" });
+          expect(executed.status, executed.stderr).toBe(0);
+          expect(executed.stdout).toContain("1 passed");
+        }
+      }
+    } finally { rmSync(directory, { recursive: true, force: true }); }
+  }, 60_000);
 
   test("lexical binding classification matches the TypeScript checker", () => {
     const vector = vectors.cases.find(vector => vector.id === "javascript-lexical-bindings")!;
@@ -96,5 +121,19 @@ describe("📐️ canonical test layout", () => {
     const libraryInputs = cacheInternals.projectInputs(libraryProject, libraryRoot, repoRoot, new Map());
     expect(libraryInputs.default).not.toContain(`!{workspaceRoot}/${library}/**/🧪️tests/**/*`);
     expect(libraryInputs.production).toContain(`!{workspaceRoot}/${library}/**/🧪️tests/**/*`);
+  });
+
+  test("Nx discovers the same canonical names and semantic owners as the layout vectors", async () => {
+    const { default: plugin } = await import("../../🟨️.mjs");
+    const cases = new Map<string, boolean>();
+    for (const vector of vectors.cases as readonly VectorCase[]) for (const source of vector.sources) {
+      if (!/^.+\/🧪️tests\/[^/]+\/🟦️\.ts$/u.test(source.path)) continue;
+      const accepted = !vector.expected.some(finding => finding.path === source.path && ["test-case-name", "test-owner-delivery-scope", "test-layout-depth"].includes(finding.code));
+      cases.set(source.path.replace(/🟦️\.ts$/u, "🥒️.feature"), accepted);
+    }
+    for (const [path, accepted] of cases) {
+      const discovered = await plugin.createNodesV2[1]([path], {}, { workspaceRoot: repoRootFromHere() });
+      expect(discovered.length > 0, path).toBe(accepted);
+    }
   });
 });

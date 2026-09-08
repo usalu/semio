@@ -1,4 +1,3 @@
-
 use std::path::{Path, PathBuf};
 
 const EXAMPLES_DIR_NAME: &str = "📚️examples";

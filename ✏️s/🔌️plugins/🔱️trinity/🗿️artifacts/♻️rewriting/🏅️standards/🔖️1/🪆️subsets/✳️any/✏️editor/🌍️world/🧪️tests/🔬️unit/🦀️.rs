@@ -1,5 +1,6 @@
 
 use super::*;
+use semio_s_artifact_trinity_jack::editor::jack::lod::trinity_lod_scale_json;
 use crate::standards::v1::subsets::any::schema::{AssignmentJson, Lhs, PatternJson, Rhs};
 use semio_framework_graph::dsl::Completion as JackCompletion;
 use semio_s_artifact_trinity_jack::PropertyValue;

@@ -16,7 +16,9 @@ fn clock() -> Option<u64> {
         Some(readings) => INDEX.with(|index| {
             let offset = index.get();
             index.set(offset + 1);
-            if offset == 3 { SAMPLE_AT_TERMINAL.with(|sample| sample.set(sample_count())); }
+            if offset == 3 {
+                SAMPLE_AT_TERMINAL.with(|sample| sample.set(sample_count()));
+            }
             readings.get(offset).copied().flatten()
         }),
         None => default_clock_us(),
@@ -33,9 +35,13 @@ impl ClockScope {
     }
 }
 impl Drop for ClockScope {
-    fn drop(&mut self) { READINGS.with(|target| *target.borrow_mut() = None); }
+    fn drop(&mut self) {
+        READINGS.with(|target| *target.borrow_mut() = None);
+    }
 }
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🔣️.json")).unwrap()
+}
 //#endregion 🕰️ClockFixture
 
 //#region 🧪️Tail

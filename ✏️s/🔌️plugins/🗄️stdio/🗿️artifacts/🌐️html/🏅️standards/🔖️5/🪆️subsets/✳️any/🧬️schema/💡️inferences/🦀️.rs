@@ -9,7 +9,6 @@ use protocol::Inference;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::HtmlOutline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an html snapshot. One field per named inference under
@@ -81,3 +80,8 @@ pub fn html_artifact_inference_descriptor() -> framework_schema::ArtifactInferen
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::HtmlOutline;
+//#endregion 🔁️Re-exports

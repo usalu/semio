@@ -39,10 +39,6 @@
     "selectedCheckpointIds": {
       "$ref": "#/$defs/VcsStringList",
       "x-semio-state": "presence"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

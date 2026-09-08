@@ -91,7 +91,7 @@ async fn instance_lifetime_close_late_physical_step_retains_its_exact_outcome() 
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let state = terminal_close_state(false, false, false);
     *state.pump.lock().unwrap() = RuntimeCloseCleanupPump::new();
-    **state.cell.lock().unwrap() = Some(std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) })));
+    **state.cell.lock().unwrap() = Some(std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() })));
     let limit = fixture["callbackLimitUs"].as_u64().unwrap();
     for _ in 0..4096 {
         state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
@@ -183,7 +183,7 @@ fn instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward
 async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_owner() {
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
-    let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
+    let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
     let state = terminal_close_state(true, false, false);
     **state.cell.lock().unwrap() = Some(cell.clone());
     assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::Fault(RuntimeCleanupFault::InstanceNotDrained));
@@ -252,7 +252,7 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
 }
 
 async fn close_lease_app(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>) {
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
+    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
     runtime.instances.borrow_mut().insert_admitted(7, cell);
 }
 
@@ -388,7 +388,7 @@ async fn run_ingress(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection() {
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
+    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), label: String::new(), origin: Vec::new() }).await;
     let fault = denied.iter().find_map(|frame| match frame { protocol::AppFrame::Error { in_reply_to: Some(0), fault, .. } => Some(fault), _ => None }).expect("encoded transaction route must remain explicitly unadmitted");
@@ -441,7 +441,7 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_registered_query_channel_continuation_ack_and_close() {
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
-    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await) }));
+    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let mut pending = std::collections::VecDeque::from(query_command(&runtime, 1, protocol::LocalInteractionQueryCommand::Read { request_id: 13 }).await);
     let mut expected_identity = None;

@@ -37,8 +37,8 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from the config-carried locale; falls back to native English.
-pub fn generation2d_labels(cfg: &Generation2dConfig) -> &'static Generation2dLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<Generation2dLabels>(&cfg.locale)
+pub fn generation2d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Generation2dLabels {
+    semio_framework_plugin::resolve_labels::<Generation2dLabels>(view_state)
 }
 //#endregion 🔖️Labels
 

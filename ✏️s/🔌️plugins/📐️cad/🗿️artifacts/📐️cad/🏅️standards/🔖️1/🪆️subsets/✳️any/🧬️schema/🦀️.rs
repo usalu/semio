@@ -1,6 +1,6 @@
 //! 🧬️ Cad artifact schema — every field of the artifact with its state class.
 
-use crate::{CadCamera, CadDrawingChild, CadModelChild, CadNode, CadReferenceList, CadSnapshot};
+use crate::{CadDrawingChild, CadModelChild, CadSnapshot};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -142,10 +142,6 @@ pub struct CadArtifact {
     #[state(config)]
     pub dislocate_structure_classic: CadDislocateOptions,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
-    pub terminology: String,
-    #[state(config)]
     pub contributions_json: String,
     #[state(artifact)]
     pub hovered_object_id: Option<String>,
@@ -224,8 +220,6 @@ impl CadArtifact {
             dislocate_building: CadDislocateOptions::default(),
             dislocate_energy: CadDislocateOptions::default(),
             dislocate_structure_classic: CadDislocateOptions::default(),
-            locale: "en-US".into(),
-            terminology: "native".into(),
             contributions_json: "[]".into(),
             hovered_object_id: None,
             hovered_target_object_id: None,
@@ -427,3 +421,10 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: CadComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::CadNode;
+pub use crate::CadReferenceList;
+pub use crate::CadCamera;
+//#endregion 🔁️Re-exports

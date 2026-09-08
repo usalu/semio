@@ -36,11 +36,7 @@
       "x-semio-state": "presence"
     },
     "camera": {
-      "$ref": "#/$defs/DagCamera",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
+      "$ref": "https://semio.tech/schema/s/dag/dag/artifact.json#/$defs/DagCamera",
       "x-semio-state": "config"
     }
   },
@@ -56,7 +52,7 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/DagNodeSpec"
+            "$ref": "https://semio.tech/schema/s/dag/dag/artifact.json#/$defs/DagNodeSpec"
           }
         }
       }
@@ -72,7 +68,7 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/DagFixtureEdge"
+            "$ref": "https://semio.tech/schema/s/dag/dag/artifact.json#/$defs/DagFixtureEdge"
           }
         }
       }
@@ -106,7 +102,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/DagNodeSpec"
+            "$ref": "https://semio.tech/schema/s/dag/dag/artifact.json#/$defs/DagNodeSpec"
           }
         },
         "removed": {
@@ -142,7 +138,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/DagFixtureEdge"
+            "$ref": "https://semio.tech/schema/s/dag/dag/artifact.json#/$defs/DagFixtureEdge"
           }
         },
         "removed": {
@@ -214,64 +210,6 @@
         },
         "target": {
           "type": "string"
-        }
-      }
-    },
-    "DagNodeSpec": {
-      "title": "DagNodeSpec",
-      "type": "object",
-      "additionalProperties": true,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "DagFixtureEdge": {
-      "title": "DagFixtureEdge",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "source",
-        "target"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "source": {
-          "type": "string"
-        },
-        "target": {
-          "type": "string"
-        }
-      }
-    },
-    "DagCamera": {
-      "title": "DagCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
         }
       }
     }

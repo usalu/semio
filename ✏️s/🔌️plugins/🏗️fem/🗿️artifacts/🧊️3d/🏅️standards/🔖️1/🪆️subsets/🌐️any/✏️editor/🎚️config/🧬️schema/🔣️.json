@@ -24,24 +24,8 @@
       "x-semio-state": "config"
     },
     "camera": {
-      "$ref": "#/$defs/FemCamera",
+      "$ref": "https://semio.tech/schema/s/fem/fem3d/artifact.json#/$defs/FemCamera",
       "x-semio-state": "config"
-    }
-  },
-  "$defs": {
-    "FemCamera": {
-      "title": "FemCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "json"
-      ],
-      "properties": {
-        "json": {
-          "type": "string",
-          "contentMediaType": "application/json"
-        }
-      }
     }
   }
 }

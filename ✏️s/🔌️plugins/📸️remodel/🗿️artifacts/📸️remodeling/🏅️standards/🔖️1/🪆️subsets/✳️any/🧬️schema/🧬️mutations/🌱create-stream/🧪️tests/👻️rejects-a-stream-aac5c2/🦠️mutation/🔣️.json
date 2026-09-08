@@ -5,8 +5,8 @@
     "name": "Orbit Quaternary",
     "kind": "image-sequence",
     "cameraId": "orbit-cam-absent",
-    "syncOffsetMs": 0.0,
-    "fpsHint": 2.0,
+    "syncOffsetMs": 0,
+    "fpsHint": 2,
     "frames": [],
     "source": null
   }

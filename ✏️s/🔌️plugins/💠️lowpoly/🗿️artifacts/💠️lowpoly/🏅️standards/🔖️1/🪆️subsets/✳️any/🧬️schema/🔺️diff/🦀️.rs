@@ -1,9 +1,8 @@
 //! 🧬️ Lowpoly diff schema — sparse field delta over the artifact.
 
-use crate::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer};
+use crate::{LowpolyObject, LowpolyPaintLayer};
 use framework_schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the lowpoly artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -70,8 +69,6 @@ pub struct LowpolyDiff {
     pub selection_mode_default: Option<String>,
     #[state(config)]
     pub engagement_input: Option<String>,
-    #[state(config)]
-    pub locale: Option<String>,
     #[state(artifact)]
     pub hovered_object_id: Option<Option<String>>,
     #[state(artifact)]
@@ -184,3 +181,8 @@ pub struct LowpolyPaintLayerPatch {
     pub blend_mode: Option<String>,
 }
 //#endregion 🔖️DeltaHelpers
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::LowpolyObjectPatch;
+//#endregion 🔁️Re-exports

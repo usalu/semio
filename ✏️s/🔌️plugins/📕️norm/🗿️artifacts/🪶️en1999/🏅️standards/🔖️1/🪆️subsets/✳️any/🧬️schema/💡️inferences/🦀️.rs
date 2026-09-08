@@ -8,7 +8,6 @@ use crate::En1999Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::En1999Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1999 snapshot. One field per named inference under
@@ -80,7 +79,6 @@ use crate::standards::v1::subsets::any::schema::{check_aluminium_member, na_de, 
 /// `⚙️engine`. `evaluate` is the `En1999Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport};
-
 /// 📋️ Full EN 1999 check spanning every remaining part: 1-1 (cross-section, buckling, bending, welds), 1-2 (fire), 1-3 (fatigue), 1-4 (cold-formed sheeting), 1-5 (shell buckling).
 #[allow(clippy::too_many_arguments)]
 pub fn check_full_aluminium(
@@ -179,3 +177,8 @@ pub fn evaluate(document: &En1999Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::En1999Outline;
+//#endregion 🔁️Re-exports

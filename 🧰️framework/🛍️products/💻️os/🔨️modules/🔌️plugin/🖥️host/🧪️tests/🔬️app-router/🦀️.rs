@@ -1,4 +1,3 @@
-
 use super::*;
 
 async fn fixture_artifact_kind(id: &str) -> semio_framework::ArtifactKindSpec {

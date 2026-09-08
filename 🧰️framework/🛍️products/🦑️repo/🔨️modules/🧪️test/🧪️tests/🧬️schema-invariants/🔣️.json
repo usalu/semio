@@ -1,6 +1,21 @@
 {
   "$schema": "../../🧬️schema/🔣️.json",
-  "schema": "semio.repository-test.schema-invariant-cases/v2",
+  "schema": "semio.repository-test.schema-invariant-cases/v4",
+  "checkOnlyDiagnosticCodes": [
+    "schema-export-id-duplicate",
+    "schema-export-id-invalid",
+    "schema-document-id-duplicate",
+    "schema-document-id-unaddressable",
+    "schema-module-id-inconsistent",
+    "schema-document-unparseable",
+    "schema-document-not-object",
+    "schema-enum-empty",
+    "schema-cross-scope-dependency-uncataloged",
+    "schema-mutation-leaf-id",
+    "schema-mutation-leaf-schema-absent",
+    "schema-mutation-aggregate-id",
+    "schema-mutation-aggregate-kinds-redundant"
+  ],
   "eligibilityCases": [
     {
       "id": "plugin-root",
@@ -109,6 +124,129 @@
       "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime",
       "eligible": true,
       "level": "product-module"
+    }
+  ],
+  "exportPresenceCases": [
+    {
+      "id": "rust-definition-struct",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub struct Approval {\n    pub artifact_id: String,\n}\n",
+      "present": true
+    },
+    {
+      "id": "rust-definition-enum",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub enum Approval {\n    Granted,\n}\n",
+      "present": true
+    },
+    {
+      "id": "rust-definition-alias",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub type Approval = super::Approval;\n",
+      "present": true
+    },
+    {
+      "id": "rust-re-export-per-name",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "mod inner;\npub use inner::Approval;\n",
+      "present": true
+    },
+    {
+      "id": "rust-re-export-per-name-qualified",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub use crate::inference::approval::Approval;\n",
+      "present": true
+    },
+    {
+      "id": "rust-re-export-renamed-to-the-export",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub use crate::inference::ApprovalV1 as Approval;\n",
+      "present": true
+    },
+    {
+      "id": "rust-re-export-grouped-declares-nothing",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub use crate::inference::{Approval, Receipt};\n",
+      "present": false
+    },
+    {
+      "id": "rust-re-export-glob-declares-nothing",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub use crate::inference::*;\n",
+      "present": false
+    },
+    {
+      "id": "rust-re-export-private-declares-nothing",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "use crate::inference::Approval;\n",
+      "present": false
+    },
+    {
+      "id": "rust-re-export-crate-visible-declares-nothing",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub(crate) use crate::inference::Approval;\n",
+      "present": false
+    },
+    {
+      "id": "rust-re-export-of-another-name-declares-nothing",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub use crate::inference::Receipt;\n",
+      "present": false
+    },
+    {
+      "id": "rust-absent",
+      "format": "🦀️rust",
+      "export": "Approval",
+      "source": "pub struct Receipt {\n    pub artifact_id: String,\n}\n",
+      "present": false
+    },
+    {
+      "id": "graphql-input-keyword",
+      "format": "🔗️graphql",
+      "export": "Approval",
+      "source": "input Approval {\n  artifactId: String!\n}\n",
+      "present": true
+    },
+    {
+      "id": "graphql-unknown-keyword",
+      "format": "🔗️graphql",
+      "export": "Approval",
+      "source": "directive Approval on FIELD\n",
+      "present": false
+    },
+    {
+      "id": "protobuf-message",
+      "format": "🛰️protobuf",
+      "export": "Approval",
+      "source": "message Approval {\n  string artifact_id = 1;\n}\n",
+      "present": true
+    },
+    {
+      "id": "typescript-type-without-parser",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "export type Approval = { artifactId: string };\n",
+      "present": true,
+      "parser": false
+    },
+    {
+      "id": "typescript-type-with-parser",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "export type Approval = { artifactId: string };\nexport function parseApproval(value: unknown): Approval {\n  return value as Approval;\n}\n",
+      "present": true,
+      "parser": true
     }
   ],
   "treeCases": [

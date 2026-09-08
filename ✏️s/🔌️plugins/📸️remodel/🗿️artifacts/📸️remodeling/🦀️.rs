@@ -12,7 +12,7 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
+extern crate semio_framework_schema as framework_schema;
 //#region 🧮️MathInternals
 // 🧮️ 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d: crate-root
 // aliases onto the compute-internals mounted below in `artifacts::remodeling::…::schema` — every
@@ -20,11 +20,11 @@ extern crate semio_framework_schema as schema;
 // site (the moved files' own internal references, and the app-engine files that used to say
 // `math::algebra::` etc.) resolves through these, exactly as the old `math::` extern-prelude
 // name used to. `semio-framework-math` is no longer a dependency of this crate.
-pub(crate) use artifacts::remodeling::standards::v1::subsets::any::schema::algebra_internals as algebra;
-pub(crate) use artifacts::remodeling::standards::v1::subsets::any::schema::lie_internals as lie;
-pub(crate) use artifacts::remodeling::standards::v1::subsets::any::schema::optimize_internals as optimize;
-pub(crate) use artifacts::remodeling::standards::v1::subsets::any::schema::signal_internals as signal;
-pub(crate) use artifacts::remodeling::standards::v1::subsets::any::schema::spatial_internals as spatial;
+pub(crate) use crate::standards::v1::subsets::any::schema::algebra_internals as algebra;
+pub(crate) use crate::standards::v1::subsets::any::schema::lie_internals as lie;
+pub(crate) use crate::standards::v1::subsets::any::schema::optimize_internals as optimize;
+pub(crate) use crate::standards::v1::subsets::any::schema::signal_internals as signal;
+pub(crate) use crate::standards::v1::subsets::any::schema::spatial_internals as spatial;
 //#endregion 🧮️MathInternals
 extern crate self as semio_s_artifact_remodel_remodeling;
 
@@ -2682,17 +2682,14 @@ mod tests;
             }
         }
 
-        // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
+        pub use crate::standards::v1::subsets::any::schema;
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
         pub mod op {
             pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
         }
-        pub mod dsl {
+        pub mod document_dsl {
             pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
         }
         pub mod spr {
@@ -2730,7 +2727,7 @@ mod tests;
                 mod component;
                 pub use component::*;
                 #[cfg(test)]
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
                 mod tests;
             }
             #[path = "."]
@@ -2739,7 +2736,7 @@ mod tests;
                 mod component;
                 pub use component::*;
                 #[cfg(test)]
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🧪️tests/🦀️.rs"]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🧪️tests/🧩️example/🦀️.rs"]
                 mod tests;
             }
         }
@@ -2875,8 +2872,6 @@ pub mod editor {
             pub mod set_ingest_params;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👓️set-layer-visibility/🦀️.rs"]
             pub mod set_layer_visibility;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️.rs"]
-            pub mod set_locale;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪢️set-match-params/🦀️.rs"]
             pub mod set_match_params;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️set-mesh-params/🦀️.rs"]
@@ -2992,3 +2987,7 @@ pub mod viewer {
         }
     }
 }
+
+//#region 📚️Examples
+pub use standards::v1::subsets::any::examples;
+//#endregion 📚️Examples

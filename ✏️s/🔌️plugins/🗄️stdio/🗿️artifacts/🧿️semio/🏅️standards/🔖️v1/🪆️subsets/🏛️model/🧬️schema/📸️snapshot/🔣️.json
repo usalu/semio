@@ -48,7 +48,7 @@
             ]
           },
           "placement": {
-            "$ref": "#/$defs/transform"
+            "$ref": "#/definitions/transform"
           }
         }
       }
@@ -70,13 +70,13 @@
             "type": "string"
           },
           "class": {
-            "$ref": "#/$defs/elementClass"
+            "$ref": "#/$defs/ElementClass"
           },
           "placement": {
-            "$ref": "#/$defs/transform"
+            "$ref": "#/definitions/transform"
           },
           "geometry": {
-            "$ref": "#/$defs/geometryRef"
+            "$ref": "#/$defs/GeometryRef"
           },
           "spatialId": {
             "type": [
@@ -109,7 +109,7 @@
                         "type": "string"
                       },
                       "value": {
-                        "$ref": "#/$defs/psetValue"
+                        "$ref": "#/$defs/PsetValue"
                       }
                     }
                   }
@@ -136,7 +136,7 @@
             "type": "string"
           },
           "kind": {
-            "$ref": "#/$defs/relationKind"
+            "$ref": "#/$defs/RelationKind"
           },
           "from": {
             "type": "string"
@@ -149,6 +149,91 @@
     }
   },
   "$defs": {
+    "ElementClass": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "wall",
+            "slab",
+            "column",
+            "beam",
+            "door",
+            "window",
+            "roof",
+            "stair",
+            "furniture",
+            "other"
+          ]
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "GeometryRef": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "none",
+            "brep",
+            "mesh"
+          ]
+        },
+        "brepId": {
+          "type": "string"
+        },
+        "meshId": {
+          "type": "string"
+        }
+      }
+    },
+    "PsetValue": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "text",
+            "number",
+            "boolean"
+          ]
+        },
+        "value": {}
+      }
+    },
+    "RelationKind": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "aggregates",
+            "containedIn",
+            "connectsTo",
+            "fillsVoid",
+            "voidsElement",
+            "other"
+          ]
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "definitions": {
     "point3": {
       "type": "object",
       "required": [
@@ -200,96 +285,13 @@
       ],
       "properties": {
         "translation": {
-          "$ref": "#/$defs/point3"
+          "$ref": "#/definitions/point3"
         },
         "rotation": {
-          "$ref": "#/$defs/quaternion"
+          "$ref": "#/definitions/quaternion"
         },
         "scale": {
-          "$ref": "#/$defs/point3"
-        }
-      }
-    },
-    "elementClass": {
-      "type": "object",
-      "required": [
-        "kind"
-      ],
-      "properties": {
-        "kind": {
-          "enum": [
-            "wall",
-            "slab",
-            "column",
-            "beam",
-            "door",
-            "window",
-            "roof",
-            "stair",
-            "furniture",
-            "other"
-          ]
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
-    "geometryRef": {
-      "type": "object",
-      "required": [
-        "kind"
-      ],
-      "properties": {
-        "kind": {
-          "enum": [
-            "none",
-            "brep",
-            "mesh"
-          ]
-        },
-        "brepId": {
-          "type": "string"
-        },
-        "meshId": {
-          "type": "string"
-        }
-      }
-    },
-    "psetValue": {
-      "type": "object",
-      "required": [
-        "kind"
-      ],
-      "properties": {
-        "kind": {
-          "enum": [
-            "text",
-            "number",
-            "boolean"
-          ]
-        },
-        "value": {}
-      }
-    },
-    "relationKind": {
-      "type": "object",
-      "required": [
-        "kind"
-      ],
-      "properties": {
-        "kind": {
-          "enum": [
-            "aggregates",
-            "containedIn",
-            "connectsTo",
-            "fillsVoid",
-            "voidsElement",
-            "other"
-          ]
-        },
-        "label": {
-          "type": "string"
+          "$ref": "#/definitions/point3"
         }
       }
     }

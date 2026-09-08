@@ -3,11 +3,59 @@
   "owner": "puzzle2d",
   "documentSchema": "puzzle.2d.fixture",
   "payloadSchema": "puzzle.2d.fixture.tool-command.v1",
-  "toolIds": ["setActiveExample", "forceLayout", "addNode", "applyBoardEvents", "reorganize", "brushCancelSlot", "brushCommitSlot", "brushCycleCandidate", "brushFillSessionAdopt", "brushFillSessionBegin", "brushFillSessionCancel", "brushFillSessionClear", "brushFillSessionDiscard", "brushFillSessionRetry", "brushFillSessionStep", "brushOpenSlot", "brushSetCandidateIndex", "deleteSelection", "duplicateSelection", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "lodScaleJson", "patchInspectorNodes", "redrawHandles", "selectSameKind", "setBrushKindWeights", "setBrushNodeSize", "setCamera", "setFillCount", "setGridFactor", "setGridSnapEnabled", "setLocale", "setLodModeForPane", "setSelectionFlag", "setSuggestionOffset", "setTerminology"],
+  "toolIds": [
+    "setActiveExample",
+    "forceLayout",
+    "addNode",
+    "applyBoardEvents",
+    "reorganize",
+    "brushCancelSlot",
+    "brushCommitSlot",
+    "brushCycleCandidate",
+    "brushFillSessionAdopt",
+    "brushFillSessionBegin",
+    "brushFillSessionCancel",
+    "brushFillSessionClear",
+    "brushFillSessionDiscard",
+    "brushFillSessionRetry",
+    "brushFillSessionStep",
+    "brushOpenSlot",
+    "brushSetCandidateIndex",
+    "deleteSelection",
+    "duplicateSelection",
+    "engagementAbort",
+    "engagementControlSelect",
+    "engagementInput",
+    "engagementSubmit",
+    "focusSelection",
+    "lodScaleJson",
+    "patchInspectorNodes",
+    "redrawHandles",
+    "selectSameKind",
+    "setBrushKindWeights",
+    "setBrushNodeSize",
+    "setCamera",
+    "setFillCount",
+    "setGridFactor",
+    "setGridSnapEnabled",
+    "setLodModeForPane",
+    "setSelectionFlag",
+    "setSuggestionOffset"
+  ],
   "evidenceToolIds": [
-    "addNode", "forceLayout", "reorganize", "setActiveExample", "redrawHandles",
-    "setFillCount", "brushFillSessionBegin", "brushFillSessionStep", "brushFillSessionAdopt", "brushFillSessionCancel",
-    "brushFillSessionRetry", "brushFillSessionDiscard", "brushFillSessionClear"
+    "addNode",
+    "forceLayout",
+    "reorganize",
+    "setActiveExample",
+    "redrawHandles",
+    "setFillCount",
+    "brushFillSessionBegin",
+    "brushFillSessionStep",
+    "brushFillSessionAdopt",
+    "brushFillSessionCancel",
+    "brushFillSessionRetry",
+    "brushFillSessionDiscard",
+    "brushFillSessionClear"
   ],
   "capacities": {
     "rawBytes": 8192,
@@ -19,133 +67,1005 @@
     "checkpointBytes": 112
   },
   "semanticCursors": {
-    "addNode": ["boundedDecode", "oneNodeMutation", "publish", "closeOwner"],
-    "forceLayout": ["node", "handle", "edge", "seed", "center", "forceReset", "repulsionPair", "spring", "integration", "mutationPublish", "closeOwner"],
-    "setActiveExample": ["clearEdge", "clearNode", "manifest", "clearCompatibility", "addCompatibility", "catalogs", "addNode", "addEdge", "closeOwner"],
-    "reorganize": ["node", "handle", "edge", "seed", "center", "forceReset", "repulsionPair", "spring", "integration", "mutationPublish", "closeOwner"],
-    "redrawHandles": ["node", "handle", "edge", "handlePublish", "closeOwner"],
-    "setFillCount": ["control", "capture", "search", "apply", "publish", "closeOwner"],
-    "brushFillSessionBegin": ["control", "capture", "search", "apply", "publish", "closeOwner"],
-    "brushFillSessionStep": ["control", "capture", "search", "apply", "publish", "closeOwner"],
-    "brushFillSessionRetry": ["control", "capture", "search", "apply", "publish", "closeOwner"],
-    "brushFillSessionAdopt": ["control", "publish", "closeOwner"],
-    "brushFillSessionCancel": ["control", "publish", "closeOwner"],
-    "brushFillSessionDiscard": ["control", "publish", "closeOwner"],
-    "brushFillSessionClear": ["control", "publish", "closeOwner"]
+    "addNode": [
+      "boundedDecode",
+      "oneNodeMutation",
+      "publish",
+      "closeOwner"
+    ],
+    "forceLayout": [
+      "node",
+      "handle",
+      "edge",
+      "seed",
+      "center",
+      "forceReset",
+      "repulsionPair",
+      "spring",
+      "integration",
+      "mutationPublish",
+      "closeOwner"
+    ],
+    "setActiveExample": [
+      "clearEdge",
+      "clearNode",
+      "manifest",
+      "clearCompatibility",
+      "addCompatibility",
+      "catalogs",
+      "addNode",
+      "addEdge",
+      "closeOwner"
+    ],
+    "reorganize": [
+      "node",
+      "handle",
+      "edge",
+      "seed",
+      "center",
+      "forceReset",
+      "repulsionPair",
+      "spring",
+      "integration",
+      "mutationPublish",
+      "closeOwner"
+    ],
+    "redrawHandles": [
+      "node",
+      "handle",
+      "edge",
+      "handlePublish",
+      "closeOwner"
+    ],
+    "setFillCount": [
+      "control",
+      "capture",
+      "search",
+      "apply",
+      "publish",
+      "closeOwner"
+    ],
+    "brushFillSessionBegin": [
+      "control",
+      "capture",
+      "search",
+      "apply",
+      "publish",
+      "closeOwner"
+    ],
+    "brushFillSessionStep": [
+      "control",
+      "capture",
+      "search",
+      "apply",
+      "publish",
+      "closeOwner"
+    ],
+    "brushFillSessionRetry": [
+      "control",
+      "capture",
+      "search",
+      "apply",
+      "publish",
+      "closeOwner"
+    ],
+    "brushFillSessionAdopt": [
+      "control",
+      "publish",
+      "closeOwner"
+    ],
+    "brushFillSessionCancel": [
+      "control",
+      "publish",
+      "closeOwner"
+    ],
+    "brushFillSessionDiscard": [
+      "control",
+      "publish",
+      "closeOwner"
+    ],
+    "brushFillSessionClear": [
+      "control",
+      "publish",
+      "closeOwner"
+    ]
   },
   "hostileSourceMutations": [
-    {"id":"forceLayoutOldReducer", "replace":"Puzzle2dForceLayoutWork::default()", "with":"BoundedFirstStepCommandWork", "expected":"rejected"},
-    {"id":"forceLayoutNodeCursorRemoved", "remove":"Puzzle2dForceStage::Nodes", "expected":"rejected"},
-    {"id":"forceLayoutPairCursorRemoved", "remove":"Puzzle2dForceStage::Repel", "expected":"rejected"},
-    {"id":"forceLayoutSpringCursorRemoved", "remove":"Puzzle2dForceStage::Springs", "expected":"rejected"},
-    {"id":"forceLayoutPublishCursorRemoved", "remove":"Puzzle2dForceStage::Emit", "expected":"rejected"},
-    {"id":"setActiveExampleOldReducer", "replace":"Puzzle2dActiveExampleWork::default()", "with":"BoundedFirstStepCommandWork", "expected":"rejected"},
-    {"id":"setActiveExampleClearCursorRemoved", "remove":"Puzzle2dExampleStage::ClearEdges", "expected":"rejected"},
-    {"id":"setActiveExampleAddCursorRemoved", "remove":"Puzzle2dExampleStage::Nodes", "expected":"rejected"},
-    {"id":"addNodeUnboundedReducer", "remove":"matches!(command.action_id(), \"addNode\").then_some(1)", "expected":"rejected"},
-    {"id":"forceLayoutUnchunkedRepulsion", "replace":"for _ in 0..PUZZLE2D_FORCE_UNITS_PER_STEP {", "with":"for _ in 0..1 {", "expected":"rejected"},
-    {"id":"forceLayoutFixedIterations", "remove":"puzzle2d_force_iterations(nodes.len(), edges)", "expected":"rejected"},
-    {"id":"forceLayoutHandleGateRemoved", "remove":"handles > PUZZLE2D_FORCE_MAX_HANDLES", "expected":"rejected"},
-    {"id":"forceLayoutNodeCeilingLowered", "replace":"const PUZZLE2D_FORCE_MAX_NODES: usize = 512;", "with":"const PUZZLE2D_FORCE_MAX_NODES: usize = 64;", "expected":"rejected"},
-    {"id":"redrawHandlesWholeFixture", "replace":"Puzzle2dRedrawHandlesWork::default()", "with":"BoundedFirstStepCommandWork", "expected":"rejected"},
-    {"id":"redrawHandlesIndexCursorRemoved", "remove":"Puzzle2dRedrawStage::Handles", "expected":"rejected"},
-    {"id":"redrawHandlesEdgeCursorRemoved", "remove":"Puzzle2dRedrawStage::Edges", "expected":"rejected"},
-    {"id":"redrawHandlesPublishCursorRemoved", "remove":"Puzzle2dRedrawStage::Emit", "expected":"rejected"},
-    {"id":"redrawHandlesUnboundedExtent", "remove":"handles > PUZZLE2D_REDRAW_MAX_HANDLES", "expected":"rejected"},
-    {"id":"fillSessionRegistryRevived", "replace":"pub struct Puzzle2dFillSessionWork {", "with":"static FILL_SESSION_SLOTS: [AtomicPtr<u8>; 8] = [];\npub struct Puzzle2dFillSessionWork {", "expected":"rejected"},
-    {"id":"fillSessionWorkerPoolRevived", "replace":"fn puzzle2d_fill_monotonic_zero", "with":"fn pool() { semio_framework_async::process_worker_pool(); }\nfn puzzle2d_fill_monotonic_zero", "expected":"rejected"},
-    {"id":"fillSessionStoreLeaseRevived", "replace":"    ingress: Option<infinite_canvas::BoardFillSnapshotIngress>,", "with":"    lease: Option<store::SnapshotRead<Puzzle2dPlaySnapshot>>,\n    ingress: Option<infinite_canvas::BoardFillSnapshotIngress>,", "expected":"rejected"},
-    {"id":"fillSessionCaptureCursorRemoved", "remove":"Puzzle2dFillStage::Capture", "expected":"rejected"},
-    {"id":"fillSessionApplyCursorRemoved", "remove":"Puzzle2dFillStage::Apply", "expected":"rejected"},
-    {"id":"fillSessionUnboundedSearch", "remove":"self.search_chunks >= PUZZLE2D_FILL_SEARCH_CHUNKS", "expected":"rejected"},
-    {"id":"fillSessionHandleBranchRevived", "replace":"return Err(Fault::from(\"puzzle2d-fill-requires-retained-job\"));", "with":"dispatch_fill_session_action(action, args, ctx);", "expected":"rejected"},
-    {"id":"fillSessionWallClockBudget", "replace":"puzzle2d_fill_monotonic_zero", "with":"semio_framework_job::default_now_us", "expected":"rejected"}
+    {
+      "id": "forceLayoutOldReducer",
+      "replace": "Puzzle2dForceLayoutWork::default()",
+      "with": "BoundedFirstStepCommandWork",
+      "expected": "rejected"
+    },
+    {
+      "id": "forceLayoutNodeCursorRemoved",
+      "remove": "Puzzle2dForceStage::Nodes",
+      "expected": "rejected"
+    },
+    {
+      "id": "forceLayoutPairCursorRemoved",
+      "remove": "Puzzle2dForceStage::Repel",
+      "expected": "rejected"
+    },
+    {
+      "id": "forceLayoutSpringCursorRemoved",
+      "remove": "Puzzle2dForceStage::Springs",
+      "expected": "rejected"
+    },
+    {
+      "id": "forceLayoutPublishCursorRemoved",
+      "remove": "Puzzle2dForceStage::Emit",
+      "expected": "rejected"
+    },
+    {
+      "id": "setActiveExampleOldReducer",
+      "replace": "Puzzle2dActiveExampleWork::default()",
+      "with": "BoundedFirstStepCommandWork",
+      "expected": "rejected"
+    },
+    {
+      "id": "setActiveExampleClearCursorRemoved",
+      "remove": "Puzzle2dExampleStage::ClearEdges",
+      "expected": "rejected"
+    },
+    {
+      "id": "setActiveExampleAddCursorRemoved",
+      "remove": "Puzzle2dExampleStage::Nodes",
+      "expected": "rejected"
+    },
+    {
+      "id": "addNodeUnboundedReducer",
+      "remove": "matches!(command.action_id(), \"addNode\").then_some(1)",
+      "expected": "rejected"
+    },
+    {
+      "id": "forceLayoutUnchunkedRepulsion",
+      "replace": "for _ in 0..PUZZLE2D_FORCE_UNITS_PER_STEP {",
+      "with": "for _ in 0..1 {",
+      "expected": "rejected"
+    },
+    {
+      "id": "forceLayoutFixedIterations",
+      "remove": "puzzle2d_force_iterations(nodes.len(), edges)",
+      "expected": "rejected"
+    },
+    {
+      "id": "forceLayoutHandleGateRemoved",
+      "remove": "handles > PUZZLE2D_FORCE_MAX_HANDLES",
+      "expected": "rejected"
+    },
+    {
+      "id": "forceLayoutNodeCeilingLowered",
+      "replace": "const PUZZLE2D_FORCE_MAX_NODES: usize = 512;",
+      "with": "const PUZZLE2D_FORCE_MAX_NODES: usize = 64;",
+      "expected": "rejected"
+    },
+    {
+      "id": "redrawHandlesWholeFixture",
+      "replace": "Puzzle2dRedrawHandlesWork::default()",
+      "with": "BoundedFirstStepCommandWork",
+      "expected": "rejected"
+    },
+    {
+      "id": "redrawHandlesIndexCursorRemoved",
+      "remove": "Puzzle2dRedrawStage::Handles",
+      "expected": "rejected"
+    },
+    {
+      "id": "redrawHandlesEdgeCursorRemoved",
+      "remove": "Puzzle2dRedrawStage::Edges",
+      "expected": "rejected"
+    },
+    {
+      "id": "redrawHandlesPublishCursorRemoved",
+      "remove": "Puzzle2dRedrawStage::Emit",
+      "expected": "rejected"
+    },
+    {
+      "id": "redrawHandlesUnboundedExtent",
+      "remove": "handles > PUZZLE2D_REDRAW_MAX_HANDLES",
+      "expected": "rejected"
+    },
+    {
+      "id": "fillSessionRegistryRevived",
+      "replace": "pub struct Puzzle2dFillSessionWork {",
+      "with": "static FILL_SESSION_SLOTS: [AtomicPtr<u8>; 8] = [];\npub struct Puzzle2dFillSessionWork {",
+      "expected": "rejected"
+    },
+    {
+      "id": "fillSessionWorkerPoolRevived",
+      "replace": "fn puzzle2d_fill_monotonic_zero",
+      "with": "fn pool() { semio_framework_async::process_worker_pool(); }\nfn puzzle2d_fill_monotonic_zero",
+      "expected": "rejected"
+    },
+    {
+      "id": "fillSessionStoreLeaseRevived",
+      "replace": "    ingress: Option<infinite_canvas::BoardFillSnapshotIngress>,",
+      "with": "    lease: Option<store::SnapshotRead<Puzzle2dPlaySnapshot>>,\n    ingress: Option<infinite_canvas::BoardFillSnapshotIngress>,",
+      "expected": "rejected"
+    },
+    {
+      "id": "fillSessionCaptureCursorRemoved",
+      "remove": "Puzzle2dFillStage::Capture",
+      "expected": "rejected"
+    },
+    {
+      "id": "fillSessionApplyCursorRemoved",
+      "remove": "Puzzle2dFillStage::Apply",
+      "expected": "rejected"
+    },
+    {
+      "id": "fillSessionUnboundedSearch",
+      "remove": "self.search_chunks >= PUZZLE2D_FILL_SEARCH_CHUNKS",
+      "expected": "rejected"
+    },
+    {
+      "id": "fillSessionHandleBranchRevived",
+      "replace": "return Err(Fault::from(\"puzzle2d-fill-requires-retained-job\"));",
+      "with": "dispatch_fill_session_action(action, args, ctx);",
+      "expected": "rejected"
+    },
+    {
+      "id": "fillSessionWallClockBudget",
+      "replace": "puzzle2d_fill_monotonic_zero",
+      "with": "semio_framework_job::default_now_us",
+      "expected": "rejected"
+    }
   ],
   "locales": {
     "en": {
-      "progress": ["Reading command page", "Validating command capacity", "Applying command", "Publishing result"],
+      "progress": [
+        "Reading command page",
+        "Validating command capacity",
+        "Applying command",
+        "Publishing result"
+      ],
       "cancel": "Cancel command",
       "status": "Command status"
     },
     "de": {
-      "progress": ["Befehlsseite wird gelesen", "Befehlskapazität wird geprüft", "Befehl wird angewendet", "Ergebnis wird veröffentlicht"],
+      "progress": [
+        "Befehlsseite wird gelesen",
+        "Befehlskapazität wird geprüft",
+        "Befehl wird angewendet",
+        "Ergebnis wird veröffentlicht"
+      ],
       "cancel": "Befehl abbrechen",
       "status": "Befehlsstatus"
     }
   },
   "vectors": [
-    {"id": "zero", "rawBytes": 0, "control": "poll", "expected": "malformedFault", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "max", "rawBytes": 8192, "padding": "jsonWhitespace", "control": "pollAckClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "maxPlusOne", "rawBytes": 8193, "control": "admit", "expected": "rejectedUnchanged", "fingerprint": "8193:0:0:0:0:0"},
-    {"id": "malformed", "raw": "{", "control": "poll", "expected": "malformedFault", "fingerprint": "1:0:0:0:0:0"},
-    {"id": "staleGeneration", "authority": {"operation": 7, "generation": 1, "presentedGeneration": 0}, "expected": "rejectedUnchanged", "fingerprint": "1:1:1:0:0:0"},
-    {"id": "wrongOperation", "authority": {"operation": 7, "presentedOperation": 8, "generation": 1}, "expected": "rejectedUnchanged", "fingerprint": "1:1:1:0:0:0"},
-    {"id": "abaGeneration", "authority": {"operation": 7, "generation": 3, "presentedGeneration": 1}, "expected": "rejectedUnchanged", "fingerprint": "1:1:1:0:0:0"},
-    {"id": "cancelWirePage", "boundary": "wirePage", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "cancelWireByte", "boundary": "wireByte", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "cancelPreflight", "boundary": "preflight", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "cancelWork", "boundary": "work", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "cancelPublish", "boundary": "publish", "control": "cancelClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "faultWork", "boundary": "work", "control": "faultClose", "expected": "terminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "retry", "control": "faultRetryAckClose", "expected": "onePublicationTerminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "close", "closeGrant": {"items": 1, "bytes": 1}, "expected": "incrementalTerminalEmpty", "fingerprint": "0:0:0:0:0:0"},
-    {"id": "replay", "control": "runAckReplayAckClose", "expected": "sameSemanticDigest", "fingerprint": "0:0:0:0:0:0"},
-    {"id":"checkpointEmpty", "checkpointBytes":0, "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
-    {"id":"checkpointSingle", "checkpointBytes":1, "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
-    {"id":"checkpointMax", "checkpointBytes":112, "control":"checkpointRestoreResumeAckClose", "expected":"sameSemanticDigestTerminalEmpty"},
-    {"id":"checkpointMaxPlusOne", "checkpointBytes":113, "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
-    {"id":"checkpointCorrupt", "checkpointBytes":112, "mutation":"magic", "control":"restoreCheckpoint", "expected":"rejectedExactHandback"},
-    {"id":"checkpointInterruptedClose", "checkpointBytes":112, "boundary":"workProgress", "closeGrant":{"items":1,"bytes":16384}, "control":"checkpointRestoreCancelIncrementalClose", "expected":"terminalEmptyExactHandback"},
-    {"id":"forceLayoutUtf8", "toolId":"forceLayout", "nodes":[{"id":"knoten-ä","x":0,"y":0},{"id":"knoten-ß","x":10,"y":10}], "expected":"deterministicFinitePositions", "control":"pollEachProgressAckClose", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"forceLayoutEmpty", "toolId":"forceLayout", "nodes":0, "edges":0, "expected":"terminalEmpty"},
-    {"id":"forceLayoutSingle", "toolId":"forceLayout", "nodes":1, "edges":0, "expected":"oneFinitePositionTerminalEmpty"},
-    {"id":"forceLayoutMax", "toolId":"forceLayout", "nodes":512, "expected":"admitted"},
-    {"id":"forceLayoutMaxPlusOne", "toolId":"forceLayout", "nodes":513, "expected":"rejectedUnchanged"},
-    {"id":"forceLayoutCancelEveryBoundary", "toolId":"forceLayout", "boundaries":["node","handle","edge","seed","center","forceReset","repulsionPair","spring","integration","mutationPublish","closeOwner"], "control":"freshCancelAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"forceLayoutFaultEveryBoundary", "toolId":"forceLayout", "boundaries":["node","handle","edge","seed","center","forceReset","repulsionPair","spring","integration","mutationPublish","closeOwner"], "control":"freshFaultAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"setActiveExampleCancelFault", "toolId":"setActiveExample", "boundaries":["clearEdge","clearNode","manifest","clearCompatibility","addCompatibility","catalogs","addNode","addEdge","closeOwner"], "control":"freshCancelAndFreshFaultAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"cohortStaleRetryCloseReplay", "toolIds":["addNode","forceLayout","setActiveExample"], "authority":{"operation":11,"generation":6,"presentedGeneration":5}, "control":"rejectStaleThenValidFaultRetryAckIncrementalCloseReplay", "expected":"sameSemanticDigestTerminalEmpty", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"forceLayoutNakagin", "toolId":"forceLayout", "nodes":180, "edges":179, "handles":358, "expected":"admittedUnderWorkItems", "control":"pollEachProgressAckClose", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"forceLayoutHandleCeiling", "toolId":"forceLayout", "nodes":8, "handles":4097, "expected":"rejectedUnchanged"},
-    {"id":"forceLayoutEdgeCeiling", "toolId":"forceLayout", "nodes":8, "edges":4097, "expected":"rejectedUnchanged"},
-    {"id":"forceLayoutIterationsScaleWithSize", "toolId":"forceLayout", "nodes":[{"id":"a","x":0,"y":0},{"id":"b","x":1,"y":1}], "expected":"deterministicFinitePositions", "control":"runAckReplayAckClose", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"reorganizeSharesForceWork", "toolId":"reorganize", "nodes":180, "edges":179, "expected":"admittedUnderWorkItems", "control":"pollAckClose", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"reorganizeWrongToolAuthority", "toolId":"reorganize", "authority":{"operation":13,"generation":2,"presentedTool":"forceLayout"}, "expected":"rejectedUnchanged"},
-    {"id":"redrawHandlesZero", "toolId":"redrawHandles", "nodes":0, "edges":0, "expected":"terminalEmpty"},
-    {"id":"redrawHandlesMalformed", "toolId":"redrawHandles", "raw":"{", "control":"poll", "expected":"malformedFault"},
-    {"id":"redrawHandlesNakagin", "toolId":"redrawHandles", "nodes":180, "edges":179, "handles":358, "expected":"admittedUnderWorkItems", "control":"pollEachProgressAckClose", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"redrawHandlesMax", "toolId":"redrawHandles", "nodes":4096, "edges":4096, "handles":8192, "expected":"admitted"},
-    {"id":"redrawHandlesMaxPlusOne", "toolId":"redrawHandles", "nodes":4096, "edges":4096, "handles":8193, "expected":"rejectedUnchanged"},
-    {"id":"redrawHandlesSharedHandleLastEdgeWins", "toolId":"redrawHandles", "nodes":[{"id":"a","x":0,"y":0,"radius":10,"handles":[{"id":"ah","angle":0}]},{"id":"b","x":100,"y":0,"radius":10,"handles":[{"id":"bh","angle":0}]},{"id":"c","x":0,"y":100,"radius":10,"handles":[{"id":"ch","angle":0}]}], "edges":[{"id":"e1","source":"ah","target":"bh"},{"id":"e2","source":"ah","target":"ch"}], "expected":"oneReplaceNodeHandlePerChangedHandle"},
-    {"id":"redrawHandlesHiddenNodeSkipped", "toolId":"redrawHandles", "nodes":[{"id":"a","x":0,"y":0,"radius":10,"hidden":true,"handles":[{"id":"ah","angle":0}]}], "edges":0, "expected":"terminalEmpty"},
-    {"id":"redrawHandlesStaleGeneration", "toolId":"redrawHandles", "authority":{"operation":21,"generation":4,"presentedGeneration":3}, "expected":"rejectedUnchanged"},
-    {"id":"redrawHandlesCancelEveryBoundary", "toolId":"redrawHandles", "boundaries":["node","handle","edge","handlePublish","closeOwner"], "control":"freshCancelAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"redrawHandlesFaultEveryBoundary", "toolId":"redrawHandles", "boundaries":["node","handle","edge","handlePublish","closeOwner"], "control":"freshFaultAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"setFillCountZero", "toolId":"setFillCount", "args":{"count":0}, "expected":"terminalEmptyRuntimeOnly"},
-    {"id":"setFillCountMissingArgument", "toolId":"setFillCount", "args":{}, "expected":"faultedLifecycle", "control":"poll"},
-    {"id":"setFillCountMalformed", "toolId":"setFillCount", "raw":"{", "control":"poll", "expected":"malformedFault"},
-    {"id":"setFillCountMax", "toolId":"setFillCount", "args":{"count":1000}, "expected":"admittedUnderWorkItems"},
-    {"id":"setFillCountMaxPlusOne", "toolId":"setFillCount", "args":{"count":1001}, "expected":"rejectedUnchanged"},
-    {"id":"setFillCountNonFinite", "toolId":"setFillCount", "args":{"count":"NaN"}, "expected":"rejectedUnchanged"},
-    {"id":"setFillCountNegative", "toolId":"setFillCount", "args":{"count":-1}, "expected":"rejectedUnchanged"},
-    {"id":"setFillCountStaleGeneration", "toolId":"setFillCount", "authority":{"operation":31,"generation":9,"presentedGeneration":8}, "expected":"rejectedUnchanged"},
-    {"id":"setFillCountCancelEveryBoundary", "toolId":"setFillCount", "boundaries":["control","capture","search","apply","publish","closeOwner"], "control":"freshCancelAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"setFillCountFaultEveryBoundary", "toolId":"setFillCount", "boundaries":["control","capture","search","apply","publish","closeOwner"], "control":"freshFaultAtEachBoundaryThenClose", "expected":"terminalEmptyExactHandback", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"setFillCountReplayIsDeterministic", "toolId":"setFillCount", "args":{"count":4}, "control":"runAckReplayAckClose", "expected":"sameSemanticDigest", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"brushFillSessionBeginMissingSeed", "toolId":"brushFillSessionBegin", "args":{"maxCount":4}, "expected":"faultedLifecycle", "control":"poll"},
-    {"id":"brushFillSessionBeginMissingCount", "toolId":"brushFillSessionBegin", "args":{"seed":7}, "expected":"faultedLifecycle", "control":"poll"},
-    {"id":"brushFillSessionBeginMaxPlusOne", "toolId":"brushFillSessionBegin", "args":{"maxCount":1001, "seed":7}, "expected":"rejectedUnchanged"},
-    {"id":"brushFillSessionBeginSeedIsDeterministic", "toolId":"brushFillSessionBegin", "args":{"maxCount":4, "seed":7}, "control":"runAckReplayAckClose", "expected":"sameSemanticDigest", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"brushFillSessionStepWithoutSession", "toolId":"brushFillSessionStep", "expected":"terminalEmptyRuntimeOnly"},
-    {"id":"brushFillSessionStepResumesRemainder", "toolId":"brushFillSessionStep", "runtime":{"fillCount":8, "fillJobAcceptedCount":3, "fillJobLifecycle":"checkpointReady"}, "expected":"resumesRemainingCount"},
-    {"id":"brushFillSessionStepStaleGeneration", "toolId":"brushFillSessionStep", "authority":{"operation":41,"generation":5,"presentedGeneration":4}, "expected":"rejectedUnchanged"},
-    {"id":"brushFillSessionAdoptControlOnly", "toolId":"brushFillSessionAdopt", "expected":"terminalEmptyRuntimeOnly", "control":"pollAckClose"},
-    {"id":"brushFillSessionCancelControlOnly", "toolId":"brushFillSessionCancel", "expected":"terminalEmptyRuntimeOnly", "control":"pollAckClose"},
-    {"id":"brushFillSessionRetryReusesStoredSeed", "toolId":"brushFillSessionRetry", "runtime":{"fillCount":4, "fillJobSeed":7}, "control":"runAckReplayAckClose", "expected":"sameSemanticDigest", "fingerprint":"0:0:0:0:0:0"},
-    {"id":"brushFillSessionDiscardControlOnly", "toolId":"brushFillSessionDiscard", "expected":"terminalEmptyRuntimeOnly", "control":"pollAckClose"},
-    {"id":"brushFillSessionClearZeroesCount", "toolId":"brushFillSessionClear", "runtime":{"fillCount":9}, "expected":"terminalEmptyRuntimeOnly", "control":"pollAckClose"},
-    {"id":"brushFillSessionClearMalformed", "toolId":"brushFillSessionClear", "raw":"{", "control":"poll", "expected":"malformedFault"},
-    {"id":"fillCohortStaleRetryCloseReplay", "toolIds":["setFillCount","brushFillSessionStep","brushFillSessionDiscard"], "authority":{"operation":51,"generation":6,"presentedGeneration":5}, "control":"rejectStaleThenValidFaultRetryAckIncrementalCloseReplay", "expected":"sameSemanticDigestTerminalEmpty", "fingerprint":"0:0:0:0:0:0"}
+    {
+      "id": "zero",
+      "rawBytes": 0,
+      "control": "poll",
+      "expected": "malformedFault",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "max",
+      "rawBytes": 8192,
+      "padding": "jsonWhitespace",
+      "control": "pollAckClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "maxPlusOne",
+      "rawBytes": 8193,
+      "control": "admit",
+      "expected": "rejectedUnchanged",
+      "fingerprint": "8193:0:0:0:0:0"
+    },
+    {
+      "id": "malformed",
+      "raw": "{",
+      "control": "poll",
+      "expected": "malformedFault",
+      "fingerprint": "1:0:0:0:0:0"
+    },
+    {
+      "id": "staleGeneration",
+      "authority": {
+        "operation": 7,
+        "generation": 1,
+        "presentedGeneration": 0
+      },
+      "expected": "rejectedUnchanged",
+      "fingerprint": "1:1:1:0:0:0"
+    },
+    {
+      "id": "wrongOperation",
+      "authority": {
+        "operation": 7,
+        "presentedOperation": 8,
+        "generation": 1
+      },
+      "expected": "rejectedUnchanged",
+      "fingerprint": "1:1:1:0:0:0"
+    },
+    {
+      "id": "abaGeneration",
+      "authority": {
+        "operation": 7,
+        "generation": 3,
+        "presentedGeneration": 1
+      },
+      "expected": "rejectedUnchanged",
+      "fingerprint": "1:1:1:0:0:0"
+    },
+    {
+      "id": "cancelWirePage",
+      "boundary": "wirePage",
+      "control": "cancelClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "cancelWireByte",
+      "boundary": "wireByte",
+      "control": "cancelClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "cancelPreflight",
+      "boundary": "preflight",
+      "control": "cancelClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "cancelWork",
+      "boundary": "work",
+      "control": "cancelClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "cancelPublish",
+      "boundary": "publish",
+      "control": "cancelClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "faultWork",
+      "boundary": "work",
+      "control": "faultClose",
+      "expected": "terminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "retry",
+      "control": "faultRetryAckClose",
+      "expected": "onePublicationTerminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "close",
+      "closeGrant": {
+        "items": 1,
+        "bytes": 1
+      },
+      "expected": "incrementalTerminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "replay",
+      "control": "runAckReplayAckClose",
+      "expected": "sameSemanticDigest",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "checkpointEmpty",
+      "checkpointBytes": 0,
+      "control": "restoreCheckpoint",
+      "expected": "rejectedExactHandback"
+    },
+    {
+      "id": "checkpointSingle",
+      "checkpointBytes": 1,
+      "control": "restoreCheckpoint",
+      "expected": "rejectedExactHandback"
+    },
+    {
+      "id": "checkpointMax",
+      "checkpointBytes": 112,
+      "control": "checkpointRestoreResumeAckClose",
+      "expected": "sameSemanticDigestTerminalEmpty"
+    },
+    {
+      "id": "checkpointMaxPlusOne",
+      "checkpointBytes": 113,
+      "control": "restoreCheckpoint",
+      "expected": "rejectedExactHandback"
+    },
+    {
+      "id": "checkpointCorrupt",
+      "checkpointBytes": 112,
+      "mutation": "magic",
+      "control": "restoreCheckpoint",
+      "expected": "rejectedExactHandback"
+    },
+    {
+      "id": "checkpointInterruptedClose",
+      "checkpointBytes": 112,
+      "boundary": "workProgress",
+      "closeGrant": {
+        "items": 1,
+        "bytes": 16384
+      },
+      "control": "checkpointRestoreCancelIncrementalClose",
+      "expected": "terminalEmptyExactHandback"
+    },
+    {
+      "id": "forceLayoutUtf8",
+      "toolId": "forceLayout",
+      "nodes": [
+        {
+          "id": "knoten-ä",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "knoten-ß",
+          "x": 10,
+          "y": 10
+        }
+      ],
+      "expected": "deterministicFinitePositions",
+      "control": "pollEachProgressAckClose",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "forceLayoutEmpty",
+      "toolId": "forceLayout",
+      "nodes": 0,
+      "edges": 0,
+      "expected": "terminalEmpty"
+    },
+    {
+      "id": "forceLayoutSingle",
+      "toolId": "forceLayout",
+      "nodes": 1,
+      "edges": 0,
+      "expected": "oneFinitePositionTerminalEmpty"
+    },
+    {
+      "id": "forceLayoutMax",
+      "toolId": "forceLayout",
+      "nodes": 512,
+      "expected": "admitted"
+    },
+    {
+      "id": "forceLayoutMaxPlusOne",
+      "toolId": "forceLayout",
+      "nodes": 513,
+      "expected": "rejectedUnchanged"
+    },
+    {
+      "id": "forceLayoutCancelEveryBoundary",
+      "toolId": "forceLayout",
+      "boundaries": [
+        "node",
+        "handle",
+        "edge",
+        "seed",
+        "center",
+        "forceReset",
+        "repulsionPair",
+        "spring",
+        "integration",
+        "mutationPublish",
+        "closeOwner"
+      ],
+      "control": "freshCancelAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "forceLayoutFaultEveryBoundary",
+      "toolId": "forceLayout",
+      "boundaries": [
+        "node",
+        "handle",
+        "edge",
+        "seed",
+        "center",
+        "forceReset",
+        "repulsionPair",
+        "spring",
+        "integration",
+        "mutationPublish",
+        "closeOwner"
+      ],
+      "control": "freshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setActiveExampleCancelFault",
+      "toolId": "setActiveExample",
+      "boundaries": [
+        "clearEdge",
+        "clearNode",
+        "manifest",
+        "clearCompatibility",
+        "addCompatibility",
+        "catalogs",
+        "addNode",
+        "addEdge",
+        "closeOwner"
+      ],
+      "control": "freshCancelAndFreshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "cohortStaleRetryCloseReplay",
+      "toolIds": [
+        "addNode",
+        "forceLayout",
+        "setActiveExample"
+      ],
+      "authority": {
+        "operation": 11,
+        "generation": 6,
+        "presentedGeneration": 5
+      },
+      "control": "rejectStaleThenValidFaultRetryAckIncrementalCloseReplay",
+      "expected": "sameSemanticDigestTerminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "forceLayoutNakagin",
+      "toolId": "forceLayout",
+      "nodes": 180,
+      "edges": 179,
+      "handles": 358,
+      "expected": "admittedUnderWorkItems",
+      "control": "pollEachProgressAckClose",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "forceLayoutHandleCeiling",
+      "toolId": "forceLayout",
+      "nodes": 8,
+      "handles": 4097,
+      "expected": "rejectedUnchanged"
+    },
+    {
+      "id": "forceLayoutEdgeCeiling",
+      "toolId": "forceLayout",
+      "nodes": 8,
+      "edges": 4097,
+      "expected": "rejectedUnchanged"
+    },
+    {
+      "id": "forceLayoutIterationsScaleWithSize",
+      "toolId": "forceLayout",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "b",
+          "x": 1,
+          "y": 1
+        }
+      ],
+      "expected": "deterministicFinitePositions",
+      "control": "runAckReplayAckClose",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "reorganizeSharesForceWork",
+      "toolId": "reorganize",
+      "nodes": 180,
+      "edges": 179,
+      "expected": "admittedUnderWorkItems",
+      "control": "pollAckClose",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "reorganizeWrongToolAuthority",
+      "toolId": "reorganize",
+      "authority": {
+        "operation": 13,
+        "generation": 2,
+        "presentedTool": "forceLayout"
+      },
+      "expected": "rejectedUnchanged"
+    },
+    {
+      "id": "redrawHandlesZero",
+      "toolId": "redrawHandles",
+      "nodes": 0,
+      "edges": 0,
+      "expected": "terminalEmpty"
+    },
+    {
+      "id": "redrawHandlesMalformed",
+      "toolId": "redrawHandles",
+      "raw": "{",
+      "control": "poll",
+      "expected": "malformedFault"
+    },
+    {
+      "id": "redrawHandlesNakagin",
+      "toolId": "redrawHandles",
+      "nodes": 180,
+      "edges": 179,
+      "handles": 358,
+      "expected": "admittedUnderWorkItems",
+      "control": "pollEachProgressAckClose",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "redrawHandlesMax",
+      "toolId": "redrawHandles",
+      "nodes": 4096,
+      "edges": 4096,
+      "handles": 8192,
+      "expected": "admitted"
+    },
+    {
+      "id": "redrawHandlesMaxPlusOne",
+      "toolId": "redrawHandles",
+      "nodes": 4096,
+      "edges": 4096,
+      "handles": 8193,
+      "expected": "rejectedUnchanged"
+    },
+    {
+      "id": "redrawHandlesSharedHandleLastEdgeWins",
+      "toolId": "redrawHandles",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 10,
+          "handles": [
+            {
+              "id": "ah",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "b",
+          "x": 100,
+          "y": 0,
+          "radius": 10,
+          "handles": [
+            {
+              "id": "bh",
+              "angle": 0
+            }
+          ]
+        },
+        {
+          "id": "c",
+          "x": 0,
+          "y": 100,
+          "radius": 10,
+          "handles": [
+            {
+              "id": "ch",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": "ah",
+          "target": "bh"
+        },
+        {
+          "id": "e2",
+          "source": "ah",
+          "target": "ch"
+        }
+      ],
+      "expected": "oneReplaceNodeHandlePerChangedHandle"
+    },
+    {
+      "id": "redrawHandlesHiddenNodeSkipped",
+      "toolId": "redrawHandles",
+      "nodes": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 0,
+          "radius": 10,
+          "hidden": true,
+          "handles": [
+            {
+              "id": "ah",
+              "angle": 0
+            }
+          ]
+        }
+      ],
+      "edges": 0,
+      "expected": "terminalEmpty"
+    },
+    {
+      "id": "redrawHandlesStaleGeneration",
+      "toolId": "redrawHandles",
+      "authority": {
+        "operation": 21,
+        "generation": 4,
+        "presentedGeneration": 3
+      },
+      "expected": "rejectedUnchanged"
+    },
+    {
+      "id": "redrawHandlesCancelEveryBoundary",
+      "toolId": "redrawHandles",
+      "boundaries": [
+        "node",
+        "handle",
+        "edge",
+        "handlePublish",
+        "closeOwner"
+      ],
+      "control": "freshCancelAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "redrawHandlesFaultEveryBoundary",
+      "toolId": "redrawHandles",
+      "boundaries": [
+        "node",
+        "handle",
+        "edge",
+        "handlePublish",
+        "closeOwner"
+      ],
+      "control": "freshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setFillCountZero",
+      "toolId": "setFillCount",
+      "args": {
+        "count": 0
+      },
+      "expected": "terminalEmptyRuntimeOnly"
+    },
+    {
+      "id": "setFillCountMissingArgument",
+      "toolId": "setFillCount",
+      "args": {},
+      "expected": "faultedLifecycle",
+      "control": "poll"
+    },
+    {
+      "id": "setFillCountMalformed",
+      "toolId": "setFillCount",
+      "raw": "{",
+      "control": "poll",
+      "expected": "malformedFault"
+    },
+    {
+      "id": "setFillCountMax",
+      "toolId": "setFillCount",
+      "args": {
+        "count": 1000
+      },
+      "expected": "admittedUnderWorkItems"
+    },
+    {
+      "id": "setFillCountMaxPlusOne",
+      "toolId": "setFillCount",
+      "args": {
+        "count": 1001
+      },
+      "expected": "rejectedUnchanged"
+    },
+    {
+      "id": "setFillCountNonFinite",
+      "toolId": "setFillCount",
+      "args": {
+        "count": "NaN"
+      },
+      "expected": "rejectedUnchanged"
+    },
+    {
+      "id": "setFillCountNegative",
+      "toolId": "setFillCount",
+      "args": {
+        "count": -1
+      },
+      "expected": "rejectedUnchanged"
+    },
+    {
+      "id": "setFillCountStaleGeneration",
+      "toolId": "setFillCount",
+      "authority": {
+        "operation": 31,
+        "generation": 9,
+        "presentedGeneration": 8
+      },
+      "expected": "rejectedUnchanged"
+    },
+    {
+      "id": "setFillCountCancelEveryBoundary",
+      "toolId": "setFillCount",
+      "boundaries": [
+        "control",
+        "capture",
+        "search",
+        "apply",
+        "publish",
+        "closeOwner"
+      ],
+      "control": "freshCancelAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setFillCountFaultEveryBoundary",
+      "toolId": "setFillCount",
+      "boundaries": [
+        "control",
+        "capture",
+        "search",
+        "apply",
+        "publish",
+        "closeOwner"
+      ],
+      "control": "freshFaultAtEachBoundaryThenClose",
+      "expected": "terminalEmptyExactHandback",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "setFillCountReplayIsDeterministic",
+      "toolId": "setFillCount",
+      "args": {
+        "count": 4
+      },
+      "control": "runAckReplayAckClose",
+      "expected": "sameSemanticDigest",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "brushFillSessionBeginMissingSeed",
+      "toolId": "brushFillSessionBegin",
+      "args": {
+        "maxCount": 4
+      },
+      "expected": "faultedLifecycle",
+      "control": "poll"
+    },
+    {
+      "id": "brushFillSessionBeginMissingCount",
+      "toolId": "brushFillSessionBegin",
+      "args": {
+        "seed": 7
+      },
+      "expected": "faultedLifecycle",
+      "control": "poll"
+    },
+    {
+      "id": "brushFillSessionBeginMaxPlusOne",
+      "toolId": "brushFillSessionBegin",
+      "args": {
+        "maxCount": 1001,
+        "seed": 7
+      },
+      "expected": "rejectedUnchanged"
+    },
+    {
+      "id": "brushFillSessionBeginSeedIsDeterministic",
+      "toolId": "brushFillSessionBegin",
+      "args": {
+        "maxCount": 4,
+        "seed": 7
+      },
+      "control": "runAckReplayAckClose",
+      "expected": "sameSemanticDigest",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "brushFillSessionStepWithoutSession",
+      "toolId": "brushFillSessionStep",
+      "expected": "terminalEmptyRuntimeOnly"
+    },
+    {
+      "id": "brushFillSessionStepResumesRemainder",
+      "toolId": "brushFillSessionStep",
+      "runtime": {
+        "fillCount": 8,
+        "fillJobAcceptedCount": 3,
+        "fillJobLifecycle": "checkpointReady"
+      },
+      "expected": "resumesRemainingCount"
+    },
+    {
+      "id": "brushFillSessionStepStaleGeneration",
+      "toolId": "brushFillSessionStep",
+      "authority": {
+        "operation": 41,
+        "generation": 5,
+        "presentedGeneration": 4
+      },
+      "expected": "rejectedUnchanged"
+    },
+    {
+      "id": "brushFillSessionAdoptControlOnly",
+      "toolId": "brushFillSessionAdopt",
+      "expected": "terminalEmptyRuntimeOnly",
+      "control": "pollAckClose"
+    },
+    {
+      "id": "brushFillSessionCancelControlOnly",
+      "toolId": "brushFillSessionCancel",
+      "expected": "terminalEmptyRuntimeOnly",
+      "control": "pollAckClose"
+    },
+    {
+      "id": "brushFillSessionRetryReusesStoredSeed",
+      "toolId": "brushFillSessionRetry",
+      "runtime": {
+        "fillCount": 4,
+        "fillJobSeed": 7
+      },
+      "control": "runAckReplayAckClose",
+      "expected": "sameSemanticDigest",
+      "fingerprint": "0:0:0:0:0:0"
+    },
+    {
+      "id": "brushFillSessionDiscardControlOnly",
+      "toolId": "brushFillSessionDiscard",
+      "expected": "terminalEmptyRuntimeOnly",
+      "control": "pollAckClose"
+    },
+    {
+      "id": "brushFillSessionClearZeroesCount",
+      "toolId": "brushFillSessionClear",
+      "runtime": {
+        "fillCount": 9
+      },
+      "expected": "terminalEmptyRuntimeOnly",
+      "control": "pollAckClose"
+    },
+    {
+      "id": "brushFillSessionClearMalformed",
+      "toolId": "brushFillSessionClear",
+      "raw": "{",
+      "control": "poll",
+      "expected": "malformedFault"
+    },
+    {
+      "id": "fillCohortStaleRetryCloseReplay",
+      "toolIds": [
+        "setFillCount",
+        "brushFillSessionStep",
+        "brushFillSessionDiscard"
+      ],
+      "authority": {
+        "operation": 51,
+        "generation": 6,
+        "presentedGeneration": 5
+      },
+      "control": "rejectStaleThenValidFaultRetryAckIncrementalCloseReplay",
+      "expected": "sameSemanticDigestTerminalEmpty",
+      "fingerprint": "0:0:0:0:0:0"
+    }
   ],
-  "oracle": {"interface": "PuzzleRetainedFixtureOracle", "implementation": "serde_json", "runtimeReachable": false}
+  "oracle": {
+    "interface": "PuzzleRetainedFixtureOracle",
+    "implementation": "serde_json",
+    "runtimeReachable": false
+  }
 }

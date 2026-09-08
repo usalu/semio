@@ -11,8 +11,7 @@ use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::profile::{compute_semio_text_profile, SemioTextProfile};
-
+use super::profile::{compute_semio_text_profile};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio text snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `profile`, backed by the `📊profile/` slug dir).
@@ -86,3 +85,8 @@ pub fn semio_text_artifact_inference_descriptor() -> framework_schema::ArtifactI
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::profile::SemioTextProfile;
+//#endregion 🔁️Re-exports

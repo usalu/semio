@@ -46,9 +46,6 @@ impl DagDiff {
             if let Some(value) = &self.camera {
                 next.camera = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -79,7 +76,6 @@ impl MutationDiff<DagSnapshot> for DagDiff {
         take!(content);
         take!(selected_node_ids);
         take!(camera);
-        take!(locale);
     }
 }
 //#endregion 🔖️Apply

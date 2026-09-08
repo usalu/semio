@@ -20,11 +20,11 @@
               "mediaKind": "image"
             },
             "origin": [
-              2.0,
-              0.0,
-              0.0
+              2,
+              0,
+              0
             ],
-            "widthWorld": 10.0,
+            "widthWorld": 10,
             "locked": false,
             "hidden": false
           }
@@ -59,7 +59,6 @@
   "lodDepthVariable": null,
   "lodManual": null,
   "proximityRadius": null,
-  "locale": null,
   "runtimeExtrasJson": null,
   "hoveredObjectId": null,
   "hoveredVortexFullId": null,

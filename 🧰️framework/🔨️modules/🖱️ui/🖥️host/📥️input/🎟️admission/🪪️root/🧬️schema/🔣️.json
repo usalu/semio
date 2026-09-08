@@ -2,11 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/framework/ui/host/input/admission/root/schema.json",
   "title": "Ui Host Input Admission Root Schema Module",
-  "definitions": {
-    "u64": {
-      "$ref": "https://semio.tech/schema/framework/ui/host/input/admission/schema.json#/definitions/u64"
-    }
-  },
   "$defs": {
     "RootFixture": {
       "title": "UI Host Input Root Identity Fixture",
@@ -59,10 +54,10 @@
                 "minLength": 1
               },
               "before": {
-                "$ref": "#/definitions/u64"
+                "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
               },
               "atCas": {
-                "$ref": "#/definitions/u64"
+                "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
               },
               "grant": {
                 "enum": [
@@ -80,12 +75,12 @@
                 ]
               },
               "after": {
-                "$ref": "#/definitions/u64"
+                "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
               },
               "root": {
                 "anyOf": [
                   {
-                    "$ref": "#/definitions/u64"
+                    "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
                   },
                   {
                     "type": "null"
@@ -119,19 +114,19 @@
           ],
           "properties": {
             "initial": {
-              "$ref": "#/definitions/u64"
+              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
             },
             "firstRoot": {
-              "$ref": "#/definitions/u64"
+              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
             },
             "secondRoot": {
-              "$ref": "#/definitions/u64"
+              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
             },
             "firstEpoch": {
-              "$ref": "#/definitions/u64"
+              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
             },
             "secondEpoch": {
-              "$ref": "#/definitions/u64"
+              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
             },
             "oldKeyAccepted": {
               "const": false
@@ -148,10 +143,10 @@
           ],
           "properties": {
             "retainedRoot": {
-              "$ref": "#/definitions/u64"
+              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
             },
             "nextRoot": {
-              "$ref": "#/definitions/u64"
+              "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/U64"
             },
             "returnedToSequence": {
               "const": false

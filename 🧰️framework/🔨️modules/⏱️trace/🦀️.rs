@@ -48,7 +48,11 @@ pub fn install_clock(clock: fn() -> Option<u64>) -> Result<(), fn() -> Option<u6
 
 fn install_exact_clock(authority: &OnceLock<fn() -> Option<u64>>, clock: fn() -> Option<u64>) -> Result<(), fn() -> Option<u64>> {
     let existing = authority.get_or_init(|| clock);
-    if std::ptr::fn_addr_eq(*existing, clock) { Ok(()) } else { Err(clock) }
+    if std::ptr::fn_addr_eq(*existing, clock) {
+        Ok(())
+    } else {
+        Err(clock)
+    }
 }
 
 /// 🌐️ Converts fractional platform milliseconds into checked unsigned microseconds.
@@ -66,7 +70,9 @@ fn default_clock_us() -> Option<u64> {
 
 /// 🔒️ Bare Wasm must install its embedding host's real clock before instrumentation or work.
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-fn default_clock_us() -> Option<u64> { None }
+fn default_clock_us() -> Option<u64> {
+    None
+}
 
 /// 🕰️ Current monotonic microsecond reading: the host's [`install_clock`] override if one was set,
 /// else [`default_clock_us`] for this target.
@@ -274,11 +280,17 @@ fn site_registry() -> &'static Mutex<SiteRegistry> {
 }
 
 fn record_site_sample(site: &'static str, elapsed_us: u64) {
-    let Ok(mut registry) = site_registry().try_lock() else { OMITTED_SITE_SAMPLES.fetch_add(1, Ordering::Relaxed); return; };
+    let Ok(mut registry) = site_registry().try_lock() else {
+        OMITTED_SITE_SAMPLES.fetch_add(1, Ordering::Relaxed);
+        return;
+    };
     let mut vacant = None;
     for (index, slot) in registry.iter_mut().enumerate() {
         match slot {
-            Some((label, ring)) if std::ptr::eq(*label, site) => { ring.record(elapsed_us); return; }
+            Some((label, ring)) if std::ptr::eq(*label, site) => {
+                ring.record(elapsed_us);
+                return;
+            }
             None if vacant.is_none() => vacant = Some(index),
             _ => {}
         }
@@ -287,7 +299,9 @@ fn record_site_sample(site: &'static str, elapsed_us: u64) {
         let mut ring = PercentileRing::new();
         ring.record(elapsed_us);
         registry[index] = Some((site, ring));
-    } else { OMITTED_SITE_SAMPLES.fetch_add(1, Ordering::Relaxed); }
+    } else {
+        OMITTED_SITE_SAMPLES.fetch_add(1, Ordering::Relaxed);
+    }
 }
 
 /// 📊️ `(p50, p95, p99)` microseconds recorded for `site`, or `None` if nothing has landed there yet.
@@ -323,8 +337,11 @@ impl Drop for StepTimer {
     // 🚫️async: E1 external-trait impl — `Drop::drop`'s signature is fixed by std, so this can never
     // `.await`; same reasoning as `CancelToken`'s `Debug::fmt` impl in `⏳️async/🦀️.rs`.
     fn drop(&mut self) {
-        if let Some(elapsed) = self.start_us.zip(try_now_us()).and_then(|(start, end)| end.checked_sub(start)) { record_site_sample(self.site, elapsed); }
-        else { OMITTED_SITE_SAMPLES.fetch_add(1, Ordering::Relaxed); }
+        if let Some(elapsed) = self.start_us.zip(try_now_us()).and_then(|(start, end)| end.checked_sub(start)) {
+            record_site_sample(self.site, elapsed);
+        } else {
+            OMITTED_SITE_SAMPLES.fetch_add(1, Ordering::Relaxed);
+        }
     }
 }
 
@@ -358,7 +375,10 @@ pub struct ContractViolation {
 
 /// 🕰️ A missing or backward monotonic reading denies callback publication.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum CallbackClockFault { Missing, Backward }
+pub enum CallbackClockFault {
+    Missing,
+    Backward,
+}
 
 /// 🔒️ Immutable verdict minted only by its exact callback guard, independent of telemetry storage.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -371,11 +391,21 @@ pub struct CallbackVerdict {
 }
 
 impl CallbackVerdict {
-    pub fn is_fault(&self) -> bool { self.elapsed.is_err() || self.elapsed.is_ok_and(interactive_step_contract_violated) }
-    pub fn elapsed_us(&self) -> Option<u64> { self.elapsed.ok() }
-    pub fn clock_fault(&self) -> Option<CallbackClockFault> { self.elapsed.err() }
-    pub fn operation(&self) -> OperationId { self.operation }
-    pub fn generation(&self) -> Generation { self.generation }
+    pub fn is_fault(&self) -> bool {
+        self.elapsed.is_err() || self.elapsed.is_ok_and(interactive_step_contract_violated)
+    }
+    pub fn elapsed_us(&self) -> Option<u64> {
+        self.elapsed.ok()
+    }
+    pub fn clock_fault(&self) -> Option<CallbackClockFault> {
+        self.elapsed.err()
+    }
+    pub fn operation(&self) -> OperationId {
+        self.operation
+    }
+    pub fn generation(&self) -> Generation {
+        self.generation
+    }
     pub fn violation(&self) -> Option<ContractViolation> {
         self.elapsed.ok().filter(|elapsed| interactive_step_contract_violated(*elapsed)).map(|elapsed_us| ContractViolation { site: self.site, operation: self.operation, generation: self.generation, stage: self.stage, elapsed_us })
     }
@@ -414,7 +444,9 @@ impl Watchdog {
         self.report(try_now_us())
     }
 
-    pub fn is_admitted(&self) -> bool { self.start_us.is_some() }
+    pub fn is_admitted(&self) -> bool {
+        self.start_us.is_some()
+    }
 
     fn verdict_at(&self, end_us: Option<u64>) -> CallbackVerdict {
         let elapsed = match (self.start_us, end_us) {
@@ -426,10 +458,15 @@ impl Watchdog {
 
     fn report(&self, end_us: Option<u64>) -> CallbackVerdict {
         let verdict = self.verdict_at(end_us);
-        if let Some(elapsed) = verdict.elapsed_us() { record_site_sample(self.site, elapsed); }
+        if let Some(elapsed) = verdict.elapsed_us() {
+            record_site_sample(self.site, elapsed);
+        }
         if let Some(violation) = verdict.violation() {
-            if let Ok(mut ring) = violation_ring().try_lock() { ring.push(violation); }
-            else { OMITTED_VIOLATIONS.fetch_add(1, Ordering::Relaxed); }
+            if let Ok(mut ring) = violation_ring().try_lock() {
+                ring.push(violation);
+            } else {
+                OMITTED_VIOLATIONS.fetch_add(1, Ordering::Relaxed);
+            }
         }
         verdict
     }
@@ -455,7 +492,9 @@ impl Watchdog {
 impl Drop for Watchdog {
     // 🚫️async: E1 external-trait impl, same reasoning as `StepTimer::drop` above.
     fn drop(&mut self) {
-        if !self.finished { self.report(try_now_us()); }
+        if !self.finished {
+            self.report(try_now_us());
+        }
     }
 }
 
@@ -709,10 +748,16 @@ fn trace_ring() -> &'static Mutex<BoundedRing<TraceEvent, TRACE_RING_CAPACITY>> 
 }
 
 fn push_trace_event(operation: OperationId, generation: Generation, stage: TraceStage) -> Option<TraceEvent> {
-    let Some(at_us) = try_now_us() else { OMITTED_EVENTS.fetch_add(1, Ordering::Relaxed); return None; };
+    let Some(at_us) = try_now_us() else {
+        OMITTED_EVENTS.fetch_add(1, Ordering::Relaxed);
+        return None;
+    };
     let event = TraceEvent { operation, generation, sequence: NEXT_SEQUENCE.fetch_add(1, Ordering::SeqCst), stage, at_us };
-    if let Ok(mut ring) = trace_ring().try_lock() { ring.push(event); }
-    else { OMITTED_EVENTS.fetch_add(1, Ordering::Relaxed); }
+    if let Ok(mut ring) = trace_ring().try_lock() {
+        ring.push(event);
+    } else {
+        OMITTED_EVENTS.fetch_add(1, Ordering::Relaxed);
+    }
     Some(event)
 }
 
@@ -791,15 +836,15 @@ pub fn cancellation_latency_us(operation: OperationId) -> Option<u64> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "⏱️clock/🦀️.rs"]
+#[path = "⏱️clock/🧪️tests/🔬️standalone/🦀️.rs"]
 mod microsecond_clock_tests;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "⏱️clock/🧪️contention/🦀️.rs"]
+#[path = "⏱️clock/🧪️tests/🧪️contention/🦀️.rs"]
 mod microsecond_telemetry_contention_tests;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "⏱️clock/🏁️tail/🧪️tests/🦀️.rs"]
+#[path = "⏱️clock/🏁️tail/🧪️tests/🏁️tail/🦀️.rs"]
 mod watchdog_tail_tests;
 
 #[cfg(test)]

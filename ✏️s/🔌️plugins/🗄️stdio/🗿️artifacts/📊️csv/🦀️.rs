@@ -23,7 +23,7 @@ pub const STDIO_CSV_DOCUMENT_SCHEMA: &str = "stdio.csv";
 pub const CSV_ARTIFACT_SCHEMA_ID: &str = "s.stdio.csv";
 
 /// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     let factories = native_codecs();

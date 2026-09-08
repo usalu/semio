@@ -57,7 +57,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
     let host = host_from_fixture(fixture);
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
     let viewport = NodeGraphViewport { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
-    let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
+    let flow_extras = flow_backed_node_graph_extras(fixture, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let hover = marks.hovered_graph_target().map(|(node_id, port_id)| NodeGraphHover { node_id: Some(node_id), port_id });
     let _ = GENERATION_3D_PLAY_APP_ID;
     crate::scene_surface(

@@ -1,0 +1,31 @@
+{
+  "base": {
+    "contributionsJson": "[]"
+  },
+  "cases": [
+    {
+      "kind": "replace-config",
+      "mutation": {
+        "ReplaceConfig": {
+          "config": {
+            "contributionsJson": "[{\"kind\":\"über\"}]"
+          }
+        }
+      },
+      "expected": {
+        "contributionsJson": "[{\"kind\":\"über\"}]"
+      }
+    },
+    {
+      "kind": "set-contributions",
+      "mutation": {
+        "SetContributions": {
+          "json": "[{\"kind\":\"über\"}]"
+        }
+      },
+      "expected": {
+        "contributionsJson": "[{\"kind\":\"über\"}]"
+      }
+    }
+  ]
+}

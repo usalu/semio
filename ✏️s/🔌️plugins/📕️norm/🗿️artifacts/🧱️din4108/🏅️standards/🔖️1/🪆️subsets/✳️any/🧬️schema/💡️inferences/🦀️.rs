@@ -8,7 +8,6 @@ use crate::Din4108Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::Din4108Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a din4108 snapshot. One field per named inference under
@@ -80,7 +79,6 @@ use crate::standards::v1::subsets::any::schema::{bb_2, part_1, part_10, part_2, 
 /// `⚙️engine`. `evaluate` is the `Din4108Snapshot -> CheckReport` projection; everything it composes
 /// (`part_N`/`bb_2`) is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity};
-
 /// 📋️ Run all applicable DIN 4108 checks for a typical opaque wall.
 pub fn check_opaque_wall(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64) -> Result<CheckReport, NormError> {
     check_opaque_wall_with_bridges(category, layers, climate, airtightness_n50, 0.02)
@@ -229,3 +227,8 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::Din4108Outline;
+//#endregion 🔁️Re-exports

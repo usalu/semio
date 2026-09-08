@@ -77,9 +77,9 @@
                       "kind": "slider",
                       "id": "note-measures.zoom",
                       "label": "Zoom",
-                      "value": 1.0,
+                      "value": 1,
                       "min": 0.1,
-                      "max": 8.0,
+                      "max": 8,
                       "step": 0.05,
                       "onChange": {
                         "controllerId": "note-play",
@@ -110,10 +110,10 @@
                       "kind": "slider",
                       "id": "note-measures.grid-spacing",
                       "label": "Spacing",
-                      "value": 32.0,
-                      "min": 8.0,
-                      "max": 256.0,
-                      "step": 4.0,
+                      "value": 32,
+                      "min": 8,
+                      "max": 256,
+                      "step": 4,
                       "onChange": {
                         "controllerId": "note-play",
                         "action": "setGridSpacing"
@@ -123,10 +123,10 @@
                       "kind": "slider",
                       "id": "note-measures.grid-subdivisions",
                       "label": "Subdivisions",
-                      "value": 4.0,
-                      "min": 1.0,
-                      "max": 16.0,
-                      "step": 1.0,
+                      "value": 4,
+                      "min": 1,
+                      "max": 16,
+                      "step": 1,
                       "onChange": {
                         "controllerId": "note-play",
                         "action": "setGridSubdivisions"
@@ -138,7 +138,7 @@
                       "label": "Opacity",
                       "value": 0.35,
                       "min": 0.05,
-                      "max": 1.0,
+                      "max": 1,
                       "step": 0.05,
                       "onChange": {
                         "controllerId": "note-play",
@@ -169,10 +169,10 @@
                       "kind": "slider",
                       "id": "note-measures.snap-spacing",
                       "label": "Snap spacing",
-                      "value": 8.0,
-                      "min": 1.0,
-                      "max": 128.0,
-                      "step": 1.0,
+                      "value": 8,
+                      "min": 1,
+                      "max": 128,
+                      "step": 1,
                       "onChange": {
                         "controllerId": "note-play",
                         "action": "setSnapGridSpacing"
@@ -191,10 +191,10 @@
                       "kind": "slider",
                       "id": "note-measures.pencil-width",
                       "label": "Pencil width",
-                      "value": 3.0,
-                      "min": 1.0,
-                      "max": 24.0,
-                      "step": 1.0,
+                      "value": 3,
+                      "min": 1,
+                      "max": 24,
+                      "step": 1,
                       "onChange": {
                         "controllerId": "note-play",
                         "action": "setPencilWidth"
@@ -213,10 +213,10 @@
                       "kind": "slider",
                       "id": "note-measures.eraser-radius-eraserStroke",
                       "label": "Eraser radius",
-                      "value": 12.0,
-                      "min": 4.0,
-                      "max": 48.0,
-                      "step": 1.0,
+                      "value": 12,
+                      "min": 4,
+                      "max": 48,
+                      "step": 1,
                       "onChange": {
                         "controllerId": "note-play",
                         "action": "setEraserRadius"
@@ -235,10 +235,10 @@
                       "kind": "slider",
                       "id": "note-measures.eraser-radius-eraserPoint",
                       "label": "Eraser radius",
-                      "value": 12.0,
-                      "min": 4.0,
-                      "max": 48.0,
-                      "step": 1.0,
+                      "value": 12,
+                      "min": 4,
+                      "max": 48,
+                      "step": 1,
                       "onChange": {
                         "controllerId": "note-play",
                         "action": "setEraserRadius"
@@ -468,7 +468,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "y",
@@ -487,7 +487,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   }
                 ],
                 "inPalette": true,
@@ -1915,50 +1915,6 @@
                 },
                 "kind": "view",
                 "iconId": "wrench",
-                "args": [],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive"
-                  }
-                }
-              },
-              {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  },
-                  "reuse": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
                 "args": [],
                 "inPalette": false,
                 "semantics": {
@@ -3414,9 +3370,9 @@
                   "kind": "slider",
                   "id": "note-navigator-measures.zoom",
                   "label": "Zoom",
-                  "value": 1.0,
+                  "value": 1,
                   "min": 0.05,
-                  "max": 2.0,
+                  "max": 2,
                   "step": 0.05,
                   "onChange": {
                     "controllerId": "note-play",
@@ -3657,7 +3613,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   },
                   {
                     "id": "y",
@@ -3676,7 +3632,7 @@
                       "integer": false
                     },
                     "required": false,
-                    "default": 0.0
+                    "default": 0
                   }
                 ],
                 "inPalette": true,
@@ -5104,50 +5060,6 @@
                 },
                 "kind": "view",
                 "iconId": "wrench",
-                "args": [],
-                "inPalette": false,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive"
-                  }
-                }
-              },
-              {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  },
-                  "reuse": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
                 "args": [],
                 "inPalette": false,
                 "semantics": {
@@ -7025,7 +6937,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 72.0,
+                "size": 72,
                 "children": [
                   {
                     "kind": "window",
@@ -7036,7 +6948,7 @@
               },
               {
                 "kind": "stack",
-                "size": 28.0,
+                "size": 28,
                 "children": [
                   {
                     "kind": "window",

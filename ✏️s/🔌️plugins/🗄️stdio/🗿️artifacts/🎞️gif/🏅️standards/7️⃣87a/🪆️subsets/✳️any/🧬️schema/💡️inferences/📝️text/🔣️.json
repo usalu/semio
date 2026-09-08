@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/gif/87a/any/inference/text.json",
   "title": "Gif87aInferenceText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of Gif87aInference: the instance is the serialized document this facet's grammar and codec speak."
 }

@@ -2421,51 +2421,6 @@
               },
               {
                 "args": [],
-                "iconId": "eye",
-                "id": "setLocale",
-                "inPalette": false,
-                "kind": "view",
-                "label": {
-                  "native": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  },
-                  "reuse": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  }
-                },
-                "semantics": {
-                  "effects": {
-                    "destructive": false,
-                    "external": false,
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "reversible": false
-                  },
-                  "execution": {
-                    "cancellable": false,
-                    "class": "interactive",
-                    "expectedRevision": false,
-                    "idempotency": "none",
-                    "interactiveJob": "migrated",
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    }
-                  },
-                  "policy": {
-                    "approval": "never",
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ]
-                  }
-                }
-              },
-              {
-                "args": [],
                 "iconId": "undo-2",
                 "id": "undo",
                 "inPalette": true,

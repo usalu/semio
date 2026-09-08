@@ -62,13 +62,13 @@ fn io_declaration() -> IoDeclaration {
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset() -> SubsetDeclaration<crate::PlaybookApps> {
+pub fn subset<A: crate::PlaybookApplication>() -> SubsetDeclaration<A> {
     SubsetDeclaration {
         dialect: PLAYBOOK_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::playbook_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io_declaration(),
-        viewer: viewer_surface::<viewer::PlaybookViewer, crate::PlaybookApps>(viewer::create_playbook_viewer()),
-        editor: editor_surface::<editor::PlaybookPlayApp, crate::PlaybookApps>(editor::create_playbook_play_app()),
+        viewer: viewer_surface::<viewer::PlaybookViewer, A>(viewer::create_playbook_viewer()),
+        editor: editor_surface::<editor::PlaybookPlayApp, A>(editor::create_playbook_play_app()),
         examples: examples(),
     }
 }

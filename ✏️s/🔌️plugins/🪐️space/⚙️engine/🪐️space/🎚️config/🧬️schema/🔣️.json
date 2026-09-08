@@ -11,8 +11,7 @@
     "clipboardNodeIds",
     "workflowEngagementInput",
     "compiledDagEngagementInput",
-    "activePanelTab",
-    "locale"
+    "activePanelTab"
   ],
   "properties": {
     "camera": {
@@ -80,10 +79,6 @@
       "x-semio-state": "config"
     },
     "clientName": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
       "type": "string",
       "x-semio-state": "config"
     }

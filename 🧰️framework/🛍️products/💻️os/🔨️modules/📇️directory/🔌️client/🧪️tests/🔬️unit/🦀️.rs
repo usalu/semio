@@ -1,7 +1,6 @@
-
 use super::test_support::{FakeTransport, FakeWs};
 use super::*;
-use crate::os_directory::{DirectoryCommandOutcomeV1, DirectoryCommandResultV1, directory_command_sha256};
+use crate::os_directory::{directory_command_sha256, DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
 use semio_framework_async::{CancelToken, TraceId};
 use std::sync::atomic::{AtomicUsize, Ordering};
 

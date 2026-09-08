@@ -1,7 +1,7 @@
 //! 🧬️ Rewriting artifact schema — every field of the artifact with its state class.
 
-use semio_s_artifact_trinity_jack::{Camera, Graph, PropertyValue};
-use crate::{LayoutPoint, TrinityRewritingError};
+use semio_s_artifact_trinity_jack::{Graph};
+use crate::{TrinityRewritingError};
 use semio_s_artifact_trinity_jack::ast::{Pattern, PatternEdge, PatternNode, QueryResult};
 use semio_s_artifact_trinity_jack::executor::execute;
 use semio_s_artifact_trinity_jack::language_service::parse;
@@ -9,7 +9,7 @@ use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
-/// 🧬️ Full rewriting artifact state across the artifact, presence and config lanes.
+/// 🧬️ Full rewriting artifact state across the artifact and local config lanes.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.rewriting")]
@@ -24,14 +24,10 @@ pub struct RewritingArtifact {
     pub parameter_bindings: BTreeMap<String, PropertyValue>,
     #[state(artifact)]
     pub rule_layout: BTreeMap<String, LayoutPoint>,
-    #[state(presence)]
+    #[state(config)]
     pub lod_mode_by_window: BTreeMap<String, String>,
     #[state(config)]
     pub before_pane_camera: Camera,
-    #[state(config)]
-    pub reorganize_epoch: u64,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -46,8 +42,6 @@ impl Default for RewritingArtifact {
             rule_layout: BTreeMap::new(),
             lod_mode_by_window: BTreeMap::new(),
             before_pane_camera: Camera::default(),
-            reorganize_epoch: 0,
-            locale: "en-US".into(),
         }
     }
 }
@@ -461,3 +455,10 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: RewritingComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use semio_s_artifact_trinity_jack::PropertyValue;
+pub use crate::LayoutPoint;
+pub use semio_s_artifact_trinity_jack::Camera;
+//#endregion 🔁️Re-exports

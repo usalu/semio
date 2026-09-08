@@ -804,6 +804,58 @@ export type PluginViewState = {
   readonly windowInstances?: readonly { readonly id: string; readonly windowKindId: string }[];
 };
 
+export type ResolvedPluginViewState = PluginViewState & { readonly locale: "en" | "de"; readonly terminology: "native" | "reuse" };
+
+/** 🪟️ Admits an explicit host projection before it crosses a process boundary. */
+export function parseResolvedPluginViewState(value: unknown): ResolvedPluginViewState {
+  const object = (input: unknown): Record<string, unknown> => {
+    if (input === null || typeof input !== "object" || Array.isArray(input)) throw new Error("view context: expected object");
+    return input as Record<string, unknown>;
+  };
+  const identifier = (input: unknown): string => {
+    if (typeof input !== "string" || input.length === 0 || Array.from(input).length > 256 || /[\u0000-\u001f\u007f]/u.test(input)) throw new Error("view context: invalid identifier");
+    return input;
+  };
+  const row = object(value);
+  const short = ["activeModeId", "activeWindowKindId", "activeUtilityId", "activeToolId", "windowId"];
+  const long = ["panelJson", "contributionsJson"];
+  const allowed = new Set([...short, ...long, "locale", "terminology", "activeUtilityByWindowId", "windowInstances"]);
+  if (Object.keys(row).some((key) => !allowed.has(key)) || !["en", "de"].includes(row.locale as string) || !["native", "reuse"].includes(row.terminology as string)) throw new Error("view context: explicit supported preferences required");
+  for (const key of short) if (row[key] !== undefined) identifier(row[key]);
+  for (const key of long) if (row[key] !== undefined && (typeof row[key] !== "string" || Array.from(row[key]).length > 65_536)) throw new Error("view context: invalid panel data");
+  if (row.activeUtilityByWindowId !== undefined) {
+    const entries = Object.entries(object(row.activeUtilityByWindowId));
+    if (entries.length > 64) throw new Error("view context: utility capacity exceeded");
+    for (const [key, item] of entries) { identifier(key); identifier(item); }
+  }
+  if (row.windowInstances !== undefined) {
+    if (!Array.isArray(row.windowInstances) || row.windowInstances.length > 64) throw new Error("view context: window capacity exceeded");
+    const ids = new Set<string>();
+    for (const item of row.windowInstances) {
+      const window = object(item);
+      if (Object.keys(window).sort().join(",") !== "id,windowKindId") throw new Error("view context: invalid window fields");
+      const id = identifier(window.id);
+      identifier(window.windowKindId);
+      if (ids.has(id)) throw new Error("view context: repeated window instance");
+      ids.add(id);
+    }
+  }
+  return structuredClone(row) as ResolvedPluginViewState;
+}
+
+/** 🎯️ Projects host-owned context onto one concrete window, preserving its own utility selection. */
+export function windowViewContext(view: PluginViewState, windowId: string): PluginViewState | undefined {
+  const window = view.windowInstances?.find((window) => window.id === windowId);
+  if (!window) return undefined;
+  const utility = view.activeUtilityByWindowId;
+  return { ...view, windowId: window.id, activeWindowKindId: window.windowKindId, activeUtilityId: utility && Object.hasOwn(utility, windowId) ? utility[windowId] : undefined };
+}
+
+/** 📌️ Projects app-level panels without binding their controls to a window. */
+export function panelViewContext(view: PluginViewState): PluginViewState {
+  return { ...view, windowId: undefined, activeWindowKindId: undefined, activeUtilityId: undefined };
+}
+
 /** 🗣️ Locale/terminology-aware label patch for an app's window-kind/panel-tab/mode labels, resolved fresh per {@link PluginViewState} — merge over the static {@link PluginManifest} app labels by id. */
 export type PluginAppLabelsOverlay = {
   readonly windowKindLabels: Readonly<Record<string, string>>;

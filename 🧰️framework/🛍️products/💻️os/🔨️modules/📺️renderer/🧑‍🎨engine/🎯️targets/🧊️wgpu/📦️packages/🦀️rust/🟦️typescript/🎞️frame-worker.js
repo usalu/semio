@@ -1592,7 +1592,7 @@ class OwnedActorTurnOutputs {
     this.#ledger = ledger;
   }
   static {
-    canRun = (slot) => slot.queue !== null && !slot.queue.#closed && slot.queue.#admissionFault === NO_OUTPUT_FAULT && (slot.queue.#admissionCell !== slot.cell || slot.queue.#admissionPhase === "published") && slot.record.matchesLiveShell(slot.queue);
+    canRun = (slot) => slot.queue !== null && !slot.queue.#closed && slot.queue.#admissionFault === NO_OUTPUT_FAULT && (slot.queue.#admissionCell !== slot.cell || slot.queue.#admissionPhase === "published") && slot.record?.matchesLiveShell(slot.queue) === true;
     cancelEmpty = (slot) => {
       const queue = slot.queue;
       if (!queue || slot.phase !== "reserved" || slot.outcome !== null || slot.fault !== NO_OUTPUT_FAULT)
@@ -1610,6 +1610,8 @@ class OwnedActorTurnOutputs {
   reserve(grant) {
     if (!granted(grant, 64))
       return admission("blocked", "actor-output.grant");
+    if (this.#closed || !this.#owner || !this.#ledger)
+      return admission("rejected", "actor-output.closed");
     try {
       const ledger = this.#ledger;
       if (this.#admissionPhase === "preparing") {
@@ -1731,6 +1733,89 @@ class OwnedActorTurnOutputs {
   }
   beginClose() {
     this.#closed = true;
+  }
+  closeStep(grant) {
+    if (!granted(grant, 64))
+      return admission("blocked", "actor-output.close-grant").step;
+    if (!this.#closed)
+      return admission("rejected", "actor-output.not-closing").step;
+    if (this.terminalIsEmpty())
+      return admission("complete", "actor-output.closed").step;
+    if (this.#admissionFault !== NO_OUTPUT_FAULT)
+      return admission("blocked", "actor-output.fault-held").step;
+    const slot = this.#head;
+    if (slot) {
+      if (slot.phase === "pending" || slot.response !== null || slot.outcome !== null || slot.fault !== NO_OUTPUT_FAULT)
+        return admission("blocked", "actor-output.domain-discharge-required").step;
+      if (slot.phase === "reserved") {
+        slot.phase = "cancelled";
+        return admission("pending", "actor-output.cancel-unused", 64).step;
+      }
+      if (slot.owner !== null || slot.queue !== null || slot.handle !== null) {
+        if (!granted(grant, 128))
+          return admission("blocked", "actor-output.slot-detachment").step;
+        slot.owner = null;
+        slot.queue = null;
+        slot.handle = null;
+        return admission("pending", "actor-output.slot-detachment", 128).step;
+      }
+    }
+    let cell = slot?.cell ?? this.#admissionCell;
+    if (!cell && this.#admissionPhase === "preparing") {
+      cell = this.#ledger?.preparedAdmission(this) ?? null;
+      if (!cell)
+        return admission("blocked", "actor-output.cell-handoff").step;
+      this.#admissionCell = cell;
+      return admission("pending", "actor-output.cell-observation", 64).step;
+    }
+    if (cell) {
+      if (cell.hasFailure)
+        return admission("blocked", "actor-output.admission-fault").step;
+      const record = slot?.record ?? this.#admissionRecord ?? cell.result?.record ?? null;
+      if (!slot && record !== null && this.#admissionRecord !== record) {
+        this.#admissionRecord = record;
+        return admission("pending", "actor-output.record-observation", 64).step;
+      }
+      if (record?.matchesShell(this)) {
+        record.beginClose();
+        return record.detach(this, grant);
+      }
+      if (!cell.terminalIsEmpty()) {
+        cell.beginClose();
+        const current = cell.closeStep(grant);
+        return { ...current, kind: current.kind === "complete" ? "pending" : current.kind };
+      }
+      if (!OwnedResidentRetirement.matches(cell.retirement, cell) || record && (!record.terminalIsEmpty() || !OwnedResidentRetirement.matches(record.retirement, record) || record.detachment !== null && !OwnedResidentRecordDetachment.matches(record.detachment, record, this)))
+        return admission("blocked", "actor-output.retirement-proof").step;
+      if (!granted(grant, 256))
+        return admission("blocked", "actor-output.unlink").step;
+      if (this.#admissionCell === cell) {
+        this.#admissionCell = null;
+        this.#admissionRecord = null;
+        this.#admissionPhase = "idle";
+      }
+      if (slot) {
+        this.#head = slot.next;
+        if (this.#head)
+          this.#head.previous = null;
+        else
+          this.#tail = null;
+        slot.previous = null;
+        slot.next = null;
+        slot.cell = null;
+        slot.record = null;
+        this.#pending--;
+      }
+      return admission("pending", "actor-output.unlink", 256).step;
+    }
+    if (slot || this.#pending !== 0 || this.#tail !== null || this.#admissionRecord !== null || this.#admissionPhase !== "idle")
+      return admission("blocked", "actor-output.retained-admission").step;
+    this.#owner = null;
+    this.#ledger = null;
+    return admission("complete", "actor-output.closed", 64).step;
+  }
+  terminalIsEmpty() {
+    return this.#closed && this.#owner === null && this.#ledger === null && this.#head === null && this.#tail === null && this.#pending === 0 && this.#admissionCell === null && this.#admissionRecord === null && this.#admissionPhase === "idle" && this.#admissionFault === NO_OUTPUT_FAULT;
   }
 }
 if (undefined) {}
@@ -23317,25 +23402,30 @@ function reconcileRetainedWindowPatch(previous, patch) {
   return applyUiPatchToRetained(previous, { revision: packWireNatural(patch.revision, "uiPatch.revision"), baseRevision: packWireNatural(patch.baseRevision, "uiPatch.baseRevision"), ops });
 }
 function applyRetainedWindowPatches(actorId, uiPatches) {
+  const retained = retainedWindowByActor.get(actorId) ?? new Map;
+  retainedWindowByActor.set(actorId, retained);
   for (const patch of uiPatches) {
-    const previous = retainedWindowByActor.get(actorId) ?? null;
+    const surfaceId = patch.surface?.surface;
+    if (!surfaceId)
+      continue;
+    const previous = retained.get(surfaceId) ?? null;
     const { surface, desynced } = reconcileRetainedWindowPatch(previous, patch);
     if (desynced) {
       console.warn(`[DEBUG] plugin-bridge: actor ${actorId} desynced (unrecognized op shape or stale baseRevision) — keeping the previously retained body`);
       continue;
     }
     if (surface)
-      retainedWindowByActor.set(actorId, surface);
+      retained.set(surfaceId, surface);
   }
 }
-async function performRender(actorId, instanceId, bodyKey) {
-  const result3 = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: bodyKey } } }]);
+async function performRender(actorId, instanceId, surfaceId, bodyKey, viewState) {
+  const result3 = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: surfaceId }, bodyKey, viewState: encodePackValue(viewState) } }]);
   if (result3.uiPatches.length > 0)
     applyRetainedWindowPatches(actorId, result3.uiPatches);
-  return retainedWindowByActor.get(actorId)?.node ?? null;
+  return retainedWindowByActor.get(actorId)?.get(surfaceId)?.node ?? null;
 }
 var RETAINED_DOCUMENT_OPPORTUNITIES = 256;
-async function publishRetainedDocument(actorId, instanceId, bodyKey) {
+async function publishRetainedDocument(actorId, instanceId, surfaceId, bodyKey, viewState) {
   const collected = [];
   const seenSurfaces = [];
   const seenTags = [];
@@ -23343,7 +23433,7 @@ async function publishRetainedDocument(actorId, instanceId, bodyKey) {
   let anyEffects = 0;
   const seenEffects = [];
   let turns = 1;
-  let result3 = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: bodyKey } } }]);
+  let result3 = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: surfaceId }, bodyKey, viewState: encodePackValue(viewState) } }]);
   for (let opportunity = 0;opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
     anyPatches += result3.uiPatches.length;
     anyEffects += result3.effects.length;
@@ -23360,14 +23450,14 @@ async function publishRetainedDocument(actorId, instanceId, bodyKey) {
     }
     if (result3.uiPatches.length > 0) {
       applyRetainedWindowPatches(actorId, result3.uiPatches);
-      collected.push(...result3.uiPatches.filter((patch) => (patch.surface?.surface ?? bodyKey) === bodyKey));
+      collected.push(...result3.uiPatches.filter((patch) => (patch.surface?.surface ?? surfaceId) === surfaceId));
     }
     if (collected.length > 0)
       break;
     result3 = await submitTurn(actorId, []);
     turns += 1;
   }
-  console.log(`[DEBUG] publishRetainedDocument ${bodyKey}: turns=${turns} collected=${collected.length} anyPatches=${anyPatches} surfaces=${JSON.stringify(seenSurfaces)} tags=${JSON.stringify(seenTags.slice(0, 12))} effects=${anyEffects} effectTags=${JSON.stringify(seenEffects.slice(0, 12))}`);
+  console.log(`[DEBUG] publishRetainedDocument ${surfaceId}/${bodyKey}: turns=${turns} collected=${collected.length} anyPatches=${anyPatches} surfaces=${JSON.stringify(seenSurfaces)} tags=${JSON.stringify(seenTags.slice(0, 12))} effects=${anyEffects} effectTags=${JSON.stringify(seenEffects.slice(0, 12))}`);
   const nodes = [];
   let revision = 0;
   let root = null;
@@ -23386,7 +23476,7 @@ async function publishRetainedDocument(actorId, instanceId, bodyKey) {
   }
   if (root === null && nodes.length > 0)
     root = Number(nodes[0].id ?? 0);
-  return JSON.stringify({ surface: bodyKey, revision, root, nodes, layoutEpoch: 0 });
+  return JSON.stringify({ surface: surfaceId, revision, root, nodes, layoutEpoch: 0 });
 }
 var pendingTurnEffects = new Map;
 var nextGlobalInstanceId = 1;
@@ -23535,8 +23625,8 @@ async function loadPluginModule(pluginId, moduleUrl, signal) {
     },
     handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), viewState),
     handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), viewState),
-    render: (instanceId, bodyKey) => performRender(requireActorId(instanceId), instanceId, bodyKey),
-    renderDocument: (instanceId, bodyKey) => publishRetainedDocument(requireActorId(instanceId), instanceId, bodyKey),
+    render: (instanceId, surfaceId, bodyKey, viewState) => performRender(requireActorId(instanceId), instanceId, surfaceId, bodyKey, viewState),
+    renderDocument: (instanceId, surfaceId, bodyKey, viewState) => publishRetainedDocument(requireActorId(instanceId), instanceId, surfaceId, bodyKey, viewState),
     contextMenu: (instanceId, request) => requireChannel(instanceId).contextMenu(request),
     dispose: () => {
       for (const instanceId of channelByInstance.keys())
@@ -23566,8 +23656,8 @@ function pluginHandleForBridge(handle) {
     destroyApp: (instanceId) => handle.destroyApp(instanceId),
     handleAction: (instanceId, actionJson, contextJson) => handle.handleAction(instanceId, actionJson, viewStateFromContextJson(contextJson)).then((result3) => JSON.stringify(result3)),
     handleCommand: (instanceId, commandJson, contextJson) => handle.handleCommand(instanceId, commandJson, viewStateFromContextJson(contextJson)).then((result3) => JSON.stringify(result3)),
-    render: (instanceId, bodyKey, viewStateJson) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
-    renderDocument: (instanceId, bodyKey) => handle.renderDocument(instanceId, bodyKey),
+    render: (instanceId, surfaceId, bodyKey, viewStateJson) => handle.render(instanceId, surfaceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
+    renderDocument: (instanceId, surfaceId, bodyKey, viewStateJson) => handle.renderDocument(instanceId, surfaceId, bodyKey, JSON.parse(viewStateJson)),
     contextMenu: (instanceId, requestJson) => handle.contextMenu(instanceId, JSON.parse(requestJson)).then((items) => JSON.stringify(items))
   };
 }

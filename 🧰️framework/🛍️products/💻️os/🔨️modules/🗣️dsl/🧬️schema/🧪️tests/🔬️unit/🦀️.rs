@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn assert_round_trip(text: &str, spec: &RecordSpec) {

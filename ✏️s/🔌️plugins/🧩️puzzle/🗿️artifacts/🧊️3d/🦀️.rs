@@ -745,8 +745,7 @@ pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// field — it belongs to the same OS media-host 14-function family flagged on puzzle2d's
 /// `declaration()` doc, a different mechanism from the nine §6 registrars this struct covers — so it
 /// stays wired through `🧩️puzzle/🦀️.rs`'s own `.setup()`, not here.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    #[cfg(feature = "component-app-assembly")]
+#[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
     + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>>
@@ -762,6 +761,7 @@ impl<PA> ArtifactApps for PA where
 {
 }
 
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
 use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
@@ -1646,6 +1646,24 @@ pub use crate::standards::v1::subsets::any::schema::inferences::flatten::{flatte
 
 #[cfg(feature = "component-app-assembly")]
 #[path = "."]
+pub mod examples {
+    #[path = "."]
+    pub mod puzzle3d {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🦀️.rs"]
+        pub mod concrete_forest;
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🦀️.rs"]
+        pub mod nakagin_capsule_tower;
+        #[cfg(test)]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🧪️tests/🧩️example/🦀️.rs"]
+        mod concrete_forest_tests;
+        #[cfg(test)]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🧪️tests/🧩️example/🦀️.rs"]
+        mod nakagin_capsule_tower_tests;
+    }
+}
+
+#[cfg(feature = "component-app-assembly")]
+#[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod puzzle3d {
@@ -1661,7 +1679,7 @@ pub mod editor {
                 mod component;
                 pub use component::*;
                 #[cfg(test)]
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
                 mod tests;
             }
         }
@@ -1779,8 +1797,6 @@ pub mod editor {
             pub mod set_fixture_json;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚖️set-kind-weight/🦀️.rs"]
             pub mod set_kind_weight;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️.rs"]
-            pub mod set_locale;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✋️set-manual/🦀️.rs"]
             pub mod set_manual;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📽️set-projection/🦀️.rs"]
@@ -1797,8 +1813,6 @@ pub mod editor {
             pub mod set_spacing;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚩️set-target-volume-flag/🦀️.rs"]
             pub mod set_target_volume_flag;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📖️set-terminology/🦀️.rs"]
-            pub mod set_terminology;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️set-transform-gumball-flag/🦀️.rs"]
             pub mod set_transform_gumball_flag;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-visible/🦀️.rs"]

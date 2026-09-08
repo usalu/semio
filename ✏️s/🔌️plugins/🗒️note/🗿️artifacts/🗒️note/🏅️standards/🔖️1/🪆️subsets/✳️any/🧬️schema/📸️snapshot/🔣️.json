@@ -26,7 +26,7 @@
     "blocks": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/NoteBlockNode"
+        "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/$defs/NoteBlockNode"
       },
       "x-semio-state": "artifact"
     },
@@ -71,49 +71,9 @@
     "assets": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/$defs/NoteImageAsset"
+        "$ref": "https://semio.tech/schema/s/note/note/artifact.json#/$defs/NoteImageAsset"
       },
       "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "NoteBlockNode": {
-      "title": "NoteBlockNode",
-      "type": "object",
-      "additionalProperties": true,
-      "required": [
-        "kind"
-      ],
-      "properties": {
-        "kind": {
-          "type": "string"
-        }
-      }
-    },
-    "NoteImageAsset": {
-      "title": "NoteImageAsset",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mime",
-        "data"
-      ],
-      "properties": {
-        "mime": {
-          "type": "string"
-        },
-        "data": {
-          "type": "string"
-        },
-        "width": {
-          "type": "number",
-          "format": "double"
-        },
-        "height": {
-          "type": "number",
-          "format": "double"
-        }
-      }
     }
   }
 }

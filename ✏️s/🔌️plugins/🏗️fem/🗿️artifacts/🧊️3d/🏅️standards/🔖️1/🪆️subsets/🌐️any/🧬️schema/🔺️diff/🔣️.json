@@ -44,7 +44,7 @@
       "x-semio-state": "artifact"
     },
     "analysis": {
-      "$ref": "#/$defs/FemAnalysisSettings",
+      "$ref": "https://semio.tech/schema/s/fem/fem3d/artifact.json#/$defs/FemAnalysisSettings",
       "x-semio-state": "artifact"
     },
     "resultSourceId": {
@@ -69,7 +69,7 @@
       "x-semio-state": "presence"
     },
     "camera": {
-      "$ref": "#/$defs/FemCamera",
+      "$ref": "https://semio.tech/schema/s/fem/fem3d/artifact.json#/$defs/FemCamera",
       "x-semio-state": "config"
     },
     "solverResultsJson": {
@@ -84,78 +84,6 @@
     }
   },
   "$defs": {
-    "FemCamera": {
-      "title": "FemCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "json"
-      ],
-      "properties": {
-        "json": {
-          "type": "string",
-          "contentMediaType": "application/json"
-        }
-      }
-    },
-    "FemAnalysisSettings": {
-      "title": "FemAnalysisSettings",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "modalCount",
-        "bucklingCount",
-        "deformationScale"
-      ],
-      "properties": {
-        "modalCount": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "bucklingCount": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
-        "deformationScale": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "FemNode": {
-      "title": "FemNode",
-      "type": "object"
-    },
-    "FemElement": {
-      "title": "FemElement",
-      "type": "object"
-    },
-    "FemSolid": {
-      "title": "FemSolid",
-      "type": "object"
-    },
-    "FemMaterial": {
-      "title": "FemMaterial",
-      "type": "object"
-    },
-    "FemSection": {
-      "title": "FemSection",
-      "type": "object"
-    },
-    "FemSupport": {
-      "title": "FemSupport",
-      "type": "object"
-    },
-    "FemLoadCase": {
-      "title": "FemLoadCase",
-      "type": "object"
-    },
-    "FemCombination": {
-      "title": "FemCombination",
-      "type": "object"
-    },
     "Fem3dNodesDelta": {
       "title": "Fem3dNodesDelta",
       "type": "object",

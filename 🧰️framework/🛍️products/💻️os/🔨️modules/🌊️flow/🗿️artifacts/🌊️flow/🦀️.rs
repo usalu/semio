@@ -29,5 +29,5 @@ pub fn widget_id_for(widget: &Widget) -> &str {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🌊️flow/🦀️.rs"]
 mod package_tests;

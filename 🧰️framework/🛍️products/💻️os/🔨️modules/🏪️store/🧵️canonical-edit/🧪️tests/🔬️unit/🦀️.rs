@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🔬️ `ScalarBytes::from_node`'s serde-free arms (`Null`/`Bool`/`I64`/`U64`/`I128`/`U128`/
@@ -82,7 +81,7 @@ impl ArtifactCanonicalJson for FixtureMutation {
 }
 
 fn fixture() -> (Edit<FixtureMutation>, serde_json::Value) {
-    let value: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔏️canonical-edit-sealer.json")).unwrap();
+    let value: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔏️canonical-edit-sealer.json")).unwrap();
     (Edit::from_value(value["edit"].clone().into()).unwrap(), value)
 }
 

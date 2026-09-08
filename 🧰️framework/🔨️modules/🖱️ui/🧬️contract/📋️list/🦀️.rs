@@ -28,7 +28,9 @@ trait PageAllocation {
 
 struct ExactAllocation;
 impl PageAllocation for ExactAllocation {
-    fn reserve<T>(owner: &mut Vec<T>, slots: usize) -> Result<(), std::collections::TryReserveError> { owner.try_reserve_exact(slots) }
+    fn reserve<T>(owner: &mut Vec<T>, slots: usize) -> Result<(), std::collections::TryReserveError> {
+        owner.try_reserve_exact(slots)
+    }
 }
 
 #[cfg(test)]
@@ -47,7 +49,10 @@ enum MutableFrame<'a, T> {
 
 impl<'a, T> MutableFrame<'a, T> {
     fn new(page: &'a mut Page<T>) -> Self {
-        match page { Page::Branch(children) => Self::Branch(children.iter_mut()), Page::Leaf { items, .. } => Self::Leaf(items.iter_mut()) }
+        match page {
+            Page::Branch(children) => Self::Branch(children.iter_mut()),
+            Page::Leaf { items, .. } => Self::Leaf(items.iter_mut()),
+        }
     }
 }
 
@@ -63,7 +68,10 @@ impl<'a, T> Iterator for PagedIterMut<'a, T> {
         while self.depth != 0 && self.remaining != 0 {
             match self.frames[self.depth - 1].as_mut()? {
                 MutableFrame::Leaf(items) => {
-                    if let Some(item) = items.next() { self.remaining -= 1; return Some(item); }
+                    if let Some(item) = items.next() {
+                        self.remaining -= 1;
+                        return Some(item);
+                    }
                 }
                 MutableFrame::Branch(children) => {
                     if let Some(child) = children.next() {
@@ -80,7 +88,9 @@ impl<'a, T> Iterator for PagedIterMut<'a, T> {
         }
         None
     }
-    fn size_hint(&self) -> (usize, Option<usize>) { (self.remaining, Some(self.remaining)) }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.remaining, Some(self.remaining))
+    }
 }
 impl<T> ExactSizeIterator for PagedIterMut<'_, T> {}
 
@@ -92,29 +102,57 @@ pub(super) struct PagedList<T, const N: usize> {
 }
 
 impl<T, const N: usize> Default for PagedList<T, N> {
-    fn default() -> Self { Self { root: Vec::new(), length: 0, capacity: 0, allocated: 0 } }
+    fn default() -> Self {
+        Self { root: Vec::new(), length: 0, capacity: 0, allocated: 0 }
+    }
 }
 
 impl<T, const N: usize> PagedList<T, N> {
-    pub(super) const fn empty() -> Self { Self { root: Vec::new(), length: 0, capacity: 0, allocated: 0 } }
-    fn page_items() -> usize { if size_of::<T>() == 0 { N.max(1) } else { (PAGE_BYTES / size_of::<T>()).max(1).min(N.max(1)) } }
+    pub(super) const fn empty() -> Self {
+        Self { root: Vec::new(), length: 0, capacity: 0, allocated: 0 }
+    }
+    fn page_items() -> usize {
+        if size_of::<T>() == 0 {
+            N.max(1)
+        } else {
+            (PAGE_BYTES / size_of::<T>()).max(1).min(N.max(1))
+        }
+    }
     fn height() -> usize {
         let slots = Self::page_items();
         let mut pages = N.div_ceil(slots);
         let mut height = 0;
-        while pages > 1 { pages = pages.div_ceil(FANOUT); height += 1; }
+        while pages > 1 {
+            pages = pages.div_ceil(FANOUT);
+            height += 1;
+        }
         height
     }
-    fn slot(index: usize, height: usize) -> usize { (index >> ((height - 1) * 4)) & (FANOUT - 1) }
-    pub(super) fn len(&self) -> usize { self.length }
-    pub(super) fn capacity(&self) -> usize { self.capacity }
-    pub(super) fn allocated_bytes(&self) -> usize { self.allocated }
-    pub(super) fn has_reserved_slot(&self) -> bool { self.length < self.capacity }
-    pub(super) fn terminal_is_empty(&self) -> bool { self.root.capacity() == 0 }
+    fn slot(index: usize, height: usize) -> usize {
+        (index >> ((height - 1) * 4)) & (FANOUT - 1)
+    }
+    pub(super) fn len(&self) -> usize {
+        self.length
+    }
+    pub(super) fn capacity(&self) -> usize {
+        self.capacity
+    }
+    pub(super) fn allocated_bytes(&self) -> usize {
+        self.allocated
+    }
+    pub(super) fn has_reserved_slot(&self) -> bool {
+        self.length < self.capacity
+    }
+    pub(super) fn terminal_is_empty(&self) -> bool {
+        self.root.capacity() == 0
+    }
 
     pub(super) fn iter_mut(&mut self) -> PagedIterMut<'_, T> {
         let mut iterator = PagedIterMut { frames: std::array::from_fn(|_| None), depth: 0, remaining: self.length };
-        if let Some(page) = self.root.first_mut() { iterator.frames[0] = Some(MutableFrame::new(page)); iterator.depth = 1; }
+        if let Some(page) = self.root.first_mut() {
+            iterator.frames[0] = Some(MutableFrame::new(page));
+            iterator.depth = 1;
+        }
         iterator
     }
 
@@ -143,22 +181,30 @@ impl<T, const N: usize> PagedList<T, N> {
     }
 
     pub(super) fn get(&self, index: usize) -> Option<&T> {
-        if index >= self.length { return None; }
+        if index >= self.length {
+            return None;
+        }
         self.leaf(index)?.get(index % Self::page_items())
     }
 
     pub(super) fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        if index >= self.length { return None; }
+        if index >= self.length {
+            return None;
+        }
         self.leaf_mut(index)?.get_mut(index % Self::page_items())
     }
 
     pub(super) fn next_allocation_bytes(&self) -> Result<usize, &'static str> {
-        if self.has_reserved_slot() { return Ok(0); }
+        if self.has_reserved_slot() {
+            return Ok(0);
+        }
         self.next_page_allocation_bytes()
     }
 
     fn next_page_allocation_bytes(&self) -> Result<usize, &'static str> {
-        if self.capacity == N { return Err("fixed list logical capacity exhausted"); }
+        if self.capacity == N {
+            return Err("fixed list logical capacity exhausted");
+        }
         let page = self.capacity / Self::page_items();
         let mut link = &self.root;
         for height in (0..=Self::height()).rev() {
@@ -172,7 +218,9 @@ impl<T, const N: usize> PagedList<T, N> {
     }
 
     pub(super) fn reserve_one(&mut self, grant: usize) -> Result<UiFixedListProgress, UiFixedListAllocationError> {
-        if self.has_reserved_slot() { return Ok(UiFixedListProgress::default()); }
+        if self.has_reserved_slot() {
+            return Ok(UiFixedListProgress::default());
+        }
         self.reserve_page(grant)
     }
 
@@ -192,7 +240,9 @@ impl<T, const N: usize> PagedList<T, N> {
     fn reserve_page_using<A: PageAllocation>(&mut self, grant: usize) -> Result<UiFixedListProgress, UiFixedListAllocationError> {
         let rejected = |reason| UiFixedListAllocationError { allocated_bytes: 0, reason };
         let requested = self.next_page_allocation_bytes().map_err(rejected)?;
-        if grant < requested { return Ok(UiFixedListProgress::default()); }
+        if grant < requested {
+            return Ok(UiFixedListProgress::default());
+        }
         self.allocated.checked_add(requested).filter(|total| *total <= isize::MAX as usize).ok_or_else(|| rejected("fixed list allocation counter exceeds addressable ownership"))?;
         let page = self.capacity / Self::page_items();
         let mut link = &mut self.root;
@@ -202,7 +252,9 @@ impl<T, const N: usize> PagedList<T, N> {
                 let actual = link.capacity() * size_of::<Page<T>>();
                 link.push(if height == 0 { Page::Leaf { items: Vec::new(), slots: 0 } } else { Page::Branch(std::array::from_fn(|_| Vec::new())) });
                 self.allocated = self.allocated.checked_add(actual).expect("preflight and Vec backing each fit signed addressable size");
-                if actual > grant { return Err(UiFixedListAllocationError { allocated_bytes: actual, reason: "fixed list metadata allocation exceeded admission; owner retained" }); }
+                if actual > grant {
+                    return Err(UiFixedListAllocationError { allocated_bytes: actual, reason: "fixed list metadata allocation exceeded admission; owner retained" });
+                }
                 return Ok(UiFixedListProgress { progressed: true, allocated_bytes: actual, ..Default::default() });
             }
             match &mut link[0] {
@@ -214,7 +266,9 @@ impl<T, const N: usize> PagedList<T, N> {
                     *slots = admitted_slots;
                     self.capacity += admitted_slots;
                     self.allocated = self.allocated.checked_add(actual).expect("preflight and Vec backing each fit signed addressable size");
-                    if actual > grant { return Err(UiFixedListAllocationError { allocated_bytes: actual, reason: "fixed list payload allocation exceeded admission; owner retained" }); }
+                    if actual > grant {
+                        return Err(UiFixedListAllocationError { allocated_bytes: actual, reason: "fixed list payload allocation exceeded admission; owner retained" });
+                    }
                     return Ok(UiFixedListProgress { progressed: true, allocated_bytes: actual, ..Default::default() });
                 }
             }
@@ -223,7 +277,9 @@ impl<T, const N: usize> PagedList<T, N> {
     }
 
     pub(super) fn push_reserved(&mut self, value: T) -> Result<(), T> {
-        if !self.has_reserved_slot() { return Err(value); }
+        if !self.has_reserved_slot() {
+            return Err(value);
+        }
         let index = self.length;
         self.leaf_mut(index).expect("reserved page owns exact next index").push(value);
         self.length += 1;
@@ -231,8 +287,13 @@ impl<T, const N: usize> PagedList<T, N> {
     }
 
     pub(super) fn place_reserved(&mut self, source: &mut Option<T>, grant: usize) -> Result<UiFixedListProgress, &'static str> {
-        if source.is_none() || !self.has_reserved_slot() || grant < size_of::<T>() { return Ok(UiFixedListProgress::default()); }
-        if let Err(owner) = self.push_reserved(source.take().expect("checked source owner")) { *source = Some(owner); return Err("fixed list reserved authority rejected exact owner"); }
+        if source.is_none() || !self.has_reserved_slot() || grant < size_of::<T>() {
+            return Ok(UiFixedListProgress::default());
+        }
+        if let Err(owner) = self.push_reserved(source.take().expect("checked source owner")) {
+            *source = Some(owner);
+            return Err("fixed list reserved authority rejected exact owner");
+        }
         Ok(UiFixedListProgress { progressed: true, placed_bytes: size_of::<T>(), ..Default::default() })
     }
 
@@ -253,13 +314,19 @@ impl<T, const N: usize> PagedList<T, N> {
 
     pub(super) fn release_empty_page(&mut self) -> Result<UiFixedListProgress, &'static str> {
         fn release<T>(link: &mut Vec<Page<T>>, slots: &mut usize) -> Result<UiFixedListProgress, &'static str> {
-            let Some(node) = link.first_mut() else { return Ok(UiFixedListProgress::default()); };
+            let Some(node) = link.first_mut() else {
+                return Ok(UiFixedListProgress::default());
+            };
             match node {
                 Page::Branch(children) => {
-                    if let Some(index) = children.iter().rposition(|child| !child.is_empty()) { return release(&mut children[index], slots); }
+                    if let Some(index) = children.iter().rposition(|child| !child.is_empty()) {
+                        return release(&mut children[index], slots);
+                    }
                 }
                 Page::Leaf { items, slots: reserved } => {
-                    if !items.is_empty() { return Err("fixed list payload must retire before its page"); }
+                    if !items.is_empty() {
+                        return Err("fixed list payload must retire before its page");
+                    }
                     if *reserved != 0 {
                         let bytes = if size_of::<T>() == 0 { 0 } else { items.capacity() * size_of::<T>() };
                         *items = Vec::new();
@@ -279,12 +346,18 @@ impl<T, const N: usize> PagedList<T, N> {
     }
 
     #[cfg(test)]
-    pub(super) fn backing_ptr(&self, index: usize) -> Option<*const T> { self.leaf(index).map(Vec::as_ptr) }
+    pub(super) fn backing_ptr(&self, index: usize) -> Option<*const T> {
+        self.leaf(index).map(Vec::as_ptr)
+    }
 
     #[cfg(test)]
     pub(super) fn initialized_len(&self) -> usize {
         fn count<T>(link: &[Page<T>]) -> usize {
-            match link.first() { None => 0, Some(Page::Leaf { items, .. }) => items.len(), Some(Page::Branch(children)) => children.iter().map(|child| count(child)).sum() }
+            match link.first() {
+                None => 0,
+                Some(Page::Leaf { items, .. }) => items.len(),
+                Some(Page::Branch(children)) => children.iter().map(|child| count(child)).sum(),
+            }
         }
         count(&self.root)
     }

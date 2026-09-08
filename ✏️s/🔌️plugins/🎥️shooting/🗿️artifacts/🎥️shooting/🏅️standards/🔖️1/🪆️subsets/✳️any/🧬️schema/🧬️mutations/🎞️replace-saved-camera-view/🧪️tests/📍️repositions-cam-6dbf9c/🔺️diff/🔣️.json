@@ -12,17 +12,17 @@
           "label": null,
           "camera": {
             "position": [
-              1.0,
-              -1.0,
+              1,
+              -1,
               0.75
             ],
             "target": [
-              0.0,
-              0.0,
-              1.0
+              0,
+              0,
+              1
             ],
-            "zoom": 4.0,
-            "fov": 20.0
+            "zoom": 4,
+            "fov": 20
           }
         }
       }
@@ -42,6 +42,5 @@
   "centerModel": null,
   "fitRevision": null,
   "cameraDraftLabel": null,
-  "camera": null,
-  "locale": null
+  "camera": null
 }

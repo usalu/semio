@@ -13,9 +13,9 @@
             "id": "node-a",
             "nodeKind": "node-kind-a",
             "shape": "circle",
-            "x": 0.0,
-            "y": 0.0,
-            "radius": 10.0,
+            "x": 0,
+            "y": 0,
+            "radius": 10,
             "text": "Alpha Prime",
             "iconKind": "icon-alpha",
             "anchor": "fixed",
@@ -23,7 +23,7 @@
               {
                 "id": "handle-1",
                 "handleKind": "handle-kind-a",
-                "angle": 0.0
+                "angle": 0
               },
               {
                 "id": "handle-spare",
@@ -51,8 +51,6 @@
   "fillCount": null,
   "brushCandidateIndex": null,
   "brushCandidateSourceHandleId": null,
-  "locale": null,
-  "terminology": null,
   "lodModeByPaneJson": null,
   "engagementInputByPaneJson": null,
   "brushCandidatesJson": null,

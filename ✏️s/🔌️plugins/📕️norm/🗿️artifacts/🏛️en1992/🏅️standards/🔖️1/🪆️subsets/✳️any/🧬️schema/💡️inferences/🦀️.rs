@@ -8,7 +8,6 @@ use crate::En1992Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::En1992Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1992 snapshot. One field per named inference under
@@ -120,3 +119,8 @@ pub fn evaluate(document: &En1992Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::En1992Outline;
+//#endregion 🔁️Re-exports

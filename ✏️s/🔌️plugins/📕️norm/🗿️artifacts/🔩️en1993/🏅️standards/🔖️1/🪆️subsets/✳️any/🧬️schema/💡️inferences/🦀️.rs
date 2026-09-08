@@ -8,7 +8,6 @@ use crate::En1993Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::En1993Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1993 snapshot. One field per named inference under
@@ -74,9 +73,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::standards::v1::subsets::any::schema::{
-    check_steel_member, part_1_1, part_1_10, part_1_11, part_1_12, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_8, part_1_9, part_2, part_3, part_4, part_5, part_6, AnnexParams,
-};
+use crate::standards::v1::subsets::any::schema::{check_steel_member, part_1_1, part_1_10, part_1_11, part_1_12, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_8, part_1_9, part_2, part_3, part_4, part_5, part_6, AnnexParams};
 /// 📋️ Full EN 1993 compliance-report conformance law (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
 /// `⚙️engine`. `evaluate` is the `En1993Snapshot -> CheckReport` projection; everything it composes
@@ -219,3 +216,8 @@ pub fn evaluate(document: &En1993Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::En1993Outline;
+//#endregion 🔁️Re-exports

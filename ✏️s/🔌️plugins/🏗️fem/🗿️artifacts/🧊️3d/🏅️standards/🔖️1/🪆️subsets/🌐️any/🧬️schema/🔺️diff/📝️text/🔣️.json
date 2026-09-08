@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/fem/fem3d/diff/text.json",
   "title": "Fem3dDiffText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of Fem3dDiff: the instance is the serialized document this facet's grammar and codec speak."
 }

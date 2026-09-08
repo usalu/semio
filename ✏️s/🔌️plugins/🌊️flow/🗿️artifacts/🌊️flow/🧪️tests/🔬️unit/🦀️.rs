@@ -15,7 +15,7 @@ fn owner_text(handle: &FlowContentChild) -> String {
 
 #[test]
 fn flow_scene_owner_fixture_is_language_neutral_and_bounded() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/⚖️flow-scene-owner-law.json")).expect("language-neutral Flow owner fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚖️flow-scene-owner-law.json")).expect("language-neutral Flow owner fixture");
     assert_eq!(fixture["ownedSlots"], 1);
     assert_eq!(fixture["maximumCases"], 5);
     assert_eq!(fixture["cases"].as_array().map(Vec::len), Some(5));
@@ -89,7 +89,7 @@ async fn widget_content_round_trips_through_the_composed_child_snapshot() {
 
 #[test]
 fn authored_slider_labels_survive_child_content_round_trip() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️fixtures/🏷️slider-labels.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🏷️slider-labels.json")).unwrap();
     for row in cases["cases"].as_array().unwrap() {
         let widget: Widget = dsl::FromValue::from_value(dsl::DslValue::from(row["widget"].clone())).unwrap();
         let content = flow_content_snapshot_from_working(&[widget.clone()], &[], &flow::OrderedMap::new());

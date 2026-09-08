@@ -5,3 +5,9 @@ type SemioGraphOpFrameHeader {
   tag: Int!
   payload: String!
 }
+
+type SemioGraphMutationBinary {
+  format: Int
+  tag: Int
+  payload: String
+}

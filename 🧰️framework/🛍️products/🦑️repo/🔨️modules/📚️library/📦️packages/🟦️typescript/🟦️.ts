@@ -18,7 +18,7 @@ import { canonicalFilenameForKind, fixedContractFilename, loadTaxonomy, taxonomy
 
 import type { PlaygroundSelection as PlaygroundVariant } from "../../🎮️playground/🟦️.ts";
 
-import { PLAYGROUND_LOCKED_EXAMPLE_ENV, loadFrameworkOsPlaygroundCatalog } from "../../🎮️playground/🟦️.ts";
+import { loadFrameworkOsPlaygroundCatalog } from "../../🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 import {
   BUILD_BUDGET_MS,
@@ -2575,49 +2575,13 @@ export function vitestRunArguments(bundleRoot: string, segments: string[], confi
   return [vitestBin, "run", "--config", config, ...vitestLevelArgs(), ...coverageArgs, ...segments];
 }
 
-export async function runVitest(bundleRoot: string, segments: string[], config = "🧪️tests/🟦️.ts"): Promise<void> {
+export async function runVitest(bundleRoot: string, segments: string[], config = "vitest.config.ts"): Promise<void> {
   const collectingCoverage = coverageEnabled();
   const runtime = collectingCoverage ? "node" : process.execPath;
   await runTestBudgeted(runtime, vitestRunArguments(bundleRoot, segments, config, collectingCoverage), { cwd: bundleRoot, env: devToolingEnv() });
 }
 
-//#region 🔒️FrameworkOsLocks
-/** @emoji 🔒️ Process env vars locking one shell preference to a single boot-time value. */
-export const SEMIO_LOCKED_LOCALE_ENV = "SEMIO_LOCKED_LOCALE";
-export const SEMIO_LOCKED_TERMINOLOGY_ENV = "SEMIO_LOCKED_TERMINOLOGY";
-export const SEMIO_LOCKED_THEME_ENV = "SEMIO_LOCKED_THEME";
-export const SEMIO_LOCKED_APPEARANCE_ENV = "SEMIO_LOCKED_APPEARANCE";
-
-/** @emoji 🏷️ Process env var selecting the shell brand a standalone artifact ships as. */
-export const SEMIO_BRAND_ENV = "SEMIO_BRAND";
-
-/** @emoji 🎛️ Process env var seeding the boot example without locking it (switcher stays visible). */
-export const SEMIO_DEFAULT_EXAMPLE_ENV = "SEMIO_DEFAULT_EXAMPLE";
-
-/**
- * @emoji 🔌️ `VITE_`-prefixed env for every set `SEMIO_LOCKED_*`/`SEMIO_BRAND`/`SEMIO_DEFAULT_EXAMPLE`/
- * `PLAYGROUND_LOCKED_EXAMPLE_ID` var, so vite exposes it on `import.meta.env` with no `define` needed.
- * Values are forwarded verbatim — the browser-side `resolveShellLocks`/`resolveShellBrandById` are the
- * single validation authority, so CLI and direct-vite launches behave identically.
- */
-export function frameworkOsLockedPrefsEnv(env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
-  const pairs: [string, string][] = [
-    ["VITE_SEMIO_LOCKED_EXAMPLE", PLAYGROUND_LOCKED_EXAMPLE_ENV],
-    ["VITE_SEMIO_LOCKED_LOCALE", SEMIO_LOCKED_LOCALE_ENV],
-    ["VITE_SEMIO_LOCKED_TERMINOLOGY", SEMIO_LOCKED_TERMINOLOGY_ENV],
-    ["VITE_SEMIO_LOCKED_THEME", SEMIO_LOCKED_THEME_ENV],
-    ["VITE_SEMIO_LOCKED_APPEARANCE", SEMIO_LOCKED_APPEARANCE_ENV],
-    ["VITE_SEMIO_BRAND", SEMIO_BRAND_ENV],
-    ["VITE_SEMIO_DEFAULT_EXAMPLE", SEMIO_DEFAULT_EXAMPLE_ENV],
-  ];
-  const out: NodeJS.ProcessEnv = {};
-  for (const [viteKey, sourceKey] of pairs) {
-    const raw = env[sourceKey]?.trim();
-    if (raw) out[viteKey] = raw;
-  }
-  return out;
-}
-//#endregion 🔒️FrameworkOsLocks
+export { SEMIO_LOCKED_LOCALE_ENV, SEMIO_LOCKED_TERMINOLOGY_ENV, SEMIO_LOCKED_THEME_ENV, SEMIO_LOCKED_APPEARANCE_ENV, SEMIO_BRAND_ENV, SEMIO_DEFAULT_EXAMPLE_ENV, frameworkOsLockedPrefsEnv } from "../../🎮️playground/🔒️preferences/🟦️.ts";
 
 //#region 🖥️FrameworkOsPlaygroundDev
 /** @emoji 🔌️ Local dev-time asset server port for wgpu Trunk/native playgrounds (Trunk forwards

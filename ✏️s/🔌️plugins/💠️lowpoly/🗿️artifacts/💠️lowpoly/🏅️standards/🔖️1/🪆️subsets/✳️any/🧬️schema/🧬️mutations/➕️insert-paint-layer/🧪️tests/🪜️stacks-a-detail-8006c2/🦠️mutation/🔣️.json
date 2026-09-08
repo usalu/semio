@@ -5,7 +5,7 @@
     "layer": {
       "name": "Detail",
       "visible": true,
-      "opacity": 1.0,
+      "opacity": 1,
       "blendMode": "normal",
       "pixels": "AAAAAAAAAAA="
     }

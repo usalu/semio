@@ -31,7 +31,6 @@ type Puzzle5dArtifact {
   fillCount: Int! @state(class: CONFIG)
   brushCandidateIndex: Int! @state(class: CONFIG)
   lodMode: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
   runtimeExtrasJson: String! @state(class: CONFIG)
   hoveredPartId: String @state(class: ARTIFACT)
   previewSeq: Int! @state(class: ARTIFACT)

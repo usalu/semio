@@ -1,8 +1,8 @@
 {
   "mutation": "updateMeshParams",
   "params": {
-    "tsdfVoxelSizeMm": 100.0,
-    "tsdfTruncationMm": 330.0,
+    "tsdfVoxelSizeMm": 100,
+    "tsdfTruncationMm": 330,
     "decimateTargetTriangles": 20000,
     "smoothingIterations": 1,
     "textureEnabled": false,

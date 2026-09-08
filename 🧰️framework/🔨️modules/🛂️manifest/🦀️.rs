@@ -635,7 +635,7 @@ pub fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
         "setProjection" | "setProjectionParam" => "scan".into(),
         "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "graphPointerDown" | "worldPointerDown" => "mouse-pointer".into(),
         "worldPick" => "crosshair".into(),
-        "engagementInput" | "engagementAbort" | "engagementControlSelect" | "editorEngagementInput" | "graphEngagementInput" | "resultsEngagementInput" | "workflowEngagementInput" | "compiledDagEngagementInput" => "hand".into(),
+        "engagementInput" | "engagementAbort" | "engagementControlSelect" | "workflowEngagementInput" | "compiledDagEngagementInput" => "hand".into(),
         "setLodMode" => "layers".into(),
         "toggleGrid" | "setGridSnapEnabled" | "setGridFactor" => "grid-3x3".into(),
         "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => "sun".into(),
@@ -4409,12 +4409,8 @@ pub struct ViewModel {
     /// 🗣️ Active UI locale; plugins resolve their own label set from this via `resolve_labels`/
     /// `app_labels!`. Non-optional — the shell always resolves one (see `initUiLocaleSync`/
     /// `detectShellLocale`) before the first `render`, so "nobody set the locale" is unrepresentable.
-    #[serde(default)]
-    #[value(default)]
     pub locale: Locale,
     /// 🗣️ Active terminology id (`Native` default, or an app-declared alternative term set).
-    #[serde(default)]
-    #[value(default)]
     pub terminology: Terminology,
     /// 🪟️ The window instance a `render`/`handle_action` call targets — programs key all per-window
     /// option state (grid, LOD, selection mode, …) off this, never off `active_window_kind_id`, so that
@@ -4440,6 +4436,28 @@ pub struct ViewWindowInstance {
     pub id: String,
     pub window_kind_id: String,
 }
+
+impl ViewModel {
+    /// 📌️ Projects app-level panels without binding their controls to a window.
+    pub fn for_panel(&self) -> Self {
+        Self { window_id: None, active_window_kind_id: None, active_utility_id: None, ..self.clone() }
+    }
+
+    /// 🎯️ Projects host-owned context onto one concrete window without borrowing the focused window's utility.
+    pub fn for_window_instance(&self, window_id: &str) -> Option<Self> {
+        let window = self.window_instances.iter().find(|window| window.id == window_id)?;
+        Some(Self {
+            window_id: Some(window.id.clone()),
+            active_window_kind_id: Some(window.window_kind_id.clone()),
+            active_utility_id: self.active_utility_by_window_id.get(window_id).cloned(),
+            ..self.clone()
+        })
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️window-view-context/🦀️.rs"]
+mod window_view_context_tests;
 
 // 🎗️ `AppLabelsOverlay` (the stringly-typed, per-id runtime label-patch map) is deleted — manifest
 // labels are now `LocalizedLabel` fields resolved directly via `.resolve(terminology, locale)`, so a

@@ -1,9 +1,7 @@
 //! 🧬️ Remodeling artifact schema — every field of the artifact with its state class.
 
-use crate::{
-    CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, ReconstructionStage, RemodelingAssetChild, RemodelingDurableArtifactStore, RemodelingSnapshot, VideoCodec,
-};
-use schema::ArtifactSchema;
+use crate::{RemodelingDurableArtifactStore, RemodelingSnapshot};
+use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -100,8 +98,6 @@ pub struct RemodelingArtifact {
     pub camera: RemodelingUiCamera,
     #[state(config)]
     pub layers: RemodelingUiLayers,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -202,7 +198,6 @@ impl RemodelingArtifact {
             frame_cursor: RemodelingUiFrameCursor::default(),
             camera: RemodelingUiCamera::default(),
             layers: RemodelingUiLayers::default(),
-            locale: "en-US".into(),
         }
     }
 
@@ -224,8 +219,8 @@ impl RemodelingArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.remodel.remodeling` — twenty handcrafted schema leaves.
-pub fn remodeling_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn remodeling_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.remodel.remodeling",
         artifact: schema::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
         snapshot: schema::FacetLeaves {
@@ -369,3 +364,16 @@ semio_framework_plugin::derive_artifact_facets!(
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::CalibrationState;
+pub use crate::GroundControlPoint;
+pub use crate::MediaStream;
+pub use crate::ReconstructionJob;
+pub use crate::ReconstructionParams;
+pub use crate::ReconstructionResults;
+pub use crate::ReconstructionStage;
+pub use crate::RemodelingAssetChild;
+pub use crate::VideoCodec;
+//#endregion 🔁️Re-exports

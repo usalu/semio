@@ -10,8 +10,7 @@
     "camera",
     "previewCamera",
     "sunJson",
-    "activeUtilityId",
-    "locale"
+    "activeUtilityId"
   ],
   "properties": {
     "lodMode": {
@@ -23,7 +22,7 @@
       "x-semio-state": "config"
     },
     "camera": {
-      "$ref": "#/$defs/CameraJson",
+      "$ref": "https://semio.tech/schema/s/procedural/generation3d/artifact.json#/$defs/CameraJson",
       "x-semio-state": "config"
     },
     "previewCamera": {
@@ -46,40 +45,12 @@
       "type": "string",
       "x-semio-state": "config"
     },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "previewEvalText": {
       "type": "string",
       "x-semio-state": "config"
     }
   },
   "$defs": {
-    "CameraJson": {
-      "title": "CameraJson",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
     "Generation3dPreviewCamera": {
       "title": "Generation3dPreviewCamera",
       "type": "object",

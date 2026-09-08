@@ -44,7 +44,7 @@ import type {
   RemoteState,
   SocketGrantReceiptV1,
 } from "./🟦️";
-import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
+import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
 import {
   DirectoryClient,
   DirectoryCommandError,
@@ -80,6 +80,8 @@ import { coldDocumentPairCursorEquals, coldDocumentPairFrontierEquals, parseCold
 import { actorInstanceCapturedReceiptMatches, actorInstanceLifetimeEquals, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt } from "../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
+import { parseBrowserActorViewStateRequest } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
+import { windowViewContext, type ResolvedPluginViewState } from "../../🔨️modules/🛂️manifest/🟦️.ts";
 import type {
   DirectoryCommandErrorCodeV1,
   DirectoryCommandOutcomeV1,
@@ -208,7 +210,7 @@ function dispatchBackboneWorkerRequest(request: BackboneWorkerRequest, host: Rus
     typescriptDispatch(request);
     return;
   }
-  if (request.kind === "browser-actor-ui-patch-result") {
+  if (request.kind === "browser-actor-ui-patch-result" || request.kind === "browser-actor-view-state") {
     typescriptDispatch(request);
     return;
   }
@@ -368,6 +370,7 @@ type ArtifactState = {
   executionTargetOpen: symbol | null;
   executionTargetLease: DocumentExecutionTargetLease | null;
   browserActorReservation: DocumentBrowserActorReservation | null;
+  browserActorViewState: ResolvedPluginViewState | null;
   /** 🛟️ Handle for the recursive, jittered sanity-poll reschedule (finding 1) — a plain
    * `ReturnType<typeof setTimeout>`, not `setInterval`, because each tick schedules its OWN next
    * delay with fresh jitter rather than ticking on a fixed period. */
@@ -390,6 +393,10 @@ type ArtifactState = {
    * branch on every successful (re)connect — this is the "flushed on reconnect" half of finding 5. */
   outbox: MutationEnvelope[];
   pendingMutations: MutationEnvelope[];
+  /** 🪢️ Exact causal bytes retained beside bound-port mutations until their terminal Ack. */
+  exactLocalEnvelopes: WeakMap<MutationEnvelope, Readonly<{ envelope: ExactWireMutationEnvelope; bytes: number; messages: number }>>;
+  pendingDocumentBackboneBytes: number;
+  pendingDocumentBackboneMessages: number;
   status: ArtifactSyncStatus;
   /** 🏔️ Last frontier the hub reported (`Welcome.server_frontier` / `Commands.frontier` /
    * `Ack.frontier`) — the wire-v2 replacement for the old `sinceVersion: number` counter. */
@@ -399,6 +406,11 @@ type ArtifactState = {
   artifactBootstrap: ArtifactBootstrapAssembler | null;
   artifactBootstrapOwner: DocumentArtifactBootstrapOwner | null;
   artifactBootstrapDeadlineMs: number | null;
+  artifactBootstrapDeadlineTimer: ReturnType<typeof setTimeout> | null;
+  artifactRebootstrapOwner: DocumentArtifactRebootstrapOwner | null;
+  artifactRebootstrapDeadlineMs: number | null;
+  artifactRebootstrapDeadlineTimer: ReturnType<typeof setTimeout> | null;
+  artifactRebootstrapRequired: boolean;
   artifactBootstrapProgress: ArtifactBootstrapProgress[];
   canonicalFolderMirror: FolderCanonicalBootstrapMirrorOwner | null;
   verifiedColdPair: VerifiedColdDocumentPair | null;
@@ -821,6 +833,7 @@ class DocumentExecutionTargetLease {
   #retirement = new AbortController();
   #browserActorGrant: DocumentBrowserActorGrant | null = null;
   #browserActorOpen: DocumentBrowserActorOpen | null = null;
+  #surfaceBodyKey: string | null = null;
 
   constructor(token: symbol, fields: DocumentExecutionTargetLeaseFieldsV1, hubOrigin: string, component: Uint8Array, descriptor: Uint8Array) {
     if (token !== documentExecutionTargetLeaseMintToken) throw new Error("document execution target lease: private constructor");
@@ -842,6 +855,12 @@ class DocumentExecutionTargetLease {
   fields(): DocumentExecutionTargetLeaseFieldsV1 {
     if (!this.#live) throw new Error("document execution target lease: dropped");
     return Object.freeze(structuredClone(this.#fields));
+  }
+
+  renderBodyKey(): string {
+    if (!this.#live || !this.#descriptor) throw new Error("document browser actor: dropped render descriptor");
+    this.#surfaceBodyKey ??= parseVerifiedPackageDescriptorV1(this.#descriptor, this.#fields);
+    return this.#surfaceBodyKey;
   }
 
   get retirement(): AbortSignal {
@@ -914,6 +933,7 @@ class DocumentExecutionTargetLease {
     this.#descriptor?.fill(0);
     this.#component = null;
     this.#descriptor = null;
+    this.#surfaceBodyKey = null;
     if (this.#moduleUrl !== null) {
       URL.revokeObjectURL(this.#moduleUrl);
       this.#moduleUrl = null;
@@ -1096,7 +1116,7 @@ async function readExecutionTargetBody(
 /** 📜️ Strictly admits the raw descriptor bytes: canonical re-encoding equality first, then exact
  * equality between the decoded package descriptor and the verified lease fields. A sibling JSON
  * manifest or a caller-selected URL is never descriptor authority. */
-function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExecutionTargetLeaseFieldsV1): void {
+function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExecutionTargetLeaseFieldsV1): string {
   const decoded = decodePackValue(bytes);
   const canonical = encodePackValue(decoded);
   if (canonical.length !== bytes.length || canonical.some((byte, index) => byte !== bytes[index])) throw new Error("document execution target: descriptor is not canonical");
@@ -1113,6 +1133,7 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
   const app = apps.find((entry) => entry.id === fields.surface.appId);
   const dialect = app === undefined ? undefined : record(app.dialect);
   const windowKinds = app !== undefined && Array.isArray(app.windowKinds) ? (app.windowKinds as readonly PackValue[]).map(record) : [];
+  const window = windowKinds.find((window) => window.id === fields.surface.windowKindId);
   if (
     packUIntSafeOrNull(descriptor.descriptorVersion) !== 1 ||
     descriptor.packageId !== fields.package.packageId ||
@@ -1130,10 +1151,11 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
     dialect.artifactKind !== fields.parentDialect.artifactKind ||
     dialect.standard !== fields.parentDialect.standard ||
     dialect.subset !== fields.parentDialect.subset ||
-    !windowKinds.some((window) => window.id === fields.surface.windowKindId) ||
+    window === undefined || typeof window.bodyKey !== "string" || window.bodyKey.length === 0 || window.bodyKey.length > 256 ||
     !artifactKinds.some((kind) => kind.id === fields.artifact.kind && kind.schema === fields.artifact.schema)
   )
     throw new Error("document execution target: descriptor mismatch");
+  return window.bodyKey as string;
 }
 
 /** 🛡️ Acquires the server-selected verified execution target for one live plan and mints the private
@@ -1277,7 +1299,32 @@ class DocumentBrowserActorReservation {
   private socket: WebSocket | null = null;
   private pendingUiPatch: { readonly offer: BrowserActorUiPatchOfferV1; readonly resolve: (result: BrowserActorUiPatchResultV1) => void; readonly reject: (error: Error) => void; readonly timer: ReturnType<typeof setTimeout> } | null = null;
   private renderedUiPatch = false;
+  private renderedViewState: ResolvedPluginViewState | null = null;
+  private viewRefresh: Promise<void> | null = null;
   private closed = false;
+
+  refreshHostView(): void {
+    if (this.closed || !this.activation || this.viewRefresh) return;
+    this.viewRefresh = (async () => {
+      await this.activation;
+      await this.coldTransfer;
+      const child = this.child;
+      if (!child || !this.coldApplied) return;
+      const assertCurrent = () => {
+        if (this.closed || this.state.socket !== this.socket || this.state.browserActorReservation !== this || documentBrowserActorLease(this.state) !== this.lease) throw new Error("document browser actor: stale host view");
+        this.lease.assertBrowserActorCurrent();
+      };
+      while (this.state.browserActorViewState !== null && this.state.browserActorViewState !== this.renderedViewState) {
+        assertCurrent();
+        await this.renderSurface(child, assertCurrent);
+      }
+    })().catch(() => {
+      if (this.closed) return;
+      const binding = hubBinding(this.state.config);
+      if (binding) emitExecutionTargetStatus(this.state, binding, "renderer-unavailable");
+      this.close();
+    }).finally(() => { this.viewRefresh = null; });
+  }
 
   bindApprovalUndoIfMounted(): void {
     const owner = this.coldApplied;
@@ -1345,6 +1392,7 @@ class DocumentBrowserActorReservation {
       assertCurrent();
       const owner = this.state.verifiedColdPair;
       if (owner) await this.transferColdPair(owner, child, binding, assertCurrent);
+      this.refreshHostView();
     })();
     return this.activation;
   }
@@ -1353,6 +1401,7 @@ class DocumentBrowserActorReservation {
     if (this.closed) throw new Error("document browser actor: closed reservation");
     if (!this.lifetime || !this.child || !this.socket || !this.activation) return;
     await this.activation;
+    await this.viewRefresh;
     const binding = hubBinding(this.state.config),
       socket = this.socket;
     if (!binding) throw new Error("document browser actor: missing hub binding");
@@ -1361,6 +1410,7 @@ class DocumentBrowserActorReservation {
       owner.assertCurrent();
     };
     await this.transferColdPair(owner, this.child, binding, assertCurrent);
+    this.refreshHostView();
   }
 
   private async openGuest(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<ActorInstanceLifetime> {
@@ -1463,16 +1513,26 @@ class DocumentBrowserActorReservation {
   private async renderSurface(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> {
     const lifetime = this.lifetime;
     if (lifetime === null) throw new Error("document browser actor: missing render lifetime");
-    const surface = { instance: lifetime.instanceId, surface: this.lease.fields().surface.windowKindId };
+    assertCurrent();
+    const hostView = this.state.browserActorViewState;
+    if (hostView === null) throw new Error("document browser actor: missing host view context");
+    const windowId = this.lease.fields().surface.windowKindId;
+    const viewState = windowViewContext(hostView, windowId);
+    if (!viewState || viewState.activeWindowKindId !== windowId) throw new Error("document browser actor: unknown host window instance");
+    const surface = { instance: lifetime.instanceId, surface: windowId };
+    const bodyKey = this.lease.renderBodyKey();
     for (let turn = 0; turn < DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT; turn += 1) {
       assertCurrent();
-      let result: BrowserActorChildValue | null = await child.invoke(["reactor", "poll"], [[turn === 0 ? { tag: "surface-visible", val: { surface } } : { tag: "wake" }], null, null, browserActorTurnBudget()]);
+      let result: BrowserActorChildValue | null = await child.invoke(["reactor", "poll"], [[turn === 0 ? { tag: "surface-visible", val: { surface, bodyKey, viewState: encodePackValue(viewState) } } : { tag: "wake" }], null, null, browserActorTurnBudget()]);
       try {
         assertCurrent();
         if (browserActorColdStatus(result).kind !== "idle") throw new Error("document browser actor: unexpected cold ingress during render");
         const owned = result;
         result = null;
-        if (!(await this.reconcileUiPatches(owned, child, assertCurrent))) return;
+        if (!(await this.reconcileUiPatches(owned, child, assertCurrent))) {
+          this.renderedViewState = hostView;
+          return;
+        }
       } finally {
         if (result !== null) wipeBrowserActorValue(result);
       }
@@ -1589,6 +1649,7 @@ class DocumentBrowserActorReservation {
     this.coldOwner = null;
     this.coldApplied = null;
     this.renderedUiPatch = false;
+    this.renderedViewState = null;
     this.child?.close();
     this.child = null;
     if (this.state.browserActorReservation === this) this.state.browserActorReservation = null;
@@ -2042,7 +2103,7 @@ function documentBackboneMessage(envelopes: readonly ExactWireMutationEnvelope[]
 }
 
 function documentBackboneMessageFromDomain(state: ArtifactState, envelopes: readonly MutationEnvelope[]): Uint8Array {
-  return documentBackboneMessage(envelopes.map((envelope) => exactWireEnvelope(toWireEnvelope(envelope, nextWireTimestamp(state)))));
+  return documentBackboneMessage(envelopes.map((envelope) => state.exactLocalEnvelopes.get(envelope)?.envelope ?? exactWireEnvelope(toWireEnvelope(envelope, nextWireTimestamp(state)))));
 }
 
 function emitMutationEvent(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
@@ -2426,6 +2487,11 @@ function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationE
   // 🔒️ A verified read-only execution target rejects publication locally, before a worker frame or
   // an outbox entry exists. Server authorization stays an independent fence.
   if (state.executionTargetLease !== null && state.executionTargetLease.live && !state.executionTargetLease.fields().grant.write) {
+    releaseDocumentBackboneOwnership(state, envelopes);
+    const refusedIds = new Set(envelopes.map((envelope) => envelope.id));
+    state.pendingMutations = state.pendingMutations.filter((envelope) => !refusedIds.has(envelope.id));
+    state.outbox = state.outbox.filter((envelope) => !refusedIds.has(envelope.id));
+    setStatus(state, { pendingMutations: state.pendingMutations.length });
     rejectReadOnlyExecutionTarget(state, envelopes);
     return;
   }
@@ -2439,7 +2505,20 @@ function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationE
   }
   const batchId = state.nextBatchId;
   state.nextBatchId += 1;
-  const wireEnvelopes = envelopes.map((envelope) => toWireEnvelope(envelope, nextWireTimestamp(state), state.actor));
+  const wireEnvelopes = envelopes.map((envelope) => {
+    const exact = state.exactLocalEnvelopes.get(envelope)?.envelope;
+    const timestamp = nextWireTimestamp(state);
+    if (exact === undefined) return toWireEnvelope(envelope, timestamp, state.actor);
+    return {
+      mutation_id: exact.mutation_id,
+      document_id: exact.document_id,
+      actor: state.actor,
+      dependencies: [...exact.dependencies],
+      diff: { schema: exact.diff.schema, payload: Array.from(exact.diff.payload) },
+      inverse: { schema: exact.inverse.schema, payload: Array.from(exact.inverse.payload) },
+      timestamp,
+    };
+  });
   state.pendingBatches.set(batchId, [...envelopes]);
   sendWireFrame(state, { Commands: { batch_id: batchId, envelopes: wireEnvelopes } }, "command");
 }
@@ -2477,6 +2556,31 @@ function rejectMutationQueueOverflow(state: ArtifactState, envelopes: readonly M
   });
 }
 
+function rejectDocumentBackboneCapacity(state: ArtifactState, envelopes: readonly MutationEnvelope[], bytes: number): void {
+  const batchId = nextLocalOverflowBatchId;
+  nextLocalOverflowBatchId -= 1;
+  emitEvent(state, {
+    kind: "commandOutcome",
+    batchId,
+    outcome: { kind: "rejected", reason: "document backbone pending capacity", messages: [envelopes.length, bytes, DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes] },
+  });
+}
+
+function releaseDocumentBackboneOwnership(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
+  let releasedBytes = 0;
+  let releasedMessages = 0;
+  for (const envelope of envelopes) {
+    const retained = state.exactLocalEnvelopes.get(envelope);
+    if (retained === undefined) continue;
+    releasedBytes += retained.bytes;
+    releasedMessages += retained.messages;
+    state.exactLocalEnvelopes.delete(envelope);
+  }
+  if (releasedBytes > state.pendingDocumentBackboneBytes || releasedMessages > state.pendingDocumentBackboneMessages) throw new Error("document backbone: retained byte ledger underflow");
+  state.pendingDocumentBackboneBytes -= releasedBytes;
+  state.pendingDocumentBackboneMessages -= releasedMessages;
+}
+
 /** 📮️ Resolves one outbound `Commands` batch's terminal `Applied` stage — mirrors the Rust actor's
  * `handle_ack`. `pendingMutations` (the UI-facing "unconfirmed" count) is trimmed by id, the same
  * way the old per-operation `ack` frame used to. */
@@ -2486,6 +2590,7 @@ function handleAck(state: ArtifactState, batchId: number, stages: readonly WireA
     const sent = state.pendingBatches.get(batchId);
     state.pendingBatches.delete(batchId);
     if (!sent) continue;
+    releaseDocumentBackboneOwnership(state, sent);
     const sentIds = new Set(sent.map((envelope) => envelope.id));
     state.pendingMutations = state.pendingMutations.filter((envelope) => !sentIds.has(envelope.id));
 
@@ -2552,7 +2657,15 @@ function emitBootstrapProgress(state: ArtifactState, progress: ArtifactBootstrap
   });
 }
 
-type DocumentArtifactBootstrapOwner = { assembler: ArtifactBootstrapAssembler | null; folderMirror: FolderCanonicalBootstrapMirrorOwner | null; readonly socket: WebSocket | null; assertCurrent(): void };
+type DocumentArtifactBootstrapOwner = {
+  assembler: ArtifactBootstrapAssembler | null;
+  folderMirror: FolderCanonicalBootstrapMirrorOwner | null;
+  deadlineMs: number | null;
+  deadlineTimer: ReturnType<typeof setTimeout> | null;
+  readonly rebootstrapOwner: DocumentArtifactRebootstrapOwner | null;
+  readonly socket: WebSocket | null;
+  assertCurrent(): void;
+};
 
 /** 🧷️ Retains the document and transport selection that admitted one canonical pair transfer. */
 function captureArtifactBootstrapOwner(state: ArtifactState): DocumentArtifactBootstrapOwner {
@@ -2570,10 +2683,14 @@ function captureArtifactBootstrapOwner(state: ArtifactState): DocumentArtifactBo
     surface = binding?.requestedSurfaceId;
   const installed = binding?.installedTarget === undefined ? undefined : structuredClone(binding.installedTarget);
   const packSchemaHash = config.packSchemaHash?.slice(),
-    folder = folderBinding(config)?.path;
+    folder = folderBinding(config)?.path,
+    rebootstrapOwner = state.artifactRebootstrapOwner;
   const owner: DocumentArtifactBootstrapOwner = {
     assembler: null,
     folderMirror: null,
+    deadlineMs: null,
+    deadlineTimer: null,
+    rebootstrapOwner,
     socket,
     assertCurrent() {
       const current = hubBinding(state.config);
@@ -2597,6 +2714,7 @@ function captureArtifactBootstrapOwner(state: ArtifactState): DocumentArtifactBo
         (packSchemaHash === undefined ? config.packSchemaHash !== undefined : config.packSchemaHash === undefined || !equalByteArrays(config.packSchemaHash, packSchemaHash)) ||
         (installed === undefined ? current?.installedTarget !== undefined : current?.installedTarget === undefined || !sameLeaseFieldsV1(current.installedTarget, installed)) ||
         (owner.assembler !== null && state.artifactBootstrap !== owner.assembler) ||
+        (rebootstrapOwner !== null && state.artifactRebootstrapOwner !== rebootstrapOwner) ||
         (lease !== null && !lease.live)
       )
         throw new Error("artifact bootstrap stale owner");
@@ -2605,6 +2723,111 @@ function captureArtifactBootstrapOwner(state: ArtifactState): DocumentArtifactBo
   state.artifactBootstrapOwner = owner;
   owner.assertCurrent();
   return owner;
+}
+
+type DocumentArtifactRebootstrapOwner = {
+  readonly deadlineMs: number;
+  readonly timer: ReturnType<typeof setTimeout>;
+  assertCurrent(): void;
+};
+
+function clearArtifactRebootstrapDeadline(state: ArtifactState, owner: DocumentArtifactRebootstrapOwner | null): void {
+  if (!owner) return;
+  clearTimeout(owner.timer);
+  if (state.artifactRebootstrapOwner === owner) {
+    state.artifactRebootstrapOwner = null;
+    state.artifactRebootstrapDeadlineMs = null;
+    state.artifactRebootstrapDeadlineTimer = null;
+  }
+}
+
+function captureArtifactRebootstrapOwner(state: ArtifactState): DocumentArtifactRebootstrapOwner {
+  clearArtifactRebootstrapDeadline(state, state.artifactRebootstrapOwner);
+  const config = state.config,
+    runtimeKey = state.runtimeKey,
+    clientInstanceId = state.openClientInstanceId,
+    binding = hubBinding(config),
+    spaceId = binding?.spaceId,
+    baseUrl = binding?.baseUrl,
+    deadlineMs = Date.now() + ARTIFACT_BOOTSTRAP_DEADLINE_MS;
+  let owner: DocumentArtifactRebootstrapOwner;
+  const timer = setTimeout(() => {
+    if (
+      state.artifactRebootstrapOwner !== owner ||
+      state.artifactRebootstrapDeadlineMs !== deadlineMs ||
+      state.artifactRebootstrapDeadlineTimer !== timer
+    )
+      return;
+    clearArtifactRebootstrapDeadline(state, owner);
+    rejectArtifactBootstrap(state, new Error("artifact rebootstrap deadline exceeded"));
+  }, Math.max(0, deadlineMs - Date.now()));
+  owner = {
+    deadlineMs,
+    timer,
+    assertCurrent() {
+      const current = hubBinding(state.config);
+      if (
+        state.closed ||
+        state.docAbort.signal.aborted ||
+        state.artifactRebootstrapOwner !== owner ||
+        state.artifactRebootstrapDeadlineMs !== deadlineMs ||
+        state.artifactRebootstrapDeadlineTimer !== timer ||
+        state.config !== config ||
+        state.runtimeKey !== runtimeKey ||
+        artifacts.get(runtimeKey) !== state ||
+        state.openClientInstanceId !== clientInstanceId ||
+        current?.spaceId !== spaceId ||
+        current?.baseUrl !== baseUrl
+      )
+        throw new Error("artifact rebootstrap stale owner");
+    },
+  };
+  state.artifactRebootstrapOwner = owner;
+  state.artifactRebootstrapDeadlineMs = deadlineMs;
+  state.artifactRebootstrapDeadlineTimer = timer;
+  state.artifactRebootstrapRequired = true;
+  owner.assertCurrent();
+  return owner;
+}
+
+function abortArtifactRebootstrap(state: ArtifactState): void {
+  clearArtifactRebootstrapDeadline(state, state.artifactRebootstrapOwner);
+  state.artifactRebootstrapRequired = false;
+}
+
+function clearArtifactBootstrapDeadline(state: ArtifactState, owner: DocumentArtifactBootstrapOwner | null): void {
+  const timer = owner?.deadlineTimer ?? null;
+  if (timer !== null) clearTimeout(timer);
+  if (owner) {
+    owner.deadlineTimer = null;
+    owner.deadlineMs = null;
+  }
+  if (state.artifactBootstrapOwner === owner) {
+    state.artifactBootstrapDeadlineTimer = null;
+    state.artifactBootstrapDeadlineMs = null;
+  }
+}
+
+function armArtifactBootstrapDeadline(state: ArtifactState, owner: DocumentArtifactBootstrapOwner, deadlineMs: number): void {
+  if (owner.deadlineTimer !== null || state.artifactBootstrapDeadlineTimer !== null) throw new Error("artifact bootstrap deadline already armed");
+  owner.deadlineMs = deadlineMs;
+  state.artifactBootstrapDeadlineMs = deadlineMs;
+  const timer = setTimeout(() => {
+    if (
+      state.artifactBootstrapOwner !== owner ||
+      state.artifactBootstrap !== owner.assembler ||
+      state.artifactBootstrapDeadlineMs !== deadlineMs ||
+      state.artifactBootstrapDeadlineTimer !== timer ||
+      owner.deadlineMs !== deadlineMs ||
+      owner.deadlineTimer !== timer
+    )
+      return;
+    owner.deadlineTimer = null;
+    state.artifactBootstrapDeadlineTimer = null;
+    rejectArtifactBootstrap(state, new Error("artifact bootstrap deadline exceeded"), owner);
+  }, Math.max(0, deadlineMs - Date.now()));
+  owner.deadlineTimer = timer;
+  state.artifactBootstrapDeadlineTimer = timer;
 }
 
 function bootstrapControl(state: ArtifactState, owner = state.artifactBootstrapOwner): ArtifactBootstrapControl {
@@ -2628,10 +2851,13 @@ function bootstrapControl(state: ArtifactState, owner = state.artifactBootstrapO
 
 function abortArtifactBootstrap(state: ArtifactState): void {
   const owner = state.artifactBootstrapOwner;
+  if (owner) clearArtifactBootstrapDeadline(state, owner);
+  else if (state.artifactBootstrapDeadlineTimer !== null) clearTimeout(state.artifactBootstrapDeadlineTimer);
   state.artifactBootstrap?.abort();
   state.artifactBootstrap = null;
   state.artifactBootstrapOwner = null;
   state.artifactBootstrapDeadlineMs = null;
+  state.artifactBootstrapDeadlineTimer = null;
   state.pendingResumeToken = null;
   state.requiredTailFrontier = null;
   if (owner?.folderMirror && state.canonicalFolderMirror !== owner.folderMirror) void retireFolderCanonicalBootstrapMirror(owner.folderMirror);
@@ -2655,6 +2881,7 @@ function artifactBootstrapFailure(state: ArtifactState, error: unknown): Extract
     normalized.includes("schema") ||
     normalized.includes("digest") ||
     normalized.includes("descriptor") ||
+    normalized.includes("canonical pair") ||
     normalized.includes("scope") ||
     normalized.includes("chunk") ||
     normalized.includes("frontier") ||
@@ -2672,6 +2899,8 @@ function rejectArtifactBootstrap(state: ArtifactState, error: unknown, owner = s
     if (state.socket !== owner.socket) owner.socket?.close();
     return;
   }
+  const rebootstrapOwner = owner?.rebootstrapOwner ?? state.artifactRebootstrapOwner;
+  if (rebootstrapOwner !== null && state.artifactRebootstrapOwner === rebootstrapOwner) clearArtifactRebootstrapDeadline(state, rebootstrapOwner);
   const failure = artifactBootstrapFailure(state, error);
   const socket = owner ? owner.socket : state.socket;
   abortArtifactBootstrap(state);
@@ -2680,9 +2909,12 @@ function rejectArtifactBootstrap(state: ArtifactState, error: unknown, owner = s
 }
 
 async function requireArtifactRebootstrap(state: ArtifactState): Promise<void> {
+  const owner = captureArtifactRebootstrapOwner(state);
   reissueInferenceApprovalUndoForRebootstrap(state);
   if (inferencePort !== null && documentRuntimeKeyV1({ kind: "hub", ...inferencePort.scope }) === state.runtimeKey && inferencePort.status.phase !== "approving") closeInferencePort(inferencePort.operationEpoch);
   await retireCurrentFolderCanonicalBootstrapMirror(state);
+  if (state.artifactRebootstrapOwner !== owner) return;
+  owner.assertCurrent();
   abortArtifactBootstrap(state);
   dropVerifiedColdDocumentPair(state);
   state.currentPack = null;
@@ -2791,9 +3023,14 @@ async function installArtifactBootstrap(state: ArtifactState, owner: DocumentArt
       emitMutationEvent(state, [...state.outbox]);
       owner.assertCurrent();
     }
+    if (owner.rebootstrapOwner !== null) {
+      owner.rebootstrapOwner.assertCurrent();
+      clearArtifactRebootstrapDeadline(state, owner.rebootstrapOwner);
+    }
+    state.artifactRebootstrapRequired = false;
+    clearArtifactBootstrapDeadline(state, owner);
     state.artifactBootstrap = null;
     state.artifactBootstrapOwner = null;
-    state.artifactBootstrapDeadlineMs = null;
     finishCatchupIfReady(state);
   } catch (error) {
     if (state.verifiedColdPair === coldOwner) dropVerifiedColdDocumentPair(state);
@@ -2823,11 +3060,12 @@ async function startArtifactBootstrap(state: ArtifactState, bootstrap: WireArtif
   try {
     state.pendingResumeToken = resumeToken;
     state.requiredTailFrontier = bootstrap.required_tail_frontier;
-    state.artifactBootstrapDeadlineMs = Date.now() + ARTIFACT_BOOTSTRAP_DEADLINE_MS;
-    assembler = new ArtifactBootstrapAssembler(bootstrap, bootstrap.descriptor_hash, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, state.artifactBootstrapDeadlineMs, bootstrapControl(state, owner));
+    const deadlineMs = Date.now() + ARTIFACT_BOOTSTRAP_DEADLINE_MS;
+    assembler = new ArtifactBootstrapAssembler(bootstrap, bootstrap.descriptor_hash, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, deadlineMs, bootstrapControl(state, owner));
     owner.assertCurrent();
     owner.assembler = assembler;
     state.artifactBootstrap = assembler;
+    armArtifactBootstrapDeadline(state, owner, deadlineMs);
     const folder = folderBinding(state.config);
     if (folder) {
       owner.folderMirror = await reserveFolderCanonicalBootstrapMirror(state, folder, bootstrap);
@@ -2853,6 +3091,11 @@ async function handleHubFrame(
     requeuePendingBatches(state);
     const bootstrap = frame.Welcome.bootstrap;
     if (bootstrap === "None") {
+      if (state.artifactRebootstrapRequired) {
+        clearArtifactRebootstrapDeadline(state, state.artifactRebootstrapOwner);
+        rejectArtifactBootstrap(state, new Error("artifact rebootstrap returned no canonical pair"));
+        return;
+      }
       await retireCurrentFolderCanonicalBootstrapMirror(state);
       abortArtifactBootstrap(state);
       state.resumeToken = frame.Welcome.resume_token;
@@ -2862,6 +3105,11 @@ async function handleHubFrame(
       return;
     }
     if (bootstrap === "Tail") {
+      if (state.artifactRebootstrapRequired) {
+        clearArtifactRebootstrapDeadline(state, state.artifactRebootstrapOwner);
+        rejectArtifactBootstrap(state, new Error("artifact rebootstrap returned tail without a canonical pair"));
+        return;
+      }
       await retireCurrentFolderCanonicalBootstrapMirror(state);
       abortArtifactBootstrap(state);
       state.pendingResumeToken = frame.Welcome.resume_token;
@@ -2926,13 +3174,13 @@ async function handleHubFrame(
     return;
   }
   if ("Commands" in frame) {
-    if (state.artifactBootstrap) {
+    if (state.artifactBootstrap || state.artifactRebootstrapRequired) {
       rejectArtifactBootstrap(state, new Error("tail arrived before artifact bootstrap completion"));
       return;
     }
     if (frame.Commands.origin !== state.actor) {
       if (frame.Commands.envelopes.length > 0 && commandBatch === null) throw new Error("document backbone: exact server command batch missing");
-      if (commandBatch !== null) emitEvent(state, { kind: "documentBackbone", message: encodeBackboneMessage({ kind: "mutations", envelopes: commandBatch }) });
+      if (frame.Commands.envelopes.length > 0 && commandBatch !== null) emitEvent(state, { kind: "documentBackbone", message: encodeBackboneMessage({ kind: "mutations", envelopes: commandBatch }) });
     }
     state.frontier = frame.Commands.frontier;
     finishCatchupIfReady(state);
@@ -4575,12 +4823,16 @@ function openArtifact(request: ArtifactActorConfig & { readonly clientInstanceId
     executionTargetOpen: null,
     executionTargetLease: null,
     browserActorReservation: null,
+    browserActorViewState: null,
     sanityPollTimer: null,
     sseHealthy: false,
     revalidateFolder: async () => {}, // 🔧 replaced below once a folder binding exists.
     reconnectDelayMs: HUB_RECONNECT_MIN_MS,
     outbox: [],
     pendingMutations: [],
+    exactLocalEnvelopes: new WeakMap(),
+    pendingDocumentBackboneBytes: 0,
+    pendingDocumentBackboneMessages: 0,
     status: { persisted: false, pendingMutations: 0, remote: { kind: "detached" } },
     frontier: null,
     pendingResumeToken: null,
@@ -4588,6 +4840,11 @@ function openArtifact(request: ArtifactActorConfig & { readonly clientInstanceId
     artifactBootstrap: null,
     artifactBootstrapOwner: null,
     artifactBootstrapDeadlineMs: null,
+    artifactBootstrapDeadlineTimer: null,
+    artifactRebootstrapOwner: null,
+    artifactRebootstrapDeadlineMs: null,
+    artifactRebootstrapDeadlineTimer: null,
+    artifactRebootstrapRequired: false,
     artifactBootstrapProgress: [],
     canonicalFolderMirror: null,
     verifiedColdPair: null,
@@ -4638,6 +4895,8 @@ function closeArtifactRuntime(runtimeKey: string): void {
   const state = artifacts.get(runtimeKey);
   if (!state) return;
   state.closed = true;
+  state.browserActorViewState = null;
+  abortArtifactRebootstrap(state);
   abortArtifactBootstrap(state);
   // 🛑️ Finding 3: cancels every in-flight folder/blob fetch this document owns and unblocks any
   // pending reconnect backoff delay immediately — no fetch or reconnect loop can pin this document
@@ -4651,6 +4910,9 @@ function closeArtifactRuntime(runtimeKey: string): void {
   state.socket?.close();
   if (state.sanityPollTimer != null) clearTimeout(state.sanityPollTimer);
   state.channel.close();
+  state.exactLocalEnvelopes = new WeakMap();
+  state.pendingDocumentBackboneBytes = 0;
+  state.pendingDocumentBackboneMessages = 0;
   artifacts.delete(runtimeKey);
 }
 
@@ -4662,15 +4924,36 @@ function closeArtifact(documentId: string, spaceId?: string, clientInstanceId?: 
   closeArtifactRuntime(runtimeKey);
 }
 
-function admitLocalMutations(state: ArtifactState, envelopes: readonly MutationEnvelope[], channelMessage: unknown): void {
+function admitLocalMutations(
+  state: ArtifactState,
+  envelopes: readonly MutationEnvelope[],
+  channelMessage: unknown,
+  exactEnvelopes: readonly ExactWireMutationEnvelope[] | null = null,
+  exactMessageBytes = 0,
+): void {
   if (envelopes.length === 0) return;
+  if (exactEnvelopes !== null && exactEnvelopes.length !== envelopes.length) throw new Error("document backbone: exact batch cardinality mismatch");
+  if (state.executionTargetLease !== null && state.executionTargetLease.live && !state.executionTargetLease.fields().grant.write) {
+    rejectReadOnlyExecutionTarget(state, envelopes);
+    return;
+  }
+  if (exactEnvelopes !== null && (!Number.isSafeInteger(exactMessageBytes) || exactMessageBytes < 1 || exactMessageBytes > DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes)) throw new Error("document backbone: invalid retained byte charge");
+  if (exactEnvelopes !== null && (state.pendingDocumentBackboneMessages >= DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumMessages || exactMessageBytes > DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - state.pendingDocumentBackboneBytes)) {
+    rejectDocumentBackboneCapacity(state, envelopes, exactMessageBytes);
+    return;
+  }
   if (state.pendingMutations.length + envelopes.length > PENDING_MUTATIONS_QUEUE_LIMIT) {
     rejectMutationQueueOverflow(state, envelopes);
     return;
   }
+  if (exactEnvelopes !== null) {
+    envelopes.forEach((envelope, index) => state.exactLocalEnvelopes.set(envelope, { envelope: exactEnvelopes[index]!, bytes: index === 0 ? exactMessageBytes : 0, messages: index === 0 ? 1 : 0 }));
+    state.pendingDocumentBackboneBytes += exactMessageBytes;
+    state.pendingDocumentBackboneMessages += 1;
+  }
   state.pendingMutations.push(...envelopes);
   setStatus(state, { pendingMutations: state.pendingMutations.length });
-  state.channel.postMessage(channelMessage);
+  if (exactEnvelopes === null || !hubBinding(state.config)) state.channel.postMessage(channelMessage);
   relayMutationsToHub(state, envelopes);
   if (folderBinding(state.config)) setStatus(state, { persisted: false });
 }
@@ -4685,7 +4968,7 @@ async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): 
         emitEvent(state, { kind: "commandOutcome", batchId, outcome: { kind: "rejected", reason: "document backbone scope mismatch", messages: [parsed.envelopes.length] } });
         break;
       }
-      admitLocalMutations(state, parsed.envelopes.map(fromWireEnvelope), { kind: "documentBackbone", message: parsed.message });
+      admitLocalMutations(state, parsed.envelopes.map(fromWireEnvelope), { kind: "documentBackbone", message: parsed.message }, parsed.envelopes, parsed.message.byteLength);
       break;
     }
     case "localMutations": {
@@ -4697,6 +4980,7 @@ async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): 
       if (folder) {
         try {
           await writeFolder(state, folder, message.pack, message.spr);
+          releaseDocumentBackboneOwnership(state, state.pendingMutations);
           state.pendingMutations = [];
           setStatus(state, { pendingMutations: 0 });
         } catch (error) {
@@ -4819,6 +5103,15 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
     case "inference-history-undo":
       void undoInferenceApproval(request.historyEpoch, request.clientInstanceId, request.scope);
       break;
+    case "browser-actor-view-state": {
+      const context = parseBrowserActorViewStateRequest(request);
+      const state = artifactState(context.scope.documentId, context.scope.spaceId);
+      if (state?.openClientInstanceId === context.clientInstanceId && JSON.stringify(state.browserActorViewState) !== JSON.stringify(context.viewState)) {
+        state.browserActorViewState = context.viewState;
+        state.browserActorReservation?.refreshHostView();
+      }
+      break;
+    }
     case "browser-actor-ui-patch-result": {
       const state = artifactState(request.scope.documentId, request.scope.spaceId);
       if (state?.openClientInstanceId === request.clientInstanceId) state.browserActorReservation?.settleUiPatch(request);
@@ -4834,6 +5127,30 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
 // below are dynamic specifically so they never get bundled into the actual browser Worker script.
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts");
-  await registerTests1(import.meta.vitest, { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserBrokerFetch, browserBrokerProofDigest, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearLocalBrowserBrokerProof, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hexBytes, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installLocalBrowserBrokerProof, localBrowserBrokerProofExpiresAtMs, localBrowserBrokerQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, { directory: import.meta.dir, url: import.meta.url });
+  const testSeams = {
+    get directoryAdministration() { return directoryAdministration; },
+    set directoryAdministration(value: typeof directoryAdministration) { directoryAdministration = value; },
+    get directoryClient() { return directoryClient; },
+    set directoryClient(value: typeof directoryClient) { directoryClient = value; },
+    get directorySessionEpoch() { return directorySessionEpoch; },
+    set directorySessionEpoch(value: typeof directorySessionEpoch) { directorySessionEpoch = value; },
+    get executionTargetStatusObserver() { return executionTargetStatusObserver; },
+    set executionTargetStatusObserver(value: typeof executionTargetStatusObserver) { executionTargetStatusObserver = value; },
+    get inferenceApprovalUndoEpoch() { return inferenceApprovalUndoEpoch; },
+    set inferenceApprovalUndoEpoch(value: typeof inferenceApprovalUndoEpoch) { inferenceApprovalUndoEpoch = value; },
+    get inferenceApprovalUndoOwner() { return inferenceApprovalUndoOwner; },
+    set inferenceApprovalUndoOwner(value: typeof inferenceApprovalUndoOwner) { inferenceApprovalUndoOwner = value; },
+    get localBrowserBrokerProofExpiresAtMs() { return localBrowserBrokerProofExpiresAtMs; },
+    set localBrowserBrokerProofExpiresAtMs(value: typeof localBrowserBrokerProofExpiresAtMs) { localBrowserBrokerProofExpiresAtMs = value; },
+    get localBrowserBrokerQueued() { return localBrowserBrokerQueued; },
+    set localBrowserBrokerQueued(value: typeof localBrowserBrokerQueued) { localBrowserBrokerQueued = value; },
+    get socketGrantTestIssue() { return socketGrantTestIssue; },
+    set socketGrantTestIssue(value: typeof socketGrantTestIssue) { socketGrantTestIssue = value; },
+    get spaceArtifactCreationTestFetch() { return spaceArtifactCreationTestFetch; },
+    set spaceArtifactCreationTestFetch(value: typeof spaceArtifactCreationTestFetch) { spaceArtifactCreationTestFetch = value; },
+    get workerPostTestSink() { return workerPostTestSink; },
+    set workerPostTestSink(value: typeof workerPostTestSink) { workerPostTestSink = value; },
+  };
+  await registerTests1(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserBrokerFetch, browserBrokerProofDigest, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearLocalBrowserBrokerProof, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hexBytes, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installLocalBrowserBrokerProof, localBrowserBrokerProofExpiresAtMs, localBrowserBrokerQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests

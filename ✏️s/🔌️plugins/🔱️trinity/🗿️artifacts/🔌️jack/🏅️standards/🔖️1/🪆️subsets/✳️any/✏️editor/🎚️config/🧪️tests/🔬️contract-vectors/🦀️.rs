@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
 #[test]
 fn configuration_and_presence_contract_vectors_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔁️mutation-contracts.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️mutation-contracts.json")).unwrap();
     let base: JackConfig = pack::from_json_str(&vectors["base"].to_string()).unwrap();
     assert_eq!(<JackConfigMutation as Mutation<JackConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().unwrap().len());
     for vector in vectors["cases"].as_array().unwrap() {

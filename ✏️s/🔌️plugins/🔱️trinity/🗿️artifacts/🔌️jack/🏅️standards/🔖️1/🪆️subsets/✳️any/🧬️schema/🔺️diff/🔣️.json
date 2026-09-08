@@ -35,7 +35,7 @@
       "x-semio-state": "artifact"
     },
     "camera": {
-      "$ref": "#/$defs/Camera",
+      "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Camera",
       "x-semio-state": "artifact"
     },
     "nodes": {
@@ -57,13 +57,9 @@
       ],
       "x-semio-state": "artifact"
     },
-    "activeFixtureId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "jackQuery": {
       "type": "string",
-      "x-semio-state": "presence"
+      "x-semio-state": "config"
     },
     "lodModeByWindow": {
       "type": "object",
@@ -77,31 +73,14 @@
           }
         ]
       },
-      "x-semio-state": "presence"
+      "x-semio-state": "config"
     },
     "viewportCamera": {
-      "$ref": "#/$defs/Camera",
+      "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Camera",
       "x-semio-state": "config"
     },
     "jackResultJson": {
       "type": "string",
-      "x-semio-state": "config"
-    },
-    "editorEngagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "graphEngagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "resultsEngagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "reorganizeEpoch": {
-      "type": "integer",
-      "format": "int64",
       "x-semio-state": "config"
     },
     "editorSelection": {
@@ -110,18 +89,9 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/JackEditorSelection"
+          "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/JackEditorSelection"
         }
       ],
-      "x-semio-state": "config"
-    },
-    "revision": {
-      "type": "integer",
-      "format": "int64",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   },
@@ -275,49 +245,6 @@
               "type": "string"
             }
           ]
-        }
-      }
-    },
-    "JackEditorSelection": {
-      "title": "JackEditorSelection",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "start",
-        "end"
-      ],
-      "properties": {
-        "start": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "end": {
-          "type": "integer",
-          "format": "int64"
-        }
-      }
-    },
-    "Camera": {
-      "title": "Camera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
         }
       }
     },

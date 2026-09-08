@@ -1,5 +1,6 @@
 //! 🧬️ The `framework.ui.contract` schema leaf: this scope's named-export registration, the Rust half
-//! of the two exports `🔣️.json` declares (`ConformanceCatalogFixture`, `ContractFixture` — contract
+//! of the three exports `🔣️.json` declares (`ConformanceCatalogFixture`, `ContractFixture`,
+//! `PresenceUpdate` — contract
 //! §B: a `🧬️schema/🦀️.rs` carries the scope's pub types and `include_str!`s its siblings), plus the
 //! versioned semantic UI wire-type metadata and its owned TypeScript projection — the latter
 //! extracted from owner `📦️packages/🦀️rust/🦀️.rs` so that file stays pure wiring (no
@@ -31,7 +32,7 @@ pub const DECLARED_FORMATS: [SchemaFormat; 2] = [SchemaFormat::JsonSchema, Schem
 const LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: "" };
 
 /// 🏷️ `$defs` of `🔣️.json`, in declaration order.
-const EXPORTS: [SchemaExport; 2] = [SchemaExport { id: "ConformanceCatalogFixture", leaves: LEAVES }, SchemaExport { id: "ContractFixture", leaves: LEAVES }];
+const EXPORTS: [SchemaExport; 3] = [SchemaExport { id: "ConformanceCatalogFixture", leaves: LEAVES }, SchemaExport { id: "ContractFixture", leaves: LEAVES }, SchemaExport { id: "PresenceUpdate", leaves: LEAVES }];
 
 /// 📌️ Registers `framework.ui.contract`'s named exports into the process-wide export catalog.
 /// See `📋️execution-contract.md` §C and `semio_framework_schema_registry::resolve_schema_export`.
@@ -45,36 +46,8 @@ pub fn register_scope_exports() {
 /// visible in the process-wide catalog, and asserts each export's `"x-semio-formats"` annotation is
 /// the taxonomy spelling of that same set.
 #[cfg(test)]
-mod scope_schema_export_law {
-    use semio_framework_schema_registry::{resolve_schema_export, scope_schema_exports_registered, SchemaFormat};
-
-    #[test]
-    fn registers_and_resolves_exactly_the_declared_formats() {
-        super::register_scope_exports();
-        assert!(scope_schema_exports_registered("framework.ui.contract"));
-        for export in super::EXPORTS.map(|declaration| declaration.id) {
-            for format in SchemaFormat::ALL {
-                let resolved = resolve_schema_export("framework.ui.contract", export, format);
-                assert_eq!(resolved.is_ok(), super::DECLARED_FORMATS.contains(&format), "{export} resolves {format} but x-semio-formats declares {:?}", super::DECLARED_FORMATS);
-            }
-            assert!(resolve_schema_export("framework.ui.contract", export, SchemaFormat::JsonSchema).is_ok_and(|leaf| leaf.contains("framework/ui/contract/schema.json")));
-            assert!(resolve_schema_export("framework.ui.contract", export, SchemaFormat::Rust).is_ok_and(|leaf| leaf.contains("register_scope_exports")));
-        }
-        assert!(resolve_schema_export("framework.ui.contract", "NotAnExport", SchemaFormat::JsonSchema).is_err());
-    }
-
-    #[test]
-    fn restricted_formats_match_the_annotation() {
-        let module: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).expect("module json");
-        let expected: Vec<&str> = super::DECLARED_FORMATS.iter().map(|format| format.taxonomy_key()).collect();
-        let defs = module["$defs"].as_object().expect("$defs");
-        assert_eq!(defs.len(), super::EXPORTS.len());
-        for export in super::EXPORTS.map(|declaration| declaration.id) {
-            let declared: Vec<&str> = defs[export]["x-semio-formats"].as_array().expect("x-semio-formats").iter().map(|entry| entry.as_str().expect("format id")).collect();
-            assert_eq!(declared, expected, "{export} must declare exactly the formats this module registers");
-        }
-    }
-}
+#[path = "🧪️tests/🔬️scope-schema-export-law-standalone/🦀️.rs"]
+mod scope_schema_export_law;
 
 //#endregion 🔖️ScopeSchemaExports
 
@@ -113,11 +86,13 @@ pub struct ContractFixture {
 }
 
 /// 🧩️ One presence-overlay case: the update as it travels the wire, and the flags it must resolve to.
+/// `update` is the scope's own [`PresenceUpdate`] export, never a structural clone of it — the JSON half
+/// says the same thing by `$ref`-ing `#/$defs/PresenceUpdate` and narrowing it with `const`/`minimum`.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ContractFixtureCase {
     pub name: String,
-    pub update: crate::PresenceUpdate,
+    pub update: PresenceUpdate,
     pub expected: ContractFixtureFlags,
 }
 
@@ -129,6 +104,13 @@ pub struct ContractFixtureFlags {
     pub hovered: bool,
     pub previewed: bool,
 }
+
+/// 📡️ The Rust half of the `PresenceUpdate` export: the crate's own coalesced, TTL-scoped presence
+/// message, declared once in `📦️packages/🦀️rust/👥️presence.rs` and re-exported here so the scope's
+/// schema module names it (contract §A: a Rust re-export is `pub use`). `🔣️.json`'s `$defs.PresenceUpdate`
+/// is the same shape in the normative format, and `presence_update_export_matches_the_wire_shape`
+/// asserts the two cannot drift.
+pub use crate::PresenceUpdate;
 
 //#endregion 🔖️Exports
 

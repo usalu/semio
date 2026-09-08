@@ -1,0 +1,11 @@
+import assert from "node:assert/strict";
+import { resolve } from "node:path";
+process.env.SEMIO_PLUGIN = "note";
+process.env.SEMIO_RENDERER = "react";
+process.env.SEMIO_BUILD_MODE = "ship";
+const { default: configure } = await import(resolve(process.cwd(), "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts"));
+const config = await configure({ command: "build", mode: "production", isSsrBuild: false, isPreview: false });
+const plugins = config.plugins.flat(Infinity).filter(Boolean).map(plugin => plugin.name);
+assert.ok(plugins.includes("semio-production-browser-artifacts"));
+assert.ok(!plugins.some(name => /activation|extension-store/.test(name)));
+console.log("[DEBUG] Actual production Vite configuration resolves a prepared note session without a development activation receipt PASS");

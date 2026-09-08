@@ -34,7 +34,6 @@ pub struct Fem2dConfig {
     #[dsl(block)]
     pub camera: FemCamera,
     /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewModel::locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -83,7 +82,7 @@ impl store::ArtifactPack for Fem2dConfig {
 
 impl Default for Fem2dConfig {
     fn default() -> Self {
-        Self { result_source_id: None, result_mode: "static".into(), result_mode_index: 0, camera: FemCamera::default(), locale: "en-US".into() }
+        Self { result_source_id: None, result_mode: "static".into(), result_mode_index: 0, camera: FemCamera::default(), }
     }
 }
 
@@ -117,8 +116,6 @@ pub enum Fem2dConfigMutation {
         camera: FemCamera,
     },
     /// 🗣️ Was read off the deleted `ViewModel::locale`.
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
@@ -187,7 +184,6 @@ impl Mutation<Fem2dConfig> for Fem2dConfigMutation {
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🟤️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/👁️set-result-display", semantic_kind: "set-result-display", display_name: "Set Result Display", emoji: "👁️", aggregate_variant: "SetResultDisplay", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🎥️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎚️config/🗣️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "🗣️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -195,7 +191,6 @@ impl Mutation<Fem2dConfig> for Fem2dConfigMutation {
             Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
             Self::SetResultDisplay { .. } => &Self::DESCRIPTORS[1],
             Self::SetCamera { .. } => &Self::DESCRIPTORS[2],
-            Self::SetLocale { .. } => &Self::DESCRIPTORS[3],
         }
     }
 
@@ -209,7 +204,6 @@ impl Mutation<Fem2dConfig> for Fem2dConfigMutation {
                 next.result_mode_index = *mode_index;
             }
             Fem2dConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
-            Fem2dConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         protocol::MutationOutcome::new(next)
     }

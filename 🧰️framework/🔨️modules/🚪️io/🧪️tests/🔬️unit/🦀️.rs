@@ -1,4 +1,3 @@
-
 //! 🧪️ `io_compose_via`'s own unit test (this file had no prior `#[cfg(test)]` region — this
 //! module has no stdio dependency to borrow a real chain from, so this registers a minimal
 //! synthetic 2-hop chain through the SAME `register_composer_entries`/`io_dispatch` machinery

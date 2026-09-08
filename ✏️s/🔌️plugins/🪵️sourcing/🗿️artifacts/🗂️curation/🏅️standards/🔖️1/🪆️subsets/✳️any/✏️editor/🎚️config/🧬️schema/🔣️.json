@@ -6,16 +6,11 @@
   "additionalProperties": false,
   "required": [
     "filters",
-    "locale",
     "contributionsJson"
   ],
   "properties": {
     "filters": {
       "$ref": "#/$defs/Filters",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     },
     "contributionsJson": {
@@ -24,31 +19,6 @@
     }
   },
   "$defs": {
-    "SortDirection": {
-      "title": "SortDirection",
-      "type": "string",
-      "enum": [
-        "asc",
-        "desc"
-      ]
-    },
-    "TableSort": {
-      "title": "TableSort",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "columnId",
-        "direction"
-      ],
-      "properties": {
-        "columnId": {
-          "type": "string"
-        },
-        "direction": {
-          "$ref": "#/$defs/SortDirection"
-        }
-      }
-    },
     "Filters": {
       "title": "Filters",
       "type": "object",
@@ -81,7 +51,7 @@
           "minimum": 0
         },
         "sort": {
-          "$ref": "#/$defs/TableSort"
+          "$ref": "https://semio.tech/schema/s/sourcing/curation/artifact.json#/$defs/TableSort"
         }
       }
     }

@@ -21,6 +21,12 @@ use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteracti
 #[cfg(test)]
 use ui_wgpu::wgpu::draw_text;
 use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition, ViewModel};
+use semio_framework_os_shell::{UiAppearance as OsUiAppearance, UiChromeLayout as OsUiChromeLayout, UiDriver as OsUiDriver, UiLocale as OsUiLocale, UiPreferences, UiTheme as OsUiTheme};
+use semio_framework_os_config::opening_config::{
+    apply_ui_preferences_config_mutation, decode_ui_preferences_config_mutation_json,
+    mutations::{set_appearance, set_custom_theme, set_driver, set_layout, set_locale, set_terminology, set_theme, UiPreferencesConfigMutation},
+    UI_PREFERENCES_CONFIG_SCHEMA,
+};
 #[cfg(test)]
 use semio_framework::IconName;
 use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
@@ -3121,12 +3127,19 @@ impl ShellState {
         }
         let mut view_state = session.view_state.clone();
         view_state.contributions_json = Some(Self::contributions_json_from_plugins(&self.plugins));
+        view_state.window_instances = session
+            .app
+            .window_kinds
+            .iter()
+            .map(|kind| semio_framework::ViewWindowInstance { id: kind.id.clone(), window_kind_id: kind.id.clone() })
+            .collect();
+        view_state.active_utility_by_window_id = self.active_utility_by_window.clone();
         let mut refresh_effects = Vec::new();
         {
             let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
             for kind in &session.app.window_kinds {
-                view_state.active_utility_id = self.active_utility_by_window.get(&kind.id).cloned();
-                let document = program.render_with_document(session.instance_id, &kind.body_key, &view_state, None, Some(&mut refresh_effects)).await?;
+                let window_view = view_state.for_window_instance(&kind.id).ok_or_else(|| format!("window '{}' is absent from the live view", kind.id))?;
+                let document = program.render_with_document(session.instance_id, &kind.id, &kind.body_key, &window_view, None, Some(&mut refresh_effects)).await?;
                 self.window_ui.insert(kind.id.clone(), document);
             }
         }
@@ -3135,9 +3148,10 @@ impl ShellState {
             return Err("shell: panel document retirement registry refused the exact prior owners".to_string());
         }
         let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
+        let panel_view = view_state.for_panel();
         for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
             let body_key = tab.body_key.as_deref().unwrap_or_default();
-            let document = program.render_with_document(session.instance_id, body_key, &view_state, None, Some(&mut refresh_effects)).await?;
+            let document = program.render_with_document(session.instance_id, tab.id(), body_key, &panel_view, None, Some(&mut refresh_effects)).await?;
             self.panel_documents.insert(tab.id().to_string(), document);
         }
         // 🧰️ The utility bar is derived from the app's declared `AppDefinition.utilities` (scoped to the active
@@ -3162,8 +3176,8 @@ impl ShellState {
                                 contributions_json: None,
                                 locale: self.active_locale(),
                                 terminology: self.active_terminology(),
-                                window_id: None,
-                                window_instances: Vec::new(),
+                                window_id: Some(spawned.id.clone()),
+                                window_instances: vec![semio_framework::ViewWindowInstance { id: spawned.id.clone(), window_kind_id: app.window_kinds.first().id.clone() }],
                                 active_tool_id: None,
                                 active_utility_by_window_id: HashMap::new(),
                             };
@@ -3173,7 +3187,7 @@ impl ShellState {
                                     return Err("shell: spawned document retirement registry refused the exact prior owner".to_string());
                                 }
                             }
-                            self.spawned_ui = Some(spawn_plugin.render(spawned.instance_id, &body_key, &view_state).await?);
+                            self.spawned_ui = Some(spawn_plugin.render(spawned.instance_id, &spawned.id, &body_key, &view_state).await?);
                         }
                     }
                 } else {
@@ -6213,16 +6227,14 @@ impl ShellState {
         let mut items = Vec::new();
         if let Some(session) = self.session.clone() {
             let shortcut_by_action: HashMap<String, String> = session.app.keybindings.iter().map(|binding| (binding.action.action.clone(), binding.keys.clone())).collect();
-            // 🖱️ `viewState` deliberately omitted — `ui_wgpu::wgpu::ContextMenuRequest` never carries it (see
-            // that type's own doc comment); `selection`/`text` are the typed slices plugins actually need.
-            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: the opaque per-app
-            // `ViewModel.selectionJson` this used to read is deleted — the framework now owns selection
-            // via `InteractionState`/`PresenceInteraction`, not yet threaded into this request. Empty
-            // until a follow-up wires the active domain's `DomainSelection` through here.
+            let mut view_state = session.view_state.clone();
+            view_state.locale = self.active_locale();
+            view_state.terminology = self.active_terminology();
             let selection: Vec<Value> = Vec::new();
             let text: Option<Value> = None;
             let request = serde_json::json!({
                 "menu": { "id": kind.clone() },
+                "viewState": view_state,
                 "surface": {
                     "surfaceId": surface_id,
                     "kind": kind.clone(),
@@ -9992,29 +10004,26 @@ impl ShellState {
         let phase = self.chrome_present.maintenance.load_phase;
         match phase {
             0 => {
-                self.appearance_id = env_lock("SEMIO_LOCKED_APPEARANCE").or_else(|| prefs_get_bounded(UI_CHROME_APPEARANCE_STORAGE_KEY).filter(|value| value == "light" || value == "dark" || value == "system")).unwrap_or_else(|| "system".to_string());
+                let preferences = read_ui_preferences();
+                let custom_themes = custom_themes_from(&preferences);
+                self.appearance_id = env_lock("SEMIO_LOCKED_APPEARANCE").unwrap_or_else(|| appearance_id(preferences.appearance));
+                self.locale_id = env_lock("SEMIO_LOCKED_LOCALE").unwrap_or_else(|| locale_id(preferences.locale));
+                self.terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or(preferences.terminology).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
+                self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
+                self.chrome_build.preferences.ui_layout = match preferences.layout { Some(OsUiChromeLayout::Tablet) => "tablet", _ => "desktop" }.to_string();
+                self.chrome_build.preferences.theme_id = env_lock("SEMIO_LOCKED_THEME").or(preferences.theme_id).unwrap_or_else(|| "semio".to_string());
+                self.chrome_build.preferences.custom_themes = custom_themes;
+                let loaded = self.chrome_build.preferences.clone();
+                with_chrome_prefs(|current| *current = loaded);
             }
             1 => {
-                self.locale_id = env_lock("SEMIO_LOCKED_LOCALE").or_else(|| prefs_get_bounded(UI_CHROME_LOCALE_STORAGE_KEY).filter(|value| value == "en" || value == "de")).unwrap_or_else(|| "en".to_string());
-            }
-            2 => {
-                self.terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or_else(|| prefs_get_bounded(UI_CHROME_TERMINOLOGY_STORAGE_KEY)).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
-            }
-            3 => self.driver_id = prefs_get_bounded(UI_CHROME_DRIVER_STORAGE_KEY).unwrap_or_else(|| "default".to_string()),
-            4 => {
-                self.chrome_build.preferences.ui_layout = if prefs_get_bounded(UI_CHROME_LAYOUT_STORAGE_KEY).as_deref() == Some("tablet") { "tablet".to_string() } else { "desktop".to_string() };
-            }
-            5 => {
-                self.chrome_build.preferences.theme_id = env_lock("SEMIO_LOCKED_THEME").or_else(|| prefs_get_bounded(UI_CHROME_THEME_ID_STORAGE_KEY)).unwrap_or_else(|| "semio".to_string());
-            }
-            6 => {
                 self.chrome_build.preferences.worker_count = prefs_get_bounded(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY).and_then(|raw| raw.parse::<u32>().ok()).filter(|count| *count >= 1).unwrap_or_else(default_compute_worker_count);
             }
             _ => {
                 self.chrome_present.preferences_loaded = true;
                 self.chrome_present.maintenance.load_requested = false;
                 self.chrome_present.maintenance.load_phase = 0;
-                self.chrome_present.last_synced_preferences = Some(UiPrefsSnapshot::default());
+                self.chrome_present.last_synced_preferences = Some(UiPrefsSnapshot::capture(self));
                 return;
             }
         }
@@ -10058,38 +10067,17 @@ impl ShellState {
 
     fn advance_chrome_preferences_persist_step(&mut self) {
         let phase = self.chrome_present.maintenance.persist_phase;
-        let synced = self.chrome_present.last_synced_preferences.get_or_insert_with(UiPrefsSnapshot::default);
+        let snapshot = UiPrefsSnapshot::capture(self);
         match phase {
-            0 if synced.appearance_id != self.appearance_id && env_lock("SEMIO_LOCKED_APPEARANCE").is_none() => {
-                prefs_set_bounded(UI_CHROME_APPEARANCE_STORAGE_KEY, &self.appearance_id);
-                synced.appearance_id.clone_from(&self.appearance_id);
+            0 if self.chrome_present.last_synced_preferences.as_ref() != Some(&snapshot) => {
+                persist_ui_preferences(self, self.chrome_present.last_synced_preferences.as_ref());
             }
-            1 if synced.driver_id != self.driver_id => {
-                prefs_set_bounded(UI_CHROME_DRIVER_STORAGE_KEY, &self.driver_id);
-                synced.driver_id.clone_from(&self.driver_id);
+            1 if self.chrome_present.last_synced_preferences.as_ref().map(|synced| synced.worker_count) != Some(snapshot.worker_count) => {
+                prefs_set_bounded(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, &snapshot.worker_count.to_string());
             }
-            2 if synced.locale_id != self.locale_id && env_lock("SEMIO_LOCKED_LOCALE").is_none() => {
-                prefs_set_bounded(UI_CHROME_LOCALE_STORAGE_KEY, &self.locale_id);
-                synced.locale_id.clone_from(&self.locale_id);
-            }
-            3 if synced.terminology_id != self.terminology_id && env_lock("SEMIO_LOCKED_TERMINOLOGY").is_none() => {
-                prefs_set_bounded(UI_CHROME_TERMINOLOGY_STORAGE_KEY, &self.terminology_id);
-                synced.terminology_id.clone_from(&self.terminology_id);
-            }
-            4 if synced.theme_id != self.chrome_build.preferences.theme_id && env_lock("SEMIO_LOCKED_THEME").is_none() => {
-                prefs_set_bounded(UI_CHROME_THEME_ID_STORAGE_KEY, &self.chrome_build.preferences.theme_id);
-                synced.theme_id.clone_from(&self.chrome_build.preferences.theme_id);
-            }
-            5 if synced.ui_layout != self.chrome_build.preferences.ui_layout => {
-                prefs_set_bounded(UI_CHROME_LAYOUT_STORAGE_KEY, &self.chrome_build.preferences.ui_layout);
-                synced.ui_layout.clone_from(&self.chrome_build.preferences.ui_layout);
-            }
-            6 if synced.worker_count != self.chrome_build.preferences.worker_count => {
-                prefs_set_bounded(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, &self.chrome_build.preferences.worker_count.to_string());
-                synced.worker_count = self.chrome_build.preferences.worker_count;
-            }
-            0..=6 => {}
+            0..=1 => {}
             _ => {
+                self.chrome_present.last_synced_preferences = Some(snapshot);
                 self.chrome_present.maintenance.persist_requested = false;
                 self.chrome_present.maintenance.persist_phase = 0;
                 return;
@@ -11437,22 +11425,6 @@ impl ShellState {
 // neither; it only adds new items after the last existing method.
 
 //#region 🔑️StorageKeys
-/// 🔑️ Byte-identical to `UI_CHROME_APPEARANCE_STORAGE_KEY` (`ui/js/react/index.tsx:2132`).
-const UI_CHROME_APPEARANCE_STORAGE_KEY: &str = "ui.chrome.appearance";
-/// 🔑️ Byte-identical to `UI_CHROME_LOCALE_STORAGE_KEY` (`ui/js/react/index.tsx:2167`).
-const UI_CHROME_LOCALE_STORAGE_KEY: &str = "ui.chrome.locale";
-/// 🔑️ Byte-identical to `UI_CHROME_TERMINOLOGY_STORAGE_KEY` (`ui/js/react/index.tsx:2186`).
-const UI_CHROME_TERMINOLOGY_STORAGE_KEY: &str = "ui.chrome.terminology";
-/// 🔑️ Byte-identical to `UI_CHROME_DRIVER_STORAGE_KEY` (`ui/js/react/index.tsx`). Custom drivers
-/// (`ui.drivers.custom`) are a JS-only editor feature this wgpu mirror doesn't surface yet — only the
-/// active driver id round-trips here, same scope the old `compact`/`expertise` fields had.
-const UI_CHROME_DRIVER_STORAGE_KEY: &str = "ui.chrome.driver";
-/// 🔑️ Byte-identical to `UI_CHROME_LAYOUT_STORAGE_KEY` (`ui/js/react/index.tsx:2152`).
-const UI_CHROME_LAYOUT_STORAGE_KEY: &str = "ui.chrome.layout";
-/// 🔑️ Byte-identical to `UI_CHROME_THEME_ID_STORAGE_KEY` (`ui/js/react/index.tsx:2201`).
-const UI_CHROME_THEME_ID_STORAGE_KEY: &str = "ui.chrome.theme";
-/// 🔑️ Byte-identical to `UI_CUSTOM_THEMES_STORAGE_KEY` (`ui/js/react/index.tsx:2237`).
-const UI_CUSTOM_THEMES_STORAGE_KEY: &str = "ui.themes.custom";
 /// 🔑️ Byte-identical to `UI_COMPUTE_WORKER_COUNT_STORAGE_KEY` (`ui/js/react/index.tsx:2267`).
 const UI_COMPUTE_WORKER_COUNT_STORAGE_KEY: &str = "ui.compute.workerCount";
 /// 🔑️ Byte-identical to `UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX` (`ui/js/react/index.tsx:2305`).
@@ -11462,7 +11434,6 @@ const UI_TERMINOLOGY_NATIVE: &str = "native";
 //#endregion 🔑️StorageKeys
 
 //#region 🗄️PrefsStore
-#[cfg(test)]
 const OS_SHELL_CONFIG_STORAGE_KEY: &str = "semio.os.config";
 
 /// 🗄️ Cross-platform key-value persistence for uiPrefs. `web-sys`'s "Storage" feature isn't enabled
@@ -11528,7 +11499,6 @@ struct FilePrefsFlushState {
     running: bool,
 }
 
-#[cfg(test)]
 const OS_SHELL_CONFIG_MAX_BYTES: usize = 64 * 1024;
 #[cfg(test)]
 const OS_SHELL_PREFS_FILE_MAX_BYTES: usize = OS_SHELL_CONFIG_MAX_BYTES + 4 * 1024;
@@ -11650,7 +11620,6 @@ thread_local! {
 #[cfg(all(not(target_arch = "wasm32"), test))]
 static PREFS_STORE: std::sync::OnceLock<std::sync::Mutex<std::cell::RefCell<FilePrefsStore>>> = std::sync::OnceLock::new();
 
-#[cfg(test)]
 fn empty_os_shell_config() -> Value {
     serde_json::json!({
         "version": 1,
@@ -11704,20 +11673,22 @@ fn native_pref_field_path(key: &str) -> Option<std::path::PathBuf> {
 #[cfg(not(target_arch = "wasm32"))]
 fn native_pref_read_page(key: &str) -> Option<String> {
     let path = native_pref_field_path(key)?;
-    let page = semio_framework_os_services::storage_worker_read_fixed_file_page(&path, SHELL_CHROME_IO_FIELD_BYTES).ok()?;
+    let max_bytes = if key == OS_SHELL_CONFIG_STORAGE_KEY { OS_SHELL_CONFIG_MAX_BYTES } else { SHELL_CHROME_IO_FIELD_BYTES };
+    let page = semio_framework_os_services::storage_worker_read_fixed_file_page(&path, max_bytes).ok()?;
     String::from_utf8(page).ok()
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn native_pref_write_page(key: &str, value: &str) -> bool {
     let Some(path) = native_pref_field_path(key) else { return false };
-    if value.len() > SHELL_CHROME_IO_FIELD_BYTES {
+    let max_bytes = if key == OS_SHELL_CONFIG_STORAGE_KEY { OS_SHELL_CONFIG_MAX_BYTES } else { SHELL_CHROME_IO_FIELD_BYTES };
+    if value.len() > max_bytes {
         return false;
     }
-    semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), SHELL_CHROME_IO_FIELD_BYTES).is_ok()
+    semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), max_bytes).is_ok()
 }
 
-fn prefs_get(key: &str) -> Option<String> {
+fn raw_prefs_get(key: &str) -> Option<String> {
     #[cfg(target_arch = "wasm32")]
     {
         PREFS_STORE.with(|store| store.borrow().get(key))
@@ -11728,12 +11699,37 @@ fn prefs_get(key: &str) -> Option<String> {
     }
 }
 
-fn prefs_set(key: &str, value: &str) {
+fn raw_prefs_set(key: &str, value: &str) {
     #[cfg(target_arch = "wasm32")]
     PREFS_STORE.with(|store| store.borrow_mut().set(key, value));
     #[cfg(not(target_arch = "wasm32"))]
     {
         let _ = native_pref_write_page(key, value);
+    }
+}
+
+fn prefs_get(key: &str) -> Option<String> {
+    let raw = raw_prefs_get(OS_SHELL_CONFIG_STORAGE_KEY)?;
+    if raw.len() > OS_SHELL_CONFIG_MAX_BYTES {
+        return None;
+    }
+    serde_json::from_str::<Value>(&raw).ok()?.get("preferences")?.get(key)?.as_str().map(ToOwned::to_owned)
+}
+
+fn prefs_set(key: &str, value: &str) {
+    let mut config = raw_prefs_get(OS_SHELL_CONFIG_STORAGE_KEY)
+        .filter(|raw| raw.len() <= OS_SHELL_CONFIG_MAX_BYTES)
+        .and_then(|raw| serde_json::from_str::<Value>(&raw).ok())
+        .filter(|config| config.get("version").and_then(Value::as_u64) == Some(1))
+        .unwrap_or_else(empty_os_shell_config);
+    if !config.get("preferences").is_some_and(Value::is_object) {
+        config["preferences"] = serde_json::json!({});
+    }
+    config["preferences"][key] = Value::String(value.to_string());
+    if let Ok(raw) = serde_json::to_string(&config) {
+        if raw.len() <= OS_SHELL_CONFIG_MAX_BYTES {
+            raw_prefs_set(OS_SHELL_CONFIG_STORAGE_KEY, &raw);
+        }
     }
 }
 
@@ -11848,9 +11844,10 @@ fn default_compute_worker_count() -> u32 {
 }
 
 fn load_chrome_prefs() -> ChromePrefsState {
-    let ui_layout = if prefs_get(UI_CHROME_LAYOUT_STORAGE_KEY).as_deref() == Some("tablet") { "tablet".to_string() } else { "desktop".to_string() };
-    let theme_id = prefs_get(UI_CHROME_THEME_ID_STORAGE_KEY).unwrap_or_else(|| "semio".to_string());
-    let custom_themes = prefs_get(UI_CUSTOM_THEMES_STORAGE_KEY).and_then(|raw| serde_json::from_str::<HashMap<String, Value>>(&raw).ok()).map(|map| map.into_iter().map(|(id, value)| (id, value.to_string())).collect()).unwrap_or_default();
+    let preferences = read_ui_preferences();
+    let ui_layout = match preferences.layout { Some(OsUiChromeLayout::Tablet) => "tablet", _ => "desktop" }.to_string();
+    let theme_id = preferences.theme_id.unwrap_or_else(|| "semio".to_string());
+    let custom_themes = preferences.custom_themes.into_iter().map(|(id, theme)| (id, theme.config.to_string())).collect();
     let worker_count = prefs_get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY).and_then(|raw| raw.parse::<u32>().ok()).filter(|count| *count >= 1).unwrap_or_else(default_compute_worker_count);
     ChromePrefsState {
         ui_layout,
@@ -12166,10 +12163,10 @@ struct UiPrefsSnapshot {
     driver_id: String,
     theme_id: String,
     ui_layout: String,
+    custom_themes: HashMap<String, String>,
     worker_count: u32,
 }
 
-#[cfg(test)]
 impl UiPrefsSnapshot {
     fn capture(state: &ShellState) -> Self {
         Self {
@@ -12179,17 +12176,136 @@ impl UiPrefsSnapshot {
             driver_id: state.driver_id.clone(),
             theme_id: state.chrome_build.preferences.theme_id.clone(),
             ui_layout: state.chrome_build.preferences.ui_layout.clone(),
+            custom_themes: state.chrome_build.preferences.custom_themes.clone(),
             worker_count: state.chrome_build.preferences.worker_count,
         }
     }
 }
 
-#[cfg(test)]
-fn persist_custom_themes(preferences: &ChromePrefsState) {
-    let as_values: HashMap<String, Value> = preferences.custom_themes.iter().map(|(id, raw)| (id.clone(), serde_json::from_str(raw).unwrap_or(Value::Null))).collect();
-    if let Ok(json) = serde_json::to_string(&as_values) {
-        prefs_set(UI_CUSTOM_THEMES_STORAGE_KEY, &json);
+#[derive(Clone, Default)]
+struct UiPreferencesEventLog {
+    version: u8,
+    events: Vec<UiPreferencesConfigMutation>,
+}
+
+fn decode_ui_preferences_event_log(raw: &str) -> Option<UiPreferencesEventLog> {
+    let value: Value = serde_json::from_str(raw).ok()?;
+    if value.get("version").and_then(Value::as_u64) != Some(1) {
+        return None;
     }
+    let events = value
+        .get("events")?
+        .as_array()?
+        .iter()
+        .map(|event| decode_ui_preferences_config_mutation_json(&event.to_string()))
+        .collect::<Result<Vec<_>, _>>()
+        .ok()?;
+    Some(UiPreferencesEventLog { version: 1, events })
+}
+
+fn encode_ui_preferences_event_log(log: &UiPreferencesEventLog) -> String {
+    let events: Vec<Value> = log.events.iter().map(|event| dsl_value_as_json(&dsl::ToValue::to_value(event))).collect();
+    serde_json::json!({ "version": log.version, "events": events }).to_string()
+}
+
+fn read_ui_preferences_event_log() -> UiPreferencesEventLog {
+    prefs_get(UI_PREFERENCES_CONFIG_SCHEMA)
+        .and_then(|raw| decode_ui_preferences_event_log(&raw))
+        .unwrap_or_else(|| UiPreferencesEventLog { version: 1, events: Vec::new() })
+}
+
+fn replay_ui_preferences(log: &UiPreferencesEventLog) -> UiPreferences {
+    let mut preferences = UiPreferences::default();
+    for mutation in &log.events {
+        apply_ui_preferences_config_mutation(&mut preferences, mutation).expect("canonical OS UI-preferences mutation must apply");
+    }
+    preferences
+}
+
+fn read_ui_preferences() -> UiPreferences {
+    replay_ui_preferences(&read_ui_preferences_event_log())
+}
+
+fn appearance_id(value: Option<OsUiAppearance>) -> String {
+    match value {
+        Some(OsUiAppearance::Light) => "light",
+        Some(OsUiAppearance::Dark) => "dark",
+        _ => "system",
+    }
+    .to_string()
+}
+
+fn locale_id(value: Option<OsUiLocale>) -> String {
+    match value {
+        Some(OsUiLocale::De) => "de",
+        _ => "en",
+    }
+    .to_string()
+}
+
+fn custom_themes_from(preferences: &UiPreferences) -> HashMap<String, String> {
+    preferences
+        .custom_themes
+        .iter()
+        .filter_map(|(id, theme)| {
+            let mut config = theme.config.as_object()?.clone();
+            config.insert("id".to_string(), Value::String(theme.theme_id.clone()));
+            config.insert("label".to_string(), Value::String(theme.label.clone()));
+            Some((id.clone(), Value::Object(config).to_string()))
+        })
+        .collect()
+}
+
+fn canonical_custom_themes(preferences: &ChromePrefsState) -> HashMap<String, OsUiTheme> {
+    preferences
+        .custom_themes
+        .iter()
+        .map(|(id, raw)| {
+            let mut config = serde_json::from_str::<Value>(raw).unwrap_or_else(|_| Value::Object(Default::default()));
+            let label = config.get("label").and_then(Value::as_str).unwrap_or(id).to_string();
+            if let Some(object) = config.as_object_mut() {
+                object.remove("id");
+                object.remove("label");
+            }
+            (id.clone(), OsUiTheme { theme_id: id.clone(), label, config })
+        })
+        .collect()
+}
+
+fn persist_ui_preferences(state: &ShellState, previous: Option<&UiPrefsSnapshot>) {
+    let mut log = read_ui_preferences_event_log();
+    let changed = |current: &str, prior: fn(&UiPrefsSnapshot) -> &str| previous.is_none_or(|snapshot| current != prior(snapshot));
+    if env_lock("SEMIO_LOCKED_APPEARANCE").is_none() && changed(&state.appearance_id, |snapshot| &snapshot.appearance_id) {
+        log.events.push(set_appearance(Some(match state.appearance_id.as_str() { "light" => OsUiAppearance::Light, "dark" => OsUiAppearance::Dark, _ => OsUiAppearance::System })));
+    }
+    if changed(&state.chrome_build.preferences.ui_layout, |snapshot| &snapshot.ui_layout) {
+        log.events.push(set_layout(Some(if state.chrome_build.preferences.ui_layout == "tablet" { OsUiChromeLayout::Tablet } else { OsUiChromeLayout::Desktop })));
+    }
+    if changed(&state.driver_id, |snapshot| &snapshot.driver_id) {
+        log.events.push(set_driver(Some(state.driver_id.clone())));
+    }
+    if env_lock("SEMIO_LOCKED_LOCALE").is_none() && changed(&state.locale_id, |snapshot| &snapshot.locale_id) {
+        log.events.push(set_locale(Some(if state.locale_id == "de" { OsUiLocale::De } else { OsUiLocale::En })));
+    }
+    if env_lock("SEMIO_LOCKED_TERMINOLOGY").is_none() && changed(&state.terminology_id, |snapshot| &snapshot.terminology_id) {
+        log.events.push(set_terminology(Some(state.terminology_id.clone())));
+    }
+    if env_lock("SEMIO_LOCKED_THEME").is_none() && changed(&state.chrome_build.preferences.theme_id, |snapshot| &snapshot.theme_id) {
+        log.events.push(set_theme(Some(state.chrome_build.preferences.theme_id.clone())));
+    }
+    if previous.is_none_or(|snapshot| snapshot.custom_themes != state.chrome_build.preferences.custom_themes) {
+        let before = previous.map(|snapshot| &snapshot.custom_themes).cloned().unwrap_or_default();
+        let after = canonical_custom_themes(&state.chrome_build.preferences);
+        let ids: std::collections::BTreeSet<String> = before.keys().chain(after.keys()).cloned().collect();
+        let projected = replay_ui_preferences(&log);
+        for id in ids {
+            let next = after.get(&id).cloned();
+            if projected.custom_themes.get(&id) != next.as_ref() {
+                log.events.push(set_custom_theme(id, next));
+            }
+        }
+    }
+    prefs_set(UI_PREFERENCES_CONFIG_SCHEMA, &encode_ui_preferences_event_log(&log));
 }
 
 impl ShellState {
@@ -12203,10 +12319,11 @@ impl ShellState {
         }
         self.chrome_present.preferences_loaded = true;
         let locks = shell_pref_locks();
-        self.appearance_id = locks.appearance.clone().unwrap_or_else(|| prefs_get(UI_CHROME_APPEARANCE_STORAGE_KEY).filter(|value| value == "light" || value == "dark" || value == "system").unwrap_or_else(|| "system".to_string()));
-        self.locale_id = locks.locale.clone().unwrap_or_else(|| prefs_get(UI_CHROME_LOCALE_STORAGE_KEY).filter(|value| value == "en" || value == "de").unwrap_or_else(|| "en".to_string()));
-        self.terminology_id = locks.terminology.clone().unwrap_or_else(|| prefs_get(UI_CHROME_TERMINOLOGY_STORAGE_KEY).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string()));
-        self.driver_id = prefs_get(UI_CHROME_DRIVER_STORAGE_KEY).unwrap_or_else(|| "default".to_string());
+        let preferences = read_ui_preferences();
+        self.appearance_id = locks.appearance.clone().unwrap_or_else(|| appearance_id(preferences.appearance));
+        self.locale_id = locks.locale.clone().unwrap_or_else(|| locale_id(preferences.locale));
+        self.terminology_id = locks.terminology.clone().or(preferences.terminology).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
+        self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
         self.chrome_build.preferences = with_chrome_prefs(|preferences| preferences.clone());
         if let Some(locked_theme) = &locks.theme_id {
             set_active_theme_id(locked_theme);
@@ -12224,23 +12341,8 @@ impl ShellState {
         if self.chrome_present.last_synced_preferences.as_ref() == Some(&snapshot) {
             return;
         }
-        let locks = shell_pref_locks();
-        if locks.appearance.is_none() {
-            prefs_set(UI_CHROME_APPEARANCE_STORAGE_KEY, &snapshot.appearance_id);
-        }
-        prefs_set(UI_CHROME_DRIVER_STORAGE_KEY, &snapshot.driver_id);
-        if locks.locale.is_none() {
-            prefs_set(UI_CHROME_LOCALE_STORAGE_KEY, &snapshot.locale_id);
-        }
-        if locks.terminology.is_none() {
-            prefs_set(UI_CHROME_TERMINOLOGY_STORAGE_KEY, &snapshot.terminology_id);
-        }
-        if locks.theme_id.is_none() {
-            prefs_set(UI_CHROME_THEME_ID_STORAGE_KEY, &snapshot.theme_id);
-        }
-        prefs_set(UI_CHROME_LAYOUT_STORAGE_KEY, &snapshot.ui_layout);
+        persist_ui_preferences(self, self.chrome_present.last_synced_preferences.as_ref());
         prefs_set(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, &snapshot.worker_count.to_string());
-        persist_custom_themes(&self.chrome_build.preferences);
         self.chrome_present.last_synced_preferences = Some(snapshot);
     }
 }

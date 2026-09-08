@@ -6,7 +6,7 @@ export function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv 
   env.NX_NATIVE_COMMAND_RUNNER ??= "false";
   env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT ??= "false";
   env.NX_TUI ??= "false";
-  env.NX_ISOLATE_PLUGINS = "false";
+  env.NX_ISOLATE_PLUGINS ??= "false";
   env.NX_VERBOSE_LOGGING ??= "false";
   env.NX_PERF_LOGGING ??= "false";
   env.NX_NATIVE_LOGGING ??= "nx=warn";

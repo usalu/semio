@@ -1,4 +1,3 @@
-
 //! 🧪️ A minimal in-process fake — no wasm — that faithfully implements the SAME two-phase wire
 //! contract §5 semantics `VcsArtifactApp::transaction_prepare/commit/rollback/undo/redo` (W1-B)
 //! implements: one `Option<pending>` per instance, `TransactionCommit` applies as one edit

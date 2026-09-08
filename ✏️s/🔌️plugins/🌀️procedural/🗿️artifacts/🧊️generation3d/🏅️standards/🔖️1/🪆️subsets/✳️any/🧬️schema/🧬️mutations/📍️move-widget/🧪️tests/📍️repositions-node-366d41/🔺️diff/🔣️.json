@@ -3,9 +3,9 @@
   "fixture": {
     "schema": "flow.fixture",
     "camera": {
-      "x": 0.0,
-      "y": 0.0,
-      "zoom": 1.0
+      "x": 0,
+      "y": 0,
+      "zoom": 1
     },
     "widgets": [
       {
@@ -46,6 +46,5 @@
   "sunJson": null,
   "selectedGenerationId": null,
   "generationPreviewText": null,
-  "activeUtilityId": null,
-  "locale": null
+  "activeUtilityId": null
 }

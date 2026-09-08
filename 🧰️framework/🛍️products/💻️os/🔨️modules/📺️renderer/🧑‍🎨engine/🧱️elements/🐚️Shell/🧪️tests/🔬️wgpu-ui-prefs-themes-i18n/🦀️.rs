@@ -25,9 +25,10 @@ fn file_prefs_store_round_trips_through_disk() {
         })
         .to_string(),
     );
-    assert_eq!(prefs_get_from(&store, UI_CHROME_APPEARANCE_STORAGE_KEY), None);
-    prefs_set_in(&mut store, UI_CHROME_APPEARANCE_STORAGE_KEY, "dark");
-    assert_eq!(prefs_get_from(&store, UI_CHROME_APPEARANCE_STORAGE_KEY), Some("dark".to_string()));
+    let events = serde_json::json!({ "version": 1, "events": [{ "mutation": "setAppearance", "appearance": "dark" }] }).to_string();
+    assert_eq!(prefs_get_from(&store, UI_PREFERENCES_CONFIG_SCHEMA), None);
+    prefs_set_in(&mut store, UI_PREFERENCES_CONFIG_SCHEMA, &events);
+    assert_eq!(prefs_get_from(&store, UI_PREFERENCES_CONFIG_SCHEMA), Some(events.clone()));
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(1);
     let raw = loop {
         if let Ok(raw) = system_fs::read_to_string(&path) {
@@ -40,11 +41,30 @@ fn file_prefs_store_round_trips_through_disk() {
     };
     let reloaded: HashMap<String, String> = serde_json::from_str(&raw).expect("valid JSON");
     let config: Value = serde_json::from_str(reloaded.get(OS_SHELL_CONFIG_STORAGE_KEY).expect("one config document")).expect("valid config JSON");
-    assert_eq!(config["preferences"][UI_CHROME_APPEARANCE_STORAGE_KEY], "dark");
+    assert_eq!(serde_json::from_str::<Value>(config["preferences"][UI_PREFERENCES_CONFIG_SCHEMA].as_str().expect("event log string")).expect("event log JSON")["events"][0]["appearance"], "dark");
     assert_eq!(config["dockLayouts"]["apps"], serde_json::json!({}));
     assert_eq!(config["namedLayouts"]["draw"][0]["id"], "wide", "preference writes must preserve sibling projections");
     assert_eq!(reloaded.len(), 1, "wgpu preferences use the shared OS config authority");
     let _ = system_fs::remove_file(&path);
+}
+
+#[test]
+fn canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript() {
+    #[derive(Deserialize)]
+    struct Fixture {
+        version: u8,
+        events: Vec<Value>,
+        expected: UiPreferences,
+    }
+    let fixture: Fixture = serde_json::from_str(include_str!("../../../../🎚️UiPreferences/🧪️tests/🎚️canonical-os-ui-preferences/🧫️fixtures/🔁️event-replay.json")).expect("shared event fixture");
+    let events = fixture
+        .events
+        .iter()
+        .map(|event| decode_ui_preferences_config_mutation_json(&event.to_string()).expect("canonical mutation JSON"))
+        .collect();
+    let projection = replay_ui_preferences(&UiPreferencesEventLog { version: fixture.version, events });
+    assert_eq!(projection, fixture.expected);
+    println!("[DEBUG] wgpu replayed the shared OS UI preference event fixture");
 }
 
 /// 🧪️ `env_lock` treats an empty-string env value the same as unset (matches

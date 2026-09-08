@@ -408,3 +408,8 @@ pub fn diff_set_snapshot(snapshot: &En1998Snapshot) -> En1998Diff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type En1998DiffText = String;
+//#endregion 🚚️Carrier

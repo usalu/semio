@@ -54,7 +54,7 @@
     "openWithFocusRole": null,
     "activeTutorialId": null,
     "uiAppearance": "system",
-    "uiLayout": "default",
+    "uiLayout": "desktop",
     "uiDriverId": "",
     "uiCustomDrivers": {},
     "uiDriverDraft": null,
@@ -134,7 +134,7 @@
       "openWithFocusRole": null,
       "activeTutorialId": null,
       "uiAppearance": "system",
-      "uiLayout": "default",
+      "uiLayout": "desktop",
       "uiDriverId": "default",
       "uiCustomDrivers": {},
       "uiDriverDraft": null,
@@ -158,7 +158,7 @@
     "events": [
       {
         "type": "applied",
-        "capabilityId": "ui.driver.setActive",
+        "capabilityId": "os.setDriver",
         "revision": 1
       }
     ]

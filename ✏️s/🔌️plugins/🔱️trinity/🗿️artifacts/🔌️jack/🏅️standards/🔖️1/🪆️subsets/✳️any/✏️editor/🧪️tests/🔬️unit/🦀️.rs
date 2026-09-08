@@ -26,7 +26,6 @@ async fn trinity_jack_command_text_and_binary_round_trip() {
         TrinityJackCommand::SetViewport { viewport_json: "{\"x\":1.0,\"y\":2.0,\"zoom\":1.0}".into() },
         TrinityJackCommand::TextSelect { start: 3, end: 9 },
         TrinityJackCommand::SetLodMode { window_id: "trinity-jack-graph".into(), value: "compact".into() },
-        TrinityJackCommand::SetLocale { value: "de-DE".into() },
     ];
     for command in commands {
         let bytes = command.encode_op().expect("encode");
@@ -255,8 +254,8 @@ async fn inspection_panel_renders_the_selection_prompt() {
 #[semio_framework_async_macros::async_test]
 async fn document_tree_de_locale_translates_labels() {
     let mut app = new_app().await;
-    app.dispatch_typed(TrinityJackCommand::SetLocale { value: "de-DE".into() }, &meta("local")).await.expect("set locale");
-    let node = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).await.expect("render");
+    let view = ViewModel { locale: semio_framework_plugin::Locale::De, ..ViewModel::default() };
+    let node = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &view).await.expect("render");
     assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains("Stücke"));
 }
 

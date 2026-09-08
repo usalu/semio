@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn coordinate(fields: [&str; 9]) -> (DocumentScope, ArtifactRef, ArtifactDialect) {
@@ -24,7 +23,7 @@ fn oracle(fields: [&str; 9], ordinal: u32) -> (String, usize) {
 
 #[test]
 fn initial_child_identity_matches_neutral_coordinates_and_blake3() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["authority"], "none");
     assert_eq!(fixture["maximumFieldBytes"], INITIAL_CHILD_FIELD_BYTES);
     assert_eq!(fixture["maximumChildren"], INITIAL_CHILD_ORDINAL_LIMIT);

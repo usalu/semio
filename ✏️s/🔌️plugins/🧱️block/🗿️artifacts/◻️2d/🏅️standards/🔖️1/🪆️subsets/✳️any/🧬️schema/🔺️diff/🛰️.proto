@@ -29,7 +29,6 @@ message Block2dDiff {
   // @state presence
   optional Block2dStringList selected_ids = 12;
   // @state config
-  optional string locale = 13;
 }
 
 message BlockKindIdentity {

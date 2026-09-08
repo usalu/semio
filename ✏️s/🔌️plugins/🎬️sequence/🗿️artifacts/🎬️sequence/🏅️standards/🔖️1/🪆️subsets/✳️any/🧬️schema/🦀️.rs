@@ -1,6 +1,6 @@
 //! 🧬️ Sequence artifact schema — every field of the artifact with its state class.
 
-use crate::{default_snapshot, SequenceCamera, SequenceContentChild, SequenceMutation, SequenceSnapshot, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::{default_snapshot, SequenceContentChild, SequenceMutation, SequenceSnapshot, SEQUENCE_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use store::ArtifactDsl;
 
@@ -24,8 +24,6 @@ pub struct SequenceArtifact {
     pub orientation: String,
     #[state(config)]
     pub camera: SequenceCamera,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -38,7 +36,6 @@ impl Default for SequenceArtifact {
             last_run_json: String::new(),
             orientation: "leftRight".into(),
             camera: SequenceCamera::default(),
-            locale: "en-US".into(),
         }
     }
 }
@@ -51,7 +48,7 @@ impl SequenceArtifact {
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
     pub fn from_snapshot(snapshot: SequenceSnapshot) -> Self {
-        Self { schema: snapshot.schema, content: snapshot.content, last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default(), locale: "en-US".into() }
+        Self { schema: snapshot.schema, content: snapshot.content, last_run_json: String::new(), orientation: "leftRight".into(), camera: SequenceCamera::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -119,3 +116,8 @@ pub fn sequence_example_json() -> String {
 /// algebra), so the trivial-subset shape applies verbatim.
 pub type Construction = semio_framework_plugin::app::SnapshotBuilder<SequenceSnapshot, SequenceMutation>;
 //#endregion 🏗️Construction
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::SequenceCamera;
+//#endregion 🔁️Re-exports

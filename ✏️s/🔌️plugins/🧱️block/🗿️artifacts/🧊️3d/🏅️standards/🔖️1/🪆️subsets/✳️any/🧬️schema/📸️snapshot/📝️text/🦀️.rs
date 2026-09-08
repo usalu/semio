@@ -38,3 +38,8 @@ pub fn block3d_boot_snapshot() -> Block3dSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Block3dSnapshotText = String;
+//#endregion 🚚️Carrier

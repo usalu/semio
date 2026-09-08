@@ -38,7 +38,7 @@
                 0.5,
                 0.25,
                 0.75,
-                1.0
+                1
               ],
               "stroke": null,
               "wrap_mode": null,
@@ -64,6 +64,5 @@
   "previewCameraY": null,
   "previewCameraZoom": null,
   "dropPreview": null,
-  "locale": null,
   "hoveredId": null
 }

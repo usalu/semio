@@ -35,9 +35,6 @@ async fn paint_stroke_drag_is_one_undo_step_with_pixel_restoration() {
 #[semio_framework_async_macros::async_test]
 async fn eyedropper_updates_paint_color_without_operations() {
     let mut a = app().await;
-    // 🧰️ The host-owned utility switch bridges into config.paint_utility and emits no operations.
-    let switch = a.dispatch_typed(LowpolyCommand::SetActiveUtility(crate::editor::lowpoly::commands::utility::set_active_utility::SetActiveUtility { utility_id: "eyedropper".into() }), &testkit::meta("a")).await.unwrap();
-    assert!(switch.mutations.is_empty());
     let result = a.dispatch_typed(LowpolyCommand::PaintSample(super::paint_sample::PaintSample { object_id: None, u: Some(0.5), v: Some(0.5), x: None, y: None }), &testkit::meta("a")).await.unwrap();
     assert!(result.mutations.is_empty());
 }

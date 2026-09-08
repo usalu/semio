@@ -1,6 +1,5 @@
 //! 🧮️ CAD app — `ArtifactApp::Config`: every field that used to live in the app struct's ephemeral
 //! `CadPlayRuntime` (selection, hover, engagement session, per-pane cameras, sun, dislocate handles)
-//! plus the locale/terminology/active-utility the shell used to push through the deleted `ViewModel`.
 //! Session view state round-trips through the config `ArtifactStore` exactly like document content,
 //! with a real `backwards` via `CadConfigMutation` at the bottom of this file.
 
@@ -142,13 +141,6 @@ pub struct CadConfig {
     pub dislocate_energy: CadDislocateOptions,
     #[dsl(block)]
     pub dislocate_structure_classic: CadDislocateOptions,
-    /// 🧰️ The active transform-gumball utility — was read off `view_state.active_utility_id`
-    /// (host-pushed `ViewModel`, deleted by B1).
-    pub active_utility_id: String,
-    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
-    /// 🗣️ Terminology id (`"native"`/`"reuse"`) — was read off `view_state.terminology`.
-    pub terminology: String,
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `cad.computer` hot-swap installs.
     #[value(default = "default_contributions_json")]
     pub contributions_json: String,
@@ -226,9 +218,6 @@ impl Default for CadConfig {
             dislocate_building: CadDislocateOptions::default(),
             dislocate_energy: CadDislocateOptions::default(),
             dislocate_structure_classic: CadDislocateOptions::default(),
-            active_utility_id: "move".into(),
-            locale: "en-US".into(),
-            terminology: "native".into(),
             contributions_json: default_contributions_json(),
         }
     }

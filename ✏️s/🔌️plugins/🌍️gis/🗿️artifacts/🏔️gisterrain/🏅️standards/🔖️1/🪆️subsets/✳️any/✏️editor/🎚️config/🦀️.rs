@@ -23,7 +23,6 @@ pub struct Gis3dConfig {
     /// 🎥️ The free/live world camera (`{position,target,up,fov}` JSON).
     pub camera_json: String,
     /// 🗣️ BCP-47 locale tag.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -79,7 +78,7 @@ fn default_gis3d_camera_json() -> String {
 
 impl Default for Gis3dConfig {
     fn default() -> Self {
-        Self { camera_json: default_gis3d_camera_json(), locale: "en-US".into() }
+        Self { camera_json: default_gis3d_camera_json(), }
     }
 }
 
@@ -124,13 +123,13 @@ impl protocol::OpBinary for Gis3dConfigMutation {
 //#endregion 🔖️OpCodec
 
 //#region 🌉️TestBridge
-/// 🔮️ One JSON report of applying a `set-camera`/`set-locale` mutation to a `Gis3dConfig`, for a
+/// 🔮️ One JSON report of applying a `set-camera` mutation to a `Gis3dConfig`, for a
 /// language-neutral test adapter — the identical shape and purpose
 /// `crate::gis_terrain_mutation_report_json` already establishes for the
 /// terrain's own document-level mutations, applied here to gis3d's editor-config artifact (shard
 /// G4, this ticket).
 ///
-/// Every field of `Gis3dConfig` (`camera_json`, `locale`) is a plain `String` — this bridge never
+/// Every field of `Gis3dConfig` is a plain `String` — this bridge never
 /// needs `serde_json::from_str::<Gis3dConfig>` at all, and so never needs this struct's own
 /// `#[cfg_attr(test, derive(Serialize, Deserialize))]` (unavailable to a `sut`-feature adapter
 /// crate, which links this crate as an ordinary dependency, not under `cfg(test)`). Every type in
@@ -141,18 +140,17 @@ impl protocol::OpBinary for Gis3dConfigMutation {
 /// second copy of the committed specification vector, free to drift away from it.
 ///
 /// `Mutation<Gis3dConfig>`/`MutationDiff<Gis3dConfig>` (via `#[derive(dsl::Mutations)]` on
-/// `Gis3dConfigMutation`, `#[derive(dsl::MutationLeaf)]` on `SetCamera`/`SetLocale`) are the
+/// `Gis3dConfigMutation` and `#[derive(dsl::MutationLeaf)]` on `SetCamera` are the
 /// UNCONDITIONAL mutation-engine traits every leaf's own `diff`/`apply`/`inverse` already exercise
 /// in this file's own `#[cfg(test)] mod tests` above — never gated by `cfg(test)`, unlike
 /// `Serialize`/`Deserialize`/`ToValue`/`FromValue` — so this bridge reaches the exact same real
 /// production behavior those unit tests already assert, through a route this crate's own default
 /// build always compiles.
-pub fn gis3d_config_mutation_report_json(camera_json: &str, locale: &str, kind: &str, value: &str) -> Result<String, String> {
+pub fn gis3d_config_mutation_report_json(camera_json: &str, kind: &str, value: &str) -> Result<String, String> {
     use protocol::{Mutation, MutationDiff};
-    let base = Gis3dConfig { camera_json: camera_json.to_string(), locale: locale.to_string() };
+    let base = Gis3dConfig { camera_json: camera_json.to_string() };
     let mutation: Gis3dConfigMutation = match kind {
         "set-camera" => Gis3dConfigMutation::SetCamera(SetCamera { camera_json: value.to_string() }),
-        "set-locale" => Gis3dConfigMutation::SetLocale(SetLocale { value: value.to_string() }),
         other => return Err(format!("gis3d_config_mutation_report_json: unknown kind {other:?}")),
     };
     let applied = mutation.diff(&base).diff().apply(&base).map_err(|error| error.to_string())?;
@@ -162,9 +160,9 @@ pub fn gis3d_config_mutation_report_json(camera_json: &str, locale: &str, kind: 
         undone = step.diff(&undone).diff().apply(&undone).map_err(|error| error.to_string())?;
     }
     let report = serde_json::json!({
-        "base": {"cameraJson": base.camera_json, "locale": base.locale},
-        "snapshot": {"cameraJson": applied.camera_json, "locale": applied.locale},
-        "inverseSnapshot": {"cameraJson": undone.camera_json, "locale": undone.locale},
+        "base": {"cameraJson": base.camera_json},
+        "snapshot": {"cameraJson": applied.camera_json},
+        "inverseSnapshot": {"cameraJson": undone.camera_json},
     });
     Ok(report.to_string())
 }

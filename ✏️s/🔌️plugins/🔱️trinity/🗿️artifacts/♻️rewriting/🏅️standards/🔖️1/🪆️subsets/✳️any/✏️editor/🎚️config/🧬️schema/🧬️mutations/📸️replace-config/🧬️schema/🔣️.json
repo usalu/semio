@@ -27,25 +27,16 @@
           ],
           "additionalProperties": false
         },
-        "reorganizeEpoch": {
-          "type": "integer",
-          "minimum": 0
-        },
         "lodModeByWindow": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           }
-        },
-        "locale": {
-          "type": "string"
         }
       },
       "required": [
         "beforePaneCamera",
-        "reorganizeEpoch",
-        "lodModeByWindow",
-        "locale"
+        "lodModeByWindow"
       ],
       "additionalProperties": false
     }

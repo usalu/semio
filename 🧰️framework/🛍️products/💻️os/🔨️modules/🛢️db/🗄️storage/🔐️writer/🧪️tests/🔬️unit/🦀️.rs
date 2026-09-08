@@ -15,7 +15,7 @@ impl WalWriterGuard for usize {
 }
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧪️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap()
 }
 fn backend(slot: u16) -> DbIoBackendControl {
     DbIoBackendControl::Memory { slot, generation: 1 }

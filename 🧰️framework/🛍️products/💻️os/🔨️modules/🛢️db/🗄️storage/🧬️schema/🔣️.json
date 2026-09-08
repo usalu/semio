@@ -7,25 +7,102 @@
       "title": "Filesystem Directory Durability V1",
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "create", "seal", "delete", "replace", "duplicatePreservesBytes", "deleteFaultState", "recoverySync"],
+      "required": [
+        "schema",
+        "create",
+        "seal",
+        "delete",
+        "replace",
+        "duplicatePreservesBytes",
+        "deleteFaultState",
+        "recoverySync"
+      ],
       "properties": {
-        "schema": { "const": "semio.db.fs-directory-durability/v1" },
-        "recoverySync": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["wal-file-synced", "wal-parent-synced"] } },
-        "create": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["segment-created", "segment-file-synced", "segment-parent-synced"] } },
-        "seal": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["marker-created", "marker-file-synced", "marker-parent-synced"] } },
-        "delete": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["segment-deleted", "segment-delete-parent-synced", "marker-deleted", "marker-delete-parent-synced"] } },
-        "replace": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["replacement-renamed", "replacement-parent-synced"] } },
-        "duplicatePreservesBytes": { "const": true },
-        "deleteFaultState": { "type": "string", "minLength": 1 }
+        "schema": {
+          "const": "semio.db.fs-directory-durability/v1"
+        },
+        "recoverySync": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "wal-file-synced",
+              "wal-parent-synced"
+            ]
+          }
+        },
+        "create": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "segment-created",
+              "segment-file-synced",
+              "segment-parent-synced"
+            ]
+          }
+        },
+        "seal": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "marker-created",
+              "marker-file-synced",
+              "marker-parent-synced"
+            ]
+          }
+        },
+        "delete": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "segment-deleted",
+              "segment-delete-parent-synced",
+              "marker-deleted",
+              "marker-delete-parent-synced"
+            ]
+          }
+        },
+        "replace": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "replacement-renamed",
+              "replacement-parent-synced"
+            ]
+          }
+        },
+        "duplicatePreservesBytes": {
+          "const": true
+        },
+        "deleteFaultState": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "BackendPoolUseV1": {
       "title": "Backend Pool Use V1",
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "cases", "opening"],
+      "required": [
+        "version",
+        "cases",
+        "opening"
+      ],
       "properties": {
-        "version": { "type": "integer", "minimum": 1 },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
         "cases": {
           "type": "array",
           "minItems": 9,
@@ -33,11 +110,39 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["name", "registeredUses", "expected"],
+            "required": [
+              "name",
+              "registeredUses",
+              "expected"
+            ],
             "properties": {
-              "name": { "enum": ["registered-backend-blocks-shutdown", "task-derives-registered-pool", "dropped-facade-retains-use", "compaction-acquires-before-admission", "forged-kind-rejected-before-page-admission", "rollback-reserved-before-owner-transfer", "all-retirement-tiers-full-return-exact-executor", "committed-rollback-retains-use-until-terminal", "prepared-post-transfer-refusal-returns-close-owner"] },
-              "registeredUses": { "type": "integer", "minimum": 0 },
-              "expected": { "enum": ["busy", "registered-pool", "deferred-close", "retained-rejection", "stale-generation", "exact-owner"] }
+              "name": {
+                "enum": [
+                  "registered-backend-blocks-shutdown",
+                  "task-derives-registered-pool",
+                  "dropped-facade-retains-use",
+                  "compaction-acquires-before-admission",
+                  "forged-kind-rejected-before-page-admission",
+                  "rollback-reserved-before-owner-transfer",
+                  "all-retirement-tiers-full-return-exact-executor",
+                  "committed-rollback-retains-use-until-terminal",
+                  "prepared-post-transfer-refusal-returns-close-owner"
+                ]
+              },
+              "registeredUses": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "expected": {
+                "enum": [
+                  "busy",
+                  "registered-pool",
+                  "deferred-close",
+                  "retained-rejection",
+                  "stale-generation",
+                  "exact-owner"
+                ]
+              }
             }
           }
         },
@@ -48,14 +153,39 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["backend", "cause", "closeRequestedBeforeRetry", "poolShutdownAfterDrain", "ledgerBaseline", "reopens"],
+            "required": [
+              "backend",
+              "cause",
+              "closeRequestedBeforeRetry",
+              "poolShutdownAfterDrain",
+              "ledgerBaseline",
+              "reopens"
+            ],
             "properties": {
-              "backend": { "enum": ["fs", "sqlite"] },
-              "cause": { "enum": ["queued-drop", "path-type-conflict"] },
-              "closeRequestedBeforeRetry": { "type": "boolean" },
-              "poolShutdownAfterDrain": { "type": "boolean" },
-              "ledgerBaseline": { "type": "boolean" },
-              "reopens": { "type": "boolean" }
+              "backend": {
+                "enum": [
+                  "fs",
+                  "sqlite"
+                ]
+              },
+              "cause": {
+                "enum": [
+                  "queued-drop",
+                  "path-type-conflict"
+                ]
+              },
+              "closeRequestedBeforeRetry": {
+                "type": "boolean"
+              },
+              "poolShutdownAfterDrain": {
+                "type": "boolean"
+              },
+              "ledgerBaseline": {
+                "type": "boolean"
+              },
+              "reopens": {
+                "type": "boolean"
+              }
             }
           }
         }
@@ -65,43 +195,102 @@
       "title": "Memory Backing V1",
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "maximumInlineBytes", "writerTable", "controllerCredit", "tables", "admission", "closeWhileAdmitted", "retry", "sequentialTasks", "retainedPageResults", "sameSlotReuseBeforeOldResultClose", "taskSlotReleasedWhileResultRetained", "droppedResultRetirement"],
+      "required": [
+        "schema",
+        "maximumInlineBytes",
+        "writerTable",
+        "controllerCredit",
+        "tables",
+        "admission",
+        "closeWhileAdmitted",
+        "retry",
+        "sequentialTasks",
+        "retainedPageResults",
+        "sameSlotReuseBeforeOldResultClose",
+        "taskSlotReleasedWhileResultRetained",
+        "droppedResultRetirement"
+      ],
       "properties": {
-        "schema": { "const": "semio.db.memory-backing/v1" },
-        "maximumInlineBytes": { "type": "integer", "minimum": 1 },
+        "schema": {
+          "const": "semio.db.memory-backing/v1"
+        },
+        "maximumInlineBytes": {
+          "const": 16384
+        },
         "writerTable": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["slots", "separateBox"],
+          "required": [
+            "slots",
+            "separateBox"
+          ],
           "properties": {
-            "slots": { "type": "integer", "minimum": 1 },
-            "separateBox": { "const": true }
+            "slots": {
+              "const": 32
+            },
+            "separateBox": {
+              "const": true
+            }
           }
         },
         "controllerCredit": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["items", "controls", "bytesFormula"],
+          "required": [
+            "items",
+            "controls",
+            "bytesFormula"
+          ],
           "properties": {
-            "items": { "type": "integer", "minimum": 0 },
-            "controls": { "type": "integer", "minimum": 0 },
-            "bytesFormula": { "type": "string", "minLength": 1 }
+            "items": {
+              "const": 1
+            },
+            "controls": {
+              "const": 1
+            },
+            "bytesFormula": {
+              "const": "wake-plus-two-usize"
+            }
           }
         },
-        "closeWhileAdmitted": { "const": false },
-        "sequentialTasks": { "type": "integer", "minimum": 1 },
-        "retainedPageResults": { "type": "integer", "minimum": 0 },
-        "sameSlotReuseBeforeOldResultClose": { "const": true },
-        "taskSlotReleasedWhileResultRetained": { "const": true },
-        "droppedResultRetirement": { "enum": ["mounted-io-maintenance"] },
+        "closeWhileAdmitted": {
+          "const": false
+        },
+        "sequentialTasks": {
+          "const": 128
+        },
+        "retainedPageResults": {
+          "const": 44
+        },
+        "sameSlotReuseBeforeOldResultClose": {
+          "const": true
+        },
+        "taskSlotReleasedWhileResultRetained": {
+          "const": true
+        },
+        "droppedResultRetirement": {
+          "enum": [
+            "mounted-io-maintenance"
+          ]
+        },
         "retry": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["maximumAttempts", "timerDelayMs", "terminalAfterQueueRelease"],
+          "required": [
+            "maximumAttempts",
+            "timerDelayMs",
+            "terminalAfterQueueRelease"
+          ],
           "properties": {
-            "maximumAttempts": { "type": "integer", "minimum": 1 },
-            "timerDelayMs": { "type": "integer", "minimum": 0 },
-            "terminalAfterQueueRelease": { "const": true }
+            "maximumAttempts": {
+              "const": 8
+            },
+            "timerDelayMs": {
+              "const": 1
+            },
+            "terminalAfterQueueRelease": {
+              "const": true
+            }
           }
         },
         "tables": {
@@ -111,12 +300,29 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["name", "slots"],
+            "required": [
+              "name",
+              "slots"
+            ],
             "properties": {
-              "name": { "enum": ["wal", "snapshots", "payloads", "index-runs", "leases", "operations", "retired-pages", "retired-wal"] },
-              "slots": { "type": "integer", "minimum": 1 }
+              "name": {
+                "enum": [
+                  "wal",
+                  "snapshots",
+                  "payloads",
+                  "index-runs",
+                  "leases",
+                  "operations",
+                  "retired-pages",
+                  "retired-wal"
+                ]
+              },
+              "slots": {
+                "const": 64
+              }
             }
-          }
+          },
+          "maxItems": 8
         },
         "admission": {
           "type": "array",
@@ -126,10 +332,21 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["remaining", "accepted"],
+            "required": [
+              "remaining",
+              "accepted"
+            ],
             "properties": {
-              "remaining": { "enum": ["exact", "one-short", "zero"] },
-              "accepted": { "type": "boolean" }
+              "remaining": {
+                "enum": [
+                  "exact",
+                  "one-short",
+                  "zero"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              }
             }
           }
         }

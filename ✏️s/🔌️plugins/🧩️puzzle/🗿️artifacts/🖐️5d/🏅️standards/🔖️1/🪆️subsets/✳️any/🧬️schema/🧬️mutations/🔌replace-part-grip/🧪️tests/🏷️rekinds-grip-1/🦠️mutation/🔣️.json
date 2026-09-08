@@ -6,13 +6,13 @@
     "id": "grip-1",
     "gripKind": "grip-kind-c",
     "2d": {
-      "angle": 0.0
+      "angle": 0
     },
     "3d": {
       "position": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
       ]
     }
   }

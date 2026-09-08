@@ -10,8 +10,7 @@
     "activeUtilityId",
     "tracePointerGeneration",
     "tracePointerCompletedWork",
-    "tracePointerPendingWork",
-    "locale"
+    "tracePointerPendingWork"
   ],
   "properties": {
     "engagementInput": {
@@ -39,10 +38,6 @@
     "tracePointerPendingWork": {
       "type": "integer",
       "minimum": 0,
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   },

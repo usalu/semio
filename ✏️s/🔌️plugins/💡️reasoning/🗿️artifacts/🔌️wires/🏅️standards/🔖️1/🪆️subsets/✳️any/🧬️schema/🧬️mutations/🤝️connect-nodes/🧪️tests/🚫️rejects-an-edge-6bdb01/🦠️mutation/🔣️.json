@@ -7,10 +7,10 @@
     "target": "node-beta"
   },
   "relationship": {
-    "relationshipId": 1.0,
+    "relationshipId": 1,
     "kind": "owns",
-    "sourceIdentityId": 1.0,
-    "targetIdentityId": 2.0,
+    "sourceIdentityId": 1,
+    "targetIdentityId": 2,
     "edgeId": "edge-alpha-beta"
   }
 }

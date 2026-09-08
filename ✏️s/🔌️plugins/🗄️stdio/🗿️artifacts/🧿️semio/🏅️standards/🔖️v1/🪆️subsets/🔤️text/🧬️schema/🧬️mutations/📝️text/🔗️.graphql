@@ -4,3 +4,8 @@ type SemioTextMutationOpDsl {
   keyword: String!
   argsWire: String!
 }
+
+type SemioTextMutationText {
+  keyword: String
+  argsWire: String
+}

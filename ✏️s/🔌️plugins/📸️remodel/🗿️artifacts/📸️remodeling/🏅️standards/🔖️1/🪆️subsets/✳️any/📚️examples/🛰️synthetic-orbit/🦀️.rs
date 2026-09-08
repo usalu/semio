@@ -15,7 +15,7 @@
 //! `FRAMES` row, the same path a file-picker drop takes (that command mints its own stream-scoped
 //! asset ids; the ids below are the fixture's, and are what the ground truth is keyed by).
 //! Regenerate everything with `bun ./📜️script.ts regenerate-example` (the `#[test] #[ignore]` in
-//! `🧪️tests/🦀️.rs`).
+//! `🧪️tests/🧩️example/🦀️.rs`).
 
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 

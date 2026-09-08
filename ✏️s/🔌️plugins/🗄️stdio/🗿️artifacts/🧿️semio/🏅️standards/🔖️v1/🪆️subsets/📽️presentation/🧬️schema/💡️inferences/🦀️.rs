@@ -10,8 +10,7 @@ use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresenta
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::{compute_semio_presentation_outline, SemioPresentationOutline};
-
+use super::outline::{compute_semio_presentation_outline};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio presentation snapshot. One field per named inference
 /// under `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir).
@@ -86,3 +85,8 @@ pub fn semio_presentation_artifact_inference_descriptor() -> framework_schema::A
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::SemioPresentationOutline;
+//#endregion 🔁️Re-exports

@@ -90,9 +90,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: fixture } = await import("../../🧫️fixture/🔣️.json");
     const { default: schema } = await import("../../🧬️schema/🔣️.json");
     const { default: lifetimeSchema } = await import("../../../🚪️lifetime/🧬️schema/🔣️.json");
+    const { default: valueSchema } = await import("../../../../🌱️value/🧬️schema/🔣️.json");
     const { default: pageSchema } = await import("../../../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
-    const ajv = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema);
+    const ajv = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema);
     expect(ajv.getSchema(`${schema.$id}#/$defs/ReturnFixture`)!(fixture)).toBe(true);
     expect(ACTOR_RETURN_ORIGIN_MAXIMUM_BYTES).toBe(fixture.maximumOriginBytes);
     expect(ACTOR_RETURN_IDENTITY_MAXIMUM_BYTES).toBe(fixture.maximumIdentityBytes);
@@ -205,9 +206,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: fixture } = await import("../../🧫️fixture/🔣️.json");
     const { default: schema } = await import("../../🧬️schema/🔣️.json");
     const { default: lifetimeSchema } = await import("../../../🚪️lifetime/🧬️schema/🔣️.json");
+    const { default: valueSchema } = await import("../../../../🌱️value/🧬️schema/🔣️.json");
     const { default: pageSchema } = await import("../../../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
-    const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("https://semio.tech/schema/framework/actor/return/schema.json#/$defs/Result")!;
+    const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("https://semio.tech/schema/framework/actor/return/schema.json#/$defs/Result")!;
     const oracle = await resultOracle();
     for (const row of fixture.resultContradictions) {
       expect(validate(row)).toBe(false);
@@ -267,9 +269,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: schema } = await import("../../🌿️framing/🧬️schema/🔣️.json");
     const { default: returned } = await import("../../🧬️schema/🔣️.json");
     const { default: lifetime } = await import("../../../🚪️lifetime/🧬️schema/🔣️.json");
+    const { default: value } = await import("../../../../🌱️value/🧬️schema/🔣️.json");
     const { default: page } = await import("../../../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
-    const ajv = new Ajv({ strict: true }).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(schema);
+    const ajv = new Ajv({ strict: true }).addSchema(value).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(schema);
     expect(ajv.validate(schema, law)).toBe(true); const oracle = await resultOracle();
     for (const row of fixture.resultVectors) {
       const value = hydrateResult(row.value); const bytes = oracle(value);

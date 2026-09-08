@@ -45,13 +45,5 @@ mod viewer { pub use semio_s_artifact_animate_presentation::viewer::*; }
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::AnimateApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_presentation_demo_session;
-    pub use crate::artifacts::presentation::examples::demo as art_presentation_demo;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

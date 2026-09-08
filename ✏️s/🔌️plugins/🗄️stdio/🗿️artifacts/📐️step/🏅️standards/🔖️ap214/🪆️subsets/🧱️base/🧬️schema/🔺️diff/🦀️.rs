@@ -12,7 +12,6 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-use crate::schema::snapshot::{StepComplexType, StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
 use crate::StepSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -1430,3 +1429,13 @@ mod tests;
 #[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
 mod handcrafted_diff_codec_tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::schema::snapshot::StepValue;
+pub use crate::schema::snapshot::StepComplexType;
+pub use crate::schema::snapshot::StepEntity;
+pub use crate::schema::snapshot::StepFileDescription;
+pub use crate::schema::snapshot::StepFileName;
+pub use crate::schema::snapshot::StepFileSchema;
+//#endregion 🔁️Re-exports

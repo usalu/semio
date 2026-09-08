@@ -8,7 +8,6 @@ use crate::En1994Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::En1994Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1994 snapshot. One field per named inference under
@@ -80,7 +79,6 @@ use crate::standards::v1::subsets::any::schema::{check_composite_beam, part_1_1,
 /// `⚙️engine`. `evaluate` is the `En1994Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
-
 fn parse_fire_rating(value: &str) -> part_1_2::FireRating {
     match value.to_ascii_lowercase().as_str() {
         "r30" => part_1_2::FireRating::R30,
@@ -160,3 +158,8 @@ pub fn evaluate(document: &En1994Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::En1994Outline;
+//#endregion 🔁️Re-exports

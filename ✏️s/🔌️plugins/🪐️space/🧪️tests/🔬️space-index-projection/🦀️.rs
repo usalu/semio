@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow, empty_space_index_snapshot};
+use semio_s_artifact_space_space::standards::v1::subsets::any::schema::snapshot::{empty_space_index_snapshot, SpaceArtifactDialect, SpaceArtifactRow};
 
 #[semio_framework_async_macros::async_test]
 async fn projects_every_row_into_a_root_level_collection_entry() {

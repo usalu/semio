@@ -3,7 +3,7 @@
   "id": "orbit-absent",
   "frame": {
     "index": 10,
-    "timestampMs": 5000.0,
+    "timestampMs": 5000,
     "assetId": "orbit-frame-00"
   },
   "kind": "video"

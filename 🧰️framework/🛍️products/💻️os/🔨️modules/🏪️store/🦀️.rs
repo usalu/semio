@@ -13975,14 +13975,7 @@ where
         let current = Self::fold_history(&envelope, &loaded_applied_edit_ids).await?;
         let initial_digest = *semio_framework_hash::hash(&envelope.vcs.initial_snapshot.encode_pack()).as_bytes();
         let catalog = ArtifactStoreInitializationOwnerCatalog::try_new().map_err(|reason| VcsError::ValidationFailed(reason.into()))?;
-        let ArtifactStoreInitializationOwnerCatalog {
-            mut applied_edit_ids,
-            mut redo_edit_ids,
-            mut cursor_applied_edit_ids,
-            mut cursor_redo_edit_ids,
-            applied_revision,
-            redo_revision,
-        } = catalog;
+        let ArtifactStoreInitializationOwnerCatalog { mut applied_edit_ids, mut redo_edit_ids, mut cursor_applied_edit_ids, mut cursor_redo_edit_ids, applied_revision, redo_revision } = catalog;
         cursor_applied_edit_ids.extend(loaded_applied_edit_ids.iter().cloned());
         cursor_redo_edit_ids.extend(loaded_redo_edit_ids.iter().cloned());
         applied_edit_ids.extend(loaded_applied_edit_ids);
@@ -17033,10 +17026,10 @@ impl OpBinary for BackboneMessage {
 }
 //#endregion 🔖️OpCodec
 
-pub const BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES: usize = 256 * 1024;
+pub const BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES: usize = crate::os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES;
 pub const BACKBONE_SNAPSHOT_MESSAGE_MAXIMUM_BYTES: usize = 4 * 1024 * 1024;
-pub const BACKBONE_CHANNEL_MAXIMUM_MESSAGES: usize = 64;
-pub const BACKBONE_CHANNEL_MAXIMUM_BYTES: usize = 4 * 1024 * 1024;
+pub const BACKBONE_CHANNEL_MAXIMUM_MESSAGES: usize = crate::os_spr::DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES;
+pub const BACKBONE_CHANNEL_MAXIMUM_BYTES: usize = crate::os_spr::DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES;
 
 pub fn decode_backbone_message_exact(bytes: &[u8]) -> Result<BackboneMessage, VcsError> {
     if bytes.len() > BACKBONE_SNAPSHOT_MESSAGE_MAXIMUM_BYTES {
@@ -17218,16 +17211,24 @@ pub struct ActorBackboneChannelOwner {
     state: Arc<Mutex<ActorBackboneChannelState>>,
 }
 
+fn push_actor_backbone_outbound(state: &Arc<Mutex<ActorBackboneChannelState>>, uri: &str, message: &[u8]) -> Result<(), VcsError> {
+    decode_hot_backbone_message_exact(message)?;
+    let mut state = state.lock().map_err(|_| VcsError::Backbone("actor backbone channel lock poisoned".into()))?;
+    if !state.accepting || state.uri != uri {
+        return Err(VcsError::Backbone("actor backbone channel is retired or addressed to another URI".into()));
+    }
+    let next_bytes = state.outbound_bytes.checked_add(message.len()).ok_or_else(|| VcsError::Backbone("actor backbone outbound byte accounting overflow".into()))?;
+    if state.outbound.len() >= BACKBONE_CHANNEL_MAXIMUM_MESSAGES || next_bytes > BACKBONE_CHANNEL_MAXIMUM_BYTES {
+        return Err(VcsError::Backbone("actor backbone outbound queue is saturated".into()));
+    }
+    state.outbound.push_back(message.to_vec());
+    state.outbound_bytes = next_bytes;
+    Ok(())
+}
+
 impl ActorBackboneChannelOwner {
     pub fn pair(uri: &str) -> (Arc<BackboneChannelPorts>, Self) {
-        let state = Arc::new(Mutex::new(ActorBackboneChannelState {
-            uri: uri.to_string(),
-            inbound: VecDeque::new(),
-            outbound: VecDeque::new(),
-            inbound_bytes: 0,
-            outbound_bytes: 0,
-            accepting: true,
-        }));
+        let state = Arc::new(Mutex::new(ActorBackboneChannelState { uri: uri.to_string(), inbound: VecDeque::new(), outbound: VecDeque::new(), inbound_bytes: 0, outbound_bytes: 0, accepting: true }));
         (Arc::new(BackboneChannelPorts::Actor(ActorBackboneChannelPort { state: state.clone() })), Self { state })
     }
 
@@ -17259,11 +17260,18 @@ impl ActorBackboneChannelOwner {
         Ok(message)
     }
 
+    #[cfg(test)]
+    pub fn push_outbound_for_test(&self, uri: &str, message: &[u8]) -> Result<(), VcsError> {
+        push_actor_backbone_outbound(&self.state, uri, message)
+    }
+
     pub fn begin_retire(&self) -> Result<(), VcsError> {
         let mut state = self.state.lock().map_err(|_| VcsError::Backbone("actor backbone channel lock poisoned".into()))?;
         state.accepting = false;
         state.inbound.clear();
+        state.outbound.clear();
         state.inbound_bytes = 0;
+        state.outbound_bytes = 0;
         Ok(())
     }
 
@@ -17280,20 +17288,7 @@ pub enum BackboneChannelPorts {
 impl BackboneChannelPort for BackboneChannelPorts {
     async fn send(&self, uri: &str, message: &[u8]) -> Result<(), VcsError> {
         match self {
-            Self::Actor(port) => {
-                decode_hot_backbone_message_exact(message)?;
-                let mut state = port.state.lock().map_err(|_| VcsError::Backbone("actor backbone channel lock poisoned".into()))?;
-                if !state.accepting || state.uri != uri {
-                    return Err(VcsError::Backbone("actor backbone channel is retired or addressed to another URI".into()));
-                }
-                let next_bytes = state.outbound_bytes.checked_add(message.len()).ok_or_else(|| VcsError::Backbone("actor backbone outbound byte accounting overflow".into()))?;
-                if state.outbound.len() >= BACKBONE_CHANNEL_MAXIMUM_MESSAGES || next_bytes > BACKBONE_CHANNEL_MAXIMUM_BYTES {
-                    return Err(VcsError::Backbone("actor backbone outbound queue is saturated".into()));
-                }
-                state.outbound.push_back(message.to_vec());
-                state.outbound_bytes = next_bytes;
-                Ok(())
-            }
+            Self::Actor(port) => push_actor_backbone_outbound(&port.state, uri, message),
         }
     }
 

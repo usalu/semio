@@ -9,9 +9,9 @@
         "url": "/mesh/detail.glb",
         "format": "glb",
         "origin": [
-          0.0,
-          4.0,
-          0.0
+          0,
+          4,
+          0
         ],
         "orientation": null,
         "scale": null
@@ -35,6 +35,5 @@
   "centerModel": null,
   "fitRevision": null,
   "cameraDraftLabel": null,
-  "camera": null,
-  "locale": null
+  "camera": null
 }

@@ -3,8 +3,8 @@
 use super::sign_out::SignOut;
 use super::IdentityConfigMutation;
 use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 use semio_framework_os_kernel::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Schema
 /// 🪪️ The OS-wide signed-in session.
@@ -73,25 +73,13 @@ pub fn sign_in(identity: Identity) -> IdentityConfigMutation {
 
 impl From<Identity> for SignIn {
     fn from(identity: Identity) -> Self {
-        Self {
-            user_id: identity.user_id,
-            email: identity.email,
-            display_name: identity.display_name,
-            hub_base_url: identity.hub_base_url,
-            issued_at_ms: identity.issued_at_ms,
-        }
+        Self { user_id: identity.user_id, email: identity.email, display_name: identity.display_name, hub_base_url: identity.hub_base_url, issued_at_ms: identity.issued_at_ms }
     }
 }
 
 impl From<&SignIn> for Identity {
     fn from(payload: &SignIn) -> Self {
-        Self {
-            user_id: payload.user_id.clone(),
-            email: payload.email.clone(),
-            display_name: payload.display_name.clone(),
-            hub_base_url: payload.hub_base_url.clone(),
-            issued_at_ms: payload.issued_at_ms,
-        }
+        Self { user_id: payload.user_id.clone(), email: payload.email.clone(), display_name: payload.display_name.clone(), hub_base_url: payload.hub_base_url.clone(), issued_at_ms: payload.issued_at_ms }
     }
 }
 

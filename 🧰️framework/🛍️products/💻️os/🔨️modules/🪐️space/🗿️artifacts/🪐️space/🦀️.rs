@@ -842,5 +842,5 @@ pub fn package_descriptor() -> Result<SpaceArtifactPackage, SpacePackageSchemaEr
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🪐️space/🦀️.rs"]
 mod tests;

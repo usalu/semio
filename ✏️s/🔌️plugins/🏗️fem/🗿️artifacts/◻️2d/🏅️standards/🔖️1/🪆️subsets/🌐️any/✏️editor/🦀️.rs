@@ -11,8 +11,7 @@ use crate::app_surface::{DisplayMode, ResultDisplay};
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
 use crate::Fem2dSnapshot;
 use crate::editor::fem2d::commands::{
-    add_area_load, add_bar, add_beam, add_combination, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_region, add_section, add_support, remove_selection, set_active_example, set_analysis_settings, set_camera, set_locale,
-    set_result_display, set_self_weight,
+    add_area_load, add_bar, add_beam, add_combination, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_region, add_section, add_support, remove_selection, set_active_example, set_analysis_settings, set_camera,     set_result_display, set_self_weight,
 };
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use crate::editor::fem2d::modes::edit;
@@ -66,7 +65,6 @@ semio_framework_plugin::app_commands! {
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "setCamera" as "camera" => set_camera::SetCamera,
         "setResultDisplay" as "result-display" => set_result_display::SetResultDisplay,
-        "setLocale" as "locale" => set_locale::SetLocale,
     }
 }
 
@@ -80,8 +78,7 @@ semio_framework_plugin::app_commands! {
 /// (pinned by `retained_routes_cover_every_command_exactly_once`).
 const FEM2D_RETAINED_TOOL_IDS: &[&str] = &[
     "addNode", "addBar", "addBeam", "addMaterial", "addSection", "addSupport", "addNodalLoad", "addMemberUdl", "addAreaLoad", "addRegion", "addLoadCase", "addCombination", "setSelfWeight", "setAnalysisSettings", "removeSelection", "setActiveExample", "setCamera",
-    "setResultDisplay", "setLocale",
-];
+    "setResultDisplay", ];
 const FEM2D_RETAINED_PAYLOAD_SCHEMA: &str = "fem.2d.tool-command.v1";
 const FEM2D_RETAINED_RAW_BYTES: usize = 65_536;
 const FEM2D_RETAINED_WORK_ITEMS: usize = 4_096;
@@ -112,7 +109,6 @@ const FEM2D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setResultDisplay", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
 ];
 
 fn fem2d_retained_contract() -> ToolExecutionContract {
@@ -142,6 +138,7 @@ fn fem2d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, NoDraftMutation>, Fault> {
     if !FEM2D_RETAINED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("fem2d-command-retained-route-rejected")); }
@@ -210,7 +207,7 @@ const FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES: usize = 4_096;
 
 //#region 🎟️Admission
 fn fem2d_config_text_bytes(config: &Fem2dConfig) -> usize {
-    [config.result_source_id.as_ref().map_or(0, String::len), config.result_mode.len(), config.locale.len()].into_iter().fold(0usize, usize::saturating_add)
+    [config.result_source_id.as_ref().map_or(0, String::len), config.result_mode.len()].into_iter().fold(0usize, usize::saturating_add)
 }
 
 fn fem2d_config_publication_bytes(mutation: &Fem2dConfigMutation) -> Result<usize, String> {
@@ -218,7 +215,6 @@ fn fem2d_config_publication_bytes(mutation: &Fem2dConfigMutation) -> Result<usiz
         Fem2dConfigMutation::Snapshot { config } => fem2d_config_text_bytes(config),
         Fem2dConfigMutation::SetResultDisplay { source_id, mode, .. } => source_id.as_ref().map_or(0, String::len).saturating_add(mode.len()),
         Fem2dConfigMutation::SetCamera { .. } => 0,
-        Fem2dConfigMutation::SetLocale { value } => value.len(),
     };
     if bytes > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES { return Err("fem2d-config-text-envelope".into()); }
     Ok(FEM2D_CONFIG_PUBLICATION_MAXIMUM_BYTES)
@@ -276,7 +272,6 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dConfig, Fem2dConfigMutation> fo
                 Fem2dConfigMutation::SetResultDisplay { source_id: base.get().result_source_id.clone(), mode: base.get().result_mode.clone(), mode_index: base.get().result_mode_index }
             }
             Fem2dConfigMutation::SetCamera { camera } => { next.camera = camera.clone(); Fem2dConfigMutation::SetCamera { camera: base.get().camera.clone() } }
-            Fem2dConfigMutation::SetLocale { value } => { next.locale = value.clone(); Fem2dConfigMutation::SetLocale { value: base.get().locale.clone() } }
         };
         if fem2d_config_text_bytes(&next) > FEM2D_CONFIG_TEXT_MAXIMUM_BYTES { return Err("fem2d-config-post-text-envelope".into()); }
         let authority = self.authority.as_ref().ok_or_else(|| "fem2d-config-authority-missing".to_string())?;
@@ -640,8 +635,7 @@ impl ArtifactEditor for Fem2dPlayApp {
             "setActiveExample",
             "setCamera",
             "setResultDisplay",
-            "setLocale"
-        ]
+                    ]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -834,7 +828,6 @@ impl ArtifactEditor for Fem2dPlayApp {
                 mode: text("mode").unwrap_or_else(|| "static".into()),
                 mode_index: number("modeIndex").map(|value| value.max(0.0) as u32).unwrap_or_default(),
             })),
-            "setLocale" => Ok(Fem2dCommand::SetLocale(set_locale::SetLocale { value: text("value").unwrap_or_else(|| "en-US".into()) })),
             other => Err(Fault::from(format!("action '{other}' is not a declared fem2d action — every app action is dispatched through the typed command channel (see `dispatch_typed_command`)"))),
         }
     }
@@ -843,7 +836,7 @@ impl ArtifactEditor for Fem2dPlayApp {
         command: &Fem2dCommand,
         doc: &ArtifactView<'_, Fem2dSnapshot>,
         cfg: &ConfigView<'_, Fem2dConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>, Fault> {
@@ -862,7 +855,7 @@ impl ArtifactEditor for Fem2dPlayApp {
         ConfigSpec::default()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let camera = &cfg.snapshot.camera;
         match body_key {
             model_window::BODY_KEY => crate::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual)),
@@ -1025,7 +1018,6 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
-            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 🧵️ Every row is `Migrated`: each one is an owned retained route on
             // `Fem2dRetainedCommandJobFactory` (`FEM2D_RETAINED_TOOL_IDS`) with a real reducer
             // (`fem2d_retained_reduce` → the `🎮️commands/*` handler) and a real publication authority
@@ -1049,7 +1041,6 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setResultDisplay", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             // 🎯️ Typed channel surface — `config_spec()`/`fem2d_io()` are this same information's single
             // source of truth, reused here rather than duplicated.
             .config(Fem2dPlayApp::config_spec())

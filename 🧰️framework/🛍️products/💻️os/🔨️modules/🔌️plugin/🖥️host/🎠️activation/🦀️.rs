@@ -59,5 +59,5 @@ pub async fn install_actor(
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🎠️activation/🦀️.rs"]
 mod tests;

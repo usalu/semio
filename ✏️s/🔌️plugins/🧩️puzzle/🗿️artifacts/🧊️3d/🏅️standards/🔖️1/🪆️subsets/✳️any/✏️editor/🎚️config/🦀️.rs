@@ -54,14 +54,6 @@ fn default_vortex_direction() -> String {
     crate::editor::puzzle3d::PUZZLE3D_VORTEX_DIRECTION_OUTWARDS.into()
 }
 
-fn default_terminology() -> String {
-    "native".into()
-}
-
-fn default_locale() -> String {
-    "en-US".into()
-}
-
 fn default_window_ids() -> Vec<String> {
     vec![crate::editor::puzzle3d::modes::edit::windows::main::WINDOW_KIND_ID.to_string()]
 }
@@ -209,12 +201,6 @@ pub struct Puzzle3dConfig {
     /// 🛠️ B1: the mode-level active tool (e.g. `"fill"`) — was host-pushed `view_state.active_tool_id`.
     #[value(default)]
     pub active_tool_id: Option<String>,
-    /// 🗣️ B1: terminology overlay (native/reuse) — was host-pushed `view_state.terminology`.
-    #[value(default = "default_terminology")]
-    pub terminology: String,
-    /// 🗣️ B1: BCP-47 locale tag — was host-pushed `view_state.locale`.
-    #[value(default = "default_locale")]
-    pub locale: String,
     /// 🪟️ B1: every window INSTANCE id currently open for this app — was host-pushed
     /// `view_state.window_instances`. Always contains at least the main window id (see `Default`
     /// below) so a freshly-loaded document still engages its one window.
@@ -256,8 +242,6 @@ impl Default for Puzzle3dConfig {
             window_options: BTreeMap::new(),
             active_utility_by_window_id: BTreeMap::new(),
             active_tool_id: None,
-            terminology: default_terminology(),
-            locale: default_locale(),
             window_ids: default_window_ids(),
         }
     }
@@ -443,8 +427,6 @@ pub enum Puzzle3dConfigMutation {
     SetBrushCandidateIndex { value: usize },
     SetWindowEngagementInput { window_id: String, value: String },
     SetActiveUtility { window_id: String, value: Option<String> },
-    SetLocale { value: String },
-    SetTerminology { value: String },
 }
 
 fn mutate_window_options(base: &Puzzle3dConfig, window_id: &str, mutate: impl FnOnce(&mut Puzzle3dWindowOptions)) -> Puzzle3dConfig {
@@ -495,8 +477,6 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🖌️set-brush-candidate-index", semantic_kind: "set-brush-candidate-index", display_name: "Set Brush Candidate Index", emoji: "🖌️", aggregate_variant: "SetBrushCandidateIndex", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⌨️set-window-engagement-input", semantic_kind: "set-window-engagement-input", display_name: "Set Window Engagement Input", emoji: "⌨️", aggregate_variant: "SetWindowEngagementInput", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🛠️set-active-utility", semantic_kind: "set-active-utility", display_name: "Set Active Utility", emoji: "🛠️", aggregate_variant: "SetActiveUtility", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🌐set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "🌐", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📖set-terminology", semantic_kind: "set-terminology", display_name: "Set Terminology", emoji: "📖", aggregate_variant: "SetTerminology", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -527,8 +507,6 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
             Puzzle3dConfigMutation::SetBrushCandidateIndex { .. } => &Self::DESCRIPTORS[23],
             Puzzle3dConfigMutation::SetWindowEngagementInput { .. } => &Self::DESCRIPTORS[24],
             Puzzle3dConfigMutation::SetActiveUtility { .. } => &Self::DESCRIPTORS[25],
-            Puzzle3dConfigMutation::SetLocale { .. } => &Self::DESCRIPTORS[26],
-            Puzzle3dConfigMutation::SetTerminology { .. } => &Self::DESCRIPTORS[27],
         }
     }
 
@@ -597,16 +575,6 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
                 }
                 next
             }
-            Puzzle3dConfigMutation::SetLocale { value } => {
-                let mut next = _base.clone();
-                next.locale = value.clone();
-                next
-            }
-            Puzzle3dConfigMutation::SetTerminology { value } => {
-                let mut next = _base.clone();
-                next.terminology = value.clone();
-                next
-            }
         })
     }
 
@@ -638,8 +606,6 @@ impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
             Puzzle3dConfigMutation::SetBrushCandidateIndex { .. } => Puzzle3dConfigMutation::SetBrushCandidateIndex { value: base.brush_candidate_index },
             Puzzle3dConfigMutation::SetWindowEngagementInput { window_id, .. } => Puzzle3dConfigMutation::SetWindowEngagementInput { window_id: window_id.clone(), value: window_options(base, window_id).engagement_input },
             Puzzle3dConfigMutation::SetActiveUtility { window_id, .. } => Puzzle3dConfigMutation::SetActiveUtility { window_id: window_id.clone(), value: base.active_utility_by_window_id.get(window_id).cloned() },
-            Puzzle3dConfigMutation::SetLocale { .. } => Puzzle3dConfigMutation::SetLocale { value: base.locale.clone() },
-            Puzzle3dConfigMutation::SetTerminology { .. } => Puzzle3dConfigMutation::SetTerminology { value: base.terminology.clone() },
         }]
     }
 }

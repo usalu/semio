@@ -8,5 +8,4 @@ type VcsArtifact {
   status: String! @state(class: ARTIFACT)
   tags: [String!]! @state(class: ARTIFACT)
   selectedCheckpointIds: [String!]! @state(class: PRESENCE)
-  locale: String! @state(class: CONFIG)
 }

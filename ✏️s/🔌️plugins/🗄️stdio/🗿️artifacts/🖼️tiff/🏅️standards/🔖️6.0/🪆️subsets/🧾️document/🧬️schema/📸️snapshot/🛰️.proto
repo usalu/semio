@@ -71,3 +71,11 @@ message TiffSnapshot {
   repeated TiffIfd ifds = 3;
   bytes pixels = 4;
 }
+
+message TiffByteOrder {
+  string value = 1;
+}
+
+message TiffFieldType {
+  string value = 1;
+}

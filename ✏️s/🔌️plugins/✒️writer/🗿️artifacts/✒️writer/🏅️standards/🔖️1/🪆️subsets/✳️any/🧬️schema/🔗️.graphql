@@ -15,7 +15,6 @@ type WriterArtifact {
   cameraX: Float!
   cameraY: Float!
   cameraZoom: Float!
-  locale: String!
 }
 
 type WriterEditorSelection {
@@ -28,4 +27,15 @@ type WriterEditorSettings {
   fontPx: Int!
   lineHeight: Int!
   tabSize: Int!
+}
+
+type WriterTextRangeEdit {
+  start: Int!
+  end: Int!
+  insert: String!
+}
+
+type WriterTextDelta {
+  replacement: String
+  edits: [WriterTextRangeEdit!]
 }

@@ -4,9 +4,9 @@
     "id": "node-alpha",
     "nodeKind": "identity",
     "shape": "circle",
-    "x": 0.0,
-    "y": 0.0,
-    "radius": 24.0,
+    "x": 0,
+    "y": 0,
+    "radius": 24,
     "text": "Alpha",
     "handles": []
   }

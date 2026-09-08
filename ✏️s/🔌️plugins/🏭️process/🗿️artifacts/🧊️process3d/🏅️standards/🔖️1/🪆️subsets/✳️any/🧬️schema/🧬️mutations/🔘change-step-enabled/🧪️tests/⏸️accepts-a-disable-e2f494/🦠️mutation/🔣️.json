@@ -1,1 +1,5 @@
-{"mutation":"changeStepEnabled","id":"step-1","newEnabled":false}
+{
+  "mutation": "changeStepEnabled",
+  "id": "step-1",
+  "newEnabled": false
+}

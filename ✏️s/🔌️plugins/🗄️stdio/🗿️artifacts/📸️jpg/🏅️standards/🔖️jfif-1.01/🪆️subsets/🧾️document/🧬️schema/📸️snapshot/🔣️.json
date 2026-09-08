@@ -4,7 +4,7 @@
   "title": "JpgSnapshot",
   "type": "object",
   "$defs": {
-    "jfifThumbnail": {
+    "JfifThumbnail": {
       "type": "object",
       "properties": {
         "width": {
@@ -21,7 +21,7 @@
         }
       }
     },
-    "jpgFrameComponent": {
+    "JpgFrameComponent": {
       "type": "object",
       "properties": {
         "id": {
@@ -38,7 +38,7 @@
         }
       }
     },
-    "jpgFrameHeader": {
+    "JpgFrameHeader": {
       "type": "object",
       "properties": {
         "precision": {
@@ -53,31 +53,12 @@
         "components": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/jpgFrameComponent"
+            "$ref": "#/$defs/JpgFrameComponent"
           }
         }
       }
     },
-    "jpgQuantTable": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer"
-        },
-        "precision": {
-          "type": "integer"
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          },
-          "minItems": 64,
-          "maxItems": 64
-        }
-      }
-    },
-    "jpgHuffmanTable": {
+    "JpgHuffmanTable": {
       "type": "object",
       "properties": {
         "id": {
@@ -106,7 +87,26 @@
         }
       }
     },
-    "jpgSegment": {
+    "JpgQuantTable": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "precision": {
+          "type": "integer"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 64,
+          "maxItems": 64
+        }
+      }
+    },
+    "JpgSegment": {
       "type": "object",
       "properties": {
         "marker": {
@@ -172,11 +172,11 @@
       "x-semio-state": "artifact"
     },
     "jfifThumbnail": {
-      "$ref": "#/$defs/jfifThumbnail",
+      "$ref": "#/$defs/JfifThumbnail",
       "x-semio-state": "artifact"
     },
     "frame": {
-      "$ref": "#/$defs/jpgFrameHeader",
+      "$ref": "#/$defs/JpgFrameHeader",
       "x-semio-state": "artifact"
     },
     "sofMarker": {
@@ -191,14 +191,14 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/jpgQuantTable"
+        "$ref": "#/$defs/JpgQuantTable"
       }
     },
     "huffmanTables": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/jpgHuffmanTable"
+        "$ref": "#/$defs/JpgHuffmanTable"
       }
     },
     "restartInterval": {
@@ -209,7 +209,7 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/jpgSegment"
+        "$ref": "#/$defs/JpgSegment"
       }
     }
   },

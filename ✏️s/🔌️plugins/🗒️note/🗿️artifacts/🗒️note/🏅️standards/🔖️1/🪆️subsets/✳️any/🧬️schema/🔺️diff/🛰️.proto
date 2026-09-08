@@ -22,7 +22,6 @@ message NoteDiff {
   optional double camera_x = 18;
   optional double camera_y = 19;
   optional double camera_zoom = 20;
-  optional string locale = 21;
   optional StringNullable hovered_block_id = 22;
 }
 

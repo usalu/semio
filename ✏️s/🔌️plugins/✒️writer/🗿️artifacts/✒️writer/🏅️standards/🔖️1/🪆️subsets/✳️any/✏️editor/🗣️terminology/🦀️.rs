@@ -2,7 +2,6 @@
 //! reaches for. Deliberately ONE block for the whole app (never split per window/panel): the macro's
 //! value is that every locale combination is compile-checked in one place.
 
-use crate::editor::writer::config::WriterConfig;
 
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
@@ -28,8 +27,8 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn writer_play_labels(cfg: &WriterConfig) -> &'static WriterPlayLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<WriterPlayLabels>(&cfg.locale)
+pub fn writer_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static WriterPlayLabels {
+    semio_framework_plugin::resolve_labels::<WriterPlayLabels>(view_state)
 }
 //#endregion 🔖️Resolvers
 

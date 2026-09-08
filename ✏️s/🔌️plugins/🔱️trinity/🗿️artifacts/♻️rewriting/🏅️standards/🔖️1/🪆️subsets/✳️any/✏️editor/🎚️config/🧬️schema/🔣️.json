@@ -6,18 +6,11 @@
   "additionalProperties": false,
   "required": [
     "beforePaneCamera",
-    "reorganizeEpoch",
-    "lodModeByWindow",
-    "locale"
+    "lodModeByWindow"
   ],
   "properties": {
     "beforePaneCamera": {
-      "$ref": "#/$defs/Camera",
-      "x-semio-state": "config"
-    },
-    "reorganizeEpoch": {
-      "type": "integer",
-      "format": "int64",
+      "$ref": "https://semio.tech/schema/s/trinity/rewriting/artifact.json#/$defs/Camera",
       "x-semio-state": "config"
     },
     "lodModeByWindow": {
@@ -26,36 +19,6 @@
         "type": "string"
       },
       "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    }
-  },
-  "$defs": {
-    "Camera": {
-      "title": "Camera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        }
-      }
     }
   }
 }

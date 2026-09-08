@@ -5,7 +5,11 @@ fn fixture() -> serde_json::Value {
 }
 
 fn value_handle(value: &UiValue) -> Option<UiCollectionHandle> {
-    match value { UiValue::List(value) => value.handle, UiValue::Map(value) => value.handle, _ => None }
+    match value {
+        UiValue::List(value) => value.handle,
+        UiValue::Map(value) => value.handle,
+        _ => None,
+    }
 }
 
 pub(super) fn descendants(value: &UiValue) -> Vec<UiCollectionHandle> {
@@ -13,12 +17,18 @@ pub(super) fn descendants(value: &UiValue) -> Vec<UiCollectionHandle> {
     let mut result = Vec::new();
     with_ui_value_arena(|arena| {
         while let Some(handle) = pending.pop() {
-            if result.contains(&handle) { continue; }
+            if result.contains(&handle) {
+                continue;
+            }
             result.push(handle);
             let mut page = arena.collection(handle).unwrap().head;
             while page != UI_VALUE_NONE {
-                let value = match arena.pages[page].value.as_ref().unwrap() { UiPageValue::List(value) | UiPageValue::Map(_, value) => value };
-                if let Some(nested) = value_handle(value) { pending.push(nested); }
+                let value = match arena.pages[page].value.as_ref().unwrap() {
+                    UiPageValue::List(value) | UiPageValue::Map(_, value) => value,
+                };
+                if let Some(nested) = value_handle(value) {
+                    pending.push(nested);
+                }
                 page = arena.pages[page].next;
             }
         }
@@ -34,8 +44,13 @@ fn close(owner: &mut UiValueRetirement, grant: usize) -> (usize, usize) {
         assert!(step.released_items <= 1 && step.released_bytes <= grant);
         items += step.released_items;
         bytes += step.released_bytes;
-        if step.complete { assert!(owner.terminal_is_empty()); return (items, bytes); }
-        if !step.progressed { std::thread::yield_now(); }
+        if step.complete {
+            assert!(owner.terminal_is_empty());
+            return (items, bytes);
+        }
+        if !step.progressed {
+            std::thread::yield_now();
+        }
     }
     panic!("exact value owner did not finish");
 }
@@ -82,7 +97,9 @@ fn instance_lifetime_ui_value_retirement_epoch_reuse_and_terminal_guard() {
     let original = arena.reserve_collection(UiCollectionKind::List).unwrap();
     arena.try_push_page(original, UiPageValue::List(UiValue::Text(UiText::try_from_str("first").unwrap()))).unwrap();
     arena.release_exact_handle(original).unwrap();
-    while arena.collection(original).is_some() { arena.advance_exact_root(original, 1, &handbacks).unwrap(); }
+    while arena.collection(original).is_some() {
+        arena.advance_exact_root(original, 1, &handbacks).unwrap();
+    }
     let replacement = arena.reserve_collection(UiCollectionKind::List).unwrap();
     assert_eq!(replacement.slot == original.slot && replacement.epoch != original.epoch, fixture()["ownership"]["exactSlotReusedWithNewEpoch"].as_bool().unwrap());
     arena.try_push_page(replacement, UiPageValue::List(UiValue::Text(UiText::try_from_str("replacement").unwrap()))).unwrap();
@@ -90,7 +107,9 @@ fn instance_lifetime_ui_value_retirement_epoch_reuse_and_terminal_guard() {
     let page = arena.collection(replacement).unwrap().head;
     assert!(matches!(arena.pages[page].value.as_ref(), Some(UiPageValue::List(UiValue::Text(value))) if value.as_str() == "replacement"));
     arena.release_exact_handle(replacement).unwrap();
-    while arena.collection(replacement).is_some() { arena.advance_exact_root(replacement, 1, &handbacks).unwrap(); }
+    while arena.collection(replacement).is_some() {
+        arena.advance_exact_root(replacement, 1, &handbacks).unwrap();
+    }
     let result = std::panic::catch_unwind(|| drop(UiValueRetirement::new(UiValue::Text(UiText::try_from_str("live").unwrap()))));
     assert_eq!(result.is_err(), fixture()["ownership"]["liveDropRejected"].as_bool().unwrap());
 }
@@ -128,7 +147,9 @@ fn instance_lifetime_ui_value_retirement_caught_drop_keeps_exact_arena_owner() {
         let root = value_handle(&value).unwrap();
         let descendants = descendants(&value);
         let mut owner = UiValueRetirement::new(value);
-        if started { assert!(owner.close_step(1, 1).unwrap().progressed); }
+        if started {
+            assert!(owner.close_step(1, 1).unwrap().progressed);
+        }
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(owner)));
         assert!(result.is_err());
         assert_eq!(with_ui_value_arena(|arena| arena.collection(root).is_some()) && UI_VALUE_HANDBACKS.has_slot_pending(root.slot), fixture()["ownership"]["caughtLiveDropKeepsArenaOwner"].as_bool().unwrap());
@@ -160,8 +181,12 @@ fn instance_lifetime_ui_value_retirement_unwind_guard_is_not_waived() {
         panic!("intentional retained value unwind");
     }
     let output = std::process::Command::new(std::env::current_exe().unwrap())
-        .arg("instance_lifetime_ui_value_retirement_unwind_guard_is_not_waived").arg("--nocapture")
-        .env("SEMIO_UI_VALUE_RETIREMENT_UNWIND_CHILD", "1").env("RUST_BACKTRACE", "0").output().unwrap();
+        .arg("instance_lifetime_ui_value_retirement_unwind_guard_is_not_waived")
+        .arg("--nocapture")
+        .env("SEMIO_UI_VALUE_RETIREMENT_UNWIND_CHILD", "1")
+        .env("RUST_BACKTRACE", "0")
+        .output()
+        .unwrap();
     assert_eq!(!output.status.success(), fixture()["ownership"]["unwindGuardFatal"].as_bool().unwrap());
     let error = String::from_utf8_lossy(&output.stderr);
     assert!(error.contains("UiValueRetirement requires exact terminal closure"));
@@ -173,7 +198,9 @@ fn instance_lifetime_ui_value_retirement_contention_preserves_owner_without_wait
     for started in [false, true] {
         let value: UiValue = serde_json::from_value(serde_json::json!(["contended"])).unwrap();
         let mut owner = UiValueRetirement::new(value);
-        if started { assert!(owner.close_step(1, 1).unwrap().progressed); }
+        if started {
+            assert!(owner.close_step(1, 1).unwrap().progressed);
+        }
         let (ready_tx, ready_rx) = std::sync::mpsc::channel();
         let (release_tx, release_rx) = std::sync::mpsc::channel();
         let holder = std::thread::spawn(move || {
@@ -195,9 +222,13 @@ fn drop_waits_for_value_arena(mode: u8) -> bool {
     let value: UiValue = serde_json::from_value(serde_json::json!([{"nested":["owned"]}])).unwrap();
     let handles = descendants(&value);
     let root = value_handle(&value).unwrap();
-    let action: Box<dyn FnOnce()> = if mode == 0 { Box::new(move || drop(value)) } else {
+    let action: Box<dyn FnOnce()> = if mode == 0 {
+        Box::new(move || drop(value))
+    } else {
         let mut owner = UiValueRetirement::new(value);
-        if mode == 2 { owner.close_step(1, 1).unwrap(); }
+        if mode == 2 {
+            owner.close_step(1, 1).unwrap();
+        }
         Box::new(move || drop(owner))
     };
     let (ready_tx, ready_rx) = std::sync::mpsc::channel();

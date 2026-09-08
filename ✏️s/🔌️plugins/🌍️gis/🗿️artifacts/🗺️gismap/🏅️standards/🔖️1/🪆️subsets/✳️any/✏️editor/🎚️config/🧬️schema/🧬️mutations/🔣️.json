@@ -13,9 +13,6 @@
       "$ref": "https://semio.tech/schema/app/gis/gis2d/config/mutation/set-layer-visibility/schema.json"
     },
     {
-      "$ref": "https://semio.tech/schema/app/gis/gis2d/config/mutation/set-locale/schema.json"
-    },
-    {
       "$ref": "https://semio.tech/schema/app/gis/gis2d/config/mutation/set-lod-mode/schema.json"
     },
     {

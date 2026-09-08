@@ -65,24 +65,24 @@ pub fn drive_with_operation(app: &CadPlayApp, scene: &CadSnapshot, action: &str,
     let doc = ArtifactView::new(scene, &history);
     let cfg = ConfigView { snapshot: config };
     let command = command_from_action(action, args.as_ref());
-    let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation };
+    let mut ctx = CadDispatchCtx { interaction: CadInteractionSnapshot::default(), preview_operation, view_state: None };
     command.dispatch(&doc, &cfg, &mut ctx)
 }
 
-pub fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_direct(_app: &CadPlayApp, body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, view_state: &ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let cfg = ConfigView { snapshot: config };
-    CadPlayApp::render(body_key, doc, &cfg).map(|tree| tree.root)
+    CadPlayApp::render(body_key, doc, &cfg, view_state).map(|tree| tree.root)
 }
 
-pub fn window_measures_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig) -> HashMap<String, Vec<WindowMeasure>> {
+pub fn window_measures_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
     let cfg = ConfigView { snapshot: config };
-    CadPlayApp::window_measures(doc, &cfg)
+    CadPlayApp::window_measures(doc, &cfg, view_state)
 }
 
-pub fn context_menu_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+pub fn context_menu_direct(_app: &CadPlayApp, doc: &ArtifactView<'_, CadSnapshot>, config: &CadConfig, view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
     let cfg = ConfigView { snapshot: config };
     let request = ContextMenuRequest { menu: UiMenuRef { id: "world3d".into(), args: None }, surface: None, window_instance_id: None, point: None };
-    CadPlayApp::context_menu(&request, doc, &cfg, registry)
+    CadPlayApp::context_menu(&request, doc, &cfg, view_state, registry)
 }
 
 /// 🧮️ Folds a list of `CadMutation`s onto a scene via the core `Mutation`/`MutationDiff` impls —

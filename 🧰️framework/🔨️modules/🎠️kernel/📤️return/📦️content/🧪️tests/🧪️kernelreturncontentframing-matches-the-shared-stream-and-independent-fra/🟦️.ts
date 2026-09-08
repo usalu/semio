@@ -34,8 +34,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: pageSchema } = await import("../../../../../🎭️actor/📃️page/🧬️schema/🔣️.json");
     const { default: lifetimeSchema } = await import("../../../../../🎭️actor/🚪️lifetime/🧬️schema/🔣️.json");
     const { default: patchSchema } = await import("../../../../../🎭️actor/🚪️lifetime/🩹️patch/🧬️schema/🔣️.json");
+    const { default: valueSchema } = await import("../../../../../🌱️value/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
-    const ajv = new Ajv({ strict: true }).addSchema(pageSchema).addSchema(lifetimeSchema).addSchema(patchSchema);
+    const ajv = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(pageSchema).addSchema(lifetimeSchema).addSchema(patchSchema);
     expect(ajv.addSchema(schema).getSchema(`${schema.$id}#/$defs/Content`)!(wire)).toBe(true);
     expect(ajv.getSchema(`${schema.$id}#/$defs/ContentFixture`)!(fixture)).toBe(true);
     const { frame } = await oracle();

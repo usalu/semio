@@ -158,10 +158,6 @@ pub struct Puzzle3dConfig {
     #[state(config)]
     pub active_tool_id: Option<String>,
     #[state(config)]
-    pub terminology: String,
-    #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub window_ids: Vec<String>,
 }
 

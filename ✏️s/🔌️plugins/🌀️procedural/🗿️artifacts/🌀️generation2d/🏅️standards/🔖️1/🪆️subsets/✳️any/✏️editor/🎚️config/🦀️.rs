@@ -32,7 +32,6 @@ pub struct Generation2dConfig {
     /// 👁️ Derived generation preview text.
     pub generation_preview_text: Option<String>,
     /// 🗣️ BCP-47 locale tag.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -81,7 +80,7 @@ impl store::ArtifactPack for Generation2dConfig {
 
 impl Default for Generation2dConfig {
     fn default() -> Self {
-        Self { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, show_mode: default_show_mode(), selected_generation_id: None, generation_preview_text: None, locale: "en-US".into() }
+        Self { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, show_mode: default_show_mode(), selected_generation_id: None, generation_preview_text: None, }
     }
 }
 
@@ -112,8 +111,6 @@ pub enum Generation2dConfigMutation {
     SetShowMode { value: String },
     #[dsl(key = "generation")]
     SetGeneration { selected_generation_id: Option<String>, generation_preview_text: Option<String> },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
@@ -182,7 +179,6 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "⚙️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-show-mode", semantic_kind: "set-show-mode", display_name: "Set Show Mode", emoji: "⚙️", aggregate_variant: "SetShowMode", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-generation", semantic_kind: "set-generation", display_name: "Set Generation", emoji: "⚙️", aggregate_variant: "SetGeneration", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "⚙️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -191,7 +187,6 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
             Generation2dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[1],
             Generation2dConfigMutation::SetShowMode { .. } => &Self::DESCRIPTORS[2],
             Generation2dConfigMutation::SetGeneration { .. } => &Self::DESCRIPTORS[3],
-            Generation2dConfigMutation::SetLocale { .. } => &Self::DESCRIPTORS[4],
         }
     }
 
@@ -207,7 +202,6 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
                 next.selected_generation_id = selected_generation_id.clone();
                 next.generation_preview_text = generation_preview_text.clone();
             }
-            Generation2dConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         protocol::MutationOutcome::new(next)
     }

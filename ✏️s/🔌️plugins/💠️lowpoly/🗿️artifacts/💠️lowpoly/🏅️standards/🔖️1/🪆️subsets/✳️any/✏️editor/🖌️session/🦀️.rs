@@ -324,8 +324,7 @@ impl LowpolyScratch {
         self.transform.as_ref().map(|session| session.doc.snapshot().clone())
     }
 
-    /// 🧰️ Clears every mid-gesture scratch — used by `SetActiveUtility` so switching tools never leaves
-    /// a stale paint/transform drag behind.
+    /// 🧰️ Clears every mid-gesture scratch when the host changes interaction context.
     pub fn reset_gestures(&mut self) {
         self.stroke = None;
         self.stroke_drag_active = false;

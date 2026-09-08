@@ -11,7 +11,7 @@ use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMut
 use crate::{artifact_kind, Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
 use crate::editor::generation2d::commands::{
     add_generation, add_widget, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, connect_media_ports, enter_generate, flow_eval_tick, move_media_node, node_graph_edit, node_graph_viewport, remove_generation, remove_widget,
-    rename_generation, reorganize, select_generation, set_eval_outputs, set_locale, set_show_mode, update_generation_values,
+    rename_generation, reorganize, select_generation, set_eval_outputs, set_show_mode, update_generation_values,
 };
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use crate::editor::generation2d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
@@ -81,7 +81,6 @@ pub async fn generation2d_io() -> semio_framework_plugin::AppIo {
 semio_framework_plugin::app_commands! {
     /// 🎯️ `Generation2dPlayApp::Command` — the SOLE dispatch surface for generation2d's own behavior.
     /// Each row states BOTH the manifest action id (`command_id()`) and the `dsl` wire keyword
-    /// (`#[dsl(key = ..)]`) — genuinely different vocabularies; `setLocale`/`locale` proves it. **Row
     /// order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
     pub enum Generation2dCommand for Generation2dSnapshot, Generation2dMutation, Generation2dConfig, Generation2dConfigMutation, ctx = FlowEvalSession {
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
@@ -104,7 +103,7 @@ semio_framework_plugin::app_commands! {
         "canvasWheel" as "canvas-wheel" => canvas_wheel::CanvasWheel,
         "selectGeneration" as "select-generation" => select_generation::SelectGeneration,
         "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
-        "setLocale" as "locale" => set_locale::SetLocale}
+        }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
@@ -131,6 +130,7 @@ fn generation2d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, Fault> {
     if !GENERATION2D_BOUNDED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("generation2d-command-retained-route-rejected")); }
@@ -211,7 +211,7 @@ const GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES: usize = 4_096;
 
 //#region 🎟️Admission
 fn generation2d_config_text_bytes(config: &Generation2dConfig) -> usize {
-    [config.show_mode.len(), config.selected_generation_id.as_ref().map_or(0, String::len), config.generation_preview_text.as_ref().map_or(0, String::len), config.locale.len()].into_iter().fold(0usize, usize::saturating_add)
+    [config.show_mode.len(), config.selected_generation_id.as_ref().map_or(0, String::len), config.generation_preview_text.as_ref().map_or(0, String::len)].into_iter().fold(0usize, usize::saturating_add)
 }
 
 fn generation2d_config_publication_bytes(mutation: &Generation2dConfigMutation) -> Result<usize, String> {
@@ -486,7 +486,6 @@ impl ArtifactEditor for Generation2dPlayApp {
             "canvasWheel" => Ok(Generation2dCommand::CanvasWheel(canvas_wheel::CanvasWheel {})),
             "selectGeneration" => Ok(Generation2dCommand::SelectGeneration(select_generation::SelectGeneration { id: str_arg(&["id"]) })),
             "flowEvalTick" => Ok(Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {})),
-            "setLocale" => Ok(Generation2dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -502,7 +501,8 @@ impl ArtifactEditor for Generation2dPlayApp {
         command: &Generation2dCommand,
         doc: &ArtifactView<'_, Generation2dSnapshot>,
         cfg: &ConfigView<'_, Generation2dConfig>,
-        interaction: &InteractionView<'_>,
+        _view_state: &semio_framework_plugin::ViewModel,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation, Self::DraftMutation>, Fault> {
@@ -559,15 +559,15 @@ impl ArtifactEditor for Generation2dPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = generation2d_labels(config);
+        let labels = generation2d_labels(view_state);
         let session = FlowEvalSession::new();
         let node = match body_key {
             flow_window::GENERATION2D_PLAY_BODY_MAIN => flow_window::render(document, config, &session),
             edit_preview::GENERATION2D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, &session),
-            generations::GENERATION2D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::Native),
+            generations::GENERATION2D_PLAY_BODY_GENERATIONS => generations::render(&document.generation, view_state.locale, semio_framework_plugin::Terminology::Native),
             form::GENERATION2D_PLAY_BODY_GENERATE_FORM => form::render(document, &document.generation, labels),
             generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(config, labels),
             document_panel::GENERATION2D_PLAY_BODY_DOCUMENT => document_panel::render(document, config, labels),
@@ -595,8 +595,8 @@ impl ArtifactEditor for Generation2dPlayApp {
 
         {
             let config = cfg.snapshot;
-            let labels = semio_framework_plugin::resolve_labels_for_locale::<Generation2dLabels>(&config.locale);
-            let is_de = config.locale.starts_with("de");
+            let labels = semio_framework_plugin::resolve_labels::<Generation2dLabels>(view_state);
+            let is_de = view_state.locale == semio_framework_plugin::Locale::De;
             let selected: Vec<String> = Vec::new();
             let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
             let mut menu = Menu::of(registry).action("addWidget").action("reorganize").action("generate");
@@ -721,7 +721,6 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("canvasWheel", InteractiveJobClassification::Migrated)
         .action_interactive_job("selectGeneration", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("flowEvalTick", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("setLocale", InteractiveJobClassification::ForbiddenFromUi)
         // 📝️ Staged argument form for the palette-visible add-widget action (default materialized host-side).
         .action_args("addWidget", vec![
             ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![

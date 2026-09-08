@@ -73,6 +73,7 @@ pub type ArtifactCommandReducer<A> = fn(
     &HistoryView,
     &protocol::InteractionState,
     &InteractionHoverState,
+    Option<&ArtifactOwnedToolJobContext<A>>,
     &AppOperationContext,
 ) -> Result<Emit<<A as ArtifactApp>::Mutation, <A as ArtifactApp>::ConfigMutation, <A as ArtifactApp>::DraftMutation>, Fault>;
 
@@ -147,12 +148,12 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedArtifactCommandWork<A> {
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
-        let ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context: _context, operation } = *input;
+        let ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context, operation } = *input;
         if self.consumed {
             return Err(Fault::from("retained-command-bounded-work-repeated"));
         }
         self.consumed = true;
-        (self.reducer)(command, snapshot, config, history, interaction, hover, operation).map(ArtifactCommandWorkStep::Complete)
+        (self.reducer)(command, snapshot, config, history, interaction, hover, context, operation).map(ArtifactCommandWorkStep::Complete)
     }
 }
 //#endregion 🔖️Work
@@ -645,7 +646,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
 
 #[cfg(test)]
 pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🚪️raw-allocation-close.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🚪️raw-allocation-close.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut raw = Vec::with_capacity(case["capacity"].as_u64().unwrap() as usize);
         raw.resize(case["initializedBytes"].as_u64().unwrap() as usize, 42);

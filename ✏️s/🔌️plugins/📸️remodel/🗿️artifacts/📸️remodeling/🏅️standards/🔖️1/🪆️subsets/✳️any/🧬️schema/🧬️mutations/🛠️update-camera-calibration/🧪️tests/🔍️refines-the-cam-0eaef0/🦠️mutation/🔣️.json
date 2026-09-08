@@ -4,17 +4,17 @@
     "id": "cam-a",
     "label": "Front",
     "model": "brownConrady",
-    "fx": 1024.0,
-    "fy": 1024.0,
-    "cx": 512.0,
-    "cy": 384.0,
-    "skew": 0.0,
+    "fx": 1024,
+    "fy": 1024,
+    "cx": 512,
+    "cy": 384,
+    "skew": 0,
     "distortion": [
       0.0625,
       -0.03125,
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
     ],
     "rmsReprojectionPx": 0.25,
     "locked": false

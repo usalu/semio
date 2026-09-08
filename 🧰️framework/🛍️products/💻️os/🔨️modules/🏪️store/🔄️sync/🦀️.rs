@@ -16,11 +16,14 @@
 use crate::os_dsl::{DslValue, FromValue as FromValueTrait, ToValue as ToValueTrait, ValueError};
 use crate::os_spr::PresencePeer;
 use crate::os_spr::{
-    decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapControl, ArtifactBootstrapLimits, ArtifactBootstrapPair,
-    ArtifactBootstrapProgress, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, RuntimeFrontierSummary, ServerFrame,
+    decode_document_backbone_envelopes_exact, decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes, AckStage, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapAssembler, ArtifactBootstrapControl, ArtifactBootstrapLimits,
+    ArtifactBootstrapPair, ArtifactBootstrapProgress, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationMessage, OpBinary, RuntimeFrontierSummary, ServerFrame,
 };
 use crate::os_spr::{ActorId, MutationId};
-use crate::os_store::{ArtifactPackFiles, ArtifactStore, ArtifactTextFiles, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote};
+use crate::os_store::{
+    decode_hot_backbone_message_exact, ArtifactPackFiles, ArtifactStore, ArtifactTextFiles, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote, BACKBONE_CHANNEL_MAXIMUM_BYTES, BACKBONE_CHANNEL_MAXIMUM_MESSAGES,
+    BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
+};
 use semio_framework_value_derive::{FromValue, ToValue};
 use tokio::sync::{broadcast, mpsc};
 
@@ -157,6 +160,9 @@ pub enum ArtifactActorMsg {
         #[value(serialize_with = "envelope_serde::to_value", deserialize_with = "envelope_serde::from_value")]
         envelopes: Vec<MutationEnvelope>,
     },
+    /// @emoji 🪢️ One canonical Store `BackboneMessage::Mutations` retained byte-for-byte by a
+    /// mounted document port until its authoritative Hub command acknowledgment.
+    DocumentBackbone { message: Vec<u8> },
     /// @emoji 📡️ Broadcasts this peer's presence/selection to the semio_hub.
     PresenceHeartbeat { peer: Box<PresencePeer> },
     /// @emoji 👻️ Publishes an ephemeral, best-effort UI-state blob on the semio_hub's uncredited preview
@@ -426,6 +432,12 @@ fn artifact_actor_message_bytes(message: &ArtifactActorMsg) -> Option<usize> {
                 add(&mut bytes, 24)?;
             }
         }
+        ArtifactActorMsg::DocumentBackbone { message } => {
+            if message.len() > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || decode_document_backbone_message_exact(message).is_err() {
+                return None;
+            }
+            add(&mut bytes, field(message.len())?)?;
+        }
         ArtifactActorMsg::PresenceHeartbeat { peer } => {
             text(&mut bytes, &peer.actor)?;
             add(&mut bytes, 8)?;
@@ -523,6 +535,8 @@ pub enum ArtifactEvent {
         #[value(serialize_with = "envelope_serde::to_value", deserialize_with = "envelope_serde::from_value")]
         envelopes: Vec<MutationEnvelope>,
     },
+    /// @emoji 🪢️ One canonical Hub mutation batch for an exact mounted guest document port.
+    DocumentBackbone { message: Vec<u8> },
     /// @emoji 📸️ The whole document was replaced (divergent external history / semio_hub snapshot swap),
     /// as real pack+spr bytes — no JSON envelope anywhere in this actor's own path.
     SnapshotReplaced { pack: Vec<u8>, spr: Vec<u8> },
@@ -555,6 +569,60 @@ pub enum ArtifactEvent {
     /// This is a transport-level diagnostic, never a first-class `crate::os_spr::Conflict` (no
     /// `id`/`status`/`actors`/`timestamp` exists for either source event).
     Conflict(MutationMessage),
+}
+
+fn decode_document_backbone_message_exact(message: &[u8]) -> Result<Vec<MutationEnvelope>, String> {
+    match decode_hot_backbone_message_exact(message).map_err(|error| error.to_string())? {
+        BackboneMessage::Mutations { envelopes } => decode_document_backbone_envelopes_exact(&envelopes).map_err(|error| error.to_string()),
+        BackboneMessage::Snapshot { .. } | BackboneMessage::Ack { .. } => Err("document backbone requires a canonical mutation message".into()),
+    }
+}
+
+#[derive(Default)]
+struct DocumentBackboneRetentionV1 {
+    entries: std::collections::HashMap<String, (usize, usize)>,
+    bytes: usize,
+    messages: usize,
+}
+
+impl DocumentBackboneRetentionV1 {
+    fn retain(&mut self, message_bytes: usize, envelopes: &[MutationEnvelope]) -> Result<(), &'static str> {
+        if envelopes.is_empty() {
+            return Ok(());
+        }
+        if message_bytes == 0 || message_bytes > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES {
+            return Err("document backbone message exceeds its hot byte limit");
+        }
+        let next_bytes = self.bytes.checked_add(message_bytes).ok_or("document backbone byte accounting overflow")?;
+        if self.messages >= BACKBONE_CHANNEL_MAXIMUM_MESSAGES || next_bytes > BACKBONE_CHANNEL_MAXIMUM_BYTES {
+            return Err("document backbone pending capacity");
+        }
+        let mut admitted = std::collections::HashSet::with_capacity(envelopes.len());
+        if envelopes.iter().any(|envelope| !admitted.insert(envelope.mutation_id.0.as_str()) || self.entries.contains_key(&envelope.mutation_id.0)) {
+            return Err("document backbone mutation identity is already retained");
+        }
+        for (index, envelope) in envelopes.iter().enumerate() {
+            self.entries.insert(envelope.mutation_id.0.clone(), if index == 0 { (message_bytes, 1) } else { (0, 0) });
+        }
+        self.bytes = next_bytes;
+        self.messages += 1;
+        Ok(())
+    }
+
+    fn release(&mut self, envelopes: &[MutationEnvelope]) {
+        for envelope in envelopes {
+            if let Some((bytes, messages)) = self.entries.remove(&envelope.mutation_id.0) {
+                self.bytes = self.bytes.checked_sub(bytes).expect("document backbone retained byte ledger underflow");
+                self.messages = self.messages.checked_sub(messages).expect("document backbone retained message ledger underflow");
+            }
+        }
+    }
+
+    fn clear(&mut self) {
+        self.entries.clear();
+        self.bytes = 0;
+        self.messages = 0;
+    }
 }
 
 const ARTIFACT_BOOTSTRAP_DEADLINE_MS: u64 = 15_000;
@@ -916,7 +984,7 @@ async fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLo
 pub struct SyncSession<P, Mutation>
 where
     P: Clone + crate::os_dsl::ToValue + crate::os_dsl::FromValue + crate::os_store::ArtifactPack + Send + Sync + 'static,
-    Mutation: Clone + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText + Send + 'static,
+    Mutation: Clone + crate::os_spr::Mutation<P> + OpBinary + crate::os_spr::OpText + Send + 'static,
 {
     pub store: ArtifactStore<P, Mutation>,
     cmd_tx: Option<ArtifactMailboxSender>,
@@ -927,7 +995,7 @@ where
 impl<P, Mutation> SyncSession<P, Mutation>
 where
     P: Clone + crate::os_dsl::ToValue + crate::os_dsl::FromValue + crate::os_store::ArtifactPack + Send + Sync + 'static,
-    Mutation: Clone + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText + Send + 'static,
+    Mutation: Clone + crate::os_spr::Mutation<P> + OpBinary + crate::os_spr::OpText + Send + 'static,
 {
     pub async fn new(store: ArtifactStore<P, Mutation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: ArtifactSyncStatus::default() }
@@ -1492,7 +1560,9 @@ mod native_actor {
         /// `Transformed` can roll back exactly the envelopes that batch sent.
         pending_batches: std::collections::HashMap<u64, Vec<MutationEnvelope>>,
         outbox: Vec<MutationEnvelope>,
+        document_backbone_retention: DocumentBackboneRetentionV1,
         next_batch_id: u64,
+        next_local_rejection_batch_id: u64,
         /// @emoji ⏰️ This actor's `HybridLogicalTimestamp` seed (derived from `actor`) + logical tick
         /// counter, for {@link next_timestamp} on every outbound wire envelope.
         hlc_seed: u64,
@@ -1583,7 +1653,9 @@ mod native_actor {
                 reconnect_at: None,
                 pending_batches: std::collections::HashMap::new(),
                 outbox: Vec::new(),
+                document_backbone_retention: DocumentBackboneRetentionV1::default(),
                 next_batch_id: 0,
+                next_local_rejection_batch_id: u64::MAX,
                 hlc_seed,
                 hlc_counter: 0,
                 current_pack: None,
@@ -1617,6 +1689,7 @@ mod native_actor {
             }
             if self.closing {
                 self.operation_cancel.cancel_now();
+                self.document_backbone_retention.clear();
                 if let Some(mut pending) = self.artifact_bootstrap.take() {
                     pending.assembler.abort();
                 }
@@ -1747,6 +1820,30 @@ mod native_actor {
                     }
                     false
                 }
+                ArtifactActorMsg::DocumentBackbone { message } => {
+                    let envelopes = match decode_document_backbone_message_exact(&message) {
+                        Ok(envelopes) if envelopes.iter().all(|envelope| envelope.document_id.0 == self.document_id) => envelopes,
+                        Ok(envelopes) => {
+                            self.reject_document_backbone("document backbone scope mismatch", vec![envelopes.len().min(u8::MAX as usize) as u8]);
+                            return false;
+                        }
+                        Err(_) => {
+                            self.reject_document_backbone("document backbone malformed", Vec::new());
+                            return false;
+                        }
+                    };
+                    if let Err(reason) = self.document_backbone_retention.retain(message.len(), &envelopes) {
+                        self.reject_document_backbone(reason, vec![envelopes.len().min(u8::MAX as usize) as u8]);
+                        return false;
+                    }
+                    self.persist_operations(&envelopes).await;
+                    if self.hub_space_id.is_some() {
+                        self.relay_operations_to_hub(&envelopes).await;
+                    } else {
+                        self.document_backbone_retention.release(&envelopes);
+                    }
+                    false
+                }
                 ArtifactActorMsg::PresenceHeartbeat { mut peer } => {
                     stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref()).await;
                     self.send_client_frame(ClientFrame::Presence { peer: presence_to_bytes(&peer).await }, Lane::Preview).await;
@@ -1762,6 +1859,12 @@ mod native_actor {
                 }
                 ArtifactActorMsg::Detach => true,
             }
+        }
+
+        fn reject_document_backbone(&mut self, reason: impl Into<String>, messages: Vec<u8>) {
+            let batch_id = self.next_local_rejection_batch_id;
+            self.next_local_rejection_batch_id = self.next_local_rejection_batch_id.wrapping_sub(1);
+            self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason: reason.into(), messages } });
         }
 
         /// @emoji 📤️ Pops and advances exactly one store-to-actor FIFO owner.
@@ -2411,6 +2514,7 @@ mod native_actor {
             for stage in stages {
                 let AckStage::Applied { outcome } = stage else { continue };
                 let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
+                self.document_backbone_retention.release(&sent);
                 match *outcome {
                     ApplyOutcome::Accepted => {
                         self.emit(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
@@ -2505,7 +2609,15 @@ mod native_actor {
             if self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).await.is_err() {
                 return false;
             }
-            self.emit(ArtifactEvent::RemoteMutations { envelopes });
+            if self.hub_space_id.is_some() {
+                let message = match (BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).encode_op() {
+                    Ok(message) => message,
+                    Err(_) => return false,
+                };
+                self.emit(ArtifactEvent::DocumentBackbone { message });
+            } else {
+                self.emit(ArtifactEvent::RemoteMutations { envelopes });
+            }
             true
         }
 
@@ -3210,7 +3322,9 @@ mod wasm_actor {
         artifact_bootstrap: Option<PendingWasmArtifactBootstrap>,
         pending_batches: std::collections::HashMap<u64, Vec<MutationEnvelope>>,
         outbox: Vec<MutationEnvelope>,
+        document_backbone_retention: DocumentBackboneRetentionV1,
         next_batch_id: u64,
+        next_local_rejection_batch_id: u64,
         hlc_seed: u64,
         hlc_counter: u64,
         incoming_tx: mpsc::UnboundedSender<WasmIncoming>,
@@ -3272,6 +3386,28 @@ mod wasm_actor {
                         self.relay_operations(&envelopes).await;
                     }
                 }
+                ArtifactActorMsg::DocumentBackbone { message } => {
+                    let envelopes = match decode_document_backbone_message_exact(&message) {
+                        Ok(envelopes) if envelopes.iter().all(|envelope| envelope.document_id.0 == self.document_id) => envelopes,
+                        Ok(envelopes) => {
+                            self.reject_document_backbone("document backbone scope mismatch", vec![envelopes.len().min(u8::MAX as usize) as u8]);
+                            return;
+                        }
+                        Err(_) => {
+                            self.reject_document_backbone("document backbone malformed", Vec::new());
+                            return;
+                        }
+                    };
+                    if let Err(reason) = self.document_backbone_retention.retain(message.len(), &envelopes) {
+                        self.reject_document_backbone(reason, vec![envelopes.len().min(u8::MAX as usize) as u8]);
+                        return;
+                    }
+                    if self.hub_space_id.is_some() {
+                        self.relay_operations(&envelopes).await;
+                    } else {
+                        self.document_backbone_retention.release(&envelopes);
+                    }
+                }
                 ArtifactActorMsg::PresenceHeartbeat { mut peer } => {
                     stamp_session(&mut peer, self.session_color, self.hub_surface.as_deref()).await;
                     self.send_frame(&ClientFrame::Presence { peer: presence_to_bytes(&peer).await }, Lane::Preview).await;
@@ -3281,6 +3417,12 @@ mod wasm_actor {
                 }
                 ArtifactActorMsg::ExternalChanged | ArtifactActorMsg::Detach => {}
             }
+        }
+
+        fn reject_document_backbone(&mut self, reason: impl Into<String>, messages: Vec<u8>) {
+            let batch_id = self.next_local_rejection_batch_id;
+            self.next_local_rejection_batch_id = self.next_local_rejection_batch_id.wrapping_sub(1);
+            let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason: reason.into(), messages } });
         }
 
         fn bootstrap_control(&self, _started_ms: u64, cancelled: bool) -> WasmBootstrapControl {
@@ -3522,6 +3664,7 @@ mod wasm_actor {
             for stage in stages {
                 let AckStage::Applied { outcome } = stage else { continue };
                 let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
+                self.document_backbone_retention.release(&sent);
                 match *outcome {
                     ApplyOutcome::Accepted => {
                         let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
@@ -3555,7 +3698,15 @@ mod wasm_actor {
             if self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).await.is_err() {
                 return false;
             }
-            let _ = self.events.send(ArtifactEvent::RemoteMutations { envelopes });
+            if self.hub_space_id.is_some() {
+                let message = match (BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).encode_op() {
+                    Ok(message) => message,
+                    Err(_) => return false,
+                };
+                let _ = self.events.send(ArtifactEvent::DocumentBackbone { message });
+            } else {
+                let _ = self.events.send(ArtifactEvent::RemoteMutations { envelopes });
+            }
             true
         }
     }
@@ -3593,7 +3744,9 @@ mod wasm_actor {
             artifact_bootstrap: None,
             pending_batches: std::collections::HashMap::new(),
             outbox: Vec::new(),
+            document_backbone_retention: DocumentBackboneRetentionV1::default(),
             next_batch_id: 0,
+            next_local_rejection_batch_id: u64::MAX,
             hlc_seed,
             hlc_counter: 0,
             incoming_tx,
@@ -3607,8 +3760,8 @@ mod wasm_actor {
                 tokio::select! {
                     cmd = cmd_rx.recv() => {
                         match cmd {
-                            None => break,
-                            Some(ArtifactActorMsg::Detach) => { let _ = actor.relay_one_backbone().await; break; }
+                            None => { actor.document_backbone_retention.clear(); break; }
+                            Some(ArtifactActorMsg::Detach) => { actor.document_backbone_retention.clear(); let _ = actor.relay_one_backbone().await; break; }
                             Some(message) => actor.handle_cmd(message).await,
                         }
                     }

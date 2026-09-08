@@ -4690,8 +4690,8 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   const projection = JSON.parse(readFileSync(projectionPath, "utf8")) as { schema: string; provider_id: string; plugin_id: string; package_id: string; receipts: NativeOpenableProjectionReceipt[] };
   const Ajv2020 = (await import("ajv/dist/2020.js")).default;
   const ajv = new Ajv2020({ allErrors: true, strict: true });
-  const claimRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/🧾️claim-authority");
-  const surfaceRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/📇️native-catalog-surface");
+  const claimRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧫️fixtures/🧾️claim-authority");
+  const surfaceRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧫️fixtures/📇️native-catalog-surface");
   const builderRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder");
   const builderFixture = JSON.parse(readFileSync(join(builderRoot, "🧪️fixtures/📇️topic-contributions/🔣️.json"), "utf8"));
   const validateBuilder = hubSchemaExport(repoRoot, "schema://os.plugin.builder/TopicContributionsV1");
@@ -4709,9 +4709,19 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   if (!validateImports(importsFixture)) throw new Error("native catalog imports fixture violates its owning scope contract");
   const catalogSource = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs"), "utf8");
   if (!catalogSource.includes("pub fn native_artifact_catalog_dependency(") || !catalogSource.includes("pub fn validate_native_artifact_catalog_dependency(")) throw new Error("native catalog compiled dependency contract is absent");
-  const inventory = JSON.parse(readFileSync(join(surfaceRoot, "../../🔣️.json"), "utf8")).artifact_definition_paths;
-  const compiledInventory = [...catalogSource.slice(catalogSource.indexOf("const SOURCES: [&str; 36] = [")).split("];", 1)[0]!.matchAll(/include_str!\("([^"]+)"\)/gu)].map((match) => match[1]);
-  if (!Array.isArray(inventory) || inventory.length !== 36 || new Set(inventory).size !== 36 || JSON.stringify(inventory) !== JSON.stringify(compiledInventory) || inventory.some((path: string) => !lstatSync(join(surfaceRoot, "../..", path)).isFile())) throw new Error("native Stdio indexed definition paths differ from the compiled complete source roster");
+  const registryRoot = join(surfaceRoot, "../..");
+  const artifactsRoot = join(registryRoot, "../🗿️artifacts");
+  const compiledDefinition = /pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!\("([^"]+)"\);/gu;
+  const compiledInventory = readdirSync(artifactsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => {
+      const module = join(artifactsRoot, entry.name, "🦀️.rs");
+      const compiled = existsSync(module) ? [...readFileSync(module, "utf8").matchAll(compiledDefinition)] : [];
+      if (compiled.length !== 1) throw new Error(`native Stdio artifact module does not compile exactly one artifact definition: ${entry.name}`);
+      return resolve(dirname(module), compiled[0][1]);
+    })
+    .sort();
+  if (compiledInventory.length !== 36 || new Set(compiledInventory).size !== 36 || compiledInventory.some((path) => !lstatSync(path).isFile())) throw new Error("native Stdio compiled artifact definition roster is not the complete set of 36 module-owned definitions");
   const budgetFixture = JSON.parse(readFileSync(join(surfaceRoot, "🧪️budget.json"), "utf8"));
   const validateBudget = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurfaceBudget");
   if (!validateBudget(budgetFixture)) throw new Error("native catalog projection budget fixture violates its owning scope contract");
@@ -4745,16 +4755,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   const validateProjection = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCodecFactories");
   if (!validateProjection(projection)) throw new Error("native-openable projection violates its owning scope contract");
   const definitionRoot = join(repoRoot, fixture.artifactDefinitionsRoot);
-  const definitionFiles: string[] = [];
-  const pending = [definitionRoot];
-  while (pending.length > 0) {
-    const directory = pending.pop()!;
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
-      const path = join(directory, entry.name);
-      if (entry.isDirectory()) pending.push(path);
-      else if (entry.isFile() && entry.name === "📜️artifact-definition.json") definitionFiles.push(path);
-    }
-  }
+  const definitionFiles = compiledInventory;
   const owners: NativeOpenableOwnerReceipt[] = [];
   for (const path of definitionFiles.sort()) {
     const definition = JSON.parse(readFileSync(path, "utf8")) as any;
@@ -4798,7 +4799,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   }
   const sha256 = async (bytes: Uint8Array): Promise<string> => Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
   const protocolDigests = new Map<string, string>();
-  const stdioRoot = resolve(dirname(projectionPath), "../..");
+  const stdioRoot = dirname(definitionRoot);
   for (const receipt of projection.receipts) protocolDigests.set(receipt.protocol_path, await sha256(readFileSync(join(stdioRoot, receipt.protocol_path))));
   const componentDigest = await sha256(Buffer.from(fixture.attestation.componentHex, "hex"));
   const descriptorDigest = await sha256(Buffer.from(fixture.attestation.descriptorProjectionHex, "hex"));
@@ -5077,7 +5078,7 @@ function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
 
 /** 🧪️ Compiles bounded positive/negative imports against one private metadata capture. */
 async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<ReturnType<typeof runExactCargoLaws>>[number]): Promise<void> {
-  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️fixtures/📇️native-catalog-surface");
+  const fixtureRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧫️fixtures/📇️native-catalog-surface");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🧪️imports.json"), "utf8")) as { features: string[]; cases: { id: string; source: string; accepted: boolean }[] };
   const reportPath = join(receipt.artifactDir, "build.stdout");
   const report = lstatSync(reportPath);
@@ -6275,7 +6276,7 @@ async function proveBrowserActorGisChildV1(
   if (!/^[a-f0-9]{64}$/u.test(actor.componentSha256) || actor.bytes.byteLength !== actor.byteLength || createHash("sha256").update(actor.bytes).digest("hex") !== actor.sha256 || createHash("sha256").update(descriptor).digest("hex") !== actor.descriptorByteSha256)
     throw new Error("GIS child retained byte identity differs");
   const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle";
-  const fixture = JSON.parse(readFileSync(join(repoRoot, ownerPath, "🧾️describe/🧪️fixtures/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(repoRoot, ownerPath, "🧾️describe/🧫️fixtures/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(repoRoot, ownerPath, "🧾️describe/🧬️schema/🔣️.json"), "utf8"));
   if (!new Ajv({ strict: true }).compile(schema)(fixture)) throw new Error("GIS describe transport fixture");
   const api = await import(join(repoRoot, ownerPath, "🧾️describe/🟦️.ts"));
@@ -6425,7 +6426,7 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments[0] !== undefined && segments[0] !== "--source" && segments[0] !== "--native")) throw new Error("usage: browser-actor-gis-describe-check [--source|--native]");
     const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle";
-    const fixture = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧾️describe/🧪️fixtures/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧾️describe/🧫️fixtures/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧾️describe/🧬️schema/🔣️.json"), "utf8"));
     if (!new Ajv({ strict: true }).compile(schema)(fixture)) throw new Error("GIS describe fixture");
     const ts = await import("typescript");
@@ -7488,17 +7489,13 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
   )
     throw new Error("retained GIS Map committer capacity, write authority, typed journal, or publication-before-apply boundary drifted");
   const hubBin = readFileSync(join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "🚀️bin.rs"), "utf8");
-  for (const symbol of [
-    "HubGisMapApprovalIngressAuthorityV1",
-    "acquire_gis_map_approval_ingress",
-    "revalidate_gis_map_approval_delivery",
-    "InferenceApprovalRouteContextV1",
-    "gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write",
-    "gis_map_applied_checkpoint_notifies_two_peers_with_one_exact_rebootstrap_pair",
-    "inference_runtime.close().await",
-    "publish_gis_map_checkpoint_change",
-  ])
+  // 🧪️The binary's own laws live beside it in `🌎️hub/🧪️tests/**`, not inside `🚀️bin.rs`, so the law
+  // names are asserted against the whole test tree — a further test-layout move cannot silently red this.
+  const hubBinLaws = moduleRustSource(join(repoRoot, "🌎️hub", "🧪️tests"));
+  for (const symbol of ["HubGisMapApprovalIngressAuthorityV1", "acquire_gis_map_approval_ingress", "revalidate_gis_map_approval_delivery", "InferenceApprovalRouteContextV1", "inference_runtime.close().await", "publish_gis_map_checkpoint_change"])
     if (!hubBin.includes(symbol)) throw new Error(`Hub GIS Map approval ingress source is missing ${symbol}`);
+  for (const law of ["gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write", "gis_map_applied_checkpoint_notifies_two_peers_with_one_exact_rebootstrap_pair"])
+    if (!hubBinLaws.includes(law)) throw new Error(`Hub GIS Map approval ingress laws are missing ${law}`);
   const currentMatchesBase = hubBin.slice(hubBin.indexOf("fn current_matches_base("), hubBin.indexOf("impl GisMapApprovalCheckpointPublisherV1 for GisMapApprovalCheckpointPublisherV1Impl"));
   if (
     !hubBin.includes("Self::current_matches_base(&request.scope") ||
@@ -8931,7 +8928,7 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
   assert.deepEqual(packValueToExactJson(decodePackValue(encodePackValue(kind))), JSON.parse(JSON.stringify(kind)));
   for (const field of ["exportStdioKinds", "importStdioKinds"]) for (const invalid of [[1], "stdio.svg"]) assert.equal(validateKind({ ...kind, [field]: invalid }), false);
   assert.deepEqual(fixture.nativeCases.map((row: any) => row.id), ["exact", "missing", "duplicate", "foreign", "any", "caret", "tilde", "at-least", "wrong-version"]);
-  const hubSource = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/🚀️bin.rs"), "utf8");
+  const hubSource = moduleRustSource(join(repoRoot, "🌎️hub", "🧪️tests"));
   const readinessFixture = hubSource.slice(hubSource.indexOf("fn native_openable_stdio_bundle("), hubSource.indexOf("async fn native_openable_stdio_provider_is_the_only_atomic_readiness_transition("));
   assert(readinessFixture.includes('"executionProtocol": { "appChannelVersion": descriptor.execution_protocol.app_channel_version }'), "readiness fixture must carry its actual descriptor protocol");
   const runnerSource = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📜️script.ts"), "utf8");
@@ -9161,10 +9158,8 @@ function captureTrustedBootstrapCodecsV1(repoRoot: string, check: (stage?: strin
 async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
   const { writeFileSync, truncateSync } = await import("node:fs");
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧊️codec-source");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const ajv = new Ajv2020({ strict: true, allErrors: true });
   assert.deepEqual(Object.keys(fixture), ["schema", "maximumSourceBytes", "maximumTotalBytes", "cases"]);
   assert.equal(fixture.schema, "semio.hub.codec-source.v1");
   assert.equal(fixture.maximumSourceBytes, 65_536);
@@ -9179,10 +9174,8 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
     stdio: "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json",
     gis: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json",
   };
-  /** 🚧️ The GIS codec receipts have no scope module yet; `📇️native-codecs` is still a flat schema file. */
-  const gisSchemaPath = "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🧬️.schema.json";
   const originals = { stdio: JSON.parse(readFileSync(join(repoRoot, sourcePaths.stdio), "utf8")), gis: JSON.parse(readFileSync(join(repoRoot, sourcePaths.gis), "utf8")) };
-  const schemas = { stdio: hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCodecFactories"), gis: ajv.compile(JSON.parse(readFileSync(join(repoRoot, gisSchemaPath), "utf8"))) };
+  const schemas = { stdio: hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCodecFactories"), gis: hubSchemaExport(repoRoot, "schema://s.gis/GisNativeCodecs") };
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   assert(artifactRoot?.includes("🗑️generated"));
   mkdirSync(artifactRoot, { recursive: true });
@@ -10816,7 +10809,7 @@ async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
 }
 
 async function proveMemoryBackendBackingFixture(repoRoot: string): Promise<void> {
-  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧪️fixtures/🧮️memory-backing");
+  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧫️fixtures/🧮️memory-backing");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validate = hubSchemaExport(repoRoot, "schema://os.db.storage/MemoryBackingV1");
   if (!validate(fixture)) throw new Error("memory backing fixture violates its owning scope contract");
@@ -11821,7 +11814,7 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
     assert.deepEqual(await readPair(), undone);
     const restartedMaps = await waitMaps(initialRegions);
     assertGisMapCompositionCurrent(prepared);
-    completedReceipt = { schema: "semio.hub.gis-map-two-author-shell-receipt/v1", current: prepared.current, browserHost: browserHost.receipt, scope, locales, cancelledJobId, regionId, initial, applied, undone, initialMaps, appliedMaps, undoneMaps, restartedMaps, ownerPrivateJobDenials: 3, rebootstrapControls: 4, actualMapObservations: 8, restartedProcess: true, nonclaims: ["external-model-provider", "browser-qualified-current-publication", "durable-collaborative-redo", "wgpu-rendering"] };
+    completedReceipt = { schema: "semio.hub.gis-map-two-author-shell-receipt/v1", current: prepared.current, browserHost: browserHost.receipt, scope, locales, cancelledJobId, regionId, initial, applied, undone, initialMaps, appliedMaps, undoneMaps, restartedMaps, ownerPrivateJobDenials: 3, rebootstrapControls: 4, actualMapObservations: 8, restartedProcess: true, nonclaims: ["external-model-provider", "browser-qualified-current-publication", "durable-collaborative-redo", "private-job-restart-recovery", "wgpu-rendering"] };
   } finally {
     const errors: unknown[] = [];
     await closePeers().catch((error) => errors.push(error));
@@ -12450,8 +12443,8 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
     ["observations.cancel", ["running-receipt-before-compute", "fd4-entered", "author-b-own-private-mcp-cancel", "cancelled-without-offer"]],
     ["observations.approval", ["author-a-shell-worker-approval", "one-server-stamped-create-region", "same-peer-rebootstrap-control", "same-pair-and-frontier", "author-b-private-job-denied"]],
     ["observations.undo", ["ordinary-shell-undo-action", "private-worker-handle", "durable-undo-receipt", "region-absent-on-both-maps"]],
-    ["observations.restart", ["same-current-receipt", "no-retained-running-job", "same-durable-post-undo-frontier"]],
-    ["nonclaims", ["external-model-provider", "browser-qualified-current-publication", "durable-collaborative-redo"]],
+    ["observations.restart", ["same-current-receipt", "same-durable-post-undo-frontier"]],
+    ["nonclaims", ["external-model-provider", "browser-qualified-current-publication", "durable-collaborative-redo", "private-job-restart-recovery"]],
     ["socketRetirement", { maximumMs: 5000, hostileDeadlineMs: 15, cases: ["closed-at-entry", "await-close-event", "timeout-refused", "bun-websocket-close", "ws-websocket-close"] }],
   ];
   for (const [name, expected] of laws) {
@@ -12461,6 +12454,7 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
   assert.equal(fixture.steps.length, 17, "two-author composition step count");
   assert.equal(new Set(fixture.steps).size, 17, "two-author composition steps are not unique");
   assert.equal(fixture.steps[0], "materialize-and-validate-current");
+  assert.deepEqual(fixture.steps.slice(3, 8), ["create-shared-space-and-admit-author-b", "mount-author-a-real-shell-and-create-map", "open-two-authenticated-mcp-clients", "open-two-authenticated-document-sockets", "mount-author-b-real-shell-worker-map"]);
   assert.equal(fixture.steps.at(-1), "reopen-two-authenticated-maps-and-compare-durable-frontier");
   assert.equal(fixture.hostiles.length, 10, "two-author composition hostile count");
   assert.equal(new Set(fixture.hostiles).size, 10, "two-author composition hostiles are not unique");
@@ -12474,6 +12468,8 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
   const peerEnd = source.indexOf("\ntype GisMapTwoAuthorPreparedV1", peerStart);
   const peerOwner = source.slice(peerStart, peerEnd);
   assert.ok(start >= 0 && end > start, "same-data-root Shell composition owner is missing");
+  assert.ok(processOwner.indexOf("creation: { kindId: target.artifactKind") < processOwner.indexOf("await openPeers(false)"), "ordinary author-a Shell creation must precede document-scoped MCP and peer join");
+  assert.ok(processOwner.includes('"private-job-restart-recovery"'), "process receipt must not claim an unobserved private job after restart");
   assert.ok(peerStart >= 0 && peerEnd > peerStart, "ticket-owned browser peer owner is missing");
   assert.ok(!processOwner.includes("materializeTrustedStdioGisBundle(") && !processOwner.includes("validateAndPublishTrustedStdioGisCandidate("), "Shell composition cannot create another current or data root");
   assert.ok(processOwner.includes("assertGisMapCompositionCurrent(prepared)") && processOwner.includes("dataDir: prepared.dataRoot"), "Shell starts and restarts must retain the prepared current owner");

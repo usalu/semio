@@ -11,18 +11,18 @@ fn assert_measure<T: SequenceRetainedJson + dsl::ToValue>(value: &T) {
 
 #[test]
 fn sequence_retained_json_measure_matches_the_json_oracle() {
-    let vectors: Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔁️retained-json.json")).expect("neutral retained vectors");
+    let vectors: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️retained-json.json")).expect("neutral retained vectors");
     for row in vectors["mutations"].as_array().expect("mutations") {
         let mutation: SequenceMutation = dsl::os_pack::from_json_str(&row.to_string()).expect("owned mutation decoder");
         assert_measure(&mutation);
         neural_engine::ColdRetire::retire_cold(mutation);
     }
-    let config: Value = serde_json::from_str(include_str!("../../🎚️config/🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral config vectors");
+    let config: Value = serde_json::from_str(include_str!("../../🎚️config/🧫️fixtures/🔁️mutation-contracts.json")).expect("neutral config vectors");
     for row in config["cases"].as_array().expect("config cases") {
         let mutation: SequenceConfigMutation = dsl::os_pack::from_json_str(&row["mutation"].to_string()).expect("owned config decoder");
         assert_measure(&mutation);
     }
-    let carrier: Value = serde_json::from_str(include_str!("../../../🚪️io/🧪️fixtures/🔁️carrier-contracts.json")).expect("neutral carrier vectors");
+    let carrier: Value = serde_json::from_str(include_str!("../../../🚪️io/🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral carrier vectors");
     for row in carrier["cases"].as_array().expect("carrier cases") {
         let fixture: SequenceFixture = dsl::os_pack::from_json_str(&row["fixture"].to_string()).expect("owned fixture decoder");
         let scene = (fixture.steps, fixture.edges);

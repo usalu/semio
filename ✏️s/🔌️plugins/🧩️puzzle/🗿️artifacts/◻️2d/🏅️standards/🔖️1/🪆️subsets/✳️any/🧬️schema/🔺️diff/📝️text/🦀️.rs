@@ -71,12 +71,6 @@ impl Puzzle2dDiff {
             if let Some(value) = &self.brush_candidate_source_handle_id {
                 next.brush_candidate_source_handle_id = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
-            if let Some(value) = &self.terminology {
-                next.terminology = value.clone();
-            }
             if let Some(value) = &self.lod_mode_by_pane_json {
                 next.lod_mode_by_pane_json = value.clone();
             }
@@ -224,8 +218,6 @@ impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
         take!(fill_count);
         take!(brush_candidate_index);
         take!(brush_candidate_source_handle_id);
-        take!(locale);
-        take!(terminology);
         take!(lod_mode_by_pane_json);
         take!(engagement_input_by_pane_json);
         take!(brush_candidates_json);
@@ -275,3 +267,8 @@ impl MutationDiff<Puzzle2dSnapshot> for Puzzle2dDiff {
     }
 }
 //#endregion 🔖️Apply
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Puzzle2dDiffText = String;
+//#endregion 🚚️Carrier

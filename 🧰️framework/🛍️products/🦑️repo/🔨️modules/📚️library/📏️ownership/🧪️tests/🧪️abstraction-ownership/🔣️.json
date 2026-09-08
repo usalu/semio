@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    { "name": "os-owns-locale-and-theme", "owner": "os", "fields": ["locale", "uiThemeId"], "commands": ["set-locale", "set-theme-id"], "expected": [] },
+    { "name": "surface-rejects-locale", "owner": "surface", "fields": ["camera", "locale"], "commands": [], "expected": ["field:locale"] },
+    { "name": "surface-rejects-global-preference-commands", "owner": "surface", "fields": [], "commands": ["set-locale", "set-terminology"], "expected": ["command:set-locale", "command:set-terminology"] },
+    { "name": "surface-rejects-host-utility", "owner": "surface", "fields": ["activeUtilityId"], "commands": ["set-active-utility"], "expected": ["field:activeUtilityId", "command:set-active-utility"] },
+    { "name": "surface-keeps-view-configuration", "owner": "surface", "fields": ["camera", "lodModeByWindow", "gridVisible"], "commands": ["set-camera", "set-lod-mode"], "expected": [] },
+    { "name": "artifact-keeps-content-language", "owner": "artifact", "fields": ["language", "text", "locale"], "commands": ["change-language"], "expected": [] },
+    { "name": "host-keeps-per-window-utility", "owner": "os", "fields": ["activeUtilityId"], "commands": ["set-active-utility"], "expected": [] },
+    { "name": "surface-rejects-appearance-and-keybindings", "owner": "surface", "fields": ["uiAppearance", "uiKeybindingOverrides"], "commands": [], "expected": ["field:uiAppearance", "field:uiKeybindingOverrides"] },
+    { "name": "surface-keeps-domain-theme", "owner": "surface", "fields": ["chartTheme", "documentLanguage"], "commands": ["set-chart-theme"], "expected": [] }
+  ]
+}

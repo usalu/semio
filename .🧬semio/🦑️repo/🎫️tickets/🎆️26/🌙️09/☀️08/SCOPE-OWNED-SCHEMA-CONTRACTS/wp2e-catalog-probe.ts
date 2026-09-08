@@ -1,0 +1,10 @@
+import { inventorySchemaScopes, loadCatalogTaxonomy } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+const root = "/Users/ueli/Documents/semio";
+const inv = inventorySchemaScopes(root, loadCatalogTaxonomy());
+const ids = Object.keys(inv.catalog.scopes).filter((id) => id.startsWith("framework.schema") || id === "framework");
+console.log("[DEBUG] framework.schema* scopes:", JSON.stringify(ids));
+const mods = inv.modules.filter((m: any) => String(m.modulePath).startsWith("🧰️framework/🔨️modules/🧬️schema"));
+for (const m of mods) console.log("[DEBUG] module", JSON.stringify({ modulePath: m.modulePath, ownerPath: m.ownerPath, level: m.level, scopeId: m.scopeId, facetKindId: m.facetKindId }));
+const diags = [...inv.diagnostics, ...inv.placement].filter((d: any) => String(d.path).startsWith("🧰️framework/🔨️modules/🧬️schema"));
+console.log("[DEBUG] diagnostics:", diags.length);
+for (const d of diags.slice(0, 40)) console.log("[DEBUG]", JSON.stringify(d));

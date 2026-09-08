@@ -4,18 +4,7 @@
   "title": "SemioValueSnapshot",
   "description": "Ordered, lexeme-preserving typed value graph — mirrors the 🦀️.rs sibling's real fields.",
   "$defs": {
-    "valueId": {
-      "type": "value",
-      "properties": {
-        "value": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "value"
-      ]
-    },
-    "semioValue": {
+    "SemioValue": {
       "type": "value",
       "properties": {
         "kind": {
@@ -43,31 +32,31 @@
         "items": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/semioValue"
+            "$ref": "#/$defs/SemioValue"
           }
         },
         "entries": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/semioValueEntry"
+            "$ref": "#/$defs/SemioValueEntry"
           }
         },
         "id": {
-          "$ref": "#/$defs/valueId"
+          "$ref": "#/$defs/ValueId"
         }
       },
       "required": [
         "kind"
       ]
     },
-    "semioValueEntry": {
+    "SemioValueEntry": {
       "type": "value",
       "properties": {
         "key": {
           "type": "string"
         },
         "value": {
-          "$ref": "#/$defs/semioValue"
+          "$ref": "#/$defs/SemioValue"
         }
       },
       "required": [
@@ -75,18 +64,29 @@
         "value"
       ]
     },
-    "semioValueNode": {
+    "SemioValueNode": {
       "type": "value",
       "properties": {
         "id": {
-          "$ref": "#/$defs/valueId"
+          "$ref": "#/$defs/ValueId"
         },
         "value": {
-          "$ref": "#/$defs/semioValue"
+          "$ref": "#/$defs/SemioValue"
         }
       },
       "required": [
         "id",
+        "value"
+      ]
+    },
+    "ValueId": {
+      "type": "value",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
         "value"
       ]
     }
@@ -98,14 +98,14 @@
       "x-semio-state": "artifact"
     },
     "root": {
-      "$ref": "#/$defs/semioValue",
+      "$ref": "#/$defs/SemioValue",
       "x-semio-state": "artifact"
     },
     "nodes": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/semioValueNode"
+        "$ref": "#/$defs/SemioValueNode"
       }
     }
   },

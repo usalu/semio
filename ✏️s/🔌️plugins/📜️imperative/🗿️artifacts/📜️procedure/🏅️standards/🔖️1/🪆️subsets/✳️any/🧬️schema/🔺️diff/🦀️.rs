@@ -25,8 +25,6 @@ pub struct ProcedureDiff {
     #[state(presence)]
     pub selected_step_ids: Option<ProcedureStringList>,
     #[state(config)]
-    pub locale: Option<String>,
-    #[state(config)]
     pub contributions_json: Option<String>,
 }
 //#endregion 🔖️Diff

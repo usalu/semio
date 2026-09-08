@@ -8,8 +8,7 @@ use crate::{forms_steps, FormsSnapshot};
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::topology::{compute_forms_topology, FormsTopology};
-
+use super::topology::{compute_forms_topology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a forms snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
@@ -82,3 +81,8 @@ pub fn forms_artifact_inference_descriptor() -> framework_schema::ArtifactInfere
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::topology::FormsTopology;
+//#endregion 🔁️Re-exports

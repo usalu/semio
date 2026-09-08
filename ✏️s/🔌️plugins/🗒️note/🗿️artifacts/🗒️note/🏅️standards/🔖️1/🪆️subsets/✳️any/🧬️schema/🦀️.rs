@@ -1,7 +1,7 @@
 //! 🧬️ Note artifact schema — every field of the artifact with its state class.
 
-use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use crate::{NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+use framework_schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -54,8 +54,6 @@ pub struct NoteArtifact {
     pub camera_y: f64,
     #[state(config)]
     pub camera_zoom: f64,
-    #[state(config)]
-    pub locale: String,
     #[state(artifact)]
     pub hovered_block_id: Option<String>,
 }
@@ -132,7 +130,6 @@ impl NoteArtifact {
             camera_x: 0.0,
             camera_y: 0.0,
             camera_zoom: 1.0,
-            locale: "en-US".into(),
             hovered_block_id: None,
         }
     }
@@ -159,8 +156,8 @@ impl NoteArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.note.note` — twenty handcrafted schema leaves.
-pub fn note_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
-    schema::ArtifactSchemaDescriptor {
+pub fn note_artifact_schema_descriptor() -> framework_schema::ArtifactSchemaDescriptor {
+    framework_schema::ArtifactSchemaDescriptor {
         id: "s.note.note",
         artifact: schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
@@ -742,3 +739,9 @@ pub type Construction = semio_framework_plugin::app::SnapshotBuilder<crate::Note
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::NoteBlockNode;
+pub use crate::NoteImageAsset;
+//#endregion 🔁️Re-exports

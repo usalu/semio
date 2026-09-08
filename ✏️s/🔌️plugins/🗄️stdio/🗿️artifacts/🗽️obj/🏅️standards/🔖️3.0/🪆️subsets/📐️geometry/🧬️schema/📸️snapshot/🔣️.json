@@ -25,42 +25,42 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/ObjVertex"
+        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjVertex"
       }
     },
     "texcoords": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/ObjTexCoord"
+        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjTexCoord"
       }
     },
     "normals": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/ObjNormal"
+        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjNormal"
       }
     },
     "faces": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/ObjFace"
+        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjFace"
       }
     },
     "groups": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/ObjGroup"
+        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjGroup"
       }
     },
     "objects": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/ObjObject"
+        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjObject"
       }
     },
     "mtllib": {
@@ -71,212 +71,21 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/ObjUsemtlRange"
+        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjUsemtlRange"
       }
     },
     "smoothingGroups": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/ObjSmoothingRange"
+        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjSmoothingRange"
       }
     },
     "unknownStatements": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/ObjUnknownStatement"
-      }
-    }
-  },
-  "$defs": {
-    "ObjVertex": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "z"
-      ],
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        },
-        "z": {
-          "type": "number"
-        },
-        "w": {
-          "type": "number"
-        }
-      }
-    },
-    "ObjTexCoord": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "u",
-        "v"
-      ],
-      "properties": {
-        "u": {
-          "type": "number"
-        },
-        "v": {
-          "type": "number"
-        },
-        "w": {
-          "type": "number"
-        }
-      }
-    },
-    "ObjNormal": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "z"
-      ],
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        },
-        "z": {
-          "type": "number"
-        }
-      }
-    },
-    "ObjFaceVertex": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "vertex"
-      ],
-      "properties": {
-        "vertex": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "texcoord": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "normal": {
-          "type": "integer",
-          "minimum": 0
-        }
-      }
-    },
-    "ObjFace": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "vertices"
-      ],
-      "properties": {
-        "vertices": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ObjFaceVertex"
-          }
-        }
-      }
-    },
-    "ObjGroup": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "faces"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "faces": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
-        }
-      }
-    },
-    "ObjObject": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "faces"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "faces": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
-        }
-      }
-    },
-    "ObjUsemtlRange": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "faceIndexFrom",
-        "material"
-      ],
-      "properties": {
-        "faceIndexFrom": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "material": {
-          "type": "string"
-        }
-      }
-    },
-    "ObjSmoothingRange": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "faceIndexFrom"
-      ],
-      "properties": {
-        "faceIndexFrom": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "group": {
-          "type": "integer",
-          "minimum": 0
-        }
-      }
-    },
-    "ObjUnknownStatement": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "lineIndex",
-        "raw"
-      ],
-      "properties": {
-        "lineIndex": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "raw": {
-          "type": "string"
-        }
+        "$ref": "https://semio.tech/schema/s/stdio/obj/3.0/geometry/artifact.json#/$defs/ObjUnknownStatement"
       }
     }
   }

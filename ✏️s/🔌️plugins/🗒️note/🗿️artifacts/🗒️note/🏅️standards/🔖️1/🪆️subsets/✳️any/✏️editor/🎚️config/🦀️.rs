@@ -34,7 +34,6 @@ pub struct NoteConfig {
     /// `view_state.active_utility_id` (host-pushed `ViewModel`, deleted by the pure-trait migration).
     pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -83,7 +82,7 @@ impl store::ArtifactPack for NoteConfig {
 
 impl Default for NoteConfig {
     fn default() -> Self {
-        Self { engagement_input: String::new(), camera: NoteCamera::default(), active_utility_id: "selectDirect".into(), locale: "en-US".into() }
+        Self { engagement_input: String::new(), camera: NoteCamera::default(), active_utility_id: "selectDirect".into(), }
     }
 }
 

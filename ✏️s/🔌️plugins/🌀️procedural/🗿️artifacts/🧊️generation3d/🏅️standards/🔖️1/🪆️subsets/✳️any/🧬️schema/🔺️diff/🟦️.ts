@@ -30,7 +30,6 @@ export interface Generation3dDiff {
   /** @state presence */
   activeUtilityId?: string;
   /** @state config */
-  locale?: string;
 }
 
 export type Generation3dStringList = { values: string[] };

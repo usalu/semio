@@ -21,3 +21,8 @@ type Din4108Artifact {
   declaredApplicationClass: String! @state(class: ARTIFACT)
   selectedCheckIndex: Int @state(class: PRESENCE)
 }
+
+type Din4108LayerDocument {
+  thicknessM: Float!
+  lambdaWMk: Float!
+}

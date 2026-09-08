@@ -9,18 +9,11 @@ type JackDiff {
   nodes: JackNodesDelta @state(class: ARTIFACT)
   edges: JackEdgesDelta @state(class: ARTIFACT)
   rootNodeId: String @state(class: ARTIFACT)
-  activeFixtureId: String @state(class: PRESENCE)
-  jackQuery: String @state(class: PRESENCE)
-  lodModeByWindow: [StringOptEntry!] @state(class: PRESENCE)
+  jackQuery: String @state(class: CONFIG)
+  lodModeByWindow: [StringOptEntry!] @state(class: CONFIG)
   viewportCamera: Camera @state(class: CONFIG)
   jackResultJson: String @state(class: CONFIG)
-  editorEngagementInput: String @state(class: CONFIG)
-  graphEngagementInput: String @state(class: CONFIG)
-  resultsEngagementInput: String @state(class: CONFIG)
-  reorganizeEpoch: Int @state(class: CONFIG)
   editorSelection: JackEditorSelection @state(class: CONFIG)
-  revision: Int @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
 }
 
 type JackNodesDelta {

@@ -59,19 +59,13 @@ pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> semio_framew
     let mut node_items = UiFixedList::<BuiltNode>::default();
     for node in fixture_nodes(fixture) {
         let id = node.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.document", "puzzle2d node id is required"))?;
-        let item =
-            tree_item_with_action(id, ui_label(node_label(node))?, node.get("nodeKind").and_then(Value::as_str).map(str::to_string), actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(selection_args(id)?))?)?;
+        let item = tree_item_with_action(id, ui_label(node_label(node))?, node.get("nodeKind").and_then(Value::as_str).map(str::to_string), actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(selection_args(id)?))?)?;
         node_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d document node admission failed"))?;
     }
     let mut edge_items = UiFixedList::<BuiltNode>::default();
     for edge in fixture_edges(fixture) {
         let id = edge.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.document", "puzzle2d edge id is required"))?;
-        let item = tree_item_with_action(
-            id,
-            ui_label(edge_label(edge, fixture))?,
-            edge.get("edgeKind").and_then(Value::as_str).map(str::to_string),
-            actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(selection_args(id)?))?,
-        )?;
+        let item = tree_item_with_action(id, ui_label(edge_label(edge, fixture))?, edge.get("edgeKind").and_then(Value::as_str).map(str::to_string), actions.action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(selection_args(id)?))?)?;
         edge_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d document edge admission failed"))?;
     }
     PanelTreeBuilder::new("puzzle2d-play-document")?

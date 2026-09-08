@@ -1,6 +1,6 @@
 //! 🧬️ Generation3d diff schema — sparse field delta over the artifact.
 
-use crate::standards::v1::subsets::any::schema::Generation3dArtifact;
+
 use crate::standards::v1::subsets::any::schema::Generation3dPreviewCamera;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 use semio_framework_artifact_flow_flow::CameraJson;
@@ -42,8 +42,6 @@ pub struct Generation3dDiff {
     pub generation_preview_text: Option<Option<String>>,
     #[state(presence)]
     pub active_utility_id: Option<String>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Generation3dDiff
 
@@ -55,3 +53,8 @@ pub struct Generation3dStringList {
     pub values: Vec<String>,
 }
 //#endregion 🔖️Helpers
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::standards::v1::subsets::any::schema::Generation3dArtifact;
+//#endregion 🔁️Re-exports

@@ -1148,10 +1148,13 @@ pub mod examples {
     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🦀️.rs"]
     pub mod art_3d_hexagonal_cut_concrete_forest_left;
     #[cfg(test)]
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🦀️.rs"]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🦀️.rs"]
     mod art_3d_hexagonal_cut_concrete_forest_left_tests;
     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🦀️.rs"]
     pub mod art_3d_nakagin_capsule;
+    #[cfg(test)]
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🧪️tests/🧩️example/🦀️.rs"]
+    mod art_3d_nakagin_capsule_tests;
 }
 
 #[cfg(feature = "component-app-assembly")]

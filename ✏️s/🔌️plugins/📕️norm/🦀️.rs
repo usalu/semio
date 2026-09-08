@@ -1,5 +1,7 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+#![allow(async_fn_in_trait)]
+
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
@@ -175,3 +177,5 @@ pub fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
 #[path = "🧪️tests/🔬️surface/🦀️.rs"]
 mod surface_tests;
 //#endregion 🧪️SurfaceTests
+
+semio_framework_plugin::plugin_exports!(plugin, NormApps);

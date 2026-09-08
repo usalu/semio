@@ -14,8 +14,8 @@
           "visible": null,
           "opacity": null,
           "blendMode": null,
-          "transformX": 16.0,
-          "transformY": -8.0,
+          "transformX": 16,
+          "transformY": -8,
           "width": null,
           "height": null,
           "adjustmentKind": null
@@ -33,6 +33,5 @@
   "cameraX": null,
   "cameraY": null,
   "cameraZoom": null,
-  "locale": null,
   "hoveredId": null
 }

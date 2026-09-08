@@ -14,8 +14,6 @@ pub struct Block3dConfig {
     #[state(config)]
     pub wanted_tags: Vec<String>,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub windows: Vec<Block3dWindowView>,
     #[state(config)]
     pub brush_vortex_kind_id: Option<String>,

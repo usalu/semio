@@ -65,7 +65,6 @@ message LowpolyDiff {
   // @state config
   optional string engagement_input = 30;
   // @state config
-  optional string locale = 31;
   // @state artifact
   optional string hovered_object_id = 32;
   // @state artifact
@@ -143,4 +142,31 @@ message LowpolyTransform {
 message LowpolyObject {
   string id = 1;
   string name = 2;
+}
+
+message LowpolyPaintLayersDelta {
+  repeated LowpolyIndexedPaintLayer added = 1;
+  repeated uint32 removed = 2;
+  repeated LowpolyIndexedPaintLayerPatch patched = 3;
+  repeated LowpolyPaintStrokeAt strokes = 4;
+}
+
+message LowpolyIndexedPaintLayer {
+  uint32 index = 1;
+  LowpolyPaintLayer layer = 2;
+}
+
+message LowpolyIndexedPaintLayerPatch {
+  uint32 index = 1;
+  LowpolyPaintLayerPatch patch = 2;
+}
+
+message LowpolyPaintStrokeAt {
+  uint32 layer_index = 1;
+  repeated PixelRun runs = 2;
+}
+
+message PixelRun {
+  uint32 offset = 1;
+  string bytes = 2;
 }

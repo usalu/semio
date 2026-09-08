@@ -1,4 +1,3 @@
-
 use super::m5_auto_discovery::{self, ConformanceFacet, ProtocolFacetKind};
 use super::m5_soft_skip::{soft_skip_empty_bytes, soft_skip_missing};
 use super::pilot_resolve;

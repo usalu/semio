@@ -8,5 +8,4 @@ type WiresArtifact {
   dragNodeId: String @state(class: ARTIFACT)
   dragLastX: Float! @state(class: ARTIFACT)
   dragLastY: Float! @state(class: ARTIFACT)
-  locale: String! @state(class: CONFIG)
 }

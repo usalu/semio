@@ -167,5 +167,5 @@ impl ShardLoop {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🔁️lifecycle/🦀️.rs"]
 mod tests;

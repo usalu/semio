@@ -8,11 +8,11 @@
 //! registration, for LSP/verification tooling — a grammar can be registered and validated without a
 //! literal parser impl backing it at runtime) stayed at `🚪️io/🔺️diff/📝️text/`.
 
-use crate::schema::NoteArtifact;
+
 use crate::schema::{block_id, find_block, flatten_blocks, insert_block, remove_block_from_tree, update_block_in_tree};
 use crate::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
 use protocol::MutationDiff;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -68,8 +68,6 @@ pub struct NoteDiff {
     pub camera_y: Option<f64>,
     #[state(config)]
     pub camera_zoom: Option<f64>,
-    #[state(config)]
-    pub locale: Option<String>,
     #[state(artifact)]
     pub hovered_block_id: Option<Option<String>>,
 }
@@ -197,9 +195,6 @@ impl NoteDiff {
             }
             if let Some(value) = self.camera_zoom {
                 next.camera_zoom = value;
-            }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
             }
             if let Some(value) = &self.hovered_block_id {
                 next.hovered_block_id = value.clone();
@@ -410,7 +405,6 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
         take!(camera_x);
         take!(camera_y);
         take!(camera_zoom);
-        take!(locale);
         take!(hovered_block_id);
         take!(linked_artifact);
         match (&mut self.blocks, other.blocks) {
@@ -477,3 +471,8 @@ pub fn note_asset_removed_diff(key: &str) -> NoteDiff {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️diff-apply/🦀️.rs"]
 mod diff_apply_tests;
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::schema::NoteArtifact;
+//#endregion 🔁️Re-exports

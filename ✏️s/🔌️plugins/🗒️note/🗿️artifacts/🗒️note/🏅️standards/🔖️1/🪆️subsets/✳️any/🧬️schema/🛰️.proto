@@ -21,7 +21,6 @@ message NoteArtifact {
   double camera_x = 17;
   double camera_y = 18;
   double camera_zoom = 19;
-  string locale = 20;
   optional string hovered_block_id = 21;
 }
 

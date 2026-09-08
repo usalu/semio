@@ -8,6 +8,54 @@ use super::{catalog, catalog_error, decode_digest, AuthorityError, TRUSTED_IDENT
 use semio_framework::PackageRole;
 use serde::{Deserialize, Serialize};
 
+//#region 🔖️ScopeSchemaExports
+use semio_framework_schema_registry::{register_scope_schema_exports, FacetLeaves, SchemaExport, ScopeSchemaExports};
+
+/// 🧬️ The scope id every export of this module resolves under.
+pub const SCHEMA_SCOPE: &str = "hub.artifact-authority.trusted-catalog";
+
+/// 🍃 The leaves this module carries. An empty body is the registry's spelling of "not provided".
+const ALL_LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: "" };
+
+/// 📚️ The module document the annotation is read from, so the law never restates it.
+#[cfg(test)]
+const MODULE_JSON: &str = include_str!("🔣️.json");
+
+/// 🏷️ `$defs` of `🔣️.json`, in declaration order.
+const EXPORTS: [SchemaExport; 17] = [
+    SchemaExport { id: "TrustedCatalogRelativePathV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleIdentityV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleCodecV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleParentDialectV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleGrantV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleOpenTargetV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleFileV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleComponentV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleExecutionProtocolV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleBrowserActorV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundlePackageV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleProfileOpenTargetV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleProfileV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedCatalogCurrentPointerV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedCatalogPublicationCommandV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedCatalogPublicationReceiptV1", leaves: ALL_LEAVES },
+];
+
+/// 📌️ Registers `hub.artifact-authority.trusted-catalog`'s named exports into the process-wide export catalog.
+/// See `📋️execution-contract.md` §C and `semio_framework_schema_registry::resolve_schema_export`.
+// 🚫️async: pure registration helper (no I/O)
+pub fn register_scope_exports() {
+    register_scope_schema_exports(ScopeSchemaExports { scope: SCHEMA_SCOPE, exports: &EXPORTS }).expect("hub.artifact-authority.trusted-catalog scope schema exports");
+}
+/// 🔬 Proves the registration at runtime rather than by inspection: it registers, resolves every
+/// export in exactly the formats its `"x-semio-formats"` annotation names and in no other, and
+/// asserts the scope is visible in the process-wide catalog.
+#[cfg(test)]
+#[path = "🧪️tests/🔬️scope-schema-export-law-standalone/🦀️.rs"]
+mod scope_schema_export_law;
+//#endregion 🔖️ScopeSchemaExports
+
 /// 🧬️ The draft-07 module every implementation of this contract is projected from.
 pub const TRUSTED_CATALOG_SCHEMA_JSON: &str = include_str!("🔣️.json");
 /// 🏷️ Closed publication command schema identity.

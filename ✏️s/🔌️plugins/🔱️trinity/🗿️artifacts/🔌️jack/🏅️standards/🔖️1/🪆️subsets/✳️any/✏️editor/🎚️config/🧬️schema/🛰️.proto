@@ -4,27 +4,20 @@ message JackConfig {
   // @state config
   Camera camera = 2;
   // @state config
-  string active_fixture_id = 3;
   // @state config
   string jack_query = 4;
   // @state config
   string jack_result_json = 5;
   // @state config
-  string editor_engagement_input = 6;
   // @state config
-  string graph_engagement_input = 7;
   // @state config
-  string results_engagement_input = 8;
   // @state config
-  int64 reorganize_epoch = 9;
   // @state config
   optional JackEditorSelection editor_selection = 10;
   // @state config
   map<string, string> lod_mode_by_window = 11;
   // @state config
-  int64 revision = 12;
   // @state config
-  string locale = 13;
 }
 
 message JackEditorSelection {

@@ -2,7 +2,6 @@
 //! reaches for. Deliberately ONE block for the whole app (never split per window): the macro's value is
 //! that every locale combination is compile-checked in one place.
 
-use crate::editor::sourcing::config::SourcingCurationConfig;
 
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
@@ -29,8 +28,8 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn sourcing_curation_labels(cfg: &SourcingCurationConfig) -> &'static SourcingLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<SourcingLabels>(&cfg.locale)
+pub fn sourcing_curation_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static SourcingLabels {
+    semio_framework_plugin::resolve_labels::<SourcingLabels>(view_state)
 }
 //#endregion 🔖️Resolvers
 

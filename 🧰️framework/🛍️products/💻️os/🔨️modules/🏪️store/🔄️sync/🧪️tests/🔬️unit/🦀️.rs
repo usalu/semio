@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::os_spr::{ArtifactId, Edit, Mutation, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcomeClass, OpBinary, OpText};
 use crate::os_store::{
-    ArtifactCodec, ArtifactCommand, ArtifactDsl, ArtifactPack, BlobStore, PackDecodeOptions, PackEncodeOptions, PackError, ParsedDocumentText, create_document_envelope, pack_rt, parse_document_pack, parse_document_text, print_document_pack,
-    print_document_text, print_edit_lines, register_document_codec,
+    create_document_envelope, pack_rt, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, ArtifactCodec, ArtifactCommand, ArtifactDsl, ArtifactPack, BlobStore,
+    PackDecodeOptions, PackEncodeOptions, PackError, ParsedDocumentText,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -11,6 +10,27 @@ use std::sync::Arc;
 fn test_pool() -> Arc<semio_framework_async::WorkerPool> {
     static POOL: std::sync::OnceLock<Arc<semio_framework_async::WorkerPool>> = std::sync::OnceLock::new();
     POOL.get_or_init(|| Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)))).clone()
+}
+
+fn document_backbone_envelope(id: &str, document_id: &str) -> MutationEnvelope {
+    MutationEnvelope {
+        mutation_id: MutationId(id.into()),
+        document_id: ArtifactId(document_id.into()),
+        actor: ActorId("actor-a".into()),
+        dependencies: Vec::new(),
+        diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![1] },
+        inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![2] },
+        timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 3, physical_ms: 9_007_199_254_740_992, logical: 5 },
+    }
+}
+
+fn document_backbone_message(envelopes: &[MutationEnvelope]) -> Vec<u8> {
+    BackboneMessage::Mutations { envelopes: encode_envelopes(envelopes) }.encode_op().expect("canonical document backbone message")
+}
+
+fn document_backbone_event_envelopes(event: &ArtifactEvent) -> Option<Vec<MutationEnvelope>> {
+    let ArtifactEvent::DocumentBackbone { message } = event else { return None };
+    decode_document_backbone_message_exact(message).ok()
 }
 
 #[semio_framework_async_macros::async_test]
@@ -53,6 +73,24 @@ fn artifact_mailbox_byte_cap_and_plus_one_preflight_before_mutation() {
     let rejected = overflow_sender.send(ArtifactActorMsg::PublishPreview { key: String::new(), seq: 2, payload: vec![9; ARTIFACT_MAILBOX_BYTES - 16] }).expect_err("byte cap + 1 must reject");
     assert!(matches!(rejected.into_message(), ArtifactActorMsg::PublishPreview { seq: 2, payload, .. } if payload.len() == ARTIFACT_MAILBOX_BYTES - 16));
     assert!(overflow_receiver.try_recv().is_none(), "byte rejection cannot mutate FIFO state");
+}
+
+#[test]
+fn document_backbone_mailbox_and_retention_are_exact_bounded_and_terminal() {
+    let envelope = document_backbone_envelope("mutation-a", "document-a");
+    let message = document_backbone_message(std::slice::from_ref(&envelope));
+    let (sender, receiver) = artifact_mailbox_pair();
+    sender.send(ArtifactActorMsg::DocumentBackbone { message: message.clone() }).expect("canonical mutation message is admitted");
+    assert!(matches!(receiver.try_recv(), Some(ArtifactActorMsg::DocumentBackbone { message: actual }) if actual == message));
+    let ack = BackboneMessage::Ack { op_ids: Vec::new() }.encode_op().expect("ack encodes");
+    assert!(matches!(sender.send(ArtifactActorMsg::DocumentBackbone { message: ack }), Err(ArtifactMailboxSendError::Bytes { .. })), "host ingress refuses a Store acknowledgment");
+
+    let mut retention = DocumentBackboneRetentionV1::default();
+    retention.retain(message.len(), std::slice::from_ref(&envelope)).expect("first exact owner is retained");
+    assert_eq!((retention.bytes, retention.messages, retention.entries.len()), (message.len(), 1, 1));
+    assert!(retention.retain(message.len(), std::slice::from_ref(&envelope)).is_err(), "duplicate mutation identity cannot replace its owner");
+    retention.release(std::slice::from_ref(&envelope));
+    assert_eq!((retention.bytes, retention.messages, retention.entries.len()), (0, 0, 0));
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1015,7 +1053,7 @@ mod actor_tests {
     use futures::{SinkExt, StreamExt};
     use std::sync::Arc;
     use std::time::Duration;
-    use tokio::sync::{Mutex, broadcast as tokio_broadcast};
+    use tokio::sync::{broadcast as tokio_broadcast, Mutex};
     use tokio_tungstenite::tungstenite::Message as WsMessage;
 
     async fn demo_envelope(document_id: &str) -> crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
@@ -1085,7 +1123,11 @@ mod actor_tests {
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
         let (pack, spr) = wait_until_value("persisted edit on disk", || async {
             let (pack, spr) = storage.read("doc-a").await.expect("read")?;
-            if spr_op_ids(&spr).await.ok()?.is_empty() { None } else { Some((pack, spr)) }
+            if spr_op_ids(&spr).await.ok()?.is_empty() {
+                None
+            } else {
+                Some((pack, spr))
+            }
         })
         .await;
 
@@ -1280,13 +1322,52 @@ mod actor_tests {
         store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).await.expect("apply on a");
         channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
 
-        let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
-        match event {
-            ArtifactEvent::RemoteMutations { envelopes } => assert_eq!(envelopes.len(), 1),
-            other => panic!("expected RemoteMutations on B, got {other:?}"),
-        }
+        let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
+        assert_eq!(document_backbone_event_envelopes(&event).expect("exact document backbone event").len(), 1);
         store_b.tick().await.expect("tick b");
         assert_eq!(store_b.snapshot().expect("snapshot b").n, 7, "B converged on A's operation");
+
+        host_a.close_key(&key_a);
+        host_b.close_key(&key_b);
+    }
+
+    #[tokio::test]
+    async fn raw_document_backbone_reaches_hub_once_and_returns_one_canonical_event() {
+        let (addr, _hub) = spawn_mock_hub().await;
+        let base_url = format!("ws://{addr}");
+        let host_a = ArtifactHost::new(test_pool());
+        let channels_a = host_a
+            .open(ArtifactActorConfig {
+                document_id: "raw-shared".into(),
+                schema: "demo/v1".into(),
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
+                watch_external: false,
+                actor: "A".into(),
+            })
+            .await;
+        let key_a = channels_a.document_key.clone();
+        let mut events_a = host_a.subscribe_key(&key_a).await;
+        let host_b = ArtifactHost::new(test_pool());
+        let channels_b = host_b
+            .open(ArtifactActorConfig { document_id: "raw-shared".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "B".into() })
+            .await;
+        let key_b = channels_b.document_key.clone();
+        let mut events_b = host_b.subscribe_key(&key_b).await;
+        tokio::time::sleep(Duration::from_millis(300)).await;
+
+        let original = document_backbone_envelope("raw-mutation", "raw-shared");
+        channels_a.cmd_tx.send(ArtifactActorMsg::DocumentBackbone { message: document_backbone_message(std::slice::from_ref(&original)) }).expect("exact raw owner admitted");
+        let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
+        let delivered = document_backbone_event_envelopes(&event).expect("canonical raw event");
+        assert_eq!(delivered.len(), 1);
+        assert_eq!(delivered[0].mutation_id, original.mutation_id);
+        assert_eq!(delivered[0].diff, original.diff);
+        assert_eq!(delivered[0].inverse, original.inverse);
+        assert_ne!(delivered[0].actor, original.actor, "Hub authority stamps its actor without rewriting opaque mutation fields");
+        assert!(matches!(wait_for_event(&mut events_a, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await, ArtifactEvent::CommandOutcome { outcome: CommandAckOutcome::Accepted, .. }));
+        while let Ok(next) = events_b.try_recv() {
+            assert!(!matches!(next, ArtifactEvent::RemoteMutations { .. }), "one server Commands frame cannot emit a duplicate legacy mutation event");
+        }
 
         host_a.close_key(&key_a);
         host_b.close_key(&key_b);
@@ -1331,10 +1412,8 @@ mod actor_tests {
         let mut store_b = ArtifactStore::new(demo_envelope("catchup").await).await.expect("valid catchup actor B fixture");
         store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
 
-        let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
-        if let ArtifactEvent::RemoteMutations { envelopes } = event {
-            assert_eq!(envelopes.len(), 2, "backlog replays both missed operations");
-        }
+        let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
+        assert_eq!(document_backbone_event_envelopes(&event).expect("exact backlog event").len(), 2, "backlog replays both missed operations");
         store_b.tick().await.expect("tick b");
         assert_eq!(store_b.envelope().vcs.edits.len(), 2, "B caught up on the full backlog");
         assert_eq!(store_b.snapshot().expect("snapshot b").n, 4);
@@ -1377,10 +1456,8 @@ mod actor_tests {
         // Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
         host_a.close_key(&key_a);
 
-        let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
-        if let ArtifactEvent::RemoteMutations { envelopes } = event {
-            assert_eq!(envelopes.len(), 1, "the operation applied before detach was not lost");
-        }
+        let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
+        assert_eq!(document_backbone_event_envelopes(&event).expect("exact drain event").len(), 1, "the operation applied before detach was not lost");
         store_b.tick().await.expect("tick b");
         assert_eq!(store_b.snapshot().expect("snapshot b").n, 5);
         host_b.close_key(&key_b);
@@ -1528,6 +1605,7 @@ mod actor_tests {
     fn document_event_tag(event: &ArtifactEvent) -> &'static str {
         match event {
             ArtifactEvent::RemoteMutations { .. } => "remoteMutations",
+            ArtifactEvent::DocumentBackbone { .. } => "documentBackbone",
             ArtifactEvent::SnapshotReplaced { .. } => "snapshotReplaced",
             ArtifactEvent::BootstrapProgress { .. } => "bootstrapProgress",
             ArtifactEvent::Status(_) => "status",

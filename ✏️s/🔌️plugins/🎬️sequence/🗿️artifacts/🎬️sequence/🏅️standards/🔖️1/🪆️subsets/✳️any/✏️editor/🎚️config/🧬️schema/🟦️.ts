@@ -7,6 +7,5 @@ export interface SequenceConfig {
   /** @state config */
   camera: SequenceCamera;
   /** @state config */
-  locale: string;
 }
 export interface SequenceCamera { x: number; y: number; zoom: number; }

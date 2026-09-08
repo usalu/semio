@@ -12,10 +12,6 @@
     }
   },
   "$defs": {
-    "HtmlNode": {
-      "description": "Mirrors the sibling snapshot facet's HtmlNode.",
-      "type": "object"
-    },
     "NullableString": {
       "description": "Tri-state: absent key = unchanged, null = cleared, string = set.",
       "type": [
@@ -119,7 +115,7 @@
           "minimum": 0
         },
         "item": {
-          "$ref": "#/$defs/HtmlNode"
+          "$ref": "https://semio.tech/schema/s/stdio/html/5/any/snapshot.json#/$defs/HtmlNode"
         }
       }
     },
@@ -243,7 +239,7 @@
               "const": "replace"
             },
             "node": {
-              "$ref": "#/$defs/HtmlNode"
+              "$ref": "https://semio.tech/schema/s/stdio/html/5/any/snapshot.json#/$defs/HtmlNode"
             }
           }
         }

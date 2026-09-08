@@ -255,15 +255,15 @@
       "id": "schema-fixture-defines-schema",
       "reason": "A 🧪️/🧫️ tree is a collection of examples: it is never a scope, and a schema document inside it is a finding together with the retired filename it uses.",
       "files": {
-        "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️.schema.json": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️.schema.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
           "title": "ApprovalFixture",
           "type": "object"
         },
-        "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🔣️.json": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
           "id": "a"
         },
-        "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️schema/🔣️.json": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
           "title": "approvalFixture"
         }
@@ -274,7 +274,7 @@
           "schema-fixture-defines-schema"
         ],
         "placementPaths": [
-          "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️.schema.json"
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️.schema.json"
         ]
       }
     },
@@ -282,13 +282,13 @@
       "id": "inert-schema-data",
       "reason": "A schema-shaped parser input stays silent only when the enclosing case names it under inertSchemaData; nothing is exempted by shape or by location.",
       "files": {
-        "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🔣️.json": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
           "id": "a",
           "inertSchemaData": [
             "🧬️schema/🔣️.json"
           ]
         },
-        "🌎️hub/💡️inference/🧪️fixtures/🧫️approval/🧬️schema/🔣️.json": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
           "title": "approvalFixture"
         }
@@ -674,6 +674,98 @@
         "diagnosticCodes": [
           "schema-enum-empty"
         ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "self-owning-module",
+      "reason": "The framework module whose own name is the facet directory name owns itself: its parent is the module container, which is deliberately not an owner level.",
+      "files": {
+        "🧰️framework/🔨️modules/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/framework/schema/schema.json",
+          "title": "SchemaModule",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "descriptor": {
+              "$ref": "#/$defs/ArtifactSchemaDescriptor"
+            }
+          },
+          "$defs": {
+            "ArtifactSchemaDescriptor": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "scope": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "scopes": {
+          "framework.schema": {
+            "path": "🧰️framework/🔨️modules/🧬️schema",
+            "level": "framework-module",
+            "exports": {
+              "ArtifactSchemaDescriptor": {
+                "file": "🔣️.json",
+                "facet": "schema"
+              },
+              "SchemaModule": {
+                "file": "🔣️.json",
+                "facet": "schema"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "git-submodule-skipped",
+      "reason": "A path .gitmodules declares is a foreign repository tracked as one gitlink, so the walk never enters it and its documents are neither catalogued nor reported.",
+      "files": {
+        ".gitmodules": "[submodule \"recherche\"]\n\tpath = ♻️mit-bestand/🔎️recherche\n\turl = https://example.invalid/recherche.git\n\tignore = dirty\n",
+        "♻️mit-bestand/🔎️recherche/🌎️hub/💡️inference/🧬️schema/🔣️.json": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "$id": "urn:foreign:inference",
+          "title": "ForeignInference",
+          "type": "object"
+        },
+        "🌎️hub/💡️inference/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://semio.tech/schema/hub/inference/contract.json",
+          "title": "InferenceApproval",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "expected": {
+        "scopes": {
+          "hub.inference": {
+            "path": "🌎️hub/💡️inference/🧬️schema",
+            "level": "hub-area-module",
+            "exports": {
+              "InferenceApproval": {
+                "file": "🔣️.json",
+                "facet": "contract"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
         "placementPaths": []
       }
     }

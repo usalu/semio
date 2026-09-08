@@ -168,7 +168,7 @@ const OWNED_SCHEMA_MODULES = {
 async function ownedExport(repoRoot: string, scope: keyof typeof OWNED_SCHEMA_MODULES, exportId: string) {
   const Ajv = (await import("ajv")).default;
   const doc = JSON.parse(readFileSync(join(repoRoot, OWNED_SCHEMA_MODULES[scope]), "utf8")) as { $id: string };
-  const compiled = new Ajv({ strict: true, allErrors: true }).addKeyword("discriminator").addKeyword("x-semio-note").addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
+  const compiled = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
   if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
   return compiled;
 }
@@ -360,7 +360,7 @@ async function proveGisMapInferencePortFixture(repoRoot: string): Promise<Record
   if (declared === null) throw new Error("the 🖥️shell TypeScript mirror declares no InferencePortPhase");
   const mirrored = declared[1]!.split("|").map((part) => part.trim().replace(/^"|"$/gu, ""));
   if (JSON.stringify(mirrored) !== JSON.stringify(fixture.phases)) throw new Error(`the 🖥️shell twin's phases differ from this corpus: ${JSON.stringify(mirrored)}`);
-  const shellRust = readFileSync(join(shellRoot, "🦀️.rs"), "utf8");
+  const shellRust = readFileSync(join(shellRoot, "🧬️schema", "🦀️.rs"), "utf8");
   let twinStrings = 0;
   for (const phase of fixture.phases) {
     const row = production.GIS_MAP_INFERENCE_PORT_TEXT_V1[phase as keyof typeof production.GIS_MAP_INFERENCE_PORT_TEXT_V1];
@@ -547,7 +547,7 @@ async function proveGisMapPeerRebootstrap(repoRoot: string): Promise<number> {
 //#endregion 🗺️GisMapPeerRebootstrapCheck
 
 async function proveMountedGisMapProbe(repoRoot: string): Promise<number> {
-  const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧪️fixtures/🔬️mounted-gis-map-probe-v1");
+  const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🔬️mounted-gis-map-probe-v1");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   const validateSource = await ownedExport(repoRoot, "renderer", "MountedGisMapProbeSourceV1");
   const validateProbe = await ownedExport(repoRoot, "renderer", "MountedGisMapProbeV1");

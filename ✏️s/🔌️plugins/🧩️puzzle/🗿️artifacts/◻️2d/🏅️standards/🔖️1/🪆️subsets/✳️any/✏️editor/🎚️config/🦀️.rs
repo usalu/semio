@@ -9,7 +9,7 @@
 use std::collections::BTreeMap;
 
 //#region 🔖️Defaults
-/// 📶️ Mirrors `ui_styling::metrics::board::SUGGESTION_OFFSET`; kept local since the plugin crate has no styling dependency.
+/// 📶️ Defines the artifact-local board suggestion offset without a styling dependency.
 pub const PUZZLE2D_DEFAULT_SUGGESTION_OFFSET: f64 = 80.0;
 
 fn default_grid_factor() -> f64 {
@@ -34,13 +34,6 @@ fn default_camera_zoom() -> f64 {
     1.0
 }
 
-fn default_locale() -> String {
-    "en-US".into()
-}
-
-fn default_terminology() -> String {
-    "native".into()
-}
 //#endregion 🔖️Defaults
 
 //#region 🧵️FillLifecycle
@@ -239,14 +232,6 @@ pub struct Puzzle2dConfig {
     /// now the app itself persists it (see `🎮️commands/🧰️set-active-utility`, the only writer).
     #[value(default)]
     pub active_utility_by_window_id: BTreeMap<String, String>,
-    /// 🗣️ BCP-47 locale tag, resolved exclusively through `terminology::puzzle2d_config_locale`'s
-    /// explicit `en`/`en-US`/`de`/`de-DE` table — any other tag resolves to no locale at all, so the UI
-    /// fails closed rather than defaulting to a language.
-    #[value(default = "default_locale")]
-    pub locale: String,
-    /// 🗣️ B1: terminology id ("native" default, or "reuse") — was host-pushed `view_state.terminology`.
-    #[value(default = "default_terminology")]
-    pub terminology: String,
     #[value(default)]
     pub example_load_generation: u64,
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -282,8 +267,6 @@ impl Default for Puzzle2dConfig {
             node_kind_weights: BTreeMap::new(),
             handle_kind_weights: BTreeMap::new(),
             active_utility_by_window_id: BTreeMap::new(),
-            locale: default_locale(),
-            terminology: default_terminology(),
             example_load_generation: 0,
             example_load_id: None,
         }
@@ -334,8 +317,38 @@ impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
     /// `owner` leaf directory below exists on disk yet — these are metadata placeholders to
     /// satisfy `protocol::Mutation`, not real registrations.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧵fill", semantic_kind: "fill", display_name: "Fill", emoji: "🧵", aggregate_variant: "Fill", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot",
+            semantic_kind: "snapshot",
+            display_name: "Snapshot",
+            emoji: "📄",
+            aggregate_variant: "Snapshot",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧵fill",
+            semantic_kind: "fill",
+            display_name: "Fill",
+            emoji: "🧵",
+            aggregate_variant: "Fill",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {

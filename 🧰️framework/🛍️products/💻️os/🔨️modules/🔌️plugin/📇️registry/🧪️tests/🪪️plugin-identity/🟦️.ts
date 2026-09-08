@@ -84,7 +84,7 @@ describe("plugin identity is the same in every authority", () => {
     const ajv = new Ajv({ strict: true });
     let checked = 0;
     for (const entry of registry) {
-      const fixtureDir = resolve(repoRoot, entry.cratePath, "..", "..", "🧪️fixtures", "🧫️plugin-identity");
+      const fixtureDir = resolve(repoRoot, entry.cratePath, "..", "..", "🧫️fixtures", "🧫️plugin-identity");
       if (!existsSync(join(fixtureDir, "🔣️.json"))) continue;
       const fixture = JSON.parse(readFileSync(join(fixtureDir, "🔣️.json"), "utf8")) as Record<string, string>;
       const schema = JSON.parse(readFileSync(join(fixtureDir, "../../🧬️schema/🔣️.json"), "utf8"));

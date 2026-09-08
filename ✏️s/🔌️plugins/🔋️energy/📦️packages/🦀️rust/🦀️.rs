@@ -44,26 +44,6 @@ mod viewer { pub use semio_s_artifact_energy_model::viewer::*; }
 pub mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::EnergyApps);
 
-//#region 📚️Examples
-#[path = "."]
-mod examples {
-    pub use semio_s_artifact_energy_model::examples::demo as art_model_demo;
-    pub use semio_s_artifact_energy_model::examples::bestest_600 as art_model_bestest_600;
-    pub use semio_s_artifact_energy_model::examples::bestest_600ff as art_model_bestest_600ff;
-    pub use semio_s_artifact_energy_model::examples::bestest_610 as art_model_bestest_610;
-    pub use semio_s_artifact_energy_model::examples::bestest_620 as art_model_bestest_620;
-    pub use semio_s_artifact_energy_model::examples::bestest_630 as art_model_bestest_630;
-    pub use semio_s_artifact_energy_model::examples::bestest_640 as art_model_bestest_640;
-    pub use semio_s_artifact_energy_model::examples::bestest_650 as art_model_bestest_650;
-    pub use semio_s_artifact_energy_model::examples::bestest_900 as art_model_bestest_900;
-    pub use semio_s_artifact_energy_model::examples::bestest_900ff as art_model_bestest_900ff;
-    pub use semio_s_artifact_energy_model::examples::bestest_910 as art_model_bestest_910;
-    pub use semio_s_artifact_energy_model::examples::bestest_920 as art_model_bestest_920;
-    pub use semio_s_artifact_energy_model::examples::bestest_930 as art_model_bestest_930;
-    pub use semio_s_artifact_energy_model::examples::bestest_940 as art_model_bestest_940;
-    pub use semio_s_artifact_energy_model::examples::bestest_950 as art_model_bestest_950;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin
 

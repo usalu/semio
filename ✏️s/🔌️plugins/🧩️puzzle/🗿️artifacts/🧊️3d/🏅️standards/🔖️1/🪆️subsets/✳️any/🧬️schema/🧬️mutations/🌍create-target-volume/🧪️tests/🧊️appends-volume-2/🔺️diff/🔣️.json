@@ -10,9 +10,9 @@
       {
         "id": "volume-2",
         "origin": [
-          10.0,
-          0.0,
-          0.0
+          10,
+          0,
+          0
         ],
         "hidden": false,
         "locked": false
@@ -49,7 +49,6 @@
   "lodDepthVariable": null,
   "lodManual": null,
   "proximityRadius": null,
-  "locale": null,
   "runtimeExtrasJson": null,
   "hoveredObjectId": null,
   "hoveredVortexFullId": null,

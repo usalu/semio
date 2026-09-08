@@ -15,6 +15,7 @@ Subcommands
   ids         — rewrite every leaf/aggregate `$id` to the contract §A grammar, proving id uniqueness
   casing      — plan the camelCase conformance change: containers to annotate + fixtures it re-cases
   facets      — dialect / `$id` / `$defs` / export-id repair of the `📝️text`+`💾️binary` codec facets
+  roots       — author the missing `🪆️subsets/<s>/🧬️schema/🔣️.json` subset-root artifact documents
   verify      — descriptor-path / dialect / `$id` / `title` structural check
 """
 
@@ -1545,6 +1546,192 @@ def command_ids(write: bool) -> None:
         print("   MISSING", path)
 
 
+def rust_module_name(directory: str) -> str:
+    """🦀 The Rust module identifier a standard/subset directory compiles to: the ascii tail with every
+    non-alphanumeric character replaced by `_`, prefixed `v`/`v_` for a standard (`🔖️2.0` → `v2_0`,
+    `🔖️ecma-376` → `v_ecma_376`, `🔖️2x3` → `v2x3`). Derived, never tabled — the crates spell it this
+    way in every `#[path]`/`pub use` in the partition."""
+    tail = strip_leading_emoji(directory).lower()
+    return re.sub(r"[^a-z0-9]", "_", tail)
+
+
+def standard_module_name(directory: str) -> str:
+    body = rust_module_name(directory)
+    return f"v{body}" if body[:1].isdigit() else f"v_{body}"
+
+
+def subset_modules() -> list[dict]:
+    """🪆 Every `🪆️subsets/<s>/🧬️schema` module of the partition, with the pieces its `$id` is made of."""
+    found: list[dict] = []
+    for artifact in sorted(os.listdir(ARTIFACTS)):
+        standards = os.path.join(ARTIFACTS, artifact, "🏅️standards")
+        if not os.path.isdir(standards):
+            continue
+        for standard in sorted(os.listdir(standards)):
+            subsets = os.path.join(standards, standard, "🪆️subsets")
+            if not os.path.isdir(subsets):
+                continue
+            for subset in sorted(os.listdir(subsets)):
+                module = os.path.join(subsets, subset, SCHEMA_DIR)
+                if not os.path.isdir(module):
+                    continue
+                found.append(
+                    {
+                        "module": module,
+                        "rel": os.path.relpath(module, REPO),
+                        "artifact_dir": artifact,
+                        "standard_dir": standard,
+                        "subset_dir": subset,
+                        "artifact": strip_leading_emoji(artifact),
+                        "standard": strip_leading_emoji(standard),
+                        "subset": strip_leading_emoji(subset),
+                        "id": f"{ID_ROOT}/{strip_leading_emoji(artifact)}/{strip_leading_emoji(standard)}/{strip_leading_emoji(subset)}/artifact.json",
+                        "root": os.path.join(module, "🔣️.json"),
+                    }
+                )
+    return found
+
+
+def reexported_schema_owner(entry: dict) -> dict | None:
+    """🔗 The subset a profile module re-exports its artifact state from, read out of the module's own
+    `pub use crate::standards::<v>::subsets::<s>::schema::*;` — the single statement that makes the
+    profile's Rust artifact type the base subset's type rather than one of its own."""
+    source = os.path.join(entry["module"], "🦀️.rs")
+    if not os.path.isfile(source):
+        return None
+    text = strip_comments(open(source, encoding="utf8").read())
+    match = re.search(r"pub\s+use\s+crate::standards::(\w+)::subsets::(\w+)::schema::\*\s*;", text)
+    if match is None:
+        return None
+    standard_module, subset_module = match.group(1), match.group(2)
+    for candidate in subset_modules():
+        if candidate["artifact_dir"] != entry["artifact_dir"]:
+            continue
+        if standard_module_name(candidate["standard_dir"]) != standard_module:
+            continue
+        if rust_module_name(candidate["subset_dir"]) != subset_module:
+            continue
+        return candidate
+    return None
+
+
+def viewed_schema_owner(entry: dict) -> dict | None:
+    """👁 The subset a view module's mutation catalogue draws its leaves from: every branch `$ref` of
+    `🧬️mutations/🔣️.json` is an absolute leaf `$id` under the owning subset's scope path (row 79), so
+    the owner is read from the references rather than guessed from the directory."""
+    aggregate = os.path.join(entry["module"], MUTATIONS_DIR, "🔣️.json")
+    if not os.path.isfile(aggregate):
+        return None
+    body = open(aggregate, encoding="utf8").read()
+    owners = {tuple(match.group(1).split("/")) for match in re.finditer(rf"{re.escape(ID_ROOT)}/([^/]+/[^/]+/[^/]+)/mutation/", body)}
+    if len(owners) != 1:
+        return None
+    artifact, standard, subset = next(iter(owners))
+    for candidate in subset_modules():
+        if (candidate["artifact"], candidate["standard"], candidate["subset"]) == (artifact, standard, subset):
+            return candidate
+    return None
+
+
+def attach_state_lanes(document: dict, definition: TypeDef, projector: Projector) -> None:
+    """🪧 Copies the artifact struct's `#[state(<lane>)]` field attributes onto the projected properties
+    as `x-semio-state`, the annotation every sibling subset root already carries. The lane is read from
+    the declaring source rather than inferred: a field with no attribute gets none."""
+    properties = document.get("properties")
+    if not isinstance(properties, dict):
+        return
+    text = strip_comments(open(definition.path, encoding="utf8").read())
+    body = re.search(rf"pub\s+struct\s+{re.escape(definition.name)}\b[^{{]*{{", text)
+    if body is None:
+        return
+    region = text[body.end() : match_block(text, body.end() - 1)]
+    lanes = {name: lane for lane, name in re.findall(r"#\[state\(\s*(\w+)\s*\)\][\s\S]*?pub\s+(\w+)\s*:", region)}
+    for field, lane in lanes.items():
+        wire = field_wire_name(field, None, definition.container.rename_all)
+        if wire in properties and isinstance(properties[wire], dict):
+            properties[wire]["x-semio-state"] = lane
+
+
+def root_export(entry: dict) -> tuple[str, str] | None:
+    """🏷 A subset root's `(title, $id)` — the export id the module publishes and the identity another
+    module references it by."""
+    if not os.path.isfile(entry["root"]):
+        return None
+    document = json.load(open(entry["root"], encoding="utf8"))
+    title, identity = document.get("title"), document.get("$id")
+    return (title, identity) if isinstance(title, str) and isinstance(identity, str) else None
+
+
+def command_roots(write: bool) -> None:
+    """🌱 Authors the missing subset-root artifact documents (`🪆️subsets/<s>/🧬️schema/🔣️.json`).
+
+    A subset that declares its own artifact struct gets the `value_derive` projection of that struct
+    (`x-semio-state` per `#[state(...)]`, nested `$defs`, crate casing) — the same reading `author`
+    applies to mutation payloads. A subset that RE-EXPORTS another subset's schema module, or that is
+    a per-domain view over one, owns no artifact state of its own: execution contract §A forbids
+    restating another scope's `$defs`, so its root names the owning scope's document by absolute `$id`
+    and annotates `x-semio-formats` — in such a module the type exists in JSON Schema only, because
+    the Rust glob re-export and the meta-only TypeScript leaf declare nothing (contract §A)."""
+    index = shared_index()
+    authored = projected = referenced = 0
+    unmapped: list[str] = []
+    for entry in subset_modules():
+        if os.path.isfile(entry["root"]):
+            continue
+        own = None
+        source = os.path.join(entry["module"], "🦀️.rs")
+        if os.path.isfile(source):
+            text = strip_comments(open(source, encoding="utf8").read())
+            match = re.search(r"pub\s+struct\s+(\w+Artifact)\b", text)
+            own = match.group(1) if match else None
+        if own is not None:
+            projector = Projector(index, entry["rel"])
+            definition = projector.lookup(own)
+            if definition is None:
+                unmapped.append(f"{entry['rel']}: declares `pub struct {own}` and the index carries no definition for it")
+                continue
+            try:
+                body = projector.project_struct(definition)
+            except Unmapped as error:
+                unmapped.append(f"{entry['rel']}: {own} — {error}")
+                continue
+            document = OrderedDict({"$schema": DIALECT, "$id": entry["id"], "title": own})
+            document.update(body)
+            attach_state_lanes(document, definition, projector)
+            if projector.defs:
+                document["$defs"] = dict(projector.defs)
+            projected += 1
+        else:
+            owner = reexported_schema_owner(entry) or viewed_schema_owner(entry)
+            if owner is None:
+                unmapped.append(f"{entry['rel']}: no own artifact struct, no `pub use …::schema::*`, no view catalogue to read an owner from")
+                continue
+            export = root_export(owner)
+            if export is None:
+                unmapped.append(f"{entry['rel']}: owner {owner['rel']} declares no title/$id to reference")
+                continue
+            title, identity = export
+            relation = "re-exports" if reexported_schema_owner(entry) is not None else "is a per-domain view over"
+            document = OrderedDict(
+                {
+                    "$schema": DIALECT,
+                    "$id": entry["id"],
+                    "title": title,
+                    "description": f"{entry['artifact']} {entry['standard']}/{entry['subset']} {relation} the {owner['subset']} subset's {title}; the artifact contract is that scope's and is referenced, never restated.",
+                    "type": "object",
+                    "allOf": [{"$ref": identity}],
+                    "x-semio-formats": ["🔣️jsonschema"],
+                }
+            )
+            referenced += 1
+        authored += 1
+        if write:
+            dump(entry["root"], ordered(document))
+    print(f"subset-modules={len(subset_modules())} authored={authored} projected={projected} referenced={referenced} unmapped={len(unmapped)} (write={write})")
+    for problem in unmapped:
+        print("   UNMAPPED", problem)
+
+
 MUTATION_FACETS = {"📝️text": "text", "💾️binary": "binary"}
 
 
@@ -1691,6 +1878,8 @@ def main() -> int:
         command_casing()
     elif command == "facets":
         command_facets(write)
+    elif command == "roots":
+        command_roots(write)
     elif command == "verify":
         command_verify()
     else:

@@ -10,7 +10,6 @@ message Generation2dConfig {
   // @state config
   optional string generation_preview_text = 4;
   // @state config
-  string locale = 5;
 }
 message CameraJson {
   double x = 1;

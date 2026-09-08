@@ -7,7 +7,7 @@ export async function proveWireValueMaterializationFixture(repoRoot: string): Pr
   const Ajv = (await import("ajv")).default;
   const equal = (await import("fast-deep-equal")).default;
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value");
-  const fixture = JSON.parse(readFileSync(join(root, "🧪️fixtures/🧮️wire-materialization/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/🧮️wire-materialization/🔣️.json"), "utf8"));
   const contract = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addSchema(contract);

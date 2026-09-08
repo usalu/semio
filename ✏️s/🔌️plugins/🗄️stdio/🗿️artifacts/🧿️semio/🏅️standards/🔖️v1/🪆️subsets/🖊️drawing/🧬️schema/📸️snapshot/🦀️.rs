@@ -4,7 +4,7 @@
 //! no `serde_json::Value`, no bare tuples/nested fixed arrays (geometry fields reuse
 //! `engine::geometry`'s named structs throughout).
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 
@@ -926,3 +926,8 @@ pub(crate) fn demo_drawing_snapshot() -> SemioDrawingSnapshot {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+//#endregion 🔁️Re-exports

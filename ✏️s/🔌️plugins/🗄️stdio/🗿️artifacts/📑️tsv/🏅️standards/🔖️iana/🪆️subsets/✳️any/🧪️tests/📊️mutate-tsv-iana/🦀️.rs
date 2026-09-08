@@ -148,7 +148,7 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_spec, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_plugin_stdio::ArtifactDsl;
+    use semio_framework_os_kernel::ArtifactDsl;
     use crate::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, insert_row, remove_row, set_cell, set_line_ending, set_snapshot, set_trailing_newline};
     use crate::standards::iana::subsets::any::schema::snapshot::{decode_tsv, encode_tsv, LineEnding};
     use crate::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};

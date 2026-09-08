@@ -1,0 +1,117 @@
+{
+  "name": "abstraction-ownership-validation",
+  "targets": {
+    "resolved-host-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts resolved-host-context"
+      }
+    },
+    "surface-view-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts surface-view-context"
+      }
+    },
+    "window-view-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts window-view test"
+      }
+    },
+    "window-view-native-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts window-view-context native"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts abstraction-ownership test"
+      }
+    },
+    "report": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts abstraction-ownership report"
+      }
+    },
+    "trinity-rewriting-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts trinity-rewriting test reorganize_uses_document_mutations"
+      }
+    },
+    "plugin-host-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts plugin-host check"
+      }
+    },
+    "ui-preferences-fixture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts ui-preferences fixture"
+      }
+    },
+    "browser-host-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts browser-actor-host-context"
+      }
+    },
+    "browser-host-worker-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts browser-actor-host-context worker"
+      }
+    },
+    "os-config-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cargo check semio-framework-os-config"
+      }
+    },
+    "cad-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cargo check semio-s-artifact-cad-cad"
+      }
+    },
+    "process3d-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cargo check semio-s-artifact-process-process3d"
+      }
+    },
+    "lowpoly-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cargo check semio-s-artifact-lowpoly-lowpoly"
+      }
+    },
+    "context-menu-view-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts surface-view-context menu"
+      }
+    }
+  }
+}

@@ -26,7 +26,7 @@ type Descriptor = { manifest: { apps: DescriptorApp[] } };
 class TestScript extends BundleScript {
   run(): void {
     const plugin = join(this.root, "..", "..");
-    const fixture = JSON.parse(readFileSync(join(plugin, "🧪️fixtures", "🧫️retained-command-dispositions", "🔣️.json"), "utf8")) as RetainedFixture;
+    const fixture = JSON.parse(readFileSync(join(plugin, "🧫️fixtures", "🧫️retained-command-dispositions", "🔣️.json"), "utf8")) as RetainedFixture;
     const descriptor = JSON.parse(readFileSync(join(plugin, "🔣️.json"), "utf8")) as Descriptor;
     const failures: string[] = [];
     const expect = (ok: boolean, message: string) => {

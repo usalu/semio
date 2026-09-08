@@ -124,9 +124,6 @@ impl Block3dDiff {
             if let Some(list) = &self.wanted_tags {
                 next.wanted_tags = list.values.clone();
             }
-            if let Some(v) = &self.locale {
-                next.locale = v.clone();
-            }
             if let Some(list) = &self.windows {
                 next.windows = list.values.clone();
             }
@@ -215,7 +212,6 @@ impl MutationDiff<Block3dSnapshot> for Block3dDiff {
         take!(selected_ids);
         take!(active_representation_id);
         take!(wanted_tags);
-        take!(locale);
         take!(windows);
         take!(brush_vortex_kind_id);
         take!(brush_radius);
@@ -353,3 +349,8 @@ pub fn diff_set_snapshot(snapshot: Block3dSnapshot) -> Block3dDiff {
     Block3dDiff { artifact: Some(Box::new(Block3dArtifact::from_snapshot(snapshot))), ..Default::default() }
 }
 //#endregion 🔖️DiffHelpers
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Block3dDiffText = String;
+//#endregion 🚚️Carrier

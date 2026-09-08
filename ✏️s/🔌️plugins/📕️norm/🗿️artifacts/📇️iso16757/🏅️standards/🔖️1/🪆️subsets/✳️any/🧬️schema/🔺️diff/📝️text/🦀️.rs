@@ -115,3 +115,8 @@ pub fn diff_set_snapshot(snapshot: &Iso16757Snapshot) -> Iso16757Diff {
     Iso16757Diff { artifact: Some(Box::new(Iso16757Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Iso16757DiffText = String;
+//#endregion 🚚️Carrier

@@ -213,3 +213,8 @@ pub fn diff_set_snapshot(snapshot: &En1994Snapshot) -> En1994Diff {
     En1994Diff { artifact: Some(Box::new(En1994Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 //#endregion 🔖️Helpers
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type En1994DiffText = String;
+//#endregion 🚚️Carrier

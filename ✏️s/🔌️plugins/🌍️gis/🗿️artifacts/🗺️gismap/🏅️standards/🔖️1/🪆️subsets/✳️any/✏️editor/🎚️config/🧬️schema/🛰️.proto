@@ -15,6 +15,5 @@ message Gis2dConfig {
   // @state config
   map<string, double> layer_stroke_scale = 6;
   // @state config
-  string locale = 7;
 }
 //#endregion 🧬️Configuration

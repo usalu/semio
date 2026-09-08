@@ -4,13 +4,6 @@
   "title": "VcsDemoConfig",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "locale"
-  ],
-  "properties": {
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    }
-  }
+  "required": [],
+  "properties": {}
 }

@@ -1,10 +1,10 @@
 //! 🧪️ Direct metadata-bearing counter fixtures for Plugin runtime tests.
 
-#[path = "🎲️dummy/🦀️.rs"]
+#[path = "../🧬️mutation-fixtures-dummy/🦀️.rs"]
 pub mod dummy;
-#[path = "🫧️no-state/🦀️.rs"]
+#[path = "../🧬️mutation-fixtures-no-state/🦀️.rs"]
 pub mod no_state;
-#[path = "🪟️surface/🦀️.rs"]
+#[path = "../🧬️mutation-fixtures-surface/🦀️.rs"]
 pub mod surface;
-#[path = "🔀️transaction/🦀️.rs"]
+#[path = "../🧬️mutation-fixtures-transaction/🦀️.rs"]
 pub mod transaction;

@@ -39,7 +39,7 @@ pub(crate) fn run_query(fixture: &JackSnapshot, query: &Option<String>, current_
     let (result_json, operations) = run_jack_query(fixture, &resolved);
     Emit {
         artifact_mutations: operations,
-        config_mutations: vec![JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: resolved }), JackConfigMutation::SetResult(crate::editor::jack::config::SetResult { value: result_json }), JackConfigMutation::SetResultsEngagementInput(crate::editor::jack::config::SetResultsEngagementInput { value: String::new() })],
+        config_mutations: vec![JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: resolved }), JackConfigMutation::SetResult(crate::editor::jack::config::SetResult { value: result_json })],
         ..Default::default()
     }
 }

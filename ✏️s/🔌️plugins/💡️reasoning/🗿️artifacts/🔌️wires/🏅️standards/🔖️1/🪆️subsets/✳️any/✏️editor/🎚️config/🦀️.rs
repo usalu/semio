@@ -26,7 +26,6 @@ pub struct WiresConfig {
     /// 🖱️ Last observed drag pointer Y (screen space) — was `WiresDragState::last_y`.
     pub drag_last_y: f64,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -75,7 +74,7 @@ impl store::ArtifactPack for WiresConfig {
 
 impl Default for WiresConfig {
     fn default() -> Self {
-        Self { drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0, locale: "en-US".into() }
+        Self { drag_node_id: None, drag_last_x: 0.0, drag_last_y: 0.0, }
     }
 }
 

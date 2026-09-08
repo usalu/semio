@@ -10,8 +10,7 @@
 use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::climate::{compute_epw_climate_summary, EpwClimateSummary};
-
+use super::climate::{compute_epw_climate_summary};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an epw snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `climate`, backed by the `🌡️climate/` slug dir).
@@ -84,3 +83,8 @@ pub fn epw_artifact_inference_descriptor() -> framework_schema::ArtifactInferenc
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::climate::EpwClimateSummary;
+//#endregion 🔁️Re-exports

@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { OS_SHELL_SCHEMA_EXPORT_IDS, OS_SHELL_SCHEMA_ID, ShellSchemaError, osShellSchemaDocument, parseAnchor, parseByAnchor, parseLayoutNode, parseLoadedPlugin, parseShellCommand, parseShellError, parseShellEvent, parseShellState, parseUiLocale } = dependencies;
+  const { OS_SHELL_SCHEMA_EXPORT_IDS, OS_SHELL_SCHEMA_ID, OsConfigSchemaError, ShellSchemaError, osShellSchemaDocument, parseAnchor, parseByAnchor, parseLayoutNode, parseLoadedPlugin, parseShellCommand, parseShellError, parseShellEvent, parseShellState, parseUiLocale } = dependencies;
 
   const { describe, expect, it } = vitest;
 
@@ -39,7 +39,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("rejects values outside the declared value space", () => {
       expect(() => parseAnchor("middle")).toThrow(ShellSchemaError);
-      expect(() => parseUiLocale("fr")).toThrow(ShellSchemaError);
+      expect(() => parseUiLocale("fr")).toThrow(OsConfigSchemaError);
       expect(parseUiLocale("de")).toBe("de");
       expect(() => parseLoadedPlugin({ pluginId: "p", moduleUrl: "u" })).toThrow(/missing required property 'label'/u);
       expect(() => parseLoadedPlugin({ pluginId: "p", moduleUrl: "u", label: null, extra: 1 })).toThrow(/unexpected property 'extra'/u);

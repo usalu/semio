@@ -9,7 +9,7 @@
 // #region 🔌️Adapters
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1, type ShellDialogV1 } from "./🗨️dialog-origin/🟦️.ts";
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
-import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, DocumentAttachmentLaneV1, runDocumentOpeningAttemptV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
+import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, runDocumentOpeningAttemptV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { runArtifactCreationReadyOpeningV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "./🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 import React, {
@@ -79,6 +79,7 @@ import {
   panelTabKindId,
   pendingPanelUiNode,
   pendingWindowUiNode,
+  parseResolvedPluginViewState,
   type PluginAppLabelsOverlay,
   type PluginContextMenuRequest,
   type PluginSource,
@@ -118,6 +119,8 @@ import {
   type UtilityNode,
   waitForEvent,
   windowElementId,
+  panelViewContext,
+  windowViewContext,
   type WindowEngagement,
   type WindowLayout,
   type WindowMeasure,
@@ -170,7 +173,7 @@ import {
  * package itself, not re-exported by `@semio-tech/framework-os` — same source
  * `🧰️framework/🛍️products/💻️os/🟦️.ts` (that package's own root) imports them from for its
  * own `encode`/`decodeMutationEnvelopesPack` helpers above. */
-import { type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework-replication";
+import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework-replication";
 import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
 
 
@@ -245,7 +248,22 @@ class LocalBrowserBrokerPort {
 import { IDENTITY_CONFIG_SCHEMA, identityActorConfig, foldIdentityEvent } from "../../../../../🧵️backbone-worker.ts";
 /** 🪪️ Self-contained identity facet (see that file's header doc for why it isn't re-exported through
  * `🎚️config/🧬️schema/**`) — `Identity`/mutation vocabulary, never redeclared here. */
-import { type Identity, type IdentityConfigMutation, applyIdentityConfigMutation, signIn } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import {
+  type Identity,
+  type IdentityConfigMutation,
+  type UiPreferencesConfigMutation,
+  applyIdentityConfigMutation,
+  setAppearance,
+  setCustomDriver,
+  setCustomTheme,
+  setDriver,
+  setKeybindingOverride as setKeybindingOverrideMutation,
+  setLayout,
+  setLocale,
+  setTerminology,
+  setTheme,
+  signIn,
+} from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import {
   decodeWorldProjectionTemplateId,
   worldProjectionSpecIconId,
@@ -323,8 +341,6 @@ import {
   PresenceBar,
   type PresencePeer,
   readStoredIntroductionSeen,
-  readStoredUiChromeLocale,
-  readStoredUiChromeThemeSnapshot,
   reconcileActivePath,
   resolveUiDriver,
   SemioLogo,
@@ -377,17 +393,8 @@ import {
   type WindowLayoutNode,
   type WindowTemplateDropPayload,
   writeStoredIntroductionSeen,
-  writeStoredUiChromeAppearance,
-  writeStoredUiChromeLayout,
-  writeStoredUiChromeLocale,
-  writeStoredUiChromeTerminology,
-  writeStoredUiChromeThemeId,
-  writeStoredUiChromeThemeSnapshot,
-  writeStoredUiCustomDrivers,
-  writeStoredUiCustomThemes,
-  writeStoredUiDriverId,
-  writeStoredUiKeybindingOverrides,
 } from "@semio-tech/ui-react";
+import { canonicalUiDriver, canonicalUiTheme, commitUiPreferencesConfigMutation, readUiPreferences, resolveUiPreferences, subscribeUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
 import {
   InterpretedUiNode,
   PluginSurfaceActionsContext,
@@ -578,7 +585,7 @@ import {
   useNamedLayoutHost,
 } from "../📌️ChromePanels/🟦️.tsx";
 import { PluginBootShardLostError, type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../🔌️PluginRuntime/🟦️.tsx";
-import { type ActorDocumentMessagePortV1 } from "../🔌️PluginRuntime/📡️backbone/🟦️.ts";
+import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "../🔌️PluginRuntime/📡️backbone/🟦️.ts";
 import { isShardLostError } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { type WindowFault, type WindowFaultClass, windowFaultFromError } from "./🩺️fault/🟦️.ts";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts";
@@ -1576,7 +1583,7 @@ export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactEleme
     // locale's chrome on its first paint, mirroring `initUiLocaleSync`'s reasoning for the page-owning
     // case. `locks.locale` and any previously-stored preference cover the common cases; a brand's own
     // `defaults.locale` (not available yet here) still lands moments later via the uiPrefs effect below.
-    const initialLocale = locks?.locale ?? readStoredUiChromeLocale(storage) ?? detectShellLocale(typeof navigator !== "undefined" ? navigator.language : undefined);
+    const initialLocale = locks?.locale ?? readUiPreferences(storage).locale ?? detectShellLocale(typeof navigator !== "undefined" ? navigator.language : undefined);
     return createShellScope({ shellId, ownsPage, storage, initialLocale });
   });
   // 🐚️ `scope.rootRef` is a stable object (its identity never changes), so a descendant hook that puts
@@ -1711,6 +1718,29 @@ function FrameworkOsShellInner({
   liveDialogRef.current = overlayDialog;
   const { activeTutorialId, playing: tutorialPlaying, rate: tutorialRate, muted: tutorialMuted, captionsOn: tutorialCaptionsOn, recording: tutorialRecording, deviated: tutorialDeviated } = shellState.tutorial;
   const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft, uiKeybindingOverrides } = shellState.uiPrefs;
+  useEffect(
+    () =>
+      subscribeUiPreferences(scope.storage, (preferences) => {
+        const resolved = resolveUiPreferences(preferences, {
+          appearance: "system",
+          layout: "desktop",
+          driverId: DEFAULT_UI_DRIVER.id,
+          locale: "en",
+          terminology: UI_TERMINOLOGY_NATIVE,
+          themeId: "semio",
+        });
+        dispatch({ type: "SET_UI_APPEARANCE", value: locks.appearance ?? resolved.appearance });
+        dispatch({ type: "SET_UI_LAYOUT", value: resolved.layout });
+        dispatch({ type: "SET_UI_DRIVER_ID", value: resolved.driverId });
+        dispatch({ type: "SET_UI_CUSTOM_DRIVERS", value: resolved.customDrivers });
+        dispatch({ type: "SET_UI_LOCALE", value: locks.locale ?? resolved.locale });
+        dispatch({ type: "SET_UI_TERMINOLOGY", value: locks.terminology ?? resolved.terminology });
+        dispatch({ type: "SET_UI_THEME_ID", value: locks.themeId ?? resolved.themeId });
+        dispatch({ type: "SET_UI_CUSTOM_THEMES", value: resolved.customThemes });
+        dispatch({ type: "SET_UI_KEYBINDING_OVERRIDES", value: resolved.keybindingOverrides });
+      }),
+    [locks.appearance, locks.locale, locks.terminology, locks.themeId, scope.storage],
+  );
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
   const { mergePolicy, conflicts, selectedConflictId } = shellState.merge;
   /** 💡️ The one document whose host-owned inference port is currently live, and its exact status. */
@@ -1789,8 +1819,8 @@ function FrameworkOsShellInner({
   const uiTheme: UiTheme = useMemo(() => {
     if (uiThemeDraft) return uiThemeDraft;
     const found = builtinUiThemes().find((t) => t.id === uiThemeId) ?? uiCustomThemes[uiThemeId];
-    return found ?? readStoredUiChromeThemeSnapshot(scope.storage) ?? semioTheme();
-  }, [uiThemeId, uiCustomThemes, uiThemeDraft, scope.storage]);
+    return found ?? semioTheme();
+  }, [uiThemeId, uiCustomThemes, uiThemeDraft]);
   const uiDriver: UiDriver = useMemo(() => uiDriverDraft ?? resolveUiDriver(uiDriverId, uiCustomDrivers), [uiDriverId, uiCustomDrivers, uiDriverDraft]);
   /** 🧵️ Lazily-created worker running `🟦️backbone-🟦️worker.ts` — one per shell instance, reused across `openDocument` calls. */
   const backboneWorkerRef = useRef<Worker | null>(null);
@@ -1874,7 +1904,7 @@ function FrameworkOsShellInner({
     port: ActorDocumentMessagePortV1 | null;
     pending: Uint8Array[];
     pendingBytes: number;
-    replacing: boolean;
+    replacements: LatestDocumentReplacementV1<Readonly<{ pack: Uint8Array; spr: Uint8Array }>>;
     ready: Promise<void>;
     resolveReady(): void;
     rejectReady(error: Error): void;
@@ -2003,27 +2033,29 @@ function FrameworkOsShellInner({
     try {
       if (!(message instanceof Uint8Array) || message.length === 0 || message.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || decodeBackboneMessage(message).kind !== "mutations") throw new Error("document-backbone.invalid-message");
       if (entry.port === null) {
-        if (entry.pending.length >= 64 || message.length > 4 * 1024 * 1024 - entry.pendingBytes) throw new Error("document-backbone.pending-capacity");
+        if (entry.pending.length >= DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumMessages || message.length > DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - entry.pendingBytes) throw new Error("document-backbone.pending-capacity");
         entry.pending.push(message.slice());
         entry.pendingBytes += message.length;
       } else void entry.port.receive({ runtimeKey, clientInstanceId: entry.clientInstanceId, scope: entry.scope ?? null }, message).catch(error => failDocumentBackbone(runtimeKey, entry, error));
     } catch (error) { failDocumentBackbone(runtimeKey, entry, error); }
   }, [failDocumentBackbone]);
-  const bindDocumentBackbone = useCallback(async (runtimeKey: string, entry: OpenDocumentSession): Promise<void> => {
-    const current = () => openDocumentSessionsRef.current.get(runtimeKey) === entry;
+  const bindDocumentBackbone = useCallback(async (runtimeKey: string, entry: OpenDocumentSession, admitted: () => boolean = () => true): Promise<void> => {
+    const current = () => admitted() && openDocumentSessionsRef.current.get(runtimeKey) === entry;
     if (!current()) return;
     if (!entry.plugin.bindDocumentPort) throw new Error("document-backbone.binding-unavailable");
     const worker = backboneWorkerRef.current;
     if (worker === null) throw new Error("document-backbone.worker-unavailable");
-    await entry.plugin.bindDocumentPort(entry.session.instanceId, {
+    const preparation: { port?: ActorDocumentMessagePortV1 } = {};
+    try { await entry.plugin.bindDocumentPort(entry.session.instanceId, {
       runtimeKey, clientInstanceId: entry.clientInstanceId, scope: entry.scope ?? null, current,
       send: message => {
         if (!current() || backboneWorkerRef.current !== worker) return;
-        if (decodeBackboneMessage(message).kind !== "mutations") return;
+        if (documentBackboneEffectV1(message) === "remote-ingest-receipt") return;
         worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "documentBackbone", message } }) });
       },
       merge: (conflicts, report) => { if (current()) applyRemoteMergeRef.current(conflicts, report); },
       prepared: port => {
+        preparation.port = port;
         entry.port = port;
         let ports = documentPortsRef.current.get(entry.plugin);
         if (ports === undefined) { ports = new Map(); documentPortsRef.current.set(entry.plugin, ports); }
@@ -2033,10 +2065,23 @@ function FrameworkOsShellInner({
         entry.pendingBytes = 0;
         for (const bytes of pending) receiveDocumentBackbone(runtimeKey, entry, bytes);
       },
-    });
+    }); } catch (error) {
+      const candidate = preparation.port;
+      await candidate?.retire();
+      if (candidate !== undefined) {
+        const ports = documentPortsRef.current.get(entry.plugin);
+        if (ports?.get(entry.session.instanceId) === candidate) ports.delete(entry.session.instanceId);
+        if (entry.port === candidate) {
+          entry.port = null;
+          entry.pending = [];
+          entry.pendingBytes = 0;
+        }
+      }
+      throw error;
+    }
     if (current()) entry.resolveReady();
   }, [receiveDocumentBackbone]);
-  const loadDocumentPair = useCallback(async (plugin: PluginWasmHandle, instanceId: number, pack: Uint8Array, spr: Uint8Array, current: () => boolean): Promise<void> => {
+  const loadDocumentPair = useCallback(async (plugin: PluginWasmHandle, instanceId: number, pack: Uint8Array, spr: Uint8Array, current: () => boolean): Promise<boolean> => {
     if (pack.length + spr.length > BACKBONE_SNAPSHOT_MAXIMUM_BYTES) throw new Error("document-backbone.snapshot-capacity");
     if (!plugin.loadAppDocumentPack) throw new Error("document-backbone.loader-unavailable");
     const load = plugin.loadAppDocumentPack;
@@ -2045,25 +2090,24 @@ function FrameworkOsShellInner({
     if (owned === undefined) {
       const owner = `cold:${crypto.randomUUID()}`;
       const unbound = () => current() && ![...openDocumentSessionsRef.current.values()].some(entry => entry.plugin === plugin && entry.session.instanceId === instanceId);
-      try { await lane.replace(owner, unbound, async () => { if (unbound()) await load(instanceId, pack, spr); }); }
+      let loaded = false;
+      try { await lane.replace(owner, unbound, async () => { if (unbound()) { await load(instanceId, pack, spr); loaded = unbound(); } }); }
       finally { await lane.close(owner); }
-      return;
+      return loaded;
     }
     const [runtimeKey, entry] = owned;
-    if (entry.replacing) throw new Error("document-backbone.snapshot-overlap");
-    const exact = () => current() && openDocumentSessionsRef.current.get(runtimeKey) === entry;
-    entry.replacing = true;
     const retirement = entry.port?.retire();
     void retirement?.catch(() => {});
     entry.port = null;
-    try {
+    return entry.replacements.replace({ pack, spr }, async (pair, latest) => {
+      const exact = () => latest() && current() && openDocumentSessionsRef.current.get(runtimeKey) === entry;
       await lane.replace(entry.clientInstanceId, exact, async () => {
         await retirement;
         if (!exact()) return;
-        await load(instanceId, pack, spr);
-        if (exact()) await bindDocumentBackbone(runtimeKey, entry);
+        await load(instanceId, pair.pack, pair.spr);
+        if (exact()) await bindDocumentBackbone(runtimeKey, entry, latest);
       });
-    } finally { entry.replacing = false; }
+    });
   }, [bindDocumentBackbone, documentAttachmentLane]);
   const captureDialogOrigin = useCallback((target: ActiveSession | null): ShellDialogOriginV1 | null =>
     shellDialogOriginV1(target, [...openDocumentSessionsRef.current].map(([runtimeKey, entry]) => ({ runtimeKey, ...entry }))), []);
@@ -2366,6 +2410,7 @@ function FrameworkOsShellInner({
         if (!entry || entry.clientInstanceId !== message.clientInstanceId) return;
         setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, message));
         if (message.kind === "artifact-bootstrap-failed") {
+          entry.replacements.invalidate();
           entry.rejectReady(new Error(message.message));
           const retirement = entry.port?.retire();
           void retirement?.catch(error => failDocumentBackbone(runtimeKey, entry, error));
@@ -2374,6 +2419,7 @@ function FrameworkOsShellInner({
           entry.pendingBytes = 0;
         }
         if (message.kind === "artifact-rebootstrap-required") {
+          entry.replacements.invalidate();
           const retirement = entry.port?.retire();
           void retirement?.catch(error => failDocumentBackbone(runtimeKey, entry, error));
           entry.port = null;
@@ -2435,7 +2481,7 @@ function FrameworkOsShellInner({
         const sprBytes = new Uint8Array(event.spr);
         void (async () => {
           try {
-            await loadDocumentPair(entry.plugin, entry.session.instanceId, packBytes, sprBytes, () => openDocumentSessionsRef.current.get(runtimeKey) === entry);
+            if (!await loadDocumentPair(entry.plugin, entry.session.instanceId, packBytes, sprBytes, () => openDocumentSessionsRef.current.get(runtimeKey) === entry)) return;
             if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
             const discarded = rebootstrapDiscardedSessionsRef.current.get(runtimeKey);
             if (discarded) {
@@ -2988,10 +3034,10 @@ function FrameworkOsShellInner({
         // module-URL lease pool is gone (packet H2's "must not exist" list); disposing the OLD handle
         // already tears down every actor it ever activated via `ShardClient.dispose`, which is the
         // real replacement — there is no separate shared-module resource left to evict.
-        current.handle.dispose();
+        await current.handle.dispose();
       } catch (error) {
         console.warn(`[DEBUG] hot-swap rolled back for ${pluginId}`, error);
-        newHandle?.dispose();
+        await newHandle?.dispose();
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "loaded" });
         dispatch({ type: "SET_PLUGIN_SUPERVISOR", pluginId, value: "crashed" });
       } finally {
@@ -3045,7 +3091,7 @@ function FrameworkOsShellInner({
         }
         dispatch({ type: "REMOVE_LOADED_PLUGIN", pluginId });
         dispatch({ type: "SET_PLUGIN_STATUS", pluginId, value: "available" });
-        current.handle.dispose();
+        await current.handle.dispose();
         pluginModuleUrlByIdRef.current.delete(pluginId);
       } finally {
         pluginOpInFlightRef.current.delete(pluginId);
@@ -3251,7 +3297,7 @@ function FrameworkOsShellInner({
           }
           dispatch({ type: "REMOVE_LOADED_PLUGIN", pluginId: extensionId });
           dispatch({ type: "SET_PLUGIN_STATUS", pluginId: extensionId, value: "available" });
-          current.handle.dispose();
+          await current.handle.dispose();
           pluginModuleUrlByIdRef.current.delete(extensionId);
         }
         setExtensionLedger((prev) => prev.filter((entry) => entry.extensionId !== extensionId));
@@ -3521,6 +3567,36 @@ function FrameworkOsShellInner({
     return injectActiveTool(withUtility);
   }, [injectActiveTool]);
 
+  const resolvedTargetViewState = useCallback(
+    (targetSession: ActiveSession) =>
+      parseResolvedPluginViewState(
+        injectActiveTool({
+          ...targetSession.viewState,
+          locale: uiLocale,
+          terminology: uiTerminology,
+          windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+          activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+          activeUtilityId: undefined,
+        }),
+      ),
+    [injectActiveTool, uiLocale, uiTerminology],
+  );
+
+  const postBrowserActorViewState = useCallback(
+    (worker: Worker, entry: OpenDocumentSession, targetSession: ActiveSession = entry.session) => {
+      if (entry.scope === undefined) return;
+      worker.postMessage({
+        wire: encodeBackboneWorkerRequest({
+          kind: "browser-actor-view-state",
+          clientInstanceId: entry.clientInstanceId,
+          scope: entry.scope,
+          viewState: resolvedTargetViewState(targetSession),
+        }),
+      });
+    },
+    [resolvedTargetViewState],
+  );
+
   useEffect(() => {
     const pending = pendingDocumentOpeningPublicationRef.current;
     pendingDocumentOpeningPublicationRef.current = null;
@@ -3591,8 +3667,8 @@ function FrameworkOsShellInner({
       }
       contributorInstancesRef.current.clear();
       const handles = loadedPluginsRef.current.map((entry) => entry.handle);
-      void Promise.allSettled(retirements).then(() => {
-        for (const handle of handles) handle.dispose();
+      void Promise.allSettled(retirements).then(() => Promise.allSettled(handles.map(handle => handle.dispose()))).then(results => {
+        for (const result of results) if (result.status === "rejected") console.error("[DEBUG] shell plugin retirement failed", result.reason);
       });
     };
   }, [retireDirectoryHomeOwner]);
@@ -3682,12 +3758,18 @@ function FrameworkOsShellInner({
       if (!session) return [];
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
       if (!plugin?.contextMenu) return [];
-      // 🖱️ No view state on the wire — the SDK's ContextMenuWireRequest dropped it (the plugin's
-      // own persisted selection/hover state already answers "what's selected", see AppActionRegistry
-      // funnel); sending one here would just be silently discarded on the Rust side.
-      return plugin.contextMenu(session.instanceId, request);
+      const baseViewState: ViewModel = {
+        ...session.viewState,
+        locale: uiLocaleRef.current,
+        terminology: uiTerminologyRef.current,
+        windowInstances: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+        activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+      };
+      const viewState = request.windowInstanceId ? windowViewContext(baseViewState, request.windowInstanceId) : panelViewContext(injectActiveTool(baseViewState));
+      if (!viewState) return [];
+      return plugin.contextMenu(session.instanceId, request, viewState);
     },
-    [loadedPlugins, session],
+    [injectActiveTool, loadedPlugins, session],
   );
 
   const refreshUi = useCallback(
@@ -3790,7 +3872,7 @@ function FrameworkOsShellInner({
                 takeSegmentedDownloadChunk: entry.handle.takeSegmentedDownloadChunk,
                 enqueue: () => {},
                 outcomes: (async function* () {})(),
-                dispose: () => {},
+                dispose: async () => {},
               },
             ]),
           ),
@@ -4643,7 +4725,7 @@ function FrameworkOsShellInner({
       let resolveReady!: () => void, rejectReady!: (error: Error) => void;
       const ready = new Promise<void>((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
       void ready.catch(() => {});
-      const entry: OpenDocumentSession = { session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacing: false, ready, resolveReady, rejectReady };
+      const entry: OpenDocumentSession = { session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacements: new LatestDocumentReplacementV1(), ready, resolveReady, rejectReady };
       openDocumentSessionsRef.current.set(runtimeKey, entry);
       const request: BackboneWorkerRequest = {
         kind: "open",
@@ -4661,10 +4743,11 @@ function FrameworkOsShellInner({
       void socketActor?.catch(() => {});
       const uri = `actor://${runtimeKey}`;
       const committed = await runDocumentOpeningAttemptV1({
-        deadlineMs: 10_000,
+        deadlineMs: 60_000,
         current: () => openDocumentSessionsRef.current.get(runtimeKey) === entry,
         socket: async () => {
           worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
+          postBrowserActorViewState(worker, entry, targetSession);
           await socketActor;
         },
         retire: () => {
@@ -4683,7 +4766,7 @@ function FrameworkOsShellInner({
               worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: scope.spaceId }) });
             }
           }
-          if (hubBinding || entry.replacing) await entry.ready;
+          if (hubBinding || entry.replacements.pending) await entry.ready;
           else await documentAttachmentLane(plugin, targetSession.instanceId).attach(clientInstanceId, () => openDocumentSessionsRef.current.get(runtimeKey) === entry, async () => {
             if (entry.port === null || entry.port.closing) await bindDocumentBackbone(runtimeKey, entry);
           });
@@ -4696,15 +4779,27 @@ function FrameworkOsShellInner({
       });
       return committed ? { committed: true, runtimeKey, clientInstanceId } : null;
     },
-    [bindDocumentBackbone, documentAttachmentLane, ensureBackboneWorker, loadedPlugins, resolveSyncTargetSession, hubEnv, retireDocumentAttachment],
+    [bindDocumentBackbone, documentAttachmentLane, ensureBackboneWorker, loadedPlugins, postBrowserActorViewState, resolveSyncTargetSession, hubEnv, retireDocumentAttachment],
   );
   openDocumentRef.current = openDocument;
+
+  useEffect(() => {
+    const worker = backboneWorkerRef.current;
+    if (worker === null) return;
+    for (const entry of openDocumentSessionsRef.current.values()) {
+      if (entry.scope === undefined) continue;
+      const current = sessionRef.current;
+      const targetSession = current?.pluginId === entry.session.pluginId && current.instanceId === entry.session.instanceId ? current : entry.session;
+      postBrowserActorViewState(worker, entry, targetSession);
+    }
+  }, [activeToolId, activeUtilityByWindowId, extraWindowInstances, postBrowserActorViewState, session?.viewState]);
 
   const closeDocument = useCallback((runtimeKey: string, clientInstanceId?: string) => {
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
     if (!entry) return;
     if (clientInstanceId !== undefined && entry.clientInstanceId !== clientInstanceId) return;
     entry.rejectReady(new Error("document closed"));
+    entry.replacements.invalidate();
     const retirement = entry.port?.retire();
     void retirement?.catch(error => console.error("[DEBUG] document backbone retirement failed", error));
     entry.port = null;
@@ -4924,7 +5019,16 @@ function FrameworkOsShellInner({
         const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
         const program = pluginEntry?.handle;
         if (program) {
-          const viewState: ViewModel = { ...session.viewState, activeUtilityId: next ?? undefined, activeToolId: next ? undefined : activeToolIdRef.current ?? undefined, windowId };
+          const viewState = windowViewContext(
+            {
+              ...session.viewState,
+              activeToolId: next ? undefined : activeToolIdRef.current ?? undefined,
+              activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+              windowInstances: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+            },
+            windowId,
+          );
+          if (!viewState) return;
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
           void program
             .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, windowId), viewState)
@@ -5072,14 +5176,13 @@ function FrameworkOsShellInner({
       // per-window option mutation off `view_state.windowId` instead of ever guessing at the active window.
       const actionWindowId = typeof action.args === "object" && action.args != null && typeof (action.args as { windowId?: unknown }).windowId === "string" ? (action.args as { windowId: string }).windowId : undefined;
       const dispatchWindowId = actionWindowId ?? activeWindowIdRef.current ?? undefined;
-      const dispatchViewState = injectActiveUtility(
-        {
-          ...targetSession.viewState,
-          windowId: dispatchWindowId,
-          windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
-        },
-        dispatchWindowId,
-      );
+      const baseDispatchViewState: ViewModel = {
+        ...targetSession.viewState,
+        windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+        activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+      };
+      const dispatchViewState = dispatchWindowId ? windowViewContext(baseDispatchViewState, dispatchWindowId) : panelViewContext(injectActiveTool(baseDispatchViewState));
+      if (!dispatchViewState) return;
       const declaredAction = targetSession.app.windowKinds.some((kind) => (kind.actions ?? []).some((entry) => entry.id === action.action));
       if (!declaredAction && !FRAMEWORK_RESERVED_ACTION_IDS.has(action.action)) {
         console.warn("[DEBUG] skipping undeclared action", action.action, targetSession.app.id);
@@ -5739,40 +5842,20 @@ function FrameworkOsShellInner({
 
   useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, driver: uiDriver }, scope.rootRef.current ?? undefined);
 
-  //#region 💾️ uiPrefs persistence (skips writes for any locked preference; an ephemeral brand's
-  // `scope.storage` is already an in-memory port, so the writes below are harmless there too — no more
-  // `ephemeral` branch needed to skip them outright)
+  //#region 🎨️ Ui preference projection effects
   useEffect(() => {
-    if (!locks.appearance) writeStoredUiChromeAppearance(scope.storage, uiAppearance);
-    writeStoredUiChromeLayout(scope.storage, uiLayout);
-    writeStoredUiDriverId(scope.storage, uiDriverId);
-    writeStoredUiCustomDrivers(scope.storage, uiCustomDrivers);
-    writeStoredUiKeybindingOverrides(scope.storage, uiKeybindingOverrides);
-    if (!locks.locale) writeStoredUiChromeLocale(scope.storage, uiLocale);
-    // 🐚️ This shell's own i18next instance (not the shared `uiI18n` singleton) — and its own root's
-    // `lang` attribute; `document.documentElement.lang` stays reserved for the page-owning case.
     void scope.i18n.changeLanguage(uiLocale);
     if (scope.ownsPage) {
       if (typeof document !== "undefined") document.documentElement.lang = uiLocale;
     } else if (scope.rootRef.current) {
       scope.rootRef.current.lang = uiLocale;
     }
-    if (!locks.terminology) writeStoredUiChromeTerminology(scope.storage, uiTerminology);
-    // 🐚️ `setActiveUiTheme` is page-global (writes `document.documentElement`'s CSS vars) — correct only
-    // for the page-owning shell. A co-mounted embedded shell paints its own theme tokens onto its own
-    // `.semio-scope` root instead, via `applyUiThemeToRoot`, so two shells with different `themeId` locks
-    // never fight over the same document-wide tokens.
     if (scope.ownsPage) {
       setActiveUiTheme(uiTheme);
     } else if (scope.rootRef.current) {
       applyUiThemeToRoot(scope.rootRef.current, uiTheme);
     }
-    if (!locks.themeId) {
-      writeStoredUiChromeThemeSnapshot(scope.storage, uiTheme);
-      writeStoredUiChromeThemeId(scope.storage, uiThemeId);
-    }
-    writeStoredUiCustomThemes(scope.storage, uiCustomThemes);
-  }, [uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiKeybindingOverrides, uiLocale, uiTerminology, uiTheme, uiThemeId, uiCustomThemes, locks, scope]);
+  }, [uiLocale, uiTheme, scope]);
 
   // 🐚️ Unmount cleanup for the embedded (non-page-owning) case — a shell that painted its own root's
   // theme tokens must remove them on unmount, or a later, unrelated element reused at the same DOM
@@ -6345,6 +6428,19 @@ function FrameworkOsShellInner({
     [osCommands, noteShellCommand, uiTerminology, uiLocale],
   );
 
+  const commitUiPreference = useCallback(
+    (mutation: UiPreferencesConfigMutation) => {
+      if (
+        (mutation.mutation === "setAppearance" && locks.appearance) ||
+        (mutation.mutation === "setLocale" && locks.locale) ||
+        (mutation.mutation === "setTerminology" && locks.terminology) ||
+        (mutation.mutation === "setTheme" && locks.themeId)
+      ) return;
+      commitUiPreferencesConfigMutation(scope.storage, mutation);
+    },
+    [locks, scope.storage],
+  );
+
   const draftThemePatch = useCallback(
     (patch: (next: UiTheme) => void) => {
       const next = structuredClone(uiThemeBase);
@@ -6357,10 +6453,10 @@ function FrameworkOsShellInner({
   const setThemeId = useCallback(
     (id: string) => {
       dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
-      dispatch({ type: "SET_UI_THEME_ID", value: id });
+      commitUiPreference(setTheme(id));
       noteOsCommand("os.setThemeId", { themeId: id });
     },
-    [noteOsCommand],
+    [commitUiPreference, noteOsCommand],
   );
 
   const setThemeColor = useCallback(
@@ -6422,8 +6518,8 @@ function FrameworkOsShellInner({
 
   const resetTheme = useCallback(() => {
     dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
-    dispatch({ type: "SET_UI_THEME_ID", value: "semio" });
-  }, []);
+    commitUiPreference(setTheme("semio"));
+  }, [commitUiPreference]);
 
   const saveTheme = useCallback(
     (label: string) => {
@@ -6436,25 +6532,22 @@ function FrameworkOsShellInner({
       if (!slug) return;
       const id = `custom.${slug}`;
       const saved: UiTheme = { ...uiThemeBase, id, label: trimmed };
-      dispatch({ type: "SET_UI_CUSTOM_THEMES", value: (current) => ({ ...current, [id]: saved }) });
+      commitUiPreference(setCustomTheme(id, canonicalUiTheme(saved)));
       dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
-      dispatch({ type: "SET_UI_THEME_ID", value: id });
+      commitUiPreference(setTheme(id));
     },
-    [uiThemeBase],
+    [commitUiPreference, uiThemeBase],
   );
 
-  const deleteTheme = useCallback((id: string) => {
-    if (!id.startsWith("custom.")) return;
-    dispatch({
-      type: "SET_UI_CUSTOM_THEMES",
-      value: (current) => {
-        const { [id]: _removed, ...rest } = current;
-        return rest;
-      },
-    });
-    dispatch({ type: "SET_UI_THEME_ID", value: (current) => (current === id ? "semio" : current) });
-    dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
-  }, []);
+  const deleteTheme = useCallback(
+    (id: string) => {
+      if (!id.startsWith("custom.")) return;
+      commitUiPreference(setCustomTheme(id, null));
+      if (uiThemeId === id) commitUiPreference(setTheme("semio"));
+      dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+    },
+    [commitUiPreference, uiThemeId],
+  );
 
   const exportTheme = useCallback(() => {
     downloadMediaExport(`${uiThemeBase.id}.theme.dsl`, "text/plain", serializeUiTheme(uiThemeBase));
@@ -6479,10 +6572,10 @@ function FrameworkOsShellInner({
   const setDriverId = useCallback(
     (id: string) => {
       dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
-      dispatch({ type: "SET_UI_DRIVER_ID", value: id });
+      commitUiPreference(setDriver(id));
       noteOsCommand("os.setDriver", { driver: id });
     },
-    [noteOsCommand],
+    [commitUiPreference, noteOsCommand],
   );
 
   const setDriverField = useCallback(
@@ -6503,42 +6596,33 @@ function FrameworkOsShellInner({
       if (!slug) return;
       const id = `custom.${slug}`;
       const saved: UiDriver = { ...uiDriverBase, id, label: trimmed };
-      dispatch({ type: "SET_UI_CUSTOM_DRIVERS", value: (current) => ({ ...current, [id]: saved }) });
+      commitUiPreference(setCustomDriver(id, canonicalUiDriver(saved)));
       dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
-      dispatch({ type: "SET_UI_DRIVER_ID", value: id });
+      commitUiPreference(setDriver(id));
     },
-    [uiDriverBase],
+    [commitUiPreference, uiDriverBase],
   );
 
-  const deleteDriver = useCallback((id: string) => {
-    if (!id.startsWith("custom.")) return;
-    dispatch({
-      type: "SET_UI_CUSTOM_DRIVERS",
-      value: (current) => {
-        const { [id]: _removed, ...rest } = current;
-        return rest;
-      },
-    });
-    dispatch({ type: "SET_UI_DRIVER_ID", value: (current) => (current === id ? DEFAULT_UI_DRIVER.id : current) });
-    dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
-  }, []);
+  const deleteDriver = useCallback(
+    (id: string) => {
+      if (!id.startsWith("custom.")) return;
+      commitUiPreference(setCustomDriver(id, null));
+      if (uiDriverId === id) commitUiPreference(setDriver(DEFAULT_UI_DRIVER.id));
+      dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
+    },
+    [commitUiPreference, uiDriverId],
+  );
   //#endregion 🚗️DriverMutators
 
   const [themeSaveLabel, setThemeSaveLabel] = useState("");
   const [driverSaveLabel, setDriverSaveLabel] = useState("");
   const [keybindingCaptureControlId, setKeybindingCaptureControlId] = useState<string | null>(null);
   const setKeybindingOverride = useCallback((controlId: string, keys: string) => {
-    dispatch({ type: "SET_UI_KEYBINDING_OVERRIDES", value: (current) => ({ ...current, [controlId]: keys }) });
-  }, []);
+    commitUiPreference(setKeybindingOverrideMutation(controlId, keys));
+  }, [commitUiPreference]);
   const resetKeybindingOverride = useCallback((controlId: string) => {
-    dispatch({
-      type: "SET_UI_KEYBINDING_OVERRIDES",
-      value: (current) => {
-        const { [controlId]: _removed, ...rest } = current;
-        return rest;
-      },
-    });
-  }, []);
+    commitUiPreference(setKeybindingOverrideMutation(controlId, null));
+  }, [commitUiPreference]);
   useEffect(() => {
     const onNavigateToHotkey = (event: Event) => {
       const path = (event as CustomEvent<{ readonly path?: string }>).detail?.path;
@@ -6568,12 +6652,12 @@ function FrameworkOsShellInner({
       setDriverSaveLabel,
       appearance: uiAppearance,
       setAppearance: (value: string) => {
-        dispatch({ type: "SET_UI_APPEARANCE", value: value as ElementsSurfaceAppearance });
+        commitUiPreference(setAppearance(value as ElementsSurfaceAppearance));
         noteOsCommand("os.setAppearance", { appearance: value });
       },
       layout: uiLayout,
       setLayout: (value: UiChromeLayout) => {
-        dispatch({ type: "SET_UI_LAYOUT", value });
+        commitUiPreference(setLayout(value));
         noteOsCommand("os.setLayout", { layout: value });
       },
       mobileActive: mobile,
@@ -6585,12 +6669,12 @@ function FrameworkOsShellInner({
       },
       locale: uiLocale,
       setLocale: (value: UiLocale) => {
-        dispatch({ type: "SET_UI_LOCALE", value });
+        commitUiPreference(setLocale(value));
         noteOsCommand("os.setLocale", { locale: value });
       },
       terminology: uiTerminology,
       setTerminology: (value: string) => {
-        dispatch({ type: "SET_UI_TERMINOLOGY", value });
+        commitUiPreference(setTerminology(value));
         noteOsCommand("os.setTerminology", { terminology: value });
       },
       terminologies: [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])],
@@ -6667,6 +6751,7 @@ function FrameworkOsShellInner({
       themeSaveLabel,
       setThemeSaveLabel,
       noteOsCommand,
+      commitUiPreference,
       mergePolicy,
       dispatchSetMergePolicy,
     ],
@@ -7390,7 +7475,7 @@ function FrameworkOsShellInner({
         void toggleDocumentFullscreen(scope.rootRef.current ?? document.documentElement).catch((error) => console.error("Fullscreen request was rejected", error));
       }
       if (isOsCommandAddress(address)) {
-        dispatchOsCommand(commandId, args, dispatch, dockLayoutStore, dockUiStateStore, locks);
+        dispatchOsCommand(commandId, args, commitUiPreference, dispatch, dockLayoutStore, dockUiStateStore, locks);
         const rawCommandLabel = resolvedCommands.find((entry) => commandAddressKey(entry.address) === commandAddressKey(address))?.definition.label as LocalizedLabel | string | undefined;
         const label = rawCommandLabel !== undefined ? resolveManifestLabel(rawCommandLabel, uiTerminology, uiLocale) : commandId;
         noteShellCommand(commandId, label, args);
@@ -7435,7 +7520,7 @@ function FrameworkOsShellInner({
           console.error("Command execution failed", error);
         });
     },
-    [applyHostEffects, captureDialogOrigin, isCurrentDialogOrigin, captureEffectOwner, isCurrentEffectOwner, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand, showTransientNotice, isViewerReadOnlyFault, uiLocale],
+    [applyHostEffects, captureDialogOrigin, isCurrentDialogOrigin, captureEffectOwner, isCurrentEffectOwner, commitUiPreference, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand, showTransientNotice, isViewerReadOnlyFault, uiLocale],
   );
 
   const handleCommandKeydown = useCallback(

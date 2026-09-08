@@ -28,7 +28,7 @@ async function bundleBrowserModule(write: boolean) {
 
 //#region 📝️BrowserDeclarations
 async function publishBrowserDeclarations(): Promise<void> {
-  const { flowBrowserDeclaration } = await import("../../../🕸️wasm/📦️packages/🟨️javascript/📜️script.ts");
+  const { flowBrowserDeclaration } = await import("../../../🧪️tests/🌐️browser-declaration/🟦️.ts");
   mkdirSync(CORE_PKG_DIR, { recursive: true });
   writeFileSync(join(CORE_PKG_DIR, "📝️flow-browser.d.ts"), flowBrowserDeclaration());
   const manifestPath = join(CORE_PKG_DIR, "package.json");
@@ -43,7 +43,7 @@ async function publishBrowserDeclarations(): Promise<void> {
 class BrowserDeclarationsScript extends BundleScript {
   async run(): Promise<void> {
     await publishBrowserDeclarations();
-    const { testFlowBrowserDeclaration } = await import("../../../🕸️wasm/📦️packages/🟨️javascript/📜️script.ts");
+    const { testFlowBrowserDeclaration } = await import("../../../🧪️tests/🌐️browser-declaration/🟦️.ts");
     await testFlowBrowserDeclaration(CORE_PKG_DIR);
   }
 }
@@ -109,7 +109,7 @@ class SourceTestScript extends BundleScript {
     await import("../../../🖥️host/🧹️retirement/📜️script.ts");
     await import("../../../🕸️wasm/🧪️tests/🧬️schema-oracle/🟨️.js");
     const { testFlowOpenOwnership } = await import("../../../🕸️wasm/🧪️tests/🔓️open-ownership/🟦️.ts");
-    const fixture = JSON.parse(readFileSync(join(BROWSER_BRIDGE_DIR, "../../🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(BROWSER_BRIDGE_DIR, "../../🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json"), "utf8"));
     await testFlowOpenOwnership(fixture.openFailure);
   }
 }

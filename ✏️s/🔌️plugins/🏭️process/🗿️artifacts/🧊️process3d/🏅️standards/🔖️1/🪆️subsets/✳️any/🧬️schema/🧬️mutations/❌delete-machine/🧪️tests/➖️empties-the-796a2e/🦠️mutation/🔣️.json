@@ -1,1 +1,4 @@
-{"mutation":"deleteMachine","id":"saw"}
+{
+  "mutation": "deleteMachine",
+  "id": "saw"
+}

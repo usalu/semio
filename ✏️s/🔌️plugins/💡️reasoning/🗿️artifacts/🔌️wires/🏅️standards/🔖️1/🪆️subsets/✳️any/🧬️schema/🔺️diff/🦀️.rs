@@ -27,7 +27,5 @@ pub struct WiresDiff {
     pub drag_last_x: Option<f64>,
     #[state(artifact)]
     pub drag_last_y: Option<f64>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

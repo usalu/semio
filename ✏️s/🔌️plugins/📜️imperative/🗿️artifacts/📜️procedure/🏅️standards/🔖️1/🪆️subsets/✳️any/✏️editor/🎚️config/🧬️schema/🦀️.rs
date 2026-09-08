@@ -8,8 +8,6 @@ pub struct ImperativeConfig {
     #[state(config)]
     pub run_output_json: String,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub contributions_json: String,
 }
 

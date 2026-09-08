@@ -4,14 +4,14 @@
     "id": "vortex-rear",
     "vortexKind": "hatch",
     "position": [
-      0.0,
+      0,
       1.6,
       1.2
     ],
     "direction": [
-      0.0,
-      1.0,
-      0.0
+      0,
+      1,
+      0
     ],
     "radius": 0.2,
     "label": "rear hatch"

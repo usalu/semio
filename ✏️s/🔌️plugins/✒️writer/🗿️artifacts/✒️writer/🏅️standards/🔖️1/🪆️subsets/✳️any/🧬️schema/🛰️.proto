@@ -17,7 +17,6 @@ message WriterArtifact {
   double camera_x = 13;
   double camera_y = 14;
   double camera_zoom = 15;
-  string locale = 16;
 }
 
 message WriterEditorSelection {
@@ -30,4 +29,15 @@ message WriterEditorSettings {
   uint32 font_px = 2;
   uint32 line_height = 3;
   uint32 tab_size = 4;
+}
+
+message WriterTextRangeEdit {
+  uint32 start = 1;
+  uint32 end = 2;
+  string insert = 3;
+}
+
+message WriterTextDelta {
+  optional string replacement = 1;
+  repeated WriterTextRangeEdit edits = 2;
 }

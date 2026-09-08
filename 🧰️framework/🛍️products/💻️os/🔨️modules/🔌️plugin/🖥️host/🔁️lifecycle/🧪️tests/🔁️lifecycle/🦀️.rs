@@ -5,12 +5,19 @@ fn event(kind: &str) -> Event {
     match kind {
         "open" => Event::InstanceOpen {
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 41, instance_id: 7, request_sequence: 8 },
-            app_id: semio_framework::kernel::AppInstanceId("s.test.synthetic@1/*#editor".into()), actor: "fixture".into(),
-            config: Vec::new(), assets: Vec::new(), capabilities: Vec::new(), quotas: Default::default(),
+            app_id: semio_framework::kernel::AppInstanceId("s.test.synthetic@1/*#editor".into()),
+            actor: "fixture".into(),
+            config: Vec::new(),
+            assets: Vec::new(),
+            capabilities: Vec::new(),
+            quotas: Default::default(),
         },
         "close" => Event::InstanceClose(semio_framework::kernel::ActorInstanceCloseRequest { lifetime, request_sequence: 9 }),
         "ack" => Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt: semio_framework::kernel::ActorInstanceLifecycleReceipt::Captured { lifetime, request_sequence: 8 } }),
-        "page" => Event::CommandIngressPage { cursor: semio_framework::kernel::CommandPageCursor { owner: 1, generation: 1, command_index: 0, command_count: 1, instance: 7, seq: 1, kind: 28, page_index: 0, page_count: 1, item_count: 0, metadata: 0 }, bytes: semio_framework::kernel::FixedCommandPage::try_copy_from(&[]).unwrap() },
+        "page" => Event::CommandIngressPage {
+            cursor: semio_framework::kernel::CommandPageCursor { owner: 1, generation: 1, command_index: 0, command_count: 1, instance: 7, seq: 1, kind: 28, page_index: 0, page_count: 1, item_count: 0, metadata: 0 },
+            bytes: semio_framework::kernel::FixedCommandPage::try_copy_from(&[]).unwrap(),
+        },
         "wake" => Event::Wake,
         _ => panic!("fixture event kind"),
     }

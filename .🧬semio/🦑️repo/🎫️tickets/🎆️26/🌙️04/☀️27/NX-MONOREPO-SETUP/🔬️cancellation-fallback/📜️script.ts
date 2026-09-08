@@ -10,8 +10,8 @@ const code = ts.transpileModule(declaration.getText(source).replace(/^export /, 
 for (const vector of JSON.parse(readFileSync(join(root, library, "⚡️caching/🧫️fixtures/🛑️cancellation.json"), "utf8")).cases) {
   const runtime = Object.assign(new EventEmitter(), { env: vector.environment, platform: vector.platform, exitCode: 0, kill: (pid: number, signal: number | string) => { if (!signal) throw new Error("No process"); killed.push(pid); } });
   const child = Object.assign(new EventEmitter(), { pid: 1234 }), killed: number[] = [], calls: string[] = [];
-  const NxScript = new Function("Script", "process", "createRequire", "join", "resolveNxInvocation", "devToolingEnv", "orchestratorBudgetOpts", "spawnNxProcess", "stopNxProcessTree", code + "; return NxScript;")(
-    class { root = root; }, runtime, () => ({ resolve: (name: string) => name }), join, (args: string[]) => ({ args, env: {} }), (env: unknown) => env, () => ({}), () => child,
+  const NxScript = new Function("Script", "process", "createRequire", "join", "existsSync", "resolveNxInvocation", "devToolingEnv", "orchestratorBudgetOpts", "spawnNxProcess", "stopNxProcessTree", code + "; return NxScript;")(
+    class { root = root; }, runtime, () => ({ resolve: (name: string) => name }), join, (path: string) => path.endsWith("node_modules/nx/package.json"), (args: string[]) => ({ args, env: {} }), (env: unknown) => env, () => ({}), () => child,
     (command: string) => { calls.push(command); if (command === "taskkill") { killed.push(child.pid); return { status: 0 }; } if (vector.throws) throw new Error("Snapshot unavailable"); return { status: 0, stdout: vector.stdout }; });
   const done = new NxScript().run(["run", "fixture:build"]);
   assert.doesNotThrow(() => runtime.emit("SIGTERM"), vector.name);

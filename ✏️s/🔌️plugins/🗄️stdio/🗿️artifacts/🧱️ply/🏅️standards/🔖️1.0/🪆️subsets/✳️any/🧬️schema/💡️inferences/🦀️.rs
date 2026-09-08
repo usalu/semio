@@ -10,8 +10,7 @@ use crate::PlySnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::bounds::{compute_ply_bounds, PlyBounds};
-
+use super::bounds::{compute_ply_bounds};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a ply snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
@@ -85,3 +84,8 @@ pub fn ply_artifact_inference_descriptor() -> framework_schema::ArtifactInferenc
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::bounds::PlyBounds;
+//#endregion 🔁️Re-exports

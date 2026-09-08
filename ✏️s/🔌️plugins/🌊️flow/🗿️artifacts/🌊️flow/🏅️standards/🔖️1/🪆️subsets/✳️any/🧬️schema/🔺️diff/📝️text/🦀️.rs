@@ -69,9 +69,6 @@ impl FlowDiff {
             if let Some(value) = &self.generation_json {
                 next.generation_json = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -124,7 +121,6 @@ impl MutationDiff<FlowSnapshot> for FlowDiff {
         take!(automation_enabled_json);
         take!(contributions_json);
         take!(generation_json);
-        take!(locale);
     }
 }
 //#endregion 🔹Apply
@@ -151,3 +147,8 @@ pub fn diff_replace_content(widgets: Vec<semio_framework_artifact_flow_flow::Wid
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type FlowDiffText = String;
+//#endregion 🚚️Carrier

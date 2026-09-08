@@ -11,6 +11,9 @@ import type { Identity, SignIn } from "./🪪️sign-in/🟦️.ts";
 import { diff as signInDiff, inverse as signInInverse, signIn } from "./🪪️sign-in/🟦️.ts";
 import type { SignOut } from "./🚪️sign-out/🟦️.ts";
 import { diff as signOutDiff, inverse as signOutInverse, signOut } from "./🚪️sign-out/🟦️.ts";
+import type { UiPreferences } from "../🟦️.ts";
+import type { SetAppearance, SetCustomDriver, SetCustomTheme, SetDriver, SetKeybindingOverride, SetLayout, SetLocale, SetTerminology, SetTheme } from "./🎨️ui-preferences/🟦️.ts";
+import { diff as uiPreferencesDiff, inverse as uiPreferencesInverse, setAppearance, setCustomDriver, setCustomTheme, setDriver, setKeybindingOverride, setLayout, setLocale, setTerminology, setTheme } from "./🎨️ui-preferences/🟦️.ts";
 
 //#region 🔖️Opening
 /** 🎚️ Typed, invertible opening-preferences mutation vocabulary. */
@@ -26,6 +29,28 @@ export function inverseOpeningConfigMutation(mutation: OpeningConfigMutation, ba
   return mutation.mutation === "setDefaultApp" ? setDefaultAppInverse(mutation, base) : clearDefaultAppInverse(mutation, base);
 }
 //#endregion 🔖️Opening
+
+//#region 🔖️UiPreferences
+/** 🎨️ Typed, invertible OS UI-preferences mutation vocabulary. */
+export type UiPreferencesConfigMutation =
+  | ({ readonly mutation: "setAppearance" } & SetAppearance)
+  | ({ readonly mutation: "setLayout" } & SetLayout)
+  | ({ readonly mutation: "setDriver" } & SetDriver)
+  | ({ readonly mutation: "setCustomDriver" } & SetCustomDriver)
+  | ({ readonly mutation: "setLocale" } & SetLocale)
+  | ({ readonly mutation: "setTerminology" } & SetTerminology)
+  | ({ readonly mutation: "setTheme" } & SetTheme)
+  | ({ readonly mutation: "setCustomTheme" } & SetCustomTheme)
+  | ({ readonly mutation: "setKeybindingOverride" } & SetKeybindingOverride);
+
+export function applyUiPreferencesConfigMutation(base: UiPreferences, mutation: UiPreferencesConfigMutation): UiPreferences {
+  return uiPreferencesDiff(mutation, base);
+}
+
+export function inverseUiPreferencesConfigMutation(mutation: UiPreferencesConfigMutation, base: UiPreferences): UiPreferencesConfigMutation[] {
+  return uiPreferencesInverse(mutation, base);
+}
+//#endregion 🔖️UiPreferences
 
 //#region 🔖️MergePolicy
 /** 🛡️ Typed, invertible merge-policy mutation vocabulary. */
@@ -61,6 +86,6 @@ export function applyIdentityConfigMutation(base: Identity | null, mutation: Ide
   return diffIdentityConfigMutation(mutation, base);
 }
 
-export { changeMergePolicy, clearDefaultApp, setDefaultApp, signIn, signOut };
-export type { ChangeMergePolicy, ClearDefaultApp, Identity, MergePolicySetting, SetDefaultApp, SignIn, SignOut };
+export { changeMergePolicy, clearDefaultApp, setAppearance, setCustomDriver, setCustomTheme, setDefaultApp, setDriver, setKeybindingOverride, setLayout, setLocale, setTerminology, setTheme, signIn, signOut };
+export type { ChangeMergePolicy, ClearDefaultApp, Identity, MergePolicySetting, SetAppearance, SetCustomDriver, SetCustomTheme, SetDefaultApp, SetDriver, SetKeybindingOverride, SetLayout, SetLocale, SetTerminology, SetTheme, SignIn, SignOut };
 //#endregion 🔖️Identity

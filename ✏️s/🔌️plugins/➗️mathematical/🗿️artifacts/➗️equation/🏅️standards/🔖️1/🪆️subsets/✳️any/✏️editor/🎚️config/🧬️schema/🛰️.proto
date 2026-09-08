@@ -11,5 +11,4 @@ message EquationConfig {
   // @state config
   EquationCamera camera = 1;
   // @state config
-  string locale = 2;
 }

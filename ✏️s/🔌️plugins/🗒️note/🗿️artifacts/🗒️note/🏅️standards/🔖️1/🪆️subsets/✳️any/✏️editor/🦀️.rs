@@ -12,7 +12,6 @@ use crate::schema::empty_note_snapshot;
 use crate::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use crate::editor::note::commands::ink_apply_events;
 use crate::editor::note::commands::set_active_utility;
-use crate::editor::note::commands::set_locale;
 use crate::editor::note::commands::{add_block, delete_block, delete_selection, duplicate_block, duplicate_selection, move_block, patch_blocks};
 use crate::editor::note::commands::{engagement_input, engagement_submit, navigator_engagement_input};
 use crate::editor::note::commands::{load_request, save_download};
@@ -157,7 +156,6 @@ semio_framework_plugin::app_commands! {
         "setCamera" as "camera" => set_camera::SetCamera,
         "setCameraZoom" as "camera-zoom" => set_camera_zoom::SetCameraZoom,
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "navigatorEngagementInput" as "navigator-engagement-input" => navigator_engagement_input::NavigatorEngagementInput,
         "saveDownload" as "save-download" => save_download::SaveDownload,
@@ -206,7 +204,6 @@ impl ArtifactEditor for NotePlayApp {
             "setCamera" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "setCameraZoom" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "setActiveUtility" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
-            "setLocale" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "engagementInput" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "navigatorEngagementInput" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "loadRequest" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
@@ -229,7 +226,7 @@ impl ArtifactEditor for NotePlayApp {
         Some(crate::editor::note::retained::config_preparation_factory())
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::note::config::schema::app_schema_descriptor())
     }
 
@@ -248,7 +245,7 @@ impl ArtifactEditor for NotePlayApp {
         command: &NoteCommand,
         doc: &ArtifactView<'_, NoteSnapshot>,
         cfg: &ConfigView<'_, NoteConfig>,
-        interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<NoteMutation, NoteConfigMutation, Self::DraftMutation>, Fault> {
@@ -265,10 +262,10 @@ impl ArtifactEditor for NotePlayApp {
         InteractionTopology { domains }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = note_play_labels(config);
+        let labels = note_play_labels(view_state);
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => composite::render(document, config),
             NOTE_PLAY_BODY_NAVIGATOR => navigator::render(document, config),
@@ -279,14 +276,14 @@ impl ArtifactEditor for NotePlayApp {
         }.map(semio_framework_plugin::built_to_component_tree)
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
         HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::engagement(doc.snapshot, &config.camera, &config.engagement_input)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::engagement(&config.active_utility_id))])
     }
 
-    fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
-        let labels = note_play_labels(config);
+        let labels = note_play_labels(view_state);
         HashMap::from([(NOTE_PLAY_WINDOW_COMPOSITE.to_string(), composite::window_measures(doc.snapshot, &config.camera, labels)), (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), navigator::window_measures(doc.snapshot, &config.camera, labels))])
     }
 }
@@ -359,7 +356,7 @@ pub fn create_note_app() -> AppDefinition {
             .action_with(note_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
             .action_with(note_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
             .action_with(note_internal_action(SET_ACTIVE_UTILITY_ACTION_ID, LocalizedLabel::native("Set Active Utility", "Aktives Werkzeug festlegen"), ActionKind::View))
-            .action_with(note_internal_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
+            .action_with(note_internal_action(LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
             // 📝️ Staged argument forms for the palette-eligible actions.
             .action_args("addBlock", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Typ"), vec![
@@ -410,7 +407,6 @@ pub fn create_note_app() -> AppDefinition {
             .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setCameraZoom", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveUtility", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("navigatorEngagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("saveDownload", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)

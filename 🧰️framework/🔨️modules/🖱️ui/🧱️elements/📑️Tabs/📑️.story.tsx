@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "../../🧪️story.ts";
+import type { Meta, StoryObj } from "../../🧪️tests/📚️storybook-types/🟦️.ts";
 
 // 🔷️#region 🏷️Tabs
 const meta = {

@@ -1,2 +1,7 @@
 # stdio.semio.model snapshot text grammar schema
 type Document { preamble: String! body: String! }
+
+type SemioModelSnapshotText {
+  preamble: String
+  body: String
+}

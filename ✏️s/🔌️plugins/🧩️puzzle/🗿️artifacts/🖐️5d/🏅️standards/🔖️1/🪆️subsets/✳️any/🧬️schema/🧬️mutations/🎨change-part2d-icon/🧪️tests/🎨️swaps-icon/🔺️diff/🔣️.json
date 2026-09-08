@@ -18,25 +18,25 @@
             "id": "part-a",
             "partKind": "part-kind-a",
             "2d": {
-              "x": 0.0,
-              "y": 0.0,
+              "x": 0,
+              "y": 0,
               "shape": "circle",
-              "radius": 10.0,
+              "radius": 10,
               "text": "Alpha",
               "iconKind": "icon-beta"
             },
             "3d": {
               "origin": [
-                0.0,
-                0.0,
-                0.0
+                0,
+                0,
+                0
               ],
               "meshUrl": "mesh://alpha",
               "orientation": [
-                0.0,
-                0.0,
-                0.0,
-                1.0
+                0,
+                0,
+                0,
+                1
               ],
               "label": "Alpha 3d"
             },
@@ -45,13 +45,13 @@
                 "id": "grip-1",
                 "gripKind": "grip-kind-a",
                 "2d": {
-                  "angle": 0.0
+                  "angle": 0
                 },
                 "3d": {
                   "position": [
-                    0.0,
-                    0.0,
-                    0.0
+                    0,
+                    0,
+                    0
                   ]
                 }
               },
@@ -59,13 +59,13 @@
                 "id": "grip-spare",
                 "gripKind": "grip-kind-a",
                 "2d": {
-                  "angle": 0.0
+                  "angle": 0
                 },
                 "3d": {
                   "position": [
-                    0.0,
-                    0.0,
-                    0.0
+                    0,
+                    0,
+                    0
                   ]
                 }
               }
@@ -99,7 +99,6 @@
   "fillCount": null,
   "brushCandidateIndex": null,
   "lodMode": null,
-  "locale": null,
   "runtimeExtrasJson": null,
   "hoveredPartId": null,
   "previewSeq": null

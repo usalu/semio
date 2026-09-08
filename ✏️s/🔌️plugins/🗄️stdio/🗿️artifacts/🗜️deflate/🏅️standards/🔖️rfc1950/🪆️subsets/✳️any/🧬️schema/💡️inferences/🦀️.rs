@@ -12,8 +12,7 @@ use crate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateSnapshot
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::window::{compute_deflate_window, DeflateWindow};
-
+use super::window::{compute_deflate_window};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a deflate snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `window`, backed by the `🪟window/` slug dir).
@@ -87,3 +86,8 @@ pub fn deflate_artifact_inference_descriptor() -> framework_schema::ArtifactInfe
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::window::DeflateWindow;
+//#endregion 🔁️Re-exports

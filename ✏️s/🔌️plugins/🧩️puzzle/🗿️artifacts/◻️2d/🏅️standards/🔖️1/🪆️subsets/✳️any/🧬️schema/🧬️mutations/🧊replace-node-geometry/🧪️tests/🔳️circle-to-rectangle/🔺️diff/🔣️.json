@@ -13,8 +13,8 @@
             "id": "node-a",
             "nodeKind": "node-kind-a",
             "shape": "rectangle",
-            "x": 0.0,
-            "y": 0.0,
+            "x": 0,
+            "y": 0,
             "text": "Alpha",
             "iconKind": "icon-alpha",
             "anchor": "fixed",
@@ -22,7 +22,7 @@
               {
                 "id": "handle-1",
                 "handleKind": "handle-kind-a",
-                "angle": 0.0
+                "angle": 0
               },
               {
                 "id": "handle-spare",
@@ -30,8 +30,8 @@
                 "angle": 1.5
               }
             ],
-            "width": 24.0,
-            "height": 16.0
+            "width": 24,
+            "height": 16
           }
         }
       }
@@ -52,8 +52,6 @@
   "fillCount": null,
   "brushCandidateIndex": null,
   "brushCandidateSourceHandleId": null,
-  "locale": null,
-  "terminology": null,
   "lodModeByPaneJson": null,
   "engagementInputByPaneJson": null,
   "brushCandidatesJson": null,

@@ -9,7 +9,6 @@ type FormsArtifact {
   selectedIds: [String!]! @state(class: PRESENCE)
   currentStepIndex: Int! @state(class: CONFIG)
   tryValues: [FormsTryValue!]! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
   contributionsJson: String! @state(class: CONFIG)
 }
 
@@ -29,4 +28,8 @@ type FormQuestion {
   id: String!
   label: String!
   kind: String!
+}
+
+type FormsStringList {
+  values: [String!]!
 }

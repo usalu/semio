@@ -6,7 +6,7 @@ import { WORKSPACE_ROOT, toolJobRustBlock } from "../../../../../../../../📜�
 /** 🧪️ Executes canonical error progress policy assertions. */
 export function canonicalErrorProgressSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🚧️canonical-error-progress.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🚧️canonical-error-progress.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/CanonicalErrorProgress" });

@@ -13,7 +13,7 @@ use crate::flatten_playbook_blocks;
 use crate::op::{AddStep, PlaybookMutation};
 use crate::schema::default_block;
 use crate::{artifact_kind, PlaybookSnapshot, PlaybookStep, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
-use crate::editor::playbook::commands::{add_block, add_step, move_block, move_step, remove_block, remove_step, set_contributions, set_locale, update_playbook};
+use crate::editor::playbook::commands::{add_block, add_step, move_block, move_step, remove_block, remove_step, set_contributions, update_playbook};
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::editor::playbook::engine::{playbook_io, PlaybookChapterPayload};
 use crate::editor::playbook::modes::builder;
@@ -52,7 +52,6 @@ semio_framework_plugin::app_commands! {
         "removeBlock" as "remove-block" => remove_block::RemoveBlock,
         "moveBlock" as "move-block" => move_block::MoveBlock,
         "updatePlaybook" as "update-playbook" => update_playbook::UpdatePlaybook,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "setContributions" as "contributions" => set_contributions::SetContributions,
     }
 }
@@ -94,13 +93,12 @@ fn playbook_blocks_topology(spec: &PlaybookSnapshot) -> DomainTopology {
 pub struct PlaybookPlayApp;
 
 //#region 🧵️RetainedCommands
-const PLAYBOOK_RETAINED_TOOL_IDS: &[&str] = &["setLocale", "setContributions"];
+const PLAYBOOK_RETAINED_TOOL_IDS: &[&str] = &["setContributions"];
 const PLAYBOOK_RETAINED_PAYLOAD_SCHEMA: &str = "playbook.program.tool-command.v1";
 const PLAYBOOK_RETAINED_RAW_BYTES: usize = 8_192;
 const PLAYBOOK_RETAINED_WORK_ITEMS: usize = 64;
 
 const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
 ];
 
@@ -110,7 +108,6 @@ fn playbook_retained_contract() -> ToolExecutionContract {
 
 fn playbook_retained_extent(command: &PlaybookCommand, _snapshot: &PlaybookSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let bytes = match command {
-        PlaybookCommand::SetLocale(payload) => payload.value.len(),
         PlaybookCommand::SetContributions(payload) => payload.json.len(),
         _ => return None,
     };
@@ -124,6 +121,7 @@ fn playbook_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<PlaybookPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
@@ -345,7 +343,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         factory: "PlaybookRetainedCommandJobFactory",
         factory_type: PlaybookRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
-        tools: ["setLocale", "setContributions"]
+        tools: ["setContributions"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -401,7 +399,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         command: &PlaybookCommand,
         doc: &ArtifactView<'_, PlaybookSnapshot>,
         cfg: &ConfigView<'_, PlaybookConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, Self::DraftMutation>, Fault> {
@@ -441,7 +439,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             PLAYBOOK_PLAY_BODY_BUILDER => Ok(semio_framework_plugin::built_to_component_tree(builder_window::render(doc.snapshot, cfg.snapshot)?)),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
@@ -456,7 +454,7 @@ impl ArtifactEditor for PlaybookPlayApp {
 /// out inline.
 pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PLAYBOOK_DIALECT)
-        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setLocale", LocalizedLabel::native("Set Locale", "Gebietsschema festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("value", LocalizedLabel::native("Locale", "Gebietsschema"))]) })
+        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog(LocalizedLabel::native("Set Locale", "Gebietsschema festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("value", LocalizedLabel::native("Locale", "Gebietsschema"))]) })
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
         .document(["semio", "playbook"])
         .artifact_kind(artifact_kind())
@@ -478,7 +476,6 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("removeBlock", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("moveBlock", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("updatePlaybook", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
         .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
         // 📝️ Staged argument form for the panel-visible create action (block kind is a choice).
         .action_args("addBlock", vec![

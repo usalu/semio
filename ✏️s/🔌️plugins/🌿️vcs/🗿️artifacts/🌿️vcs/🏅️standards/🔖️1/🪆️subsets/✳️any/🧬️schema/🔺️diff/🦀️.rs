@@ -26,8 +26,6 @@ pub struct VcsDiff {
     pub tags: Option<VcsTagsDelta>,
     #[state(presence)]
     pub selected_checkpoint_ids: Option<VcsStringList>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
 

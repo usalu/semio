@@ -21,8 +21,6 @@ pub struct PresentationArtifact {
     pub selected_ids: Vec<String>,
     #[state(config)]
     pub engagement_input: String,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -35,7 +33,6 @@ impl Default for PresentationArtifact {
             animation: crate::animation_child_handle(),
             selected_ids: Vec::new(),
             engagement_input: String::new(),
-            locale: "en-US".into(),
         }
     }
 }

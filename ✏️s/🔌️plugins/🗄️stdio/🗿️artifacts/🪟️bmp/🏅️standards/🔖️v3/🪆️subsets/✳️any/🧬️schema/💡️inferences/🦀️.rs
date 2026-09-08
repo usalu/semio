@@ -7,8 +7,7 @@
 use crate::BmpSnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::dimensions::{compute_bmp_dimensions, BmpDimensions};
-
+use super::dimensions::{compute_bmp_dimensions};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a bmp snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `dimensions`, backed by the `📐dimensions/` slug dir).
@@ -82,3 +81,8 @@ pub fn bmp_artifact_inference_descriptor() -> framework_schema::ArtifactInferenc
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::dimensions::BmpDimensions;
+//#endregion 🔁️Re-exports

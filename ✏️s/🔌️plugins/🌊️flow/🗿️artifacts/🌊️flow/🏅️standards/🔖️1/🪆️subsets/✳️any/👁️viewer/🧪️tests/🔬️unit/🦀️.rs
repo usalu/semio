@@ -5,7 +5,7 @@ use super::*;
 async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract() {
     use semio_framework::kernel::{ArtifactKind, Rights, Scope};
     use semio_framework_plugin::{Plugin, PluginApp, PluginCloseStep};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🧹️owners/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧹️owners/🔣️.json")).unwrap();
     let definition = create_flow_viewer();
     assert_eq!(definition.role, semio_framework_plugin::AppRole::Viewer);
     assert_eq!(fixture["role"].as_str().unwrap(), "viewer");

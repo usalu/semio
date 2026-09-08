@@ -275,7 +275,7 @@ impl<'a> Node<'a> {
     fn json(self) -> Json<'a> {
         match self {
             Self::Scalar(value) => value,
-            Self::Config(_) => Json::Object(13),
+            Self::Config(_) => Json::Object(12),
             Self::Camera(_) => Json::Object(3),
             Self::Strings(values) => Json::Array(values.len()),
             Self::Mutation(_) | Self::Payload(_) => Json::Object(1),
@@ -297,7 +297,6 @@ impl<'a> Node<'a> {
                 9 => Self::Scalar(Json::String(&value.contributions_json)),
                 10 => Self::Scalar(Json::String(&value.generation_json)),
                 11 => Self::Scalar(Json::String(&value.duplicate_widget_progress_json)),
-                12 => Self::Scalar(Json::String(&value.locale)),
                 _ => return Err("Flow canonical config index outside fields".into()),
             },
             Self::Camera(value) => Self::Scalar(Json::F64(match index {
@@ -310,7 +309,7 @@ impl<'a> Node<'a> {
                 FlowConfigMutation::Snapshot { config } => Self::Config(config),
                 FlowConfigMutation::SetPreviewOff { node_ids } => Self::Strings(node_ids),
                 FlowConfigMutation::SetCamera { camera } => Self::Camera(camera),
-                FlowConfigMutation::SetLodMode { value } | FlowConfigMutation::SetLocale { value } => Self::Scalar(Json::String(value)),
+                FlowConfigMutation::SetLodMode { value } => Self::Scalar(Json::String(value)),
                 FlowConfigMutation::SetProximityDistance { value } | FlowConfigMutation::SetGridFactor { value } => Self::Scalar(Json::F64(*value)),
                 FlowConfigMutation::SetGridVisible { value } | FlowConfigMutation::SetGridSnapEnabled { value } => Self::Scalar(Json::Bool(*value)),
                 FlowConfigMutation::SetContributions { json } | FlowConfigMutation::SetAutomationEnabled { json }
@@ -324,7 +323,7 @@ impl<'a> Node<'a> {
 
     fn key(self, index: usize) -> Result<&'static str, String> {
         let key = match self {
-            Self::Config(_) => ["previewOffNodeIds", "camera", "lodMode", "proximityDistance", "gridVisible", "gridSnapEnabled", "gridFactor", "catalogueSectionsJson", "automationEnabledJson", "contributionsJson", "generationJson", "duplicateWidgetProgressJson", "locale"].get(index).copied(),
+            Self::Config(_) => ["previewOffNodeIds", "camera", "lodMode", "proximityDistance", "gridVisible", "gridSnapEnabled", "gridFactor", "catalogueSectionsJson", "automationEnabledJson", "contributionsJson", "generationJson", "duplicateWidgetProgressJson"].get(index).copied(),
             Self::Camera(_) => ["x", "y", "zoom"].get(index).copied(),
             Self::Mutation(value) if index == 0 => Some(match value {
                 FlowConfigMutation::SetContributions { .. } => "SetContributions",
@@ -341,7 +340,6 @@ impl<'a> Node<'a> {
                 FlowConfigMutation::SetGeneration { .. } => "SetGeneration",
                 FlowConfigMutation::SetDuplicateWidgetProgress { .. } => "SetDuplicateWidgetProgress",
                 FlowConfigMutation::CancelDuplicateWidget { .. } => "CancelDuplicateWidget",
-                FlowConfigMutation::SetLocale { .. } => "SetLocale",
             }),
             Self::Payload(value) if index == 0 => Some(match value {
                 FlowConfigMutation::Snapshot { .. } => "config",

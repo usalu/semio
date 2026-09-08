@@ -1,8 +1,7 @@
 //! 🧬️ schema leaf
-use crate::{LayoutCamera, LayoutDropPreviewState};
+
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.layout.layout.presence")]
@@ -16,3 +15,9 @@ pub struct LayoutPresence {
     #[state(presence)]
     pub preview_camera: LayoutCamera,
 }
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::LayoutDropPreviewState;
+pub use crate::LayoutCamera;
+//#endregion 🔁️Re-exports

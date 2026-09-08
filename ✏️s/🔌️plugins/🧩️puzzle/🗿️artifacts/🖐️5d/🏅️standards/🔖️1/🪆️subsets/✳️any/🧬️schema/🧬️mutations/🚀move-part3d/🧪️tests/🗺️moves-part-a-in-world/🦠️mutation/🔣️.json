@@ -2,8 +2,8 @@
   "mutation": "movePart3d",
   "id": "part-a",
   "newOrigin": [
-    11.0,
-    12.0,
-    13.0
+    11,
+    12,
+    13
   ]
 }

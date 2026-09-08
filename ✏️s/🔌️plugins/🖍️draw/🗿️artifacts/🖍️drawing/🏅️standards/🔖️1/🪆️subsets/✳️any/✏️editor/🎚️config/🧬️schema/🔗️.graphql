@@ -5,6 +5,5 @@ type DrawingConfig {
   tracePointerGeneration: Float! @state(class: CONFIG)
   tracePointerCompletedWork: Float! @state(class: CONFIG)
   tracePointerPendingWork: Float! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 type DrawingCamera { x: Float! y: Float! zoom: Float! }

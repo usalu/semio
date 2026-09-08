@@ -1,4 +1,3 @@
-
 use super::{DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
 use semio_framework_async::OperationContext;
 use std::collections::VecDeque;

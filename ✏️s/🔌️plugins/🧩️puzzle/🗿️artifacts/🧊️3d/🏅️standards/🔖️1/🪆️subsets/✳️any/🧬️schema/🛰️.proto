@@ -71,7 +71,6 @@ message Puzzle3dArtifact {
   // @state config
   double proximity_radius = 33;
   // @state config
-  string locale = 34;
   // @state config
   string runtime_extras_json = 35;
   // @state artifact
@@ -201,4 +200,12 @@ message Puzzle3dMeta {
 message Puzzle3dKindCatalogs {
   repeated Puzzle3dCatalogObjectKind objects = 1;
   repeated Puzzle3dCatalogVortexKind vortices = 2;
+}
+
+message Puzzle3dTargetVolume {
+  optional string id = 1;
+}
+
+message Puzzle3dReference {
+  optional string id = 1;
 }

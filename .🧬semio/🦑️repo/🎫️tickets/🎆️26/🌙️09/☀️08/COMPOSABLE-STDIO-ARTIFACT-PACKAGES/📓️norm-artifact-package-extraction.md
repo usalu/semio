@@ -98,6 +98,28 @@ cargo tree -p semio-s-artifact-norm-en1993 --features cross-fem --prefix none
 
 The first complete leaf compile also found that the extracted ISO 16757 root re-exported `Iso16757Snapshot` through both its canonical document-schema route and its generated standards route. The redundant standards-route re-export was removed; the canonical root API remains unchanged.
 
+The corrected complete leaf gate passes with both FEM integrations enabled:
+
+```text
+CARGO_TARGET_DIR=<ticket>/🗑️generated/cargo cargo check \
+  -p 'semio-s-artifact-norm-din*' \
+  -p 'semio-s-artifact-norm-en*' \
+  -p semio-s-artifact-norm-iso16757 \
+  -p semio-s-artifact-norm-vdi3805 \
+  --features semio-s-artifact-norm-en1992/cross-fem,semio-s-artifact-norm-en1993/cross-fem \
+  --lib --keep-going --message-format short
+```
+
+Result: all 15 norm leaves pass. EN 1992 and EN 1993 compile against `semio-s-artifact-fem-2d`; ISO 16757 compiles with its single canonical snapshot export. Existing lint warnings remain outside the extraction boundary.
+
+The final thin-plugin runtime gate was started once with incremental output disabled:
+
+```text
+CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=<ticket>/🗑️generated/cargo cargo test -p semio-s-plugin-norm --lib --message-format short
+```
+
+The original attached session was `67307` with Cargo PID `22032`. After the execution turn finalized, the session became unavailable (`Unknown process id`) and the PID disappeared without a durable raw log. No pass/fail result is claimed from that run. The explicit config and surface integration targets registered afterward are the authoritative replacement gates.
+
 ## Integration handoff
 
 Nx declarations are owned by the Nx execution packet. Native source inputs must explicitly include the lower contract taxonomy sources because they are outside the contract package directory. VDI 3805 must conservatively include its complete artifact owner glob because Rust source discovery cannot see every macro-generated module.
@@ -105,3 +127,22 @@ Nx declarations are owned by the Nx execution packet. Native source inputs must 
 ## Related finding
 
 Before the stdio owner fix, `semio-s-artifact-stdio-semio` unconditionally depended on all other 35 stdio leaves, causing `en1990` and its downstream norm chain to pull the full stdio catalog. This was reported to the coordinator and reassigned to the stdio owner because it directly defeats the selective-compilation goal.
+
+## Coordinator Integration Target Audit
+
+The final read-only audit found two missing explicit Cargo integration targets still referenced by persistent script routes. The coordinator mounted the existing config mutation test under the shared Norm contract package and routed that command directly to the contract. The full thirty-app surface-render integration test remains a parent plugin composition test and is now explicitly mounted from its taxonomy source, with its existing third-party oracle dependencies declared only for tests. Both target paths resolve on disk. Native execution is pending. The remaining seven-line parent package facade was removed; Cargo now mounts the taxonomy root directly, where its unchanged plugin export macro resides.
+
+The two independent source/oracle commands completed with exit 0: config checked 5 cases, 5 hostile payloads, 4 undeclared forms, 13 text vectors and 25 binary vectors; surface checked 15 variants, 30 apps, 120 bodies and 5 hostile vectors with AJV. These are source/oracle checks; the new native integration targets still require execution.
+
+Additional coordinator-owned files:
+- `✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust/Cargo.toml`
+
+A focused scan of literal Rust include paths in the shared Norm config and app-surface taxonomy found 0 unresolved references.
+
+Before native execution, the mounted integration surfaces were audited against the current graph. The config test imports only `semio-s-artifact-norm-contract` plus the framework kernel traits, and its semantic kind, text opcode, and binary tag match the owned change-selected-check-index descriptor. The surface test imports the public framework testkit and the fifteen artifact crates directly; every editor/viewer type path and plugin app/artifact identity resolves from the current package roots. No Rust source or manifest below Norm refers to the removed parent artifact/config/app-surface API or to `semio-s-plugin-fem`. Both integration sources pass `rustfmt --check`; the surface test import layout was normalized during this audit.
+
+The three authoritative native commands are staged sequentially with `CARGO_INCREMENTAL=0` and the one ticket Cargo target: contract `config-mutation-test`, plugin `test -- --lib`, then plugin `surface-render-test`. They remain intentionally unstarted while the coordinator's host Cargo process owns the shared build epoch.

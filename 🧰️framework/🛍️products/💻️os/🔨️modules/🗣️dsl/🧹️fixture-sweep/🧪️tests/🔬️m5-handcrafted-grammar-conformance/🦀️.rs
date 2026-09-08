@@ -1,12 +1,15 @@
-
 use super::m5_auto_discovery::{self, ConformanceFacet};
 use super::m5_soft_skip::soft_skip_missing;
 use super::pilot_resolve;
-use crate::os_dsl::{Recognizer, SemioDialect, parse_grammar};
+use crate::os_dsl::{parse_grammar, Recognizer, SemioDialect};
 use crate::os_store::semio_format::split_text_preamble;
 
 pub(super) async fn dsl_body_from_fixture(text: &str) -> String {
-    if text.trim_start().starts_with("semio ") { split_text_preamble(text).map_or_else(|_| text.to_string(), |(env, body)| format!("{}\n{body}", env.envelope_id())) } else { text.to_string() }
+    if text.trim_start().starts_with("semio ") {
+        split_text_preamble(text).map_or_else(|_| text.to_string(), |(env, body)| format!("{}\n{body}", env.envelope_id()))
+    } else {
+        text.to_string()
+    }
 }
 
 /// @emoji ✅️ Real check, no panics — lets the caller choose hard-assert vs. soft-log per facet.

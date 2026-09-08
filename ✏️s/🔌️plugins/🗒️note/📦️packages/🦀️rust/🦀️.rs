@@ -36,12 +36,5 @@ mod plugin;
 pub use plugin::NoteApps;
 semio_framework_plugin::plugin_exports!(plugin::plugin, NoteApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_note_demo_session;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

@@ -7,15 +7,9 @@ pub use replace_config::ReplaceConfig;
 #[path = "🎥️set-before-pane-camera/🦀️.rs"]
 mod set_before_pane_camera;
 pub use set_before_pane_camera::SetBeforePaneCamera;
-#[path = "🔄️set-reorganize-epoch/🦀️.rs"]
-mod set_reorganize_epoch;
-pub use set_reorganize_epoch::SetReorganizeEpoch;
 #[path = "🔍️set-lod-mode/🦀️.rs"]
 mod set_lod_mode;
 pub use set_lod_mode::SetLodMode;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = RewritingConfig, diff = RewritingConfig, schema = "trinity.rewritingcfg")]
@@ -24,12 +18,8 @@ pub enum RewritingConfigMutation {
     ReplaceConfig(ReplaceConfig),
     #[dsl(key = "set-before-pane-camera")]
     SetBeforePaneCamera(SetBeforePaneCamera),
-    #[dsl(key = "set-reorganize-epoch")]
-    SetReorganizeEpoch(SetReorganizeEpoch),
     #[dsl(key = "set-lod-mode")]
     SetLodMode(SetLodMode),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
 }
 
 impl protocol::OpText for RewritingConfigMutation {
@@ -56,4 +46,3 @@ impl protocol::OpBinary for RewritingConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
 }
-

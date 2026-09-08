@@ -12,23 +12,25 @@
 //! blocks the executor for longer than a real query takes.
 
 use crate::artifact_authority::chunk_cas::{decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1, ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation};
+use crate::artifact_authority::creation::{
+    decide_artifact_creation_fact_append_v1, ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1,
+    DocumentGenesisAppendV1, DocumentGenesisCommitV1,
+};
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
-    active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str, directory_projection_rejection_v1, directory_projection_space_v1,
-    admin_operation_effect_receipt_v1, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit,
-    validate_admin_operation_effect_receipt, validate_bounded_auth_text,
-    validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str,
-    ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent,
-    ProjectionRebuildControl, SessionCapability, ShareCapability, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX,
-    AUTH_TEXT_MAX_BYTES, UNCONTROLLED_PROJECTION_REBUILD,
+    active_capability, admin_operation_effect_receipt_v1, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str, directory_projection_rejection_v1,
+    directory_projection_space_v1, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit,
+    validate_admin_operation_effect_receipt, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, validate_verified_checkpoint_append,
+    verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight,
+    InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS,
+    ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, UNCONTROLLED_PROJECTION_REBUILD,
 };
 use directory::os_directory::{
     validate_directory_event_page_event, ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility,
     DocumentDescriptor, DocumentFrontier, DocumentOwner, Hlc, PublishedArtifactCheckpoint,
 };
 use directory::os_identity::time_ordered_id;
-use crate::artifact_authority::creation::{ArtifactCreationActorV1, ArtifactCreationIntentV1, ArtifactCreationClaimV1, ArtifactCreationFactV1, ArtifactCreationFactBodyV1, ArtifactCreationFactAppendV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1, decide_artifact_creation_fact_append_v1};
 use directory::{DslValue, FromValue, ToValue};
 use rusqlite::{Connection, OptionalExtension, Transaction};
 use std::sync::{Arc, Mutex};
@@ -591,15 +593,39 @@ impl SqliteDirectory {
 
     fn creation_authority(conn: &Connection, actor: &ArtifactCreationActorV1, space_id: &str, now_ms: u64) -> DirectoryResult<()> {
         let allowed: i64 = conn.query_row("SELECT EXISTS(SELECT 1 FROM hub_auth_session AS a JOIN hub_user AS u ON u.id = a.user_id JOIN hub_space AS s ON s.id = ?4 JOIN hub_space_membership AS m ON m.space_id = s.id AND m.user_id = u.id WHERE a.id = ?1 AND a.user_id = ?2 AND a.authorization_generation = ?3 AND a.revoked_at IS NULL AND a.expires_at > ?5 AND s.kind <> 'archive' AND m.role = 'author')", rusqlite::params![actor.session_id, actor.user_id, i64::try_from(actor.authorization_generation).map_err(backend)?, space_id, i64::try_from(now_ms).map_err(backend)?], |row| row.get(0)).map_err(backend)?;
-        if allowed != 1 { return Err(DirectoryError::Unauthorized); }
+        if allowed != 1 {
+            return Err(DirectoryError::Unauthorized);
+        }
         Ok(())
     }
 
     fn insert_creation_fact(tx: &Transaction<'_>, intent: &ArtifactCreationIntentV1, fact: &ArtifactCreationFactV1) -> DirectoryResult<()> {
-        let phase = match fact.body { ArtifactCreationFactBodyV1::Accepted { .. } => "accepted", ArtifactCreationFactBodyV1::Prepared { .. } => "prepared", ArtifactCreationFactBodyV1::Committed { .. } => "committed", ArtifactCreationFactBodyV1::Cancelled => "cancelled", ArtifactCreationFactBodyV1::Failed => "failed" };
+        let phase = match fact.body {
+            ArtifactCreationFactBodyV1::Accepted { .. } => "accepted",
+            ArtifactCreationFactBodyV1::Prepared { .. } => "prepared",
+            ArtifactCreationFactBodyV1::Committed { .. } => "committed",
+            ArtifactCreationFactBodyV1::Cancelled => "cancelled",
+            ArtifactCreationFactBodyV1::Failed => "failed",
+        };
         let payload = directory::os_pack::json::to_json_string(fact);
-        if payload.len() > 8 * 1024 * 1024 { return Err(DirectoryError::Conflict("artifact creation fact exceeds its bounded envelope".into())); }
-        tx.execute("INSERT INTO hub_artifact_creation_fact(actor_user_id, request_id, revision, phase, space_id, document_id, deadline_ms, recorded_at_ms, payload) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)", rusqlite::params![fact.actor_user_id, fact.request_id, i64::try_from(fact.revision).map_err(backend)?, phase, intent.scope.space_id, intent.scope.document_id, i64::try_from(intent.deadline_ms).map_err(backend)?, i64::try_from(fact.recorded_at_ms).map_err(backend)?, payload]).map_err(backend)?;
+        if payload.len() > 8 * 1024 * 1024 {
+            return Err(DirectoryError::Conflict("artifact creation fact exceeds its bounded envelope".into()));
+        }
+        tx.execute(
+            "INSERT INTO hub_artifact_creation_fact(actor_user_id, request_id, revision, phase, space_id, document_id, deadline_ms, recorded_at_ms, payload) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            rusqlite::params![
+                fact.actor_user_id,
+                fact.request_id,
+                i64::try_from(fact.revision).map_err(backend)?,
+                phase,
+                intent.scope.space_id,
+                intent.scope.document_id,
+                i64::try_from(intent.deadline_ms).map_err(backend)?,
+                i64::try_from(fact.recorded_at_ms).map_err(backend)?,
+                payload
+            ],
+        )
+        .map_err(backend)?;
         Ok(())
     }
 
@@ -634,11 +660,15 @@ impl SqliteDirectory {
 
     /// 🧪️ Drops only the genesis acknowledgement after its entire real transaction commits.
     #[cfg(test)]
-    pub(crate) fn fail_next_genesis_commit_ack(&self) { self.genesis_commit_ack_failure.store(1, std::sync::atomic::Ordering::SeqCst); }
+    pub(crate) fn fail_next_genesis_commit_ack(&self) {
+        self.genesis_commit_ack_failure.store(1, std::sync::atomic::Ordering::SeqCst);
+    }
 
     /// 🧪️ Drops the commit acknowledgement and exactly one subsequent receipt or event read.
     #[cfg(test)]
-    pub(crate) fn fail_next_genesis_reconciliation(&self, events: bool) { self.genesis_commit_ack_failure.store(if events { 3 } else { 2 }, std::sync::atomic::Ordering::SeqCst); }
+    pub(crate) fn fail_next_genesis_reconciliation(&self, events: bool) {
+        self.genesis_commit_ack_failure.store(if events { 3 } else { 2 }, std::sync::atomic::Ordering::SeqCst);
+    }
 
     #[cfg(test)]
     pub(crate) fn install_invite_projection_failure(&self) -> DirectoryResult<()> {
@@ -699,15 +729,7 @@ impl SqliteDirectory {
         Ok(revoked)
     }
 
-    fn revoke_auth_sessions_matching_with_admin_effect(
-        &self,
-        predicate: &str,
-        key: &str,
-        reason: &str,
-        actor_user_id: Option<&str>,
-        correlation_id: &str,
-        effect: &NewAdminOperationEffectReceiptV1,
-    ) -> AdminEffectCommitV1<Vec<RevokedAuthSession>> {
+    fn revoke_auth_sessions_matching_with_admin_effect(&self, predicate: &str, key: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<RevokedAuthSession>> {
         if let Err(outcome) = admin_effect_preflight(validate_bounded_auth_text(reason, "session revoke reason", AUTH_TEXT_MAX_BYTES)) {
             return outcome.into();
         }
@@ -730,7 +752,10 @@ impl SqliteDirectory {
         let mut revoked = Vec::with_capacity(rows.len());
         for (id, user_id, generation, provider) in rows {
             let Some(next_generation) = generation.checked_add(1) else { return admin_effect_rollback(tx) };
-            admin_effect_try!(tx, tx.execute("UPDATE hub_auth_session SET revoked_at = ?2, revoked_reason = ?3, authorization_generation = ?4 WHERE id = ?1 AND revoked_at IS NULL", rusqlite::params![id, revoked_at, reason, next_generation]).map_err(backend));
+            admin_effect_try!(
+                tx,
+                tx.execute("UPDATE hub_auth_session SET revoked_at = ?2, revoked_reason = ?3, authorization_generation = ?4 WHERE id = ?1 AND revoked_at IS NULL", rusqlite::params![id, revoked_at, reason, next_generation]).map_err(backend)
+            );
             let audit = admin_effect_try!(tx, auth_audit(revoked_at, "session-revoked", Some(&id), Some(&user_id), actor_user_id, Some(&provider), "success", Some(reason), correlation_id, "server"));
             admin_effect_try!(tx, insert_auth_audit(&tx, &audit));
             let Ok(authorization_generation) = u64::try_from(next_generation) else { return admin_effect_rollback(tx) };
@@ -1004,15 +1029,21 @@ impl SqliteDirectory {
                 let row = crate::directory::document_index_projection_v1(event, &descriptor)?;
                 let payload = directory::os_pack::json::to_json_string(&row);
                 let previous: Option<String> = tx.query_row("SELECT payload FROM hub_document_index WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![scope.space_id, scope.document_id], |row| row.get(0)).optional().map_err(backend)?;
-                if previous.as_ref().is_some_and(|stored| stored != &payload) { return Err(DirectoryError::Conflict("document index is already bound".into())); }
+                if previous.as_ref().is_some_and(|stored| stored != &payload) {
+                    return Err(DirectoryError::Conflict("document index is already bound".into()));
+                }
                 tx.execute("INSERT OR IGNORE INTO hub_document_index (space_id, document_id, payload) VALUES (?1, ?2, ?3)", rusqlite::params![scope.space_id, scope.document_id, payload]).map_err(backend)?;
             }
             DirectoryEventBody::ArtifactCheckpointPublished { checkpoint } => {
                 let descriptor = tx.query_row("SELECT space_id, document_id, artifact_kind, artifact_schema, owner_plugin_id, owner_package_id, owner_version, owner_package_hash, pack_schema_hash, bootstrap_version, bootstrap_head_seq, bootstrap_commit_seq, bootstrap_epoch, bootstrap_snapshot_hash FROM hub_document_descriptor WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], document_descriptor_row).optional().map_err(backend)?.ok_or_else(|| DirectoryError::NotFound("checkpoint document descriptor".into()))?;
-                let index_payload: Option<String> = tx.query_row("SELECT payload FROM hub_document_index WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], |row| row.get(0)).optional().map_err(backend)?;
+                let index_payload: Option<String> =
+                    tx.query_row("SELECT payload FROM hub_document_index WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], |row| row.get(0)).optional().map_err(backend)?;
                 let index = index_payload.as_deref().map(directory::os_pack::json::from_json_str::<directory::os_directory::DirectoryIndexedDocumentViewV1>).transpose().map_err(backend)?;
                 crate::directory::validate_checkpoint_index_v1(index.as_ref(), &descriptor, checkpoint)?;
-                let active = tx.query_row("SELECT payload FROM hub_artifact_checkpoint WHERE space_id = ?1 AND document_id = ?2 AND active = 1", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], published_checkpoint_row).optional().map_err(backend)?;
+                let active = tx
+                    .query_row("SELECT payload FROM hub_artifact_checkpoint WHERE space_id = ?1 AND document_id = ?2 AND active = 1", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], published_checkpoint_row)
+                    .optional()
+                    .map_err(backend)?;
                 let count: i64 = tx.query_row("SELECT COUNT(*) FROM hub_artifact_checkpoint WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], |row| row.get(0)).map_err(backend)?;
                 crate::directory::validate_published_checkpoint_lineage(&descriptor, active.as_ref(), u64::try_from(count).map_err(backend)?, checkpoint)?;
                 let payload = serde_json::Value::from(&checkpoint.to_value()).to_string();
@@ -1051,17 +1082,35 @@ impl HubDirectory for SqliteDirectory {
         let mut conn = self.lock()?;
         let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
         let observed_now = u64::try_from(now_ms()).map_err(backend)?;
-        if intent.accepted_at_ms > observed_now || observed_now >= intent.deadline_ms { return Err(DirectoryError::Conflict("artifact creation acceptance is outside its live server deadline".into())); }
+        if intent.accepted_at_ms > observed_now || observed_now >= intent.deadline_ms {
+            return Err(DirectoryError::Conflict("artifact creation acceptance is outside its live server deadline".into()));
+        }
         Self::creation_authority(&tx, &intent.actor, &intent.scope.space_id, observed_now)?;
         let facts = Self::creation_facts(&tx, &intent.actor.user_id, &intent.request.request_id)?;
         if !facts.is_empty() {
             let operation = ArtifactCreationOperationV1::fold(&facts)?;
-            if operation.intent.command_sha256 != intent.command_sha256 || operation.intent.scope.space_id != intent.scope.space_id { return Err(DirectoryError::Conflict("artifact creation request is already bound to another intent".into())); }
+            if operation.intent.command_sha256 != intent.command_sha256 || operation.intent.scope.space_id != intent.scope.space_id {
+                return Err(DirectoryError::Conflict("artifact creation request is already bound to another intent".into()));
+            }
             return Ok(ArtifactCreationClaimV1::Existing(operation));
         }
-        let occupied: i64 = tx.query_row("SELECT EXISTS(SELECT 1 FROM hub_document_descriptor WHERE space_id = ?1 AND document_id = ?2 UNION ALL SELECT 1 FROM hub_artifact_creation_fact WHERE space_id = ?1 AND document_id = ?2)", rusqlite::params![intent.scope.space_id, intent.scope.document_id], |row| row.get(0)).map_err(backend)?;
-        if occupied != 0 { return Err(DirectoryError::Conflict("artifact creation document identity is already occupied".into())); }
-        let fact = ArtifactCreationFactV1 { actor_user_id: intent.actor.user_id.clone(), request_id: intent.request.request_id.clone(), revision: 1, recorded_at_ms: intent.accepted_at_ms, body: ArtifactCreationFactBodyV1::Accepted { intent: intent.clone() } };
+        let occupied: i64 = tx
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM hub_document_descriptor WHERE space_id = ?1 AND document_id = ?2 UNION ALL SELECT 1 FROM hub_artifact_creation_fact WHERE space_id = ?1 AND document_id = ?2)",
+                rusqlite::params![intent.scope.space_id, intent.scope.document_id],
+                |row| row.get(0),
+            )
+            .map_err(backend)?;
+        if occupied != 0 {
+            return Err(DirectoryError::Conflict("artifact creation document identity is already occupied".into()));
+        }
+        let fact = ArtifactCreationFactV1 {
+            actor_user_id: intent.actor.user_id.clone(),
+            request_id: intent.request.request_id.clone(),
+            revision: 1,
+            recorded_at_ms: intent.accepted_at_ms,
+            body: ArtifactCreationFactBodyV1::Accepted { intent: intent.clone() },
+        };
         let operation = ArtifactCreationOperationV1::fold(std::slice::from_ref(&fact))?;
         Self::insert_creation_fact(&tx, intent, &fact)?;
         tx.commit().map_err(backend)?;
@@ -1070,7 +1119,9 @@ impl HubDirectory for SqliteDirectory {
 
     async fn read_artifact_creation(&self, actor_user_id: &str, request_id: &str) -> DirectoryResult<Vec<ArtifactCreationFactV1>> {
         #[cfg(test)]
-        if self.creation_read_failure.swap(false, std::sync::atomic::Ordering::SeqCst) { return Err(DirectoryError::Backend("injected creation receipt read failure".into())); }
+        if self.creation_read_failure.swap(false, std::sync::atomic::Ordering::SeqCst) {
+            return Err(DirectoryError::Backend("injected creation receipt read failure".into()));
+        }
         let conn = self.lock()?;
         Self::creation_facts(&conn, actor_user_id, request_id)
     }
@@ -1082,7 +1133,9 @@ impl HubDirectory for SqliteDirectory {
         Self::creation_authority(&tx, &append.actor, &append.space_id, observed_now)?;
         let mut facts = Self::creation_facts(&tx, &append.actor.user_id, &append.request_id)?;
         let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        if append.recorded_at_ms > observed_now || matches!(append.body, ArtifactCreationFactBodyV1::Prepared { .. }) && observed_now >= operation.intent.deadline_ms { return Err(DirectoryError::Conflict("artifact creation transition is outside its live server clock".into())); }
+        if append.recorded_at_ms > observed_now || matches!(append.body, ArtifactCreationFactBodyV1::Prepared { .. }) && observed_now >= operation.intent.deadline_ms {
+            return Err(DirectoryError::Conflict("artifact creation transition is outside its live server clock".into()));
+        }
         if let Some(next) = decide_artifact_creation_fact_append_v1(&facts, append, observed_now)? {
             Self::insert_creation_fact(&tx, &operation.intent, &next)?;
             facts.push(next);
@@ -1097,11 +1150,19 @@ impl HubDirectory for SqliteDirectory {
         let mut conn = self.lock()?;
         let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
         let observed_now = u64::try_from(now_ms()).map_err(backend)?;
-        if current_now_ms > observed_now { return Err(DirectoryError::Conflict("artifact creation supervisor clock is in the future".into())); }
+        if current_now_ms > observed_now {
+            return Err(DirectoryError::Conflict("artifact creation supervisor clock is in the future".into()));
+        }
         let mut facts = Self::creation_facts(&tx, &intent.actor.user_id, &intent.request.request_id)?;
         let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        if operation.intent != *intent { return Err(DirectoryError::Conflict("artifact creation supervisor intent differs".into())); }
-        if operation.receipt.is_some() || matches!(operation.phase, directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Cancelled | directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Failed) { return Ok(operation); }
+        if operation.intent != *intent {
+            return Err(DirectoryError::Conflict("artifact creation supervisor intent differs".into()));
+        }
+        if operation.receipt.is_some()
+            || matches!(operation.phase, directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Cancelled | directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Failed)
+        {
+            return Ok(operation);
+        }
         match Self::creation_authority(&tx, &intent.actor, &intent.scope.space_id, observed_now) {
             Ok(()) if observed_now < intent.deadline_ms => return Err(DirectoryError::Conflict("artifact creation still has live execution authority".into())),
             Ok(()) | Err(DirectoryError::Unauthorized) => {}
@@ -1116,15 +1177,21 @@ impl HubDirectory for SqliteDirectory {
     }
 
     async fn artifact_creation_recovery_candidates(&self, now_ms: u64, limit: usize) -> DirectoryResult<Vec<ArtifactCreationIntentV1>> {
-        if limit == 0 || limit > 256 { return Err(DirectoryError::Conflict("artifact creation recovery page is out of bounds".into())); }
+        if limit == 0 || limit > 256 {
+            return Err(DirectoryError::Conflict("artifact creation recovery page is out of bounds".into()));
+        }
         let conn = self.lock()?;
         let mut query = conn.prepare("SELECT a.payload FROM hub_artifact_creation_fact AS a WHERE a.revision = 1 AND NOT EXISTS(SELECT 1 FROM hub_artifact_creation_fact AS t WHERE t.actor_user_id = a.actor_user_id AND t.request_id = a.request_id AND t.phase IN ('committed','cancelled','failed')) AND (a.deadline_ms <= ?1 OR EXISTS(SELECT 1 FROM hub_artifact_creation_fact AS p WHERE p.actor_user_id = a.actor_user_id AND p.request_id = a.request_id AND p.phase = 'prepared')) ORDER BY a.recorded_at_ms, a.actor_user_id, a.request_id LIMIT ?2").map_err(backend)?;
         let rows = query.query_map(rusqlite::params![i64::try_from(now_ms).map_err(backend)?, limit as i64], |row| row.get::<_, String>(0)).map_err(backend)?;
         rows.map(|row| {
             let fact: ArtifactCreationFactV1 = directory::os_pack::json::from_json_str(&row.map_err(backend)?).map_err(backend)?;
-            let ArtifactCreationFactBodyV1::Accepted { intent } = fact.body else { return Err(DirectoryError::Backend("artifact creation recovery row is not accepted".into())); };
-            intent.validate()?; Ok(intent)
-        }).collect()
+            let ArtifactCreationFactBodyV1::Accepted { intent } = fact.body else {
+                return Err(DirectoryError::Backend("artifact creation recovery row is not accepted".into()));
+            };
+            intent.validate()?;
+            Ok(intent)
+        })
+        .collect()
     }
 
     async fn append_document_genesis(&self, append: &DocumentGenesisAppendV1) -> DirectoryResult<DocumentGenesisCommitV1> {
@@ -1134,48 +1201,97 @@ impl HubDirectory for SqliteDirectory {
         Self::creation_authority(&tx, &append.intent.actor, &append.intent.scope.space_id, observed_now)?;
         let mut facts = Self::creation_facts(&tx, &append.intent.actor.user_id, &append.intent.request.request_id)?;
         let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        if operation.intent != append.intent { return Err(DirectoryError::Conflict("genesis creation accepted identity differs".into())); }
-        if operation.receipt.is_some() { return Ok(DocumentGenesisCommitV1::Existing(operation)); }
-        if append.now_ms > observed_now || observed_now >= append.intent.deadline_ms { return Err(DirectoryError::Conflict("genesis publication is outside its live server deadline".into())); }
+        if operation.intent != append.intent {
+            return Err(DirectoryError::Conflict("genesis creation accepted identity differs".into()));
+        }
+        if operation.receipt.is_some() {
+            return Ok(DocumentGenesisCommitV1::Existing(operation));
+        }
+        if append.now_ms > observed_now || observed_now >= append.intent.deadline_ms {
+            return Err(DirectoryError::Conflict("genesis publication is outside its live server deadline".into()));
+        }
         crate::directory::validate_document_genesis_append_v1(&operation, append)?;
         let checkpoint = &append.checkpoint;
         let reservation = &append.reservation;
         let occupied: i64 = tx.query_row("SELECT EXISTS(SELECT 1 FROM hub_document_descriptor WHERE space_id = ?1 AND document_id = ?2 UNION ALL SELECT 1 FROM hub_document_index WHERE space_id = ?1 AND document_id = ?2 UNION ALL SELECT 1 FROM hub_artifact_checkpoint WHERE space_id = ?1 AND document_id = ?2)", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], |row| row.get(0)).map_err(backend)?;
-        if occupied != 0 { return Err(DirectoryError::Conflict("genesis scope is already publicly occupied".into())); }
+        if occupied != 0 {
+            return Err(DirectoryError::Conflict("genesis scope is already publicly occupied".into()));
+        }
         let encoded = encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
         let now = i64::try_from(observed_now).map_err(backend)?;
         let token_generation = i64::try_from(reservation.generation).map_err(backend)?;
         let token_epoch = i64::try_from(reservation.write_epoch).map_err(backend)?;
         let live_lease: i64 = tx.query_row("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_delete_lease WHERE space_id = ?1 AND expires_at_ms > ?2)", rusqlite::params![checkpoint.scope.space_id, now], |row| row.get(0)).map_err(backend)?;
-        if live_lease != 0 { return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into())); }
-        let published: i64 = tx.query_row("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reference WHERE space_id = ?1 AND document_id = ?2)", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], |row| row.get(0)).map_err(backend)?;
-        if published != 0 { return Err(DirectoryError::Conflict("genesis scope has a CAS reference without its creation receipt".into())); }
-        let current: Option<(i64, i64, i64, Vec<u8>)> = tx.query_row("SELECT generation, write_epoch, expires_at_ms, plan FROM hub_artifact_cas_reservation WHERE space_id = ?1 AND document_id = ?2 AND checkpoint_id = ?3", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id, checkpoint.checkpoint_id.0.as_slice()], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))).optional().map_err(backend)?;
-        if current.as_ref().is_none_or(|(generation, epoch, expiry, plan)| *generation != token_generation || *epoch != token_epoch || *expiry <= now || *expiry != i64::try_from(reservation.expires_at_ms).unwrap_or(-1) || plan != &encoded) { return Err(DirectoryError::Conflict("genesis CAS reservation is missing, expired or substituted".into())); }
+        if live_lease != 0 {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into()));
+        }
+        let published: i64 =
+            tx.query_row("SELECT EXISTS(SELECT 1 FROM hub_artifact_cas_reference WHERE space_id = ?1 AND document_id = ?2)", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], |row| row.get(0)).map_err(backend)?;
+        if published != 0 {
+            return Err(DirectoryError::Conflict("genesis scope has a CAS reference without its creation receipt".into()));
+        }
+        let current: Option<(i64, i64, i64, Vec<u8>)> = tx
+            .query_row(
+                "SELECT generation, write_epoch, expires_at_ms, plan FROM hub_artifact_cas_reservation WHERE space_id = ?1 AND document_id = ?2 AND checkpoint_id = ?3",
+                rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id, checkpoint.checkpoint_id.0.as_slice()],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .optional()
+            .map_err(backend)?;
+        if current.as_ref().is_none_or(|(generation, epoch, expiry, plan)| *generation != token_generation || *epoch != token_epoch || *expiry <= now || *expiry != i64::try_from(reservation.expires_at_ms).unwrap_or(-1) || plan != &encoded) {
+            return Err(DirectoryError::Conflict("genesis CAS reservation is missing, expired or substituted".into()));
+        }
         let mut events = Vec::with_capacity(3);
         for event in &append.events {
             let full = self.persist_event(&tx, event)?;
             if events.len() == 2 {
-                tx.execute("INSERT INTO hub_artifact_authority_journal(event_seq, space_id, document_id, checkpoint_id, payload) VALUES (?1, ?2, ?3, ?4, ?5)", rusqlite::params![i64::try_from(full.seq).map_err(backend)?, checkpoint.scope.space_id, checkpoint.scope.document_id, checkpoint.checkpoint_id.0.as_slice(), directory::os_pack::json::to_json_string(checkpoint)]).map_err(backend)?;
+                tx.execute(
+                    "INSERT INTO hub_artifact_authority_journal(event_seq, space_id, document_id, checkpoint_id, payload) VALUES (?1, ?2, ?3, ?4, ?5)",
+                    rusqlite::params![i64::try_from(full.seq).map_err(backend)?, checkpoint.scope.space_id, checkpoint.scope.document_id, checkpoint.checkpoint_id.0.as_slice(), directory::os_pack::json::to_json_string(checkpoint)],
+                )
+                .map_err(backend)?;
             }
             self.project(&tx, &full)?;
-            if events.len() == 2 { self.project_verified_checkpoint(&tx, &full, checkpoint)?; }
+            if events.len() == 2 {
+                self.project_verified_checkpoint(&tx, &full, checkpoint)?;
+            }
             events.push(full);
         }
         let generation = Self::cas_generation(&tx)?;
-        tx.execute("INSERT INTO hub_artifact_cas_ledger_journal(generation, operation, space_id, document_id, checkpoint_id, write_epoch, expires_at_ms, event_seq, plan) VALUES (?1, 'publish', ?2, ?3, ?4, ?5, ?6, ?7, ?8)", rusqlite::params![generation, checkpoint.scope.space_id, checkpoint.scope.document_id, checkpoint.checkpoint_id.0.as_slice(), token_epoch, i64::try_from(reservation.expires_at_ms).map_err(backend)?, i64::try_from(events[2].seq).map_err(backend)?, encoded]).map_err(backend)?;
+        tx.execute(
+            "INSERT INTO hub_artifact_cas_ledger_journal(generation, operation, space_id, document_id, checkpoint_id, write_epoch, expires_at_ms, event_seq, plan) VALUES (?1, 'publish', ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            rusqlite::params![
+                generation,
+                checkpoint.scope.space_id,
+                checkpoint.scope.document_id,
+                checkpoint.checkpoint_id.0.as_slice(),
+                token_epoch,
+                i64::try_from(reservation.expires_at_ms).map_err(backend)?,
+                i64::try_from(events[2].seq).map_err(backend)?,
+                encoded
+            ],
+        )
+        .map_err(backend)?;
         Self::cas_project_publish(&tx, reservation, generation)?;
         let completion = crate::directory::document_genesis_completion_v1(&operation, append, &events)?;
         Self::insert_creation_fact(&tx, &append.intent, &completion)?;
         facts.push(completion);
         let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        if tx.commit().is_err() { return Ok(DocumentGenesisCommitV1::Indeterminate); }
+        if tx.commit().is_err() {
+            return Ok(DocumentGenesisCommitV1::Indeterminate);
+        }
         #[cfg(test)]
         {
             let failure = self.genesis_commit_ack_failure.swap(0, std::sync::atomic::Ordering::SeqCst);
-            if failure == 2 { self.creation_read_failure.store(true, std::sync::atomic::Ordering::SeqCst); }
-            if failure == 3 { self.event_read_failure.store(true, std::sync::atomic::Ordering::SeqCst); }
-            if failure != 0 { return Ok(DocumentGenesisCommitV1::Indeterminate); }
+            if failure == 2 {
+                self.creation_read_failure.store(true, std::sync::atomic::Ordering::SeqCst);
+            }
+            if failure == 3 {
+                self.event_read_failure.store(true, std::sync::atomic::Ordering::SeqCst);
+            }
+            if failure != 0 {
+                return Ok(DocumentGenesisCommitV1::Indeterminate);
+            }
         }
         Ok(DocumentGenesisCommitV1::Committed { events, operation })
     }
@@ -1220,14 +1336,16 @@ impl HubDirectory for SqliteDirectory {
             Ok(tx) => tx,
             Err(_) => return AdminEffectCommitV1::Indeterminate,
         };
-        let changed = admin_effect_try!(tx, tx
-            .execute(
+        let changed = admin_effect_try!(
+            tx,
+            tx.execute(
                 "INSERT INTO hub_share_grant (id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason)
                  SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL FROM hub_space AS s JOIN hub_document_descriptor AS d ON d.space_id = s.id
                  WHERE s.id = ?4 AND d.space_id = ?4 AND d.document_id = ?5",
                 rusqlite::params![issued.record.id, issued.record.selector, issued.record.secret_digest.as_slice(), scope.space_id, scope.document_id, issued.record.created_at, issued.record.expires_at],
             )
-            .map_err(backend));
+            .map_err(backend)
+        );
         if changed != 1 {
             return admin_effect_rollback(tx);
         }
@@ -1275,10 +1393,11 @@ impl HubDirectory for SqliteDirectory {
             Ok(tx) => tx,
             Err(_) => return AdminEffectCommitV1::Indeterminate,
         };
-        if admin_effect_try!(tx, tx
-            .execute("UPDATE hub_share_grant SET revoked_at = ?4, revoked_reason = ?5 WHERE id = ?1 AND space_id = ?2 AND document_id = ?3 AND revoked_at IS NULL", rusqlite::params![share_id, scope.space_id, scope.document_id, revoked_at, reason])
-            .map_err(backend))
-            != 1
+        if admin_effect_try!(
+            tx,
+            tx.execute("UPDATE hub_share_grant SET revoked_at = ?4, revoked_reason = ?5 WHERE id = ?1 AND space_id = ?2 AND document_id = ?3 AND revoked_at IS NULL", rusqlite::params![share_id, scope.space_id, scope.document_id, revoked_at, reason])
+                .map_err(backend)
+        ) != 1
         {
             return admin_effect_rollback(tx);
         }
@@ -1931,11 +2050,14 @@ impl HubDirectory for SqliteDirectory {
             Ok(tx) => tx,
             Err(_) => return AdminEffectCommitV1::Indeterminate,
         };
-        admin_effect_try!(tx, tx.execute(
-            "INSERT INTO hub_space_invite (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL, NULL, NULL)",
-            rusqlite::params![issued.record.id, issued.record.selector, issued.record.secret_digest.as_slice(), space_id, role.as_str(), issued.record.created_at, issued.record.expires_at],
-        )
-        .map_err(backend));
+        admin_effect_try!(
+            tx,
+            tx.execute(
+                "INSERT INTO hub_space_invite (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL, NULL, NULL)",
+                rusqlite::params![issued.record.id, issued.record.selector, issued.record.secret_digest.as_slice(), space_id, role.as_str(), issued.record.created_at, issued.record.expires_at],
+            )
+            .map_err(backend)
+        );
         admin_effect_try!(tx, insert_auth_audit(&tx, &audit));
         let receipt = admin_effect_try!(tx, admin_operation_effect_receipt_v1(effect, &[]));
         admin_effect_try!(tx, insert_admin_operation_effect_receipt(&tx, &receipt));
@@ -2046,9 +2168,10 @@ impl HubDirectory for SqliteDirectory {
             Ok(tx) => tx,
             Err(_) => return AdminEffectCommitV1::Indeterminate,
         };
-        let changed = admin_effect_try!(tx, tx
-            .execute("UPDATE hub_space_invite SET revoked_at = ?2, revoked_reason = ?3 WHERE space_id = ?4 AND id = ?1 AND revoked_at IS NULL AND accepted_at IS NULL", rusqlite::params![invite_id, revoked_at, reason, space_id])
-            .map_err(backend));
+        let changed = admin_effect_try!(
+            tx,
+            tx.execute("UPDATE hub_space_invite SET revoked_at = ?2, revoked_reason = ?3 WHERE space_id = ?4 AND id = ?1 AND revoked_at IS NULL AND accepted_at IS NULL", rusqlite::params![invite_id, revoked_at, reason, space_id]).map_err(backend)
+        );
         if changed == 0 {
             return admin_effect_rollback(tx);
         }
@@ -2275,7 +2398,9 @@ impl HubDirectory for SqliteDirectory {
         now_ms: u64,
     ) -> DirectoryResult<Vec<DirectoryEvent>> {
         validate_artifact_cas_publication_v1(&reservation.plan, checkpoint).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
-        if checkpoint.parent_checkpoint_id.is_none() || !checkpoint.baseline_frontier.is_edited_for(&checkpoint.scope) { return Err(DirectoryError::Conflict("ordinary checkpoint publication requires an edited child of committed genesis".into())); }
+        if checkpoint.parent_checkpoint_id.is_none() || !checkpoint.baseline_frontier.is_edited_for(&checkpoint.scope) {
+            return Err(DirectoryError::Conflict("ordinary checkpoint publication requires an edited child of committed genesis".into()));
+        }
         if let Some(event) = event {
             validate_verified_checkpoint_append(event, checkpoint)?;
         }
@@ -2567,7 +2692,9 @@ impl HubDirectory for SqliteDirectory {
 
     async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>> {
         #[cfg(test)]
-        if self.event_read_failure.swap(false, std::sync::atomic::Ordering::SeqCst) { return Err(DirectoryError::Backend("injected directory event read failure".into())); }
+        if self.event_read_failure.swap(false, std::sync::atomic::Ordering::SeqCst) {
+            return Err(DirectoryError::Backend("injected directory event read failure".into()));
+        }
         let (since_seq, limit) = bounded_event_read(since_seq, limit)?;
         let conn = self.lock()?;
         let mut stmt = conn.prepare("SELECT seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, payload, recorded_at FROM hub_directory_event WHERE seq > ?1 ORDER BY seq LIMIT ?2").map_err(backend)?;
@@ -2829,7 +2956,7 @@ fn event_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<DirectoryEvent> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🌱️creation-v1/🦀️.rs"]
+#[path = "🌱️creation-v1/🧪️tests/🔬️standalone/🦀️.rs"]
 mod creation_tests;
 
 #[cfg(test)]

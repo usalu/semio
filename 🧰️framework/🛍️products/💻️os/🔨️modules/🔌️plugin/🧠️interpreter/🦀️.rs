@@ -2262,7 +2262,11 @@ fn check_values(values: &[Value], types: &[ValueType]) -> Result<(), CoreError> 
 }
 
 fn expect_type(value: Value, expected: ValueType) -> Result<(), CoreError> {
-    if value.value_type() == expected { Ok(()) } else { Err(CoreError::Trap(format!("expected {expected:?}, received {:?}", value.value_type()))) }
+    if value.value_type() == expected {
+        Ok(())
+    } else {
+        Err(CoreError::Trap(format!("expected {expected:?}, received {:?}", value.value_type())))
+    }
 }
 
 //#endregion ⚙️InstructionExecution
@@ -2840,11 +2844,19 @@ fn signed_div_i64(left: i64, right: i64) -> Result<i64, CoreError> {
 //#region 🔢️NumericSemantics
 
 fn canonical_f32(value: f32) -> f32 {
-    if value.is_nan() { f32::from_bits(0x7fc0_0000) } else { value }
+    if value.is_nan() {
+        f32::from_bits(0x7fc0_0000)
+    } else {
+        value
+    }
 }
 
 fn canonical_f64(value: f64) -> f64 {
-    if value.is_nan() { f64::from_bits(0x7ff8_0000_0000_0000) } else { value }
+    if value.is_nan() {
+        f64::from_bits(0x7ff8_0000_0000_0000)
+    } else {
+        value
+    }
 }
 
 fn round_ties_even_f32(value: f32) -> f32 {
@@ -2860,7 +2872,11 @@ fn wasm_min_f32(left: f32, right: f32) -> f32 {
         return f32::NAN;
     }
     if left == right {
-        if left == 0.0 && (left.is_sign_negative() || right.is_sign_negative()) { -0.0 } else { left }
+        if left == 0.0 && (left.is_sign_negative() || right.is_sign_negative()) {
+            -0.0
+        } else {
+            left
+        }
     } else if left < right {
         left
     } else {
@@ -2873,7 +2889,11 @@ fn wasm_max_f32(left: f32, right: f32) -> f32 {
         return f32::NAN;
     }
     if left == right {
-        if left == 0.0 && (!left.is_sign_negative() || !right.is_sign_negative()) { 0.0 } else { left }
+        if left == 0.0 && (!left.is_sign_negative() || !right.is_sign_negative()) {
+            0.0
+        } else {
+            left
+        }
     } else if left > right {
         left
     } else {
@@ -2886,7 +2906,11 @@ fn wasm_min_f64(left: f64, right: f64) -> f64 {
         return f64::NAN;
     }
     if left == right {
-        if left == 0.0 && (left.is_sign_negative() || right.is_sign_negative()) { -0.0 } else { left }
+        if left == 0.0 && (left.is_sign_negative() || right.is_sign_negative()) {
+            -0.0
+        } else {
+            left
+        }
     } else if left < right {
         left
     } else {
@@ -2899,7 +2923,11 @@ fn wasm_max_f64(left: f64, right: f64) -> f64 {
         return f64::NAN;
     }
     if left == right {
-        if left == 0.0 && (!left.is_sign_negative() || !right.is_sign_negative()) { 0.0 } else { left }
+        if left == 0.0 && (!left.is_sign_negative() || !right.is_sign_negative()) {
+            0.0
+        } else {
+            left
+        }
     } else if left > right {
         left
     } else {
@@ -2959,7 +2987,11 @@ fn saturating_i32_from_f64(value: f64, signed: bool) -> i32 {
     if value.is_nan() {
         return 0;
     }
-    if signed { value.trunc().clamp(i32::MIN as f64, i32::MAX as f64) as i32 } else { value.trunc().clamp(0.0, u32::MAX as f64) as u32 as i32 }
+    if signed {
+        value.trunc().clamp(i32::MIN as f64, i32::MAX as f64) as i32
+    } else {
+        value.trunc().clamp(0.0, u32::MAX as f64) as u32 as i32
+    }
 }
 
 fn saturating_i64_from_f32(value: f32, signed: bool) -> i64 {
@@ -2970,7 +3002,11 @@ fn saturating_i64_from_f64(value: f64, signed: bool) -> i64 {
     if value.is_nan() {
         return 0;
     }
-    if signed { value.trunc().clamp(i64::MIN as f64, i64::MAX as f64) as i64 } else { value.trunc().clamp(0.0, u64::MAX as f64) as u64 as i64 }
+    if signed {
+        value.trunc().clamp(i64::MIN as f64, i64::MAX as f64) as i64
+    } else {
+        value.trunc().clamp(0.0, u64::MAX as f64) as u64 as i64
+    }
 }
 
 //#endregion 🔢️NumericSemantics
@@ -3324,7 +3360,11 @@ fn pages_to_bytes(pages: u64) -> Result<usize, CoreError> {
 
 fn checked_end(start: usize, length: usize, bound: usize, subject: &str) -> Result<usize, CoreError> {
     let end = start as u128 + length as u128;
-    if end > bound as u128 { Err(CoreError::Trap(format!("{subject} is out of bounds: start={start} length={length} end={end} bound={bound}"))) } else { Ok(end as usize) }
+    if end > bound as u128 {
+        Err(CoreError::Trap(format!("{subject} is out of bounds: start={start} length={length} end={end} bound={bound}")))
+    } else {
+        Ok(end as usize)
+    }
 }
 
 fn stable_fingerprint(bytes: &[u8]) -> u64 {

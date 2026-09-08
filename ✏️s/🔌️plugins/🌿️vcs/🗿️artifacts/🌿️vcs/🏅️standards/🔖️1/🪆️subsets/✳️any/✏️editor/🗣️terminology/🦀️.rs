@@ -2,7 +2,6 @@
 //! for. Deliberately ONE block for the whole app (never split per window/panel): the macro's value is
 //! that every locale×terminology combination is compile-checked in one place.
 
-use crate::editor::vcs::config::VcsDemoConfig;
 
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
@@ -28,8 +27,8 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn vcs_play_labels(cfg: &VcsDemoConfig) -> &'static VcsPlayLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<VcsPlayLabels>(&cfg.locale)
+pub fn vcs_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static VcsPlayLabels {
+    semio_framework_plugin::resolve_labels::<VcsPlayLabels>(view_state)
 }
 //#endregion 🔖️Resolvers
 

@@ -25,7 +25,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     buildHubBinary(this.repoRoot);
-    await runVitest(this.root, rest);
+    await runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 

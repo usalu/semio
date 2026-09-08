@@ -65,7 +65,6 @@ message Puzzle5dArtifact {
   // @state config
   string lod_mode = 30;
   // @state config
-  string locale = 31;
   // @state config
   string runtime_extras_json = 32;
   // @state artifact
@@ -126,4 +125,12 @@ message Puzzle5dFastener {
   string id = 1; string source = 2; string target = 3; optional string fastener_kind = 4;
   double gap = 5; double shift = 6; double rise = 7; double rotation = 8; double turn = 9; double tilt = 10;
   double x = 11; double y = 12;
+}
+
+message Puzzle5dPartAnchor {
+  string value = 1;
+}
+
+message Puzzle5dCompatSpecificity {
+  string value = 1;
 }

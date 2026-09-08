@@ -15,7 +15,6 @@ message GisTerrainDiff {
   // @state config
   optional string camera_json = 5;
   // @state config
-  optional string locale = 6;
 }
 
 message GisTerrainArtifact {
@@ -23,7 +22,6 @@ message GisTerrainArtifact {
   string imported_features_json = 2;
   repeated string selected_ids = 3;
   string camera_json = 4;
-  string locale = 5;
 }
 
 message GisTerrainStringList {

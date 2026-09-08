@@ -8,7 +8,6 @@ use crate::Iso16757Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::Iso16757Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a iso16757 snapshot. One field per named inference under
@@ -82,7 +81,6 @@ use crate::standards::v1::subsets::any::schema::{part_1, part_2, part_4, part_5}
 use crate::CatalogueValue;
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity, QuantityKind};
 use std::collections::{HashMap, HashSet};
-
 fn clause(part: &str, section: &str) -> ClauseId {
     ClauseId::new("ISO 16757", part, section)
 }
@@ -201,3 +199,8 @@ pub fn evaluate(document: &Iso16757Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::Iso16757Outline;
+//#endregion 🔁️Re-exports

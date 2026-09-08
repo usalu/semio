@@ -17,7 +17,6 @@ type ShootingArtifact {
   fitRevision: Int! @state(class: CONFIG)
   cameraDraftLabel: String! @state(class: CONFIG)
   camera: ShootingCamera! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 
 type ShootingCamera {
@@ -90,4 +89,14 @@ type ShootingSceneLighting {
   shadow: ShootingShadow!
   material: ShootingMaterial!
   emblemBase64: String
+}
+
+type ShootingRetainedCommandStepContract {
+  maxRawBytes: Int!
+  maxDecodedItems: Int!
+  maxWorkUnitsPerStep: Int!
+  maxOutputBytes: Int!
+  maxStepMicros: Int!
+  maxCheckpointBytes: Int
+  maxInFlightPages: Int
 }

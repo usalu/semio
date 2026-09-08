@@ -43,7 +43,6 @@ message FlowDiff {
   // @state config
   optional string generation_json = 19;
   // @state config
-  optional string locale = 20;
 }
 
 message FlowArtifact {
@@ -65,7 +64,6 @@ message FlowArtifact {
   string automation_enabled_json = 16;
   string contributions_json = 17;
   string generation_json = 18;
-  string locale = 19;
 }
 
 message CameraJson {

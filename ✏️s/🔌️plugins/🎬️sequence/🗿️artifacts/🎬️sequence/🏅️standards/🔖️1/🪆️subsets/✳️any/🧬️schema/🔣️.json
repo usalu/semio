@@ -10,8 +10,7 @@
     "edges",
     "lastRunJson",
     "orientation",
-    "camera",
-    "locale"
+    "camera"
   ],
   "properties": {
     "schema": {
@@ -42,10 +41,6 @@
     },
     "camera": {
       "$ref": "#/$defs/SequenceCamera",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   },
@@ -353,14 +348,10 @@
           "additionalProperties": false,
           "required": [
             "orientation",
-            "locale",
             "viewport"
           ],
           "properties": {
             "orientation": {
-              "const": true
-            },
-            "locale": {
               "const": true
             },
             "viewport": {
@@ -468,8 +459,8 @@
         },
         "routes": {
           "type": "array",
-          "minItems": 17,
-          "maxItems": 17,
+          "minItems": 16,
+          "maxItems": 16,
           "items": {
             "$ref": "#/$defs/SequenceRetainedActionsRoute"
           }

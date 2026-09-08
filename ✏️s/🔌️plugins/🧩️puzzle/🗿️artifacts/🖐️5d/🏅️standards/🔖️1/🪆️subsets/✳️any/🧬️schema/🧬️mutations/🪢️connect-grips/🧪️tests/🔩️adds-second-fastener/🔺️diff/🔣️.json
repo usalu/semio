@@ -15,14 +15,14 @@
         "source": "part-a:grip-spare",
         "target": "part-b:grip-2",
         "fastenerKind": "fastener-kind-b",
-        "gap": 2.0,
-        "shift": 0.0,
-        "rise": 0.0,
-        "rotation": 0.0,
-        "turn": 0.0,
-        "tilt": 0.0,
-        "x": 0.0,
-        "y": 0.0
+        "gap": 2,
+        "shift": 0,
+        "rise": 0,
+        "rotation": 0,
+        "turn": 0,
+        "tilt": 0,
+        "x": 0,
+        "y": 0
       }
     ],
     "removed": [],
@@ -51,7 +51,6 @@
   "fillCount": null,
   "brushCandidateIndex": null,
   "lodMode": null,
-  "locale": null,
   "runtimeExtrasJson": null,
   "hoveredPartId": null,
   "previewSeq": null

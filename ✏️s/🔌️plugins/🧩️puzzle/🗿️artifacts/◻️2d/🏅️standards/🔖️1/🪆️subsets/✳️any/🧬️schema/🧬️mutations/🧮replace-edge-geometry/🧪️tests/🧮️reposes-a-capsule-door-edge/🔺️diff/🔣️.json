@@ -15,13 +15,13 @@
             "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl2_d1",
             "target": "085a9625-3c6d-4e2d-921a-70ac66cbc56a:link",
             "gap": 1.5,
-            "shift": 0.0,
-            "rise": 0.0,
-            "rotation": 0.0,
-            "turn": 0.0,
-            "tilt": 0.0,
-            "x": 0.0,
-            "y": 0.0
+            "shift": 0,
+            "rise": 0,
+            "rotation": 0,
+            "turn": 0,
+            "tilt": 0,
+            "x": 0,
+            "y": 0
           }
         }
       }
@@ -41,8 +41,6 @@
   "fillCount": null,
   "brushCandidateIndex": null,
   "brushCandidateSourceHandleId": null,
-  "locale": null,
-  "terminology": null,
   "lodModeByPaneJson": null,
   "engagementInputByPaneJson": null,
   "brushCandidatesJson": null,

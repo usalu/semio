@@ -144,6 +144,7 @@ class ActionCohortAuditScript extends BundleScript {
     const noteRoot = resolve(flowRoot, "../🗒️note");
     const schemaModule = await Bun.file(resolve(flowRoot, "🎬️action-cohort/🧬️schema/🔣️.json")).json();
     const validate = new Ajv({ allErrors: true, strict: true }).addSchema(schemaModule).compile({ $ref: `${schemaModule.$id}#/$defs/ActionCohort` });
+    validate.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     const fixtures = [
       await Bun.file(resolve(flowRoot, "🎬️action-cohort/🔣️.json")).json() as Fixture,
       await Bun.file(resolve(noteRoot, "🧪️action-cohort/🔣️.json")).json() as Fixture,

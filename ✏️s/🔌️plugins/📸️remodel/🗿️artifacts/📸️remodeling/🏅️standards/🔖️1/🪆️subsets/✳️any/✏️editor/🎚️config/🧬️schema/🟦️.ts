@@ -43,5 +43,4 @@ export interface RemodelingConfig {
   /** @state config */
   activeUtilityId: string;
   /** @state config */
-  locale: string;
 }

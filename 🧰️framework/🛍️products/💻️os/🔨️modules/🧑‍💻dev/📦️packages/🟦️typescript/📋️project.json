@@ -255,6 +255,15 @@
         "command": "bun ./📜️script.ts bench plugins wgpu",
         "forwardAllArgs": true
       }
+    },
+    "build-inputs": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ../../🚚️distribution/📜️script.ts inputs",
+        "forwardAllArgs": true
+      }
     }
   },
   "implicitDependencies": [

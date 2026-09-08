@@ -1,1 +1,4 @@
-{"mutation":"deleteStep","id":"step-1"}
+{
+  "mutation": "deleteStep",
+  "id": "step-1"
+}

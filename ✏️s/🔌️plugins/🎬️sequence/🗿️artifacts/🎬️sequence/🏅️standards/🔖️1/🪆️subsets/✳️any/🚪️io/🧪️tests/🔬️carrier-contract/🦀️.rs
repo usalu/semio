@@ -9,7 +9,7 @@ use semio_s_artifact_stdio_md::{MdSnapshot, schema::snapshot::MdBlock};
 
 #[semio_framework_async_macros::async_test]
 async fn sequence_carrier_contracts_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔁️carrier-contracts.json")).expect("neutral carrier vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️carrier-contracts.json")).expect("neutral carrier vectors");
     for row in vectors["cases"].as_array().expect("cases") {
         let fixture = neural_engine::ColdOwner::new(pack::from_json_str::<SequenceFixture>(&row["fixture"].to_string()).expect("owned fixture decoder"));
         assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&*fixture)).expect("independent fixture oracle"), row["fixture"]);

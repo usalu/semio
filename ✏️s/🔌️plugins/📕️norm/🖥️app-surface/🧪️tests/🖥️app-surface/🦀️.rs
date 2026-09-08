@@ -1,7 +1,7 @@
 //! 🧪️ Every public norm editor/viewer wrapper renders its declared language-neutral surface inventory.
 
-use semio_framework_plugin::{AppDefinition, Locale, PanelTabDefinition, PluginApp, Terminology, ViewModel};
 use semio_framework_plugin::testkit::project_and_retire_fixture_tree;
+use semio_framework_plugin::{AppDefinition, Locale, PanelTabDefinition, PluginApp, Terminology, ViewModel};
 use std::collections::BTreeSet;
 
 #[derive(serde::Deserialize)]
@@ -141,7 +141,7 @@ macro_rules! assert_norm_pair {
 /// publication-lane availability check, both of which fail closed on a mechanical classification flip.
 #[semio_framework_async_macros::async_test]
 async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
-    let fixture: RetainedFixture = serde_json::from_str(include_str!("../../../🧪️fixtures/🧫️retained-command-dispositions/🔣️.json")).unwrap();
+    let fixture: RetainedFixture = serde_json::from_str(include_str!("../../../🧫️fixtures/🧫️retained-command-dispositions/🔣️.json")).unwrap();
     assert!(fixture.factory.shared);
     assert_eq!(fixture.factory.payload_schema, semio_s_artifact_norm_contract::app_surface::NORM_RETAINED_PAYLOAD_SCHEMA);
     assert_eq!(fixture.factory.maximum_raw_bytes, semio_s_artifact_norm_contract::app_surface::NORM_RETAINED_RAW_BYTES);

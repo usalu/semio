@@ -1,6 +1,6 @@
 //! 🧬️ Direct change-node-name mutation owner.
-use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::structure_geometry::checked_index;
+use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
 use dsl::DslValue;
@@ -403,3 +403,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNam
 #[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
 mod direct_leaf_tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "📜️contract/🧪️tests/🔬️unit/🦀️.rs"]
+mod contract;

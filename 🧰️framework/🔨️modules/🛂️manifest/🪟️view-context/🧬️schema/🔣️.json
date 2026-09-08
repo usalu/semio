@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/view-context/schema.json",
+  "title": "ResolvedPluginViewState",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "locale",
+    "terminology"
+  ],
+  "properties": {
+    "activeModeId": {
+      "$ref": "#/$defs/Identifier"
+    },
+    "activeWindowKindId": {
+      "$ref": "#/$defs/Identifier"
+    },
+    "activeUtilityId": {
+      "$ref": "#/$defs/Identifier"
+    },
+    "activeToolId": {
+      "$ref": "#/$defs/Identifier"
+    },
+    "windowId": {
+      "$ref": "#/$defs/Identifier"
+    },
+    "panelJson": {
+      "type": "string",
+      "maxLength": 65536
+    },
+    "contributionsJson": {
+      "type": "string",
+      "maxLength": 65536
+    },
+    "locale": {
+      "enum": [
+        "en",
+        "de"
+      ]
+    },
+    "terminology": {
+      "enum": [
+        "native",
+        "reuse"
+      ]
+    },
+    "activeUtilityByWindowId": {
+      "type": "object",
+      "maxProperties": 64,
+      "propertyNames": {
+        "$ref": "#/$defs/Identifier"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/Identifier"
+      }
+    },
+    "windowInstances": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "windowKindId"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "windowKindId": {
+            "$ref": "#/$defs/Identifier"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    }
+  }
+}

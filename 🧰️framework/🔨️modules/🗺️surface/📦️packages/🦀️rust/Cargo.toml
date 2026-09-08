@@ -64,4 +64,4 @@ web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window"] }
 # contain ASCII — so the repo's emoji filename convention needs an explicit name/path pair here.
 [[test]]
 name = "tiled_map_mercator_oracle"
-path = "tests/🗺️tiled_map_mercator_oracle.rs"
+path = "../../🧪️tests/🗺️tiled-map-mercator-oracle/🦀️.rs"

@@ -17,7 +17,7 @@
   ],
   "properties": {
     "workshop": {
-      "$ref": "#/$defs/Process3dWorkshop",
+      "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/Process3dWorkshop",
       "x-semio-state": "artifact"
     },
     "stockId": {
@@ -29,72 +29,38 @@
       "x-semio-state": "artifact"
     },
     "stockPose": {
-      "$ref": "#/$defs/Process3dPose",
+      "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/Process3dPose",
       "x-semio-state": "artifact"
     },
     "stockPayload": {
-      "$ref": "#/$defs/Process3dStock",
+      "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/Process3dStock",
       "x-semio-state": "artifact"
     },
     "stockSolid": {
-      "$ref": "#/$defs/ArtifactChildHandle",
+      "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle",
       "x-semio-state": "artifact"
     },
     "steps": {
-      "$ref": "#/$defs/ArtifactChildHandle",
+      "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle",
       "x-semio-state": "artifact"
     },
     "stepPayloads": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/Process3dStep"
+        "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/Process3dStep"
       },
       "x-semio-state": "artifact"
     },
     "toolSolids": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/ArtifactChildHandle"
+        "$ref": "https://semio.tech/schema/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle"
       },
       "x-semio-state": "artifact"
     },
     "resolvedUpTo": {
       "type": "integer",
       "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "Process3dWorkshop": {
-      "title": "Process3dWorkshop",
-      "type": "object"
-    },
-    "Process3dStock": {
-      "title": "Process3dStock",
-      "type": "object"
-    },
-    "Process3dPose": {
-      "title": "Process3dPose",
-      "type": "object"
-    },
-    "ArtifactChildHandle": {
-      "title": "ArtifactChildHandle",
-      "type": "object",
-      "required": [
-        "childId",
-        "target"
-      ],
-      "properties": {
-        "childId": {
-          "type": "string"
-        },
-        "target": {
-          "type": "string"
-        }
-      }
-    },
-    "Process3dStep": {
-      "title": "Process3dStep",
-      "type": "object"
     }
   }
 }

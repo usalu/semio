@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn semantic_question_controls_match_the_language_neutral_vectors() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️controls.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️controls.json")).unwrap();
     for vector in vectors["cases"].as_array().unwrap() {
         let question = &vector["question"];
         let question = crate::editor::forms::commands::add_question::question_shell(question["id"].as_str().unwrap().into(), question["label"].as_str().unwrap().into(), question["kind"].as_str().unwrap().into());

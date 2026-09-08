@@ -8,7 +8,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
 #[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
 mod art_forms_demo_tests;
 extern crate semio_framework_schema as framework_schema;
 use semio_framework_artifact_playbook_playbook as playbook;
@@ -508,11 +508,26 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// (`any`). Sole registration channel (plugin root `.declare_artifact(artifact())`); the old
 /// `.artifact(declaration())`/`.editor::<>()`/`.viewer::<>()` triad is deleted, not kept alongside
 /// it (a second parallel registration channel is the compatibility layer CLAUDE.md forbids).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::FormsApps> {
+pub fn artifact<A: FormsApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
 
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.forms.forms").expect("canonical forms kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+}
+
+/// 📋️ Application variants required to assemble the Forms artifact.
+pub trait FormsApplication:
+    semio_framework_plugin::PluginApp
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::forms::FormsPlayApp>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::forms::FormsViewer>>>
+{
+}
+
+impl<A> FormsApplication for A where
+    A: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::forms::FormsPlayApp>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::forms::FormsViewer>>>
+{
 }
 //#endregion 🔖️Declaration
 
@@ -963,8 +978,6 @@ pub mod editor {
             pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️.rs"]
-            pub mod set_locale;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔣️set-spec-json/🦀️.rs"]
             pub mod set_spec_json;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-try-value/🦀️.rs"]
@@ -1034,3 +1047,7 @@ pub mod viewer {
         }
     }
 }
+
+//#region 📚️Examples
+pub use standards::v1::subsets::any::examples;
+//#endregion 📚️Examples

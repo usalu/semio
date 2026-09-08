@@ -1,6 +1,0 @@
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/s/sequence/sequence/1/any/io/mutations/text.json",
-  "title": "SequenceMutationsText",
-  "type": "object"
-}

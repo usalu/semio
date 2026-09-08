@@ -12,7 +12,6 @@ type Block2dArtifact {
   camera2d: BlockCamera2d! @state(class: ARTIFACT)
   meta: BlockMeta! @state(class: ARTIFACT)
   selectedIds: [String!]! @state(class: PRESENCE)
-  locale: String! @state(class: CONFIG)
 }
 
 type BlockKindIdentity { _placeholder: Boolean }

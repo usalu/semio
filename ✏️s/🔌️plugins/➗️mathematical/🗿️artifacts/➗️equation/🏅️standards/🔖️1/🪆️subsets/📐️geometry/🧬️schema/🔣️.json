@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/mathematical/equation/1/geometry/artifact.json",
+  "description": "🪆️ The geometry subset of EquationArtifact: the same document, mutated by this module's leaves. The subset owns its mutations, never a second copy of the artifact's types.",
+  "allOf": [
+    {
+      "$ref": "https://semio.tech/schema/s/equation/equation/artifact.json"
+    }
+  ]
+}

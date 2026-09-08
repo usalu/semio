@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/norm/en1990/diff/text.json",
   "title": "En1990DiffText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of En1990Diff: the instance is the serialized document this facet's grammar and codec speak."
 }

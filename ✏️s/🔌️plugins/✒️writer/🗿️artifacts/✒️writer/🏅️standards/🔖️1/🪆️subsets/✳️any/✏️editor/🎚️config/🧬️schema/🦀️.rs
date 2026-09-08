@@ -1,8 +1,7 @@
 //! 🧬️ schema leaf
-use crate::{WriterCamera, WriterEditorSelection, WriterEditorSettings};
+use crate::{WriterEditorSettings};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.writer.writer.config")]
@@ -21,8 +20,6 @@ pub struct WriterConfig {
     pub engagement_input: String,
     #[state(config)]
     pub camera: WriterCamera,
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor
@@ -47,3 +44,9 @@ pub fn app_schema_descriptor() -> ::schema::AppSchemaDescriptor {
     }
 }
 //endregion 📎 App-schema descriptor
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::WriterEditorSelection;
+pub use crate::WriterCamera;
+//#endregion 🔁️Re-exports

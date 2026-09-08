@@ -9,7 +9,6 @@ type PlaybookDiff {
   document: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.document")
   flow: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio.flow")
   selectedIds: PlaybookStringList @state(class: PRESENCE)
-  locale: String @state(class: CONFIG)
   contributionsJson: String @state(class: CONFIG)
 }
 

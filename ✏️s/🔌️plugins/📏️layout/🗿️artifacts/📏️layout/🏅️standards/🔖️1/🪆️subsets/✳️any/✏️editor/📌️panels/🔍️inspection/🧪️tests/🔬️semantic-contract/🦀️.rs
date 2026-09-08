@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn layout_inspection_summary_matches_the_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️summary.json")).expect("neutral inspector vectors");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️summary.json")).expect("neutral inspector vectors");
     let mut snapshot = crate::schema::default_document();
     snapshot.name = fixture["name"].as_str().expect("document name").into();
     snapshot.pages.clear();

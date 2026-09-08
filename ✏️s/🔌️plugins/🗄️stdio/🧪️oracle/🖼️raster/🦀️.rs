@@ -5,7 +5,7 @@
 //! samples. Filtering, interlacing, chunk order, compression level and ancillary metadata are
 //! encoder choices, not normative content, and are canonicalized away.
 //!
-//! @see 📇️registry/🔣️.json — the approved oracle registry these functions implement.
+//! @see 🧪️oracle/🔣️.json — the approved oracle registry these functions implement.
 
 use semio_repo_test_host::Json;
 

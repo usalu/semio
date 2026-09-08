@@ -8,14 +8,14 @@
       "id": "plate",
       "name": "Plate",
       "visible": true,
-      "opacity": 1.0,
+      "opacity": 1,
       "blendMode": "normal",
       "transform": {
-        "x": 0.0,
-        "y": 0.0,
-        "scaleX": 1.0,
-        "scaleY": 1.0,
-        "rotation": 0.0
+        "x": 0,
+        "y": 0,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0
       },
       "mask": null,
       "width": 512,
@@ -27,14 +27,14 @@
       "id": "tone",
       "name": "Tone",
       "visible": true,
-      "opacity": 1.0,
+      "opacity": 1,
       "blendMode": "normal",
       "transform": {
-        "x": 0.0,
-        "y": 0.0,
-        "scaleX": 1.0,
-        "scaleY": 1.0,
-        "rotation": 0.0
+        "x": 0,
+        "y": 0,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0
       },
       "adjustmentKind": "levels",
       "params": {}

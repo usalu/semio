@@ -7,3 +7,9 @@ message SemioTableMutationFrame {
   uint32 tag = 2;    // variant ordinal, 0-7
   bytes payload = 3; // opaque: the variant's own argument tail
 }
+
+message SemioTableMutationBinary {
+  optional int64 format = 1;
+  optional int64 tag = 2;
+  optional string payload = 3;
+}

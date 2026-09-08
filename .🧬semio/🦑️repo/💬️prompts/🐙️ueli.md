@@ -578,6 +578,10 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧬️schema/🔣️.json
+
+---
+
 Turn every artifact into a package because currently compiling stdio takes too long and it should be composable later. Make sure to properly integrate it with nx, etc.
 
 e.g.
@@ -613,6 +617,7 @@ Schema is part of folder name, fixtures are only examples used for testing - sch
 e.g. violations
 🌎️hub/🧪️fixtures/✅️inference-approval-v1/🧬️.schema.json
 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/🎟️invite-capability/🧬️.schema.json
+Still lot of violations where schema appears on the wrong level such as on test level e.g. 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/👀️readme-reviewed-fixture-inputs/🛂️schema/🔣️.json
 etc
 
 ---

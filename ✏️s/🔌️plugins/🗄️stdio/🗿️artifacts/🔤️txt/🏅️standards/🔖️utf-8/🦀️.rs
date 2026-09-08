@@ -2,7 +2,7 @@
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P pilot). Exports
 //! `standard() -> StandardDeclaration`, mounting subset `any` (the only subset this standard
 //! has). Media values are the REAL `FormatDescriptor` registration for `stdio.txt`, taken
-//! verbatim from `🧬️schema/📜️artifact-definition.json`'s `representations[0]`
+//! verbatim from `📜️artifact-definition.json`'s `representations[0]`
 //! (`mimes: ["text/plain"], extensions: [".txt"]`) — not invented.
 
 #[cfg(feature = "component-app-assembly")]

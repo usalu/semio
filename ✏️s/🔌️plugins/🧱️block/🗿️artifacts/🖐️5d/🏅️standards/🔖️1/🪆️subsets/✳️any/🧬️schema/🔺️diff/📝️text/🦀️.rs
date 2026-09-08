@@ -125,9 +125,6 @@ impl Block5dDiff {
             if let Some(list) = &self.selected_ids {
                 next.selected_ids = list.values.clone();
             }
-            if let Some(v) = &self.locale {
-                next.locale = v.clone();
-            }
             next
         })
     }
@@ -203,7 +200,6 @@ impl MutationDiff<Block5dSnapshot> for Block5dDiff {
         take!(camera3d);
         take!(meta);
         take!(selected_ids);
-        take!(locale);
         fn absorb_col<D>(target: &mut Option<D>, incoming: Option<D>, merge: impl FnOnce(&mut D, D)) {
             if let Some(src) = incoming {
                 match target {
@@ -332,3 +328,8 @@ pub fn diff_set_snapshot(snapshot: Block5dSnapshot) -> Block5dDiff {
     Block5dDiff { artifact: Some(Box::new(Block5dArtifact::from_snapshot(snapshot))), ..Default::default() }
 }
 //#endregion 🔖️DiffHelpers
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Block5dDiffText = String;
+//#endregion 🚚️Carrier

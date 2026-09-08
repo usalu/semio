@@ -3,7 +3,7 @@ use super::*;
 use protocol::{MutationLeaf, OpBinary, OpText, SemanticMutation};
 
 fn fixture() -> Value {
-    dsl::os_pack::json::parse(include_str!("../../🧪️fixtures/🔣️mutations.json")).expect("neutral Dag mutation fixture")
+    dsl::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️mutations.json")).expect("neutral Dag mutation fixture")
 }
 
 /// 🌉️ `T: FromValue` decode of a pack JSON [`Value`] — the in-house `serde_json::from_value` analog.

@@ -8,7 +8,6 @@ use crate::En1990Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::En1990Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1990 snapshot. One field per named inference under
@@ -81,7 +80,6 @@ use crate::En1990QkEntry;
 /// `⚙️engine`. `evaluate` is the `En1990Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport, DesignSituation};
-
 /// 🔁️ Convert a `En1990Snapshot`'s `q_k` entries (read through the `en1990_qk` working-scene
 /// accessor — `q_k` is a composed `s.stdio.semio.table` child slot, ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) into the plain `(category, value)` pairs
@@ -110,3 +108,8 @@ pub fn evaluate(document: &En1990Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::En1990Outline;
+//#endregion 🔁️Re-exports

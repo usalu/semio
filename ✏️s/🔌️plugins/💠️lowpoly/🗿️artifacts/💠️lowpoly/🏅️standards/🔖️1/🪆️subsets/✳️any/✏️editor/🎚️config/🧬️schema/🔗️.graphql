@@ -31,6 +31,4 @@ type LowpolyConfig {
   sunElevation: Float! @state(class: CONFIG)
   sunIntensity: Float! @state(class: CONFIG)
   sunColor: String! @state(class: CONFIG)
-  activeUtilityId: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }

@@ -48,10 +48,8 @@
  * Honest gap: `render` has no wire counterpart any more (channel v12 retired the per-verb
  * `render`/`renderWithDocument` command) — it is rebuilt here on top of a raw `"surface-visible"` turn
  * event + the retained-patch reconciliation `🖼️wire-turn.ts` provides, exactly mirroring
- * `PluginRuntime`'s own `refreshUi`. `windowEngagements`/`windowMeasures` are left unimplemented
- * (Rust's `🌉️ProgramBridge` already tolerates a missing function there with an empty-map fallback) —
- * `PluginRuntime` documents the identical gap ("no wire path yet, `dirty_render` only ever renders the
- * ONE window surface this wave").
+ * `PluginRuntime`'s own `refreshUi`. `windowEngagements`/`windowMeasures` are left unimplemented;
+ * Rust's `🌉️ProgramBridge` already treats their absence as an empty-map result.
  */
 // #endregion 🧲️Header
 
@@ -222,7 +220,7 @@ const lifecycleByInstance = new Map<number, ShardInstanceLifecycleLease>();
 //#endregion 🚪️InstanceLifecycleSettle
 
 //#region 🔖️RetainedWindow
-const retainedWindowByActor = new Map<string, RetainedSurface>();
+const retainedWindowByActor = new Map<string, Map<string, RetainedSurface>>();
 
 /** 🖼️ One wire `UiPatch` reconciled onto `previous`: every `pack`-typed op payload is projected through
  * {@link decodePackWire} and the two WIT `u64` revisions narrowed through {@link packWireNatural}, so a
@@ -234,26 +232,26 @@ export function reconcileRetainedWindowPatch(previous: RetainedSurface | null, p
 }
 
 function applyRetainedWindowPatches(actorId: string, uiPatches: readonly WireUiPatch[]): void {
+  const retained = retainedWindowByActor.get(actorId) ?? new Map<string, RetainedSurface>();
+  retainedWindowByActor.set(actorId, retained);
   for (const patch of uiPatches) {
-    const previous = retainedWindowByActor.get(actorId) ?? null;
+    const surfaceId = patch.surface?.surface;
+    if (!surfaceId) continue;
+    const previous = retained.get(surfaceId) ?? null;
     const { surface, desynced } = reconcileRetainedWindowPatch(previous, patch);
     if (desynced) {
       console.warn(`[DEBUG] plugin-bridge: actor ${actorId} desynced (unrecognized op shape or stale baseRevision) — keeping the previously retained body`);
       continue;
     }
-    if (surface) retainedWindowByActor.set(actorId, surface);
+    if (surface) retained.set(surfaceId, surface);
   }
 }
 
-/** 🖼️ Channel v12 retired the per-verb `render`/`renderWithDocument` `AppCommand` — rebuilt here as a
- * raw `"surface-visible"` turn event, reading back whatever this SAME turn's `TurnResult.uiPatches`
- * produced (or the retained tree if nothing changed). Only the ONE "window" surface renders this wave
- * (`⚛️reactor/🦀️.rs`'s `dirty_render` loop hardcodes it) — `bodyKey`/`viewState` are accepted
- * for ABI compatibility but not yet threaded through, matching `PluginRuntime`'s own identical gap. */
-async function performRender(actorId: string, instanceId: number, bodyKey: string): Promise<unknown> {
-  const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: bodyKey } } }]);
+/** 🖼️ Requests one concrete retained surface with its authored body and host ViewModel. */
+async function performRender(actorId: string, instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown): Promise<unknown> {
+  const result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: surfaceId }, bodyKey, viewState: encodePackValue(viewState) } }]);
   if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
-  return retainedWindowByActor.get(actorId)?.node ?? null;
+  return retainedWindowByActor.get(actorId)?.get(surfaceId)?.node ?? null;
 }
 
 /** @emoji 📃️ Publishes ONE surface's retained document as the `UiSnapshot`-shaped JSON the wgpu
@@ -274,7 +272,7 @@ async function performRender(actorId: string, instanceId: number, bodyKey: strin
  * flag — is what bounds this. */
 const RETAINED_DOCUMENT_OPPORTUNITIES = 256;
 
-async function publishRetainedDocument(actorId: string, instanceId: number, bodyKey: string): Promise<string> {
+async function publishRetainedDocument(actorId: string, instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown): Promise<string> {
   const collected: WireUiPatch[] = [];
   const seenSurfaces: string[] = [];
   const seenTags: string[] = [];
@@ -282,7 +280,7 @@ async function publishRetainedDocument(actorId: string, instanceId: number, body
   let anyEffects = 0;
   const seenEffects: string[] = [];
   let turns = 1;
-  let result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: bodyKey } } }]);
+  let result = await submitTurn(actorId, [{ kind: "surface-visible", payload: { surface: { instance: instanceId, surface: surfaceId }, bodyKey, viewState: encodePackValue(viewState) } }]);
   for (let opportunity = 0; opportunity < RETAINED_DOCUMENT_OPPORTUNITIES; opportunity += 1) {
     anyPatches += result.uiPatches.length;
     anyEffects += result.effects.length;
@@ -294,13 +292,13 @@ async function publishRetainedDocument(actorId: string, instanceId: number, body
     }
     if (result.uiPatches.length > 0) {
       applyRetainedWindowPatches(actorId, result.uiPatches);
-      collected.push(...result.uiPatches.filter((patch) => (patch.surface?.surface ?? bodyKey) === bodyKey));
+      collected.push(...result.uiPatches.filter((patch) => (patch.surface?.surface ?? surfaceId) === surfaceId));
     }
     if (collected.length > 0) break;
     result = await submitTurn(actorId, []);
     turns += 1;
   }
-  console.log(`[DEBUG] publishRetainedDocument ${bodyKey}: turns=${turns} collected=${collected.length} anyPatches=${anyPatches} surfaces=${JSON.stringify(seenSurfaces)} tags=${JSON.stringify(seenTags.slice(0, 12))} effects=${anyEffects} effectTags=${JSON.stringify(seenEffects.slice(0, 12))}`);
+  console.log(`[DEBUG] publishRetainedDocument ${surfaceId}/${bodyKey}: turns=${turns} collected=${collected.length} anyPatches=${anyPatches} surfaces=${JSON.stringify(seenSurfaces)} tags=${JSON.stringify(seenTags.slice(0, 12))} effects=${anyEffects} effectTags=${JSON.stringify(seenEffects.slice(0, 12))}`);
   const nodes: unknown[] = [];
   let revision = 0;
   let root: number | null = null;
@@ -316,7 +314,7 @@ async function publishRetainedDocument(actorId: string, instanceId: number, body
     }
   }
   if (root === null && nodes.length > 0) root = Number((nodes[0] as { readonly id?: unknown }).id ?? 0);
-  return JSON.stringify({ surface: bodyKey, revision, root, nodes, layoutEpoch: 0 });
+  return JSON.stringify({ surface: surfaceId, revision, root, nodes, layoutEpoch: 0 });
 }
 //#endregion 🔖️RetainedWindow
 
@@ -382,8 +380,8 @@ export interface WgpuPluginHandle {
   readonly destroyApp: (instanceId: number) => Promise<void>;
   readonly handleAction: (instanceId: number, actionJson: string, viewState: unknown) => Promise<InvocationResponse>;
   readonly handleCommand: (instanceId: number, commandJson: string, viewState: unknown) => Promise<InvocationResponse>;
-  readonly render: (instanceId: number, bodyKey: string, viewState: unknown) => Promise<unknown>;
-  readonly renderDocument: (instanceId: number, bodyKey: string) => Promise<string>;
+  readonly render: (instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown) => Promise<unknown>;
+  readonly renderDocument: (instanceId: number, surfaceId: string, bodyKey: string, viewState: unknown) => Promise<string>;
   readonly contextMenu: (instanceId: number, request: unknown) => Promise<unknown>;
   readonly dispose: () => void;
 }
@@ -514,8 +512,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     },
     handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), viewState),
     handleCommand: (instanceId, commandJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), viewState),
-    render: (instanceId, bodyKey) => performRender(requireActorId(instanceId), instanceId, bodyKey),
-    renderDocument: (instanceId, bodyKey) => publishRetainedDocument(requireActorId(instanceId), instanceId, bodyKey),
+    render: (instanceId, surfaceId, bodyKey, viewState) => performRender(requireActorId(instanceId), instanceId, surfaceId, bodyKey, viewState),
+    renderDocument: (instanceId, surfaceId, bodyKey, viewState) => publishRetainedDocument(requireActorId(instanceId), instanceId, surfaceId, bodyKey, viewState),
     contextMenu: (instanceId, request) => requireChannel(instanceId).contextMenu(request),
     dispose: () => {
       for (const instanceId of channelByInstance.keys()) channelByInstance.get(instanceId)?.dispose();
@@ -544,8 +542,8 @@ export interface WgpuJsBridge {
   readonly destroyApp: (instanceId: number) => Promise<void>;
   readonly handleAction: (instanceId: number, actionJson: string, contextJson: string) => Promise<string>;
   readonly handleCommand: (instanceId: number, commandJson: string, contextJson: string) => Promise<string>;
-  readonly render: (instanceId: number, bodyKey: string, viewStateJson: string) => Promise<string>;
-  readonly renderDocument: (instanceId: number, bodyKey: string) => Promise<string>;
+  readonly render: (instanceId: number, surfaceId: string, bodyKey: string, viewStateJson: string) => Promise<string>;
+  readonly renderDocument: (instanceId: number, surfaceId: string, bodyKey: string, viewStateJson: string) => Promise<string>;
   readonly contextMenu: (instanceId: number, requestJson: string) => Promise<string>;
 }
 
@@ -570,8 +568,8 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     destroyApp: (instanceId) => handle.destroyApp(instanceId),
     handleAction: (instanceId, actionJson, contextJson) => handle.handleAction(instanceId, actionJson, viewStateFromContextJson(contextJson)).then((result) => JSON.stringify(result)),
     handleCommand: (instanceId, commandJson, contextJson) => handle.handleCommand(instanceId, commandJson, viewStateFromContextJson(contextJson)).then((result) => JSON.stringify(result)),
-    render: (instanceId, bodyKey, viewStateJson) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
-    renderDocument: (instanceId, bodyKey) => handle.renderDocument(instanceId, bodyKey),
+    render: (instanceId, surfaceId, bodyKey, viewStateJson) => handle.render(instanceId, surfaceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
+    renderDocument: (instanceId, surfaceId, bodyKey, viewStateJson) => handle.renderDocument(instanceId, surfaceId, bodyKey, JSON.parse(viewStateJson)),
     contextMenu: (instanceId, requestJson) => handle.contextMenu(instanceId, JSON.parse(requestJson)).then((items) => JSON.stringify(items)),
   };
 }

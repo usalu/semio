@@ -1,0 +1,481 @@
+{
+  "controller": "s.remodel.remodeling@1/*#editor",
+  "documentSchema": "remodeling.scene",
+  "factory": "RemodelingRetainedCommandJobFactory",
+  "limits": {
+    "bounded": {
+      "maxRawBytes": 65536,
+      "maxDecodedItems": 4096,
+      "maxWorkUnitsPerStep": 1,
+      "maxOutputBytes": 262144,
+      "maxStepMicros": 7500
+    }
+  },
+  "publicationContracts": [
+    {
+      "toolId": "runReconstruction",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "retryStage",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "runStage",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "importFramePayload",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "importVideoFramePayload",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "importVideoDone",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "importVideoBytesPayload",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "addStream",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "removeStream",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "setStreamSync",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "editCalibration",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "calibrateCameras",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "addGcp",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "removeGcp",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "placeGcpObservation",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "setIngestParams",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "setFeatureParams",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "setMatchParams",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "setSfmParams",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "setDenseParams",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "setMeshParams",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "setMotionParams",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "setGeoParams",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "resetPlaceholderMesh",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "clearSparse",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "clearDense",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "clearMeshResult",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "clearTracks",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "clearGeoProducts",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "clearResult",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "setCamera",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "setLayerVisibility",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "setFrameCursor",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "setReportTable",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "setActiveUtility",
+      "lanes": [
+        "config"
+      ]
+    },
+    {
+      "toolId": "importFrames",
+      "lanes": [
+        "host-only"
+      ]
+    },
+    {
+      "toolId": "importVideo",
+      "lanes": [
+        "host-only"
+      ]
+    },
+    {
+      "toolId": "exportQcReport",
+      "lanes": [
+        "host-only"
+      ]
+    },
+    {
+      "toolId": "advanceReconstruction",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "cancelReconstruction",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "setActiveExample",
+      "lanes": [
+        "artifact"
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "id": "runReconstruction",
+      "execution": "bounded",
+      "feature": "open generation-tagged reconstruction"
+    },
+    {
+      "id": "retryStage",
+      "execution": "bounded",
+      "feature": "open generation-tagged stage retry"
+    },
+    {
+      "id": "runStage",
+      "execution": "bounded",
+      "feature": "open generation-tagged stage run"
+    },
+    {
+      "id": "importFramePayload",
+      "execution": "bounded",
+      "feature": "decode and publish one retained still payload"
+    },
+    {
+      "id": "importVideoFramePayload",
+      "execution": "bounded",
+      "feature": "decode and publish one retained video frame payload"
+    },
+    {
+      "id": "importVideoDone",
+      "execution": "bounded",
+      "feature": "publish fixed video provenance as document work"
+    },
+    {
+      "id": "importVideoBytesPayload",
+      "execution": "bounded",
+      "feature": "demux and publish retained video payload pages"
+    },
+    {
+      "id": "addStream",
+      "execution": "bounded",
+      "feature": "append one stream mutation as document work"
+    },
+    {
+      "id": "removeStream",
+      "execution": "bounded",
+      "feature": "emit one stream tombstone as document work"
+    },
+    {
+      "id": "setStreamSync",
+      "execution": "bounded",
+      "feature": "locate and update one stream through a microcursor"
+    },
+    {
+      "id": "editCalibration",
+      "execution": "bounded",
+      "feature": "locate and replace one camera calibration through a microcursor"
+    },
+    {
+      "id": "calibrateCameras",
+      "execution": "bounded",
+      "feature": "advance one stream calibration cursor"
+    },
+    {
+      "id": "addGcp",
+      "execution": "bounded",
+      "feature": "append one ground control point mutation as document work"
+    },
+    {
+      "id": "removeGcp",
+      "execution": "bounded",
+      "feature": "emit one ground control point tombstone as document work"
+    },
+    {
+      "id": "placeGcpObservation",
+      "execution": "bounded",
+      "feature": "locate a ground control point and append one observation through a microcursor"
+    },
+    {
+      "id": "setIngestParams",
+      "execution": "bounded",
+      "feature": "replace one ingest parameter group as document work"
+    },
+    {
+      "id": "setFeatureParams",
+      "execution": "bounded",
+      "feature": "replace one feature parameter group as document work"
+    },
+    {
+      "id": "setMatchParams",
+      "execution": "bounded",
+      "feature": "replace one match parameter group as document work"
+    },
+    {
+      "id": "setSfmParams",
+      "execution": "bounded",
+      "feature": "replace one sfm parameter group as document work"
+    },
+    {
+      "id": "setDenseParams",
+      "execution": "bounded",
+      "feature": "replace one dense parameter group as document work"
+    },
+    {
+      "id": "setMeshParams",
+      "execution": "bounded",
+      "feature": "replace one mesh parameter group as document work"
+    },
+    {
+      "id": "setMotionParams",
+      "execution": "bounded",
+      "feature": "replace one motion parameter group as document work"
+    },
+    {
+      "id": "setGeoParams",
+      "execution": "bounded",
+      "feature": "replace one geo parameter group as document work"
+    },
+    {
+      "id": "resetPlaceholderMesh",
+      "execution": "bounded",
+      "feature": "emit placeholder mesh reset mutations as document work"
+    },
+    {
+      "id": "clearSparse",
+      "execution": "bounded",
+      "feature": "emit one sparse result clear mutation as document work"
+    },
+    {
+      "id": "clearDense",
+      "execution": "bounded",
+      "feature": "emit one dense result clear mutation as document work"
+    },
+    {
+      "id": "clearMeshResult",
+      "execution": "bounded",
+      "feature": "emit mesh result clear mutations as document work"
+    },
+    {
+      "id": "clearTracks",
+      "execution": "bounded",
+      "feature": "emit one track clear mutation as document work"
+    },
+    {
+      "id": "clearGeoProducts",
+      "execution": "bounded",
+      "feature": "emit one geo product clear mutation as document work"
+    },
+    {
+      "id": "clearResult",
+      "execution": "bounded",
+      "feature": "emit result clear mutations as document work"
+    },
+    {
+      "id": "setCamera",
+      "execution": "bounded",
+      "feature": "publish fixed camera configuration after a config preparation factory is installed"
+    },
+    {
+      "id": "setLayerVisibility",
+      "execution": "bounded",
+      "feature": "publish layer visibility after a config preparation factory is installed"
+    },
+    {
+      "id": "setFrameCursor",
+      "execution": "bounded",
+      "feature": "publish frame cursor after a config preparation factory is installed"
+    },
+    {
+      "id": "setReportTable",
+      "execution": "bounded",
+      "feature": "publish report table after a config preparation factory is installed"
+    },
+    {
+      "id": "setActiveUtility",
+      "execution": "bounded",
+      "feature": "publish active utility after a config preparation factory is installed"
+    },
+    {
+      "id": "importFrames",
+      "execution": "bounded",
+      "feature": "request host multi-file selection"
+    },
+    {
+      "id": "importVideo",
+      "execution": "bounded",
+      "feature": "request host video frame stream"
+    },
+    {
+      "id": "exportQcReport",
+      "execution": "bounded",
+      "feature": "encode QC report through retained output pages"
+    },
+    {
+      "id": "advanceReconstruction",
+      "execution": "bounded",
+      "feature": "advance exactly one reconstruction microcursor"
+    },
+    {
+      "id": "cancelReconstruction",
+      "execution": "bounded",
+      "feature": "cancel one operation-owned generation per step"
+    },
+    {
+      "id": "setActiveExample",
+      "execution": "bounded",
+      "feature": "replace the open document with one committed example in a single bounded first step"
+    }
+  ],
+  "oracle": {
+    "library": "serde_json",
+    "scope": "test-only-existing-dependency",
+    "ownedInterface": "RemodelingRetainedCatalogOracle",
+    "runtimeDependency": false,
+    "expected": {
+      "routes": 42,
+      "bounded": 42,
+      "resumable": 0,
+      "unique": true
+    }
+  }
+}

@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/deflate/rfc1950/any/diff/text.json",
   "title": "DeflateDiffText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of DeflateDiff: the instance is the serialized document this facet's grammar and codec speak."
 }

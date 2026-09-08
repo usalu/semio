@@ -13,7 +13,6 @@ use crate::op::WriterMutation;
 use crate::{writer_text, writer_text_owner, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use crate::editor::writer::commands::set_camera;
 use crate::editor::writer::commands::set_editor_selection;
-use crate::editor::writer::commands::set_locale;
 use crate::editor::writer::commands::{commit_rename, format_document, open_document, set_active_example, set_fixture_json, set_snapshot, set_snapshot_json, set_text, text_edit};
 use crate::editor::writer::commands::{engagement_input, engagement_submit};
 use crate::editor::writer::commands::{lint_document, request_completions};
@@ -204,7 +203,6 @@ semio_framework_plugin::app_commands! {
     /// the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`,
     /// the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case
     /// `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different vocabularies.
-    /// `setLocale`/`locale` is the row that proves it; `setEditorSetting` is declared by THREE rows
     /// (font/line-height/tab-size) sharing one manifest action id but three distinct wire keys and
     /// payload types — mirrors the pre-migration `WriterCommand::command_id()` match arm that mapped all
     /// three variants to the same `"setEditorSetting"` string. **Row order is the binary variant
@@ -229,7 +227,6 @@ semio_framework_plugin::app_commands! {
         "setEditorSetting" as "tab-size" => set_tab_size::SetTabSize,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
-        "setLocale" as "locale" => set_locale::SetLocale,
     }
 }
 //#endregion 🔖️Commands
@@ -307,8 +304,7 @@ const WRITER_COMMAND_TOOL_IDS: &[&str] = &[
     "setEditorSetting",
     "engagementInput",
     "engagementSubmit",
-    "setLocale",
-];
+    ];
 const WRITER_COMMAND_PAYLOAD_SCHEMA: &str = "writer.writer.tool-command.v1";
 const MAX_WRITER_COMMAND_RAW_BYTES: usize = 4_096;
 const MAX_WRITER_COMMAND_DECODED_ITEMS: usize = 4_096;
@@ -355,9 +351,6 @@ impl WriterCommandToolJob {
     fn admit_text(&mut self) -> bool {
         let Some(command) = self.command.as_ref() else { return false };
         let Some(config) = self.config.as_ref() else { return false };
-        if matches!(command, WriterCommand::SetLocale(payload) if payload.value.len() > MAX_WRITER_LOCALE_BYTES) {
-            return false;
-        }
         if matches!(command, WriterCommand::EngagementInput(payload) if payload.value.len() > MAX_WRITER_COMMAND_TEXT_BYTES) {
             return false;
         }
@@ -507,7 +500,6 @@ impl WriterCommandToolJob {
                 }
                 Emit { artifact_mutations, config_mutations, ..Default::default() }
             }
-            WriterCommand::SetLocale(payload) => Emit::config(vec![WriterConfigMutation::SetLocale(crate::editor::writer::config::SetLocale { value: payload.value })]),
         })
     }
 
@@ -778,7 +770,6 @@ impl ArtifactOwnedToolJobFactory for WriterCommandJobFactory {
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setEditorSetting", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact, semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
     ];
 }
 //#endregion 🧵️InteractiveJobs
@@ -800,13 +791,13 @@ struct WriterConfigStorePreparation {
 }
 
 fn writer_config_retained_bytes(config: &WriterConfig) -> usize {
-    config.engagement_input.len().saturating_add(config.locale.len())
+    config.engagement_input.len()
 }
 
 fn writer_config_mutation_retained_bytes(mutation: &WriterConfigMutation) -> usize {
     match mutation {
         WriterConfigMutation::ReplaceConfig(crate::editor::writer::config::ReplaceConfig { config }) => writer_config_retained_bytes(config),
-        WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value }) | WriterConfigMutation::SetLocale(crate::editor::writer::config::SetLocale { value }) => value.len(),
+        WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value }) => value.len(),
         WriterConfigMutation::SetEditorSelection(crate::editor::writer::config::SetEditorSelection { .. })
         | WriterConfigMutation::SetFormatSignal(crate::editor::writer::config::SetFormatSignal { .. })
         | WriterConfigMutation::SetLintSignal(crate::editor::writer::config::SetLintSignal { .. })
@@ -839,7 +830,6 @@ fn prepare_writer_config(base: &WriterConfig, mutation: WriterConfigMutation) ->
         WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }) => post.editor_settings = settings.clone(),
         WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value }) => post.engagement_input = value.clone(),
         WriterConfigMutation::SetCamera(crate::editor::writer::config::SetCamera { camera }) => post.camera = camera.clone(),
-        WriterConfigMutation::SetLocale(crate::editor::writer::config::SetLocale { value }) => post.locale = value.clone(),
     }
     Ok((post, vec![WriterConfigMutation::ReplaceConfig(crate::editor::writer::config::ReplaceConfig { config: base.clone() })], mutation))
 }
@@ -1184,8 +1174,7 @@ impl ArtifactEditor for WriterPlayApp {
             "setEditorSetting",
             "engagementInput",
             "engagementSubmit",
-            "setLocale"
-        ]
+                    ]
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
@@ -1254,7 +1243,7 @@ impl ArtifactEditor for WriterPlayApp {
         command: &WriterCommand,
         doc: &ArtifactView<'_, WriterSnapshot>,
         cfg: &ConfigView<'_, WriterConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<WriterMutation, WriterConfigMutation, Self::DraftMutation>, Fault> {
@@ -1286,10 +1275,10 @@ impl ArtifactEditor for WriterPlayApp {
         Ok(Media { media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document }, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = writer_play_labels(config);
+        let labels = writer_play_labels(view_state);
         let node = match body_key {
             WRITER_PLAY_BODY_MAIN => main::render(document, config),
             WRITER_PLAY_BODY_ARTIFACT => document_panel::render(document, config, labels),
@@ -1300,11 +1289,11 @@ impl ArtifactEditor for WriterPlayApp {
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
-    fn window_engagements(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    fn window_engagements(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         use semio_framework_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus};
 
         let config = cfg.snapshot;
-        let labels = writer_play_labels(config);
+        let labels = writer_play_labels(view_state);
         let engagement = WindowEngagement {
             session_active: Some(false),
             options: Some(vec![WindowEngagementOption {
@@ -1337,13 +1326,13 @@ impl ArtifactEditor for WriterPlayApp {
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), engagement)])
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
-        HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), main::window_measures(config, writer_play_labels(config)))])
+        HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), main::window_measures(config, writer_play_labels(view_state)))])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        let is_de = cfg.snapshot.locale.starts_with("de");
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
         let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
         writer_context_menu_items(registry, text, is_de)
     }
@@ -1409,7 +1398,6 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("formatDocument", InteractiveJobClassification::Migrated)
             .action_interactive_job("commitRename", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms: example choice + the dev JSON setters.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![

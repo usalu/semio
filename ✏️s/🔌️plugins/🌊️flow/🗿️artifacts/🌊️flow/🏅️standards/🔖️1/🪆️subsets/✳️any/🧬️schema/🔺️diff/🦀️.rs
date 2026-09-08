@@ -1,6 +1,6 @@
 //! 🧬️ Flow diff schema — sparse field delta over the artifact.
 
-use crate::schema::FlowArtifact;
+
 use crate::FlowContentChild;
 use semio_framework_artifact_flow_flow::CameraJson;
 use framework_schema::ArtifactSchema;
@@ -50,8 +50,6 @@ pub struct FlowDiff {
     pub contributions_json: Option<String>,
     #[state(config)]
     pub generation_json: Option<String>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔹Diff
 
@@ -65,3 +63,8 @@ pub struct FlowStringList {
     pub values: Vec<String>,
 }
 //#endregion 🔹DeltaHelpers
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::schema::FlowArtifact;
+//#endregion 🔁️Re-exports

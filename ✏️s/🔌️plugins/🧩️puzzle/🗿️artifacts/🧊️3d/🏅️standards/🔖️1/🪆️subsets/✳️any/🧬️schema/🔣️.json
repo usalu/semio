@@ -38,7 +38,6 @@
     "lodDepthVariable",
     "lodManual",
     "proximityRadius",
-    "locale",
     "runtimeExtrasJson",
     "previewSeq"
   ],
@@ -217,10 +216,6 @@
       "format": "double",
       "x-semio-state": "config"
     },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "runtimeExtrasJson": {
       "type": "string",
       "contentMediaType": "application/json",
@@ -341,52 +336,62 @@
         },
         "gap": {
           "type": "number",
-          "default": 0.0
+          "default": 0
         },
         "shift": {
           "type": "number",
-          "default": 0.0
+          "default": 0
         },
         "rise": {
           "type": "number",
-          "default": 0.0
+          "default": 0
         },
         "rotation": {
           "type": "number",
-          "default": 0.0,
+          "default": 0,
           "description": "degrees"
         },
         "turn": {
           "type": "number",
-          "default": 0.0,
+          "default": 0,
           "description": "degrees"
         },
         "tilt": {
           "type": "number",
-          "default": 0.0,
+          "default": 0,
           "description": "degrees"
         },
         "x": {
           "type": "number",
-          "default": 0.0,
+          "default": 0,
           "description": "diagram offset (compose u)"
         },
         "y": {
           "type": "number",
-          "default": 0.0,
+          "default": 0,
           "description": "diagram offset (compose v)"
         }
       }
     },
     "Puzzle3dTargetVolume": {
-      "title": "Puzzle3dTargetVolume",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "title": "Puzzle3dTargetVolume"
     },
     "Puzzle3dReference": {
-      "title": "Puzzle3dReference",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "title": "Puzzle3dReference"
     },
     "Puzzle3dVortex": {
       "type": "object",

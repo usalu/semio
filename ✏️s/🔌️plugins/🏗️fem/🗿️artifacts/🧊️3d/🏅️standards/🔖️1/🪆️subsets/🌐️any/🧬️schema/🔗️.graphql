@@ -18,3 +18,57 @@ type Fem3dArtifact {
   meshPreviewJson: String! @state(class: ARTIFACT)
 }
 
+type FemCamera {
+  json: String!
+}
+
+type FemAnalysisSettings {
+  modalCount: Int!
+  bucklingCount: Int!
+  deformationScale: Float!
+}
+
+type FemNode {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+scalar FemElement
+
+type FemSolid {
+  id: String!
+  name: String!
+  outline: [[Float!]!]!
+  holes: [[[Float!]!]!]!
+  baseZ: Float!
+  height: Float!
+  layers: Int!
+  meshSize: Float!
+  materialId: String!
+}
+
+type FemMaterial {
+  id: String!
+  name: String!
+  e: Float!
+  g: Float!
+  nu: Float!
+  rho: Float!
+}
+
+type FemSection {
+  id: String!
+  name: String!
+  area: Float!
+  iy: Float!
+  iz: Float!
+  j: Float!
+}
+
+type FemSupport {
+  id: String!
+  nodeId: String!
+  fixed: [String!]!
+}

@@ -1,13 +1,13 @@
-import { policyReadFileSafe, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE, interactivityPuzzleFillP4eFailures } from "../../../../../📜️script.ts";
+import { policyReadRustPolicySource, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE, interactivityPuzzleFillP4eFailures } from "../../../../../📜️script.ts";
 
 /** 🧪️ Executes interactivity puzzle fill p4e policy assertions. */
 export function interactivityPuzzleFillP4eSelfTests(repoRoot: string): void {
-  const precompute = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE);
-  const fill = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE);
-  const geometry = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE);
-  const schema = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE);
-  const transport = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE);
-  const renderer = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE);
+  const precompute = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE);
+  const fill = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE);
+  const geometry = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE);
+  const schema = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_SCHEMA_FILE);
+  const transport = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_TRANSPORT_FILE);
+  const renderer = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_RENDERER_FILE);
   const mutations: [string, string, string, string, string, string, string][] = [
     ["whole-builder", precompute.replace("let fill = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, self.meshes.clone()), operation);", "let fill = FillBuilder::new(scene.fixture.clone(), scene.seed, &self.meshes, &KindCatalogBundle::default());"), fill, geometry, schema, transport, renderer],
     ["direct-configure", precompute.replace("self.fill = Some(Arc::new(Mutex::new(fill)));", "fill.configure(operation); self.fill = Some(Arc::new(Mutex::new(fill)));"), fill, geometry, schema, transport, renderer],

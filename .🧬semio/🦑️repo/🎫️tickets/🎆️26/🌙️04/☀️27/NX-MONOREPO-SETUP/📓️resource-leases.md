@@ -39,3 +39,9 @@ The focused Flow release retry was stopped through its own wrapper before target
 ## Host Restart Checkpoint — 2026-09-08 19:31
 
 The previous tool session handles are missing. The OS reports boot time 18:31:22, after the preceding test launch; a process inspection finds neither the Print probe/TeX descendants nor the repo/registry invocation. Their logs contain no terminal result. They are interrupted, not failed or passed. Logs were retained with a before-reboot suffix. Available disk headroom is now 69 GiB; the reason for the space change was not determined. Print collection verification and the repo/registry checks are being restarted from the current sources and surviving task caches.
+
+## Pinned Nx Task Boundaries
+
+The current Nx 23.2.0 task orchestrator retrieves results through `fetchCacheHits` before local restore in `finalizeCacheHits`; remote retrieval may already materialize outputs. Discrete cache misses then enter `runTaskDirectly`, and `postRunSteps` records output hashes and captures cache bytes before `complete`. A future resource hook must acquire before retrieval and hold across execution/capture, including uncached paths and batch execution.
+
+Continuous cleanup is a distinct boundary: `performCleanup` calls `completeContinuousTask` before awaiting runner/process termination. Releasing a live reader lease from generic `completeTasks` would therefore be premature. Normal completion and cancellation need separate verified resource-release paths. No Nx task-resource patch has been applied in this checkpoint; current registry entries correctly retain pending lease coverage.

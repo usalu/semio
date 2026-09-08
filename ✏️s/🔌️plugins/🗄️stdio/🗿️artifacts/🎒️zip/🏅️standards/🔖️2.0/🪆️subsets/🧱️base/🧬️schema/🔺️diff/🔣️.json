@@ -4,24 +4,6 @@
   "title": "ZipDiff",
   "type": "object",
   "$defs": {
-    "ZipEntry": {
-      "type": "object",
-      "required": [
-        "name",
-        "data"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        }
-      }
-    },
     "ZipEntryDiff": {
       "type": "object",
       "properties": {
@@ -69,7 +51,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ZipEntry"
+            "$ref": "https://semio.tech/schema/s/stdio/zip/2.0/base/snapshot.json#/$defs/ZipEntry"
           }
         }
       }

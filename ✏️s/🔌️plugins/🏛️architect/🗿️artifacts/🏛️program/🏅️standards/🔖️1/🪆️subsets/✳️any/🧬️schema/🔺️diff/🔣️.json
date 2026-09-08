@@ -16,11 +16,11 @@
       "x-semio-state": "artifact"
     },
     "meta": {
-      "$ref": "#/$defs/ProgramMeta",
+      "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ProgramMeta",
       "x-semio-state": "artifact"
     },
     "project": {
-      "$ref": "#/$defs/ProjectDefinition",
+      "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ProjectDefinition",
       "x-semio-state": "artifact"
     },
     "stakeholders": {
@@ -288,7 +288,7 @@
       "x-semio-state": "artifact"
     },
     "governance": {
-      "$ref": "#/$defs/Governance",
+      "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Governance",
       "x-semio-state": "artifact"
     },
     "selectedIds": {
@@ -305,7 +305,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/AdjacencyKind"
+          "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/AdjacencyKind"
         }
       ],
       "x-semio-state": "presence"
@@ -351,356 +351,6 @@
     }
   },
   "$defs": {
-    "AccessRule": {
-      "title": "AccessRule",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "AccessibilityRequirement": {
-      "title": "AccessibilityRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Activity": {
-      "title": "Activity",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Adjacency": {
-      "title": "Adjacency",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "AdjacencyKind": {
-      "title": "AdjacencyKind",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "AnalysisRecord": {
-      "title": "AnalysisRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ApprovalRecord": {
-      "title": "ApprovalRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Assumption": {
-      "title": "Assumption",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "AuditEvent": {
-      "title": "AuditEvent",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BenchmarkRecord": {
-      "title": "BenchmarkRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ChangeRecord": {
-      "title": "ChangeRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "CollaborationRecord": {
-      "title": "CollaborationRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "CommunicationRequirement": {
-      "title": "CommunicationRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ComplianceRecord": {
-      "title": "ComplianceRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Conflict": {
-      "title": "Conflict",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ConstraintRecord": {
-      "title": "ConstraintRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "CostRequirement": {
-      "title": "CostRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Decision": {
-      "title": "Decision",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "DeliveryConstraint": {
-      "title": "DeliveryConstraint",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "DocumentRecord": {
-      "title": "DocumentRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "EnvironmentalRequirement": {
-      "title": "EnvironmentalRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Equipment": {
-      "title": "Equipment",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "FlexibilityRequirement": {
-      "title": "FlexibilityRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "FlowRequirement": {
-      "title": "FlowRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Function": {
-      "title": "Function",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Governance": {
-      "title": "Governance",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "GrowthPlan": {
-      "title": "GrowthPlan",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "HumanFactorRequirement": {
-      "title": "HumanFactorRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "InformationRequirement": {
-      "title": "InformationRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "InfrastructureRequirement": {
-      "title": "InfrastructureRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Issue": {
-      "title": "Issue",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "KnowledgeRecord": {
-      "title": "KnowledgeRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "MeetingRecord": {
-      "title": "MeetingRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "OperationalRequirement": {
-      "title": "OperationalRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "OptionEvaluation": {
-      "title": "OptionEvaluation",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "OrganizationalRequirement": {
-      "title": "OrganizationalRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "PerformanceCriterion": {
-      "title": "PerformanceCriterion",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "PriorityRecord": {
-      "title": "PriorityRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "PrivacyRequirement": {
-      "title": "PrivacyRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Process": {
-      "title": "Process",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ProgramElement": {
-      "title": "ProgramElement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ProgramMeta": {
-      "title": "ProgramMeta",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ProjectDefinition": {
-      "title": "ProjectDefinition",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "QualityRecord": {
-      "title": "QualityRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "QuantityRequirement": {
-      "title": "QuantityRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "RegulatoryRequirement": {
-      "title": "RegulatoryRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Relationship": {
-      "title": "Relationship",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ReportRecord": {
-      "title": "ReportRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Requirement": {
-      "title": "Requirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ResilienceRequirement": {
-      "title": "ResilienceRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Resource": {
-      "title": "Resource",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Risk": {
-      "title": "Risk",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "SafetyRequirement": {
-      "title": "SafetyRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Scenario": {
-      "title": "Scenario",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ScheduleRequirement": {
-      "title": "ScheduleRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "SearchFilter": {
-      "title": "SearchFilter",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "SecurityRequirement": {
-      "title": "SecurityRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ServiceRequirement": {
-      "title": "ServiceRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "SiteContext": {
-      "title": "SiteContext",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Stakeholder": {
-      "title": "Stakeholder",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "StatusRecord": {
-      "title": "StatusRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "StorageRequirement": {
-      "title": "StorageRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Survey": {
-      "title": "Survey",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "SustainabilityRequirement": {
-      "title": "SustainabilityRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "TemplateRecord": {
-      "title": "TemplateRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "TraceLink": {
-      "title": "TraceLink",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "UserProfile": {
-      "title": "UserProfile",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "ValidationRecord": {
-      "title": "ValidationRecord",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "WayfindingRequirement": {
-      "title": "WayfindingRequirement",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Workshop": {
-      "title": "Workshop",
-      "type": "object",
-      "additionalProperties": true
-    },
     "ProgramStakeholdersDelta": {
       "title": "ProgramStakeholdersDelta",
       "type": "object",
@@ -714,7 +364,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Stakeholder"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Stakeholder"
           }
         },
         "removed": {
@@ -750,7 +400,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/UserProfile"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/UserProfile"
           }
         },
         "removed": {
@@ -786,7 +436,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Activity"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Activity"
           }
         },
         "removed": {
@@ -822,7 +472,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Function"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Function"
           }
         },
         "removed": {
@@ -858,7 +508,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ProgramElement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ProgramElement"
           }
         },
         "removed": {
@@ -894,7 +544,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/QuantityRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/QuantityRequirement"
           }
         },
         "removed": {
@@ -930,7 +580,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Relationship"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Relationship"
           }
         },
         "removed": {
@@ -966,7 +616,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Adjacency"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Adjacency"
           }
         },
         "removed": {
@@ -1002,7 +652,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Process"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Process"
           }
         },
         "removed": {
@@ -1038,7 +688,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/FlowRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/FlowRequirement"
           }
         },
         "removed": {
@@ -1074,7 +724,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/AccessRule"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/AccessRule"
           }
         },
         "removed": {
@@ -1110,7 +760,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/OperationalRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/OperationalRequirement"
           }
         },
         "removed": {
@@ -1146,7 +796,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Equipment"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Equipment"
           }
         },
         "removed": {
@@ -1182,7 +832,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Resource"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Resource"
           }
         },
         "removed": {
@@ -1218,7 +868,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/StorageRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/StorageRequirement"
           }
         },
         "removed": {
@@ -1254,7 +904,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/EnvironmentalRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/EnvironmentalRequirement"
           }
         },
         "removed": {
@@ -1290,7 +940,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/HumanFactorRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/HumanFactorRequirement"
           }
         },
         "removed": {
@@ -1326,7 +976,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/AccessibilityRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/AccessibilityRequirement"
           }
         },
         "removed": {
@@ -1362,7 +1012,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PrivacyRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/PrivacyRequirement"
           }
         },
         "removed": {
@@ -1398,7 +1048,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/SafetyRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/SafetyRequirement"
           }
         },
         "removed": {
@@ -1434,7 +1084,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/SecurityRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/SecurityRequirement"
           }
         },
         "removed": {
@@ -1470,7 +1120,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/RegulatoryRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/RegulatoryRequirement"
           }
         },
         "removed": {
@@ -1506,7 +1156,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/SiteContext"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/SiteContext"
           }
         },
         "removed": {
@@ -1542,7 +1192,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/OrganizationalRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/OrganizationalRequirement"
           }
         },
         "removed": {
@@ -1578,7 +1228,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ServiceRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ServiceRequirement"
           }
         },
         "removed": {
@@ -1614,7 +1264,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/InfrastructureRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/InfrastructureRequirement"
           }
         },
         "removed": {
@@ -1650,7 +1300,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/InformationRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/InformationRequirement"
           }
         },
         "removed": {
@@ -1686,7 +1336,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/CommunicationRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/CommunicationRequirement"
           }
         },
         "removed": {
@@ -1722,7 +1372,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/WayfindingRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/WayfindingRequirement"
           }
         },
         "removed": {
@@ -1758,7 +1408,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ScheduleRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ScheduleRequirement"
           }
         },
         "removed": {
@@ -1794,7 +1444,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/FlexibilityRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/FlexibilityRequirement"
           }
         },
         "removed": {
@@ -1830,7 +1480,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/GrowthPlan"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/GrowthPlan"
           }
         },
         "removed": {
@@ -1866,7 +1516,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/SustainabilityRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/SustainabilityRequirement"
           }
         },
         "removed": {
@@ -1902,7 +1552,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ResilienceRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ResilienceRequirement"
           }
         },
         "removed": {
@@ -1938,7 +1588,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/CostRequirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/CostRequirement"
           }
         },
         "removed": {
@@ -1974,7 +1624,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/DeliveryConstraint"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/DeliveryConstraint"
           }
         },
         "removed": {
@@ -2010,7 +1660,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Risk"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Risk"
           }
         },
         "removed": {
@@ -2046,7 +1696,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Conflict"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Conflict"
           }
         },
         "removed": {
@@ -2082,7 +1732,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Requirement"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Requirement"
           }
         },
         "removed": {
@@ -2118,7 +1768,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PriorityRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/PriorityRecord"
           }
         },
         "removed": {
@@ -2154,7 +1804,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Scenario"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Scenario"
           }
         },
         "removed": {
@@ -2190,7 +1840,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/OptionEvaluation"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/OptionEvaluation"
           }
         },
         "removed": {
@@ -2226,7 +1876,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Decision"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Decision"
           }
         },
         "removed": {
@@ -2262,7 +1912,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ValidationRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ValidationRecord"
           }
         },
         "removed": {
@@ -2298,7 +1948,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PerformanceCriterion"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/PerformanceCriterion"
           }
         },
         "removed": {
@@ -2334,7 +1984,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/QualityRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/QualityRecord"
           }
         },
         "removed": {
@@ -2370,7 +2020,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/DocumentRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/DocumentRecord"
           }
         },
         "removed": {
@@ -2406,7 +2056,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Assumption"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Assumption"
           }
         },
         "removed": {
@@ -2442,7 +2092,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ConstraintRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ConstraintRecord"
           }
         },
         "removed": {
@@ -2478,7 +2128,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ComplianceRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ComplianceRecord"
           }
         },
         "removed": {
@@ -2514,7 +2164,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ApprovalRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ApprovalRecord"
           }
         },
         "removed": {
@@ -2550,7 +2200,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/MeetingRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/MeetingRecord"
           }
         },
         "removed": {
@@ -2586,7 +2236,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ChangeRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ChangeRecord"
           }
         },
         "removed": {
@@ -2622,7 +2272,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/CollaborationRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/CollaborationRecord"
           }
         },
         "removed": {
@@ -2658,7 +2308,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/AnalysisRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/AnalysisRecord"
           }
         },
         "removed": {
@@ -2694,7 +2344,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/ReportRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/ReportRecord"
           }
         },
         "removed": {
@@ -2730,7 +2380,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/SearchFilter"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/SearchFilter"
           }
         },
         "removed": {
@@ -2766,7 +2416,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/StatusRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/StatusRecord"
           }
         },
         "removed": {
@@ -2802,7 +2452,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Workshop"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Workshop"
           }
         },
         "removed": {
@@ -2838,7 +2488,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Survey"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Survey"
           }
         },
         "removed": {
@@ -2874,7 +2524,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Issue"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/Issue"
           }
         },
         "removed": {
@@ -2910,7 +2560,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/AuditEvent"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/AuditEvent"
           }
         },
         "removed": {
@@ -2946,7 +2596,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/TemplateRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/TemplateRecord"
           }
         },
         "removed": {
@@ -2982,7 +2632,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/KnowledgeRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/KnowledgeRecord"
           }
         },
         "removed": {
@@ -3018,7 +2668,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/BenchmarkRecord"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/BenchmarkRecord"
           }
         },
         "removed": {
@@ -3054,7 +2704,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/TraceLink"
+            "$ref": "https://semio.tech/schema/s/architect/program/artifact.json#/$defs/TraceLink"
           }
         },
         "removed": {

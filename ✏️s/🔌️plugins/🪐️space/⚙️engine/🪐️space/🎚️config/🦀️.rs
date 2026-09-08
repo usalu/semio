@@ -77,8 +77,6 @@ pub struct SpaceConfig {
     /// 🫀️ This session's local presence identity.
     pub client_id: Option<String>,
     pub client_name: Option<String>,
-    /// 🗣️ BCP-47 locale tag.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -142,7 +140,6 @@ impl Default for SpaceConfig {
             space_id: None,
             client_id: None,
             client_name: None,
-            locale: "en-US".into(),
         }
     }
 }
@@ -198,8 +195,6 @@ pub enum SpaceConfigMutation {
     SetClient { client_id: Option<String>, client_name: Option<String> },
     #[dsl(key = "active-panel-tab")]
     SetActivePanelTab { tab_id: String },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
@@ -470,22 +465,6 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
             composition: protocol::MutationComposition::Atomic,
             required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
         },
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
-            owner: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/⚙️set-locale",
-            semantic_kind: "set-locale",
-            display_name: "Set Locale",
-            emoji: "⚙️",
-            aggregate_variant: "SetLocale",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -503,7 +482,6 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
             SpaceConfigMutation::SetSpaceId { .. } => &Self::DESCRIPTORS[10],
             SpaceConfigMutation::SetClient { .. } => &Self::DESCRIPTORS[11],
             SpaceConfigMutation::SetActivePanelTab { .. } => &Self::DESCRIPTORS[12],
-            SpaceConfigMutation::SetLocale { .. } => &Self::DESCRIPTORS[13],
         }
     }
 
@@ -533,7 +511,6 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
                 next.client_name = client_name.clone();
             }
             SpaceConfigMutation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
-            SpaceConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         protocol::MutationOutcome::new(next)
     }

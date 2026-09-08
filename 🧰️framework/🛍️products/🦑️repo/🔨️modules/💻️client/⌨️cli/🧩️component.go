@@ -1011,76 +1011,22 @@ func analyzeCommand(factory EngineFactory, config *Config) *command.Command {
 // #endregion 🪅️Analyze Command
 
 // #region 🖥️Entity Emojis Command
+// 🌪️AllEntityEmojis lists every entity-identifying emoji in catalog declaration order, normalized
+// through emojiText and deduplicated first-wins, so the CLI, the VS Code extension and the Rust
+// catalog answer with the same set. The catalog is the generated projection EntityKindCatalog
+// (🐹️entity_kinds.g.go) of the framework-owned `framework.schema` export EntityKindCatalog; this
+// function MUST NOT restate it.
 func AllEntityEmojis() []string {
 	seen := map[string]bool{}
-	var result []string
-	add := func(e string) {
-		normalized := emojiText(e)
+	result := make([]string, 0, len(EntityKindCatalog))
+	for _, kind := range EntityKindCatalog {
+		normalized := emojiText(kind.Emoji)
 		if normalized == "" || seen[normalized] {
-			return
+			continue
 		}
 		seen[normalized] = true
 		result = append(result, normalized)
 	}
-
-	add(EmojiTechnologyUser)
-	add(EmojiTechnologyInfra)
-	add(EmojiTechnologyResearch)
-	add(EmojiTechnologyMono)
-	add(EmojiBundleLibrary)
-	add(EmojiBundleSchema)
-	add(EmojiBundleBinary)
-	add(EmojiBundleUI)
-	add(EmojiBundleExample)
-	add(EmojiBundleSite)
-	add(EmojiBundleAssets)
-	add(EmojiBundleRepo)
-	add(EmojiFolderOrg)
-	add(EmojiFolderRequired)
-	add(EmojiFileCode)
-	add(EmojiFileLab)
-	add(EmojiFileScript)
-	add(EmojiFileDocs)
-	add(EmojiFileConfig)
-	add(EmojiFileResource)
-	add(EmojiFileLicense)
-	add(EmojiLine)
-	add(EmojiSection)
-	add(EmojiDefinitionImpl)
-	add(EmojiDefinitionInterface)
-	add(EmojiDefinitionConstant)
-	add(EmojiDefinitionTest)
-	add(EmojiYear)
-	add(EmojiMonth)
-	add(EmojiDay)
-	add(EmojiHour)
-	add(EmojiMinute)
-	add(EmojiSecond)
-	add(EmojiGoal)
-	add(EmojiTicket)
-	add(EmojiDraft)
-	add(EmojiTodo)
-	add(EmojiPolicy)
-	add(EmojiBreach)
-	add(EmojiBreachScope)
-	add(EmojiContributor)
-	add(EmojiCheckpoint)
-	add(EmojiInteractionStarted)
-	add(EmojiInteractionEdited)
-	add(EmojiInteractionFinished)
-	add(EmojiInteractionRestarted)
-	add(EmojiInteractionDeleted)
-	add(EmojiSession)
-	add(EmojiSessionRunning)
-	add(EmojiSessionCompleted)
-	add(EmojiSessionInterrupted)
-
-	add(EmojiCodebase)
-	add(EmojiTechnologies)
-	add(EmojiBundles)
-	add(EmojiFolders)
-	add(EmojiFiles)
-	add(EmojiDefinitions)
 	return result
 }
 

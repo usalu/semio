@@ -48,10 +48,9 @@ fn reposition_operations(before: &[Node], after: &[Node]) -> Vec<TrinityGraphMut
         .collect()
 }
 
-pub(crate) fn reorganize(fixture: &JackSnapshot, reorganize_epoch: u64) -> Emit<TrinityGraphMutation, JackConfigMutation> {
-    let config_mutations = vec![JackConfigMutation::SetReorganizeEpoch(crate::editor::jack::config::SetReorganizeEpoch { value: reorganize_epoch + 1 })];
+pub(crate) fn reorganize(fixture: &JackSnapshot) -> Emit<TrinityGraphMutation, JackConfigMutation> {
     match force_layout_nodes(fixture) {
-        Some(after) => Emit { artifact_mutations: reposition_operations(&fixture.nodes(), &after), config_mutations, ..Default::default() },
-        None => Emit::config(config_mutations),
+        Some(after) => Emit { artifact_mutations: reposition_operations(&fixture.nodes(), &after), ..Default::default() },
+        None => Emit::default(),
     }
 }

@@ -14,8 +14,6 @@ pub struct Generation2dConfig {
     pub selected_generation_id: Option<String>,
     #[state(config)]
     pub generation_preview_text: Option<String>,
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor

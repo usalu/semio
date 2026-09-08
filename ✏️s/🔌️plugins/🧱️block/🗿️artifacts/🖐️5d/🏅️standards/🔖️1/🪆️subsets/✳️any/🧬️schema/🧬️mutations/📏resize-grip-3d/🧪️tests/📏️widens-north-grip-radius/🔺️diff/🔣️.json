@@ -16,17 +16,17 @@
           "replacement": {
             "id": "grip-north",
             "gripKind": "gk-plug",
-            "angle": 0.0,
+            "angle": 0,
             "radius2d": 0.3,
             "position": [
-              0.0,
-              1.0,
-              0.0
+              0,
+              1,
+              0
             ],
             "direction": [
-              0.0,
-              1.0,
-              0.0
+              0,
+              1,
+              0
             ],
             "radius3d": 0.9
           }
@@ -41,6 +41,5 @@
   "camera2d": null,
   "camera3d": null,
   "meta": null,
-  "selectedIds": null,
-  "locale": null
+  "selectedIds": null
 }

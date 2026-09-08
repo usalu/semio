@@ -38,8 +38,6 @@ pub struct RasterDiff {
     pub camera_y: Option<f64>,
     #[state(config)]
     pub camera_zoom: Option<f64>,
-    #[state(config)]
-    pub locale: Option<String>,
     #[state(artifact)]
     pub hovered_id: Option<Option<String>>,
 }

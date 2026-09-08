@@ -15,5 +15,4 @@ export interface Fem2dConfig {
   /** @state config */
   camera: FemCamera;
   /** @state config */
-  locale: string;
 }

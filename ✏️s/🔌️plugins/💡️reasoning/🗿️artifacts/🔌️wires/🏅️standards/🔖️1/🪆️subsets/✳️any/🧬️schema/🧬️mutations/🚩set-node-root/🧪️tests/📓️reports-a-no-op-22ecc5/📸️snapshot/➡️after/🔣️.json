@@ -6,18 +6,18 @@
     "board": {
       "schema": "reasoning.mindmap.fixture",
       "camera": {
-        "x": 0.0,
-        "y": 0.0,
-        "zoom": 1.0
+        "x": 0,
+        "y": 0,
+        "zoom": 1
       },
       "nodes": [
         {
           "id": "node-leaf",
           "nodeKind": "identity",
           "shape": "circle",
-          "x": 0.0,
-          "y": 0.0,
-          "radius": 24.0,
+          "x": 0,
+          "y": 0,
+          "radius": 24,
           "text": "Leaf",
           "handles": []
         }
@@ -38,9 +38,9 @@
     }
   },
   "camera": {
-    "x": 0.0,
-    "y": 0.0,
-    "zoom": 1.0
+    "x": 0,
+    "y": 0,
+    "zoom": 1
   },
   "meta": null
 }

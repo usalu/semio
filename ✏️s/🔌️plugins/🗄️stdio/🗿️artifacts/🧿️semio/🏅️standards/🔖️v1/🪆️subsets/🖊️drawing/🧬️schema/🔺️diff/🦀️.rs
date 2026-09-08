@@ -11,13 +11,8 @@
 //! implementation instead of two near-duplicates.
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{
-    dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff,
-};
-use crate::standards::v1::subsets::drawing::schema::snapshot::{
-    dec_layer, dec_list, dec_node, dec_path_segment, dec_point2, dec_rgba, dec_style, dec_transform, enc_layer, enc_list, enc_node, enc_path_segment, enc_point2, enc_rgba, enc_style, enc_transform, DrawCanvas, DrawLayer, DrawNode, DrawStyle,
-    PathSegment, SemioDrawingSnapshot,
-};
+use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, NamedModified};
+use crate::standards::v1::subsets::drawing::schema::snapshot::{dec_layer, dec_list, dec_node, dec_path_segment, dec_point2, dec_rgba, dec_style, dec_transform, enc_layer, enc_list, enc_node, enc_path_segment, enc_point2, enc_rgba, enc_style, enc_transform, DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use framework_schema::ArtifactSchema;
@@ -1218,3 +1213,9 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioDrawingDiff> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff;
+pub use crate::standards::v1::subsets::base::schema::triples::NamedTripleDiff;
+//#endregion 🔁️Re-exports

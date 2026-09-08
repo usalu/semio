@@ -481,6 +481,6 @@ impl<PA: crate::app::PluginApp> Drop for NativeLifecycleRegistry<PA> {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🚪️lifetime/🦀️.rs"]
 mod tests;
 //#endregion 🚪️GuestLifecycleAuthority

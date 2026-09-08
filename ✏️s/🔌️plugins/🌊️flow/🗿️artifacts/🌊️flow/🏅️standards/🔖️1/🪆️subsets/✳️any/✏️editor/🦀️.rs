@@ -27,8 +27,7 @@ use crate::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
 use crate::{FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use crate::editor::flow::commands::{
     add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, duplicate_widget, duplicate_widget_step, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, move_media_node, node_graph_edit, node_graph_viewport,
-    open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, reorganize, replace_image, run_extension_action, set_catalogue_sections, set_contributions, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_locale,
-    set_lod_mode, set_preview_off, set_proximity_distance, spotlight_commit, toggle_extension,
+    open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, reorganize, replace_image, run_extension_action, set_catalogue_sections, set_contributions, set_grid_factor, set_grid_snap_enabled, set_grid_visible,     set_lod_mode, set_preview_off, set_proximity_distance, spotlight_commit, toggle_extension,
 };
 use crate::editor::flow::config::{FlowConfig, FlowConfigMutation};
 use crate::editor::flow::modes::edit::windows::{compiled, main};
@@ -60,7 +59,7 @@ use store::EngineHandles;
 mod retained;
 
 #[cfg(test)]
-#[path = "🫧️transient/🧪️tests/🦀️.rs"]
+#[path = "🫧️transient/🧪️tests/🫧️transient/🦀️.rs"]
 mod transient_retirement_tests;
 
 //#region 🔖️Constants
@@ -168,7 +167,6 @@ semio_framework_plugin::app_commands! {
     /// `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`, the
     /// camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case
     /// `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different vocabularies, and
-    /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal: appending
     /// is safe, reordering is a wire-format break.**
     ///
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `setSelection`/`clearSelection`/
@@ -212,7 +210,6 @@ semio_framework_plugin::app_commands! {
         "selectGeneration" as "select-generation" => select_generation::SelectGeneration,
         "renameGeneration" as "rename-generation" => rename_generation::RenameGeneration,
         "updateGenerationValues" as "update-generation-values" => update_generation_values::UpdateGenerationValues,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
         "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
         "duplicateWidgetStep" as "duplicate-widget-step" => duplicate_widget_step::DuplicateWidgetStep,
@@ -396,7 +393,6 @@ fn flow_config_text_bytes(config: &FlowConfig) -> usize {
         + config.contributions_json.len()
         + config.generation_json.len()
         + config.duplicate_widget_progress_json.len()
-        + config.locale.len()
 }
 
 fn flow_config_mutation_text_bytes(mutation: &FlowConfigMutation) -> usize {
@@ -408,7 +404,7 @@ fn flow_config_mutation_text_bytes(mutation: &FlowConfigMutation) -> usize {
         | FlowConfigMutation::SetDuplicateWidgetProgress { json } => json.len(),
         FlowConfigMutation::Snapshot { config } => flow_config_text_bytes(config),
         FlowConfigMutation::SetPreviewOff { node_ids } => node_ids.iter().map(String::len).sum(),
-        FlowConfigMutation::SetLodMode { value } | FlowConfigMutation::SetLocale { value } => value.len(),
+        FlowConfigMutation::SetLodMode { value }  => value.len(),
         FlowConfigMutation::SetCamera { .. }
         | FlowConfigMutation::SetProximityDistance { .. }
         | FlowConfigMutation::SetGridVisible { .. }
@@ -462,7 +458,6 @@ fn prepare_flow_config(base: &FlowConfig, mutation: FlowConfigMutation) -> Resul
         FlowConfigMutation::SetContributions { .. } => {
             return Err("Flow contribution publication requires a post-ACK app-instance host synchronization hook".into());
         }
-        FlowConfigMutation::SetLocale { value } => post.locale = value.clone(),
     }
     let inverse = FlowConfigMutation::Snapshot { config: base.clone() };
     Ok((post, vec![inverse], mutation))
@@ -790,8 +785,7 @@ const FLOW_DIRECT_STORE_TOOL_IDS: &[&str] = &[
     "setPreviewOff",
     "setCatalogueSections",
     "toggleExtension",
-    "setLocale",
-];
+    ];
 const FLOW_DIRECT_STORE_RAW_BYTES: usize = 16_384;
 
 fn flow_direct_store_emit(command: &FlowCommand, snapshot: &FlowSnapshot, config: &FlowConfig, _operation: &semio_framework_plugin::AppOperationContext) -> Result<Emit<FlowMutation, FlowConfigMutation>, Fault> {
@@ -825,7 +819,6 @@ fn flow_direct_store_emit(command: &FlowCommand, snapshot: &FlowSnapshot, config
             let json = serde_json::to_string(&enabled).map_err(|_| Fault::from("flow-retained-extension-encode"))?;
             Emit::config(vec![FlowConfigMutation::SetAutomationEnabled { json }])
         }
-        FlowCommand::SetLocale(payload) => Emit::config(vec![FlowConfigMutation::SetLocale { value: payload.value.clone() }]),
         _ => return Err(Fault::from("flow-retained-direct-route-mismatch")),
     })
 }
@@ -1257,7 +1250,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowDirectStoreJobF
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setPreviewOff", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCatalogueSections", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleExtension", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
     ];
 }
 //#endregion 🧵️DirectStoreLaneRoutes
@@ -1458,7 +1450,7 @@ fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack::Sca
 fn flow_host_wire_view(payload: &FlowHostEffectPayload) -> Result<store::os_pack::ScalarRecordView<'_>, &'static str> { flow_scalar_command_view(&payload.command) }
 
 #[cfg(test)]
-#[path = "🧵️retained/🔎️wire/🧪️tests/🦀️.rs"]
+#[path = "🧵️retained/🔎️wire/🧪️tests/🔎️wire/🦀️.rs"]
 mod scalar_host_wire_tests;
 
 struct FlowHostEffectJob {
@@ -1665,7 +1657,6 @@ impl FlowDirectStoreJobFactoryProofs {
             "setPreviewOff" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
             "setCatalogueSections" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
             "toggleExtension" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
-            "setLocale" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 256, 16_384, 7_500, 1, 1),
         }
     }
 }
@@ -1899,7 +1890,6 @@ impl ArtifactEditor for FlowPlayApp {
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
-    /// `app_commands!`'s generated `command_id()`. `setLocale`/`flowEvalTick`/`flowEvalResolve` have no
     /// manifest declaration (host-pushed/internally-chained, not user-facing actions).
     fn command_id(command: &FlowCommand) -> &'static str {
         command.command_id()
@@ -1913,7 +1903,7 @@ impl ArtifactEditor for FlowPlayApp {
         command: &FlowCommand,
         doc: &ArtifactView<'_, FlowSnapshot>,
         cfg: &ConfigView<'_, FlowConfig>,
-        interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<FlowMutation, FlowConfigMutation, Self::DraftMutation>, Fault> {
@@ -1955,16 +1945,16 @@ impl ArtifactEditor for FlowPlayApp {
         evaluate::evaluate_result(doc.snapshot, cfg.snapshot, &mut FlowEvalSession::new()).effects
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = flow_play_labels(config);
+        let labels = flow_play_labels(view_state);
         let mut session = FlowEvalSession::new();
         match body_key {
             FLOW_PLAY_BODY_MAIN => main::render(fixture, config, &mut session).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_COMPILED => compiled::render(fixture, config, &mut session).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_GENERATIONS => generations::render(config, semio_framework_plugin::locale_from_str(&config.locale), semio_framework_plugin::Terminology::Native).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_GENERATE_FORM => form::render(fixture, config).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_GENERATIONS => generations::render(config, view_state.locale, semio_framework_plugin::Terminology::Native).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_GENERATE_FORM => form::render(fixture, config, labels).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(config).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_DOCUMENT => document_panel::render(fixture, labels).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(fixture, config, &mut session, labels).map(semio_framework_plugin::built_to_component_tree),
@@ -1978,33 +1968,34 @@ impl ArtifactEditor for FlowPlayApp {
         body_key: &str,
         doc: &ArtifactView<'_, FlowSnapshot>,
         cfg: &ConfigView<'_, FlowConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         owner
             .with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match body_key {
                     FLOW_PLAY_BODY_MAIN => main::render(doc.snapshot, cfg.snapshot, session).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_COMPILED => compiled::render(doc.snapshot, cfg.snapshot, session).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_GENERATIONS => generations::render(cfg.snapshot, semio_framework_plugin::locale_from_str(&cfg.snapshot.locale), semio_framework_plugin::Terminology::Native).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_GENERATE_FORM => form::render(doc.snapshot, cfg.snapshot).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_GENERATIONS => generations::render(cfg.snapshot, view_state.locale, view_state.terminology).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_GENERATE_FORM => form::render(doc.snapshot, cfg.snapshot, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(cfg.snapshot).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, flow_play_labels(cfg.snapshot)).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(doc.snapshot, cfg.snapshot, session, flow_play_labels(cfg.snapshot)).map(semio_framework_plugin::built_to_component_tree),
-                    FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(flow_play_labels(cfg.snapshot)).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_DOCUMENT => document_panel::render(doc.snapshot, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(doc.snapshot, cfg.snapshot, session, flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(flow_play_labels(view_state)).map(semio_framework_plugin::built_to_component_tree),
                     _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
                 })
             })
             .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("flow.eval-session-owner", error.message))?
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
-        HashMap::from([(main::FLOW_PLAY_WINDOW_MAIN.to_string(), main::window_measures(config, flow_play_labels(config)))])
+        HashMap::from([(main::FLOW_PLAY_WINDOW_MAIN.to_string(), main::window_measures(config, flow_play_labels(view_state)))])
     }
 
-    fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, FlowConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let config = cfg.snapshot;
-        let is_de = config.locale.starts_with("de");
-        flow_context_menu_items(registry, doc.snapshot, config, flow_play_labels(config), is_de, request.surface.as_ref())
+        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        flow_context_menu_items(registry, doc.snapshot, config, flow_play_labels(view_state), is_de, request.surface.as_ref())
     }
 }
 //#endregion 🔖️FlowPlayApp
@@ -2179,7 +2170,6 @@ pub fn create_flow_app() -> AppDefinition {
         .action_interactive_job("selectGeneration", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("renameGeneration", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("updateGenerationValues", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("flowEvalTick", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("flowEvalResolve", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("duplicateWidgetStep", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)

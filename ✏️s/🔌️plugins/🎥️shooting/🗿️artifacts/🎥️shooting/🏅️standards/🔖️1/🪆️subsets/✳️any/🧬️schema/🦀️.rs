@@ -1,6 +1,6 @@
 //! 🧬️ Shooting artifact schema — every field of the artifact with its state class.
 
-use crate::{ShootingAsset, ShootingCamera, ShootingEmblemChild, ShootingSavedCamera, ShootingSceneLighting, ShootingShot, ShootingSnapshot};
+use crate::{ShootingEmblemChild, ShootingSnapshot};
 use schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
@@ -51,8 +51,6 @@ pub struct ShootingArtifact {
     pub camera_draft_label: String,
     #[state(config)]
     pub camera: ShootingCamera,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -77,7 +75,6 @@ impl Default for ShootingArtifact {
             fit_revision: 0,
             camera_draft_label: String::new(),
             camera: ShootingCamera::default(),
-            locale: "en-US".into(),
         }
     }
 }
@@ -515,3 +512,12 @@ semio_framework_plugin::derive_artifact_facets!(
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::ShootingCamera;
+pub use crate::ShootingSavedCamera;
+pub use crate::ShootingAsset;
+pub use crate::ShootingShot;
+pub use crate::ShootingSceneLighting;
+//#endregion 🔁️Re-exports

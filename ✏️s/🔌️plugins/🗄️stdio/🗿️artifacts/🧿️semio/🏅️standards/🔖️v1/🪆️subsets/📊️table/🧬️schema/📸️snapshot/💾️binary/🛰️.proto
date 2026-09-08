@@ -7,3 +7,10 @@ message SemioTableSnapshotFrame {
   bytes schema = 2;
   bytes payload = 3; // opaque: columns + rows, protocol-array-of-records gap
 }
+
+message SemioTableSnapshotBinaryFrame {
+  optional int64 format = 1;
+  optional int64 schema_len = 2;
+  optional string schema_bytes = 3;
+  optional string payload = 4;
+}

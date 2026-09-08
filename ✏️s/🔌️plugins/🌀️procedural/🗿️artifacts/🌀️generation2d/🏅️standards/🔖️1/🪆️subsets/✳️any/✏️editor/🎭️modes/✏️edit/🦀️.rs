@@ -15,7 +15,7 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[semio_framework_os_flow::GENERATION2D_PLAY_WINDOW_MAIN.into(), preview::GENERATION2D_PLAY_WINDOW_PREVIEW.into()], "row", Some(&[55.0, 45.0]), Some(&["Main".into(), "Preview".into()]))
+    create_default_layout(&[flow::GENERATION2D_PLAY_WINDOW_MAIN.into(), preview::GENERATION2D_PLAY_WINDOW_PREVIEW.into()], "row", Some(&[55.0, 45.0]), Some(&["Main".into(), "Preview".into()]))
 }
 //#endregion 🔖️Definition
 

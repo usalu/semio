@@ -13,8 +13,7 @@
     "fitRevision",
     "cameraDraftLabel",
     "camera",
-    "activeUtilityId",
-    "locale"
+    "activeUtilityId"
   ],
   "properties": {
     "defaultShotFormat": {
@@ -51,69 +50,12 @@
       "x-semio-state": "config"
     },
     "camera": {
-      "$ref": "#/$defs/ShootingCamera",
+      "$ref": "https://semio.tech/schema/s/shooting/shooting/artifact.json#/$defs/ShootingCamera",
       "x-semio-state": "config"
     },
     "activeUtilityId": {
       "type": "string",
       "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    }
-  },
-  "$defs": {
-    "ShootingCamera": {
-      "title": "ShootingCamera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "position",
-        "target",
-        "zoom",
-        "fov"
-      ],
-      "properties": {
-        "position": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "target": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        },
-        "fov": {
-          "type": "number",
-          "format": "double"
-        },
-        "up": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
-        },
-        "projection": {
-          "type": "string"
-        }
-      }
     }
   }
 }

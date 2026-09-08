@@ -7,8 +7,6 @@ use framework_schema::ArtifactSchema;
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.vcs.vcs.config")]
 pub struct VcsDemoConfig {
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor

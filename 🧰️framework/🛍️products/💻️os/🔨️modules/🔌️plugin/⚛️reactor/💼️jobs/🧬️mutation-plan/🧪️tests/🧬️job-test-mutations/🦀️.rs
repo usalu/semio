@@ -36,10 +36,10 @@ impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {
     }
 }
 
-#[path = "🧬️mutations/🦀️.rs"]
+#[path = "../🧬️job-test-mutations-mutations/🦀️.rs"]
 mod mutations;
 pub(crate) use mutations::{AddValue, JobTestOp};
 
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "../🧬️job-test-mutations-unit/🦀️.rs"]
 mod tests;
 //#endregion 🧬️JobTestMutations

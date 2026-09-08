@@ -1,6 +1,6 @@
 //! 🧬️ Direct change-material-alpha-mode mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::material_animation::{index, GltfMaterialAnimationFailure};
+use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::snapshot::GltfAlphaMode;
 use crate::GltfSnapshot;
 
@@ -61,7 +61,13 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMateria
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => { let mut next = base.clone(); match apply(&mut next, payload) { Ok(()) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)), Err(error) => rejection_outcome(&error.code, &error.path, error.detail) } }
+            Self::Apply(payload) => {
+                let mut next = base.clone();
+                match apply(&mut next, payload) {
+                    Ok(()) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+                    Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
+                }
+            }
             Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
                 Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
                 Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
@@ -93,3 +99,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMateria
 #[path = "🧪️tests/🔬️direct-leaf/🦀️.rs"]
 mod direct_leaf_tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "📜️contract/🧪️tests/🔬️unit/🦀️.rs"]
+mod contract;

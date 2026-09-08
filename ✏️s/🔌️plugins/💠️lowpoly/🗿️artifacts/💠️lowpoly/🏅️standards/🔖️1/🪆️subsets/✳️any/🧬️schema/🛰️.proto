@@ -63,7 +63,6 @@ message LowpolyArtifact {
   // @state config
   string engagement_input = 29;
   // @state config
-  string locale = 30;
   // @state artifact
   optional string hovered_object_id = 31;
   // @state artifact

@@ -94,10 +94,19 @@
   },
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "wire", "cases"],
+  "required": ["schema", "wire", "retention", "cases"],
   "properties": {
     "schema": { "const": "semio.replication.document-backbone-batch.v1" },
     "wire": { "const": "causal-envelope-batch-v1" },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumBytes", "maximumMessages"],
+      "properties": {
+        "maximumBytes": { "const": 1048576 },
+        "maximumMessages": { "const": 64 }
+      }
+    },
     "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Case" } }
   }
 }

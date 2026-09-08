@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -22,6 +23,7 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
     handleAction: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
     handleCommand: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
     render: async () => ({ type: "text", value: "hello" }),
+    renderDocument: async () => "document",
     contextMenu: async () => [],
     dispose: () => {},
     ...overrides,
@@ -59,7 +61,7 @@ describe("framework renderer wgpu plugin bridge", () => {
 
   it("bridges render() through JSON round-tripping", async () => {
     const bridge = pluginHandleForBridge(fakeHandle());
-    const result = await bridge.render(1, "window", JSON.stringify({}));
+    const result = await bridge.render(1, "window", "body", JSON.stringify({}));
     expect(JSON.parse(result)).toEqual({ type: "text", value: "hello" });
   });
 });
@@ -112,7 +114,8 @@ describe("framework renderer wgpu generated worker", () => {
     const source = readFileSync(join(directory, "../../../../../../🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts"), "utf8");
     const definition = source.match(/^function packageGeneratorActivated\([\s\S]*?^\}/mu)![0];
     const catalogBytes = readFileSync(join(directory, "../../🎯️targets/🧊️wgpu/🪪️package-catalog.json"), "utf8");
-    const manifest = contract.packageGeneration!.browserProfile.ownerPath + "/📦️packages/🦀️rust/Cargo.toml";
+    const catalog = parseCanonicalWgpuPackageCatalog(catalogBytes, contract.packageGeneration!.catalogSha256, contract.packageGeneration!.browserProfile, taxonomy);
+    const manifest = `${catalog.ownerPath}/${catalog.packageRelativePath}/Cargo.toml`;
     for (const compile of [
       (code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code),
       (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText,
@@ -140,7 +143,7 @@ describe("framework renderer wgpu generated worker", () => {
   it("validates the current package catalog with Ajv and independent WebCrypto integrity vectors", async () => {
     const taxonomy = loadTaxonomy(), generation = taxonomy.generatorContracts["wgpu-frame-worker"]!.packageGeneration!;
     const bytes = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/🧊️wgpu/🪪️package-catalog.json"), "utf8");
-    const catalogExport = new Ajv({ strict: true, allErrors: true }).addKeyword("discriminator").addKeyword("x-semio-note").addSchema(rendererSchema)
+    const catalogExport = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(rendererSchema)
       .getSchema(`${rendererSchema.$id}#/$defs/RendererPackageCatalogV1`)!;
     expect(catalogExport(JSON.parse(bytes)), JSON.stringify(catalogExport.errors)).toBe(true);
     for (const scenario of browserAuthorityFixture.catalogCases) {
@@ -157,8 +160,8 @@ describe("framework renderer wgpu generated worker", () => {
   });
 
   it("validates explicit browser entry identities against neutral vectors and independent Ajv/emoji parsing", () => {
-    const schema = { ...packageCatalogSchema, $ref: "#/definitions/browserEntries", type: undefined, properties: undefined, required: undefined, additionalProperties: undefined };
-    const validate = new Ajv().compile(schema);
+    const validate = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(rendererSchema)
+      .getSchema(`${rendererSchema.$id}#/$defs/RendererPackageCatalogBrowserEntries`)!;
     const template = loadTaxonomy().generatorContracts["wgpu-frame-worker"]!.packageGeneration!.browserProfile;
     for (const scenario of browserAuthorityFixture.cases) {
       const entries = structuredClone(browserAuthorityFixture.entries) as Record<string, unknown>[];
@@ -225,7 +228,7 @@ describe("framework renderer wgpu generated worker", () => {
 
   it("renders an astral-emoji-bearing browser entry (🟦️.ts, which references the \"🎞️frame-worker.js\" filename by URL) with the emoji as literal UTF-8, not Bun's astral \\uXXXX surrogate-pair escapes — otherwise the reference scanner cannot see or rewrite it", async () => {
     const bundleRoot = dirname(fileURLToPath(import.meta.url));
-    const content = await renderBrowserEntry(join(bundleRoot, "../../🚀️browser-boot/🟦️.ts"));
+    const content = await renderBrowserEntry(join(bundleRoot, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"));
     expect(content).toContain("🎞️frame-worker.js");
     expect(content).not.toMatch(/\\u[Dd][89abAB][0-9a-fA-F]{2}/);
   });

@@ -8,7 +8,6 @@ message PlaybookArtifact {
   optional string title = 4;
   repeated PlaybookStep steps = 5;
   repeated string selected_ids = 6;
-  string locale = 7;
   string contributions_json = 8;
 }
 

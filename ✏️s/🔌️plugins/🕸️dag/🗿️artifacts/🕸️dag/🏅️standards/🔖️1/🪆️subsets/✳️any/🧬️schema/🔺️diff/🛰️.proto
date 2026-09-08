@@ -9,7 +9,6 @@ message DagDiff {
   optional DagFixtureEdgeList set_edges = 6; // @state artifact
   optional DagStringList selected_node_ids = 7; // @state presence
   optional DagCamera camera = 8; // @state config
-  optional string locale = 9; // @state config
 }
 message DagStringList { repeated string values = 1; }
 message DagNodeSpecList { repeated DagNodeSpec values = 1; }
@@ -25,5 +24,4 @@ message DagFixtureEdge { string id = 1; string source = 2; string target = 3; }
 message DagCamera { double x = 1; double y = 2; double zoom = 3; }
 message DagArtifact {
   string schema = 1; repeated DagNodeSpec nodes = 2; repeated DagFixtureEdge edges = 3;
-  repeated string selected_node_ids = 4; DagCamera camera = 5; string locale = 6;
-}
+  repeated string selected_node_ids = 4; DagCamera camera = 5;}

@@ -12,8 +12,8 @@
           "url": null,
           "origin": null,
           "orientation": [
-            0.0,
-            0.0,
+            0,
+            0,
             0.6816387600233341,
             0.7316888688738209
           ],
@@ -37,6 +37,5 @@
   "centerModel": null,
   "fitRevision": null,
   "cameraDraftLabel": null,
-  "camera": null,
-  "locale": null
+  "camera": null
 }

@@ -13,7 +13,7 @@ static FIXTURE_SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 
 #[test]
 fn trusted_descriptor_wire_materialization_matches_neutral_boundaries() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧪️fixtures/🧮️wire-materialization/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧫️fixtures/🧮️wire-materialization/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let encoded = row["rawHex"].as_str().unwrap();
         let bytes: Vec<_> = (0..encoded.len()).step_by(2).map(|index| u8::from_str_radix(&encoded[index..index + 2], 16).unwrap()).collect();

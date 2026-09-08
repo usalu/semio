@@ -1,6 +1,8 @@
 use super::*;
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+}
 
 #[test]
 fn instance_lifetime_ui_handback_alias_counter_preserves_full_u64_domain() {
@@ -66,15 +68,25 @@ fn instance_lifetime_ui_handback_racing_producers_preserve_every_admitted_alias(
     let mut threads = Vec::new();
     for _ in 0..producers {
         let owners = owners.clone();
-        threads.push(std::thread::spawn(move || { for _ in 0..returns { owners.record(255, UiArenaHandback::ReleaseAlias); } }));
+        threads.push(std::thread::spawn(move || {
+            for _ in 0..returns {
+                owners.record(255, UiArenaHandback::ReleaseAlias);
+            }
+        }));
     }
     let mut consumed = 0;
     while threads.iter().any(|thread| !thread.is_finished()) {
-        if let Some(slot) = owners.next_slot(0) { consumed += usize::from(owners.take_one(slot).is_some()); }
+        if let Some(slot) = owners.next_slot(0) {
+            consumed += usize::from(owners.take_one(slot).is_some());
+        }
         std::thread::yield_now();
     }
-    for thread in threads { thread.join().unwrap(); }
-    while let Some(slot) = owners.next_slot(0) { consumed += usize::from(owners.take_one(slot).is_some()); }
+    for thread in threads {
+        thread.join().unwrap();
+    }
+    while let Some(slot) = owners.next_slot(0) {
+        consumed += usize::from(owners.take_one(slot).is_some());
+    }
     assert_eq!(consumed, producers * returns);
     assert!(!owners.has_slot_pending(255));
 }

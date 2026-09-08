@@ -31,5 +31,10 @@
         "kind"
       ]
     }
+  ],
+  "x-semio-formats": [
+    "🔣️jsonschema",
+    "🔗️graphql",
+    "🛰️protobuf"
   ]
 }

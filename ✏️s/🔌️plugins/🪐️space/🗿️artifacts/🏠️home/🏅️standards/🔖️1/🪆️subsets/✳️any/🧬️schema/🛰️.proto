@@ -11,5 +11,4 @@ message SHomeArtifact {
   // @state config
   string active_panel_tab = 3;
   // @state config
-  string locale = 4;
 }

@@ -38,8 +38,6 @@ pub struct Fem2dDiff {
     pub result_mode_index: Option<u32>,
     #[state(config)]
     pub camera: Option<FemCamera>,
-    #[state(config)]
-    pub locale: Option<String>,
     #[state(artifact)]
     pub solver_results_json: Option<String>,
     #[state(artifact)]

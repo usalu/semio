@@ -2,11 +2,11 @@
   "mutation": "replaceEdgeGeometry",
   "id": "02d43618-0e15-482b-9335-702d795f8074",
   "newGap": 1.5,
-  "newShift": 0.0,
-  "newRise": 0.0,
-  "newRotation": 0.0,
-  "newTurn": 0.0,
-  "newTilt": 0.0,
-  "newX": 0.0,
-  "newY": 0.0
+  "newShift": 0,
+  "newRise": 0,
+  "newRotation": 0,
+  "newTurn": 0,
+  "newTilt": 0,
+  "newX": 0,
+  "newY": 0
 }

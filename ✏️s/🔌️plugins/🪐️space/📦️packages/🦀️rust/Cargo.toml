@@ -34,39 +34,28 @@ semio-s-artifact-space-home = { workspace = true, features = ["component-app-ass
 semio-s-artifact-space-space = { workspace = true, features = ["component-app-assembly"] }
 semio-framework-artifact-infinite-dag = { workspace = true }
 semio-framework-artifact-space-space = { workspace = true }
-semio-framework-artifact-space-collection = { workspace = true }
-semio-s-artifact-stdio-csv = { workspace = true }
-semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-txt = { workspace = true }
-semio-s-artifact-stdio-xlsx = { workspace = true }
-semio-s-artifact-stdio-zip = { workspace = true }
 infinite_canvas = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
-semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-# 🚧️ Plain `path =` (not `workspace = true`) for these three, even though their keys match root
-# `[workspace.dependencies]` exactly: this crate isn't a workspace member yet (see the temporary
-# overlay below), and the overlay's own minimal `[workspace.dependencies]` can't carry the framework
-# crates' full dependency graphs. `workspace = true` for these three is safe to adopt in the SAME
-# registrar pass that adds this crate as a real root-workspace member (see registrar handoff).
-semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
-semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework = { workspace = true }
 semio-framework-job.workspace = true
-semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+pack = { workspace = true }
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
-semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-scene = { workspace = true }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os", features = ["space-guest"] }
+semio-framework-os = { workspace = true, features = ["space-guest"] }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os", features = ["os-host-full"] }
+semio-framework-os = { workspace = true, features = ["os-host-full"] }
 
 [dev-dependencies]
-semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-async-macros = { workspace = true }
+semio-framework-hash = { workspace = true }
 # 🌱️ Test-only: every production/`#[cfg(test)]`-adjacent call site now runs on `ToValue`/`FromValue`
 # (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`). What remains is the
 # `🧪️tests/<case>/🦀️.rs` per-mutation fixture-comparison suite, which deliberately keeps

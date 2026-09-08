@@ -119,3 +119,15 @@ type PdfDiff {
   objects: PdfObjectsDiff @state(class: ARTIFACT)
   trailer: PdfDictDiff @state(class: ARTIFACT)
 }
+
+type ObjRef {
+  num: Int!
+  gen: Int!
+}
+
+type PdfPage {
+  mediaBox: [Float!]
+  cropBox: [Float!]
+  rotate: Int
+  text: String
+}

@@ -1,8 +1,8 @@
 //! 🧪️ Source-owned presence and transient leaves for publication-pipeline laws.
 
-#[path = "👥️presence/🦀️.rs"]
+#[path = "../📢️publication-fixtures-presence/🦀️.rs"]
 pub mod presence;
-#[path = "🫧️transient/🦀️.rs"]
+#[path = "../📢️publication-fixtures-transient/🦀️.rs"]
 pub mod transient;
 
 pub use presence::{ChangePublicationPresence, PublicationPresence, PublicationPresenceDiff, PublicationPresenceMutation};

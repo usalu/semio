@@ -1,11 +1,11 @@
-import { policyReadFileSafe, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE, interactivityPuzzleFillEnvelopeFailures } from "../../../../../📜️script.ts";
+import { policyReadRustPolicySource, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE, INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE, interactivityPuzzleFillEnvelopeFailures } from "../../../../../📜️script.ts";
 
 /** 🧪️ Executes interactivity puzzle fill envelope policy assertions. */
 export function interactivityPuzzleFillEnvelopeSelfTests(repoRoot: string): void {
-  const precompute = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE);
-  const fill = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE);
-  const geometry = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE);
-  const action = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE);
+  const precompute = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE);
+  const fill = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE);
+  const geometry = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE);
+  const action = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE);
   const mutations: [string, string, string, string, string][] = [
     ["page-cap", precompute.replace("FILL_ENVELOPE_PAGE_BYTES: usize = 16 * 1024", "FILL_ENVELOPE_PAGE_BYTES: usize = 32 * 1024"), fill, geometry, action],
     ["dynamic-slots", precompute.replace("slots: [Option<FillEnvelopeAuthority>; FILL_ENVELOPE_MAX_OPERATIONS]", "slots: Vec<Option<FillEnvelopeAuthority>>"), fill, geometry, action],

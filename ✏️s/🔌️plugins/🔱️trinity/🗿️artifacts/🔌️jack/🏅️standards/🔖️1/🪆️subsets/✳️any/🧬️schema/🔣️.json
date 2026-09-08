@@ -11,17 +11,10 @@
     "camera",
     "nodes",
     "edges",
-    "activeFixtureId",
     "jackQuery",
     "lodModeByWindow",
     "viewportCamera",
-    "jackResultJson",
-    "editorEngagementInput",
-    "graphEngagementInput",
-    "resultsEngagementInput",
-    "reorganizeEpoch",
-    "revision",
-    "locale"
+    "jackResultJson"
   ],
   "properties": {
     "schema": {
@@ -62,20 +55,16 @@
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "activeFixtureId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "jackQuery": {
       "type": "string",
-      "x-semio-state": "presence"
+      "x-semio-state": "config"
     },
     "lodModeByWindow": {
       "type": "object",
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "presence"
+      "x-semio-state": "config"
     },
     "viewportCamera": {
       "$ref": "#/$defs/Camera",
@@ -86,34 +75,8 @@
       "contentMediaType": "application/json",
       "x-semio-state": "config"
     },
-    "editorEngagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "graphEngagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "resultsEngagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "reorganizeEpoch": {
-      "type": "integer",
-      "format": "int64",
-      "x-semio-state": "config"
-    },
     "editorSelection": {
       "$ref": "#/$defs/JackEditorSelection",
-      "x-semio-state": "config"
-    },
-    "revision": {
-      "type": "integer",
-      "format": "int64",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   },

@@ -1,0 +1,15 @@
+{
+  "schema": "vcs.vcs.retained-command-limits.v1",
+  "toolIds": [
+    "incrementCounter",
+    "patchSnapshot",
+    "noMutation",
+    "canvasPointerDown",
+    "canvasPointerMove",
+    "canvasPointerUp",
+    "canvasWheel"
+  ],
+  "maximumTextBytes": 8192,
+  "rejectedAdditionalBytes": 1,
+  "expectedWorkItems": 1
+}

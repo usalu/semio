@@ -79,8 +79,6 @@ pub struct Process3dDiff {
     #[state(config)]
     pub sun_color: Option<String>,
     #[state(config)]
-    pub locale: Option<String>,
-    #[state(config)]
     pub contributions_json: Option<String>,
     #[state(artifact)]
     pub hovered_id: Option<Option<String>>,

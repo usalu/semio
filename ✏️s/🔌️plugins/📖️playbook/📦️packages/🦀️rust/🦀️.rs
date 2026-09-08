@@ -48,14 +48,5 @@ mod plugin;
 pub use plugin::PlaybookApps;
 semio_framework_plugin::plugin_exports!(plugin::plugin, PlaybookApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_playbook_demo_session;
-    #[path = "../../🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_playbook_demo;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

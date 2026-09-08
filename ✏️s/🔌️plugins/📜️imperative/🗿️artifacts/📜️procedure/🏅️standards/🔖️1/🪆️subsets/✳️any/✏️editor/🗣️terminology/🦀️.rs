@@ -4,7 +4,6 @@
 //! reuse-terminology concept (pure control-flow vocabulary), so `reuse_*` mirrors `native_*` throughout —
 //! `ImperativeConfig` carries no terminology axis.
 
-use crate::editor::procedure::config::ImperativeConfig;
 
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
@@ -32,8 +31,8 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn imperative_labels(cfg: &ImperativeConfig) -> &'static ImperativeLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<ImperativeLabels>(&cfg.locale)
+pub fn imperative_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static ImperativeLabels {
+    semio_framework_plugin::resolve_labels::<ImperativeLabels>(view_state)
 }
 //#endregion 🔖️Resolvers
 

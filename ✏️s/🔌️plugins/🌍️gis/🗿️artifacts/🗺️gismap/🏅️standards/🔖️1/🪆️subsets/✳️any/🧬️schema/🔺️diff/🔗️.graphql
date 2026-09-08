@@ -16,7 +16,6 @@ type GisMapDiff {
   hoverJson: String @state(class: CONFIG)
   selectionMethod: String @state(class: CONFIG)
   selectionMode: String @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
 }
 
 type GisMapArtifact {
@@ -34,7 +33,6 @@ type GisMapArtifact {
   hoverJson: String!
   selectionMethod: String!
   selectionMode: String!
-  locale: String!
 }
 
 type GisMapFeature { id: String! data: String! }

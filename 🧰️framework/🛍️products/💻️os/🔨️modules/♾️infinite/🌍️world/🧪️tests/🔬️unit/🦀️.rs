@@ -2336,7 +2336,7 @@ fn publish_retained_draw_fixture(state: &mut World3dState, vector: &serde_json::
 
 #[test]
 fn retained_draw_rebuild_keeps_url_backed_asset_authority() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️draws.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️draws.json")).unwrap();
     let vector = &fixture["draws"][1];
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let token = reserve_world3d_asset_request(&mut state, WorldAssetRequestKind::Glb, vector["url"].as_str().unwrap()).unwrap();
@@ -2399,7 +2399,7 @@ fn environment_light_dir_uses_sun_direction_only_when_enabled() {
 
 #[test]
 fn retained_draw_rebuild_preserves_prepared_material_colors_from_the_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️draws.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️draws.json")).unwrap();
     for vector in fixture["draws"].as_array().unwrap() {
         let mut state = World3dState::new("surface-1".into(), "controller-1".into());
         publish_retained_draw_fixture(&mut state, vector);

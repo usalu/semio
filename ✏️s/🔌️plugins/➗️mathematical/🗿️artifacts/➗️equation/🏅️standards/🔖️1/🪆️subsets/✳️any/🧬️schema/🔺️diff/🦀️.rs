@@ -33,8 +33,6 @@ pub struct EquationDiff {
     pub camera_y: Option<f64>,
     #[state(config)]
     pub camera_zoom: Option<f64>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 
 // 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `Option<store::ArtifactChild<S>>`,
@@ -54,7 +52,6 @@ impl ToValue for EquationDiff {
             ("cameraX".to_string(), self.camera_x.to_value()),
             ("cameraY".to_string(), self.camera_y.to_value()),
             ("cameraZoom".to_string(), self.camera_zoom.to_value()),
-            ("locale".to_string(), self.locale.to_value()),
         ])
     }
 }
@@ -70,7 +67,6 @@ impl FromValue for EquationDiff {
             camera_x: Option::from_value(field("cameraX"))?,
             camera_y: Option::from_value(field("cameraY"))?,
             camera_zoom: Option::from_value(field("cameraZoom"))?,
-            locale: Option::from_value(field("locale"))?,
         })
     }
 }

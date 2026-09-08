@@ -29,8 +29,13 @@ def load(path):
 
 
 def library_sources():
-    listed = subprocess.run(["git", "ls-files", "-z", LIB], capture_output=True, check=True).stdout
-    return [path for path in listed.decode("utf-8").split("\0") if path.endswith(SOURCE_SUFFIXES) and path not in SKIP]
+    found = []
+    for directory, _, names in os.walk(LIB):
+        for name in names:
+            path = os.path.join(directory, name)
+            if path.endswith(SOURCE_SUFFIXES) and path not in SKIP:
+                found.append(path)
+    return sorted(found)
 
 
 def resolve(base, literal):
@@ -79,6 +84,8 @@ def main():
     mapping, dry = load(sys.argv[1]), "--dry" in sys.argv
     rows = documents(mapping)
     for source, target in mapping.items():
+        if not os.path.exists(source):
+            continue
         if not dry:
             os.makedirs(os.path.dirname(target), exist_ok=True)
             os.rename(source, target)

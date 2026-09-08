@@ -159,23 +159,44 @@ fn is_section(component: &crate::Component) -> bool {
 pub enum UiContractViolation {
     CensusCapacity,
     /// 🔁️ `node` is reachable from itself by following `children` — a document must be a tree.
-    Cycle { node: crate::UiNodeId },
+    Cycle {
+        node: crate::UiNodeId,
+    },
     /// 🧩️ `parent`'s `children` names `child`, but no record with that id exists.
-    OrphanChild { parent: crate::UiNodeId, child: crate::UiNodeId },
+    OrphanChild {
+        parent: crate::UiNodeId,
+        child: crate::UiNodeId,
+    },
     /// 👯️ Two of `parent`'s children share `key` — reconciliation keys must be unique among siblings.
-    DuplicateSiblingKey { parent: crate::UiNodeId, key: crate::UiText },
+    DuplicateSiblingKey {
+        parent: crate::UiNodeId,
+        key: crate::UiText,
+    },
     /// 📦️ `count` live nodes exceeds [`UiDocumentLimits::max_nodes`] (`max`).
-    NodeQuota { count: usize, max: usize },
+    NodeQuota {
+        count: usize,
+        max: usize,
+    },
     /// 📏️ `node` sits `depth` edges below the root, exceeding [`UiDocumentLimits::max_depth`] (`max`).
-    DepthQuota { node: crate::UiNodeId, depth: usize, max: usize },
+    DepthQuota {
+        node: crate::UiNodeId,
+        depth: usize,
+        max: usize,
+    },
     /// 🪢️ `node` exists in the node table but is not reachable from the root by following
     /// `children` — including the degenerate case where the root itself names an id with no record.
-    DanglingRoot { node: crate::UiNodeId },
+    DanglingRoot {
+        node: crate::UiNodeId,
+    },
     /// 🗂️ `node` is a `Container` with `role: Section` nested inside another `Section` — sectioning is
     /// intentionally flat, one level, so a renderer never has to resolve ambiguous nested chrome.
-    SectionNested { node: crate::UiNodeId },
+    SectionNested {
+        node: crate::UiNodeId,
+    },
     /// 🔢️ `node`'s component carries a NaN or infinite numeric field.
-    NonFiniteNumber { node: crate::UiNodeId },
+    NonFiniteNumber {
+        node: crate::UiNodeId,
+    },
 }
 
 /// 🌲️ Validates `snapshot` against `limits`, collecting every [`UiContractViolation`] found rather
@@ -274,13 +295,19 @@ fn validate_core<'a>(
 
                         let in_section = parent_in_section || is_section(&record.component);
                         if parent_in_section && is_section(&record.component) {
-                            if violations.try_push(UiContractViolation::SectionNested { node: id }).is_err() { return violations; }
+                            if violations.try_push(UiContractViolation::SectionNested { node: id }).is_err() {
+                                return violations;
+                            }
                         }
                         if !component_is_finite(&record.component) {
-                            if violations.try_push(UiContractViolation::NonFiniteNumber { node: id }).is_err() { return violations; }
+                            if violations.try_push(UiContractViolation::NonFiniteNumber { node: id }).is_err() {
+                                return violations;
+                            }
                         }
                         if depth > limits.max_depth {
-                            if violations.try_push(UiContractViolation::DepthQuota { node: id, depth, max: limits.max_depth }).is_err() { return violations; }
+                            if violations.try_push(UiContractViolation::DepthQuota { node: id, depth, max: limits.max_depth }).is_err() {
+                                return violations;
+                            }
                             continue;
                         }
 
@@ -292,10 +319,16 @@ fn validate_core<'a>(
                         let mut seen_keys = crate::UiFixedList::<&crate::UiText, { crate::UI_DOCUMENT_NODES }>::default();
                         for &child_id in &record.children {
                             match get(child_id) {
-                                None => if violations.try_push(UiContractViolation::OrphanChild { parent: id, child: child_id }).is_err() { return violations; },
+                                None => {
+                                    if violations.try_push(UiContractViolation::OrphanChild { parent: id, child: child_id }).is_err() {
+                                        return violations;
+                                    }
+                                }
                                 Some(child) => {
                                     if seen_keys.iter().any(|key| key.as_str() == child.key.as_str()) {
-                                        if violations.try_push(UiContractViolation::DuplicateSiblingKey { parent: id, key: child.key.clone() }).is_err() { return violations; }
+                                        if violations.try_push(UiContractViolation::DuplicateSiblingKey { parent: id, key: child.key.clone() }).is_err() {
+                                            return violations;
+                                        }
                                     } else if seen_keys.try_push(&child.key).is_err() {
                                         let _ = violations.try_push(UiContractViolation::CensusCapacity);
                                         return violations;
@@ -319,7 +352,9 @@ fn validate_core<'a>(
 
     for record in records {
         if !visited.iter().any(|id| *id == record.id) {
-            if violations.try_push(UiContractViolation::DanglingRoot { node: record.id }).is_err() { return violations; }
+            if violations.try_push(UiContractViolation::DanglingRoot { node: record.id }).is_err() {
+                return violations;
+            }
         }
     }
     violations
@@ -896,15 +931,7 @@ impl UiPatchApplyProducer {
         let (Some(state), Some(previous), Some(patch)) = (self.draft.take(), self.original.take(), self.patch.take()) else { return Err(self) };
         let Some(retirement_handle) = self.retirement_handle.take() else { return Err(self) };
         let validation_seen = std::mem::replace(&mut self.validation_seen, std::array::from_fn(|_| crate::UiFixedList::default()));
-        Ok(UiPatchApplyOutcome {
-            retirement_handle: Some(retirement_handle),
-            generation: self.generation,
-            state: Some(state),
-            previous: Some(previous),
-            patch: Some(patch),
-            validation_seen,
-            validation_seen_cursor: 0,
-        })
+        Ok(UiPatchApplyOutcome { retirement_handle: Some(retirement_handle), generation: self.generation, state: Some(state), previous: Some(previous), patch: Some(patch), validation_seen, validation_seen_cursor: 0 })
     }
 
     #[expect(clippy::result_large_err, reason = "A producer that has not reached rejection returns its full retained authority without a new allocation.")]
@@ -987,13 +1014,7 @@ impl UiPatchApplyOutcome {
 impl Drop for UiPatchApplyOutcome {
     fn drop(&mut self) {
         let Some(handle) = self.retirement_handle.take() else { return };
-        let retirement = UiPatchRetirement::new(
-            self.state.take(),
-            self.previous.take(),
-            self.patch.take(),
-            None,
-            std::mem::replace(&mut self.validation_seen, std::array::from_fn(|_| crate::UiFixedList::default())),
-        );
+        let retirement = UiPatchRetirement::new(self.state.take(), self.previous.take(), self.patch.take(), None, std::mem::replace(&mut self.validation_seen, std::array::from_fn(|_| crate::UiFixedList::default())));
         with_ui_patch_apply_arena(|arena| arena.handback(handle, retirement));
     }
 }
@@ -1014,18 +1035,7 @@ pub struct UiPatchApplyRejected {
 
 impl UiPatchApplyRejected {
     fn new(retirement_handle: Option<UiPatchApplyHandle>, generation: u64, state: crate::UiSnapshotState, patch: crate::UiPatch, rejection: PatchRejection) -> Self {
-        Self {
-            retirement_handle,
-            generation,
-            state: Some(state),
-            patch: Some(patch),
-            draft: None,
-            remove_record: None,
-            rejection,
-            retire_scalar: 0,
-            validation_seen: std::array::from_fn(|_| crate::UiFixedList::default()),
-            validation_seen_cursor: 0,
-        }
+        Self { retirement_handle, generation, state: Some(state), patch: Some(patch), draft: None, remove_record: None, rejection, retire_scalar: 0, validation_seen: std::array::from_fn(|_| crate::UiFixedList::default()), validation_seen_cursor: 0 }
     }
 
     pub fn generation(&self) -> u64 {
@@ -1059,12 +1069,7 @@ impl UiPatchApplyRejected {
 
     #[expect(clippy::result_large_err, reason = "State extraction retains the exact outcome owner until its previous payloads and validation backing are retired.")]
     pub fn take_state(mut self) -> Result<crate::UiSnapshotState, Self> {
-        if self.draft.is_some()
-            || self.remove_record.is_some()
-            || self.patch.is_some()
-            || self.retire_scalar == 0
-            || self.validation_seen_cursor < self.validation_seen.len()
-        {
+        if self.draft.is_some() || self.remove_record.is_some() || self.patch.is_some() || self.retire_scalar == 0 || self.validation_seen_cursor < self.validation_seen.len() {
             return Err(self);
         }
         match (self.state.take(), self.retirement_handle.take()) {
@@ -1081,13 +1086,7 @@ impl UiPatchApplyRejected {
 impl Drop for UiPatchApplyRejected {
     fn drop(&mut self) {
         let Some(handle) = self.retirement_handle.take() else { return };
-        let retirement = UiPatchRetirement::new(
-            self.state.take(),
-            self.draft.take(),
-            self.patch.take(),
-            self.remove_record.take(),
-            std::mem::replace(&mut self.validation_seen, std::array::from_fn(|_| crate::UiFixedList::default())),
-        );
+        let retirement = UiPatchRetirement::new(self.state.take(), self.draft.take(), self.patch.take(), self.remove_record.take(), std::mem::replace(&mut self.validation_seen, std::array::from_fn(|_| crate::UiFixedList::default())));
         with_ui_patch_apply_arena(|arena| arena.handback(handle, retirement));
     }
 }
@@ -1112,10 +1111,7 @@ fn retire_patch_one(patch: &mut Option<crate::UiPatch>) -> bool {
     false
 }
 
-fn retire_validation_seen_one(
-    seen: &mut [crate::UiFixedList<crate::UiText, { crate::UI_DOCUMENT_NODES }>; crate::UI_DOCUMENT_NODES],
-    cursor: &mut usize,
-) -> bool {
+fn retire_validation_seen_one(seen: &mut [crate::UiFixedList<crate::UiText, { crate::UI_DOCUMENT_NODES }>; crate::UI_DOCUMENT_NODES], cursor: &mut usize) -> bool {
     while *cursor < seen.len() {
         if seen[*cursor].pop().is_some() {
             return false;

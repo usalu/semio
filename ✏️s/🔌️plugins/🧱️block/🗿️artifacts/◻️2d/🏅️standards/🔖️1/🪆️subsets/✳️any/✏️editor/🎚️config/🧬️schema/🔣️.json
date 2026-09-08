@@ -5,8 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedIds",
-    "locale"
+    "selectedIds"
   ],
   "properties": {
     "selectedIds": {
@@ -14,10 +13,6 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   }

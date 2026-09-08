@@ -26,7 +26,6 @@ pub struct SourcingCurationConfig {
     #[dsl(block)]
     pub filters: Filters,
     /// 🗣️ BCP-47 locale tag.
-    pub locale: String,
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `sourcing.module` hot-swap installs.
     #[value(default = "default_contributions_json")]
     pub contributions_json: String,
@@ -82,7 +81,7 @@ fn default_contributions_json() -> String {
 
 impl Default for SourcingCurationConfig {
     fn default() -> Self {
-        Self { filters: Filters::default(), locale: "en-US".into(), contributions_json: default_contributions_json() }
+        Self { filters: Filters::default(), contributions_json: default_contributions_json() }
     }
 }
 
@@ -118,8 +117,6 @@ pub enum SourcingCurationConfigMutation {
         #[dsl(block)]
         sort: Option<TableSort>,
     },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
     #[dsl(key = "contributions")]
     SetContributions { json: String },
 }
@@ -196,7 +193,6 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🌳️set-filter-typology", semantic_kind: "set-filter-typology", display_name: "Set Filter Typology", emoji: "🌳️", aggregate_variant: "SetFilterTypology", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️set-filter-min-availability", semantic_kind: "set-filter-min-availability", display_name: "Set Filter Min Availability", emoji: "📦️", aggregate_variant: "SetFilterMinAvailability", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/↕️set-sort", semantic_kind: "set-sort", display_name: "Set Sort", emoji: "↕️", aggregate_variant: "SetSort", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🗣️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "🗣️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🤝️set-contributions", semantic_kind: "set-contributions", display_name: "Set Contributions", emoji: "🤝️", aggregate_variant: "SetContributions", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
@@ -208,8 +204,7 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
             SourcingCurationConfigMutation::SetFilterTypology { .. } => &Self::DESCRIPTORS[3],
             SourcingCurationConfigMutation::SetFilterMinAvailability { .. } => &Self::DESCRIPTORS[4],
             SourcingCurationConfigMutation::SetSort { .. } => &Self::DESCRIPTORS[5],
-            SourcingCurationConfigMutation::SetLocale { .. } => &Self::DESCRIPTORS[6],
-            SourcingCurationConfigMutation::SetContributions { .. } => &Self::DESCRIPTORS[7],
+            SourcingCurationConfigMutation::SetContributions { .. } => &Self::DESCRIPTORS[6],
         }
     }
 
@@ -225,7 +220,6 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
             SourcingCurationConfigMutation::SetFilterTypology { path } => next.filters.typology_path = path.clone(),
             SourcingCurationConfigMutation::SetFilterMinAvailability { value } => next.filters.min_availability = *value,
             SourcingCurationConfigMutation::SetSort { sort } => next.filters.sort = sort.clone(),
-            SourcingCurationConfigMutation::SetLocale { value } => next.locale = value.clone(),
             SourcingCurationConfigMutation::SetContributions { json } => {
                 next.contributions_json = json.clone();
             }

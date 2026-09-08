@@ -11,9 +11,7 @@
     "parameterBindings",
     "ruleLayout",
     "lodModeByWindow",
-    "beforePaneCamera",
-    "reorganizeEpoch",
-    "locale"
+    "beforePaneCamera"
   ],
   "properties": {
     "beforeFixtureJson": {
@@ -50,19 +48,10 @@
       "additionalProperties": {
         "type": "string"
       },
-      "x-semio-state": "presence"
+      "x-semio-state": "config"
     },
     "beforePaneCamera": {
       "$ref": "#/$defs/Camera",
-      "x-semio-state": "config"
-    },
-    "reorganizeEpoch": {
-      "type": "integer",
-      "format": "int64",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   },

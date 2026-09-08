@@ -1,4 +1,3 @@
-
 use super::*;
 #[semio_framework_async_macros::async_test]
 async fn changes_only_alpha_mode_and_rejects_identity() {

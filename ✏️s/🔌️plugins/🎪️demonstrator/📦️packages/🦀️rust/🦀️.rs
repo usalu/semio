@@ -43,10 +43,3 @@ mod manifest;
 semio_framework_plugin::plugin_exports!(manifest::plugin, manifest::DemonstratorApps);
 //#endregion 🛂️Manifest
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod art_playground_demo;
-}
-//#endregion 📚️Examples

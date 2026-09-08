@@ -6,37 +6,31 @@
   "type": "object",
   "properties": {
     "spatial": {
-      "$ref": "#/$defs/spatialTriple"
+      "$ref": "#/definitions/spatialTriple"
     },
     "elements": {
-      "$ref": "#/$defs/elementsTriple"
+      "$ref": "#/definitions/elementsTriple"
     },
     "relations": {
-      "$ref": "#/$defs/relationsTriple"
+      "$ref": "#/definitions/relationsTriple"
     }
   },
   "$defs": {
-    "spatialNodeDiff": {
+    "ModelRelationDiff": {
       "type": "object",
       "properties": {
         "kind": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "parentId": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "placement": {
           "type": "object"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
         }
       }
     },
-    "semioModelElementDiff": {
+    "SemioModelElementDiff": {
       "type": "object",
       "properties": {
         "class": {
@@ -59,20 +53,28 @@
         }
       }
     },
-    "modelRelationDiff": {
+    "SpatialNodeDiff": {
       "type": "object",
       "properties": {
         "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "placement": {
           "type": "object"
-        },
-        "from": {
-          "type": "string"
-        },
-        "to": {
-          "type": "string"
         }
       }
-    },
+    }
+  },
+  "definitions": {
     "spatialTriple": {
       "type": "object",
       "properties": {
@@ -91,7 +93,7 @@
                 "type": "string"
               },
               "diff": {
-                "$ref": "#/$defs/spatialNodeDiff"
+                "$ref": "#/$defs/SpatialNodeDiff"
               }
             }
           }
@@ -119,7 +121,7 @@
                 "type": "string"
               },
               "diff": {
-                "$ref": "#/$defs/semioModelElementDiff"
+                "$ref": "#/$defs/SemioModelElementDiff"
               }
             }
           }
@@ -147,7 +149,7 @@
                 "type": "string"
               },
               "diff": {
-                "$ref": "#/$defs/modelRelationDiff"
+                "$ref": "#/$defs/ModelRelationDiff"
               }
             }
           }

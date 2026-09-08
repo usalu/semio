@@ -90,7 +90,7 @@
           "type": "number"
         },
         "background": {
-          "$ref": "📸️snapshot/🔣️.json#/$defs/Rgba"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/Rgba"
         }
       }
     },
@@ -98,10 +98,10 @@
       "type": "object",
       "properties": {
         "fill": {
-          "$ref": "📸️snapshot/🔣️.json#/$defs/Rgba"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/Rgba"
         },
         "stroke": {
-          "$ref": "📸️snapshot/🔣️.json#/$defs/Rgba"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/Rgba"
         },
         "strokeWidth": {
           "type": [
@@ -135,7 +135,7 @@
         "segments": {
           "type": "array",
           "items": {
-            "$ref": "📸️snapshot/🔣️.json#/$defs/PathSegment"
+            "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/PathSegment"
           }
         },
         "style": {
@@ -148,10 +148,10 @@
           "type": "string"
         },
         "at": {
-          "$ref": "📸️snapshot/🔣️.json#/$defs/SemioPoint2"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/SemioPoint2"
         },
         "transform": {
-          "$ref": "📸️snapshot/🔣️.json#/$defs/Transform"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/Transform"
         },
         "children": {
           "$ref": "#/$defs/IndexedTripleDiff"
@@ -170,7 +170,7 @@
           "contentEncoding": "base64"
         },
         "node": {
-          "$ref": "📸️snapshot/🔣️.json#/$defs/DrawNode"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/drawing/snapshot.json#/$defs/DrawNode"
         }
       }
     },

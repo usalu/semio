@@ -103,7 +103,7 @@
                       "integer": false
                     },
                     "required": true,
-                    "default": 2.0
+                    "default": 2
                   },
                   {
                     "id": "columns",
@@ -122,7 +122,7 @@
                       "integer": false
                     },
                     "required": true,
-                    "default": 2.0
+                    "default": 2
                   }
                 ],
                 "inPalette": true,
@@ -828,51 +828,6 @@
                   "reuse": {
                     "de": "Keine Aktion",
                     "en": "No Operation"
-                  }
-                },
-                "kind": "view",
-                "iconId": "eye",
-                "args": [],
-                "inPalette": true,
-                "semantics": {
-                  "effects": {
-                    "reads": [
-                      "config:{self}"
-                    ],
-                    "external": false,
-                    "destructive": false,
-                    "reversible": false
-                  },
-                  "policy": {
-                    "scopes": [
-                      "documents.read",
-                      "shell.observe"
-                    ],
-                    "approval": "never"
-                  },
-                  "execution": {
-                    "preview": "none",
-                    "undo": {
-                      "kind": "none"
-                    },
-                    "idempotency": "none",
-                    "expectedRevision": false,
-                    "cancellable": false,
-                    "class": "interactive",
-                    "interactiveJob": "migrated"
-                  }
-                }
-              },
-              {
-                "id": "setLocale",
-                "label": {
-                  "native": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
-                  },
-                  "reuse": {
-                    "de": "Sprache festlegen",
-                    "en": "Set Locale"
                   }
                 },
                 "kind": "view",

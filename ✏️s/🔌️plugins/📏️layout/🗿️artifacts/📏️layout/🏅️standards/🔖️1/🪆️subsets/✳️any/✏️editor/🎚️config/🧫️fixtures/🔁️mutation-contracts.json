@@ -1,0 +1,170 @@
+{
+  "base": {
+    "activePageId": "page-a",
+    "dropPreview": {
+      "kind": "text",
+      "x": 1.25,
+      "y": -2.5
+    },
+    "engagementInput": "Before",
+    "camera": {
+      "x": 0.25,
+      "y": -0.25,
+      "zoom": 1.5
+    },
+    "previewCamera": {
+      "x": 0.75,
+      "y": 1.25,
+      "zoom": 2.5
+    }
+  },
+  "cases": [
+    {
+      "kind": "set-active-page",
+      "mutation": {
+        "SetActivePage": {
+          "pageId": "page-b"
+        }
+      },
+      "expected": {
+        "activePageId": "page-b",
+        "dropPreview": {
+          "kind": "text",
+          "x": 1.25,
+          "y": -2.5
+        },
+        "engagementInput": "Before",
+        "camera": {
+          "x": 0.25,
+          "y": -0.25,
+          "zoom": 1.5
+        },
+        "previewCamera": {
+          "x": 0.75,
+          "y": 1.25,
+          "zoom": 2.5
+        }
+      }
+    },
+    {
+      "kind": "set-drop-preview",
+      "mutation": {
+        "SetDropPreview": {
+          "preview": {
+            "kind": "rect",
+            "x": 5.5,
+            "y": 6.25
+          }
+        }
+      },
+      "expected": {
+        "activePageId": "page-a",
+        "dropPreview": {
+          "kind": "rect",
+          "x": 5.5,
+          "y": 6.25
+        },
+        "engagementInput": "Before",
+        "camera": {
+          "x": 0.25,
+          "y": -0.25,
+          "zoom": 1.5
+        },
+        "previewCamera": {
+          "x": 0.75,
+          "y": 1.25,
+          "zoom": 2.5
+        }
+      }
+    },
+    {
+      "kind": "set-engagement-input",
+      "mutation": {
+        "SetEngagementInput": {
+          "value": "export svg"
+        }
+      },
+      "expected": {
+        "activePageId": "page-a",
+        "dropPreview": {
+          "kind": "text",
+          "x": 1.25,
+          "y": -2.5
+        },
+        "engagementInput": "export svg",
+        "camera": {
+          "x": 0.25,
+          "y": -0.25,
+          "zoom": 1.5
+        },
+        "previewCamera": {
+          "x": 0.75,
+          "y": 1.25,
+          "zoom": 2.5
+        }
+      }
+    },
+    {
+      "kind": "set-camera",
+      "mutation": {
+        "SetCamera": {
+          "camera": {
+            "x": 2.5,
+            "y": 3.75,
+            "zoom": 1.25
+          }
+        }
+      },
+      "expected": {
+        "activePageId": "page-a",
+        "dropPreview": {
+          "kind": "text",
+          "x": 1.25,
+          "y": -2.5
+        },
+        "engagementInput": "Before",
+        "camera": {
+          "x": 2.5,
+          "y": 3.75,
+          "zoom": 1.25
+        },
+        "previewCamera": {
+          "x": 0.75,
+          "y": 1.25,
+          "zoom": 2.5
+        }
+      }
+    },
+    {
+      "kind": "set-preview-camera",
+      "mutation": {
+        "SetPreviewCamera": {
+          "camera": {
+            "x": -4.5,
+            "y": 2.25,
+            "zoom": 0.75
+          }
+        }
+      },
+      "expected": {
+        "activePageId": "page-a",
+        "dropPreview": {
+          "kind": "text",
+          "x": 1.25,
+          "y": -2.5
+        },
+        "engagementInput": "Before",
+        "camera": {
+          "x": 0.25,
+          "y": -0.25,
+          "zoom": 1.5
+        },
+        "previewCamera": {
+          "x": -4.5,
+          "y": 2.25,
+          "zoom": 0.75
+        }
+      }
+    }
+  ]
+}

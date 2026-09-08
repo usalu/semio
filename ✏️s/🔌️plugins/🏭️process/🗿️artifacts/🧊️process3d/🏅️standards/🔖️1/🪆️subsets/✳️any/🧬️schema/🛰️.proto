@@ -53,7 +53,6 @@ message Process3dArtifact {
   // @state config
   string sun_color = 27;
   // @state config
-  string locale = 28;
   // @state config
   string contributions_json = 29;
   // @state artifact

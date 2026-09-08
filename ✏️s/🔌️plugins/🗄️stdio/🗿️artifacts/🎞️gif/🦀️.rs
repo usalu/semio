@@ -25,7 +25,7 @@ pub const STDIO_GIF_DOCUMENT_SCHEMA: &str = "stdio.gif";
 pub const GIF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.gif";
 
 /// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
@@ -399,7 +399,7 @@ pub mod examples {
         mod component;
         pub use component::*;
         #[cfg(test)]
-        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🧪️tests/🦀️.rs"]
+        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/📚️examples/💃️dancing/🧪️tests/🧩️example/🦀️.rs"]
         mod dancing_tests;
     }
 }

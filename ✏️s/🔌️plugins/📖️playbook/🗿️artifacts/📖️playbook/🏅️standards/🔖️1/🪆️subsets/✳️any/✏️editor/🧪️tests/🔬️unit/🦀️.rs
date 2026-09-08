@@ -49,7 +49,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 /// parser and the test-only third-party JSON oracle, then matches the schema-generated command enum.
 #[semio_framework_async_macros::async_test]
 async fn interactive_job_catalog_matches_owned_and_json_oracle_projections() {
-    let source = include_str!("../../🧪️fixtures/🧫️interactive-jobs/🔣️.json");
+    let source = include_str!("../../🧫️fixtures/🧫️interactive-jobs/🔣️.json");
     let owned = source.lines().filter_map(|line| line.trim().strip_prefix("{\"id\":\"").and_then(|tail| tail.split_once('"')).map(|(id, _)| id.to_string())).collect::<Vec<_>>();
     let oracle = serde_json::from_str::<serde_json::Value>(source)
         .expect("language-neutral interactive job fixture")

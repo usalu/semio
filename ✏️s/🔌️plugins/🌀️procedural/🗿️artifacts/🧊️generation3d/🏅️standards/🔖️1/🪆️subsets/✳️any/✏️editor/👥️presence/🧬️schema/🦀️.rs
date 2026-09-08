@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::editor::generation3d::config::Generation3dPreviewCamera;
+
 use semio_framework_artifact_flow_flow::CameraJson;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -16,3 +16,8 @@ pub struct Generation3dPresence {
     #[state(presence)]
     pub show_mode: String,
 }
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::editor::generation3d::config::Generation3dPreviewCamera;
+//#endregion 🔁️Re-exports

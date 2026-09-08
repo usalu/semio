@@ -24,8 +24,6 @@ pub struct Gis2dConfig {
     pub lod_mode: String,
     #[state(config)]
     pub layer_stroke_scale: BTreeMap<String, f64>,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🧬️Configuration
 

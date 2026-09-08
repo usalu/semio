@@ -3,7 +3,7 @@
 import { join } from "node:path";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import {
   BundleScript,
   ScriptRouter,
@@ -20,7 +20,8 @@ class MediaProjectionScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("media-projection-check accepts only --oracle-only");
     const base = join(this.root, "../../🧪️tests/🕸️media-projection");
     const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
+    const projection = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")) as { $id: string };
+    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(projection).getSchema(`${projection.$id}#/$defs/WorkflowMediaContractProjectionV1`)!;
     assert.equal(fixture.schema, "semio.workflow.media-contract-presentation/v1");
     assert.equal(fixture.cases.length, 4);
     const ids = new Set<string>();
@@ -42,7 +43,8 @@ class MediaProjectionScript extends BundleScript {
     const source = readFileSync(join(this.root, "../../🦀️.rs"), "utf8");
     assert(!source.includes("edge.contract.to_value()"), "presentation must not invent a persistence codec");
     assert(source.includes('"contract": workflow_media_contract_payload(&edge.contract)'), "the live window payload uses the explicit projection");
-    assert(source.includes("fn workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"), "an exact native projection law is registered");
+    const projectionLaw = readFileSync(join(this.root, "../../🧪️tests/🔬️workflow-standalone/🦀️.rs"), "utf8");
+    assert(projectionLaw.includes("fn workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"), "an exact native projection law is registered");
     console.log(`[DEBUG] media contract presentation oracle: ${fixture.cases.length} document/binary/conversion vectors, ${denied} strict hostile denials; no native claim`);
     if (segments.includes("--oracle-only")) return;
     const receipts = await runExactCargoLaws({ cwd: this.repoRoot, groups: [{ package: "semio-framework-os", target: { kind: "lib" }, cargoArgs: ["--features", "os-host-full"], laws: ["workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases", "owned_artifact_kind_formats_survive_host_registry_projection"] }] });
@@ -56,10 +58,10 @@ class PersistenceContractScript extends BundleScript {
     const base = join(this.root, "../../💾️persistence");
     const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
-    const ajv = new Ajv2020({ strict: true, allErrors: true });
+    const ajv = new Ajv({ strict: true, allErrors: true });
     ajv.addSchema(schema);
-    const requestValid = ajv.getSchema("semio.shell.persistence/v1#/$defs/request")!;
-    const eventValid = ajv.getSchema("semio.shell.persistence/v1#/$defs/event")!;
+    const requestValid = ajv.getSchema(`${schema.$id}#/$defs/Request`)!;
+    const eventValid = ajv.getSchema(`${schema.$id}#/$defs/Event`)!;
     assert.equal(fixture.schema, "semio.shell.persistence-neutral/v1");
     assert.equal(fixture.capacity, 64);
     assert.equal(fixture.requests.length, 4);
@@ -128,7 +130,7 @@ class PersistenceContractScript extends BundleScript {
       assert(!eventValid(hostile));
       eventDenials++;
     }
-    const source = readFileSync(join(base, "🦀️.rs"), "utf8");
+    const source = readFileSync(join(base, "🧪️tests/🔬️unit/🦀️.rs"), "utf8");
     assert(source.includes("persistence_contract_matches_neutral_scope_progress_and_terminal_traces"));
     assert(!source.includes("resolve_kernel_future") && !source.includes("resolve_ready") && !source.includes("ReplayShellCommand"));
     console.log(`[DEBUG] persistence contract oracle: requests=${requests.size}, hostileRequests=${fixture.requestNegatives.length}, hostileEvents=${eventDenials}, traces=${fixture.traces.length}, accepted=${accepted}, rejected=${rejected}, durablePublications=${published}; no IO/runtime activation claim`);
@@ -144,7 +146,7 @@ class DocumentRetirementScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("document-retirement-check accepts only --oracle-only");
     const base = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement");
     const fixture = JSON.parse(readFileSync(join(base, "🧪️fixture/🔣️.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), JSON.stringify(validate.errors));
     let grants = 0;
     for (const row of fixture.cases) {
@@ -182,7 +184,7 @@ class MemberOpenProtocolScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-open-protocol-check accepts only --oracle-only");
     const base = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open");
     const fixture = JSON.parse(readFileSync(join(base, "🧫️fixture/🔣️.json"), "utf8"));
-    const ajv = new Ajv2020({ strict: true, allErrors: true });
+    const ajv = new Ajv({ strict: true, allErrors: true });
     const validate = ajv.compile(JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), JSON.stringify(validate.errors));
     let rejectedBytes = 0;
@@ -248,7 +250,7 @@ class MemberHistoryIdentitySourceScript extends BundleScript {
     const leb = await import("@webassemblyjs/leb128");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
-    const ajv = new Ajv2020({ strict: true });
+    const ajv = new Ajv({ strict: true });
     const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const fail = (error: string): never => { throw new Error(error); };
@@ -339,7 +341,7 @@ class MemberHistoryInputScript extends BundleScript {
     const { inspectRetainedSprNeutral } = await import(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts"));
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
-    const ajv = new Ajv2020({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const history = Buffer.from(fixture.historyHex, "hex"); const hash = (bytes: Buffer) => Buffer.from(blake3Hex(bytes), "hex");
     assert.equal(crc.buf(history.subarray(0, 20)) >>> 0, history.readUInt32LE(20));
@@ -439,7 +441,7 @@ class MemberHistoryIdScript extends BundleScript {
     const leb = await import("@webassemblyjs/leb128");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🪪️id");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
-    const ajv = new Ajv2020({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors)); const ids = new Set<string>(); let accepted = 0;
     const decode = (row: { dictionary: string | null; resolvedIndex?: number }, bytes: Buffer) => {
       let at = 0;
@@ -529,7 +531,7 @@ class MemberHistoryRecordScript extends BundleScript {
     const leb = await import("@webassemblyjs/leb128");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧾️record");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
-    const ajv = new Ajv2020({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors)); let accepted = 0; const ids = new Set<string>();
     const fail = (reason: string): never => { throw new Error(reason); };
     for (const row of fixture.cases) {
@@ -628,7 +630,7 @@ class MemberHistoryDictionaryScript extends BundleScript {
     const { inspectRetainedSprNeutral } = await import(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts"));
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
-    const ajv = new Ajv2020({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const checksum = (bytes: Uint8Array): number => crc.buf(bytes) >>> 0;
     const hash = (bytes: Buffer): Buffer => Buffer.from(blake3Hex(bytes), "hex");
@@ -897,7 +899,7 @@ class MemberFactoryIdentityScript extends BundleScript {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("member-factory-identity-check accepts only --oracle-only");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
-    const ajv = new Ajv2020({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const semioSource = readFileSync(join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs"), "utf8");
     const semioTable = semioSource.slice(semioSource.indexOf("pub enum SemioMembers {"), semioSource.indexOf("/// 🏭️ Mints a typed Semio child"));
@@ -1045,7 +1047,7 @@ class PublicMemberOpenHandoffScript extends BundleScript {
   protected proveSource(): void {
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/🚪️member-open");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixture/🔣️.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
+    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), JSON.stringify(validate.errors));
     const selectedFixture = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🏭️factory/🧫️fixture/🔣️.json"), "utf8"));
     assert.equal(selectedFixture.declarations.length, fixture.requiredFactoryOperations);

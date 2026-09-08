@@ -1,7 +1,6 @@
 //! 🗣️ GIS 2D play app — the single `app_labels!` block plus the locale resolvers every taxonomy node
 //! reaches for.
 
-use crate::editor::gis2d::config::Gis2dConfig;
 
 //#region 🔖️Labels
 semio_framework_plugin::app_labels! {
@@ -41,8 +40,8 @@ semio_framework_plugin::app_labels! {
 }
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub fn gis2d_labels(cfg: &Gis2dConfig) -> &'static Gis2dPlayLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<Gis2dPlayLabels>(&cfg.locale)
+pub fn gis2d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Gis2dPlayLabels {
+    semio_framework_plugin::resolve_labels::<Gis2dPlayLabels>(view_state)
 }
 
 /// 🗣️ Resolves a standard map layer's display label from its stable id; unknown ids fall back to the

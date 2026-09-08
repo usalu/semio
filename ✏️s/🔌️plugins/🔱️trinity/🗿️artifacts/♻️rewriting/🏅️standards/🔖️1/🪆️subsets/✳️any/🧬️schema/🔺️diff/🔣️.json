@@ -34,7 +34,7 @@
             "type": "null"
           },
           {
-            "$ref": "#/$defs/PropertyValue"
+            "$ref": "https://semio.tech/schema/s/trinity/rewriting/artifact.json#/$defs/PropertyValue"
           }
         ]
       },
@@ -48,7 +48,7 @@
             "type": "null"
           },
           {
-            "$ref": "#/$defs/LayoutPoint"
+            "$ref": "https://semio.tech/schema/s/trinity/rewriting/artifact.json#/$defs/LayoutPoint"
           }
         ]
       },
@@ -66,69 +66,11 @@
           }
         ]
       },
-      "x-semio-state": "presence"
+      "x-semio-state": "config"
     },
     "beforePaneCamera": {
-      "$ref": "#/$defs/Camera",
+      "$ref": "https://semio.tech/schema/s/trinity/rewriting/artifact.json#/$defs/Camera",
       "x-semio-state": "config"
-    },
-    "reorganizeEpoch": {
-      "type": "integer",
-      "format": "int64",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    }
-  },
-  "$defs": {
-    "PropertyValue": {
-      "title": "PropertyValue",
-      "description": "JSON-equivalent property value."
-    },
-    "LayoutPoint": {
-      "title": "LayoutPoint",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "Camera": {
-      "title": "Camera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        }
-      }
     }
   }
 }

@@ -1,6 +1,6 @@
 //! 🧬️ Lowpoly artifact schema — every field of the artifact with its state class.
 
-use crate::{LowpolyObject, LowpolyPaintLayer, LowpolySelection, LOWPOLY_PAINT_TEXTURE_SIZE};
+use crate::{LOWPOLY_PAINT_TEXTURE_SIZE};
 use framework_schema::ArtifactSchema;
 use semio_framework_3d::mesh::HalfedgeMesh;
 use semio_framework_plugin::MeshData;
@@ -69,8 +69,6 @@ pub struct LowpolyArtifact {
     pub selection_mode_default: String,
     #[state(config)]
     pub engagement_input: String,
-    #[state(config)]
-    pub locale: String,
     #[state(artifact)]
     pub hovered_object_id: Option<String>,
     #[state(artifact)]
@@ -121,7 +119,6 @@ impl Default for LowpolyArtifact {
             selection_method: "rectangle".into(),
             selection_mode_default: "default".into(),
             engagement_input: String::new(),
-            locale: "en-US".into(),
             hovered_object_id: None,
             hovered_target_object_id: None,
             hovered_target_mode: None,
@@ -560,3 +557,10 @@ mod tests;
 #[path = "🧪️tests/🔬️export-concrete-forest-mesh/🦀️.rs"]
 mod export_concrete_forest_mesh_tests;
 //#endregion 🔖️ExportConcreteForestMeshTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::LowpolyObject;
+pub use crate::LowpolyPaintLayer;
+pub use crate::LowpolySelection;
+//#endregion 🔁️Re-exports

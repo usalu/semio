@@ -25,8 +25,6 @@ pub struct WiresArtifact {
     pub drag_last_x: f64,
     #[state(artifact)]
     pub drag_last_y: f64,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -41,7 +39,6 @@ impl Default for WiresArtifact {
             drag_node_id: None,
             drag_last_x: 0.0,
             drag_last_y: 0.0,
-            locale: "en-US".into(),
         }
     }
 }

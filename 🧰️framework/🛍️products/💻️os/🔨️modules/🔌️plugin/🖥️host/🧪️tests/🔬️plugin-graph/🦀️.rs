@@ -1,4 +1,3 @@
-
 use super::*;
 
 async fn manifest(plugin_id: &str, version: &str, deps: &[(&str, &str)]) -> PluginManifest {

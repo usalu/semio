@@ -8,9 +8,7 @@ use crate::Fem2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_framework_value_derive::{FromValue, ToValue};
-
-use super::bounds::{compute_fem2d_bounds, Fem2dBounds};
-
+use super::bounds::{compute_fem2d_bounds};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a fem2d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
@@ -73,3 +71,8 @@ pub fn fem2d_artifact_inference_descriptor() -> ::semio_framework_schema::Artifa
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::bounds::Fem2dBounds;
+//#endregion 🔁️Re-exports

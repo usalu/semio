@@ -8,7 +8,6 @@ use crate::En1991Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::En1991Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1991 snapshot. One field per named inference under
@@ -81,7 +80,6 @@ use crate::standards::v1::subsets::any::schema::{part_1_1, part_1_2, part_1_3, p
 /// `⚙️engine`. `evaluate` is the `En1991Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, ImposedCategory, NationalAnnex, Quantity};
-
 /// 📋️ Aggregate action checks for a typical floor bay.
 pub fn check_floor_actions(area_m2: f64, category: ImposedCategory, wind_zone_vb: f64, snow_zone: u8, use_de_na: bool) -> CheckReport {
     // 🔀️ O1 de-dyn: runtime-chosen concrete type (was `&dyn NationalAnnex`) — the closed-set enum
@@ -137,3 +135,8 @@ pub fn evaluate(document: &En1991Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::En1991Outline;
+//#endregion 🔁️Re-exports

@@ -4,3 +4,9 @@ type SemioTableMutationFrame {
   tag: Int!         # variant ordinal, 0-7
   payload: String!  # opaque base64: the variant's own argument tail
 }
+
+type SemioTableMutationBinary {
+  format: Int
+  tag: Int
+  payload: String
+}

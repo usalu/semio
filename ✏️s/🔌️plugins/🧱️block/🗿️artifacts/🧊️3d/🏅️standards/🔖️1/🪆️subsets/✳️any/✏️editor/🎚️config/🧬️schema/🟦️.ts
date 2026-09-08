@@ -7,7 +7,6 @@ export interface Block3dConfig {
   /** @state config */
   wantedTags: string[];
   /** @state config */
-  locale: string;
   /** @state config */
   windows: Block3dWindowView[];
   /** @state config */

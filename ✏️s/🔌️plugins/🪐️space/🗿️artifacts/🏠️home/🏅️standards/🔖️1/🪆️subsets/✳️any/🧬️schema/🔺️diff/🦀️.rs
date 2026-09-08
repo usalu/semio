@@ -14,7 +14,5 @@ pub struct SHomeDiff {
     pub catalog_generation: Option<u64>,
     #[state(config)]
     pub active_panel_tab: Option<String>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff

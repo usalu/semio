@@ -12,6 +12,13 @@
     { "id": "retired", "clientInstanceId": "client-a", "runtimeKey": "v1:7:3:space-amap", "spaceId": "space-a", "uri": "actor://v1:7:3:space-amap", "current": true, "activationActive": true, "retired": true, "outbound": false, "inbound": false }
   ],
   "retirement": ["deliver:1", "finished:1", "retire"],
+  "disposal": {
+    "bound": ["bind", "retire", "retired", "dispose"],
+    "opening": [
+      { "phase": "activation", "events": ["activate", "activated", "dispose"] },
+      { "phase": "open", "events": ["activate", "activated", "open", "opened", "dispose"] }
+    ]
+  },
   "bindingRetirement": [
     { "result": "refused", "sequence": ["bind"] },
     { "result": "transport", "sequence": ["bind", "retire"] },

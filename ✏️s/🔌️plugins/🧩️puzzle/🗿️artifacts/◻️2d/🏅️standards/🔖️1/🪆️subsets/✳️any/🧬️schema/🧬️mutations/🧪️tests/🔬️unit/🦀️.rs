@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::PUZZLE_2D_SCHEMA;
 use protocol::os_spr::testkit::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
@@ -44,7 +43,7 @@ fn sparse_node_without_anchor_still_emits_create_node() {
 //#region 🔖️MutationLaws
 #[test]
 fn create_delete_node_inverse_law() {
-    use crate::{Puzzle2dNode, schema::empty_puzzle2d_snapshot};
+    use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
     let base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
     semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &create_node(node.clone(), None)));
@@ -54,7 +53,7 @@ fn create_delete_node_inverse_law() {
 
 #[test]
 fn move_node_inverse_and_absorb_law() {
-    use crate::{Puzzle2dNode, schema::empty_puzzle2d_snapshot};
+    use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
     let base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
     let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
@@ -67,7 +66,7 @@ fn move_node_inverse_and_absorb_law() {
 
 #[test]
 fn node_field_mutations_inverse_law() {
-    use crate::{Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor, schema::empty_puzzle2d_snapshot};
+    use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
     let base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n1".into(), handles: vec![Puzzle2dHandle { id: "h1".into(), ..Default::default() }], ..Default::default() };
     let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
@@ -87,7 +86,7 @@ fn node_field_mutations_inverse_law() {
 
 #[test]
 fn connect_disconnect_handles_inverse_law() {
-    use crate::{Puzzle2dHandle, Puzzle2dNode, schema::empty_puzzle2d_snapshot};
+    use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
     let base = empty_puzzle2d_snapshot();
     let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }], ..Default::default() };
     let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }], ..Default::default() };
@@ -106,7 +105,7 @@ fn connect_disconnect_handles_inverse_law() {
 
 #[test]
 fn delete_node_severs_and_reconnects_edges() {
-    use crate::{Puzzle2dHandle, Puzzle2dNode, schema::empty_puzzle2d_snapshot};
+    use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dHandle, Puzzle2dNode};
     let base = empty_puzzle2d_snapshot();
     let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }], ..Default::default() };
     let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }], ..Default::default() };
@@ -123,7 +122,7 @@ fn delete_node_severs_and_reconnects_edges() {
 
 #[test]
 fn meta_mutations_inverse_law() {
-    use crate::{Puzzle2dCompatSpecificity, Puzzle2dKindCatalogs, schema::empty_puzzle2d_snapshot};
+    use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dCompatSpecificity, Puzzle2dKindCatalogs};
     let base = empty_puzzle2d_snapshot();
     semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &change_manifest_id(Some("manifest-1".into()))));
     semio_framework::io::resolve_ready(assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle)));
@@ -162,7 +161,7 @@ fn missing_target_is_error_per_verb_family() {
 
 #[test]
 fn create_duplicate_id_is_fatal_and_never_applies() {
-    use crate::{Puzzle2dNode, schema::empty_puzzle2d_snapshot};
+    use crate::{schema::empty_puzzle2d_snapshot, Puzzle2dNode};
     let mut base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n0".into(), ..Default::default() };
     base.nodes.push(node.clone());

@@ -935,9 +935,16 @@ export function discoverTestContributions(repoRoot: string): TestContribution[] 
  * add or remove a manifest mid-run. */
 const contributionCache = new Map<string, TestContribution[]>();
 
-/** 🧩️ Forgets the memoized contribution scan. */
-export function clearContributionCache(): void {
-  contributionCache.clear();
+/**
+ * 🧩️ Forgets the memoized contribution scan — of ONE root when it is named, of every root otherwise.
+ *
+ * A caller that mutated one synthetic repository names it: discarding every root's scan on its behalf
+ * makes the next reader of a repository nobody touched pay a full repository walk again, which is how a
+ * test budget ends up measuring the filesystem instead of the rule it asserts.
+ */
+export function clearContributionCache(repoRoot?: string): void {
+  if (repoRoot === undefined) contributionCache.clear();
+  else contributionCache.delete(repoRoot);
 }
 
 /**
@@ -1821,11 +1828,19 @@ function canonicalTestImport(path: string, declared: string, taxonomy: TestTaxon
   return assessTestImplementationPath(relativeTarget, taxonomy).canonical && availablePaths.has(relativeTarget);
 }
 
-/** 🪆️ Returns the Rust inline-module names that contribute to #[path] resolution at an offset. */
-function rustInlineModuleAncestors(masked: string, offset: number): string[] {
+/** 🪧️ Reads an actual Rust path attribute without treating comments or string contents as attributes. */
+function rustPathAttribute(source: string, masked: string, offset: number): string | undefined {
+  const attribute = /#\s*\[\s*path\s*=\s*"[^"]*"\s*\]/u.exec(masked);
+  return attribute ? /"([^"]*)"/u.exec(source.slice(offset + attribute.index, offset + attribute.index + attribute[0].length))?.[1] : undefined;
+}
+
+/** 🪆️ Resolves enclosing Rust inline-module directories, including explicit #[path] attributes. */
+function rustInlineModuleAncestors(source: string, masked: string, offset: number): string[] {
   const stack: (string | null)[] = [];
-  for (const match of masked.slice(0, offset).matchAll(/\bmod\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{|[{}]/gu)) {
-    if (match[1]) stack.push(match[1]);
+  for (const match of masked.slice(0, offset).matchAll(/((?:#\s*\[[^\]]*\]\s*)*)(?:pub(?:\([^)]*\))?\s+)?\bmod\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{|[{}]/gu)) {
+    if (match[2]) {
+      stack.push(rustPathAttribute(source, match[1]!, match.index!) ?? match[2]);
+    }
     else if (match[0] === "{") stack.push(null);
     else stack.pop();
   }
@@ -1874,8 +1889,13 @@ function rustTestSignals(path: string, source: string, taxonomy: TestTaxonomy, a
       found.push({ code: "inline-test-body", line: line(match.index!), detail: "Inline Rust test modules must move to a canonical test implementation." });
       continue;
     }
-    const original = source.slice(match.index!, match.index! + match[0].length), declared = /path\s*=\s*"([^"]+)"/u.exec(original)?.[1];
-    if (!declared || !canonicalTestImport(path, declared, taxonomy, availablePaths, rustInlineModuleAncestors(masked, match.index!))) found.push({ code: "invalid-test-module-wiring", line: line(match.index!), detail: "External Rust test modules must use #[path] to an existing canonical test implementation." });
+    const declared = rustPathAttribute(source, attributes, match.index!);
+    const ancestors = rustInlineModuleAncestors(source, masked, match.index!);
+    const segments = declared?.split(/[\\/]/u) ?? [];
+    const testModule = /(?:^|_)tests?$/u.test(name) || segments.some(segment => segment === taxonomy.testsDirName || taxonomy.testLegacyDirectoryNames.includes(segment)) || taxonomy.testLegacyFilenamePatterns.some(entry => new RegExp(entry.pattern, "u").test(segments.at(-1) ?? ""));
+    const supportTarget = declared && posix.relative("/repo", posix.resolve("/repo", posix.dirname(path), ...ancestors, declared));
+    if (!testModule && supportTarget && availablePaths.has(supportTarget)) continue;
+    if (!declared || !canonicalTestImport(path, declared, taxonomy, availablePaths, ancestors)) found.push({ code: "invalid-test-module-wiring", line: line(match.index!), detail: "External Rust test modules must use #[path] to an existing canonical test implementation." });
   }
   const includePattern = /((?:#\s*\[[^\]\n]+\]\s*)*)include!\s*\(\s*"[^"]+"\s*\)\s*;/gu;
   for (const match of masked.matchAll(includePattern)) {
@@ -3643,26 +3663,82 @@ export function outcomeClassesOf(descriptor: MutationLeafDescriptor): MutationOu
  * were reported as 4, because three facet directories could never have one.
  */
 export function isMutationLeafDirectory(repoRoot: string, name: string): boolean {
-  const pattern = (testTaxonomy(repoRoot) as unknown as { mutationDirectoryPattern?: string }).mutationDirectoryPattern;
-  if (typeof pattern === "string") {
+  const pattern = (rawTaxonomy(repoRoot) as { mutationDirectoryPattern?: unknown }).mutationDirectoryPattern;
+  if (typeof pattern !== "string") throw new Error(`${TAXONOMY_REL_PATH} declares no \`mutationDirectoryPattern\``);
+  return new RegExp(pattern, "u").test(name.normalize("NFC")) && !mutationFacetDirNames(repoRoot).has(name.normalize("NFC"));
+}
+
+/**
+ * 🧩️ The directory names that live BESIDE and INSIDE mutation leaves without ever being one.
+ *
+ * `🧩️plan`, `📝️text`, `💾️binary`, `🧬️schema` (`mutationOrganizationalFacetDirs`) organise a leaf's
+ * material; `🦠️mutation`, `🔺️diff`, `↩️inverse` (`mutationBehaviorFacetDirs`) carry its behaviour. Both
+ * lists are the taxonomy's, because a walker that spelled them itself would keep counting a facet as
+ * a leaf the day the taxonomy renames one — which is how 21 fully described owners once measured 4.
+ */
+function mutationFacetDirNames(repoRoot: string): ReadonlySet<string> {
+  const raw = rawTaxonomy(repoRoot);
+  const names = [...(raw.mutationOrganizationalFacetDirs as unknown[] | undefined ?? []), ...(raw.mutationBehaviorFacetDirs as unknown[] | undefined ?? [])];
+  return new Set(names.filter((name): name is string => typeof name === "string").map((name) => name.normalize("NFC")));
+}
+
+/**
+ * 🍃️ Every mutation leaf of one owner, as a path relative to its `🧬️mutations` directory.
+ *
+ * A leaf sits at depth 1 (`🧬️mutations/<verb-noun>`) or depth 2 (`🧬️mutations/<domain>/<verb>`, the
+ * shape execution contract §B admits and the gltf and architect vocabularies use). Reading one level
+ * was the whole of ledger row 7: 47 architect `<domain>` grouping directories were reported as
+ * undeclared leaves — they can never carry a descriptor — while the 266 real leaves beneath them were
+ * never reached at all. `schema check`'s `mutationRootModule` already accepts depth 1 or 2; this is
+ * the same rule on this side.
+ *
+ * The classification is DECLARED, never guessed: a directory carrying a descriptor is a leaf, whatever
+ * its name; a directory carrying none whose children qualify is a grouping directory and never a leaf
+ * itself; a directory with neither is a leaf only when its name matches the taxonomy's
+ * `mutationDirectoryPattern`, so an undescribed leaf is still REPORTED as undescribed rather than
+ * silently dropped. Test and fixture collections are excluded at both levels — a case's own
+ * contribution file would otherwise read as a leaf descriptor.
+ *
+ * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/SCOPE-OWNED-SCHEMA-CONTRACTS/📓️wp4b-mutations.md
+ */
+export function mutationLeafDirectories(repoRoot: string, ownerRel: string): string[] {
+  const taxonomy = testTaxonomy(repoRoot);
+  const filename = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
+  const root = join(repoRoot, ownerRel, schemaModuleDirName(repoRoot), taxonomy.testMutationVocabularyDirName);
+  const facets = mutationFacetDirNames(repoRoot);
+  const directories = (absDir: string): string[] => {
     try {
-      return new RegExp(pattern, "u").test(name);
+      return readdirSync(absDir, { withFileTypes: true }).filter((entry) => entry.isDirectory() && !entry.isSymbolicLink()).map((entry) => entry.name);
     } catch {
-      /* 🧭️Fall through to the structural rule below. */
+      return [];
     }
+  };
+  const structural = (name: string): boolean => !facets.has(name.normalize("NFC")) && !isFixtureOwnedPath(repoRoot, name);
+  const described = (absDir: string): boolean => existsSync(join(absDir, filename));
+  const qualifies = (absParent: string, name: string): boolean => structural(name) && (described(join(absParent, name)) || isMutationLeafDirectory(repoRoot, name));
+  const leaves: string[] = [];
+  for (const name of directories(root)) {
+    if (!structural(name)) continue;
+    const absDir = join(root, name);
+    if (described(absDir)) {
+      leaves.push(name);
+      continue;
+    }
+    const children = directories(absDir).filter((child) => qualifies(absDir, child));
+    if (children.length > 0) leaves.push(...children.map((child) => `${name}/${child}`));
+    else if (isMutationLeafDirectory(repoRoot, name)) leaves.push(name);
   }
-  return /[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/.test(name) && !["💾️binary", "📝️text", "🧬️schema"].includes(name);
+  return leaves.sort();
 }
 
 export function readLeafDescriptors(repoRoot: string, owner: string): Map<string, MutationLeafDescriptor> {
   const taxonomy = testTaxonomy(repoRoot);
   const filename = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
-  const root = join(repoRoot, owner, "🧬️schema", taxonomy.testMutationVocabularyDirName);
+  const root = join(repoRoot, owner, schemaModuleDirName(repoRoot), taxonomy.testMutationVocabularyDirName);
   const found = new Map<string, MutationLeafDescriptor>();
   if (!existsSync(root)) return found;
-  for (const entry of readdirSync(root, { withFileTypes: true })) {
-    if (!entry.isDirectory() || entry.isSymbolicLink() || !isMutationLeafDirectory(repoRoot, entry.name)) continue;
-    const descriptorPath = join(root, entry.name, filename);
+  for (const leaf of mutationLeafDirectories(repoRoot, owner)) {
+    const descriptorPath = join(root, leaf, filename);
     if (!existsSync(descriptorPath)) continue;
     try {
       const parsed = JSON.parse(readFileSync(descriptorPath, "utf8")) as MutationLeafDescriptor;
@@ -3678,9 +3754,9 @@ export function readLeafDescriptors(repoRoot: string, owner: string): Map<string
 export function leafDescriptorCoverage(repoRoot: string, owner: string): { leaves: number; described: number; missing: string[] } {
   const taxonomy = testTaxonomy(repoRoot);
   const filename = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
-  const root = join(repoRoot, owner, "🧬️schema", taxonomy.testMutationVocabularyDirName);
+  const root = join(repoRoot, owner, schemaModuleDirName(repoRoot), taxonomy.testMutationVocabularyDirName);
   if (!existsSync(root)) return { leaves: 0, described: 0, missing: [] };
-  const directories = readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory() && !entry.isSymbolicLink() && isMutationLeafDirectory(repoRoot, entry.name)).map((entry) => entry.name);
+  const directories = mutationLeafDirectories(repoRoot, owner);
   const missing = directories.filter((name) => !existsSync(join(root, name, filename)));
   return { leaves: directories.length, described: directories.length - missing.length, missing };
 }
@@ -3786,11 +3862,16 @@ function pascalCase(kind: string): string {
  */
 export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafDirName: string): LeafScaffold {
   const taxonomy = testTaxonomy(repoRoot);
-  const vocabulary = join(repoRoot, ownerRel, "🧬️schema", taxonomy.testMutationVocabularyDirName);
+  const vocabulary = join(repoRoot, ownerRel, schemaModuleDirName(repoRoot), taxonomy.testMutationVocabularyDirName);
   const leafAbs = join(vocabulary, leafDirName);
-  const leafRel = `${ownerRel}/🧬️schema/${taxonomy.testMutationVocabularyDirName}/${leafDirName}`;
-  const kind = leafDirName.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/)?.[0] ?? "";
-  const emoji = kind.length > 0 ? leafDirName.slice(0, leafDirName.length - kind.length) : "";
+  const leafRel = `${ownerRel}/${schemaModuleDirName(repoRoot)}/${taxonomy.testMutationVocabularyDirName}/${leafDirName}`;
+  // 🍃️A two-segment leaf (`<domain>/<verb>`) is named by its OWN directory, never by the grouping
+  // directory above it: `🌳️node/⚖️change-weights` declares `change-node-morph-weights`, which no
+  // concatenation of the two segments produces. The scaffolder therefore refuses such a leaf rather
+  // than inventing a kind — the leaf's descriptor is the authority, and this tool exists to write one.
+  const leafName = leafDirName.split("/").at(-1) ?? leafDirName;
+  const kind = leafName.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/)?.[0] ?? "";
+  const emoji = kind.length > 0 ? leafName.slice(0, leafName.length - kind.length) : "";
   const evidence: Record<string, string> = {};
   const refused: string[] = [];
 
@@ -4002,11 +4083,10 @@ export function binaryProtocolDriftBreaches(repoRoot: string, registry: OracleRe
 /** 🏗️ Scaffolds every leaf of one owner, so roster-level uniqueness can be checked before anything is written. */
 export function scaffoldOwnerDescriptors(repoRoot: string, ownerRel: string): LeafScaffold[] {
   const taxonomy = testTaxonomy(repoRoot);
-  const vocabulary = join(repoRoot, ownerRel, "🧬️schema", taxonomy.testMutationVocabularyDirName);
+  const vocabulary = join(repoRoot, ownerRel, schemaModuleDirName(repoRoot), taxonomy.testMutationVocabularyDirName);
   if (!existsSync(vocabulary)) return [];
-  return readdirSync(vocabulary, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && !entry.isSymbolicLink() && isMutationLeafDirectory(repoRoot, entry.name))
-    .map((entry) => scaffoldLeafDescriptor(repoRoot, ownerRel, entry.name))
+  return mutationLeafDirectories(repoRoot, ownerRel)
+    .map((leaf) => scaffoldLeafDescriptor(repoRoot, ownerRel, leaf))
     .sort((a, b) => a.kind.localeCompare(b.kind));
 }
 //#endregion 🏗️LeafScaffold
@@ -4067,55 +4147,92 @@ export function forbiddenSchemaPlacements(repoRoot: string): { directories: read
 }
 
 /**
- * 🔠️ The single schema-contract diagnostic code table: every code this vocabulary owns, each with
- * the one-line description a reader needs to act on the finding.
+ * 🏭️ The two implementations that emit the shared schema-contract vocabulary: this harness, and the
+ * root script's `schema check`. A code names its emitters so the table can hold the codes only one
+ * side can raise without either side pretending to raise the other's.
+ */
+export const SCHEMA_DIAGNOSTIC_EMITTERS = ["harness", "check"] as const;
+export type SchemaDiagnosticEmitter = (typeof SCHEMA_DIAGNOSTIC_EMITTERS)[number];
+
+/**
+ * 🔠️ The single schema-contract diagnostic code table: every code EITHER implementation emits, each
+ * with the one-line description a reader needs to act on the finding and the emitters that raise it.
  *
- * This constant IS the contract between the two implementations of the rule set (ledger row 97): the
- * harness emits from it and the root `schema check` imports it rather than restating a second
+ * This constant IS the contract between the two implementations of the rule set (ledger rows 97, 125):
+ * the harness emits from it and the root `schema check` imports it rather than restating a second
  * vocabulary. Import path:
  * `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts`
- * → `SCHEMA_DIAGNOSTIC_CODE_TABLE` (descriptions), `SCHEMA_DIAGNOSTIC_CODES` (the ids, in order),
- * `SchemaDiagnosticCode` (the union). A code added here is added in one place only; the protocol
- * schema's `SchemaDiagnosticCode` enum is held equal to it by the invariants suite.
+ * → `SCHEMA_DIAGNOSTIC_CODE_TABLE` (descriptions + emitters), `SCHEMA_DIAGNOSTIC_CODES` (the ids, in
+ * order), `SchemaDiagnosticCode` (the union), `SchemaHarnessDiagnosticCode` (the half this file may
+ * raise). A code added here is added in one place only; the protocol schema's `SchemaDiagnosticCode`
+ * enum is held equal to it by the invariants suite.
+ *
+ * `emitters` is a LIST, not a single tag: a rule implemented on both sides — the catalog states, the
+ * placement and export rules `schema check` re-derives over the whole tree — is one code with two
+ * emitters, and writing one of them would be a lie about the other.
  */
 export const SCHEMA_DIAGNOSTIC_CODE_TABLE = {
-  "schema-export-resolution-undeclared": "the taxonomy declares no `schemaExportResolution`, so `schema://` addresses nothing",
-  "schema-catalog-missing": "the derived schema catalog the taxonomy points at does not exist",
-  "schema-catalog-malformed": "the catalog exists but is not the declared `{ scopes: { <id>: { path, formats, exports, dependsOn } } }` document",
-  "schema-uri-malformed": "a `schema://` uri is not `schema://<scope id>/<ExportId>`",
-  "schema-scope-unknown": "a `schema://` uri names a scope id the catalog does not declare",
-  "schema-scope-ambiguous": "two catalog rows claim the same scope id",
-  "schema-export-unknown": "a scope is addressed for an export it does not declare, or its carrier file declares no such `$defs` member",
-  "schema-format-unavailable": "a scope implements no file for the format that was asked for, the normative one included",
-  "schema-file-missing": "the catalog names a file for a scope, format or export and that file does not exist",
-  "schema-ref-unresolved": "a cross-document `$ref` addresses no export: a relative file path, an unknown `$id`, or a fragment other than `#/$defs/<ExportId>`",
-  "schema-ref-broken-internal": "a module-internal JSON pointer (`#…`) lands on nothing in its own document",
-  "schema-cross-scope-dependency-forbidden": "a scope references another scope without declaring it in `dependsOn`",
-  "schema-placement-forbidden-filename": "a schema document carries a filename the taxonomy retired (`*.schema.json`, `🧬️schema.json`, …)",
-  "schema-placement-outside-module": "a schema document lives outside any `🧬️schema/` module of an eligible owner",
-  "schema-contracts-directory-forbidden": "a schema document lives under the retired per-contract `🧬️contracts/<x>` shape",
-  "schema-owner-ineligible": "a `🧬️schema/` module hangs off a directory level the taxonomy does not admit as a scope owner",
-  "schema-export-incomplete": "an export is missing from a format its scope provides, or from a format its `x-semio-formats` declared",
-  "schema-export-parser-missing": "a TypeScript export declares its type but no `parse<Export>()` entry point, so the format cannot decode it",
-  "schema-export-format-undeclared": "a format declares the export while its `x-semio-formats` does not name that format, the normative one included",
-  "schema-export-formats-annotation-invalid": "`x-semio-formats` is not a non-empty array of taxonomy format ids",
-  "schema-dialect-not-draft-07": "a schema document declares a `$schema` dialect other than the single one the taxonomy allows",
-  "schema-module-id-missing": "a schema module declares no `$id`, so nothing can `$ref` it across scopes",
-  "schema-fixture-defines-schema": "a schema DEFINITION lives inside a `🧪️*`/`🧫️*` tree without the enclosing case declaring `inertSchemaData`",
-  "schema-fixture-local-schema-fallback": "a fixture resolves its contract from a fixture-local copy instead of the owning scope",
-  "schema-fixture-metadata-invalid": "a schema-bound fixture's declaration is not the shape the test protocol states",
-  "schema-fixture-parse-failed": "a schema-bound fixture's payload could not be parsed in the format it was bound to",
-  "schema-instance-invalid": "an instance fails structural validation against the export it was bound to",
+  "schema-export-resolution-undeclared": { emitters: ["harness"], description: "the taxonomy declares no `schemaExportResolution`, so `schema://` addresses nothing" },
+  "schema-catalog-missing": { emitters: ["harness", "check"], description: "the derived schema catalog the taxonomy points at does not exist" },
+  "schema-catalog-malformed": { emitters: ["harness", "check"], description: "the catalog exists but is not the declared `{ scopes: { <id>: { path, formats, exports, dependsOn } } }` document" },
+  "schema-catalog-stale": { emitters: ["harness", "check"], description: "the derived schema catalog does not match the schema modules on disk; regenerate it" },
+  "schema-uri-malformed": { emitters: ["harness"], description: "a `schema://` uri is not `schema://<scope id>/<ExportId>`" },
+  "schema-scope-unknown": { emitters: ["harness"], description: "a `schema://` uri names a scope id the catalog does not declare" },
+  "schema-scope-ambiguous": { emitters: ["harness", "check"], description: "two catalog rows claim the same scope id" },
+  "schema-export-unknown": { emitters: ["harness"], description: "a scope is addressed for an export it does not declare, or its carrier file declares no such `$defs` member" },
+  "schema-format-unavailable": { emitters: ["harness"], description: "a scope implements no file for the format that was asked for, the normative one included" },
+  "schema-file-missing": { emitters: ["harness"], description: "the catalog names a file for a scope, format or export and that file does not exist" },
+  "schema-ref-unresolved": { emitters: ["harness", "check"], description: "a cross-document `$ref` addresses no export: a relative file path, an unknown `$id`, or a fragment other than `#/$defs/<ExportId>`" },
+  "schema-ref-broken-internal": { emitters: ["harness"], description: "a module-internal JSON pointer (`#…`) lands on nothing in its own document" },
+  "schema-cross-scope-dependency-forbidden": { emitters: ["harness", "check"], description: "a scope references another scope without declaring it in `dependsOn`" },
+  "schema-placement-forbidden-filename": { emitters: ["harness", "check"], description: "a schema document carries a filename the taxonomy retired (`*.schema.json`, `🧬️schema.json`, …)" },
+  "schema-placement-outside-module": { emitters: ["harness", "check"], description: "a schema document lives outside any `🧬️schema/` module of an eligible owner" },
+  "schema-contracts-directory-forbidden": { emitters: ["harness"], description: "a schema document lives under the retired per-contract `🧬️contracts/<x>` shape" },
+  "schema-owner-ineligible": { emitters: ["harness", "check"], description: "a `🧬️schema/` module hangs off a directory level the taxonomy does not admit as a scope owner" },
+  "schema-export-incomplete": { emitters: ["harness", "check"], description: "an export is missing from a format its scope provides, or from a format its `x-semio-formats` declared" },
+  "schema-export-parser-missing": { emitters: ["harness"], description: "a TypeScript export declares its type but no `parse<Export>()` entry point, so the format cannot decode it" },
+  "schema-export-format-undeclared": { emitters: ["harness"], description: "a format declares the export while its `x-semio-formats` does not name that format, the normative one included" },
+  "schema-export-formats-annotation-invalid": { emitters: ["harness", "check"], description: "`x-semio-formats` is not a non-empty array of taxonomy format ids" },
+  "schema-export-id-duplicate": { emitters: ["check"], description: "one scope resolves the same export id to two carrier files, so `schema://<scope>/<Export>` names both" },
+  "schema-export-id-invalid": { emitters: ["check"], description: "an export key is not a PascalCase export id, so no format can declare an entity by that name" },
+  "schema-dialect-not-draft-07": { emitters: ["harness", "check"], description: "a schema document declares a `$schema` dialect other than the single one the taxonomy allows" },
+  "schema-module-id-missing": { emitters: ["harness", "check"], description: "a schema module declares no `$id`, so nothing can `$ref` it across scopes" },
+  "schema-document-id-duplicate": { emitters: ["check"], description: "two schema documents declare the same `$id`, so a cross-scope `$ref` to it addresses either of them" },
+  "schema-document-id-unaddressable": { emitters: ["check"], description: "a schema document's `$id` is not the `https://semio.tech/schema/<scope path>/<facet>.json` form the catalog resolves" },
+  "schema-module-id-inconsistent": { emitters: ["check"], description: "a facet document's `$id` deepens or leaves its module's scope path instead of varying only the facet filename" },
+  "schema-document-unparseable": { emitters: ["check"], description: "a file in the canonical schema slot is not parseable JSON at all" },
+  "schema-document-not-object": { emitters: ["check"], description: "a schema module leaf parses but is not a JSON Schema object" },
+  "schema-enum-empty": { emitters: ["check"], description: "an `enum: []` admits no instance; state the intent with `propertyNames: false` / `maxProperties: 0` or delete the keyword" },
+  "schema-cross-scope-dependency-uncataloged": { emitters: ["check"], description: "a `$ref` resolves into a document no catalogued scope owns, so no `dependsOn` entry could ever declare it" },
+  "schema-mutation-leaf-id": { emitters: ["check"], description: "a mutation leaf's `$id` is not the `<root scope path>/mutation/<semanticKind>/schema.json` form its own scope derives" },
+  "schema-mutation-leaf-schema-absent": { emitters: ["check"], description: "a described mutation leaf carries no `🧬️schema/🔣️.json`, so the declared authority for its payload does not exist" },
+  "schema-mutation-aggregate-id": { emitters: ["check"], description: "a mutations aggregate's `$id` is not its own module's `mutations.json` facet, so the aggregate deepens the scope" },
+  "schema-mutation-aggregate-kinds-redundant": { emitters: ["check"], description: "an aggregate carries `x-semio-mutationKinds`, which restates its `oneOf` `$ref` union and has no reader" },
+  "schema-fixture-defines-schema": { emitters: ["harness", "check"], description: "a schema DEFINITION lives inside a `🧪️*`/`🧫️*` tree without the enclosing case declaring `inertSchemaData`" },
+  "schema-fixture-local-schema-fallback": { emitters: ["harness"], description: "a fixture resolves its contract from a fixture-local copy instead of the owning scope" },
+  "schema-fixture-metadata-invalid": { emitters: ["harness"], description: "a schema-bound fixture's declaration is not the shape the test protocol states" },
+  "schema-fixture-parse-failed": { emitters: ["harness"], description: "a schema-bound fixture's payload could not be parsed in the format it was bound to" },
+  "schema-instance-invalid": { emitters: ["harness"], description: "an instance fails structural validation against the export it was bound to" },
 } as const;
 
-/** 🔠️ Every diagnostic this layer can emit, in table order. A distinct code per distinguishable failure. */
+/** 🔠️ Every diagnostic in the shared vocabulary, in table order. A distinct code per distinguishable failure. */
 export const SCHEMA_DIAGNOSTIC_CODES = Object.keys(SCHEMA_DIAGNOSTIC_CODE_TABLE) as readonly (keyof typeof SCHEMA_DIAGNOSTIC_CODE_TABLE)[];
 export type SchemaDiagnosticCode = keyof typeof SCHEMA_DIAGNOSTIC_CODE_TABLE;
 
-/** 🩺️ One finding, with everything needed to act on it and nothing inferred. */
-export type SchemaDiagnostic = Readonly<{ code: SchemaDiagnosticCode; scope: string | null; export: string | null; format: string | null; path: string | null; detail: string }>;
+/** 🏭️ The codes one emitter raises, as a type. `schemaDiagnostic` takes the harness half, so a code
+ * only `schema check` can raise is a compile error here rather than a finding no rule produces. */
+export type SchemaDiagnosticCodeEmittedBy<E extends SchemaDiagnosticEmitter> = { [K in SchemaDiagnosticCode]: E extends (typeof SCHEMA_DIAGNOSTIC_CODE_TABLE)[K]["emitters"][number] ? K : never }[SchemaDiagnosticCode];
+export type SchemaHarnessDiagnosticCode = SchemaDiagnosticCodeEmittedBy<"harness">;
 
-function schemaDiagnostic(code: SchemaDiagnosticCode, detail: string, where: Partial<Omit<SchemaDiagnostic, "code" | "detail">> = {}): SchemaDiagnostic {
+/** 🏭️ The codes one emitter raises, at runtime, in table order. */
+export function schemaDiagnosticCodesEmittedBy(emitter: SchemaDiagnosticEmitter): readonly SchemaDiagnosticCode[] {
+  return SCHEMA_DIAGNOSTIC_CODES.filter((code) => (SCHEMA_DIAGNOSTIC_CODE_TABLE[code].emitters as readonly string[]).includes(emitter));
+}
+
+/** 🩺️ One finding, with everything needed to act on it and nothing inferred. */
+export type SchemaDiagnostic = Readonly<{ code: SchemaHarnessDiagnosticCode; scope: string | null; export: string | null; format: string | null; path: string | null; detail: string }>;
+
+function schemaDiagnostic(code: SchemaHarnessDiagnosticCode, detail: string, where: Partial<Omit<SchemaDiagnostic, "code" | "detail">> = {}): SchemaDiagnostic {
   return { code, detail, scope: where.scope ?? null, export: where.export ?? null, format: where.format ?? null, path: where.path ?? null };
 }
 
@@ -4149,6 +4266,7 @@ const schemaCatalogCache = new Map<string, { catalog: SchemaCatalog | null; diag
 export function clearSchemaContractCache(): void {
   rawTaxonomyCache.clear();
   schemaCatalogCache.clear();
+  submodulePathCache.clear();
 }
 
 function rawTaxonomy(repoRoot: string): Record<string, unknown> {
@@ -4309,8 +4427,9 @@ export function resolveSchemaExport(repoRoot: string, uri: string, format?: stri
  * 🧫️ Whether a repository-relative path lives inside a test or fixture COLLECTION.
  *
  * The patterns are the taxonomy's (`schemaScopeOwnerLevels.fixtureOwnerPathPatterns`), so what counts as
- * a collection is declared once. The one thing decided here is the `🔨️modules/<m>` carve-out: a module
- * member is a module whatever emoji its name starts with, and without it the repository test platform —
+ * a collection is declared once. The one thing decided here is the module-member carve-out, and its
+ * directory name is the taxonomy's too (`schemaScopeOwnerLevels.moduleMemberDirName`): a module member is
+ * a module whatever emoji its name starts with, and without the carve-out the repository test platform —
  * `🔨️modules/🧪️test`, which owns the test-protocol contract every host reads — would be classified as a
  * collection of its own examples.
  */
@@ -4318,10 +4437,12 @@ export function isFixtureOwnedPath(repoRoot: string, rel: string): boolean {
   // 🧭️Only the SELF patterns (`**/🧪️*`) name a collection ROOT; the `/**` siblings name its descendants
   // and are redundant here, because every ancestor of the path is tested. Keeping them would make
   // `🔨️modules/🧪️test/🧬️schema` a collection by virtue of an ancestor the carve-out had just excused.
-  const patterns = ((schemaScopeOwnerLevels(repoRoot) as { fixtureOwnerPathPatterns?: readonly string[] } | null)?.fixtureOwnerPathPatterns ?? []).filter((pattern) => !pattern.endsWith("/**"));
+  const declared = schemaScopeOwnerLevels(repoRoot);
+  const patterns = (declared?.fixtureOwnerPathPatterns ?? []).filter((pattern) => !pattern.endsWith("/**"));
+  const moduleMemberDirName = declared?.moduleMemberDirName;
   const segments = rel.split("/");
   for (let index = 0; index < segments.length; index += 1) {
-    if (isModuleMemberSegment(segments, index)) continue;
+    if (isModuleMemberSegment(segments, index, moduleMemberDirName)) continue;
     const prefix = segments.slice(0, index + 1).join("/");
     if (patterns.some((pattern) => matchesTaxonomyPathPattern(pattern, prefix))) return true;
   }
@@ -4329,21 +4450,23 @@ export function isFixtureOwnedPath(repoRoot: string, rel: string): boolean {
 }
 
 /**
- * 🔨️ Whether the segment at `index` is a `🔨️modules/<m>` member.
+ * 🔨️ Whether the segment at `index` is a member of the taxonomy's module-member directory.
  *
  * This decides COLLECTION membership only — "does this path lie inside a test or fixture collection" —
- * never ownership, which `schemaScopeEligibility` reads from the taxonomy. A `🔨️modules/<m>` member is
- * a module whatever emoji its name starts with; `🧪️tests/` and `🧫️fixtures/` under it are collections.
+ * never ownership, which `schemaScopeEligibility` reads from the taxonomy. A module member is a module
+ * whatever emoji its name starts with; `🧪️tests/` and `🧫️fixtures/` under it are collections. The
+ * directory name is `schemaScopeOwnerLevels.moduleMemberDirName`; a taxonomy that declares none carves
+ * nothing out, because a carve-out nobody declared is a rule nobody can read.
  */
-function isModuleMemberSegment(segments: readonly string[], index: number): boolean {
-  return index > 0 && segments[index - 1] === "🔨️modules";
+function isModuleMemberSegment(segments: readonly string[], index: number, moduleMemberDirName: string | undefined): boolean {
+  return moduleMemberDirName !== undefined && index > 0 && segments[index - 1] === moduleMemberDirName;
 }
 
 /** 🏛️ One eligibility verdict for a candidate scope owner directory. */
 export type SchemaScopeEligibility = Readonly<{ path: string; eligible: boolean; level: string | null; reason: string }>;
 
 /** 🏛️ The declared owner levels and exclusions, exactly as the taxonomy states them. */
-export type SchemaScopeOwnerLevels = Readonly<{ facetDirName: string; levels: Readonly<Record<string, { pathPatterns: readonly string[]; reason: string }>>; excludedOwnerPathPatterns: readonly string[] }>;
+export type SchemaScopeOwnerLevels = Readonly<{ facetDirName: string; levels: Readonly<Record<string, { pathPatterns: readonly string[]; reason: string }>>; excludedOwnerPathPatterns: readonly string[]; fixtureOwnerPathPatterns?: readonly string[]; moduleMemberDirName?: string }>;
 
 export function schemaScopeOwnerLevels(repoRoot: string): SchemaScopeOwnerLevels | null {
   const declared = rawTaxonomy(repoRoot).schemaScopeOwnerLevels as SchemaScopeOwnerLevels | undefined;
@@ -4438,8 +4561,47 @@ function readSchemaDefinition(abs: string): unknown | undefined {
   return isJsonSchemaDefinition(parsed) ? parsed : undefined;
 }
 
-/** 🗂️ Every file under a subtree, repository-relative, skipping the taxonomy's exclusions. */
+const submodulePathCache = new Map<string, ReadonlySet<string>>();
+
+/**
+ * 🧩️ The repository-relative paths `.gitmodules` declares as submodules, parsed once per root.
+ *
+ * A submodule is a FOREIGN repository: its files are authored, versioned and reviewed elsewhere, and
+ * this workspace tracks one gitlink for the whole tree. Auditing them reports findings nobody here
+ * can act on, against documents no owner in this tree could move. The declaration is read from
+ * `.gitmodules` rather than from `git submodule status`, so the rule holds in a devcontainer, on a
+ * bare checkout and with no `git` binary at all; paths are NFC-normalised because the file is written
+ * by git while directory entries come from the filesystem, and macOS hands those back decomposed.
+ */
+export function submodulePaths(repoRoot: string): ReadonlySet<string> {
+  const cached = submodulePathCache.get(repoRoot);
+  if (cached !== undefined) return cached;
+  let text = "";
+  try {
+    text = readFileSync(join(repoRoot, ".gitmodules"), "utf8");
+  } catch {
+    /* 🧭️A repository with no submodules declares none; an absent file is that statement. */
+  }
+  const declared = new Set<string>();
+  for (const line of text.split(/\r?\n/u)) {
+    const match = /^\s*path\s*=\s*(.+?)\s*$/u.exec(line);
+    if (match !== null) declared.add(match[1]!.normalize("NFC"));
+  }
+  submodulePathCache.set(repoRoot, declared);
+  return declared;
+}
+
+/**
+ * 🗂️ Every file under a subtree, repository-relative, skipping the taxonomy's exclusions.
+ *
+ * Three kinds of directory are never a schema authority and are cut at the directory, not per file:
+ * dot-directories (tooling state — `.nx/cache` alone carries six generated copies of one manifest
+ * schema), the `SKIP_DIR_NAMES` build and dependency outputs (`dist/` among them, so the gitignored
+ * `dist/🧬️schema/📜️artifact-definition.json` copies under each artifact's TypeScript package cannot
+ * double a law that walks the artifact tree — ledger row 153), and declared git submodules (row 133).
+ */
 export function schemaTreeFiles(repoRoot: string, under = ""): string[] {
+  const submodules = submodulePaths(repoRoot);
   const files: string[] = [];
   const walk = (absDir: string, relDir: string): void => {
     let entries: import("node:fs").Dirent[];
@@ -4452,10 +4614,7 @@ export function schemaTreeFiles(repoRoot: string, under = ""): string[] {
       if (entry.isSymbolicLink()) continue;
       const rel = relDir.length === 0 ? entry.name : `${relDir}/${entry.name}`;
       if (entry.isDirectory()) {
-        // 🗑️A dot-directory is tooling state — `.nx/cache` alone carries six generated copies of one
-        // manifest schema. Generated output is never an authority, and counting it as one reports the
-        // same violation once per cache entry.
-        if (entry.name.startsWith(".") || SKIP_DIR_NAMES.has(entry.name) || isExcludedTestPath(repoRoot, rel)) continue;
+        if (entry.name.startsWith(".") || SKIP_DIR_NAMES.has(entry.name) || submodules.has(rel.normalize("NFC")) || isExcludedTestPath(repoRoot, rel)) continue;
         walk(join(absDir, entry.name), rel);
         continue;
       }
@@ -4515,6 +4674,50 @@ export function schemaPlacementDiagnostics(repoRoot: string, files: readonly str
 function schemaModuleDirOf(dirSegments: readonly string[], moduleDirName: string): string | null {
   const at = dirSegments.lastIndexOf(moduleDirName);
   return at < 0 ? null : dirSegments.slice(0, at + 1).join("/");
+}
+
+/** 🧬️ Every `🧬️schema/` module directory the FILE WALK reaches that carries a schema definition. */
+export function schemaModuleDirectoriesOnDisk(repoRoot: string, files: readonly string[] = schemaTreeFiles(repoRoot)): ReadonlySet<string> {
+  const moduleDirName = schemaModuleDirName(repoRoot);
+  const found = new Set<string>();
+  for (const rel of files) {
+    const segments = rel.split("/");
+    if (!segments[segments.length - 1]!.endsWith(".json")) continue;
+    const moduleDir = schemaModuleDirOf(segments.slice(0, -1), moduleDirName);
+    if (moduleDir === null || found.has(moduleDir)) continue;
+    if (readSchemaDefinition(join(repoRoot, rel)) !== undefined) found.add(moduleDir);
+  }
+  return found;
+}
+
+/**
+ * ⚖️ The GATE FLAG for the two-measurement problem (ledger row 150).
+ *
+ * This layer measures the tree twice and the two measurements are independent: PLACEMENT walks the
+ * filesystem and asks where each definition sits, RESOLUTION reads the derived catalog and asks what
+ * each declared scope owes. When they disagree — a module on disk no catalog row names, a catalog row
+ * whose module the walk never produced a definition for — every number either half reports is a number
+ * about a different tree, and a subtree can read "clean" from one side while the other has never
+ * looked at it. That silence is what row 150 asks to be broken, so the disagreement itself is a
+ * finding: `schema-catalog-stale`, the code whose remedy — regenerate the catalog — is exactly right
+ * for it, and which `schema check` already raises from its own side.
+ *
+ * Under `--under` both sides are narrowed to the same subtree, so the comparison stays like-for-like.
+ */
+export function schemaMeasurementDisagreementDiagnostics(repoRoot: string, files: readonly string[] = schemaTreeFiles(repoRoot), under = ""): SchemaDiagnostic[] {
+  const { catalog } = readSchemaCatalog(repoRoot);
+  if (catalog === null) return [];
+  const selected = (path: string): boolean => under.length === 0 || path === under || path.startsWith(`${under}/`);
+  // 🧫️A module inside a `🧪️`/`🧫️` collection is one the catalog is RIGHT not to name, and
+  // `schema-fixture-defines-schema` already reports it. Counting it here too would report one defect
+  // twice and make the disagreement number a claim about the catalog that is not true.
+  const onDisk = [...schemaModuleDirectoriesOnDisk(repoRoot, files)].filter((path) => selected(path) && !isFixtureOwnedPath(repoRoot, path));
+  const catalogued = new Map<string, string>();
+  for (const [id, scope] of Object.entries(catalog.scopes)) if (selected(scope.path) && !catalogued.has(scope.path)) catalogued.set(scope.path, id);
+  const found: SchemaDiagnostic[] = [];
+  for (const path of onDisk.sort()) if (!catalogued.has(path)) found.push(schemaDiagnostic("schema-catalog-stale", `${path} carries a schema definition and no catalog row names it, so export resolution never measures this module`, { path }));
+  for (const [path, id] of [...catalogued].sort((left, right) => left[0].localeCompare(right[0]))) if (!onDisk.includes(path)) found.push(schemaDiagnostic("schema-catalog-stale", `the catalog declares scope ${JSON.stringify(id)} at ${path}, and the tree walk finds no schema definition there`, { scope: id, path }));
+  return found;
 }
 
 /** 🏛️ Owner eligibility: every `🧬️schema/` module on disk sits on a declared scope owner level. */
@@ -4717,7 +4920,10 @@ export const GRAPHQL_EXPORT_KEYWORDS = ["type", "input", "enum", "interface", "u
  * GraphQL admits any of `GRAPHQL_EXPORT_KEYWORDS`: an export whose JSON Schema is an `enum` or a
  * `oneOf` has no honest `type` form, and forcing one would make the GraphQL document a lie about the
  * contract. TypeScript answers only for the TYPE half here; its `parse<Export>()` half is
- * `declaresSchemaExportParser`, so the two failures stay separately reportable.
+ * `declaresSchemaExportParser`, so the two failures stay separately reportable. Rust admits a
+ * definition OR a per-name `pub use` re-export (`declaresRustReExport`): a scope that owns the type
+ * elsewhere and republishes it by name has declared it, and demanding a second definition would
+ * mandate the restatement contract §A forbids.
  */
 export function declaresSchemaExport(format: string, source: string, exported: string): boolean {
   const name = exported.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
@@ -4727,12 +4933,30 @@ export function declaresSchemaExport(format: string, source: string, exported: s
     case "🔗️graphql":
       return new RegExp(`^\\s*(?:${GRAPHQL_EXPORT_KEYWORDS.join("|")})\\s+${name}\\b`, "mu").test(source);
     case "🦀️rust":
-      return new RegExp(`^\\s*pub\\s+(?:struct|enum|type)\\s+${name}\\b`, "mu").test(source);
+      return new RegExp(`^\\s*pub\\s+(?:struct|enum|type)\\s+${name}\\b`, "mu").test(source) || declaresRustReExport(source, name);
     case "🟦️typescript":
       return new RegExp(`^\\s*export\\s+(?:interface|type|const|class)\\s+${name}\\b`, "mu").test(source);
     default:
       return false;
   }
+}
+
+/**
+ * 🦀️ Whether a Rust source PUBLISHES one export by name through a re-export.
+ *
+ * Execution contract §A (ledger row 148): a Rust re-export declares an export when it names it, one
+ * name per statement — `pub use <path>::<Export>;`, or `pub use <path>::<Other> as <Export>;`, which
+ * publishes the same name through a rename. A GROUPED re-export (`pub use a::{X, Y};`) and a GLOB
+ * (`pub use a::*;`) declare nothing here: neither one names `<Export>` at the module's surface, so a
+ * reader of the module — and this rule is a reader — cannot tell from the statement whether the
+ * export is published at all, which is exactly the ambiguity a declared contract exists to remove.
+ * `pub(crate) use` is not `pub use`: a re-export the crate keeps to itself publishes nothing.
+ *
+ * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/SCOPE-OWNED-SCHEMA-CONTRACTS/📋️execution-contract.md
+ */
+function declaresRustReExport(source: string, name: string): boolean {
+  const path = "[A-Za-z_][A-Za-z0-9_]*(?:\\s*::\\s*[A-Za-z_][A-Za-z0-9_]*)*";
+  return new RegExp(`^\\s*pub\\s+use\\s+(?![^;\\n]*[{*])${path}\\s*::\\s*(?:${name}|[A-Za-z_][A-Za-z0-9_]*\\s+as\\s+${name})\\s*;`, "mu").test(source);
 }
 
 /**
@@ -4862,10 +5086,11 @@ function schemaRefDiagnostics(scopeId: string, scope: SchemaCatalogScope, file: 
  * Every document of a scope is read, not only its module root: a facet child (`🔺️diff/`,
  * `🧬️mutations/`, …) carries exports of the same scope and writes its own refs.
  */
-export function schemaResolutionDiagnostics(repoRoot: string): SchemaDiagnostic[] {
+export function schemaResolutionDiagnostics(repoRoot: string, under = ""): SchemaDiagnostic[] {
   const { catalog, diagnostics } = readSchemaCatalog(repoRoot);
   if (catalog === null) return [...diagnostics];
   const found: SchemaDiagnostic[] = [...diagnostics];
+  const selected = (scope: SchemaCatalogScope): boolean => under.length === 0 || scope.path === under || scope.path.startsWith(`${under}/`);
   const normative = normativeSchemaFormat(repoRoot);
   // 🪪️Every normative document of a scope declares its own `$id` — a facet child keeps the scope
   // path and varies only the facet filename — and a reference may address any of them. Indexing the
@@ -4878,6 +5103,9 @@ export function schemaResolutionDiagnostics(repoRoot: string): SchemaDiagnostic[
     }
   }
   for (const [id, scope] of Object.entries(catalog.scopes)) {
+    // 📏️The `$id` index above is built over EVERY scope even under a filter: a subtree's refs
+    // point out of it, and an index narrowed to the filter would report every one of them unresolved.
+    if (!selected(scope)) continue;
     found.push(...schemaExportCompletenessDiagnostics(repoRoot, id, scope));
     for (const file of scopeNormativeDocuments(scope, normative)) {
       const document = readJson(join(repoRoot, file));
@@ -4906,11 +5134,19 @@ function jsonRefsIn(document: unknown): string[] {
   return refs;
 }
 
-/** 🩺️ Every schema-contract invariant, over the whole tree. One walk, one ordered finding list. */
+/**
+ * 🩺️ Every schema-contract invariant, over one subtree or the whole tree. One walk, one ordered list.
+ *
+ * `under` narrows BOTH measurements, never just the cheap one (ledger row 135): the placement walk is
+ * rooted at the subtree and the catalog‑driven resolution half selects the scopes whose module path
+ * lies inside it. Skipping resolution under a filter — what this did before — made every per‑partition
+ * run report zero `schema-export-*` and `schema-ref-*` rows BY CONSTRUCTION, which reads as "this
+ * subtree is clean" to everyone who does not know the gate declined to look.
+ */
 export function schemaContractDiagnostics(repoRoot: string, under = ""): SchemaDiagnostic[] {
   const files = schemaTreeFiles(repoRoot, under);
   const inert = inertSchemaDataPaths(repoRoot, files);
-  return [...schemaPlacementDiagnostics(repoRoot, files, inert), ...schemaOwnerEligibilityDiagnostics(repoRoot, files), ...schemaFixtureIsolationDiagnostics(repoRoot, files, inert), ...(under.length === 0 ? schemaResolutionDiagnostics(repoRoot) : [])];
+  return [...schemaPlacementDiagnostics(repoRoot, files, inert), ...schemaOwnerEligibilityDiagnostics(repoRoot, files), ...schemaFixtureIsolationDiagnostics(repoRoot, files, inert), ...schemaMeasurementDisagreementDiagnostics(repoRoot, files, under), ...schemaResolutionDiagnostics(repoRoot, under)];
 }
 //#endregion 🧬️SchemaContracts
 
@@ -5102,14 +5338,14 @@ export type SchemaBoundFixture = Readonly<{
 }>;
 
 /** 🪜️ What one stage did. `skipped` means an earlier stage already decided the outcome. */
-export type SchemaStageOutcome = Readonly<{ stage: SchemaFixtureStage; result: "passed" | "failed" | "skipped"; code: string | null; detail: string }>;
+export type SchemaStageOutcome = Readonly<{ stage: SchemaFixtureStage; result: "passed" | "failed" | "skipped"; code: SchemaHarnessDiagnosticCode | null; detail: string }>;
 
 /** 📤️ One fixture's staged report — the shape `test schema` prints and a gate reads. */
 export type SchemaFixtureReport = Readonly<{ fixture: string; uri: string; target: SchemaFixtureTarget; stages: readonly SchemaStageOutcome[]; outcome: "passed" | "failed"; expected: SchemaStageExpectation; detail: string }>;
 
 const SCHEMA_FIXTURE_COLLECTION_KEY = "schemaFixtures";
 
-function stage(name: SchemaFixtureStage, result: "passed" | "failed" | "skipped", code: string | null, detail: string): SchemaStageOutcome {
+function stage(name: SchemaFixtureStage, result: "passed" | "failed" | "skipped", code: SchemaHarnessDiagnosticCode | null, detail: string): SchemaStageOutcome {
   return { stage: name, result, code, detail };
 }
 
@@ -5251,8 +5487,11 @@ export function resolvePayloadSchema(repoRoot: string, ownerRel: string, leafDir
   const canonical = payloadSchemaRelativePath(repoRoot);
   const descriptorFile = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
   const leafRel = `${ownerRel}/${schemaModuleDirName(repoRoot)}/${taxonomy.testMutationVocabularyDirName}/${leafDirName}`;
-  const kind = leafDirName.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/)?.[0] ?? "";
   const descriptor = readJson(join(repoRoot, leafRel, descriptorFile)) as MutationLeafDescriptor | undefined;
+  // 🧬️The DESCRIPTOR names the kind; the directory only hints at it. A two-segment leaf
+  // (`🌳️node/⚖️change-weights` → `change-node-morph-weights`) has no kind derivable from its path at all,
+  // so reading the declaration first is what makes such a leaf reportable under its own name.
+  const kind = typeof descriptor?.semanticKind === "string" && descriptor.semanticKind.length > 0 ? descriptor.semanticKind : leafDirName.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/)?.[0] ?? "";
   if (descriptor === undefined) return { leaf: leafRel, kind, declared: "", path: null, schema: null, refused: [`the leaf carries no ${descriptorFile} descriptor, so nothing declares its payload contract`] };
   const declared = typeof descriptor.payloadSchema === "string" ? descriptor.payloadSchema : "";
   if (declared.length === 0) return { leaf: leafRel, kind, declared, path: null, schema: null, refused: ["the descriptor declares no `payloadSchema`"] };
@@ -5270,9 +5509,8 @@ export function resolvePayloadSchemas(repoRoot: string, ownerRel: string): Paylo
   const taxonomy = testTaxonomy(repoRoot);
   const vocabulary = join(repoRoot, ownerRel, schemaModuleDirName(repoRoot), taxonomy.testMutationVocabularyDirName);
   if (!existsSync(vocabulary)) return [];
-  return readdirSync(vocabulary, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && !entry.isSymbolicLink() && isMutationLeafDirectory(repoRoot, entry.name))
-    .map((entry) => resolvePayloadSchema(repoRoot, ownerRel, entry.name))
+  return mutationLeafDirectories(repoRoot, ownerRel)
+    .map((leaf) => resolvePayloadSchema(repoRoot, ownerRel, leaf))
     .sort((a, b) => a.kind.localeCompare(b.kind));
 }
 //#endregion 🧬️PayloadSchema

@@ -1,4 +1,4 @@
-import { INTERACTIVITY_AUDIT_SHELL_FILE, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_WORLD3D_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_OS_SERVICES_FILE, policyReadFileSafe, interactivityMountedFrameTransactionFailures } from "../../../../../../../../📜️script.ts";
+import { INTERACTIVITY_AUDIT_SHELL_FILE, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_WORLD3D_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_OS_SERVICES_FILE, policyReadRustPolicySource, interactivityMountedFrameTransactionFailures } from "../../../../../../../../📜️script.ts";
 
 /** 🧪️ Executes interactivity mounted frame transaction policy assertions. */
 export function interactivityMountedFrameTransactionSelfTests(repoRoot: string): void {
@@ -21,7 +21,7 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
     INTERACTIVITY_AUDIT_OS_SERVICES_FILE,
   ];
-  const clean = files.map((file) => policyReadFileSafe(repoRoot, file));
+  const clean = files.map((file) => policyReadRustPolicySource(repoRoot, file));
   const mutations: [string, number, string, string][] = [
     ["zero-mounted-constructor", 1, "crate::FrameTransaction::new", "crate::UnmountedFrameTransaction::new"],
     ["second-runtime", 1, "renderer_worker_pool()", "semio_framework_async::WorkerPool::new()"],

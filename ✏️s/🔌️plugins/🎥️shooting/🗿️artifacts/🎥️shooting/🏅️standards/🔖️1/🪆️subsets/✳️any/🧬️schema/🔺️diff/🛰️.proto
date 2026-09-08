@@ -39,7 +39,6 @@ message ShootingDiff {
   // @state config
   optional ShootingCamera camera = 19;
   // @state config
-  optional string locale = 20;
 }
 
 message ShootingStringList {
@@ -120,7 +119,6 @@ message ShootingArtifact {
   uint32 fit_revision = 16;
   string camera_draft_label = 17;
   ShootingCamera camera = 18;
-  string locale = 19;
 }
 
 message ShootingCamera {

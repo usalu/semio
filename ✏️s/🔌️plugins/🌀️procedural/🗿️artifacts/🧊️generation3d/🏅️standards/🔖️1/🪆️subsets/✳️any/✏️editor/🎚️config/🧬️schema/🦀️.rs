@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use super::Generation3dPreviewCamera;
+
 use semio_framework_artifact_flow_flow::CameraJson;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -23,8 +23,6 @@ pub struct Generation3dConfig {
     pub generation_preview_text: Option<String>,
     #[state(config)]
     pub active_utility_id: String,
-    #[state(config)]
-    pub locale: String,
     #[state(config)]
     pub preview_eval_text: Option<String>,
 }
@@ -51,3 +49,8 @@ pub fn app_schema_descriptor() -> ::semio_framework_schema::AppSchemaDescriptor 
     }
 }
 //endregion 📎 App-schema descriptor
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::Generation3dPreviewCamera;
+//#endregion 🔁️Re-exports

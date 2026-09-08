@@ -15,7 +15,7 @@
       "x-semio-state": "artifact"
     },
     "camera": {
-      "$ref": "#/$defs/CameraJson",
+      "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/CameraJson",
       "x-semio-state": "artifact"
     },
     "widgets": {
@@ -87,90 +87,9 @@
       "type": "string",
       "contentMediaType": "application/json",
       "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {
-    "CameraJson": {
-      "title": "CameraJson",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "WidgetLayout": {
-      "title": "WidgetLayout",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "SynapseSpec": {
-      "title": "SynapseSpec",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "from",
-        "to",
-        "fromPort",
-        "toPort"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "from": {
-          "type": "string"
-        },
-        "to": {
-          "type": "string"
-        },
-        "fromPort": {
-          "type": "string"
-        },
-        "toPort": {
-          "type": "string"
-        }
-      }
-    },
-    "Widget": {
-      "title": "Widget",
-      "type": "string",
-      "contentMediaType": "application/json"
-    },
     "FlowArtifact": {
       "title": "FlowArtifact",
       "type": "object",
@@ -193,32 +112,31 @@
         "catalogueSectionsJson",
         "automationEnabledJson",
         "contributionsJson",
-        "generationJson",
-        "locale"
+        "generationJson"
       ],
       "properties": {
         "schema": {
           "type": "string"
         },
         "camera": {
-          "$ref": "#/$defs/CameraJson"
+          "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/CameraJson"
         },
         "widgets": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Widget"
+            "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/Widget"
           }
         },
         "synapses": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/SynapseSpec"
+            "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/SynapseSpec"
           }
         },
         "layout": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/WidgetLayout"
+            "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/WidgetLayout"
           }
         },
         "selectedNodeIds": {
@@ -277,9 +195,6 @@
         "generationJson": {
           "type": "string",
           "contentMediaType": "application/json"
-        },
-        "locale": {
-          "type": "string"
         }
       }
     },
@@ -312,7 +227,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Widget"
+            "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/Widget"
           }
         },
         "removed": {
@@ -348,7 +263,7 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/Widget"
+          "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/Widget"
         }
       }
     },
@@ -365,7 +280,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/SynapseSpec"
+            "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/SynapseSpec"
           }
         },
         "removed": {
@@ -401,7 +316,7 @@
           "type": "string"
         },
         "patch": {
-          "$ref": "#/$defs/SynapseSpec"
+          "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/SynapseSpec"
         }
       }
     },
@@ -421,7 +336,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/$defs/WidgetLayout"
+                "$ref": "https://semio.tech/schema/s/flow/flow/artifact.json#/$defs/WidgetLayout"
               }
             ]
           }

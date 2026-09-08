@@ -5,7 +5,17 @@ use crate::builder::{BuiltChildRetirementNext, BuiltChildrenIntoIter, BuiltNode,
 use std::mem::ManuallyDrop;
 
 const _: () = {
-    let depths = [<UiText as UiTypedRetire>::DEPTH, <crate::Component as UiTypedRetire>::DEPTH, <crate::LayoutSpec as UiTypedRetire>::DEPTH, <crate::StyleSpec as UiTypedRetire>::DEPTH, <crate::Activity as UiTypedRetire>::DEPTH, <bool as UiTypedRetire>::DEPTH, <crate::AccessibilitySpec as UiTypedRetire>::DEPTH, <crate::UiNodeBindings as UiTypedRetire>::DEPTH, <Option<MenuRef> as UiTypedRetire>::DEPTH];
+    let depths = [
+        <UiText as UiTypedRetire>::DEPTH,
+        <crate::Component as UiTypedRetire>::DEPTH,
+        <crate::LayoutSpec as UiTypedRetire>::DEPTH,
+        <crate::StyleSpec as UiTypedRetire>::DEPTH,
+        <crate::Activity as UiTypedRetire>::DEPTH,
+        <bool as UiTypedRetire>::DEPTH,
+        <crate::AccessibilitySpec as UiTypedRetire>::DEPTH,
+        <crate::UiNodeBindings as UiTypedRetire>::DEPTH,
+        <Option<MenuRef> as UiTypedRetire>::DEPTH,
+    ];
     let mut index = 0;
     while index < depths.len() {
         assert!(depths[index] <= typed::UI_TYPED_RETIREMENT_DEPTH);
@@ -36,8 +46,12 @@ impl BuiltTreeRetirement {
 
     /// 🪶️ Advances one typed leaf, child transfer, or exact page release without draining global queues.
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
-        if self.terminal_is_empty() { return Ok(UiValueRetirementStep { complete: true, ..Default::default() }); }
-        if maximum_items == 0 || maximum_bytes == 0 { return Ok(UiValueRetirementStep::default()); }
+        if self.terminal_is_empty() {
+            return Ok(UiValueRetirementStep { complete: true, ..Default::default() });
+        }
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(UiValueRetirementStep::default());
+        }
         let owned = &mut *self.owned;
         if let Some(node) = owned.node.as_mut() {
             let BuiltNode { key, component, layout, style, activity, disabled, accessibility, bindings, menu, children, rejected_children } = node.as_mut();
@@ -54,14 +68,19 @@ impl BuiltTreeRetirement {
                     8 => owned.cursor.advance(menu, 1, maximum_bytes)?,
                     _ => unreachable!(),
                 };
-                if step.complete { owned.cursor = UiTypedRetirementCursor::empty(); owned.field += 1; }
+                if step.complete {
+                    owned.cursor = UiTypedRetirementCursor::empty();
+                    owned.field += 1;
+                }
                 step.complete = false;
                 return Ok(step);
             }
             if owned.field < 11 {
                 let children = if owned.field == 9 { rejected_children } else { children };
                 if children.capacity() != 0 {
-                    if owned.page_count == owned.pages.len() { return Err("built tree retirement exceeds admitted child pages"); }
+                    if owned.page_count == owned.pages.len() {
+                        return Err("built tree retirement exceeds admitted child pages");
+                    }
                     owned.pages[owned.page_count] = Some(std::mem::take(children).into_iter());
                     owned.page_count += 1;
                 }
@@ -77,8 +96,16 @@ impl BuiltTreeRetirement {
             let iterator = owned.pages[index].as_mut().ok_or("built tree retirement lost its retained page")?;
             return match iterator.try_next_or_release()? {
                 BuiltChildRetirementNext::Pending => Ok(UiValueRetirementStep::default()),
-                BuiltChildRetirementNext::Node(node) => { owned.node = Some(node); owned.cursor = UiTypedRetirementCursor::empty(); Ok(UiValueRetirementStep { progressed: true, ..Default::default() }) }
-                BuiltChildRetirementNext::Complete => { owned.pages[index].take(); owned.page_count -= 1; Ok(UiValueRetirementStep { progressed: true, released_items: 1, ..Default::default() }) }
+                BuiltChildRetirementNext::Node(node) => {
+                    owned.node = Some(node);
+                    owned.cursor = UiTypedRetirementCursor::empty();
+                    Ok(UiValueRetirementStep { progressed: true, ..Default::default() })
+                }
+                BuiltChildRetirementNext::Complete => {
+                    owned.pages[index].take();
+                    owned.page_count -= 1;
+                    Ok(UiValueRetirementStep { progressed: true, released_items: 1, ..Default::default() })
+                }
             };
         }
         owned.pages = Box::default();
@@ -93,7 +120,9 @@ impl BuiltTreeRetirement {
 
 impl Drop for BuiltTreeRetirement {
     fn drop(&mut self) {
-        if !self.terminal_is_empty() && !std::thread::panicking() { panic!("built tree retirement requires exact terminal closure"); }
+        if !self.terminal_is_empty() && !std::thread::panicking() {
+            panic!("built tree retirement requires exact terminal closure");
+        }
     }
 }
 

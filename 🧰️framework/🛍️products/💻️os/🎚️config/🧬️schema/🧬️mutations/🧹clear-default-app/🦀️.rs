@@ -5,8 +5,8 @@ use super::set_default_app::SetDefaultApp;
 use super::OpeningConfigMutation;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework::{AppRole, ArtifactDialect};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🧹 Removes the pinned default for one `(dialect, role)` coordinate, if present.

@@ -1,9 +1,0 @@
-# 🚧 scaffolded by W1b — generic facet mirror.
-type Semio_wav_mutationsEntry {
-  key: String!
-  value: String!
-}
-type Semio_wav_mutations {
-  schema: String! @state(class: ARTIFACT)
-  entries: [Semio_wav_mutationsEntry!]! @state(class: ARTIFACT)
-}

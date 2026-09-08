@@ -21,7 +21,7 @@
           "maximum": 4294967295
         },
         "sequence": {
-          "$ref": "https://semio.tech/schema/framework/actor/lifetime/schema.json#/$defs/U64"
+          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
         },
         "phase": {
           "enum": [

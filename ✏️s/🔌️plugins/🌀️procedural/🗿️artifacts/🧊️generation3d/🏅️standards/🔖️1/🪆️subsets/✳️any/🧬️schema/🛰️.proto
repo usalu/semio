@@ -31,7 +31,6 @@ message Generation3dArtifact {
   // @state presence
   string active_utility_id = 13;
   // @state config
-  string locale = 14;
 }
 
 message CameraJson {
@@ -78,4 +77,8 @@ message Generation3dPreviewCamera {
   double target_y = 5;
   double target_z = 6;
   double fov = 7;
+}
+
+message Generation3dStringList {
+  repeated string values = 1;
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@semio-tech/sequence-js",
+  "name": "@semio-tech/sequence-tests",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "test": {
@@ -8,7 +8,18 @@
         "cwd": "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "@semio-tech/sequence-sequence"
+          ]
+        }
+      ]
     }
-  }
+  },
+  "implicitDependencies": [
+    "@semio-tech/sequence-sequence"
+  ]
 }

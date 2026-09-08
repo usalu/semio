@@ -29,7 +29,6 @@ async fn trinity_rewriting_command_text_and_binary_round_trip() {
         TrinityRewritingCommand::SetViewport { surface_id: Some("trinity.rewriting.before".into()), viewport_json: "{\"x\":1.0,\"y\":2.0,\"zoom\":1.0}".into() },
         TrinityRewritingCommand::Reorganize,
         TrinityRewritingCommand::SetLodMode { window_id: "trinity-rewriting-before".into(), value: "compact".into() },
-        TrinityRewritingCommand::SetLocale { value: "de-DE".into() },
     ];
     for command in commands {
         let bytes = command.encode_op().expect("encode");
@@ -183,15 +182,15 @@ async fn trinity_rewriting_labels_resolve_native_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn trinity_rewriting_labels_translate_panels_in_german() {
     let mut app = new_app().await;
-    app.dispatch_typed(TrinityRewritingCommand::SetLocale { value: "de-DE".into() }, &meta("local")).await.expect("set locale");
-    let document_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
+    let view = ViewModel { locale: Locale::De, terminology: Terminology::Native, ..ViewModel::default() };
+    let document_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_DOCUMENT, None, &view).await.expect("render").root).expect("serialize semantic UI test tree");
     assert!(document_json.contains("Stücke"));
     assert!(!document_json.contains("\"Pieces\""));
-    let catalogue_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
+    let catalogue_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_CATALOGUE, None, &view).await.expect("render").root).expect("serialize semantic UI test tree");
     assert!(catalogue_json.contains("Katalog"));
     assert!(catalogue_json.contains("Zu LHS hinzufügen"));
     assert!(catalogue_json.contains("Zu RHS hinzufügen"));
-    let parameters_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_PARAMETERS, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
+    let parameters_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_PARAMETERS, None, &view).await.expect("render").root).expect("serialize semantic UI test tree");
     assert!(parameters_json.contains("\"Parameter\""));
     let definition = create_rewriting_app();
     let reset_rule = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resetRule").expect("resetRule action");

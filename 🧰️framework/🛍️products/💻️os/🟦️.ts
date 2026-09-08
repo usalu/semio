@@ -28,6 +28,7 @@ import { decodeClientFrame, decodeLocalInteractionQueryCommand, decodeLocalInter
  * for its backbone-envelope and app-channel codecs rather than keeping a second copy. */
 import { decodeCausalEnvelopeBatch, decodeDocumentBackboneEnvelopeBatchExact, encodeCausalEnvelopeBatch, readBool, readBytes, readF64, readHash32, readStr, readU8, readVarintU64, readVecBytes, readVecEnvelope, readVecStr, writeBool, writeBytes, writeF64, writeHash32, writeStr, writeVarintU64, writeVecBytes, writeVecEnvelope, writeVecStr } from "@semio-tech/framework-replication";
 import { parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
+import { parseBrowserActorViewStateRequest, type BrowserActorViewStateRequest } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
 export type { BrowserActorUiPatchOfferV1, BrowserActorUiPatchResultV1 };
 
 const replicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
@@ -730,6 +731,7 @@ export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uin
 /** @emoji 🧵️ Decodes a {@link BackboneWorkerRequest} from the wasm actor or structured-clone twin. */
 export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerRequest {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
+  if (parsed.kind === "browser-actor-view-state") return parseBrowserActorViewStateRequest(parsed);
   if (parsed.kind === "space-artifact-create" || parsed.kind === "space-artifact-create-cancel") {
     return parseSpaceArtifactCreationWorkerRequestV1(parsed);
   }
@@ -1067,6 +1069,7 @@ export type SpaceArtifactCreationCatalogStatusV1 = Readonly<{
  * — plugin surfaces never talk to the network, and the shell never opens a directory socket on the
  * UI thread; see `🧵️backbone-worker.ts`'s `🔖️Directory` region. */
 export type BackboneWorkerRequest =
+  | BrowserActorViewStateRequest
   | ({ readonly kind: "open"; readonly clientInstanceId?: string } & ArtifactActorConfig)
   | { readonly kind: "close"; readonly documentId: string; readonly spaceId?: string; readonly clientInstanceId?: string }
   | { readonly kind: "send"; readonly documentId: string; readonly spaceId?: string; readonly clientInstanceId?: string; readonly message: ArtifactActorMsg }

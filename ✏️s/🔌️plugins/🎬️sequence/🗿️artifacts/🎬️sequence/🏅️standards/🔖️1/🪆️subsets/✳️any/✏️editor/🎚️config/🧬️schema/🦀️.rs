@@ -12,8 +12,6 @@ pub struct SequenceConfig {
     pub orientation: String,
     #[state(config)]
     pub camera: SequenceCamera,
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor

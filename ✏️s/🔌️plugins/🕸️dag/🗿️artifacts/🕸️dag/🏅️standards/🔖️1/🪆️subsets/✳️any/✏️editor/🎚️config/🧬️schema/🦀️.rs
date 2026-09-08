@@ -11,8 +11,6 @@ pub struct DagConfig {
     pub camera_y: f64,
     #[state(config)]
     pub camera_zoom: f64,
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor

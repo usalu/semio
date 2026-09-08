@@ -8,9 +8,7 @@ use crate::SequenceSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
-
-use super::topology::{compute_sequence_topology, SequenceTopology};
-
+use super::topology::{compute_sequence_topology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a sequence snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir) — sequence is a
@@ -94,3 +92,8 @@ pub fn sequence_artifact_inference_descriptor() -> framework_schema::ArtifactInf
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::topology::SequenceTopology;
+//#endregion 🔁️Re-exports

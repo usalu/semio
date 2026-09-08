@@ -58,15 +58,15 @@
         {
           "cameraId": "cam-a",
           "rotationWxyz": [
-            1.0,
-            0.0,
-            0.0,
-            0.0
+            1,
+            0,
+            0,
+            0
           ],
           "translation": [
-            0.0,
-            0.0,
-            0.0
+            0,
+            0,
+            0
           ]
         },
         {
@@ -74,13 +74,13 @@
           "rotationWxyz": [
             0.75,
             0.25,
-            0.0,
-            0.0
+            0,
+            0
           ],
           "translation": [
             0.5,
-            0.0,
-            0.0
+            0,
+            0
           ]
         }
       ]
@@ -119,7 +119,7 @@
         "isTwoManifold": true,
         "isWatertight": true
       },
-      "meanTrackLength": 8.0,
+      "meanTrackLength": 8,
       "registeredFrameRatio": 0.875,
       "denseCoverageRatio": 0.5,
       "warnings": []
@@ -130,6 +130,5 @@
   "reportTable": null,
   "frameCursor": null,
   "camera": null,
-  "layers": null,
-  "locale": null
+  "layers": null
 }

@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn close(cursor: &mut RetainedDictionaryDelta, grant: usize) -> usize {

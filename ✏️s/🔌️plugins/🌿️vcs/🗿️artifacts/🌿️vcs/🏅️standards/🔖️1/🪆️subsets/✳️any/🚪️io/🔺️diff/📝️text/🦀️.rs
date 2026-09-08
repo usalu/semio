@@ -81,9 +81,6 @@ impl VcsDiff {
             if let Some(list) = &self.selected_checkpoint_ids {
                 next.selected_checkpoint_ids = list.values.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -136,7 +133,6 @@ impl MutationDiff<VcsSnapshot> for VcsDiff {
         take!(notes);
         take!(status);
         take!(selected_checkpoint_ids);
-        take!(locale);
     }
 }
 //#endregion 🔖️Apply

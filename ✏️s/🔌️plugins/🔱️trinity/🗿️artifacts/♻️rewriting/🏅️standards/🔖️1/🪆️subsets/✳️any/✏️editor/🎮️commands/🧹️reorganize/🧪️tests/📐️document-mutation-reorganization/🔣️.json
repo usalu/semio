@@ -1,0 +1,18 @@
+{
+  "cases": [
+    {
+      "name": "Restore Default Semantic Layout",
+      "before": {"lhs-match": {"x": 40, "y": -20}, "rhs-create-0": {"x": 160, "y": 80}},
+      "after": {},
+      "artifactMutationCount": 2,
+      "configMutationCount": 0
+    },
+    {
+      "name": "Keep Default Layout Unchanged",
+      "before": {},
+      "after": {},
+      "artifactMutationCount": 0,
+      "configMutationCount": 0
+    }
+  ]
+}

@@ -129,9 +129,6 @@ impl Block2dDiff {
             if let Some(list) = &self.selected_ids {
                 next.selected_ids = list.values.clone();
             }
-            if let Some(locale) = &self.locale {
-                next.locale = locale.clone();
-            }
             next
         })
     }
@@ -196,7 +193,6 @@ impl MutationDiff<Block2dSnapshot> for Block2dDiff {
         take!(camera2d);
         take!(meta);
         take!(selected_ids);
-        take!(locale);
         fn absorb_delta<D, F>(target: &mut Option<D>, incoming: Option<D>, merge: F)
         where
             F: FnOnce(&mut D, D),
@@ -349,3 +345,8 @@ pub fn diff_set_snapshot(snapshot: Block2dSnapshot) -> Block2dDiff {
     Block2dDiff { artifact: Some(Box::new(Block2dArtifact::from_snapshot(snapshot))), ..Default::default() }
 }
 //#endregion 🔖️DiffHelpers
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Block2dDiffText = String;
+//#endregion 🚚️Carrier

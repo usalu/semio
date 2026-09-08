@@ -1,7 +1,9 @@
 use super::*;
 
 //#region 🧪️Assembly
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+}
 fn open() -> UiDocumentAssembly {
     let data = fixture();
     let mut owner = UiDocumentAssembly::default();
@@ -23,7 +25,9 @@ fn place(owner: &mut UiDocumentAssembly, source: &mut Option<UiNodeRecord>) -> u
         assert!(step.allocated_bytes <= 32768 && step.moved_bytes <= 32768);
         assert_eq!(owner.allocated_bytes().unwrap() - before, step.allocated_bytes);
         allocated += step.allocated_bytes;
-        if source.is_none() { return allocated; }
+        if source.is_none() {
+            return allocated;
+        }
     }
     panic!("admitted record placement did not finish");
 }
@@ -37,7 +41,10 @@ fn close(lease: &mut UiDocumentLease, bytes: usize) {
     for _ in 0..500000 {
         let step = lease.close_read_step_with_grant(1, bytes).unwrap();
         assert!(step.released_items <= 1 && step.released_bytes <= bytes);
-        if step.complete { assert!(lease.terminal_is_empty()); return; }
+        if step.complete {
+            assert!(lease.terminal_is_empty());
+            return;
+        }
     }
     panic!("exact document read did not retire");
 }
@@ -48,7 +55,10 @@ fn retained_document_assembly_places_exact_pages_and_preserves_wire_and_payload_
     let mut owner = open();
     let mut first = tests::leaf_record(41, "first");
     first.component = serde_json::from_value(serde_json::json!({"type":"surface","kind":"canvas-2d","docSchema":"wire","doc":{"bytes":[1,2,3,4]},"bindings":[]})).unwrap();
-    let pointer = match &first.component { crate::Component::Surface(props) => props.doc.bytes.as_slice().as_ptr(), _ => unreachable!() };
+    let pointer = match &first.component {
+        crate::Component::Surface(props) => props.doc.bytes.as_slice().as_ptr(),
+        _ => unreachable!(),
+    };
     let mut source = Some(first);
     assert!(!owner.place_one(&mut source, 1, 0).unwrap().progressed);
     assert_eq!(owner.allocated_bytes().unwrap(), 0);
@@ -59,7 +69,13 @@ fn retained_document_assembly_places_exact_pages_and_preserves_wire_and_payload_
     assert_eq!(read.allocated_bytes(), allocated);
     let ids = (0..read.len()).map(|index| read.node_at(index).unwrap().id.0).collect::<Vec<_>>();
     assert_eq!(serde_json::to_value(ids).unwrap(), data["nodeIds"]);
-    assert_eq!(match &read.node_at(0).unwrap().component { crate::Component::Surface(props) => props.doc.bytes.as_slice().as_ptr(), _ => unreachable!() }, pointer);
+    assert_eq!(
+        match &read.node_at(0).unwrap().component {
+            crate::Component::Surface(props) => props.doc.bytes.as_slice().as_ptr(),
+            _ => unreachable!(),
+        },
+        pointer
+    );
     assert_eq!(read.exact_node(1, UiNodeId(41)).map(|_| ()), Err(UiDocumentLeaseError::NodeIdentity));
     drop(read);
     close(&mut lease, 1);
@@ -74,7 +90,15 @@ fn retained_document_assembly_rejects_duplicate_without_consuming_input_and_canc
         let before = owner.allocated_bytes().unwrap();
         let mut duplicate = Some(tests::leaf_record(41, "duplicate"));
         let mut error = None;
-        for _ in 0..10 { match owner.place_one(&mut duplicate, 1, 32768) { Ok(_) => {}, Err(found) => { error = Some(found); break; } } }
+        for _ in 0..10 {
+            match owner.place_one(&mut duplicate, 1, 32768) {
+                Ok(_) => {}
+                Err(found) => {
+                    error = Some(found);
+                    break;
+                }
+            }
+        }
         let error = error.unwrap();
         assert_eq!(error.kind, UiDocumentAssemblyErrorKind::DuplicateNode);
         let compared_bytes = error.compared_bytes;
@@ -84,7 +108,9 @@ fn retained_document_assembly_rejects_duplicate_without_consuming_input_and_canc
         for _ in 0..100000 {
             let step = owner.close_step(1, bytes.as_u64().unwrap() as usize).unwrap();
             assert!(step.released_items <= 1 && step.released_bytes <= bytes.as_u64().unwrap() as usize);
-            if step.complete { break; }
+            if step.complete {
+                break;
+            }
         }
         assert!(owner.terminal_is_empty());
         assert_eq!(compared_bytes, fixture()["comparisonBytesPerIdentity"].as_u64().unwrap() as usize);
@@ -102,7 +128,11 @@ fn retained_document_assembly_and_read_alias_do_not_wait_on_contended_arena() {
     assert!(lease.same_root(alias.as_ref().unwrap()));
     let (ready_tx, ready_rx) = std::sync::mpsc::channel();
     let (release_tx, release_rx) = std::sync::mpsc::channel();
-    let holder = std::thread::spawn(move || { let _guard = UI_DOCUMENT_ARENA.lock().unwrap(); ready_tx.send(()).unwrap(); release_rx.recv().unwrap(); });
+    let holder = std::thread::spawn(move || {
+        let _guard = UI_DOCUMENT_ARENA.lock().unwrap();
+        ready_tx.send(()).unwrap();
+        release_rx.recv().unwrap();
+    });
     ready_rx.recv().unwrap();
     let read_blocked = matches!(lease.try_read(), Err(UiDocumentLeaseError::Contended));
     let mut second = None;
@@ -110,7 +140,8 @@ fn retained_document_assembly_and_read_alias_do_not_wait_on_contended_arena() {
     let mut blocked = UiDocumentAssembly::default();
     let mut surface = Some(SurfaceId::try_from("blocked").unwrap());
     let open_blocked = matches!(blocked.open_into(&mut surface, crate::UiDocumentAssemblyIdentity { generation: 117, revision: UiRevision(4), root: Some(UiNodeId(41)), layout_epoch: 0 }, 1, 32768), Err(error) if error.kind == UiDocumentAssemblyErrorKind::Contended);
-    release_tx.send(()).unwrap(); holder.join().unwrap();
+    release_tx.send(()).unwrap();
+    holder.join().unwrap();
     close(alias.as_mut().unwrap(), 64);
     assert!(lease.try_read().unwrap().node_at(0).is_some());
     close(&mut lease, 64);
@@ -127,8 +158,11 @@ fn retained_document_assembly_reports_metadata_initialization_separately_from_em
     let mut initialized = 0;
     for _ in 0..1000 {
         let step = owner.place_one(&mut source, 1, 32768).unwrap();
-        allocated += step.allocated_bytes; initialized += step.initialized_bytes;
-        if source.is_none() { break; }
+        allocated += step.allocated_bytes;
+        initialized += step.initialized_bytes;
+        if source.is_none() {
+            break;
+        }
     }
     let expected = allocated - size_of::<UiNodeRecord>();
     let mut lease = finish(&mut owner);

@@ -162,6 +162,7 @@ fn space_index_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<SpaceIndexEditor>>>,
     operation: &semio_framework_plugin::AppOperationContext,
 ) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation, NoDraftMutation>, Fault> {
     if space_index_retained_extent(command, snapshot, interaction).is_none() {
@@ -310,7 +311,7 @@ impl ArtifactEditor for SpaceIndexEditor {
         command: &SpaceIndexCommand,
         doc: &ArtifactView<'_, SSpaceSnapshot>,
         cfg: &ConfigView<'_, SpaceIndexConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
@@ -360,7 +361,7 @@ impl ArtifactEditor for SpaceIndexEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         match body_key {
             main::BODY_KEY => Ok(built_to_component_tree(main::render(doc.snapshot, cfg.snapshot)?)),
             members_panel::SPACE_INDEX_BODY_MEMBERS => Ok(built_to_component_tree(members_panel::render(cfg.snapshot)?)),

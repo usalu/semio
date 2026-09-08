@@ -10,7 +10,7 @@ use semio_s_artifact_gis_gisterrain::viewer::gisterrain::GisTerrainViewer;
 
 #[test]
 fn gis_component_assembly_declares_exact_package_identity_before_descriptor_emission() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🪪️artifact-identity/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️artifact-identity/🔣️.json")).unwrap();
     let plugin = super::plugin().expect("GIS component must assemble with its exact semio:gis package identity");
     assert_eq!(plugin.manifest.plugin_id, fixture["pluginId"].as_str().unwrap());
     assert_eq!(plugin.artifact_definitions().len(), fixture["artifacts"].as_array().unwrap().len());

@@ -327,5 +327,5 @@ pub fn contains_point(pose: Isometry3, mesh: &TriMesh, point: Point3) -> bool {
 //#endregion 🔖️Queries
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🧿️collision/🦀️.rs"]
 mod tests;

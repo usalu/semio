@@ -78,6 +78,7 @@ class TestScript extends BundleScript {
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
     const module = await Bun.file(resolve(plugin, "🧬️schema", "🔣️.json")).json() as { $id: string };
     const ajv = new Ajv({ allErrors: true, strict: true });
+    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     ajv.addSchema(module);
     const validate = ajv.compile({ $ref: `${module.$id}#/$defs/BlockPublicationAuthority` });
     if (!validate(fixture)) throw new Error(`Block fixture failed strict Ajv: ${JSON.stringify(validate.errors)}`);

@@ -66,9 +66,9 @@ const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣�
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "change-schema" => (
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-playground-document-schema/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-playground-document-schema/🦠️mutation/🔣️.json"),
-            include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-playground-document-schema/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-4f474c/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-4f474c/🦠️mutation/🔣️.json"),
+            include_str!("../../🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-4f474c/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-playground-1: {other:?} is not a declared kind of this subset"),
     }

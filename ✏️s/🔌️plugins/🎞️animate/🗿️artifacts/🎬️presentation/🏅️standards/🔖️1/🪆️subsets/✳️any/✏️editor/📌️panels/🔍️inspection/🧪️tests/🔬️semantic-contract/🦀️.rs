@@ -8,7 +8,7 @@ fn project(node: BuiltNode) -> serde_json::Value {
 
 #[test]
 fn presentation_semantic_panels_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️panels.json")).expect("neutral UI vectors");
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
     let document = crate::default_presentation_snapshot();
     let (_, tiles) = crate::presentation_working_scene(&document);
     for row in vectors["cases"].as_array().expect("locales") {

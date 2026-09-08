@@ -36,9 +36,6 @@ impl SequenceDiff {
             if let Some(value) = &self.camera {
                 next.camera = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -77,7 +74,6 @@ impl MutationDiff<SequenceSnapshot> for SequenceDiff {
         take!(last_run_json);
         take!(orientation);
         take!(camera);
-        take!(locale);
     }
 }
 //#endregion 🔖️Apply

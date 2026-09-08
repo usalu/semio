@@ -3,13 +3,13 @@
     "schema": "reasoning.wires.fixture",
     "identities": [
       {
-        "identityId": 1.0,
+        "identityId": 1,
         "identityKind": "topic",
         "label": "Source",
         "nodeId": "node-source"
       },
       {
-        "identityId": 2.0,
+        "identityId": 2,
         "identityKind": "topic",
         "label": "Sink",
         "nodeId": "node-sink"
@@ -17,28 +17,28 @@
     ],
     "relationships": [
       {
-        "relationshipId": 1.0,
+        "relationshipId": 1,
         "kind": "owns",
-        "sourceIdentityId": 1.0,
-        "targetIdentityId": 2.0,
+        "sourceIdentityId": 1,
+        "targetIdentityId": 2,
         "edgeId": "edge-owns"
       }
     ],
     "board": {
       "schema": "reasoning.mindmap.fixture",
       "camera": {
-        "x": 0.0,
-        "y": 0.0,
-        "zoom": 1.0
+        "x": 0,
+        "y": 0,
+        "zoom": 1
       },
       "nodes": [
         {
           "id": "node-source",
           "nodeKind": "identity",
           "shape": "circle",
-          "x": 0.0,
-          "y": 0.0,
-          "radius": 24.0,
+          "x": 0,
+          "y": 0,
+          "radius": 24,
           "text": "Source",
           "handles": []
         },
@@ -46,9 +46,9 @@
           "id": "node-sink",
           "nodeKind": "identity",
           "shape": "circle",
-          "x": 60.0,
-          "y": 0.0,
-          "radius": 24.0,
+          "x": 60,
+          "y": 0,
+          "radius": 24,
           "text": "Sink",
           "handles": []
         }
@@ -76,9 +76,9 @@
     }
   },
   "camera": {
-    "x": 0.0,
-    "y": 0.0,
-    "zoom": 1.0
+    "x": 0,
+    "y": 0,
+    "zoom": 1
   },
   "meta": null
 }

@@ -7,7 +7,6 @@ message FormsConfig {
   // @state config
   map<string, FormsTryValueChunks> try_values = 2;
   // @state config
-  string locale = 3;
   // @state config
   string contributions_json = 4;
 }

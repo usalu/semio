@@ -8,8 +8,7 @@ use crate::RasterSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::topology::{compute_raster_topology, RasterTopology};
-
+use super::topology::{compute_raster_topology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a raster snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir) — `layers` is a
@@ -81,3 +80,8 @@ pub fn raster_artifact_inference_descriptor() -> schema::ArtifactInferenceDescri
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::topology::RasterTopology;
+//#endregion 🔁️Re-exports

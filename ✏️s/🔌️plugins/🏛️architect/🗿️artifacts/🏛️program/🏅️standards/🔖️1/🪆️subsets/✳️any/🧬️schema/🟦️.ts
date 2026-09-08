@@ -1864,3 +1864,416 @@ export interface ProgramArtifact {
   graphCameraZoom: number;
 }
 
+//#region 🚪️Parsers
+/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
+export class architectProgramArtifactGuardRefusal extends Error {
+  constructor(readonly at: string, readonly why: string) {
+    super(`${at}: ${why}`);
+  }
+}
+
+const architectProgramArtifactGuardReject = (at: string, why: string): never => {
+  throw new architectProgramArtifactGuardRefusal(at, why);
+};
+
+type architectProgramArtifactGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
+type architectProgramArtifactGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
+type architectProgramArtifactGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
+
+export const architectProgramArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : architectProgramArtifactGuardReject(at, "value is not an object");
+export const architectProgramArtifactGuardArray = (value: unknown, at: string, bounds: architectProgramArtifactGuardSizeBounds = {}): readonly unknown[] => {
+  if (!Array.isArray(value)) return architectProgramArtifactGuardReject(at, "value is not an array");
+  if (bounds.minItems !== undefined && value.length < bounds.minItems) architectProgramArtifactGuardReject(at, `array has fewer than ${bounds.minItems} items`);
+  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) architectProgramArtifactGuardReject(at, `array has more than ${bounds.maxItems} items`);
+  return value;
+};
+export const architectProgramArtifactGuardString = (value: unknown, at: string, bounds: architectProgramArtifactGuardTextBounds = {}): string => {
+  if (typeof value !== "string") return architectProgramArtifactGuardReject(at, "value is not a string");
+  const length = [...value].length;
+  if (bounds.minLength !== undefined && length < bounds.minLength) architectProgramArtifactGuardReject(at, `string is shorter than ${bounds.minLength}`);
+  if (bounds.maxLength !== undefined && length > bounds.maxLength) architectProgramArtifactGuardReject(at, `string is longer than ${bounds.maxLength}`);
+  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) architectProgramArtifactGuardReject(at, `string does not match ${bounds.pattern}`);
+  return value;
+};
+export const architectProgramArtifactGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : architectProgramArtifactGuardReject(at, "value is not a boolean"));
+export const architectProgramArtifactGuardNumber = (value: unknown, at: string, bounds: architectProgramArtifactGuardRangeBounds = {}): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return architectProgramArtifactGuardReject(at, "value is not a finite number");
+  if (bounds.minimum !== undefined && value < bounds.minimum) architectProgramArtifactGuardReject(at, `number is below ${bounds.minimum}`);
+  if (bounds.maximum !== undefined && value > bounds.maximum) architectProgramArtifactGuardReject(at, `number is above ${bounds.maximum}`);
+  return value;
+};
+export const architectProgramArtifactGuardInteger = (value: unknown, at: string, bounds: architectProgramArtifactGuardRangeBounds = {}): number =>
+  Number.isSafeInteger(value) ? architectProgramArtifactGuardNumber(value, at, bounds) : architectProgramArtifactGuardReject(at, "value is not an integer");
+export const architectProgramArtifactGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
+  members.includes(value as T) ? (value as T) : architectProgramArtifactGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const architectProgramArtifactGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
+  value === expected ? expected : architectProgramArtifactGuardReject(at, `value is not ${String(expected)}`);
+//#endregion 🚪️Parsers
+
+export function parseProgramArtifact(value: unknown, at = "$"): ProgramArtifact {
+  const row = architectProgramArtifactGuardObject(value, at);
+  return {
+    schema: architectProgramArtifactGuardString(row["schema"], `${at}.schema`),
+    meta: parseProgramMeta(row["meta"], `${at}.meta`),
+    project: parseProjectDefinition(row["project"], `${at}.project`),
+    stakeholders: architectProgramArtifactGuardArray(row["stakeholders"], `${at}.stakeholders`).map((item, index) => parseStakeholder(item, `${at}.stakeholders[${index}]`)),
+    users: architectProgramArtifactGuardArray(row["users"], `${at}.users`).map((item, index) => parseUserProfile(item, `${at}.users[${index}]`)),
+    activities: architectProgramArtifactGuardArray(row["activities"], `${at}.activities`).map((item, index) => parseActivity(item, `${at}.activities[${index}]`)),
+    functions: architectProgramArtifactGuardArray(row["functions"], `${at}.functions`).map((item, index) => parseFunction(item, `${at}.functions[${index}]`)),
+    elements: architectProgramArtifactGuardArray(row["elements"], `${at}.elements`).map((item, index) => parseProgramElement(item, `${at}.elements[${index}]`)),
+    quantities: architectProgramArtifactGuardArray(row["quantities"], `${at}.quantities`).map((item, index) => parseQuantityRequirement(item, `${at}.quantities[${index}]`)),
+    relationships: architectProgramArtifactGuardArray(row["relationships"], `${at}.relationships`).map((item, index) => parseRelationship(item, `${at}.relationships[${index}]`)),
+    adjacencies: architectProgramArtifactGuardArray(row["adjacencies"], `${at}.adjacencies`).map((item, index) => parseAdjacency(item, `${at}.adjacencies[${index}]`)),
+    processes: architectProgramArtifactGuardArray(row["processes"], `${at}.processes`).map((item, index) => parseProcess(item, `${at}.processes[${index}]`)),
+    flows: architectProgramArtifactGuardArray(row["flows"], `${at}.flows`).map((item, index) => parseFlowRequirement(item, `${at}.flows[${index}]`)),
+    accessRules: architectProgramArtifactGuardArray(row["accessRules"], `${at}.accessRules`).map((item, index) => parseAccessRule(item, `${at}.accessRules[${index}]`)),
+    operations: architectProgramArtifactGuardArray(row["operations"], `${at}.operations`).map((item, index) => parseOperationalRequirement(item, `${at}.operations[${index}]`)),
+    equipment: architectProgramArtifactGuardArray(row["equipment"], `${at}.equipment`).map((item, index) => parseEquipment(item, `${at}.equipment[${index}]`)),
+    resources: architectProgramArtifactGuardArray(row["resources"], `${at}.resources`).map((item, index) => parseResource(item, `${at}.resources[${index}]`)),
+    storage: architectProgramArtifactGuardArray(row["storage"], `${at}.storage`).map((item, index) => parseStorageRequirement(item, `${at}.storage[${index}]`)),
+    environmental: architectProgramArtifactGuardArray(row["environmental"], `${at}.environmental`).map((item, index) => parseEnvironmentalRequirement(item, `${at}.environmental[${index}]`)),
+    humanFactors: architectProgramArtifactGuardArray(row["humanFactors"], `${at}.humanFactors`).map((item, index) => parseHumanFactorRequirement(item, `${at}.humanFactors[${index}]`)),
+    accessibility: architectProgramArtifactGuardArray(row["accessibility"], `${at}.accessibility`).map((item, index) => parseAccessibilityRequirement(item, `${at}.accessibility[${index}]`)),
+    privacy: architectProgramArtifactGuardArray(row["privacy"], `${at}.privacy`).map((item, index) => parsePrivacyRequirement(item, `${at}.privacy[${index}]`)),
+    safety: architectProgramArtifactGuardArray(row["safety"], `${at}.safety`).map((item, index) => parseSafetyRequirement(item, `${at}.safety[${index}]`)),
+    security: architectProgramArtifactGuardArray(row["security"], `${at}.security`).map((item, index) => parseSecurityRequirement(item, `${at}.security[${index}]`)),
+    regulatory: architectProgramArtifactGuardArray(row["regulatory"], `${at}.regulatory`).map((item, index) => parseRegulatoryRequirement(item, `${at}.regulatory[${index}]`)),
+    siteContext: architectProgramArtifactGuardArray(row["siteContext"], `${at}.siteContext`).map((item, index) => parseSiteContext(item, `${at}.siteContext[${index}]`)),
+    organizational: architectProgramArtifactGuardArray(row["organizational"], `${at}.organizational`).map((item, index) => parseOrganizationalRequirement(item, `${at}.organizational[${index}]`)),
+    services: architectProgramArtifactGuardArray(row["services"], `${at}.services`).map((item, index) => parseServiceRequirement(item, `${at}.services[${index}]`)),
+    infrastructure: architectProgramArtifactGuardArray(row["infrastructure"], `${at}.infrastructure`).map((item, index) => parseInfrastructureRequirement(item, `${at}.infrastructure[${index}]`)),
+    information: architectProgramArtifactGuardArray(row["information"], `${at}.information`).map((item, index) => parseInformationRequirement(item, `${at}.information[${index}]`)),
+    communication: architectProgramArtifactGuardArray(row["communication"], `${at}.communication`).map((item, index) => parseCommunicationRequirement(item, `${at}.communication[${index}]`)),
+    wayfinding: architectProgramArtifactGuardArray(row["wayfinding"], `${at}.wayfinding`).map((item, index) => parseWayfindingRequirement(item, `${at}.wayfinding[${index}]`)),
+    schedules: architectProgramArtifactGuardArray(row["schedules"], `${at}.schedules`).map((item, index) => parseScheduleRequirement(item, `${at}.schedules[${index}]`)),
+    flexibility: architectProgramArtifactGuardArray(row["flexibility"], `${at}.flexibility`).map((item, index) => parseFlexibilityRequirement(item, `${at}.flexibility[${index}]`)),
+    growth: architectProgramArtifactGuardArray(row["growth"], `${at}.growth`).map((item, index) => parseGrowthPlan(item, `${at}.growth[${index}]`)),
+    sustainability: architectProgramArtifactGuardArray(row["sustainability"], `${at}.sustainability`).map((item, index) => parseSustainabilityRequirement(item, `${at}.sustainability[${index}]`)),
+    resilience: architectProgramArtifactGuardArray(row["resilience"], `${at}.resilience`).map((item, index) => parseResilienceRequirement(item, `${at}.resilience[${index}]`)),
+    costs: architectProgramArtifactGuardArray(row["costs"], `${at}.costs`).map((item, index) => parseCostRequirement(item, `${at}.costs[${index}]`)),
+    delivery: architectProgramArtifactGuardArray(row["delivery"], `${at}.delivery`).map((item, index) => parseDeliveryConstraint(item, `${at}.delivery[${index}]`)),
+    risks: architectProgramArtifactGuardArray(row["risks"], `${at}.risks`).map((item, index) => parseRisk(item, `${at}.risks[${index}]`)),
+    conflicts: architectProgramArtifactGuardArray(row["conflicts"], `${at}.conflicts`).map((item, index) => parseConflict(item, `${at}.conflicts[${index}]`)),
+    requirements: architectProgramArtifactGuardArray(row["requirements"], `${at}.requirements`).map((item, index) => parseRequirement(item, `${at}.requirements[${index}]`)),
+    priorities: architectProgramArtifactGuardArray(row["priorities"], `${at}.priorities`).map((item, index) => parsePriorityRecord(item, `${at}.priorities[${index}]`)),
+    scenarios: architectProgramArtifactGuardArray(row["scenarios"], `${at}.scenarios`).map((item, index) => parseScenario(item, `${at}.scenarios[${index}]`)),
+    options: architectProgramArtifactGuardArray(row["options"], `${at}.options`).map((item, index) => parseOptionEvaluation(item, `${at}.options[${index}]`)),
+    decisions: architectProgramArtifactGuardArray(row["decisions"], `${at}.decisions`).map((item, index) => parseDecision(item, `${at}.decisions[${index}]`)),
+    validations: architectProgramArtifactGuardArray(row["validations"], `${at}.validations`).map((item, index) => parseValidationRecord(item, `${at}.validations[${index}]`)),
+    performance: architectProgramArtifactGuardArray(row["performance"], `${at}.performance`).map((item, index) => parsePerformanceCriterion(item, `${at}.performance[${index}]`)),
+    quality: architectProgramArtifactGuardArray(row["quality"], `${at}.quality`).map((item, index) => parseQualityRecord(item, `${at}.quality[${index}]`)),
+    documents: architectProgramArtifactGuardArray(row["documents"], `${at}.documents`).map((item, index) => parseDocumentRecord(item, `${at}.documents[${index}]`)),
+    assumptions: architectProgramArtifactGuardArray(row["assumptions"], `${at}.assumptions`).map((item, index) => parseAssumption(item, `${at}.assumptions[${index}]`)),
+    constraints: architectProgramArtifactGuardArray(row["constraints"], `${at}.constraints`).map((item, index) => parseConstraintRecord(item, `${at}.constraints[${index}]`)),
+    complianceRecords: architectProgramArtifactGuardArray(row["complianceRecords"], `${at}.complianceRecords`).map((item, index) => parseComplianceRecord(item, `${at}.complianceRecords[${index}]`)),
+    approvals: architectProgramArtifactGuardArray(row["approvals"], `${at}.approvals`).map((item, index) => parseApprovalRecord(item, `${at}.approvals[${index}]`)),
+    meetings: architectProgramArtifactGuardArray(row["meetings"], `${at}.meetings`).map((item, index) => parseMeetingRecord(item, `${at}.meetings[${index}]`)),
+    changes: architectProgramArtifactGuardArray(row["changes"], `${at}.changes`).map((item, index) => parseChangeRecord(item, `${at}.changes[${index}]`)),
+    collaboration: architectProgramArtifactGuardArray(row["collaboration"], `${at}.collaboration`).map((item, index) => parseCollaborationRecord(item, `${at}.collaboration[${index}]`)),
+    analyses: architectProgramArtifactGuardArray(row["analyses"], `${at}.analyses`).map((item, index) => parseAnalysisRecord(item, `${at}.analyses[${index}]`)),
+    reports: architectProgramArtifactGuardArray(row["reports"], `${at}.reports`).map((item, index) => parseReportRecord(item, `${at}.reports[${index}]`)),
+    searchFilters: architectProgramArtifactGuardArray(row["searchFilters"], `${at}.searchFilters`).map((item, index) => parseSearchFilter(item, `${at}.searchFilters[${index}]`)),
+    statusRecords: architectProgramArtifactGuardArray(row["statusRecords"], `${at}.statusRecords`).map((item, index) => parseStatusRecord(item, `${at}.statusRecords[${index}]`)),
+    workshops: architectProgramArtifactGuardArray(row["workshops"], `${at}.workshops`).map((item, index) => parseWorkshop(item, `${at}.workshops[${index}]`)),
+    surveys: architectProgramArtifactGuardArray(row["surveys"], `${at}.surveys`).map((item, index) => parseSurvey(item, `${at}.surveys[${index}]`)),
+    issues: architectProgramArtifactGuardArray(row["issues"], `${at}.issues`).map((item, index) => parseIssue(item, `${at}.issues[${index}]`)),
+    auditEvents: architectProgramArtifactGuardArray(row["auditEvents"], `${at}.auditEvents`).map((item, index) => parseAuditEvent(item, `${at}.auditEvents[${index}]`)),
+    templates: architectProgramArtifactGuardArray(row["templates"], `${at}.templates`).map((item, index) => parseTemplateRecord(item, `${at}.templates[${index}]`)),
+    knowledge: architectProgramArtifactGuardArray(row["knowledge"], `${at}.knowledge`).map((item, index) => parseKnowledgeRecord(item, `${at}.knowledge[${index}]`)),
+    benchmarks: architectProgramArtifactGuardArray(row["benchmarks"], `${at}.benchmarks`).map((item, index) => parseBenchmarkRecord(item, `${at}.benchmarks[${index}]`)),
+    traces: architectProgramArtifactGuardArray(row["traces"], `${at}.traces`).map((item, index) => parseTraceLink(item, `${at}.traces[${index}]`)),
+    governance: parseGovernance(row["governance"], `${at}.governance`),
+    selectedIds: architectProgramArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => architectProgramArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
+    activeRegister: architectProgramArtifactGuardString(row["activeRegister"], `${at}.activeRegister`),
+    adjacencyKindFilter: row["adjacencyKindFilter"] === undefined ? undefined : parseAdjacencyKind(row["adjacencyKindFilter"], `${at}.adjacencyKindFilter`),
+    activeReportJson: architectProgramArtifactGuardString(row["activeReportJson"], `${at}.activeReportJson`),
+    searchQuery: architectProgramArtifactGuardString(row["searchQuery"], `${at}.searchQuery`),
+    searchHistoryJson: architectProgramArtifactGuardString(row["searchHistoryJson"], `${at}.searchHistoryJson`),
+    lastResultJson: architectProgramArtifactGuardString(row["lastResultJson"], `${at}.lastResultJson`),
+    lastAnalysisJson: architectProgramArtifactGuardString(row["lastAnalysisJson"], `${at}.lastAnalysisJson`),
+    graphCameraX: architectProgramArtifactGuardNumber(row["graphCameraX"], `${at}.graphCameraX`),
+    graphCameraY: architectProgramArtifactGuardNumber(row["graphCameraY"], `${at}.graphCameraY`),
+    graphCameraZoom: architectProgramArtifactGuardNumber(row["graphCameraZoom"], `${at}.graphCameraZoom`),
+  };
+}
+
+export function parseAccessRule(value: unknown, at = "$"): AccessRule {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseAccessibilityRequirement(value: unknown, at = "$"): AccessibilityRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseActivity(value: unknown, at = "$"): Activity {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseAdjacency(value: unknown, at = "$"): Adjacency {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseAdjacencyKind(value: unknown, at = "$"): AdjacencyKind {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseAnalysisRecord(value: unknown, at = "$"): AnalysisRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseApprovalRecord(value: unknown, at = "$"): ApprovalRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseAssumption(value: unknown, at = "$"): Assumption {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseAuditEvent(value: unknown, at = "$"): AuditEvent {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseBenchmarkRecord(value: unknown, at = "$"): BenchmarkRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseChangeRecord(value: unknown, at = "$"): ChangeRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseCollaborationRecord(value: unknown, at = "$"): CollaborationRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseCommunicationRequirement(value: unknown, at = "$"): CommunicationRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseComplianceRecord(value: unknown, at = "$"): ComplianceRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseConflict(value: unknown, at = "$"): Conflict {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseConstraintRecord(value: unknown, at = "$"): ConstraintRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseCostRequirement(value: unknown, at = "$"): CostRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseDecision(value: unknown, at = "$"): Decision {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseDeliveryConstraint(value: unknown, at = "$"): DeliveryConstraint {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseDocumentRecord(value: unknown, at = "$"): DocumentRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseEnvironmentalRequirement(value: unknown, at = "$"): EnvironmentalRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseEquipment(value: unknown, at = "$"): Equipment {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseFlexibilityRequirement(value: unknown, at = "$"): FlexibilityRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseFlowRequirement(value: unknown, at = "$"): FlowRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseFunction(value: unknown, at = "$"): Function {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseGovernance(value: unknown, at = "$"): Governance {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseGrowthPlan(value: unknown, at = "$"): GrowthPlan {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseHumanFactorRequirement(value: unknown, at = "$"): HumanFactorRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseInformationRequirement(value: unknown, at = "$"): InformationRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseInfrastructureRequirement(value: unknown, at = "$"): InfrastructureRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseIssue(value: unknown, at = "$"): Issue {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseKnowledgeRecord(value: unknown, at = "$"): KnowledgeRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseMeetingRecord(value: unknown, at = "$"): MeetingRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseOperationalRequirement(value: unknown, at = "$"): OperationalRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseOptionEvaluation(value: unknown, at = "$"): OptionEvaluation {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseOrganizationalRequirement(value: unknown, at = "$"): OrganizationalRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parsePerformanceCriterion(value: unknown, at = "$"): PerformanceCriterion {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parsePriorityRecord(value: unknown, at = "$"): PriorityRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parsePrivacyRequirement(value: unknown, at = "$"): PrivacyRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseProcess(value: unknown, at = "$"): Process {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseProgramElement(value: unknown, at = "$"): ProgramElement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseProgramMeta(value: unknown, at = "$"): ProgramMeta {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseProjectDefinition(value: unknown, at = "$"): ProjectDefinition {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseQualityRecord(value: unknown, at = "$"): QualityRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseQuantityRequirement(value: unknown, at = "$"): QuantityRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseRegulatoryRequirement(value: unknown, at = "$"): RegulatoryRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseRelationship(value: unknown, at = "$"): Relationship {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseReportRecord(value: unknown, at = "$"): ReportRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseRequirement(value: unknown, at = "$"): Requirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseResilienceRequirement(value: unknown, at = "$"): ResilienceRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseResource(value: unknown, at = "$"): Resource {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseRisk(value: unknown, at = "$"): Risk {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseSafetyRequirement(value: unknown, at = "$"): SafetyRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseScenario(value: unknown, at = "$"): Scenario {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseScheduleRequirement(value: unknown, at = "$"): ScheduleRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseSearchFilter(value: unknown, at = "$"): SearchFilter {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseSecurityRequirement(value: unknown, at = "$"): SecurityRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseServiceRequirement(value: unknown, at = "$"): ServiceRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseSiteContext(value: unknown, at = "$"): SiteContext {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseStakeholder(value: unknown, at = "$"): Stakeholder {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseStatusRecord(value: unknown, at = "$"): StatusRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseStorageRequirement(value: unknown, at = "$"): StorageRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseSurvey(value: unknown, at = "$"): Survey {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseSustainabilityRequirement(value: unknown, at = "$"): SustainabilityRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseTemplateRecord(value: unknown, at = "$"): TemplateRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseTraceLink(value: unknown, at = "$"): TraceLink {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseUserProfile(value: unknown, at = "$"): UserProfile {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseValidationRecord(value: unknown, at = "$"): ValidationRecord {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseWayfindingRequirement(value: unknown, at = "$"): WayfindingRequirement {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}
+
+export function parseWorkshop(value: unknown, at = "$"): Workshop {
+  return architectProgramArtifactGuardObject(value, `${at}`);
+}

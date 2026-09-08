@@ -210,6 +210,7 @@ fn block2d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Block2dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Block2dMutation, Block2dConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
@@ -504,7 +505,7 @@ impl ArtifactEditor for Block2dPlayApp {
         command: &Block2dCommand,
         doc: &ArtifactView<'_, Block2dSnapshot>,
         cfg: &ConfigView<'_, Block2dConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Block2dMutation, Block2dConfigMutation, Self::DraftMutation>, Fault> {
@@ -529,8 +530,8 @@ impl ArtifactEditor for Block2dPlayApp {
         InteractionTopology { domains }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let labels = block2d_labels(&cfg.snapshot.locale);
+    fn render(body_key: &str, doc: &ArtifactView<'_, Block2dSnapshot>, cfg: &ConfigView<'_, Block2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let labels = block2d_labels(view_state);
         let node = match body_key {
             board::BLOCK2D_BODY_BOARD => board::render(doc.snapshot, labels)?,
             document_panel::BLOCK2D_BODY_DOCUMENT => document_panel::render(doc.snapshot, labels)?,

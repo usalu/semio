@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/semio/v1/mesh/diff/text.json",
-  "title": "Stdio_semio_mesh_diff_text",
+  "title": "SemioMeshDiffText",
   "description": "Real hand-rolled DiffCodec text grammar: space-separated key=value tokens (meshes/materials/textures), each value a bracket-depth-aware [removed];[modified];[added] named triple.",
   "type": "string",
   "pattern": "^((meshes|materials|textures)=\\[[^;]*\\];\\[[^;]*\\];\\[[^;]*\\])?( (meshes|materials|textures)=\\[[^;]*\\];\\[[^;]*\\];\\[[^;]*\\])*$"

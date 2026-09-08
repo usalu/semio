@@ -615,5 +615,5 @@ fn id_error(error: HistoryIdDiagnostic) -> MemberOpenDiagnostic {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🗂️dictionary/🦀️.rs"]
 mod tests;

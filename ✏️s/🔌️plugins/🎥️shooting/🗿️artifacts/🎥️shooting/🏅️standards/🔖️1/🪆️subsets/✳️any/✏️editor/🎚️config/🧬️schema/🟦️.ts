@@ -19,7 +19,6 @@ export interface ShootingConfig {
   /** @state config */
   activeUtilityId: string;
   /** @state config */
-  locale: string;
 }
 
 export interface ShootingCamera {

@@ -6,7 +6,7 @@ use semio_framework_plugin::testkit::meta;
 use std::collections::BTreeMap;
 use store::{Backbone, BackboneMessage, MemoryBackbone};
 
-const RETAINED_ROUTES: &str = include_str!("../../🧪️fixtures/🛣️retained-command-routes.json");
+const RETAINED_ROUTES: &str = include_str!("../../🧫️fixtures/🛣️retained-command-routes.json");
 
 #[test]
 fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {

@@ -877,3 +877,6 @@ type ProgramTracesPatchEntry {
   item: TraceLink!
 }
 
+type ProgramStringList {
+  values: [String!]!
+}

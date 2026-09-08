@@ -94,7 +94,7 @@ class RetainedAuditScript extends BundleScript {
     const expectedAdmitted = [
       "addNode", "renameNode", "patchCadPlayReference", "focusModelDefinition",
       "setCamera", "setProjection", "setProjectionParam", "setDislocateOption", "setNodeSelection", "setReferenceSelection", "referenceHover", "engagementInput", "engagementPossibleSelect", "engagementRepeatLast",
-      "engagementAbort", "worldPointerMove", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setActiveUtility", "setLocale", "setTerminology", "setContributions", "loadRawRequest",
+      "engagementAbort", "worldPointerMove", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setActiveUtility", "setContributions", "loadRawRequest",
     ];
     const retainedToolBlock = owner.slice(owner.indexOf("const CAD_RETAINED_TOOL_IDS"), owner.indexOf("const CAD_RETAINED_COMMAND_SCHEMA"));
     const retainedToolIds = [...retainedToolBlock.matchAll(/"([^"]+)"/g)].map((match) => match[1]!);

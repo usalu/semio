@@ -6,8 +6,7 @@
   "additionalProperties": false,
   "required": [
     "dragLastX",
-    "dragLastY",
-    "locale"
+    "dragLastY"
   ],
   "properties": {
     "dragNodeId": {
@@ -20,10 +19,6 @@
     },
     "dragLastY": {
       "type": "number",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   }

@@ -17,7 +17,6 @@
     "meta",
     "selectedIds",
     "wantedTags",
-    "locale",
     "windows",
     "brushRadius",
     "brushFlip"
@@ -98,10 +97,6 @@
         "type": "string"
       },
       "x-semio-state": "presence"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     },
     "windows": {
       "type": "array",

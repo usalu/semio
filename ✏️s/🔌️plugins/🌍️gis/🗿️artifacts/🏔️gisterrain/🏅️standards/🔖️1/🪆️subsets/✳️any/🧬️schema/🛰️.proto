@@ -13,5 +13,4 @@ message GisTerrainArtifact {
   // @state config
   string camera_json = 4;
   // @state config
-  string locale = 5;
 }

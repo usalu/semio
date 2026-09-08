@@ -15,7 +15,6 @@ type Block3dDiff {
   selectedIds: Block3dStringList @state(class: PRESENCE)
   activeRepresentationId: String @state(class: PRESENCE)
   wantedTags: Block3dStringList @state(class: PRESENCE)
-  locale: String @state(class: CONFIG)
   windows: Block3dWindowsList @state(class: CONFIG)
   brushVortexKindId: String @state(class: CONFIG)
   brushRadius: Float @state(class: CONFIG)

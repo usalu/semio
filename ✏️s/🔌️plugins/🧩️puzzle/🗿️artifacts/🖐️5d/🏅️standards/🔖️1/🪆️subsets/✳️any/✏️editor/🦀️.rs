@@ -8721,7 +8721,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         command: &Puzzle5dCommand,
         doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle5dConfig>,
-        interaction: &InteractionView<'_>,
+        _view_state: &semio_framework_plugin::ViewModel,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle5dMutation, Puzzle5dConfigMutation, Self::DraftMutation>, Fault> {
@@ -8791,14 +8792,14 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         Err(MediaError::NotImplemented)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let projection = puzzle5d_projection_value(&doc.snapshot.0);
         let node = with_puzzle5d_app(|app| -> semio_framework_plugin::UiAssemblyResult<_> {
             let config = cfg.snapshot;
             let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
             let active_utility = puzzle5d_scene_active_utility(config, Some(window_for_body));
             let envelope = scene_from_projection(&projection, config.clone(), &active_utility);
-            let labels = puzzle5d_labels(config).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d locale or terminology is not recognized"))?;
+            let labels = puzzle5d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d locale or terminology is not recognized"))?;
             match body_key {
                 board2d::BODY_KEY => board2d::render(&envelope),
                 world3d::BODY_KEY => world3d::render(&envelope, &app.precompute.borrow(), labels),
@@ -8811,10 +8812,10 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 
-    fn window_engagements(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let projection = puzzle5d_projection_value(&doc.snapshot.0);
         let config = cfg.snapshot;
-        let Some(labels) = puzzle5d_labels(config) else {
+        let Some(labels) = puzzle5d_labels(view_state) else {
             return HashMap::new();
         };
         // 🪟️ One entry per live window INSTANCE of each of the 2D/3D window kinds — see
@@ -8832,11 +8833,11 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             .collect()
     }
 
-    fn window_measures(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let projection = puzzle5d_projection_value(&doc.snapshot.0);
         with_puzzle5d_app(|app| {
             let config = cfg.snapshot;
-            let Some(labels) = puzzle5d_labels(config) else {
+            let Some(labels) = puzzle5d_labels(view_state) else {
                 return HashMap::new();
             };
             PUZZLE5D_PLAY_WINDOWS
@@ -8861,10 +8862,10 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let projection = puzzle5d_projection_value(&doc.snapshot.0);
         let config = cfg.snapshot;
-        let Some(labels) = puzzle5d_labels(config) else {
+        let Some(labels) = puzzle5d_labels(view_state) else {
             return Vec::new();
         };
-        let Some(is_de) = puzzle5d_is_de_locale(config) else {
+        let Some(is_de) = puzzle5d_is_de_locale(view_state) else {
             return Vec::new();
         };
         let active_utility = puzzle5d_scene_active_utility(config, Some(world3d::WINDOW_KIND_ID));

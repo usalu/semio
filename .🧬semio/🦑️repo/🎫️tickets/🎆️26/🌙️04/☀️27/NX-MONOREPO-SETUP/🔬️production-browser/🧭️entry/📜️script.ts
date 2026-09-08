@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import { resolve } from "node:path";
+import { build } from "esbuild";
+const workspace = process.cwd();
+const entry = resolve(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📜️script.ts");
+const bundled = await build({ entryPoints: [entry], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
+const inputs = Object.keys(bundled.metafile.inputs);
+assert.ok(!inputs.some(path => /🧪️|🔬️/.test(path) || path.endsWith("📦️packages/🟦️typescript/📜️script.ts") || path === "📜️script.ts"));
+const { resolveNxInvocation } = await import(resolve(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"));
+const args = ["run", "@semio-tech/framework-os-dev:build-note-react-release", "--graph"];
+assert.deepEqual(resolveNxInvocation(args), { args, env: { SEMIO_BUILD_MODE: "ship", SEMIO_PLUGIN: "note", SEMIO_RENDERER: "react" } });
+console.log(`[DEBUG] Production executor has ${inputs.length} command inputs and no application/test orchestration; public Nx selects release environment PASS`);

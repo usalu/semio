@@ -11,10 +11,10 @@
 //! `Puzzle2dFillRuntime` in `Config` (count, seed, accepted count, lifecycle) plus the placements
 //! already committed to the document, which is exactly what `brushFillSessionStep` resumes from.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::{Puzzle2dMutation, Puzzle2dPlaySnapshot};
 use crate::editor::puzzle2d::config::{Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dFillLifecycle, Puzzle2dFillRuntime, Puzzle2dFillText};
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::Puzzle2dPlayApp;
+use crate::standards::v1::subsets::any::schema::mutations::text::{Puzzle2dMutation, Puzzle2dPlaySnapshot};
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{EditorApp, Emit, Fault};

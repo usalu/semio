@@ -22,8 +22,7 @@
     "catalogueSectionsJson",
     "automationEnabledJson",
     "contributionsJson",
-    "generationJson",
-    "locale"
+    "generationJson"
   ],
   "properties": {
     "schema": {
@@ -123,10 +122,6 @@
     "generationJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   },
@@ -1130,8 +1125,7 @@
               "SetAutomationEnabled",
               "SetGeneration",
               "SetDuplicateWidgetProgress",
-              "CancelDuplicateWidget",
-              "SetLocale"
+              "CancelDuplicateWidget"
             ]
           }
         },

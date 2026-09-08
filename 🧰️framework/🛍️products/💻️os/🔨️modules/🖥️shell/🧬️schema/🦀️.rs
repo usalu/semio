@@ -82,10 +82,11 @@ pub mod schema_registry {
         SchemaExport { name: "SyncCardKind", version: 1, typescript: r##"export type SyncCardKind = "file" | "folder" | "remote";"## },
         SchemaExport { name: "TransientNotice", version: 1, typescript: r##"export type TransientNotice = { message: string, kind: NoticeKind, expiresAtMs: number | null, };"## },
         SchemaExport { name: "UiAppearance", version: 1, typescript: r##"export type UiAppearance = "system" | "light" | "dark";"## },
-        SchemaExport { name: "UiChromeLayout", version: 1, typescript: r##"export type UiChromeLayout = "default" | "compact";"## },
+        SchemaExport { name: "UiChromeLayout", version: 1, typescript: r##"export type UiChromeLayout = "desktop" | "tablet";"## },
         SchemaExport { name: "UiDriver", version: 1, typescript: r##"export type UiDriver = { driverId: string, label: string, config: unknown, };"## },
         SchemaExport { name: "UiLocale", version: 1, typescript: r##"export type UiLocale = "en" | "de";"## },
-        SchemaExport { name: "UiTheme", version: 1, typescript: r##"export type UiTheme = { themeId: string, label: string, tokens: { [key in string]?: string }, };"## },
+        SchemaExport { name: "UiPreferences", version: 1, typescript: r##"export type UiPreferences = { appearance: UiAppearance | null, layout: UiChromeLayout | null, driverId: string | null, customDrivers: { [key in string]?: UiDriver }, locale: UiLocale | null, terminology: string | null, themeId: string | null, customThemes: { [key in string]?: UiTheme }, keybindingOverrides: { [key in string]?: string }, };"## },
+        SchemaExport { name: "UiTheme", version: 1, typescript: r##"export type UiTheme = { themeId: string, label: string, config: unknown, };"## },
     ];
 
     /// 🧬️ The language-neutral authority this registry projects — `🔣️.json` verbatim.
@@ -442,60 +443,7 @@ pub struct AppRole(pub String);
 //#endregion 🔔️Overlays
 
 //#region 🎨️UiPreferences
-/// 🎨️ Appearance preference.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
-pub enum UiAppearance {
-    System,
-    Light,
-    Dark,
-}
-
-/// 📐️ UI chrome density (matches the `os.setDriver` command's declared select options
-/// default/compact — audit §5).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
-pub enum UiChromeLayout {
-    Default,
-    Compact,
-}
-
-/// 🌐️ Interface language. CLAUDE.md requires "no default language" as a *product* policy (a host
-/// must not silently prefer a language without an explicit choice reaching the user) — that is a
-/// bootstrap-sequencing concern for the host, not something a plain-old-data enum can encode; this
-/// type still needs a technical fallback value for [`ShellState::default`], documented there.
-/// English first, then German, per CLAUDE.md.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
-pub enum UiLocale {
-    En,
-    De,
-}
-
-/// 🚗️ A user-defined UI driver (audit: `uiCustomDrivers`/`uiDriverDraft`). Its full shape was
-/// never captured by the audit; `config` carries whatever driver-specific data the real type has.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
-pub struct UiDriver {
-    pub driver_id: String,
-    pub label: String,
-    #[value(with = "json_value_bridge")]
-    pub config: JsonValue,
-}
-
-/// 🎨️ A user-defined UI theme (audit: `uiCustomThemes`/`uiThemeDraft`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(crate = "::protocol::value", rename_all = "camelCase")]
-pub struct UiTheme {
-    pub theme_id: String,
-    pub label: String,
-    pub tokens: HashMap<String, String>,
-}
+pub use semio_framework_os_config::opening_config::{UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiPreferences, UiTheme};
 //#endregion 🎨️UiPreferences
 
 //#region 🔄️Sync
@@ -801,7 +749,7 @@ impl Default for ShellState {
             open_with_focus_role: None,
             active_tutorial_id: None,
             ui_appearance: UiAppearance::System,
-            ui_layout: UiChromeLayout::Default,
+            ui_layout: UiChromeLayout::Desktop,
             ui_driver_id: String::new(),
             ui_custom_drivers: HashMap::new(),
             ui_driver_draft: None,
@@ -1875,8 +1823,8 @@ const SHELL_COMMAND_CATALOG: [CommandMeta; 65] = [
     CommandMeta { id: "ui.open.setFocusRole", title: "Set Open-With Focus Role", description: "Set which role group the Open panel focuses.", observable_only: false },
     CommandMeta { id: "ui.tutorial.setActive", title: "Set Active Tutorial", description: "Switch the active video tutorial.", observable_only: false },
     CommandMeta { id: "os.setAppearance", title: "Set Appearance", description: "Set light/dark/system appearance.", observable_only: false },
-    CommandMeta { id: "os.setDriver", title: "Set UI Layout", description: "Set default/compact UI chrome density.", observable_only: false },
-    CommandMeta { id: "ui.driver.setActive", title: "Set UI Driver", description: "Select the active UI driver.", observable_only: false },
+    CommandMeta { id: "os.setLayout", title: "Set UI Layout", description: "Set the desktop/tablet UI chrome layout.", observable_only: false },
+    CommandMeta { id: "os.setDriver", title: "Set UI Driver", description: "Select the active UI driver.", observable_only: false },
     CommandMeta { id: "ui.driver.setCustom", title: "Set Custom UI Driver", description: "Add, replace, or remove a user-defined UI driver.", observable_only: false },
     CommandMeta { id: "ui.driver.setDraft", title: "Set UI Driver Draft", description: "Set or clear the in-progress driver editor draft.", observable_only: false },
     CommandMeta { id: "os.setLocale", title: "Set UI Locale", description: "Set the interface language.", observable_only: false },

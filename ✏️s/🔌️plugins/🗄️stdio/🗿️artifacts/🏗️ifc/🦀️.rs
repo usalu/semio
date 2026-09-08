@@ -23,7 +23,7 @@ pub const STDIO_IFC_DOCUMENT_SCHEMA: &str = "stdio.ifc";
 pub const IFC_ARTIFACT_SCHEMA_ID: &str = "s.stdio.ifc";
 
 /// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
 /// ⚠️ **Deliberately left imperative** (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g4):
 /// no `declaration()` here, `engine::register()` NOT removed from the

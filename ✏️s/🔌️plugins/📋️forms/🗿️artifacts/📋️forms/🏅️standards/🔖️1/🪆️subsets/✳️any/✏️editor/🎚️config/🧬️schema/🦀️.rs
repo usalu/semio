@@ -11,8 +11,6 @@ pub struct FormsConfig {
     #[state(config)]
     pub try_values: BTreeMap<String, Vec<String>>,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub contributions_json: String,
 }
 

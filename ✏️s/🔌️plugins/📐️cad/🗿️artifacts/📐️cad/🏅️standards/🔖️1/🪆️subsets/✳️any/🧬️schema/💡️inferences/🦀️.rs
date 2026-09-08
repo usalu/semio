@@ -7,8 +7,7 @@
 use crate::CadSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use super::bounds::{object_count, scene_bounds, vertex_count, CadBounds};
-
+use super::bounds::{object_count, scene_bounds, vertex_count};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a cad snapshot. Today: object/brep-vertex counts and the 3d
 /// bounding box across every pane's object origins and vertex positions (see
@@ -1036,3 +1035,8 @@ mod scene_compute {
 }
 pub use scene_compute::*;
 //#endregion 🖥️SceneCompute
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::bounds::CadBounds;
+//#endregion 🔁️Re-exports

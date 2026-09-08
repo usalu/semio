@@ -10,9 +10,6 @@ pub use set_orientation::SetOrientation;
 #[path = "📷️set-camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = SequenceConfig, diff = SequenceConfig, schema = "sequence.config")]
@@ -23,8 +20,6 @@ pub enum SequenceConfigMutation {
     SetOrientation(SetOrientation),
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
 }
 
 impl protocol::OpText for SequenceConfigMutation {

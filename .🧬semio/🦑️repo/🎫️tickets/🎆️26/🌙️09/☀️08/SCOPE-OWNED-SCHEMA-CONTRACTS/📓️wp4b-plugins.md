@@ -86,6 +86,26 @@ $ find '✏️s' -name '*.schema.json' -not -path '*/.venv/*' -not -path '*🧬�
 (no output)
 ```
 
+### `🧪️fixtures` → `🧫️fixtures` (ledger row 27)
+
+`testFixturesDirName` is `🧫️fixtures` and `testsDirName` is `🧪️tests`; `🧪️fixtures` is not a taxonomy
+name. **96 directories renamed, 131 files under `✏️s` rewritten**, 0 collisions (no parent already had
+a `🧫️fixtures` sibling), 0 `🧪️fixtures` directories left under `✏️s`. `wp4b-fixture-dir-name.py` is in
+the ticket folder.
+
+Two corrections were needed after the sweep and are worth recording:
+
+1. **A blanket literal replace is wrong.** Five files under `✏️s` spell a path into *another*
+   partition (`🧰️framework/…/🔌️plugin/🧪️fixtures/🌱️artifact-document-id-v1`), and those directories
+   are still `🧪️fixtures`. Six occurrences in five files were reverted by checking each rewritten path
+   against the filesystem; the check now reports 0 referenced-but-missing foreign fixture directories.
+2. **`🌍️gis/…/🌉️component-cold-map-patch` had already moved.** A peer's test-layout sweep relocated it
+   from `🧫️fixtures/` to `🧪️tests/` (it is a Cargo integration-test target, `📓️wp4-plugins.md` Family
+   9), leaving `🌍️gis/📦️packages/🦀️rust/📜️script.ts:239` stale before this pass. Repointed to
+   `✏️s/🔌️plugins/🌍️gis/🧪️tests/🌉️component-cold-map-patch`; the check passes again (§7.4).
+
+Four files outside this partition still name an `✏️s/…/🧪️fixtures/…` path — request **F**.
+
 ---
 
 ## 2. Row 67 — the sequence editor's wasm surface
@@ -158,25 +178,41 @@ final vocabulary this pass normalised to is the one on disk now:
 
 ### Casing table actually applied
 
-| Key | Was | Now | Data | Schema |
-|---|---|---|---|---|
-| `lanes` / `lane` / `publicationLane(s)` | `Artifact` | `artifact` | 200 | 11 |
-| | `Config` | `config` | 116 | 11 |
-| | `HostOnly`, `hostOnly` | `host-only` | 77 | 11 |
-| | `Transient` | `transient` | 30 | 9 |
-| | `Child` | `child` | 1 | 9 |
-| | `Draft` | `draft` | 0 | 8 |
-| | `Presence` | `presence` | 0 | 8 |
-| `disposition` / `status` / `admission` / `classification` | `Migrated` | `migrated` | 128 | 10 |
-| | `BatchOnlyPendingRewrite`, `batch-only` | `batch-only-pending-rewrite` | 93 | 21 |
-| | `failClosed` | `fail-closed` | 37 | 1 |
+| Axis keys | Was (every spelling found) | Now |
+|---|---|---|
+| `lane`, `lanes`, `publicationLane`, `publicationLanes` | `Artifact` | `artifact` |
+| | `Config` | `config` |
+| | `HostOnly`, `hostOnly` | `host-only` |
+| | `Transient` | `transient` |
+| | `Child` | `child` |
+| | `Draft` | `draft` |
+| | `Presence` | `presence` |
+| `disposition`, `status`, `admission`, `classification` | `Migrated` | `migrated` |
+| | `BatchOnlyPendingRewrite`, `batchOnlyPendingRewrite`, `batchOnly`, `BatchOnly`, `batch-only` | `batch-only-pending-rewrite` |
+| | `failClosed`, `FailClosed` | `fail-closed` |
+| | `Unclassified` / `ForbiddenFromUi` / `Deleted` | `unclassified` / `forbidden-from-ui` / `deleted` |
+| `execution` | `Bounded`, `Batch`, `Resumable`, `BoundedFirstStep` | `bounded`, `batch`, `resumable`, `bounded-first-step` |
 
-**20 data files** (483 value rewrites) and **18 schema modules** (134 `const`/`enum` rewrites) in this
-partition. The normaliser only touches a node that carries a retained-command row shape (`id`/`toolId`
-beside a lane/disposition/execution key, or `lanes` beside `status`/`routes`), so the architect
-program's unrelated `status: "Blocked"/"Open"/"Closed"` payloads and lowpoly's separate
-`preparation: ["Artifact","Config"]` axis are left alone — an earlier, looser rule would have
-rewritten 127 of them and was discarded.
+The vocabulary was applied in two waves because `framework.ui` changed underneath (O-6): the first
+wave rewrote **20 data files / 483 values** and **18 schema modules / 134 `const`+`enum` values**, the
+second re-mapped `batch-only` → `batch-only-pending-rewrite` in **7 data files / 68 values** and the
+matching schema narrowings. Both passes are idempotent and now report nothing left to do:
+
+```
+$ python3 wp4b-retained-vocabulary.py plan     → files: 0  rewrites: 0
+$ python3 wp4b-retained-vocabulary.py schema   → files: 0  rewrites: 0
+```
+
+Six `const` narrowings sat in an `if`/`then` guard whose `properties` block names only the axis key
+(sequence's `classification: {const: "Migrated"}`), which the deliberately conservative row test does
+not reach; those were repaired in a second, explicitly-listed pass over six modules (flow
+action-cohort, sequence, lowpoly, draw, raster, puzzle).
+
+The normaliser only touches a node carrying a retained-command **row shape** (`id`/`toolId` beside a
+lane/disposition/execution key, or `lanes` beside `status`/`routes`). That is why the architect
+program's unrelated `status: "Blocked"/"Open"/"Closed"` mutation payloads and lowpoly's separate
+`preparation: ["Artifact","Config"]` axis are untouched — a looser first rule would have rewritten 127
+of the former and was discarded before anything was written.
 
 ### Oracles taught the mapping
 
@@ -191,6 +227,18 @@ const variant = (value: string): string => value.split("-").map((part) => `${par
 `forbidden-from-ui` → `ForbiddenFromUi` — exactly the `ArtifactToolPublicationLane` and
 `InteractiveJobClassification` variants) and its comparisons were switched to the kebab spelling:
 flow, process, block, draw, mathematical, puzzle, lowpoly, sequence, note, norm, cad, space.
+
+Final census of every retained-command row value left in plugin data:
+
+```
+lane:        {artifact: 164, child: 1, config: 93, document: 1, draft: 1, host-only: 55, transient: 30}
+disposition: {batch-only-pending-rewrite: 68, fail-closed: 37, migrated: 165}
+execution:   {batch: 25, bounded: 80, bounded-first-step: 8, resumable: 40}
+```
+
+Every value is in the `framework.ui` vocabulary except the single `document`, which is flow's **store**
+lane (`document|config|draft|presence|transient` in `🏪️store-owners` and `👁️viewer/🧹️owners`) — a
+different axis from `ArtifactToolPublicationLane`, correctly left alone.
 
 ### Proof — all ten `framework.ui`-referencing exports validate their real fixture
 
@@ -241,7 +289,11 @@ Three shapes changed:
    `s/cad/cad/snapshot/text.json`, `stdio.dwg/diff/text.json`, …) — the 191
    `module-scope-id-inconsistent` rows.
 
-483 moved ids were rewritten repo-wide in every `$ref`/reader literal that named them; 14 old ids were
+483 moved ids were rewritten repo-wide in every `$ref`/reader literal that named them — only **15
+files** actually carried one, all of them stdio modules referencing their own siblings. (The
+`🗑️generated/wp4b-id-map.json` this pass wrote was swept from the generated folder by another session
+before the report was finished; re-running `wp4b-plugin-schema-ids.py apply` regenerates it and is a
+no-op on the tree now that every `$id` already matches.) 13 old ids were
 **ambiguous** (two modules had declared the same id — `s.stdio.gif/artifact.json` for both the `87a/any`
 and `89a/base` subsets, `stdio.avi.diff.json` for three) and are reported rather than guessed, because
 a reference to a duplicated id never named one module unambiguously in the first place.
@@ -274,7 +326,212 @@ ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items:
 
 ## 7. Verification — real output
 
-*(filled in below)*
+### 7.1 `schema check`, filtered to this partition
+
+`bun ./📜️script.ts schema check --report <ticket>/🗑️generated/schema-check-w6c.jsonl`, then
+`path.startswith("✏️s/") and "🧬️schema/🧬️mutations/" not in path`. **The diagnostic vocabulary was
+rewritten by the tooling worker between the baseline and the final run** (`document-dialect-unexpected`
+→ `schema-dialect-not-draft-07`, `placement-retired-location` → `schema-placement-forbidden-filename`,
+`scope-id-duplicate` → `schema-scope-ambiguous`, `module-scope-id-inconsistent` retired, and two new
+rules — `schema-export-incomplete` and `schema-export-id-duplicate` — added), so the table pairs each
+old code with the rule that replaced it.
+
+| Baseline code (my partition) | → | Final code (my partition) |
+|---|---|---|
+| `placement-retired-location` = **11** | → | `schema-placement-forbidden-filename` = **0** ✅ |
+| `document-dialect-unexpected` = **825** | → | `schema-dialect-not-draft-07` = **0** ✅ |
+| `document-id-unaddressable` = **54** | → | `schema-document-id-unaddressable` = **0** ✅ |
+| `document-id-duplicate` = **9** | → | `schema-module-id-duplicate` = **0** ✅ |
+| `scope-id-duplicate` = **76** | → | `schema-scope-ambiguous` = **0** ✅ |
+| `module-scope-id-inconsistent` = **191** | → | rule retired; no successor row = **0** ✅ |
+| `document-id-missing` = 9 + `module-scope-id-missing` = 48 | → | `schema-module-id-missing` = **38** (see below) |
+| `module-level-ineligible` = 65 | → | `schema-owner-ineligible` = **58** |
+| `export-id-invalid` = 221 | → | `schema-export-id-invalid` = **219** |
+| `ref-unresolved` 20 + `ref-not-*` 197 | → | `schema-ref-unresolved` = **67** |
+| — (new rule) | → | `schema-export-incomplete` = **6409** |
+| — (new rule) | → | `schema-export-id-duplicate` = **655** |
+
+```
+$ bun ./📜️script.ts schema check --report …/🗑️generated/schema-check-w6c.jsonl
+[schema check] modules=3205 scopes=3069 findings=8235
+[schema check] schema-catalog-stale=1
+[schema check] schema-dialect-not-draft-07=4
+[schema check] schema-document-id-unaddressable=2
+[schema check] schema-export-id-duplicate=655
+[schema check] schema-export-id-invalid=322
+[schema check] schema-export-incomplete=6650
+[schema check] schema-fixture-defines-schema=61
+[schema check] schema-module-id-missing=42
+[schema check] schema-mutation-leaf-id=362
+[schema check] schema-owner-ineligible=63
+[schema check] schema-placement-forbidden-filename=1
+[schema check] schema-ref-unresolved=70
+[schema check] schema-scope-ambiguous=2
+
+$ python3 - (filter to ✏️s/** outside 🧬️schema/🧬️mutations/**)
+repo findings 8235 | my partition 7448
+  schema-export-id-duplicate=655
+  schema-export-id-invalid=219
+  schema-export-incomplete=6409
+  schema-fixture-defines-schema=2
+  schema-module-id-missing=38
+  schema-owner-ineligible=58
+  schema-ref-unresolved=67
+--- repo-wide codes with ZERO rows in my partition:
+  schema-catalog-stale: repo=1  mine=0
+  schema-dialect-not-draft-07: repo=4  mine=0
+  schema-document-id-unaddressable: repo=2  mine=0
+  schema-mutation-leaf-id: repo=362  mine=0
+  schema-placement-forbidden-filename: repo=1  mine=0
+  schema-scope-ambiguous: repo=2  mine=0
+```
+
+**Every placement / dialect / id code is 0 in this partition.** Two side-effects worth naming:
+
+- repo-wide `schema-mutation-leaf-id` fell **1763 → 362**. The stdio root-module `$id` rewrite (§5.1)
+  is what unblocked the 491 stdio leaves; the leaves themselves were never touched by this pass.
+- `schema-module-id-missing = 38` is **not** an id-grammar defect. All 38 are subset modules that have
+  **no `🧬️schema/🔣️.json` at all** (verified: `os.path.exists` is false for every one) — they carry
+  `🦀️.rs`, `🟦️.ts` and a `🧬️mutations/` tree but no JSON artifact facet. Writing a root there would
+  mean inventing a contract; the honest source is the Rust type projection, i.e.
+  `wp4-stdio-schemas.py audit --write` — cross-partition request **G**.
+
+### 7.2 Module structure — `wp4-final-check.py`
+
+The `touched` list was extended with the six modules this pass created or wrote into (raster, puzzle,
+mathematical plugin roots; the cad subset and cad presence surface; the sequence subset):
+
+```
+$ python3 wp4-final-check.py
+modules checked: 36 | problems: 0
+```
+
+(dialect, `$id` prefix, and every intra-module / `framework.ui` `$ref` resolving.)
+
+### 7.3 The ten `framework.ui` law exports against their real fixtures
+
+`wp4b-retained-export-proof.ts` (kept in the ticket folder) loads `framework.ui` + each owner module
+and validates the committed fixture:
+
+```
+$ bun wp4b-retained-export-proof.ts
+PASS PresentationRetainedCommandLimits   PASS ShootingRetainedCommandLimits
+PASS Fem3dRetainedCommandLimits          PASS RemodelingRetainedCommandLimits
+PASS HomeRetainedCommandLimits           PASS SpaceIndexRetainedCommandLimits
+PASS SpacePlayRetainedCommandLimits      PASS VcsRetainedCommandRoutes
+PASS WiresRetainedCommandRoutes          PASS ProcedureRetainedCommandRoutes
+```
+
+### 7.4 Rewired oracles that pass
+
+```
+$ ✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript  bun ./📜️script.ts publication-authority-audit
+validated Mathematical publication authority; routes=7; schema=Ajv; oracle=owned; hostile=3
+ 2 pass  0 fail
+
+$ ✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript  bun ./📜️script.ts publication-authority-audit
+validated Draw publication authority; apps=DrawingPlayApp:26; schema=Ajv; oracle=owned; hostile=5
+ 2 pass  0 fail
+
+$ ✏️s/🔌️plugins/🗄️stdio  bun ./📜️script.ts package-contract
+[stdio-package-contract] AJV accepted=2 rejected=2
+[stdio-package-contract] Cargo metadata packages=36
+[stdio-package-contract] source packages=36 dag=valid
+
+$ ✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust  bun ./📜️script.ts mutation-leaf-taxonomy-check
+norm mutation-leaf taxonomy is fresh: 392 payloads, AJV schema and hostile vectors passed
+
+$ ✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript  bun ./📜️script.ts test
+norm retained cohort ok: 15 editors × 3 migrated routes, 0 descriptor rows carried a classification
+ 15 pass  0 fail
+
+$ ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust  bun ./📜️script.ts plugin-identity-check
+plugin-identity-check: checks=11 clean
+$ …                                          home-directory-projection-persistence-check
+home-directory-projection-persistence-check: checks=11 clean
+$ …                                          interactive-job-catalog-check
+interactive-job-catalog: descriptor rows without an interactiveJob disposition: 0
+interactive-job-catalog-check: checks=23 clean
+
+$ ✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust  bun ./📜️script.ts component-cold-map-patch-check
+gis-component-cold-map-patch-source: AJV=1 SHA256=node+webcrypto hostile=5 markers=9
+
+$ (proveVcsNativeCodecReceipts + proveGisNativeCodecReceipts, run directly)
+vcs-native-codec-oracle: receipts=1 hostile=9 ajv+node+webcrypto=1 dependency-coherence=3
+[DEBUG] VcsNativeCodecs + ArtifactDocumentIdV1: fixture accepted, receipts proven
+gis-native-codec-oracle: receipts=2 hostile=8 ajv+node+webcrypto=1
+[DEBUG] GisNativeCodecs + ArtifactDocumentIdV1: fixture accepted, receipts proven
+
+$ node '…/🌉️wasm/🧪️tests/🧬️schema/🟨️.js'
+{"facet":"📜️interface","features":10,"operations":47,"events":8,"framing":"A1-AbiMessage-v1"}
+$ node '…/🌉️wasm/📦️packages/🟨️javascript/🧪️tests/🟨️.js'
+{"oracle":"ajv-draft07+dagre-0.8.5+graphlib","routes":17,"migrated":17,"pending":0,"hostileLaws":7,…}
+
+$ (every export of the largest rewritten module, compiled against framework.ui + the vendor keywords)
+[DEBUG] s.flow.flow: 47/47 exports compile []
+
+$ (every JSON file under ✏️s, re-parsed after the sweeps)
+json files parsed: 20959 | unparseable: 0
+
+$ ✏️s/🔌️plugins/🧱️block  (publication-authority region, replayed directly)
+[DEBUG] BlockPublicationAuthority accepts fixture: true
+[DEBUG] Block2dPlayApp: rust-contracts=9  fixture-routes=9  lanes-match=true
+[DEBUG] Block3dPlayApp: rust-contracts=23 fixture-routes=23 lanes-match=true
+[DEBUG] Block5dPlayApp: rust-contracts=7  fixture-routes=7  lanes-match=true
+```
+
+### 7.5 Rust — `semio-s-plugin-puzzle`, wasm32-wasip2
+
+```
+$ CARGO_TARGET_DIR=<scratchpad>/target-w6 RUSTC_WRAPPER="" CARGO_PROFILE_WASM_DEV_DEBUG=false \
+    cargo check --target wasm32-wasip2 -p semio-s-plugin-puzzle
+…
+error: could not compile `semio-s-artifact-puzzle-3d` (lib) due to 2 previous errors; 21 warnings
+
+$ grep -o '^error\[[A-Z0-9]*\]' puzzle-wasm-check.txt | sort | uniq -c
+   2 error[E0433]      # cannot find `examples` in `crate`
+$ grep -c '⏳️precompute/🪣️fill' puzzle-wasm-check.txt
+0
+```
+
+**WP4's 163 errors are down to 2, and neither names the file WP4 edited.** Both are
+`crate::examples::puzzle3d::…` at
+`🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs:37`, unresolved because a peer's
+**uncommitted** working-tree change in `🗿️artifacts/🧊️3d/🦀️.rs` put `pub mod examples` behind
+`#[cfg(feature = "component-app-assembly")]` while the call site at line 37 is not gated
+(`git diff HEAD` on that file shows the gate being introduced). Full log:
+`🗑️generated/puzzle-wasm-check.txt`.
+
+### 7.6 Failures confirmed as NOT this pass's
+
+Each was checked against `HEAD` before being classified.
+
+1. **`🧩️puzzle` `publication-authority-audit`** — the Ajv step passes; `ownerOracle` then rejects
+   `Puzzle2dPlayApp` on two anchors (`Ok(puzzle2d_dispatch_emit(command, snapshot.0.clone(), …))` and
+   the `before, config, interaction.selection(…)` twin) that are absent **both** in the worktree and at
+   HEAD. Stale assertion, pre-existing.
+2. **`🏭️process` `test`** — passes the Ajv step and every lane comparison
+   (`groups=5 publications=33`, all lanes matched after `variant()`); `sourceOracle` then fails on the
+   single anchor `ToolCancellationPolicy::PerOperation`, present at HEAD and gone in the worktree — a
+   peer's uncommitted edit.
+3. **`💠️lowpoly` `test`** — Ajv, the 8-arm lane/preparation signature law and the 47 classification
+   rows all pass after the vocabulary change; it then fails on
+   `"addPrimitive" => semio_framework::ToolExecutionContract::resumable`, which has **0** occurrences
+   at HEAD as well (the peer `super::`/qualifier-stripping sweep WP4 §5.6 already recorded).
+4. **`🌊️flow` `action-cohort-audit`** — 16 publication-contract rows in the fixture have no matching
+   `ArtifactToolPublicationContract` in the editor `🦀️.rs`. Reproduced identically against HEAD's copy
+   of that file with the same fixture, so the divergence is in the source, not in the re-casing.
+5. **`🌍️gis` `map-create-region-group-check`** — Ajv passes; the source law then fails on
+   `fixture["membershipCases"]`, which has 0 occurrences in `💡️inferences/🦀️.rs` in the worktree **and**
+   at HEAD (it passed for WP4 four hours earlier, so a peer removed it since).
+6. **`🧱️block` `test`/`publication-authority-audit`** — dies before its own audit in the `bun test`
+   step, on `🚪️io/🧪️tests/🧩️suite/🟦️.ts` reading `./🧫️fixtures/…`: a peer's test-layout sweep moved
+   `🟦️.ts` into `🧩️suite/` and left `🧫️fixtures` one level up. The audit region itself was replayed
+   directly and passes (§7.4).
+7. **`🌿️vcs` `native-codec-check` full command** — the Ajv and receipt stages pass; the command then
+   runs `runExactCargoLaws`, whose native `cargo test` stage fails with the workspace-wide
+   `E0432: unresolved import semio_framework_schema_registry` (the framework-schema worker's in-flight
+   registry split, ledger row 76).
 
 ---
 
@@ -328,6 +585,73 @@ in the `✏️s` paths those four files spell.
 
 ---
 
+**G. `wp4-stdio-schemas.py` (W8c) — 38 subsets have no root `🧬️schema/🔣️.json`.** They carry
+`🦀️.rs`, `🟦️.ts` and a full `🧬️mutations/` tree, so `schema check` sees documents in the module but no
+root `$id`. The honest root is the Rust type projection the stdio tool already produces; writing one by
+hand would invent a contract. The 38 (all `🗄️stdio`): `zip/2.0/iso21320`, `svg/1.1/{tiny,basic,base}`,
+`ifc/2x3/{cobie,cv20,sav}`, `step/ap214/{cc1..cc6}`, `pdf/{4️⃣1.4/{x,a},7️⃣1.7/{ua,h,e,x,a,vt}}`,
+`docx/ecma-376/{strict,transitional}`, `pptx/ecma-376/{transitional,strict}`,
+`xlsx/ecma-376/{transitional,strict}`, `xml/1.0/{valid,base}`, `csv/rfc4180/any`, `tsv/iana/any`,
+`epw/energyplus/any`, `mp4/isobmff/any`, `avi/1.0/hdrl`, `jpg/jfif-1.01/baseline`, `tiff/6.0/baseline`,
+`json/rfc8259/i-json`, `gltf/2.0/{animation,camera,scene,material,buffer,mesh,skin,asset}`,
+`semio/v1/presentation`.
+
+---
+
 ## 9. Open questions
 
-*(filled in below)*
+**O-1. `schema-export-incomplete = 6409` and `schema-export-id-duplicate = 655` are an export-naming
+job, not a format job.** Both rules landed in the tooling while this pass ran. Sampling them shows the
+same root cause twice:
+
+- `app.writer.writer.config declares export WriterCamera in 🔣️.json; 🦀️rust carries no declaration of
+  it` — the Rust twin is spelled `WriterConfigCamera`. The export exists in all five formats under a
+  different name. Annotating `x-semio-formats` here would be a lie, which is exactly why §6's rule
+  refuses to (the `RasterCamera` / `RasterPresenceCamera` case).
+- `Export WriterArtifact is already declared by …/🧬️schema/🔣️.json` from `🔺️diff/🔣️.json` — facet
+  children restate the root's `$defs` rather than referencing them.
+
+Both need one deliberate pass that aligns JSON `$defs` keys with the Rust/TS/GraphQL/proto declarations
+and makes facet children `$ref` the root's exports. That is a work package, not a sweep, and it should
+be scheduled with a decision on which side is authoritative (contract §A says the export id is the
+same-named Rust `struct/enum`, so the Rust spelling wins).
+
+**O-2. `schema-export-id-invalid = 219` is blocked on ledger row 77 being implemented.** They are
+camelCase `$defs` keys (`valueId`, `xmlNode`, `visualStyle`, …) in the stdio and cad artifact modules —
+module-internal helpers that contract §A says belong in `definitions`. Moving them there is mechanical,
+but the checker still reports every local `#/definitions/<helper>` reference as a bad ref until W2c
+implements row 77's decision, so the fix would trade 219 rows of one code for a larger number of
+another. Recommendation: land row 77 first, then move the helpers in one pass.
+
+**O-3. `schema-owner-ineligible = 58` — three distinct shapes, one taxonomy question each.**
+- 36 stdio + 15 norm `🗿️artifacts/<a>/🧬️schema/📜️artifact-definition.json`: an **artifact**-level
+  module holding the package-definition row that the artifact's `🏅️standards/🔖️N/🦀️.rs` `include_str!`s.
+  Either `schemaScopeOwnerLevels` admits `✏️s/🔌️plugins/*/🗿️artifacts/*`, or the definition file moves
+  out of the `🧬️schema/` slot (it is data, like `📜️native-codec-factories.json` in §1).
+- `✏️editor/🌉️wasm/🧬️schema` (sequence) and `📸️snapshot/🧬️generation/🧬️schema` (procedural),
+  `🎬️action-cohort` (flow), `📇️registry` (stdio), `🧩️extensions/*` (playbook, cad): nested module
+  directories at levels no pattern matches. Ledger row 53 already asks for the `plugin-extension`
+  level; the same decision is needed for `🌉️wasm` (row 67, request **C**) and for a plugin's own
+  named sub-areas (`🎬️action-cohort`, `📇️registry`).
+- `📕️norm/{🎚️config,👥️presence}` and `🪐️space/⚙️engine/🪐️space/{🎚️config,👥️presence}`: surface lanes
+  that are **not** under an `✏️editor/`, so `**/✏️editor/🎚️config` does not match them. The pattern
+  should be `**/🎚️config` (etc.), or these two plugins should grow the `✏️editor` segment.
+
+**O-4. The 13 ambiguous stdio ids.** `s.stdio.gif/artifact.json` was declared by both the `87a/any`
+and `89a/base` subsets, `stdio.avi.diff.json` by three modules, and so on. The `$id`s are now distinct,
+but the ref rewriter deliberately left references to the old ids alone rather than guess a target.
+Verified: `git grep` finds **no** reference to any of the 13 anywhere — they were `$id` declarations
+only, never `$ref` targets — so nothing dangles. Recorded in case a later pass expects a mapping.
+
+**O-5. `x-semio-formats` needs a home in the shared Ajv setup.** Registering the keyword had to be
+added to 15 scripts by hand (request **E**); a sixteenth consumer written tomorrow will throw
+`strict mode: unknown keyword: "x-semio-formats"` before validating anything, exactly as
+`x-semio-state` does today. Until `compileScopeExport` exists in the repo library, every new consumer
+repeats the trap.
+
+**O-6. The framework worker's vocabulary moved mid-pass.** `retainedCommandDisposition` read
+`["migrated","batch-only","fail-closed"]` at 19:xx and
+`["unclassified","migrated","batch-only-pending-rewrite","forbidden-from-ui","deleted","fail-closed"]`
+at 20:22. The data was normalised twice as a result. If `framework.ui` is tightened again, re-run
+`wp4b-retained-vocabulary.py plan` and `schema-apply` — the tables at the top of that script are the
+single place to update.

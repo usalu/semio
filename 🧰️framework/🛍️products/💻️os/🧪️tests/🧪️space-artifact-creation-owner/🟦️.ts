@@ -2,6 +2,20 @@ type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
   const { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserBrokerFetch, browserBrokerProofDigest, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearLocalBrowserBrokerProof, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hexBytes, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installLocalBrowserBrokerProof, localBrowserBrokerProofExpiresAtMs, localBrowserBrokerQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink } = dependencies;
+  const testSeams = dependencies.testSeams as {
+    directoryAdministration: typeof directoryAdministration;
+    directoryClient: typeof directoryClient;
+    directorySessionEpoch: typeof directorySessionEpoch;
+    executionTargetStatusObserver: typeof executionTargetStatusObserver;
+    inferenceApprovalUndoEpoch: typeof inferenceApprovalUndoEpoch;
+    inferenceApprovalUndoOwner: typeof inferenceApprovalUndoOwner;
+    localBrowserBrokerProofExpiresAtMs: typeof localBrowserBrokerProofExpiresAtMs;
+    localBrowserBrokerQueued: typeof localBrowserBrokerQueued;
+    socketGrantTestIssue: typeof socketGrantTestIssue;
+    spaceArtifactCreationTestFetch: typeof spaceArtifactCreationTestFetch;
+    workerPostTestSink: typeof workerPostTestSink;
+  };
+  const { DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck } = dependencies;
   type ActorInstanceLifetime = any;
   type ArtifactActorConfig = any;
   type ArtifactEvent = any;
@@ -46,11 +60,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     spaceArtifactCreationCatalogOperations.clear();
     for (const operation of spaceArtifactCreationOperations.values()) operation.abort.abort();
     spaceArtifactCreationOperations.clear();
-    spaceArtifactCreationTestFetch = null;
-    workerPostTestSink = null;
+    testSeams.spaceArtifactCreationTestFetch = null;
+    testSeams.workerPostTestSink = null;
     clearLocalBrowserBrokerProof();
     installLocalBrowserBrokerProof("4".repeat(64));
-    socketGrantTestIssue = async () => ({
+    testSeams.socketGrantTestIssue = async () => ({
       schema: "semio.hub.socket-grant/v1",
       protocol: "semio.socket.v1",
       grant: `socket.v1.${"1".repeat(32)}.${"2".repeat(64)}`,
@@ -74,11 +88,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         kinds: [{ kindId: "s.gis.gismap", schema: "s.gis.gismap", dialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" }, label: { en: "GIS Map", de: "GIS-Karte" } }],
       });
       const replies: BackboneWorkerResponse[] = [];
-      spaceArtifactCreationTestFetch = async (path, init) => {
+      testSeams.spaceArtifactCreationTestFetch = async (path, init) => {
         expect([path, init.method]).toEqual(["/spaces/space-a/artifact-creations", "GET"]);
         return new Response(body, { status: 200, headers: { "content-length": String(new TextEncoder().encode(body).byteLength) } });
       };
-      workerPostTestSink = (message) => replies.push(message);
+      testSeams.workerPostTestSink = (message) => replies.push(message);
       const clientInstanceId = "12345678-1234-4123-8123-123456789abc";
       handleTsRequest({ kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: "space-a" });
       await vi.waitFor(() => expect(replies.at(-1)).toEqual({ kind: "space-artifact-creation-catalog-status", clientInstanceId, spaceId: "space-a", phase: "ready" }));
@@ -89,7 +103,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       ]);
       expect(spaceArtifactCreationCatalogOperations).toHaveLength(0);
 
-      spaceArtifactCreationTestFetch = async () => new Response(body.replace('"spaceId":"space-a"', '"spaceId":"space-b"'), { status: 200 });
+      testSeams.spaceArtifactCreationTestFetch = async () => new Response(body.replace('"spaceId":"space-a"', '"spaceId":"space-b"'), { status: 200 });
       handleTsRequest({ kind: "space-artifact-creation-catalog-open", clientInstanceId, spaceId: "space-a" });
       await vi.waitFor(() => expect(spaceArtifactCreationCatalogOperations).toHaveLength(0));
       expect(replies.slice(-2)).toEqual([
@@ -106,11 +120,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         response("preparing"),
         response("ready", { documentId: `artifact-${"2".repeat(32)}`, kindId: "s.gis.gismap", artifactSchema: "s.gis.gismap", parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "any" } }),
       ];
-      spaceArtifactCreationTestFetch = async (path, init) => {
+      testSeams.spaceArtifactCreationTestFetch = async (path, init) => {
         calls.push([path, init.method ?? "GET"]);
         return replies[calls.length - 1]!;
       };
-      workerPostTestSink = (message) => {
+      testSeams.workerPostTestSink = (message) => {
         if (message.kind === "space-artifact-creation-status") statuses.push(message);
       };
       handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", kindId: "s.gis.gismap", name: "Shared Map" });
@@ -127,11 +141,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("routes cancellation through the exact retained owner without manufacturing a ready tuple", async () => {
       const calls: Array<readonly [string, string]> = [];
       const statuses: Array<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>> = [];
-      spaceArtifactCreationTestFetch = async (path, init) => {
+      testSeams.spaceArtifactCreationTestFetch = async (path, init) => {
         calls.push([path, init.method ?? "GET"]);
         return response(path.endsWith("/cancel") ? "cancelled" : "preparing");
       };
-      workerPostTestSink = (message) => {
+      testSeams.workerPostTestSink = (message) => {
         if (message.kind === "space-artifact-creation-status") statuses.push(message);
       };
       handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", kindId: "s.gis.gismap", name: "Shared Map" });
@@ -145,11 +159,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("never fabricates cancelled from a rejected cancel request", async () => {
       const statuses: Array<Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>> = [];
-      spaceArtifactCreationTestFetch = async (path) => {
+      testSeams.spaceArtifactCreationTestFetch = async (path) => {
         if (path.endsWith("/cancel")) return new Response(null, { status: 409 });
         return response("preparing");
       };
-      workerPostTestSink = (message) => {
+      testSeams.workerPostTestSink = (message) => {
         if (message.kind === "space-artifact-creation-status") statuses.push(message);
       };
       handleTsRequest({ kind: "space-artifact-create", requestId, spaceId: "space-a", kindId: "s.gis.gismap", name: "Shared Map" });
@@ -289,7 +303,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("rejects expired, duplicate-initialized, and over-capacity broker work without exposing proof", async () => {
       const originalFetch = globalThis.fetch;
-      const originalQueued = localBrowserBrokerQueued;
+      const originalQueued = testSeams.localBrowserBrokerQueued;
       let observedCurrent = "";
       (globalThis as unknown as { fetch: unknown }).fetch = async (_input: unknown, init?: RequestInit) => {
         observedCurrent = new Headers(init?.headers).get("x-semio-browser-broker") ?? "";
@@ -301,15 +315,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(observedCurrent).toBe("4".repeat(64));
 
         installLocalBrowserBrokerProof("9".repeat(64));
-        localBrowserBrokerProofExpiresAtMs = Date.now() - 1;
+        testSeams.localBrowserBrokerProofExpiresAtMs = Date.now() - 1;
         await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
 
         installLocalBrowserBrokerProof("a".repeat(64));
-        localBrowserBrokerQueued = 64;
+        testSeams.localBrowserBrokerQueued = 64;
         await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker capacity exceeded");
         expect(observedCurrent).not.toContain("a".repeat(64));
       } finally {
-        localBrowserBrokerQueued = originalQueued;
+        testSeams.localBrowserBrokerQueued = originalQueued;
         clearLocalBrowserBrokerProof();
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
       }
@@ -381,13 +395,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       if (typeof decoded === "string" || !("Commands" in decoded) || exactBatch === null) throw new Error("expected exact server Commands frame");
       const config: ArtifactActorConfig = { documentId: "d", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "local" };
       const state = { config, actor: "local", openClientInstanceId: "client-1", artifactBootstrap: null, frontier: null, requiredTailFrontier: null } as unknown as ArtifactState;
-      const priorSink = workerPostTestSink;
+      const priorSink = testSeams.workerPostTestSink;
       const posted: BackboneWorkerResponse[] = [];
-      workerPostTestSink = (message) => posted.push(message);
+      testSeams.workerPostTestSink = (message) => posted.push(message);
       try {
         await handleHubFrame(state, decoded, null, null, exactBatch);
       } finally {
-        workerPostTestSink = priorSink;
+        testSeams.workerPostTestSink = priorSink;
       }
       expect(posted).toHaveLength(1);
       const response = posted[0]!;
@@ -497,8 +511,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: Ajv } = await import("ajv");
       const { createHash } = await import("node:crypto");
       const corpus = JSON.parse(await readFile(new URL("./🧫️fixtures/📇️directory/🧵️artifact-bootstrap-owner-v1.json", source.url), "utf8"));
-      const schema = JSON.parse(await readFile(new URL("./🧫️fixtures/📇️directory/🧬️artifact-bootstrap-owner-v1.schema.json", source.url), "utf8"));
-      expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);
+      const schema = JSON.parse(await readFile(new URL("./🔨️modules/📇️directory/🧬️schema/🔣️.json", source.url), "utf8")) as { $id: string };
+      const validate = new Ajv({ strict: true }).addKeyword("x-semio-note").addSchema(schema).getSchema(`${schema.$id}#/$defs/DirectoryArtifactBootstrapOwnerV1`)!;
+      expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
       const fixture = await artifactBootstrapFixture(),
         frame = decodeFixtureFrame(fixture.wire.inlineWelcomeHex);
       if (!("Welcome" in frame) || typeof frame.Welcome.bootstrap !== "object" || !("ArtifactBootstrap" in frame.Welcome.bootstrap)) throw new Error("fixture bootstrap");
@@ -506,7 +521,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(createHash("sha256").update(bytesFromHex(fixture.payload.packHex)).digest("hex")).toBe(executionTargetHex(new Uint8Array(bootstrap.pack_hash)));
       expect(createHash("sha256").update(bytesFromHex(fixture.payload.sprHex)).digest("hex")).toBe(executionTargetHex(new Uint8Array(bootstrap.spr_hash)));
       const originalFinish = ArtifactBootstrapAssembler.prototype.finish,
-        originalPost = workerPostTestSink;
+        originalPost = testSeams.workerPostTestSink;
       for (const row of corpus.cases) {
         const config = fixtureConfig(fixture);
         openArtifact(config);
@@ -590,7 +605,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           });
           return pair;
         });
-        workerPostTestSink = (message) => {
+        testSeams.workerPostTestSink = (message) => {
           if (row.name === "client-during-progress" && message.kind === "artifact-bootstrap-progress") state.openClientInstanceId = "foreign-progress-client";
         };
         try {
@@ -617,7 +632,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           expect(returned.every((pair) => pair.pack.every((byte) => byte === 0) && pair.spr.every((byte) => byte === 0))).toBe(true);
         } finally {
           finish.mockRestore();
-          workerPostTestSink = originalPost;
+          testSeams.workerPostTestSink = originalPost;
           successor?.abort();
           closeArtifactRuntime(state.runtimeKey);
         }
@@ -650,6 +665,182 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(chunked.artifactBootstrapProgress.at(-1)).toMatchObject({ receivedBytes: pack.length + spr.length, receivedChunks: fixture.wire.chunkHex.length });
       expect(inlineProgress.at(-1)).toMatchObject({ receivedBytes: pack.length + spr.length });
       closeArtifact(chunked.config.documentId);
+    });
+
+    it("fails a stalled non-inline bootstrap at its exact owner deadline and fences a replaced owner's timer", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(1_000_000);
+      const fixture = await artifactBootstrapFixture();
+      const config = fixtureConfig(fixture);
+      openArtifact(config);
+      const state = artifactState(config.documentId)!;
+      let firstCloses = 0,
+        successorCloses = 0;
+      const firstSocket = { close: () => firstCloses++ } as unknown as WebSocket;
+      const successorSocket = { close: () => successorCloses++ } as unknown as WebSocket;
+      const priorPost = testSeams.workerPostTestSink;
+      const posted: BackboneWorkerResponse[] = [];
+      testSeams.workerPostTestSink = (message) => posted.push(message);
+      try {
+        state.socket = firstSocket;
+        await handleHubFrame(state, decodeFixtureFrame(fixture.wire.chunkedWelcomeHex), null, firstSocket);
+        const firstAssembler = state.artifactBootstrap;
+        const firstOwner = state.artifactBootstrapOwner;
+        const firstDeadline = state.artifactBootstrapDeadlineMs;
+        const firstTimer = state.artifactBootstrapDeadlineTimer;
+        if (!firstAssembler || !firstOwner || firstDeadline === null || firstTimer === null) throw new Error("first bootstrap deadline owner missing");
+        const firstHalf = Math.floor((firstDeadline - Date.now()) / 2);
+        await vi.advanceTimersByTimeAsync(firstHalf);
+
+        state.socket = successorSocket;
+        await handleHubFrame(state, decodeFixtureFrame(fixture.wire.chunkedWelcomeHex), null, successorSocket);
+        const successorAssembler = state.artifactBootstrap;
+        const successorOwner = state.artifactBootstrapOwner;
+        const successorDeadline = state.artifactBootstrapDeadlineMs;
+        const successorTimer = state.artifactBootstrapDeadlineTimer;
+        if (!successorAssembler || !successorOwner || successorDeadline === null || successorTimer === null) throw new Error("successor bootstrap deadline owner missing");
+        expect(successorOwner).not.toBe(firstOwner);
+        expect(successorAssembler).not.toBe(firstAssembler);
+        expect(successorTimer).not.toBe(firstTimer);
+        expect(firstAssembler.retainedBytes).toBe(0);
+
+        await vi.advanceTimersByTimeAsync(firstDeadline - Date.now() + 1);
+        expect(state.artifactBootstrapOwner).toBe(successorOwner);
+        expect(state.artifactBootstrap).toBe(successorAssembler);
+        expect(state.artifactBootstrapDeadlineMs).toBe(successorDeadline);
+        expect(posted.filter((message) => message.kind === "artifact-bootstrap-failed")).toHaveLength(0);
+        expect(firstCloses).toBe(0);
+        expect(successorCloses).toBe(0);
+
+        await vi.advanceTimersByTimeAsync(successorDeadline - Date.now());
+        expect(posted.filter((message) => message.kind === "artifact-bootstrap-failed")).toEqual([
+          expect.objectContaining({ documentId: config.documentId, clientInstanceId: state.openClientInstanceId, code: "deadline-exceeded", retryable: true }),
+        ]);
+        expect(state.artifactBootstrapOwner).toBeNull();
+        expect(state.artifactBootstrap).toBeNull();
+        expect(state.artifactBootstrapDeadlineMs).toBeNull();
+        expect(state.artifactBootstrapDeadlineTimer).toBeNull();
+        expect(successorAssembler.retainedBytes).toBe(0);
+        expect(firstCloses).toBe(0);
+        expect(successorCloses).toBe(1);
+      } finally {
+        testSeams.workerPostTestSink = priorPost;
+        closeArtifactRuntime(state.runtimeKey);
+        vi.useRealTimers();
+      }
+    });
+
+    it("bounds a required rebootstrap across reconnect and refuses pairless welcome shortcuts", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(2_000_000);
+      const fixture = await artifactBootstrapFixture();
+      const priorPost = testSeams.workerPostTestSink;
+      const rebootstrapControl = (documentId: string): ServerFrame => ({
+        RebootstrapRequired: {
+          control: {
+            space_id: "bootstrap-watchdog-space",
+            document_id: documentId,
+            checkpoint_id: Array(32).fill(1),
+            descriptor_hash: Array(32).fill(2),
+            baseline_frontier: { ...fixtureRequiredFrontier(fixture), document_id: documentId },
+          },
+        },
+      });
+      const prepare = async (): Promise<ArtifactState> => {
+        const state = await installFixture(fixture, false);
+        artifacts.delete(state.runtimeKey);
+        state.config = { ...state.config, bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "bootstrap-watchdog-space" }] };
+        state.runtimeKey = documentRuntimeKeyForConfig(state.config);
+        artifacts.set(state.runtimeKey, state);
+        return state;
+      };
+      try {
+        const stalled = await prepare();
+        const posted: BackboneWorkerResponse[] = [];
+        testSeams.workerPostTestSink = (message) => posted.push(message);
+        let firstCloses = 0,
+          replacementCloses = 0,
+          currentCloses = 0;
+        const firstSocket = { close: () => firstCloses++ } as unknown as WebSocket;
+        stalled.socket = firstSocket;
+        await handleHubFrame(stalled, rebootstrapControl(stalled.config.documentId), null, firstSocket);
+        const firstOwner = stalled.artifactRebootstrapOwner;
+        const firstDeadline = stalled.artifactRebootstrapDeadlineMs;
+        if (!firstOwner || firstDeadline === null) throw new Error("first rebootstrap watchdog missing");
+        await vi.advanceTimersByTimeAsync(Math.floor((firstDeadline - Date.now()) / 2));
+        const replacementSocket = { close: () => replacementCloses++ } as unknown as WebSocket;
+        stalled.socket = replacementSocket;
+        await handleHubFrame(stalled, rebootstrapControl(stalled.config.documentId), null, replacementSocket);
+        const replacementOwner = stalled.artifactRebootstrapOwner;
+        const replacementDeadline = stalled.artifactRebootstrapDeadlineMs;
+        if (!replacementOwner || replacementDeadline === null) throw new Error("replacement rebootstrap watchdog missing");
+        expect(replacementOwner).not.toBe(firstOwner);
+        const currentSocket = { close: () => currentCloses++ } as unknown as WebSocket;
+        stalled.socket = currentSocket;
+        await vi.advanceTimersByTimeAsync(firstDeadline - Date.now() + 1);
+        expect(stalled.artifactRebootstrapOwner).toBe(replacementOwner);
+        expect(stalled.artifactRebootstrapRequired).toBe(true);
+        expect(currentCloses).toBe(0);
+        await vi.advanceTimersByTimeAsync(replacementDeadline - Date.now());
+        expect(posted.filter((message) => message.kind === "artifact-bootstrap-failed")).toEqual([
+          expect.objectContaining({ documentId: stalled.config.documentId, code: "deadline-exceeded", retryable: true }),
+        ]);
+        expect(stalled.artifactRebootstrapOwner).toBeNull();
+        expect(stalled.artifactRebootstrapDeadlineMs).toBeNull();
+        expect(stalled.artifactRebootstrapDeadlineTimer).toBeNull();
+        expect(stalled.artifactRebootstrapRequired).toBe(true);
+        expect(stalled.artifactBootstrap).toBeNull();
+        expect(firstCloses).toBe(1);
+        expect(replacementCloses).toBe(1);
+        expect(currentCloses).toBe(1);
+        closeArtifactRuntime(stalled.runtimeKey);
+
+        for (const outcome of ["none", "tail", "success"] as const) {
+          const state = await prepare();
+          const messages: BackboneWorkerResponse[] = [];
+          testSeams.workerPostTestSink = (message) => messages.push(message);
+          let oldCloses = 0,
+            activeCloses = 0;
+          const oldSocket = { close: () => oldCloses++ } as unknown as WebSocket;
+          state.socket = oldSocket;
+          await handleHubFrame(state, rebootstrapControl(state.config.documentId), null, oldSocket);
+          const deadline = state.artifactRebootstrapDeadlineMs;
+          if (deadline === null) throw new Error("rebootstrap watchdog missing");
+          const activeSocket = { close: () => activeCloses++ } as unknown as WebSocket;
+          state.socket = activeSocket;
+          const welcome = structuredClone(decodeFixtureFrame(fixture.wire.inlineWelcomeHex));
+          if (!("Welcome" in welcome)) throw new Error("welcome fixture missing");
+          if (outcome === "none") welcome.Welcome.bootstrap = "None";
+          if (outcome === "tail") welcome.Welcome.bootstrap = "Tail";
+          await handleHubFrame(state, welcome, null, activeSocket);
+          if (outcome === "success") {
+            expect(state.artifactRebootstrapRequired).toBe(false);
+            expect(state.artifactRebootstrapOwner).toBeNull();
+            expect(state.artifactRebootstrapDeadlineMs).toBeNull();
+            expect(state.artifactRebootstrapDeadlineTimer).toBeNull();
+            expect(messages.filter((message) => message.kind === "artifact-bootstrap-failed")).toHaveLength(0);
+            await vi.advanceTimersByTimeAsync(Math.max(0, deadline - Date.now() + 1));
+            expect(activeCloses).toBe(0);
+          } else {
+            expect(messages.filter((message) => message.kind === "artifact-bootstrap-failed")).toEqual([
+              expect.objectContaining({ documentId: state.config.documentId, code: "invalid-bootstrap", retryable: false }),
+            ]);
+            expect(state.artifactRebootstrapRequired).toBe(true);
+            expect(state.artifactRebootstrapOwner).toBeNull();
+            expect(state.artifactRebootstrapDeadlineMs).toBeNull();
+            expect(state.artifactRebootstrapDeadlineTimer).toBeNull();
+            expect(activeCloses).toBe(1);
+          }
+          expect(oldCloses).toBe(1);
+          closeArtifactRuntime(state.runtimeKey);
+        }
+      } finally {
+        testSeams.workerPostTestSink = priorPost;
+        for (const state of [...artifacts.values()]) {
+          if (state.config.documentId === fixture.artifact.requiredTailFrontier.documentId) closeArtifactRuntime(state.runtimeKey);
+        }
+        vi.useRealTimers();
+      }
     });
 
     it("does not reach Live for a same-ordinal frontier with a different authenticated head or chain", async () => {
@@ -709,9 +900,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         nonclaims: readonly string[];
       }>;
       const parsed: unknown = JSON.parse(await readFile(new URL("./🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🔣️.json", source.url), "utf8"));
-      const schema = JSON.parse(await readFile(new URL("./🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🧬️.schema.json", source.url), "utf8"));
-      const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-      const validate = new Ajv2020({ strict: true }).compile<GisMapPeerRebootstrapFixtureV1>(schema);
+      const schema = JSON.parse(await readFile(new URL("./🧬️schema/🔣️.json", source.url), "utf8")) as { $id: string };
+      const Ajv = (await import("ajv")).default;
+      const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/GisMapPeerRebootstrapV1`)! as unknown as (value: unknown) => value is GisMapPeerRebootstrapFixtureV1;
       expect(validate(parsed)).toBe(true);
       if (!validate(parsed)) throw new Error("GIS Map peer rebootstrap fixture is invalid");
       const corpus = parsed;
@@ -720,7 +911,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       if (!("Welcome" in welcome) || typeof welcome.Welcome.bootstrap !== "object" || !("ArtifactBootstrap" in welcome.Welcome.bootstrap)) throw new Error("peer bootstrap fixture");
       const bootstrap = welcome.Welcome.bootstrap.ArtifactBootstrap;
       const { UiDocumentStore } = await import("../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx");
-      const priorPost = workerPostTestSink;
+      const priorPost = testSeams.workerPostTestSink;
       const results: { clientInstanceId: string; pack: number[]; spr: number[]; frontier: WireFrontierSummary; node: unknown; closeCount: number }[] = [];
       try {
         for (const client of corpus.clients) {
@@ -735,7 +926,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           const staleSocket = { close: () => closeCount++ } as unknown as WebSocket;
           state.socket = staleSocket;
           const posted: BackboneWorkerResponse[] = [];
-          workerPostTestSink = (message) => posted.push(message);
+          testSeams.workerPostTestSink = (message) => posted.push(message);
           await handleHubFrame(
             state,
             {
@@ -786,7 +977,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           closeArtifactRuntime(state.runtimeKey);
         }
       } finally {
-        workerPostTestSink = priorPost;
+        testSeams.workerPostTestSink = priorPost;
       }
       expect(results).toHaveLength(2);
       expect(results[0]!.pack).toEqual(results[1]!.pack);
@@ -1137,8 +1328,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     function administrationHarness(pageStatuses: readonly number[], receiptStatus = 200) {
       const posted: BackboneWorkerResponse[] = [];
-      const original = workerPostTestSink;
-      workerPostTestSink = (message) => posted.push(message);
+      const original = testSeams.workerPostTestSink;
+      testSeams.workerPostTestSink = (message) => posted.push(message);
       const requests: string[] = [];
       let pageIndex = 0;
       const bodies: string[] = [];
@@ -1157,7 +1348,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         bodies,
         fetches,
         release: () => {
-          workerPostTestSink = original;
+          testSeams.workerPostTestSink = original;
         },
       };
     }
@@ -1172,7 +1363,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         [{ inviteId: "invite-1", createdAtMs: 20 }],
       );
       try {
-        directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
         harness.bodies.push(first);
         handleTsRequest({ kind: "directory-administration-open", operationEpoch: 1, spaceId: SPACE });
         await settleAdministrationTurns(harness);
@@ -1207,7 +1398,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const harness = administrationHarness([200, 200]);
       const page = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], []);
       try {
-        directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
         harness.bodies.push(page);
         handleTsRequest({ kind: "directory-administration-open", operationEpoch: 2, spaceId: SPACE });
         await settleAdministrationTurns(harness);
@@ -1253,7 +1444,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const author = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], []);
       const member = await sealMemberAdministrationPage();
       try {
-        directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
         harness.bodies.push(author);
         handleTsRequest({ kind: "directory-administration-open", operationEpoch: 6, spaceId: SPACE });
         await settleAdministrationTurns(harness);
@@ -1276,7 +1467,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       for (const status of [401, 403]) {
         const harness = administrationHarness([status]);
         try {
-          directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+          testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
           handleTsRequest({ kind: "directory-administration-open", operationEpoch: 3, spaceId: SPACE });
           await settleAdministrationTurns(harness);
           const terminal = harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1) as { phase: string; canonicalJson?: string; code?: string };
@@ -1294,7 +1485,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const harness = administrationHarness([200, 200]);
       const page = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], []);
       try {
-        directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
         harness.bodies.push(page);
         handleTsRequest({ kind: "directory-administration-open", operationEpoch: 5, spaceId: SPACE });
         await settleAdministrationTurns(harness);
@@ -1318,13 +1509,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const harness = administrationHarness([200]);
       const page = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], []);
       try {
-        directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
+        testSeams.directoryClient = new DirectoryClient("http://hub.test", { request: harness.fetches as never });
         harness.bodies.push(page);
         handleTsRequest({ kind: "directory-administration-open", operationEpoch: 4, spaceId: SPACE });
         await settleAdministrationTurns(harness);
-        if (directoryAdministration === null) throw new Error("administration operation missing");
-        directoryAdministration.inviteToken = "invite.v1.close-secret";
-        directoryAdministration.inviteCapabilityStatus = "available";
+        if (testSeams.directoryAdministration === null) throw new Error("administration operation missing");
+        testSeams.directoryAdministration.inviteToken = "invite.v1.close-secret";
+        testSeams.directoryAdministration.inviteCapabilityStatus = "available";
         handleTsRequest({ kind: "directory-administration-close", operationEpoch: 4 });
         const terminal = harness.posted.filter((message) => message.kind === "directory-administration-state").at(-1) as { phase: string; canonicalJson?: string };
         expect(terminal.phase).toBe("cancelled");
@@ -1396,7 +1587,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
      * transport owner from the browser broker's own proof ratchet (proved separately above). */
     function installFakeDirectoryClient(respond: (request: DirectoryCommandRequestV1) => Promise<{ status: number; body: string }> | { status: number; body: string }): string[] {
       const bodies: string[] = [];
-      directoryClient = new DirectoryClient("http://hub.test", {
+      testSeams.directoryClient = new DirectoryClient("http://hub.test", {
         request: async (_input: string, init: RequestInit = {}) => {
           const body = String(init.body ?? "");
           bodies.push(body);
@@ -1404,7 +1595,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           return { ok: response.status >= 200 && response.status < 300, status: response.status, text: async () => response.body } as unknown as FetchTimeoutResponse;
         },
       });
-      directorySessionEpoch += 1;
+      testSeams.directorySessionEpoch += 1;
       return bodies;
     }
 
@@ -1515,7 +1706,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const stale: DirectoryCommandTransportOperationV1 = {
           request: sealDirectoryCommandRequestV1(commandRequestId(301), sampleCommand),
           abort: new AbortController(),
-          sessionEpoch: directorySessionEpoch - 1,
+          sessionEpoch: testSeams.directorySessionEpoch - 1,
           workerEpoch: directoryWorkerEpoch,
           settled: false,
         };
@@ -1575,7 +1766,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const originalWebSocket = globalThis.WebSocket;
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
       const paths: string[] = [];
-      socketGrantTestIssue = async (_baseUrl, path) => {
+      testSeams.socketGrantTestIssue = async (_baseUrl, path) => {
         paths.push(path);
         return {
           schema: "semio.hub.socket-grant/v1",
@@ -1587,7 +1778,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       };
       const scope = { spaceId: "space/a", documentId: "document b" };
       const posted: BackboneWorkerResponse[] = [];
-      workerPostTestSink = (message) => posted.push(message);
+      testSeams.workerPostTestSink = (message) => posted.push(message);
       try {
         handleTsRequest({ kind: "directory-scope-open", baseUrl: "http://hub.test", scope, since: 7 });
         for (let turn = 0; turn < 16 && FakeDirectoryWebSocket.instances.length === 0; turn += 1) await Promise.resolve();
@@ -1595,13 +1786,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(paths).toEqual(["/directory/spaces/space%2Fa/documents/document%20b/socket-grants"]);
         expect(socket.url).toBe("ws://hub.test/directory/spaces/space%2Fa/documents/document%20b/socket/v1?since=7");
         socket.triggerOpen();
-        const issue = socketGrantTestIssue;
-        socketGrantTestIssue = null;
+        const issue = testSeams.socketGrantTestIssue;
+        testSeams.socketGrantTestIssue = null;
         openArtifact({ documentId: scope.documentId, schema: "gis.map", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: scope.spaceId }], actor: "caller" });
-        socketGrantTestIssue = issue;
+        testSeams.socketGrantTestIssue = issue;
         const state = artifactState(scope.documentId, scope.spaceId)!;
-        inferenceApprovalUndoOwner = {
-          historyEpoch: ++inferenceApprovalUndoEpoch,
+        testSeams.inferenceApprovalUndoOwner = {
+          historyEpoch: ++testSeams.inferenceApprovalUndoEpoch,
           scope,
           clientInstanceId: state.openClientInstanceId,
           receipt: {
@@ -1626,7 +1817,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           phase: "submitting",
           retryable: true,
         };
-        const revokedOwner = inferenceApprovalUndoOwner;
+        const revokedOwner = testSeams.inferenceApprovalUndoOwner;
         socket.triggerClose(4401);
         await Promise.resolve();
         await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MAX_MS * 2);
@@ -1634,13 +1825,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(FakeDirectoryWebSocket.instances).toHaveLength(1);
         expect(artifacts.has(state.runtimeKey)).toBe(false);
         expect(revokedOwner.abort.signal.aborted).toBe(true);
-        expect(inferenceApprovalUndoOwner).toBeNull();
+        expect(testSeams.inferenceApprovalUndoOwner).toBeNull();
         expect(posted.some((message) => message.kind === "inference-history-status" && message.historyEpoch === revokedOwner.historyEpoch && message.status.phase === "unavailable")).toBe(true);
         expect(posted.some((message) => message.kind === "directory-scope-revoked")).toBe(true);
       } finally {
         closeDirectory();
-        socketGrantTestIssue = null;
-        workerPostTestSink = null;
+        testSeams.socketGrantTestIssue = null;
+        testSeams.workerPostTestSink = null;
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
         vi.useRealTimers();
       }
@@ -1709,8 +1900,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     function inferenceHarness(options: { readonly lease: "none" | "viewer" | "editor" }) {
       const posted: BackboneWorkerResponse[] = [];
-      const original = workerPostTestSink;
-      workerPostTestSink = (message) => posted.push(message);
+      const original = testSeams.workerPostTestSink;
+      testSeams.workerPostTestSink = (message) => posted.push(message);
       const originalFetch = globalThis.fetch;
       const requests: string[] = [];
       const bodies: string[] = [];
@@ -1732,8 +1923,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       installLocalBrowserBrokerProof("b".repeat(64));
       // 🧷️ No socket-grant issuer and no installed target means `openArtifact` opens no hub socket
       // at all, so this harness exercises the inference port's own four calls and nothing else.
-      const originalIssue = socketGrantTestIssue;
-      socketGrantTestIssue = null;
+      const originalIssue = testSeams.socketGrantTestIssue;
+      testSeams.socketGrantTestIssue = null;
       openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller" });
       const state = artifactState(DOCUMENT, SPACE)!;
       if (options.lease !== "none") state.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, leaseFields(options.lease === "editor"), "http://hub.test", new Uint8Array(1), new Uint8Array(1));
@@ -1747,8 +1938,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         release: () => {
           closeArtifact(DOCUMENT, SPACE);
           clearLocalBrowserBrokerProof();
-          workerPostTestSink = original;
-          socketGrantTestIssue = originalIssue;
+          testSeams.workerPostTestSink = original;
+          testSeams.socketGrantTestIssue = originalIssue;
           (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
         },
       };
@@ -2036,6 +2227,21 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       return { documentId, schema: "demo/v1", bindings: [{ kind: "folder", path: `/tmp/${documentId}` }], actor: "actor-1" };
     }
 
+    function exactDocumentBackboneMessage(envelope: MutationEnvelope, diffPayload = encodePackValue(envelope.diff.payload)): Uint8Array {
+      return encodeBackboneMessage({
+        kind: "mutations",
+        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{
+          mutation_id: envelope.id,
+          document_id: envelope.document,
+          actor: envelope.actor,
+          dependencies: envelope.deps ?? [],
+          diff: { schema: envelope.diff.schemaId, payload: diffPayload },
+          inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: encodePackValue(envelope.inverse.inverseDiff.payload) },
+          timestamp: { actor: 1n, physical_ms: 9_007_199_254_740_992n, logical: 3n },
+        }]),
+      });
+    }
+
     type BrowserDocumentOpenFixture = {
       nowMs: number;
       intent: DocumentOpenIntentV1;
@@ -2148,7 +2354,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const originalWebSocket = globalThis.WebSocket;
       const current = currentBrowserDocumentOpenFixture(fixture);
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
-      socketGrantTestIssue = async () => current.grant;
+      testSeams.socketGrantTestIssue = async () => current.grant;
       const left = fixture.expected.scopeIsolation.left;
       const right = fixture.expected.scopeIsolation.right;
       try {
@@ -2180,7 +2386,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       } finally {
         closeArtifact(left.documentId, left.spaceId);
         closeArtifact(right.documentId, right.spaceId);
-        socketGrantTestIssue = null;
+        testSeams.socketGrantTestIssue = null;
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
       }
     });
@@ -2226,7 +2432,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const originalWebSocket = globalThis.WebSocket;
       const requests: { url: string; headers: Headers; body: string }[] = [];
       FakeHubWebSocket.instances = [];
-      socketGrantTestIssue = null;
+      testSeams.socketGrantTestIssue = null;
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
       (globalThis as unknown as { fetch: unknown }).fetch = async (input: string, init?: RequestInit) => {
         const url = String(input);
@@ -2287,7 +2493,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const originalFetch = globalThis.fetch;
       const originalWebSocket = globalThis.WebSocket;
       FakeHubWebSocket.instances = [];
-      socketGrantTestIssue = null;
+      testSeams.socketGrantTestIssue = null;
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
       let effects = 0;
       (globalThis as unknown as { fetch: unknown }).fetch = async () => {
@@ -2383,8 +2589,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const requests: { url: string; method: string; body: string }[] = [];
       const statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [];
       const originalFetch = globalThis.fetch;
-      socketGrantTestIssue = null;
-      executionTargetStatusObserver = (status) => statuses.push(status);
+      testSeams.socketGrantTestIssue = null;
+      testSeams.executionTargetStatusObserver = (status) => statuses.push(status);
       openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor" });
       const state = artifactState(fixture.intent.scope.documentId)!;
       state.openClientInstanceId = fixture.intent.clientInstanceId;
@@ -2408,7 +2614,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         requests,
         statuses,
         release: () => {
-          executionTargetStatusObserver = null;
+          testSeams.executionTargetStatusObserver = null;
           closeArtifact(fixture.intent.scope.documentId);
           clearLocalBrowserBrokerProof();
           (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
@@ -2419,23 +2625,25 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("browser document first open verifies server assets without a prior installed target", async () => {
       const fixture = await executionTargetLeaseFixture();
       const { readFile } = await import("node:fs/promises");
-      const corpusBase = "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧭️opening/🧪️fixtures/📍️scope/";
-      const corpus = JSON.parse(await readFile(new URL(corpusBase + "🔣️.json", source.url), "utf8"));
-      const schema = JSON.parse(await readFile(new URL(corpusBase + "🧬️.schema.json", source.url), "utf8"));
+      const corpus = JSON.parse(await readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧭️opening/🧫️fixtures/📍️scope/🔣️.json", source.url), "utf8"));
+      const schema = JSON.parse(await readFile(new URL("./🔨️modules/📺️renderer/🧬️schema/🔣️.json", source.url), "utf8")) as { $id: string };
       const Ajv = (await import("ajv")).default;
-      expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);
+      const validators = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(schema);
+      const validateScope = validators.getSchema(`${schema.$id}#/$defs/DocumentOpeningScopeResolutionV1`)!;
+      const validateFirstOpen = validators.getSchema(`${schema.$id}#/$defs/DocumentFirstOpenV1`)!;
+      expect(corpus.cases.every((row: unknown) => validateScope(row)) && validateFirstOpen(corpus.firstOpen), JSON.stringify([...validateScope.errors ?? [], ...validateFirstOpen.errors ?? []])).toBe(true);
       const originalFetch = globalThis.fetch,
         originalSocket = globalThis.WebSocket,
-        originalPost = workerPostTestSink;
+        originalPost = testSeams.workerPostTestSink;
       const requests: { stage: string; body: Record<string, unknown> }[] = [];
       const posted: BackboneWorkerResponse[] = [];
       const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
       const grant = { ...structuredClone(fixture.socketGrant), expiresAtMs: Date.now() + 25_000 };
       const scope = fixture.intent.scope;
       const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...scope });
-      socketGrantTestIssue = null;
+      testSeams.socketGrantTestIssue = null;
       FakeHubWebSocket.instances = [];
-      workerPostTestSink = (message) => posted.push(message);
+      testSeams.workerPostTestSink = (message) => posted.push(message);
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
       globalThis.fetch = async (input, init) => {
         const stage = String(input).split("/").at(-1)!;
@@ -2493,18 +2701,18 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         clearLocalBrowserBrokerProof();
         globalThis.fetch = originalFetch;
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalSocket;
-        workerPostTestSink = originalPost;
+        testSeams.workerPostTestSink = originalPost;
       }
     });
 
     it("browser document first open rejects hostile assets and retired owners before socket authority", async () => {
       const { readFile } = await import("node:fs/promises");
-      const corpus = JSON.parse(await readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧭️opening/🧪️fixtures/📍️scope/🔣️.json", source.url), "utf8"));
+      const corpus = JSON.parse(await readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧭️opening/🧫️fixtures/📍️scope/🔣️.json", source.url), "utf8"));
       const originalFetch = globalThis.fetch,
         originalSocket = globalThis.WebSocket,
-        originalPost = workerPostTestSink;
+        originalPost = testSeams.workerPostTestSink;
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
-      socketGrantTestIssue = null;
+      testSeams.socketGrantTestIssue = null;
       try {
         for (const row of corpus.firstOpen.hostile) {
           const fixture = await executionTargetLeaseFixture();
@@ -2517,8 +2725,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           FakeHubWebSocket.instances = [];
           clearLocalBrowserBrokerProof();
           installLocalBrowserBrokerProof("a".repeat(64));
-          executionTargetStatusObserver = (status) => statuses.push(status);
-          workerPostTestSink = () => {};
+          testSeams.executionTargetStatusObserver = (status) => statuses.push(status);
+          testSeams.workerPostTestSink = () => {};
           globalThis.fetch = async (input) => {
             const stage = String(input).split("/").at(-1)!;
             stages.push(stage);
@@ -2557,14 +2765,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           } finally {
             closeArtifactRuntime(runtimeKey);
             await new Promise((resolve) => setTimeout(resolve, 0));
-            executionTargetStatusObserver = null;
+            testSeams.executionTargetStatusObserver = null;
             clearLocalBrowserBrokerProof();
           }
         }
       } finally {
         globalThis.fetch = originalFetch;
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalSocket;
-        workerPostTestSink = originalPost;
+        testSeams.workerPostTestSink = originalPost;
       }
     });
 
@@ -2881,7 +3089,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           return Response.json(grant, { headers });
         });
         if (row.name === "status-owner-change")
-          executionTargetStatusObserver = (status) => {
+          testSeams.executionTargetStatusObserver = (status) => {
             if (status.code === "renderer-unavailable") mutate();
           };
         crypto.subtle.digest = async function (algorithm, bytes) {
@@ -3181,8 +3389,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             }
           }
           (globalThis as unknown as { Worker: unknown }).Worker = SessionWorker;
-          socketGrantTestIssue = null;
-          executionTargetStatusObserver = (status) => {
+          testSeams.socketGrantTestIssue = null;
+          testSeams.executionTargetStatusObserver = (status) => {
             statuses.push(status);
             if (status.progress?.stage === "manifest") bodyProgress.delete(status.spaceId);
             if (status.progress?.stage === corpus.progressStage) {
@@ -3317,7 +3525,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             }
             for (const worker of workers) expect(worker.terminations).toBe(1);
             expect(browserActorChildCapacity()).toEqual({ actors: 0, bytes: 0 });
-            executionTargetStatusObserver = null;
+            testSeams.executionTargetStatusObserver = null;
             clearLocalBrowserBrokerProof();
           }
         }
@@ -3332,9 +3540,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("browser document actor transfers one verified cold pair only after lifecycle ACK and exact page receipts", async () => {
       const fixture = await executionTargetLeaseFixture();
       const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧫️fixture/🔣️.json", source.url), "utf8"));
-      const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+      const Ajv = (await import("ajv")).default;
       const schema = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧬️schema/🔣️.json", source.url), "utf8"));
-      expect(new Ajv2020({ strict: true }).compile(schema)(corpus)).toBe(true);
+      expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);
       const { applyPatch } = await import("fast-json-patch");
       const rendererOracle = applyPatch({ revision: 0, nodeKind: null as string | null }, [
         { op: "replace", path: "/revision", value: corpus.browserRender.revision },
@@ -3365,6 +3573,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         originalFetch = globalThis.fetch;
       const { UiDocumentStore } = await import("../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx");
       const windowKindId = fixture.manifest.surface.windowKindId;
+      const hostFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🧪️tests/🪟️host-opening-context/🔣️.json", source.url), "utf8"));
+      const hostView = { ...hostFixture.valid.viewState, windowId: windowKindId, activeWindowKindId: windowKindId, activeUtilityId: "pan", activeUtilityByWindowId: { [windowKindId]: "pan" }, windowInstances: [{ id: windowKindId, windowKindId }] };
+      const bodyKey = leaseBodyKey(guest);
+      function leaseBodyKey(descriptor: Record<string, any>): string {
+        return descriptor.manifest.apps.find((app: Record<string, any>) => app.id === fixture.manifest.surface.appId).windowKinds.find((window: Record<string, any>) => window.id === windowKindId).bodyKey;
+      }
+      const visibleViews: Record<string, unknown>[] = [];
       for (const key of Object.keys(guest.hashes)) guest.hashes[key] = "";
       const received = new Uint8Array(pack.byteLength + spr.byteLength),
         pageIndexes: number[] = [],
@@ -3414,6 +3629,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               expect(lifecycleAcknowledged).toBe(true);
               expect(pageIndexes).toHaveLength(exact.pageCount);
               expect(visible.surface).toEqual({ instance: 0, surface: windowKindId });
+              expect(visible.bodyKey).toBe(bodyKey);
+              const visibleView = decodePackValue(visible.viewState) as Record<string, unknown>;
+              expect(visibleView).toEqual(state.browserActorViewState);
+              visibleViews.push(visibleView);
             }
             if (wake) {
               expect(renderEvents[0]).toBe("surface-visible");
@@ -3499,7 +3718,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
                   effects: [],
                   presence: [],
                   nextWake: null,
-                  status: { tag: visible || (wake && !initialScene) ? "more-work" : "idle" },
+                  status: { tag: (visible && visibleViews.length === 1) || (wake && !initialScene) ? "more-work" : "idle" },
                   fuelUsed: 1n,
                   commandIngress: { tag: "idle" },
                   coldPairIngress,
@@ -3527,6 +3746,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       state.config = { ...state.config, documentId, schema: fixture.manifest.artifact.schema, bindings: [binding] };
       state.runtimeKey = documentRuntimeKeyForConfig(state.config);
       artifacts.set(state.runtimeKey, state);
+      const hostRequest = { kind: "browser-actor-view-state", clientInstanceId: state.openClientInstanceId, scope: { spaceId: binding.spaceId, documentId }, viewState: hostView } as const;
+      handleTsRequest({ ...hostRequest, clientInstanceId: "00000000-0000-4000-8000-000000000000" });
+      expect(state.browserActorViewState).toBeNull();
+      handleTsRequest(hostRequest);
+      expect(state.browserActorViewState).toEqual(hostView);
       const fields = structuredClone(fixture.manifest);
       fields.scope = { spaceId: binding.spaceId, documentId };
       fields.checkpoint = {
@@ -3546,7 +3770,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         chain_hash: fields.checkpoint.baselineFrontier.chainHash,
       };
       const intent = { ...structuredClone(fixture.intent), scope: { spaceId: binding.spaceId, documentId } },
-        actorFixtureExpiresAtMs = Date.now() + 120_000,
+        actorFixtureExpiresAtMs = Date.now() + 600_000,
         receipt = { ...structuredClone(fixture.socketGrant), expiresAtMs: actorFixtureExpiresAtMs };
       lease.admitBrowserActor(documentExecutionTargetLeaseMintToken, receipt, actorFixtureExpiresAtMs + 5_000, { binding, intent, assertCurrent() {} });
       state.actor = receipt.actorId;
@@ -3555,8 +3779,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const socket = new FakeHubWebSocket("ws://hub.test/cold");
       state.socket = socket as unknown as WebSocket;
       socket.open();
-      executionTargetStatusObserver = (status) => statuses.push(status);
-      workerPostTestSink = (message) => {
+      testSeams.executionTargetStatusObserver = (status) => statuses.push(status);
+      testSeams.workerPostTestSink = (message) => {
         if (message.kind === "inference-history-status") {
           historyStatuses.push(message);
           return;
@@ -3653,18 +3877,18 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           closed: false,
         };
         retainInferenceApprovalUndo(operation, approvalReceipt);
-        expect(inferenceApprovalUndoOwner).toMatchObject({ phase: "awaiting-mount", clientInstanceId: state.openClientInstanceId });
+        expect(testSeams.inferenceApprovalUndoOwner).toMatchObject({ phase: "awaiting-mount", clientInstanceId: state.openClientInstanceId });
         expect(historyStatuses).toEqual([]);
         expect(owner.pageCount).toBe(exact.pageCount);
         await reservation!.installColdPair(owner);
-        expect(inferenceApprovalUndoOwner).toMatchObject({ phase: "available", clientInstanceId: state.openClientInstanceId });
+        expect(testSeams.inferenceApprovalUndoOwner).toMatchObject({ phase: "available", clientInstanceId: state.openClientInstanceId });
         expect(historyStatuses.at(-1)?.status).toEqual({ phase: "available", canUndo: true, code: null });
         expect(renderEvents).toEqual(corpus.browserRender.events);
         await reservation!.installColdPair(owner);
         expect(renderEvents).toEqual(corpus.browserRender.events);
         expect(pageIndexes).toEqual(Array.from({ length: exact.pageCount }, (_unused, index) => index));
-        expect(received.subarray(0, pack.byteLength)).toEqual(pack);
-        expect(received.subarray(pack.byteLength)).toEqual(spr);
+        expect(Buffer.from(received.subarray(0, pack.byteLength)).equals(Buffer.from(pack))).toBe(true);
+        expect(Buffer.from(received.subarray(pack.byteLength)).equals(Buffer.from(spr))).toBe(true);
         expect(statuses.filter((status) => status.code === "renderer-unavailable")).toHaveLength(0);
         expect(patchOffers).toHaveLength(2);
         expect(patchAcknowledged).toBe(true);
@@ -3672,9 +3896,18 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(uiStore.getRevisionSnapshot()).toBe(rendererOracle.revision);
         expect(uiStore.getState().nodes.get(uiStore.getState().root!)?.component).toMatchObject({ type: "surface", kind: rendererOracle.nodeKind });
 
+        const beforeConfig = JSON.stringify(state.config);
+        const beforeFrontier = JSON.stringify(state.frontier);
+        handleTsRequest({ ...hostRequest, viewState: { ...hostView, locale: "en", terminology: "native" } });
+        await vi.waitFor(() => expect(visibleViews.at(-1)?.locale).toBe("en"));
+        expect(visibleViews.at(-1)?.terminology).toBe("native");
+        expect(JSON.stringify(state.config)).toBe(beforeConfig);
+        expect(JSON.stringify(state.frontier)).toBe(beforeFrontier);
+        console.log("[DEBUG] browser-host-context live-preference-refresh=1 artifact-config-unchanged=1 stale-opening-rejected=1");
+
         retainInferenceApprovalUndo(operation, approvalReceipt);
         reissueInferenceApprovalUndoForRebootstrap(state);
-        const ownerAwaitingA = inferenceApprovalUndoOwner!;
+        const ownerAwaitingA = testSeams.inferenceApprovalUndoOwner!;
         const stateB: ArtifactState = {
           ...state,
           runtimeKey: documentRuntimeKeyV1({ kind: "hub", spaceId: "unrelated-space", documentId: "unrelated-document" }),
@@ -3684,16 +3917,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           verifiedColdPair: owner,
         };
         bindInferenceApprovalUndoToMountedPair(stateB, reservation!, owner);
-        expect(inferenceApprovalUndoOwner).toBe(ownerAwaitingA);
-        expect(inferenceApprovalUndoOwner?.phase).toBe("awaiting-mount");
+        expect(testSeams.inferenceApprovalUndoOwner).toBe(ownerAwaitingA);
+        expect(testSeams.inferenceApprovalUndoOwner?.phase).toBe("awaiting-mount");
         reservation!.bindApprovalUndoIfMounted();
-        expect(inferenceApprovalUndoOwner?.phase).toBe("available");
+        expect(testSeams.inferenceApprovalUndoOwner?.phase).toBe("available");
 
         for (const field of ["directoryRevision", "membershipGeneration", "sessionGeneration"] as const) {
           retainInferenceApprovalUndo(operation, approvalReceipt);
-          const originalOwner = inferenceApprovalUndoOwner!;
+          const originalOwner = testSeams.inferenceApprovalUndoOwner!;
           reissueInferenceApprovalUndoForRebootstrap(state);
-          const reissued = inferenceApprovalUndoOwner!;
+          const reissued = testSeams.inferenceApprovalUndoOwner!;
           expect(originalOwner.abort.signal.aborted).toBe(true);
           expect(reissued).toMatchObject({ phase: "awaiting-mount", idempotencyKey: originalOwner.idempotencyKey });
           const rotatedFields = structuredClone(fields);
@@ -3701,7 +3934,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           const rotatedLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(rotatedFields), fixture.hubOrigin, executionTargetBytes(fixture.componentHex), executionTargetBytes(fixture.descriptorHex));
           state.executionTargetLease = rotatedLease;
           reservation!.bindApprovalUndoIfMounted();
-          expect(inferenceApprovalUndoOwner).toBeNull();
+          expect(testSeams.inferenceApprovalUndoOwner).toBeNull();
           expect(historyStatuses.at(-1)?.status).toEqual({ phase: "unavailable", canUndo: false, code: null });
           rotatedLease.drop();
           state.executionTargetLease = lease;
@@ -3719,14 +3952,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const rotatedShareLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(rotatedShareFields), fixture.hubOrigin, executionTargetBytes(fixture.componentHex), executionTargetBytes(fixture.descriptorHex));
         state.executionTargetLease = rotatedShareLease;
         reservation!.bindApprovalUndoIfMounted();
-        expect(inferenceApprovalUndoOwner).toBeNull();
+        expect(testSeams.inferenceApprovalUndoOwner).toBeNull();
         rotatedShareLease.drop();
         shareLease.drop();
         state.executionTargetLease = lease;
 
         retainInferenceApprovalUndo(operation, approvalReceipt);
         reservation!.bindApprovalUndoIfMounted();
-        const submittingOwner = inferenceApprovalUndoOwner!;
+        const submittingOwner = testSeams.inferenceApprovalUndoOwner!;
         expect(submittingOwner.phase).toBe("available");
         clearLocalBrowserBrokerProof();
         expect(installLocalBrowserBrokerProof("e".repeat(64))).toBe(true);
@@ -3739,11 +3972,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         };
         const pendingUndo = undoInferenceApproval(submittingOwner.historyEpoch, submittingOwner.clientInstanceId, submittingOwner.scope);
         await vi.waitFor(() => {
-          expect(inferenceApprovalUndoOwner?.phase).toBe("submitting");
+          expect(testSeams.inferenceApprovalUndoOwner?.phase).toBe("submitting");
           expect(answerUndo.resolve).not.toBeNull();
         });
         reissueInferenceApprovalUndoForRebootstrap(state);
-        const reissuedOwner = inferenceApprovalUndoOwner!;
+        const reissuedOwner = testSeams.inferenceApprovalUndoOwner!;
         expect(reissuedOwner.idempotencyKey).toBe(submittingOwner.idempotencyKey);
         expect(submittingOwner.abort.signal.aborted).toBe(true);
         const respondUndo = answerUndo.resolve;
@@ -3764,9 +3997,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           ),
         );
         await pendingUndo;
-        expect(inferenceApprovalUndoOwner).toBe(reissuedOwner);
+        expect(testSeams.inferenceApprovalUndoOwner).toBe(reissuedOwner);
         expect(historyStatuses.some((message) => message.historyEpoch === submittingOwner.historyEpoch && message.status.phase === "applied")).toBe(false);
-        expect(inferenceApprovalUndoOwner?.phase).toBe("awaiting-mount");
+        expect(testSeams.inferenceApprovalUndoOwner?.phase).toBe("awaiting-mount");
 
         const renderDriver = reservation as unknown as { renderSurface(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> };
         for (const row of corpus.browserRender.hostile) {
@@ -3776,7 +4009,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             async invoke(path: readonly string[], args: BrowserActorChildValue[]): Promise<BrowserActorChildValue> {
               expect(path).toEqual(["reactor", "poll"]);
               const events = args[0] as Record<string, any>[];
-              expect(events).toEqual([turns === 0 ? { tag: "surface-visible", val: { surface: { instance: 0, surface: windowKindId } } } : { tag: "wake" }]);
+              expect(events).toEqual([turns === 0 ? { tag: "surface-visible", val: { surface: { instance: 0, surface: windowKindId }, bodyKey, viewState: encodePackValue(state.browserActorViewState!) } } : { tag: "wake" }]);
               turns++;
               if (row.name === "stale-after-turn") current = false;
               return {
@@ -3811,10 +4044,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         );
       } finally {
         closeArtifactRuntime(state.runtimeKey);
+        expect(state.browserActorViewState).toBeNull();
         expect(terminated).toBe(1);
         expect(browserActorChildCapacity()).toEqual({ actors: 0, bytes: 0 });
-        executionTargetStatusObserver = null;
-        workerPostTestSink = null;
+        testSeams.executionTargetStatusObserver = null;
+        testSeams.workerPostTestSink = null;
         clearLocalBrowserBrokerProof();
         globalThis.fetch = originalFetch;
         (globalThis as unknown as { Worker: unknown }).Worker = originalWorker;
@@ -3844,8 +4078,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           expect(documentExecutionTargetStatusRoleV1(code as keyof typeof DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1)).toBe(fixture.expected.statusRoles[code]);
         }
         expect(Object.keys(DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1).sort()).toEqual(Object.keys(fixture.expected.status).sort());
-        const source = await (await import("node:fs/promises")).readFile(new URL("./🧵️backbone-worker.ts", source.url), "utf8");
-        const leaseRegion = source.slice(source.indexOf("//#region 🪪️ExecutionTargetLease"), source.indexOf("//#endregion 🪪️ExecutionTargetLease"));
+        const workerSource = await (await import("node:fs/promises")).readFile(new URL("./🧵️backbone-worker.ts", source.url), "utf8");
+        const leaseRegion = workerSource.slice(workerSource.indexOf("//#region 🪪️ExecutionTargetLease"), workerSource.indexOf("//#endregion 🪪️ExecutionTargetLease"));
         expect(leaseRegion).not.toContain("loadPluginModule");
         expect(leaseRegion).not.toContain("ActivationRegistry");
         expect(leaseRegion).not.toContain("load_wasm_plugins");
@@ -3868,7 +4102,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const current = currentBrowserDocumentOpenFixture(fixture);
       const originalFetch = globalThis.fetch;
       FakeHubWebSocket.instances = [];
-      socketGrantTestIssue = null;
+      testSeams.socketGrantTestIssue = null;
       openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor" });
       const state = artifactState(fixture.intent.scope.documentId)!;
       state.openClientInstanceId = fixture.intent.clientInstanceId;
@@ -3941,10 +4175,20 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("keeps two concurrent document grant actors isolated and rewrites caller envelopes at the wire boundary", async () => {
       FakeHubWebSocket.instances = [];
       const originalWebSocket = globalThis.WebSocket;
+      const originalBroadcastChannel = globalThis.BroadcastChannel;
+      const broadcasts: unknown[] = [];
+      class BoundPortBroadcastChannel {
+        onmessage: ((event: MessageEvent) => void) | null = null;
+        constructor(readonly name: string) {}
+        postMessage(value: unknown): void { broadcasts.push(value); }
+        close(): void {}
+      }
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = BoundPortBroadcastChannel;
       const actorA = `hub.v1.${"a".repeat(64)}`;
       const actorB = `hub.v1.${"b".repeat(64)}`;
-      socketGrantTestIssue = async (_baseUrl, path) => ({
+      const opaqueNoncanonicalPack = new Uint8Array(Buffer.from("00010111048000", "hex"));
+      testSeams.socketGrantTestIssue = async (_baseUrl, path) => ({
         schema: "semio.hub.socket-grant/v1",
         protocol: "semio.socket.v1",
         grant: `socket.v1.${path.includes("doc-a") ? "1".repeat(32) : "2".repeat(32)}.${"3".repeat(64)}`,
@@ -3970,7 +4214,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             document_id: value.document,
             actor: value.actor,
             dependencies: value.deps ?? [],
-            diff: { schema: value.diff.schemaId, payload: encodePackValue(value.diff.payload) },
+            diff: { schema: value.diff.schemaId, payload: value.document === "doc-a" ? opaqueNoncanonicalPack : encodePackValue(value.diff.payload) },
             inverse: { schema: value.inverse.inverseDiff.schemaId, payload: encodePackValue(value.inverse.inverseDiff.payload) },
             timestamp: { actor: 7n, physical_ms: 9_007_199_254_740_992n, logical: 11n },
           }]),
@@ -3986,18 +4230,93 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         await handleHubFrame(artifactState("doc-b", "space-1")!, { Session: { actor: actorB, color: 2 } });
         handleTsRequest({ kind: "send", documentId: "doc-a", clientInstanceId: artifactState("doc-a", "space-1")!.openClientInstanceId, message: documentBackbone(envelope("doc-a")) });
         handleTsRequest({ kind: "send", documentId: "doc-b", clientInstanceId: artifactState("doc-b", "space-1")!.openClientInstanceId, message: documentBackbone(envelope("doc-b")) });
-        const commandActor = (socket: FakeHubWebSocket): string => {
+        const commandEnvelope = (socket: FakeHubWebSocket) => {
           const frame = decodeClientFrame(socket.sent[1]!).frame;
           if (typeof frame === "string" || !("Commands" in frame)) throw new Error("expected commands");
-          return frame.Commands.envelopes[0]!.actor;
+          return frame.Commands.envelopes[0]!;
         };
-        expect(commandActor(socketA!)).toBe(actorA);
-        expect(commandActor(socketB!)).toBe(actorB);
-        expect(commandActor(socketA!)).not.toBe(commandActor(socketB!));
+        expect(commandEnvelope(socketA!).actor).toBe(actorA);
+        expect(commandEnvelope(socketB!).actor).toBe(actorB);
+        expect(commandEnvelope(socketA!).actor).not.toBe(commandEnvelope(socketB!).actor);
+        expect(commandEnvelope(socketA!).diff.payload).toEqual(Array.from(opaqueNoncanonicalPack));
+        expect(broadcasts).toEqual([]);
       } finally {
         closeArtifact("doc-a");
         closeArtifact("doc-b");
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+        (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = originalBroadcastChannel;
+      }
+    });
+
+    it("bounds retained document backbone bytes until terminal Ack and drains them on disposal", async () => {
+      FakeHubWebSocket.instances = [];
+      const originalWebSocket = globalThis.WebSocket;
+      const originalBroadcastChannel = globalThis.BroadcastChannel;
+      class BoundPortBroadcastChannel {
+        onmessage: ((event: MessageEvent) => void) | null = null;
+        postMessage(): void { throw new Error("bound document backbone must not echo before server authority"); }
+        close(): void {}
+      }
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = BoundPortBroadcastChannel;
+      testSeams.socketGrantTestIssue = async () => ({
+        schema: "semio.hub.socket-grant/v1",
+        protocol: "semio.socket.v1",
+        grant: `socket.v1.${"1".repeat(32)}.${"2".repeat(64)}`,
+        actorId: `hub.v1.${"3".repeat(64)}`,
+        expiresAtMs: Number.MAX_SAFE_INTEGER,
+      });
+      const documentId = "doc-retained-bytes";
+      const actor = `hub.v1.${"3".repeat(64)}`;
+      const messageOfSize = (id: string, target: number): Uint8Array => {
+        let textBytes = Math.max(0, target - 128);
+        for (let turn = 0; turn < 8; turn += 1) {
+          const message = encodeBackboneMessage({
+            kind: "mutations",
+            envelopes: encodeDocumentBackboneEnvelopeBatchExact([{
+              mutation_id: id,
+              document_id: documentId,
+              actor: "caller",
+              dependencies: [],
+              diff: { schema: "demo/v1", payload: encodePackValue("x".repeat(textBytes)) },
+              inverse: { schema: "demo/v1", payload: encodePackValue(null) },
+              timestamp: { actor: 1n, physical_ms: 2n, logical: 3n },
+            }]),
+          });
+          if (message.byteLength === target) return message;
+          textBytes += target - message.byteLength;
+          if (textBytes < 0) break;
+        }
+        throw new Error(`unable to construct ${target}-byte document backbone message`);
+      };
+      const outcomes: BackboneWorkerResponse[] = [];
+      testSeams.workerPostTestSink = (message) => outcomes.push(message);
+      try {
+        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+        await flushSocketGrantTurns();
+        const socket = FakeHubWebSocket.instances[0]!;
+        socket.open();
+        const state = artifactState(documentId, "space-1")!;
+        await handleHubFrame(state, { Session: { actor, color: 1 } });
+        const targets = [262_144, 262_144, 262_144, 262_143] as const;
+        targets.forEach((target, index) => handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: messageOfSize(`edit-${index}`, target) } }));
+        expect(state.pendingDocumentBackboneBytes).toBe(DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - 1);
+        expect(state.pendingDocumentBackboneMessages).toBe(4);
+        const refused = messageOfSize("edit-refused", 128);
+        handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: refused } });
+        expect(state.pendingDocumentBackboneBytes).toBe(DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - 1);
+        expect(outcomes.at(-1)).toMatchObject({ kind: "event", event: { kind: "commandOutcome", outcome: { kind: "rejected", reason: "document backbone pending capacity" } } });
+        handleAck(state, 0, [{ Applied: { outcome: "Accepted" } }]);
+        expect(state.pendingDocumentBackboneBytes).toBe(DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - 1 - targets[0]);
+        handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: refused } });
+        expect(state.pendingDocumentBackboneBytes).toBe(DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - 1 - targets[0] + refused.byteLength);
+        closeArtifact(documentId, "space-1", state.openClientInstanceId);
+        expect(state.pendingDocumentBackboneBytes).toBe(0);
+        expect(state.pendingDocumentBackboneMessages).toBe(0);
+      } finally {
+        closeArtifact(documentId, "space-1");
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+        (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = originalBroadcastChannel;
       }
     });
 
@@ -4209,12 +4528,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           diff: { schemaId: "demo/v1", payload: { n: 1, sequenceNumber: 1 } },
           inverse: { targetOperation: "edit-offline-1", inverseDiff: { schemaId: "demo/v1", payload: { n: 0 } }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
         };
-        handleTsRequest({ kind: "send", documentId: "doc-hub-flush", clientInstanceId: state.openClientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } });
+        const opaqueNoncanonicalPack = new Uint8Array(Buffer.from("00010111048000", "hex"));
+        const rawMessage = exactDocumentBackboneMessage(envelope, opaqueNoncanonicalPack);
+        handleTsRequest({ kind: "send", documentId: "doc-hub-flush", clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: rawMessage } });
 
         // 📴️ Socket isn't open yet — the mutation is queued in the outbox, never silently dropped.
         expect(state.outbox).toHaveLength(1);
         expect(socket.sent).toHaveLength(0);
         expect(state.pendingMutations).toHaveLength(1);
+        expect(state.pendingDocumentBackboneBytes).toBe(rawMessage.byteLength);
 
         // 🔌️ Hub (re)connects: `Hello` goes out on open, then the hub answers with `Welcome`.
         socket.open();
@@ -4242,6 +4564,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         if (typeof commandsFrame === "string" || !("Commands" in commandsFrame)) throw new Error("expected a Commands frame");
         expect(commandsFrame.Commands.envelopes).toHaveLength(1);
         expect(commandsFrame.Commands.envelopes[0]!.mutation_id).toBe("edit-offline-1");
+        expect(commandsFrame.Commands.envelopes[0]!.diff.payload).toEqual(Array.from(opaqueNoncanonicalPack));
+        expect(state.pendingDocumentBackboneBytes).toBe(rawMessage.byteLength);
         expect(state.pendingBatches.size).toBe(1); // now awaiting `Ack` — no longer in the outbox.
       } finally {
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
@@ -4273,9 +4597,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           diff: { schemaId: "demo/v1", payload: { n: 1, sequenceNumber: 1 } },
           inverse: { targetOperation: "edit-inflight-1", inverseDiff: { schemaId: "demo/v1", payload: { n: 0 } }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
         };
-        handleTsRequest({ kind: "send", documentId: "doc-hub-stranded", clientInstanceId: state.openClientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } });
+        const rawMessage = exactDocumentBackboneMessage(envelope);
+        handleTsRequest({ kind: "send", documentId: "doc-hub-stranded", clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: rawMessage } });
         expect(state.pendingBatches.size).toBe(1); // socket was open — sent immediately, awaiting Ack.
         expect(state.outbox).toHaveLength(0);
+        expect(state.pendingDocumentBackboneBytes).toBe(rawMessage.byteLength);
 
         // 💥️ The socket dies before the hub ever acks — the batch must not be lost.
         socket.close();
@@ -4283,6 +4609,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(state.outbox).toHaveLength(1);
         expect(state.outbox[0]!.id).toBe("edit-inflight-1");
         expect(state.pendingMutations).toHaveLength(1); // status-visible pending count is unaffected.
+        expect(state.pendingDocumentBackboneBytes).toBe(rawMessage.byteLength);
       } finally {
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
         closeArtifact("doc-hub-stranded");
@@ -4446,7 +4773,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   describe("backbone-worker scope-safe presence", () => {
     it("binds verified surface authority only after the exact socket Session and isolates equal document ids", async () => {
       const responses: BackboneWorkerResponse[] = [];
-      workerPostTestSink = (message) => responses.push(message);
+      testSeams.workerPostTestSink = (message) => responses.push(message);
       const socketA = { close: vi.fn() } as unknown as WebSocket;
       const socketB = { close: vi.fn() } as unknown as WebSocket;
       const makeState = (spaceId: string, socket: WebSocket): ArtifactState =>
@@ -4482,7 +4809,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(tail[1]).toMatchObject({ scope: { spaceId: "space-a", documentId: "same-document" }, event: { kind: "presence", peers: [] } });
         expect(tail[1]?.verifiedSurfaceId).toBeUndefined();
       } finally {
-        workerPostTestSink = null;
+        testSeams.workerPostTestSink = null;
       }
     });
   });

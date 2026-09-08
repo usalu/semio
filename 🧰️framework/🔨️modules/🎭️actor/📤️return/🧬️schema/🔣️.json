@@ -13,7 +13,7 @@
       ],
       "properties": {
         "activationGeneration": {
-          "$ref": "#/$defs/U64"
+          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
         },
         "requestSequence": {
           "type": "integer",
@@ -34,7 +34,7 @@
           "$ref": "#/definitions/origin"
         },
         "returnSequence": {
-          "$ref": "#/$defs/U64"
+          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
         }
       }
     },
@@ -748,19 +748,6 @@
         }
       ]
     },
-    "U64": {
-      "type": "string",
-      "allOf": [
-        {
-          "$ref": "https://semio.tech/schema/framework/actor/lifetime/schema.json#/$defs/U64"
-        },
-        {
-          "not": {
-            "pattern": "[^0-9]"
-          }
-        }
-      ]
-    },
     "PageReceipt": {
       "type": "object",
       "additionalProperties": false,
@@ -775,7 +762,7 @@
           "$ref": "#/definitions/identity"
         },
         "pageSequence": {
-          "$ref": "#/$defs/U64"
+          "$ref": "https://semio.tech/schema/framework/value/schema.json#/$defs/NonZeroU64"
         },
         "length": {
           "type": "integer",

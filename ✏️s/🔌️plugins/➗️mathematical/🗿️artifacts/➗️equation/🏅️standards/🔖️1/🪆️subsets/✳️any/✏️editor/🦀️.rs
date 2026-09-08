@@ -20,7 +20,6 @@
 use crate::op::EquationMutation;
 use crate::{EquationGeometry, EquationGraph, EquationSnapshot, EQUATION_DIALECT, MATH_DOCUMENT_SCHEMA};
 use crate::editor::equation::commands::set_artifact;
-use crate::editor::equation::commands::set_locale;
 use crate::editor::equation::commands::set_points;
 use crate::editor::equation::commands::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
 use crate::editor::equation::config::{EquationConfig, EquationConfigMutation};
@@ -192,7 +191,6 @@ semio_framework_plugin::app_commands! {
     /// assembled from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
     /// (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the
     /// kebab-case `#[dsl(key = ..)]` the binary/text codec uses) — they are genuinely different
-    /// vocabularies; `setLocale`/`locale` is the row that proves it. **Row order is the binary variant
     /// ordinal: appending is safe, reordering is a wire-format break.**
     pub enum EquationCommand for EquationSnapshot, EquationMutation, EquationConfig, EquationConfigMutation {
         "setDocument" as "set-artifact" => set_artifact::SetArtifact,
@@ -201,13 +199,12 @@ semio_framework_plugin::app_commands! {
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
         "setPoints" as "set-points" => set_points::SetPoints,
-        "setLocale" as "locale" => set_locale::SetLocale,
     }
 }
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const EQUATION_TOOL_IDS: &[&str] = &["setDocument", "setAlgorithm", "setDirected", "nodeGraphEdit", "nodeGraphViewport", "setPoints", "setLocale"];
+const EQUATION_TOOL_IDS: &[&str] = &["setDocument", "setAlgorithm", "setDirected", "nodeGraphEdit", "nodeGraphViewport", "setPoints", ];
 const EQUATION_RETAINED_PAYLOAD_SCHEMA: &str = "semio.equation/v1.tool-command.v1";
 const EQUATION_RETAINED_RAW_BYTES: usize = 65_536;
 const EQUATION_RETAINED_WORK_ITEMS: usize = 65_536;
@@ -227,7 +224,6 @@ const EQUATION_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setPoints", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
 ];
 
 fn equation_contract() -> ToolExecutionContract {
@@ -276,8 +272,6 @@ fn equation_command_extent(command: &EquationCommand, snapshot: &EquationSnapsho
     }
     let extent = match command {
         EquationCommand::NodeGraphViewport(_) => 1,
-        EquationCommand::SetLocale(payload) if payload.value.len() <= EQUATION_MAX_LOCALE_BYTES => 1,
-        EquationCommand::SetLocale(_) => return None,
         EquationCommand::SetAlgorithm(payload) if payload.algorithm.len() <= EQUATION_MAX_TEXT_BYTES && payload.seed.as_ref().is_none_or(|seed| seed.len() <= EQUATION_MAX_TEXT_BYTES) => {
             2_usize.checked_add(scene.graph.nodes.len())?.checked_add(scene.graph.edges.len())?
         }
@@ -512,7 +506,7 @@ impl EquationRetainedCommandWork {
                 self.points.try_reserve_exact(payload.geometry.points.len()).map_err(|_| Fault::from("equation-command-point-reserve"))?;
                 self.phase = EquationWorkPhase::Points;
             }
-            EquationCommand::NodeGraphViewport(_) | EquationCommand::SetLocale(_) => self.phase = EquationWorkPhase::Finish,
+            EquationCommand::NodeGraphViewport(_) => self.phase = EquationWorkPhase::Finish,
         }
         Ok(())
     }
@@ -537,7 +531,6 @@ impl EquationRetainedCommandWork {
                 Emit::mutations(mutations)
             }
             EquationCommand::NodeGraphViewport(payload) => Emit::config(vec![EquationConfigMutation::SetCamera(crate::editor::equation::config::SetCamera { camera: payload.camera.clone() })]),
-            EquationCommand::SetLocale(payload) => Emit::config(vec![EquationConfigMutation::SetLocale(crate::editor::equation::config::SetLocale { value: payload.value.clone() })]),
         })
     }
 
@@ -1194,7 +1187,6 @@ impl ArtifactEditor for EquationPlayApp {
             "nodeGraphEdit" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
             "nodeGraphViewport" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
             "setPoints" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
-            "setLocale" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1)
         }
     }
 
@@ -1243,7 +1235,6 @@ impl ArtifactEditor for EquationPlayApp {
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
-    /// `app_commands!`'s generated `command_id()`. `setLocale` has no manifest declaration (host-pushed,
     /// not a user-facing action).
     fn command_id(command: &EquationCommand) -> &'static str {
         command.command_id()
@@ -1253,7 +1244,7 @@ impl ArtifactEditor for EquationPlayApp {
         command: &EquationCommand,
         doc: &ArtifactView<'_, EquationSnapshot>,
         cfg: &ConfigView<'_, EquationConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<EquationMutation, EquationConfigMutation, Self::DraftMutation>, Fault> {
@@ -1282,7 +1273,7 @@ impl ArtifactEditor for EquationPlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, EquationSnapshot>, cfg: &ConfigView<'_, EquationConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, EquationSnapshot>, cfg: &ConfigView<'_, EquationConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
             MATH_PLAY_BODY_GRAPH => graph_window::render(&crate::equation_graph(doc.snapshot), &cfg.snapshot.camera),
             MATH_PLAY_BODY_GEOMETRY => geometry_window::render(&crate::equation_geometry(doc.snapshot)),
@@ -1322,14 +1313,12 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
         .view_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
         .mutation("setPoints", LocalizedLabel::native("Set Points", "Punkte festlegen"))
-        .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
         .action_interactive_job("setDocument", InteractiveJobClassification::Migrated)
         .action_interactive_job("setAlgorithm", InteractiveJobClassification::Migrated)
         .action_interactive_job("setDirected", InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
         .action_interactive_job("setPoints", InteractiveJobClassification::Migrated)
-        .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
         // 📝️ Staged argument forms for the graph analysis controls.
         .action_args("setAlgorithm", vec![
             ActionArgDef::select("algorithm", LocalizedLabel::native("Algorithm", "Algorithmus"), vec![

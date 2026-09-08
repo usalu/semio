@@ -32,7 +32,8 @@ mod builder;
 mod component;
 /// 🧪️ Loads and asserts against `📚️examples/🧪️conformance/` — entirely `#[cfg(test)]` inside, so it
 /// mounts unconditionally here without affecting the wasm check targets (see the file's own header).
-#[path = "🔬️conformance.rs"]
+#[cfg(test)]
+#[path = "../../🧪️tests/🔬️conformance-unit/🦀️.rs"]
 mod conformance;
 #[path = "📃️document.rs"]
 mod document;

@@ -179,7 +179,7 @@ impl ArtifactOwnedValueRetirementFactory<MapMutation> for MapRetirementFactory {
 
 //#region 📦️FixtureOwners
 pub(super) fn fixture() -> (Edit<MapMutation>, serde_json::Value, Arc<MapLifetime>) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/🗺️canonical-borrowed-map.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🗺️canonical-borrowed-map.json")).unwrap();
     let mut edit = Edit::<MapMutation>::from_value(fixture["edit"].clone().into()).unwrap();
     let MapMutation::ReplaceMap { lifetime, tracked, .. } = &mut edit.forwards[0];
     *tracked = true;

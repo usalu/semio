@@ -19,5 +19,4 @@ message VcsArtifact {
   // @state presence
   repeated string selected_checkpoint_ids = 7;
   // @state config
-  string locale = 8;
 }

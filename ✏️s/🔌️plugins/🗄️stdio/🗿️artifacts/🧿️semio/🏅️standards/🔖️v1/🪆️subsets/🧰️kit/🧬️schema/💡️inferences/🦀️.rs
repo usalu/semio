@@ -11,8 +11,7 @@ use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::entries::{compute_semio_kit_entries, SemioKitEntries};
-
+use super::entries::{compute_semio_kit_entries};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio kit snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `entries`, backed by the `🗃️entries/` slug dir).
@@ -86,3 +85,8 @@ pub fn semio_kit_artifact_inference_descriptor() -> framework_schema::ArtifactIn
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::entries::SemioKitEntries;
+//#endregion 🔁️Re-exports

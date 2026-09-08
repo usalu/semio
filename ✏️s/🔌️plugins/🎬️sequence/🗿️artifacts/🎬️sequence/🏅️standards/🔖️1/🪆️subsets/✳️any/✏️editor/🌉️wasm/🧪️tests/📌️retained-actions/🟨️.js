@@ -11,7 +11,7 @@ const editorRoot = new URL("../../", import.meta.url);
 const variant = (value) => value.split("-").map((part) => `${part[0].toUpperCase()}${part.slice(1)}`).join("");
 
 const module = JSON.parse(readFileSync(fileURLToPath(new URL("../../🧬️schema/🔣️.json", editorRoot)), "utf8"));
-const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("🧪️fixtures/📌️retained-actions/🔣️.json", editorRoot)), "utf8"));
+const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("🧫️fixtures/📌️retained-actions/🔣️.json", editorRoot)), "utf8"));
 const source = readFileSync(fileURLToPath(new URL("../🦀️.rs", editorRoot)), "utf8");
 const ajv = new Ajv({ strict: true });
 ajv.addKeyword({ keyword: "x-semio-state", metaSchema: { type: "string" } });
@@ -22,7 +22,7 @@ const validate = ajv.compile({ $ref: `${module.$id}#/$defs/SequenceRetainedActio
 
 if (!validate(fixture)) throw new Error(`Sequence retained action fixture rejected: ${JSON.stringify(validate.errors)}`);
 const ids = fixture.routes.map(({ id }) => id);
-if (new Set(ids).size !== 17) throw new Error("Sequence retained action fixture must own 17 unique live routes");
+if (new Set(ids).size !== 16) throw new Error("Sequence retained action fixture must own 16 unique live routes");
 
 for (const route of fixture.routes) {
   const declaration = `.action_interactive_job("${route.id}", semio_framework_plugin::InteractiveJobClassification::${variant(route.classification)})`;
@@ -31,7 +31,7 @@ for (const route of fixture.routes) {
 
 const migrated = fixture.routes.filter(({ classification }) => classification === "migrated");
 const pending = fixture.routes.filter(({ classification }) => classification === "batch-only-pending-rewrite");
-if (migrated.length !== 17 || pending.length !== 0) throw new Error("Sequence retained route disposition counts drifted");
+if (migrated.length !== 16 || pending.length !== 0) throw new Error("Sequence retained route disposition counts drifted");
 for (const route of migrated) {
   if (!source.includes(`tool_id: "${route.id}", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::${variant(route.publicationLane)}]`)) throw new Error(`Sequence publication lane drifted for ${route.id}`);
   const persistent = route.contract.maximumUnits === 66049;

@@ -5,7 +5,7 @@
     "asset-prop",
     "asset-ghost"
   ],
-  "dx": 4.0,
-  "dy": -1.0,
+  "dx": 4,
+  "dy": -1,
   "dz": 0.5
 }

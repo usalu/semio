@@ -7,8 +7,7 @@
 use crate::SvgSnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::dimensions::{compute_svg_dimensions, SvgDimensions};
-
+use super::dimensions::{compute_svg_dimensions};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an svg snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `dimensions`, backed by the `📐dimensions/` slug dir).
@@ -80,3 +79,8 @@ pub fn svg_artifact_inference_descriptor() -> framework_schema::ArtifactInferenc
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::dimensions::SvgDimensions;
+//#endregion 🔁️Re-exports

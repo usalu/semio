@@ -1,9 +1,8 @@
 //! 🧬️ Layout artifact schema — every field of the artifact with its state class.
 
-use crate::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, LayoutDropPreviewState, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
+use crate::{LayoutDrawingChild, LAYOUT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-
 //#region 🔖️Artifact
 /// 🧬️ Full layout artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
@@ -62,8 +61,6 @@ pub struct LayoutArtifact {
     pub preview_camera_zoom: f64,
     #[state(config)]
     pub drop_preview: LayoutDropPreviewState,
-    #[state(config)]
-    pub locale: String,
     #[state(artifact)]
     pub hovered_id: Option<String>,
 }
@@ -97,7 +94,6 @@ impl Default for LayoutArtifact {
             preview_camera_y: 0.0,
             preview_camera_zoom: 1.0,
             drop_preview: LayoutDropPreviewState::default(),
-            locale: "en-US".into(),
             hovered_id: None,
         }
     }
@@ -478,3 +474,16 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: LayoutComposer,
 );
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::GridSettings;
+pub use crate::LayoutDropPreviewState;
+pub use crate::ParagraphStyle;
+pub use crate::CharacterStyle;
+pub use crate::TextStory;
+pub use crate::ImageLink;
+pub use crate::ParentPage;
+pub use crate::Spread;
+pub use crate::Page;
+//#endregion 🔁️Re-exports

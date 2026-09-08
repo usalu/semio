@@ -5,16 +5,11 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "camera",
-    "locale"
+    "camera"
   ],
   "properties": {
     "camera": {
       "$ref": "#/$defs/EquationCamera",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   },

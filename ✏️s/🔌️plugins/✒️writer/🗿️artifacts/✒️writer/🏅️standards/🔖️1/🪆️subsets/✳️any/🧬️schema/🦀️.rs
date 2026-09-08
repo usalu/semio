@@ -1,11 +1,10 @@
 //! 🧬️ Writer artifact schema — every field with its state class.
 
-use crate::{document_child_handle_with_text, WriterDocumentChild, WriterEditorSelection, WriterEditorSettings, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
+use crate::{document_child_handle_with_text, WriterDocumentChild, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use semio_s_artifact_trinity_jack::lexer::{lex_spanned, SpannedToken, Token};
-
 //#region 🔖️Artifact
 /// 🧬️ Full writer artifact across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, dsl::ToValue, dsl::FromValue)]
@@ -41,8 +40,6 @@ pub struct WriterArtifact {
     pub camera_y: f64,
     #[state(config)]
     pub camera_zoom: f64,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
@@ -80,7 +77,6 @@ impl WriterArtifact {
             camera_x: 0.0,
             camera_y: 0.0,
             camera_zoom: 1.0,
-            locale: "en-US".into(),
         }
     }
 
@@ -771,3 +767,9 @@ pub fn apply_jack_rename(text: &str, occurrences: &[(usize, usize)], new_name: &
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::WriterEditorSelection;
+pub use crate::WriterEditorSettings;
+//#endregion 🔁️Re-exports

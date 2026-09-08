@@ -5,6 +5,6 @@
   "newSourceUrl": "https://example.test/plan-v2.png",
   "newMediaKind": "drawing",
   "newOrientation": null,
-  "newScale": 2.0,
+  "newScale": 2,
   "newOpacity": 0.25
 }

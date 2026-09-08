@@ -5,7 +5,7 @@ use store::ArtifactDsl;
 
 #[test]
 fn layout_pdf_page_collection_matches_the_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📖️pdf-page-text.json")).expect("neutral PDF fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📖️pdf-page-text.json")).expect("neutral PDF fixture");
     let snapshot: LayoutSnapshot = dsl::os_pack::from_json_str(&fixture["snapshot"].to_string()).expect("owned layout fixture");
     let exported = crate::io::export::serializers::artifacts::pdf::v1_4::base::serialize(&snapshot).expect("PDF export");
     let actual: serde_json::Value = serde_json::from_str(&dsl::os_pack::to_json_string(&exported)).expect("independent PDF JSON oracle");

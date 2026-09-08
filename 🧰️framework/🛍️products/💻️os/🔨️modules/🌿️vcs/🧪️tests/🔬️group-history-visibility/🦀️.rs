@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn observed(ledger: &ArtifactHistoryLedger<i32>) -> serde_json::Value {

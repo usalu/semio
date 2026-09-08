@@ -39,10 +39,6 @@ mod editor { pub use semio_s_artifact_imperative_procedure::editor::*; }
 mod viewer { pub use semio_s_artifact_imperative_procedure::viewer::*; }
 //#endregion 👁️Viewer
 
-//#region 🧩️Extensions
-pub use semio_s_artifact_imperative_procedure::extensions;
-//#endregion 🧩️Extensions
-
 //#region 🕸️Wasm
 // 🌉️ The wasm-bindgen `ImperativeSession` bridge that used to be re-exported here was deleted along
 // with `editor::procedure::wasm`'s content — nothing ever built it for `wasm32-unknown-unknown`.
@@ -53,12 +49,5 @@ pub use semio_s_artifact_imperative_procedure::extensions;
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ImperativeApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_procedure_demo_session;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

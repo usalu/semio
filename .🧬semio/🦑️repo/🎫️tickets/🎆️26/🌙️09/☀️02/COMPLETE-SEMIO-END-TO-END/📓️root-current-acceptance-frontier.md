@@ -1,5 +1,117 @@
 # Current End-to-End Acceptance Frontier
 
+## 2026-09-08 21:23 UTC Focused Rechecks and Return Cleanup Foundation
+
+Renderer35886 passed all87 tests across current PluginRuntime, actor-backbone and
+document-opening suites. The first recheck96115 and Hub11020 failed in Nx graph
+construction before tests because npm:@asamuzakjp/css-color disappeared from the
+concurrent graph. Fresh task-specific metadata avoided that infrastructure issue.
+Hub2663 then passed16 composition source laws,10 hostile declarations and5
+socket-retirement cases including real Bun and third-party ws close events.
+These qualify the harness's boundaries, not the actual mounted Hub journey.
+
+Root added the schema/fixture-backed ActorOutputEmptyRetirement API and registered
+its launch gate. Explicit cooperative close drains only original never-used or
+cancelled response reservations and their exact resident cells/records.
+In-flight, returned and faulted roots remain blocked without reading their
+payloads. Focused81030 passed2; the earlier file named root-output-retirement-red.log
+also passed2 because delayed Nx startup imported the repaired source. It is not
+RED evidence. A larger cohort95604 now includes multi-reservation cleanup,
+existing admission conservation and fault laws. No activation.returned release,
+page/input/content discharge, or full returned-response teardown is yet claimed.
+
+Home source67876 passed47 AJV/oracle rows and now owns the sole native40797:
+strict replication codec1, raw os-kernel sync2 and plugin binding2 in the warm
+ticket target, jobs1. WGPU is implementing the audited real UI lifetime path:
+captured lifecycle → exact OwnedUiInstance → original patch intake/issued ACK →
+actual descendant retirement witness, with no empty synthetic host.
+
+## 2026-09-08 21:04 UTC Disposal and Current Integration Frontier
+
+Root87717 passed3 actual-factory/control-codec tests after repairing the concurrent
+PluginRuntime test extraction's live mutable seams and relative imports. Guest
+Ack is now explicitly consumed as a remote-ingest receipt at Shell; only raw
+Mutations reach the worker, whose Hub ServerFrame Ack alone releases pending
+commands. Guest/browser hot retention is1MiB/64; cold pairs remain4MiB. Foreign
+document-URI effects fail instead of silently disappearing.
+
+Root51135 reproduced2 async-disposal failures. Repair52754 passed both focused
+laws, using the actual PluginRuntime factory and a controlled shard: disposal
+retains a delayed Retired receipt, closes new creation, and waits for pending
+activation/open before exact cleanup without late instance publication. Disposal
+is asynchronous through kernel/rich interfaces and Shell consumers. Failed
+retirement preserves ownership maps instead of erasing them before native dispose.
+Root67831 then completed85/87 binding/opening/runtime tests; the remaining two
+surface fixtures had stale nullable/instance-key expectations. Their exact fixture
+repair is being rechecked in96115. This is not native teardown qualification.
+
+Terra found the deeper production blocker: PluginRuntime does not yet bind and
+route its actual retained UI descendants through an exact OwnedUiInstance.
+ShardClient correctly rejects disposal until the lifecycle and genuine host
+retirement witness complete. Captured returns also lack a terminal original-owner
+release path. WGPU Sol now owns actual UI lifetime/retirement composition;
+root owns the captured-return release frontier. Neither will install an empty
+close-only host, fabricate a proof, or bypass the native guards.
+
+WGPU reports raw-worker focused45938 GREEN5, watchdog3607 GREEN2, and current
+package-integration43536 GREEN15. Full worker previously had4 extracted harness
+failures, still requiring a complete recheck. Native Home80189 was BUILD RED
+after116m46s on a relocated Windows-backslash Rust test path; no binding law ran.
+Home fixed that exact path and is composing strict raw Rust sync parity before
+reacquiring the sole fleet Cargo slot. No root or WGPU Cargo is running.
+
+The two-author harness truth audit corrected its planned order: author A mounts
+an ordinary Shell to create the Map before document-scoped MCP clients, sockets,
+and author B can join. Restart observes the current receipt and durable post-Undo
+pair/maps, not private running-job recovery; that is now an explicit nonclaim.
+Root63596 reproduced the stale observation claim; source/socket recheck11020 is
+running. This does not substitute for the still-unexecuted genuine mounted
+current Stdio+GIS/MCP/approval/Undo/same-root-restart journey. Goal remains active.
+
+## 2026-09-08 20:08 UTC Cold-Pair Race Repair
+
+Terra's read-only audit identified the initial cold-ready deadline gap, overlapping
+snapshot failure, failed lane ownership and failed prepared-port retention.
+Root44689 reproduced three failures: missing latest-pair queue, non-idle failed
+lane, and socket-success/cold-ready-never-resolves timeout. Repair39461 passed17
+binding/opening tests. A single deadline now covers socket and attachment; Shell
+uses60s, while the worker's verified bootstrap assembler already uses15s. The
+latest-pair queue retains at most one active and one pending pair, each bounded
+at4MiB, invalidates superseded publication and survives same-owner replacement.
+Cold lane failures clean only their captured intent. Prepared Shell candidates
+are cleared only after their own retirement completes; indeterminate retirement
+does not silently discard ownership.
+
+Full renderer95772 completed RED:151 tests passed, five files failed import/setup.
+The current Puzzle fixture lives under🧫️fixtures, UiPreferences had two incorrect
+parent traversals, and Node-only package integration loaded esbuild in a jsdom
+realm with incompatible typed-array constructors. Root repaired those boundaries
+without undoing concurrent file moves and started another full renderer run.
+No mounted two-peer acceptance is inferred. WGPU's exact raw OS request/response
+gate2154 passed2 and its neutral replication59590 passed6; its actual worker relay
+test harness still needs repair. Home80189 has advanced to workspace kernel
+compilation but no binding law has run yet.
+
+## 2026-09-08 19:37 UTC Recovery Qualification
+
+Root10098 passed both actual PluginRuntime factory tests (64 unrelated cases
+skipped). The new four-row fixture exercises verified refusal, lost transport,
+duplicate receipts and stale presentation through the actual factory, then binds
+and retires a clean successor for every row. This uses a controlled guest, not a
+compiled plugin.
+
+Full renderer74732 terminated at the registered long runner's300000ms process
+budget without a suite summary. It is not a passing result and no assertion
+failure is inferred from the timeout. Type22562 terminated with diagnostics after
+18m51s, dominated by concurrent extracted tests and repository-wide missing
+types/imports. A targeted diagnostic scan found no ShellHost, PluginRuntime,
+actor-backbone or document-opening diagnostics, but the complete typecheck is
+still RED. A fresh full run uses the supported SEMIO_TEST_BUDGET_MS override
+of1800000ms and two workers, without another simultaneous root typecheck.
+The scoped-presence source oracle now asserts the owned raw route instead of
+the deleted page-global relay. Native80189 remains with Home; WGPU's neutral
+raw-batch replication gate passed6, while its OS test-long is pending.
+
 ## 2026-09-08 18:48 UTC Actor Binding and Shell Composition
 
 Root's actual PluginRuntime factory test76757 passed its controlled guest exchange:

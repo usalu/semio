@@ -22,9 +22,6 @@ pub use set_camera::SetCamera;
 #[path = "🧰️set-active-utility/🦀️.rs"]
 mod set_active_utility;
 pub use set_active_utility::SetActiveUtility;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 #[path = "🔧️set-defaults/🦀️.rs"]
 mod set_defaults;
 pub use set_defaults::SetDefaults;
@@ -46,8 +43,6 @@ pub enum ShootingConfigMutation {
     SetCamera(SetCamera),
     #[dsl(key = "set-active-utility")]
     SetActiveUtility(SetActiveUtility),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
     #[dsl(key = "set-defaults")]
     SetDefaults(SetDefaults),
 }

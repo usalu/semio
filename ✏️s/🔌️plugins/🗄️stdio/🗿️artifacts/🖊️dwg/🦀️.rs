@@ -34,7 +34,7 @@ pub const STDIO_DWG_DOCUMENT_SCHEMA: &str = "stdio.dwg";
 pub const DWG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.dwg";
 
 /// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     let factories = native_codecs();
@@ -529,7 +529,7 @@ pub mod examples {
         mod component;
         pub use component::*;
         #[cfg(test)]
-        #[path = "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🧪️tests/🦀️.rs"]
+        #[path = "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🧪️tests/🧩️example/🦀️.rs"]
         mod architectural_tests;
     }
 }

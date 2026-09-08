@@ -1,3 +1,7 @@
 syntax = "proto3";
 package semio.s_stdio_semio_kit_mutations.text;
 message SemioKitMutationDsl { string line = 1; }
+
+message SemioKitMutationText {
+  optional string line = 1;
+}

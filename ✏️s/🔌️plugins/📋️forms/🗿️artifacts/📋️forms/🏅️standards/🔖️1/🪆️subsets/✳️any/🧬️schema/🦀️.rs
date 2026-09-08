@@ -6,7 +6,7 @@ use crate::op::FormMutation;
 // submodule under the bare name would shadow that crate and break every `dsl::DslValue`/`dsl::to_dsl_value`
 // reference in this file (confirmed by `cargo check`: E0425/E0433 "not found in `dsl`").
 use crate::document_dsl as forms_dsl;
-use crate::{forms_snapshot_with_state, forms_steps, FormQuestion, FormStep, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
+use crate::{forms_snapshot_with_state, forms_steps, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use dsl::os_pack::json::{Object, Value};
 use std::collections::BTreeMap;
@@ -42,8 +42,6 @@ pub struct FormsArtifact {
     #[state(config)]
     pub try_values: BTreeMap<String, Vec<String>>,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub contributions_json: String,
 }
 //#endregion 🔖️Artifact
@@ -62,7 +60,6 @@ impl Default for FormsArtifact {
             selected_ids: Vec::new(),
             current_step_index: 0,
             try_values: BTreeMap::new(),
-            locale: "en-US".into(),
             contributions_json: "[]".into(),
         }
     }
@@ -293,3 +290,9 @@ pub type Construction = semio_framework_plugin::app::SnapshotBuilder<FormsSnapsh
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::FormStep;
+pub use crate::FormQuestion;
+//#endregion 🔁️Re-exports

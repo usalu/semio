@@ -1,6 +1,6 @@
 //! 🧬️ StlArtifact schema — full artifact state.
 
-use crate::schema::snapshot::StlTriangle;
+
 use crate::{StlSnapshot, STDIO_STL_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 
@@ -277,3 +277,8 @@ pub fn demo_stl_snapshot() -> StlSnapshot {
     }
 }
 //#endregion 🔖️DocumentHelpers
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::schema::snapshot::StlTriangle;
+//#endregion 🔁️Re-exports

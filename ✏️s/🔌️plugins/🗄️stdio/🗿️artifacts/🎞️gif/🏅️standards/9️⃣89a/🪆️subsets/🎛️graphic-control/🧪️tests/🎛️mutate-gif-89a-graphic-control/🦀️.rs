@@ -114,7 +114,7 @@ mod subject {
     use super::{arranged_input, mutable_input, KINDS};
     use semio_repo_test_host::{Adapter, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::gif::standards::v89a::subsets::any::project;
-    use semio_s_plugin_stdio::ArtifactDsl;
+    use semio_framework_os_kernel::ArtifactDsl;
     use crate::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
     use crate::standards::v89a::subsets::any::schema::mutations::{
         add_app_extension, apply_gif_mutation, insert_comment, insert_frame, inverse_gif_mutation, move_frame, remove_app_extension, remove_comment, remove_frame, set_background_color_index, set_frame_delay, set_frame_disposal, set_frame_geometry,

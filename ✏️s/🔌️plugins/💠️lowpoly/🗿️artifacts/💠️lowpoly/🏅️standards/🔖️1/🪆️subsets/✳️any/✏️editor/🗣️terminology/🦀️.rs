@@ -61,10 +61,9 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-/// 🗣️ Resolves the labels for a config's locale — the single call site every render/measure/engagement
-/// builder uses.
-pub fn lowpoly_play_labels(config: &crate::editor::lowpoly::config::LowpolyConfig) -> &'static LowpolyLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>(&config.locale)
+/// 🗣️ Resolves labels from the OS-owned view context.
+pub fn lowpoly_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static LowpolyLabels {
+    semio_framework_plugin::resolve_labels::<LowpolyLabels>(view_state)
 }
 
 /// 🗣️ Resolves a primitive catalogue entry's display label from its stable kind; unknown kinds fall

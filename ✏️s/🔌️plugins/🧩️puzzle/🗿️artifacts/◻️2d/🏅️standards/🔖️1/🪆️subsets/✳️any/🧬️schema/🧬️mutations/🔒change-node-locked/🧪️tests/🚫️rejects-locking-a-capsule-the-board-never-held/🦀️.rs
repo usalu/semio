@@ -42,7 +42,11 @@ fn rejection_leaves_the_document_at_the_committed_after() {
 fn the_refusal_is_the_declared_one() {
     assert!(DIFF_ABSENT.is_empty(), "change-node-locked/rejects-locking-a-capsule-the-board-never-held: the D6 sentinel 🔺️diff/🚫️.absent must stay empty");
     let produced = <Puzzle2dMutation as protocol::Mutation<Puzzle2dSnapshot>>::diff(&mutation(), &before());
-    assert_eq!(produced.diff(), &crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff::default(), "change-node-locked/rejects-locking-a-capsule-the-board-never-held: a refusing diff builder answers the default diff, never a half-built delta");
+    assert_eq!(
+        produced.diff(),
+        &crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff::default(),
+        "change-node-locked/rejects-locking-a-capsule-the-board-never-held: a refusing diff builder answers the default diff, never a half-built delta"
+    );
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "change-node-locked/rejects-locking-a-capsule-the-board-never-held: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.target-missing", "change-node-locked/rejects-locking-a-capsule-the-board-never-held: the refusal code is fixed by this vector");

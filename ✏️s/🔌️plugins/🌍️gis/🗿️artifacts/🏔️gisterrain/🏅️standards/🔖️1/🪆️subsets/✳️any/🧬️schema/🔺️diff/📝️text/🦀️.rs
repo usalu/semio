@@ -27,9 +27,6 @@ impl GisTerrainDiff {
             if let Some(value) = &self.camera_json {
                 next.camera_json = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -69,7 +66,6 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
         take!(exaggeration);
         take!(imported_features_json);
         take!(camera_json);
-        take!(locale);
     }
 }
 //#endregion 🔹Apply
@@ -94,3 +90,8 @@ pub fn diff_set_snapshot(snapshot: &GisTerrainSnapshot) -> GisTerrainDiff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔹Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type GisTerrainDiffText = String;
+//#endregion 🚚️Carrier

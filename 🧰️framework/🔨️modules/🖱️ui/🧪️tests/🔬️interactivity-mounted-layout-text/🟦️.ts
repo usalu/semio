@@ -1,4 +1,4 @@
-import { policyReadFileSafe, interactivityMountedLayoutTextFailures } from "../../../../../📜️script.ts";
+import { policyReadRustPolicySource, interactivityMountedLayoutTextFailures } from "../../../../../📜️script.ts";
 
 /** 🧪️ Executes interactivity mounted layout text policy assertions. */
 export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void {
@@ -12,7 +12,7 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
   ] as const;
-  const clean = paths.map((path) => policyReadFileSafe(repoRoot, path));
+  const clean = paths.map((path) => policyReadRustPolicySource(repoRoot, path));
   const mutations: [string, number, string, string][] = [
     ["node-credit", 0, "LAYOUT_NODE_CREDITS: usize = 4_096", "LAYOUT_NODE_CREDITS: usize = 4_095"],
     ["glyph-credit", 0, "LAYOUT_GLYPH_CREDITS: usize = 16_384", "LAYOUT_GLYPH_CREDITS: usize = 16_383"],

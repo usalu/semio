@@ -89,7 +89,10 @@ message CurationArtifact {
   // @state config
   Filters filters = 4;
   // @state config
-  string locale = 6;
   // @state config
   string contributions_json = 7;
+}
+
+message SortDirection {
+  string value = 1;
 }

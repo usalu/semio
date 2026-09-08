@@ -5,13 +5,10 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
 use crate::NoteSnapshot;
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
-
-use super::outline::NoteOutline;
-
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a note snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir) — a note document
@@ -70,8 +67,8 @@ impl ArtifactInferrer for NoteInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.note.note.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `note_artifact_schema_descriptor`'s registration.
-pub fn note_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
-    schema::ArtifactInferenceDescriptor {
+pub fn note_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
+    framework_schema::ArtifactInferenceDescriptor {
         id: "s.note.note.inference",
         inference: schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
@@ -89,3 +86,8 @@ pub fn note_artifact_inference_descriptor() -> schema::ArtifactInferenceDescript
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::NoteOutline;
+//#endregion 🔁️Re-exports

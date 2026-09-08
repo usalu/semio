@@ -23,7 +23,6 @@ pub struct PresentationConfig {
     /// ⌨️ In-progress engagement-bar input draft — was `AnimatePresentationPlayRuntime::engagement_input`.
     pub engagement_input: String,
     /// 🗣️ BCP-47 locale tag — was read off the host-pushed `ViewModel.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -72,7 +71,7 @@ impl store::ArtifactPack for PresentationConfig {
 
 impl Default for PresentationConfig {
     fn default() -> Self {
-        Self { engagement_input: String::new(), locale: "en-US".into() }
+        Self { engagement_input: String::new(), }
     }
 }
 

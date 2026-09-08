@@ -51,7 +51,7 @@ fn bulk_sessions_are_document_and_operation_scoped() {
 
 #[test]
 fn bulk_continuation_identity_matches_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔑️continuations.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔑️continuations.json")).unwrap();
     let key = |value: &serde_json::Value| BulkJobKey {
         app_id: value["appId"].as_str().unwrap().into(),
         document_id: value["documentId"].as_str().unwrap().into(),

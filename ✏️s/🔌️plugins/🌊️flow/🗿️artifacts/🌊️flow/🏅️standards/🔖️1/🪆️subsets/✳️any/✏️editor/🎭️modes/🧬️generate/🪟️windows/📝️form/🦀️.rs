@@ -119,11 +119,11 @@ fn question_field(question: &PlaybookBlock, values: &PlaybookValues, patch_actio
     Ok(Some(builder.try_build().map_err(|_| form_error("field-build"))?))
 }
 
-pub fn render(fixture: &FlowSnapshot, config: &FlowConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(fixture: &FlowSnapshot, config: &FlowConfig, labels: &crate::editor::flow::terminology::FlowPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let spec = flow_fixture_to_form_spec(&fixture.to_fixture());
     let generation = config.generation();
     let Some(active) = selected_generation(&generation) else {
-        return ui::text(ui_label(flow_play_labels(config).generation_needed.as_str())?).try_build().map_err(|_| form_error("placeholder-build"));
+        return ui::text(ui_label(labels.generation_needed.as_str())?).try_build().map_err(|_| form_error("placeholder-build"));
     };
     let mut children = UiFixedList::<BuiltNode>::default();
     for step in &spec.steps {

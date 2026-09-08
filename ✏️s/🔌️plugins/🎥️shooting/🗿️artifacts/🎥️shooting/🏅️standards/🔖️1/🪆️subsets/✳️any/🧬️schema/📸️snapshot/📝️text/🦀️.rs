@@ -32,3 +32,8 @@ pub fn print_dsl(snapshot: &ShootingSnapshot) -> String {
 mod tests;
 
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type ShootingSnapshotText = String;
+//#endregion 🚚️Carrier

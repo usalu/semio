@@ -1,0 +1,66 @@
+{
+  "valid": {
+    "kind": "browser-actor-view-state",
+    "clientInstanceId": "12345678-1234-4234-8234-123456789abc",
+    "scope": {
+      "spaceId": "s",
+      "documentId": "d"
+    },
+    "viewState": {
+      "locale": "de",
+      "terminology": "reuse",
+      "windowId": "left",
+      "activeWindowKindId": "editor",
+      "activeUtilityId": "pan",
+      "activeUtilityByWindowId": {
+        "left": "pan",
+        "right": "inspect"
+      },
+      "windowInstances": [
+        {
+          "id": "left",
+          "windowKindId": "editor"
+        },
+        {
+          "id": "right",
+          "windowKindId": "editor"
+        }
+      ]
+    }
+  },
+  "invalid": [
+    {
+      "name": "missing preferences",
+      "set": {
+        "viewState": {}
+      }
+    },
+    {
+      "name": "missing opening",
+      "remove": [
+        "clientInstanceId"
+      ]
+    },
+    {
+      "name": "invalid opening",
+      "set": {
+        "clientInstanceId": "old"
+      }
+    },
+    {
+      "name": "invalid scope",
+      "set": {
+        "scope": {
+          "spaceId": "",
+          "documentId": "d"
+        }
+      }
+    },
+    {
+      "name": "extra field",
+      "set": {
+        "config": {}
+      }
+    }
+  ]
+}

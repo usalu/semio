@@ -6,7 +6,6 @@ type ProcedureDiff {
   path: ProcedurePathDelta @state(class: ARTIFACT)
   seed: [ProcedureSeedEntry!] @state(class: ARTIFACT)
   selectedStepIds: ProcedureStringList @state(class: PRESENCE)
-  locale: String @state(class: CONFIG)
   contributionsJson: String @state(class: CONFIG)
 }
 
@@ -62,7 +61,6 @@ type ProcedureArtifact {
   path: ProcedurePath!
   seed: [ProcedureSeedEntry!]!
   selectedStepIds: [String!]!
-  locale: String!
   contributionsJson: String!
   runOutputJson: String!
 }

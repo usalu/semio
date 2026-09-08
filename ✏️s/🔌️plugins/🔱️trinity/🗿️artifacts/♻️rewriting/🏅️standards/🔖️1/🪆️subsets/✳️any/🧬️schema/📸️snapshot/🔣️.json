@@ -37,7 +37,7 @@
     "ruleLayout": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/$defs/LayoutPoint"
+        "$ref": "https://semio.tech/schema/s/trinity/rewriting/artifact.json#/$defs/LayoutPoint"
       },
       "x-semio-state": "artifact"
     }
@@ -46,25 +46,6 @@
     "PropertyValue": {
       "title": "PropertyValue",
       "description": "JSON-equivalent property value (null, bool, number, string, array, or object)."
-    },
-    "LayoutPoint": {
-      "title": "LayoutPoint",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        }
-      }
     }
   }
 }

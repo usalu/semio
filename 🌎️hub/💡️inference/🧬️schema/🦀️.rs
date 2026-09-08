@@ -22,6 +22,84 @@ pub type GisMapApprovalUndoRequestV1 = directory::os_directory::GisMapApprovalUn
 pub const SCHEMA_SCOPE: &str = "hub.inference";
 pub const SCHEMA_ID: &str = "https://semio.tech/schema/hub/inference/schema.json";
 
+//#region 🔖️ScopeSchemaExports
+use semio_framework_schema_registry::{register_scope_schema_exports, FacetLeaves, SchemaExport, ScopeSchemaExports};
+
+/// 🍃 The three leaves this module carries. The registry's spelling of "not provided" is an empty
+/// body: no `🔗️.graphql` or `🛰️.proto` file exists here and no export claims one.
+const ALL_LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: "", json_schema: include_str!("🔣️.json"), proto: "" };
+
+/// 🏷️ The leaves of an export that is only ever validated, never transported by a Rust decoder —
+/// exactly the set its `"x-semio-formats"` annotation declares (contract §B).
+const VALIDATED_ONLY: FacetLeaves = FacetLeaves { rust: "", typescript: include_str!("🟦️.ts"), graphql: "", json_schema: include_str!("🔣️.json"), proto: "" };
+
+/// 📚️ The module document the annotation is read from, so the law never restates it.
+#[cfg(test)]
+const MODULE_JSON: &str = include_str!("🔣️.json");
+
+/// 🏷️ `$defs` of `🔣️.json`, in declaration order.
+const EXPORTS: [SchemaExport; 45] = [
+    SchemaExport { id: "InferenceServerIdV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceDocumentScopeV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceRequestV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceParentDialectV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceBindingIdentityV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceIdentityV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceJobStateV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceProposalStateV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceLifecycleKindV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceLimitsV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceApprovalRequestV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceApprovalReceiptV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceApprovalOutboxV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "GisMapDocumentFrontierV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "GisMapApprovalUndoHandleV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "GisMapApprovalUndoRequestV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "GisMapApprovalUndoReceiptV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "GisMapApprovalUndoTargetV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "GisInferenceCheckpointControlFrameV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "GisInferenceCheckpointControlDirectionV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "GisMapInferencePreviewV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceMapBoundsV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceMapSummaryV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceProgressV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceEventV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceJobReceiptV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceEventPageV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceHybridLogicalTimestampV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceCommandPayloadV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceCommandV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceCommandLimitsV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceWalChainPolicyV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceWalTargetV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceCatalogOwnerV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceCatalogFrontierV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceCatalogDescriptorV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceCatalogPackageV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "InferenceCatalogServiceV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "InferenceCatalogSelectionV1", leaves: VALIDATED_ONLY },
+    SchemaExport { id: "GisMapFrozenExecutionProtocolV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "GisMapFrozenPackageV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "GisMapFrozenArtifactV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "GisMapFrozenSurfaceV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "GisMapFrozenGrantV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "GisMapFrozenBindingV1", leaves: ALL_LEAVES },
+];
+
+/// 📌️ Registers `hub.inference`'s named exports into the process-wide export catalog.
+/// See `📋️execution-contract.md` §C and `semio_framework_schema_registry::resolve_schema_export`.
+// 🚫️async: pure registration helper (no I/O)
+pub fn register_scope_exports() {
+    register_scope_schema_exports(ScopeSchemaExports { scope: SCHEMA_SCOPE, exports: &EXPORTS }).expect("hub.inference scope schema exports");
+}
+/// 🔬 Proves the registration at runtime rather than by inspection: it registers, resolves every
+/// export in exactly the formats its `"x-semio-formats"` annotation names and in no other, and
+/// asserts the scope is visible in the process-wide catalog.
+#[cfg(test)]
+#[path = "🧪️tests/🔬️scope-schema-export-law-standalone/🦀️.rs"]
+mod scope_schema_export_law;
+//#endregion 🔖️ScopeSchemaExports
+
 pub const REQUEST_MAX_BYTES: usize = 1024;
 pub const SERVER_ID_MAX_BYTES: usize = 96;
 pub const INPUT_MAX_BYTES: usize = 65_536;

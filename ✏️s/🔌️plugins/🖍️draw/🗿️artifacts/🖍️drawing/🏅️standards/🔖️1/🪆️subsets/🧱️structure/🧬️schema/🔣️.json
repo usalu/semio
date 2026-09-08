@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s/draw/drawing/1/structure/artifact.json",
+  "description": "🪆️ The structure subset of DrawingArtifact: the same document, mutated by this module's leaves. The subset owns its mutations, never a second copy of the artifact's types.",
+  "allOf": [
+    {
+      "$ref": "https://semio.tech/schema/s/drawing/drawing/artifact.json"
+    }
+  ]
+}

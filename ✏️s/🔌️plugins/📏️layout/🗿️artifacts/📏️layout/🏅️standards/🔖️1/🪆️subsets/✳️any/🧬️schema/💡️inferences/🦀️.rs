@@ -8,9 +8,8 @@ use crate::LayoutSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::topology::{compute_layout_topology, LayoutTopology};
+use super::topology::{compute_layout_topology};
 use semio_framework_value_derive::{FromValue, ToValue};
-
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a layout snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
@@ -81,3 +80,8 @@ pub fn layout_artifact_inference_descriptor() -> schema::ArtifactInferenceDescri
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::topology::LayoutTopology;
+//#endregion 🔁️Re-exports

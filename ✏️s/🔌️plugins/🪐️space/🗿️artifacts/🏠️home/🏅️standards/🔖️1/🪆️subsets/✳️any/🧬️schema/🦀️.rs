@@ -14,15 +14,13 @@ pub struct SHomeArtifact {
     pub catalog_generation: u64,
     #[state(config)]
     pub active_panel_tab: String,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for SHomeArtifact {
     fn default() -> Self {
-        Self { schema: crate::S_HOME_DOCUMENT_SCHEMA.into(), catalog_generation: 0, active_panel_tab: String::new(), locale: "en-US".into() }
+        Self { schema: crate::S_HOME_DOCUMENT_SCHEMA.into(), catalog_generation: 0, active_panel_tab: String::new() }
     }
 }
 

@@ -15,7 +15,6 @@ type GisMapArtifact {
   hoverJson: String! @state(class: CONFIG)
   selectionMethod: String! @state(class: CONFIG)
   selectionMode: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 
 type GisMapFeature {

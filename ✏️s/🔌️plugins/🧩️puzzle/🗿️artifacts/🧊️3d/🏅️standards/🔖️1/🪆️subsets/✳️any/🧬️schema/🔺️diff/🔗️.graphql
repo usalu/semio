@@ -35,7 +35,6 @@ type Puzzle3dDiff {
   lodDepthVariable: Boolean @state(class: CONFIG)
   lodManual: Float @state(class: CONFIG)
   proximityRadius: Float @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
   runtimeExtrasJson: String @state(class: CONFIG)
   hoveredObjectId: String @state(class: ARTIFACT)
   hoveredVortexFullId: String @state(class: ARTIFACT)

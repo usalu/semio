@@ -41,7 +41,7 @@ pub const STDIO_TXT_DOCUMENT_SCHEMA: &str = "stdio.txt";
 pub const TXT_ARTIFACT_SCHEMA_ID: &str = "s.stdio.txt";
 
 /// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
 pub fn definition() -> Result<ArtifactDefinition, PluginAssemblyError> {
     semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)

@@ -15,7 +15,10 @@
 import schemaDocument from "./🔣️.json" with { type: "json" };
 
 export * from "../🤖️generated/🟦️.js";
-import type { ActiveSession, Anchor, AppRole, ArtifactSyncStatus, ByAnchor, Conflict, DialogState, DockUiState, ExtraWindowInstance, IconName, InferencePortPhase, InferencePortStatus, LayoutNode, LoadedPlugin, MergePolicy, NoticeKind, PluginPanelStatus, PluginSupervisorState, ShellCapability, ShellCommand, ShellError, ShellEvent, ShellScope, ShellState, SplitOrientation, SyncCardKind, TransientNotice, UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiTheme } from "../🤖️generated/🟦️.js";
+export { OsConfigSchemaError, parseUiAppearance, parseUiChromeLayout, parseUiDriver, parseUiLocale, parseUiPreferences, parseUiTheme } from "../../../🎚️config/🧬️schema/🟦️.ts";
+export type { UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiPreferences, UiTheme } from "../../../🎚️config/🧬️schema/🟦️.ts";
+import { OsConfigSchemaError, parseUiLocale } from "../../../🎚️config/🧬️schema/🟦️.ts";
+import type { ActiveSession, Anchor, AppRole, ArtifactSyncStatus, ByAnchor, Conflict, DialogState, DockUiState, ExtraWindowInstance, IconName, InferencePortPhase, InferencePortStatus, LayoutNode, LoadedPlugin, MergePolicy, NoticeKind, PluginPanelStatus, PluginSupervisorState, ShellCapability, ShellCommand, ShellError, ShellEvent, ShellScope, ShellState, SplitOrientation, SyncCardKind, TransientNotice } from "../🤖️generated/🟦️.js";
 
 //#region 🪪️Authority
 /** 🪪️ The `$id` `🔣️.json` declares — the identity every consumer resolves `#/$defs/<ExportId>` against. */
@@ -216,25 +219,11 @@ export const parseSyncCardKind = defineParser<SyncCardKind>("SyncCardKind");
 /** 🧬️ Validates an untrusted value against `#/$defs/TransientNotice`. */
 export const parseTransientNotice = defineParser<TransientNotice>("TransientNotice");
 
-/** 🧬️ Validates an untrusted value against `#/$defs/UiAppearance`. */
-export const parseUiAppearance = defineParser<UiAppearance>("UiAppearance");
-
-/** 🧬️ Validates an untrusted value against `#/$defs/UiChromeLayout`. */
-export const parseUiChromeLayout = defineParser<UiChromeLayout>("UiChromeLayout");
-
-/** 🧬️ Validates an untrusted value against `#/$defs/UiDriver`. */
-export const parseUiDriver = defineParser<UiDriver>("UiDriver");
-
-/** 🧬️ Validates an untrusted value against `#/$defs/UiLocale`. */
-export const parseUiLocale = defineParser<UiLocale>("UiLocale");
-
-/** 🧬️ Validates an untrusted value against `#/$defs/UiTheme`. */
-export const parseUiTheme = defineParser<UiTheme>("UiTheme");
 //#endregion 🧬️Parsers
 
 //#region 🧪️tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️os-shell-schema-module/🟦️.ts");
-  await registerTests1(import.meta.vitest, { OS_SHELL_SCHEMA_EXPORT_IDS, OS_SHELL_SCHEMA_ID, ShellSchemaError, osShellSchemaDocument, parseAnchor, parseByAnchor, parseLayoutNode, parseLoadedPlugin, parseShellCommand, parseShellError, parseShellEvent, parseShellState, parseUiLocale }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { OS_SHELL_SCHEMA_EXPORT_IDS, OS_SHELL_SCHEMA_ID, OsConfigSchemaError, ShellSchemaError, osShellSchemaDocument, parseAnchor, parseByAnchor, parseLayoutNode, parseLoadedPlugin, parseShellCommand, parseShellError, parseShellEvent, parseShellState, parseUiLocale }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️tests

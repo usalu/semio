@@ -24,8 +24,7 @@
     "previewCameraX",
     "previewCameraY",
     "previewCameraZoom",
-    "dropPreview",
-    "locale"
+    "dropPreview"
   ],
   "properties": {
     "schema": {
@@ -144,10 +143,6 @@
     },
     "dropPreview": {
       "$ref": "#/$defs/LayoutDropPreviewState",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     },
     "hoveredId": {

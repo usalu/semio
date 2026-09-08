@@ -1,10 +1,9 @@
-
 use super::super::fixture_mutations::demo::{DemoMutation, SetN};
-use super::super::tests::{DemoOneItemPreparationFactory, DemoSnapshot, demo_closable_store_owners};
+use super::super::tests::{demo_closable_store_owners, DemoOneItemPreparationFactory, DemoSnapshot};
 use super::*;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧪️fixtures/🔣️.json")).expect("durable group fixture")
+    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("durable group fixture")
 }
 
 fn hex(value: &str) -> Vec<u8> {

@@ -10,7 +10,6 @@
     "version",
     "steps",
     "selectedIds",
-    "locale",
     "contributionsJson"
   ],
   "properties": {
@@ -43,10 +42,6 @@
         "type": "string"
       },
       "x-semio-state": "presence"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     },
     "contributionsJson": {
       "type": "string",

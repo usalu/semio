@@ -35,7 +35,7 @@
     {
       "id": "handle-in",
       "handleKind": "hk-signal",
-      "angle": 0.0,
+      "angle": 0,
       "radius": 0.5
     }
   ],
@@ -67,9 +67,9 @@
     }
   ],
   "camera2d": {
-    "x": 0.0,
-    "y": 0.0,
-    "zoom": 1.0
+    "x": 0,
+    "y": 0,
+    "zoom": 1
   },
   "meta": {
     "description": "Fixture base for the block2d mutation vocabulary."

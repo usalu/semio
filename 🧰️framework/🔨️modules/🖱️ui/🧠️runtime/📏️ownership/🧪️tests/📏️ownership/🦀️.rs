@@ -22,16 +22,20 @@ fn census(node: &crate::TreeNode) -> SurfaceSemanticUsage {
 }
 
 fn icon_node(icon: bool) -> crate::TreeNode {
-    crate::TreeNode::try_new("machine", ui_contract::Component::TreeItem(ui_contract::TreeItemProps {
-        label: ui_contract::Label::try_from("machine").unwrap(),
-        description: None,
-        icon: icon.then(|| ui_text("machine")),
-        default_open: None,
-        draggable: None,
-        drag_data: None,
-        dimmed: None,
-        row_actions: Default::default(),
-    })).unwrap()
+    crate::TreeNode::try_new(
+        "machine",
+        ui_contract::Component::TreeItem(ui_contract::TreeItemProps {
+            label: ui_contract::Label::try_from("machine").unwrap(),
+            description: None,
+            icon: icon.then(|| ui_text("machine")),
+            default_open: None,
+            draggable: None,
+            drag_data: None,
+            dimmed: None,
+            row_actions: Default::default(),
+        }),
+    )
+    .unwrap()
 }
 //#endregion 📐️Fixtures
 
@@ -50,7 +54,10 @@ fn surface_ownership_existing_component_refuses_before_cloning_unadmitted_payloa
     cursor.limits.max_bytes = 0;
     let step = cursor.step(&current);
     let rejected = matches!(step, SurfaceReconcileStep::Fault(SurfaceReconcileFault::Credits { .. }));
-    let allocation = match cursor.pending_op.get() { Some(ui_contract::UiPatchOp::SetComponent { component: ui_contract::Component::Surface(props), .. }) => props.doc.bytes.as_slice().len(), _ => 0 };
+    let allocation = match cursor.pending_op.get() {
+        Some(ui_contract::UiPatchOp::SetComponent { component: ui_contract::Component::Surface(props), .. }) => props.doc.bytes.as_slice().len(),
+        _ => 0,
+    };
     let source_unchanged = serde_json::to_value(&cursor.record_diff.as_ref().unwrap().record.component).unwrap() == expected;
     while !cursor.retire_one() {}
     while !current.retire_one() {}
@@ -81,10 +88,15 @@ fn surface_ownership_existing_component_retains_comparison_and_copy_between_turn
         let step = cursor.step(&current);
         assert!(matches!(step, SurfaceReconcileStep::Yield { .. }), "existing retained field failed: {step:?}");
         turns += 1;
-        if cursor.record_diff.as_ref().unwrap().field != 0 { break; }
+        if cursor.record_diff.as_ref().unwrap().field != 0 {
+            break;
+        }
     }
     let allocation = cursor.usage.bytes - initial;
-    let candidate = match cursor.pending_op.get().unwrap() { ui_contract::UiPatchOp::SetComponent { component, .. } => serde_json::to_value(component).unwrap(), _ => panic!("changed component patch missing") };
+    let candidate = match cursor.pending_op.get().unwrap() {
+        ui_contract::UiPatchOp::SetComponent { component, .. } => serde_json::to_value(component).unwrap(),
+        _ => panic!("changed component patch missing"),
+    };
     let old_unchanged = serde_json::to_value(&current.read_record(id).unwrap().unwrap().component).unwrap() == before;
     while !cursor.retire_one() {}
     while !current.retire_one() {}
@@ -112,11 +124,15 @@ fn surface_ownership_component_copy_charges_actual_surface_backing_before_public
     let mut reported = 0;
     for _ in 0..256 {
         let step = cursor.step(&current);
-        let SurfaceReconcileStep::Yield { bytes, .. } = step else { panic!("component copy fault: {step:?}"); };
+        let SurfaceReconcileStep::Yield { bytes, .. } = step else {
+            panic!("component copy fault: {step:?}");
+        };
         assert!(bytes <= data["allocationGrant"].as_u64().unwrap() as usize);
         reported += bytes;
         turns += 1;
-        if cursor.record_diff.as_ref().unwrap().field != 1 { break; }
+        if cursor.record_diff.as_ref().unwrap().field != 1 {
+            break;
+        }
     }
     let after = cursor.usage.bytes;
     let fresh = cursor.record_diff.as_ref().unwrap().fresh.as_ref().unwrap().component.as_ref().unwrap();
@@ -134,7 +150,9 @@ fn surface_ownership_binding_clone_requires_bounded_backing_and_copy() {
     let data = fixture();
     let data = &data["bindingClone"];
     let mut node = leaf("root");
-    for index in 0..data["items"].as_u64().unwrap() { node = with_binding(node, "fixture", &format!("action-{index}")); }
+    for index in 0..data["items"].as_u64().unwrap() {
+        node = with_binding(node, "fixture", &format!("action-{index}"));
+    }
     let mut current = SurfaceReconciler::new("allocation-fixture");
     let mut cursor = SurfaceReconcileCursor::new(tree(leaf("unused")), &current);
     cursor.stage = SurfaceReconcileStage::DiffRecords;
@@ -147,7 +165,9 @@ fn surface_ownership_binding_clone_requires_bounded_backing_and_copy() {
     let mut turns = 0;
     for _ in 0..1000 {
         let step = cursor.step(&current);
-        let SurfaceReconcileStep::Yield { bytes, .. } = step else { panic!("binding copy fault: {step:?}"); };
+        let SurfaceReconcileStep::Yield { bytes, .. } = step else {
+            panic!("binding copy fault: {step:?}");
+        };
         let diff = cursor.record_diff.as_ref().unwrap();
         let fresh = diff.fresh.as_ref().unwrap();
         let candidate = fresh.bindings.as_ref().or_else(|| diff.owned_copy.as_ref().and_then(RecordOwnedCopy::bindings).and_then(ui_contract::UiBindingsCopy::candidate));
@@ -162,7 +182,9 @@ fn surface_ownership_binding_clone_requires_bounded_backing_and_copy() {
         previous_allocated = allocated;
         previous_initialized = initialized;
         turns += 1;
-        if diff.field != 5 { break; }
+        if diff.field != 5 {
+            break;
+        }
     }
     let diff = cursor.record_diff.as_ref().unwrap();
     assert_eq!(diff.field, 6);
@@ -187,7 +209,9 @@ fn surface_ownership_component_copy_unwind_and_credit_refusal_keep_exact_source(
         cursor.stage = SurfaceReconcileStage::DiffRecords;
         cursor.record_diff = Some(RecordDiffCursor { id: ui_contract::UiNodeId(1), record: build_record_owned(ui_contract::UiNodeId(1), node, Default::default(), None).into(), field: 1, fresh: Some(FreshRecordClone::default()), owned_copy: None });
         for _ in 0..frontier.as_u64().unwrap() {
-            if cursor.record_diff.as_ref().unwrap().field != 1 { break; }
+            if cursor.record_diff.as_ref().unwrap().field != 1 {
+                break;
+            }
             assert!(matches!(cursor.step(&current), SurfaceReconcileStep::Yield { .. }));
         }
         if frontier.as_u64().unwrap() <= 12 {
@@ -196,11 +220,18 @@ fn surface_ownership_component_copy_unwind_and_credit_refusal_keep_exact_source(
             cursor.fail_component_step = false;
             assert!(failed);
             let owner = cursor.record_diff.as_ref().unwrap().owned_copy.as_ref().and_then(RecordOwnedCopy::component).expect("callback keeps exact component owner");
-            let ui_contract::Component::Surface(source) = owner.source().unwrap() else { panic!("retained source changed variant"); };
-            assert_eq!(source.doc.bytes.as_slice(), vec![17u8;32768]);
+            let ui_contract::Component::Surface(source) = owner.source().unwrap() else {
+                panic!("retained source changed variant");
+            };
+            assert_eq!(source.doc.bytes.as_slice(), vec![17u8; 32768]);
         }
         let mut terminal = false;
-        for _ in 0..100_000 { if cursor.retire_one() { terminal = true; break; } }
+        for _ in 0..100_000 {
+            if cursor.retire_one() {
+                terminal = true;
+                break;
+            }
+        }
         assert!(terminal && cursor.record_diff.is_none());
         while !current.retire_one() {}
         eprintln!("[DEBUG] surface-component-unwind frontier={frontier} retained-outside-callback=true terminal-close=true");
@@ -212,7 +243,9 @@ fn surface_ownership_component_copy_unwind_and_credit_refusal_keep_exact_source(
     cursor.stage = SurfaceReconcileStage::DiffRecords;
     cursor.record_diff = Some(RecordDiffCursor { id: ui_contract::UiNodeId(1), record: build_record_owned(ui_contract::UiNodeId(1), node, Default::default(), None).into(), field: 1, fresh: Some(FreshRecordClone::default()), owned_copy: None });
     for _ in 0..32 {
-        if cursor.record_diff.as_ref().unwrap().owned_copy.as_ref().and_then(RecordOwnedCopy::component).is_some_and(|copy| copy.next_allocation_bytes() == Ok(32768)) { break; }
+        if cursor.record_diff.as_ref().unwrap().owned_copy.as_ref().and_then(RecordOwnedCopy::component).is_some_and(|copy| copy.next_allocation_bytes() == Ok(32768)) {
+            break;
+        }
         cursor.step(&current);
     }
     cursor.limits.max_bytes = 0;
@@ -236,13 +269,19 @@ fn surface_ownership_patch_backing_is_admitted_in_separate_turns() {
     for _ in 0..100 {
         let before = cursor.ops.allocated_bytes();
         let outcome = cursor.step(&current);
-        let after = match &outcome { SurfaceReconcileStep::Complete { patch: Some(patch), .. } => patch.ops.allocated_bytes(), _ => cursor.ops.allocated_bytes() };
+        let after = match &outcome {
+            SurfaceReconcileStep::Complete { patch: Some(patch), .. } => patch.ops.allocated_bytes(),
+            _ => cursor.ops.allocated_bytes(),
+        };
         let allocated = after.saturating_sub(before);
         largest = largest.max(allocated);
         allocation_turns += usize::from(allocated != 0);
         match outcome {
             SurfaceReconcileStep::Yield { .. } => {}
-            SurfaceReconcileStep::Complete { reconciler, patch } => { complete = Some((reconciler, patch)); break; }
+            SurfaceReconcileStep::Complete { reconciler, patch } => {
+                complete = Some((reconciler, patch));
+                break;
+            }
             SurfaceReconcileStep::Fault(fault) => panic!("patch allocation fixture fault: {fault:?}"),
         }
     }
@@ -251,7 +290,11 @@ fn surface_ownership_patch_backing_is_admitted_in_separate_turns() {
     while !cursor.retire_one() {}
     while !candidate.retire_one() {}
     while !current.retire_one() {}
-    if let Some(patch) = patch.as_mut() { while !patch.ops.terminal_is_empty() { patch.ops.close_step(1, 4096).unwrap(); } }
+    if let Some(patch) = patch.as_mut() {
+        while !patch.ops.terminal_is_empty() {
+            patch.ops.close_step(1, 4096).unwrap();
+        }
+    }
     eprintln!("[DEBUG] surface-patch-allocation turns={allocation_turns} largest={largest} operation-bytes={}", size_of::<ui_contract::UiPatchOp>());
     assert!(largest <= fixture()["patchAllocation"]["maximumBytesPerTurn"].as_u64().unwrap() as usize, "directory and payload allocations require distinct admitted opportunities");
     assert_eq!(allocation_turns, 2);
@@ -262,17 +305,23 @@ fn surface_ownership_binding_copy_cancel_keeps_all_original_and_partial_backings
     for frontier in fixture()["bindingClone"]["cancelFrontiers"].as_array().unwrap() {
         let frontier = frontier.as_u64().unwrap();
         let mut node = leaf("root");
-        for index in 0..32 { node = with_binding(node, "fixture", &format!("action-{index}")); }
+        for index in 0..32 {
+            node = with_binding(node, "fixture", &format!("action-{index}"));
+        }
         let mut current = SurfaceReconciler::new("allocation-fixture");
         let mut cursor = SurfaceReconcileCursor::new(tree(leaf("unused")), &current);
         cursor.stage = SurfaceReconcileStage::DiffRecords;
         cursor.record_diff = Some(RecordDiffCursor { id: ui_contract::UiNodeId(1), record: build_record_owned(ui_contract::UiNodeId(1), node, Default::default(), None).into(), field: 5, fresh: Some(FreshRecordClone::default()), owned_copy: None });
-        let bytes = |cursor: &SurfaceReconcileCursor| cursor.record_diff.as_ref().map_or(0, |diff| {
-            diff.record.bindings.allocated_bytes()
-                + diff.fresh.as_ref().and_then(|fresh| fresh.bindings.as_ref()).map_or(0, ui_contract::UiNodeBindings::allocated_bytes)
-                + diff.owned_copy.as_ref().and_then(RecordOwnedCopy::bindings).map_or(0, |copy| copy.source_allocated_bytes() + copy.candidate_allocated_bytes())
-        });
-        for _ in 0..frontier { assert!(matches!(cursor.step(&current), SurfaceReconcileStep::Yield { .. })); }
+        let bytes = |cursor: &SurfaceReconcileCursor| {
+            cursor.record_diff.as_ref().map_or(0, |diff| {
+                diff.record.bindings.allocated_bytes()
+                    + diff.fresh.as_ref().and_then(|fresh| fresh.bindings.as_ref()).map_or(0, ui_contract::UiNodeBindings::allocated_bytes)
+                    + diff.owned_copy.as_ref().and_then(RecordOwnedCopy::bindings).map_or(0, |copy| copy.source_allocated_bytes() + copy.candidate_allocated_bytes())
+            })
+        };
+        for _ in 0..frontier {
+            assert!(matches!(cursor.step(&current), SurfaceReconcileStep::Yield { .. }));
+        }
         let retained = bytes(&cursor);
         let mut previous = retained;
         let mut terminal = false;
@@ -282,7 +331,9 @@ fn surface_ownership_binding_copy_cancel_keeps_all_original_and_partial_backings
             assert!(current <= previous, "cancel cannot replace a source or candidate with fresh backing");
             assert!(previous - current <= SURFACE_RECONCILE_PAGE_BYTES, "one close turn must release one admitted page: frontier={frontier} before={previous} after={current}");
             previous = current;
-            if terminal { break; }
+            if terminal {
+                break;
+            }
         }
         assert!(terminal && cursor.record_diff.is_none());
         while !current.retire_one() {}
@@ -294,12 +345,16 @@ fn surface_ownership_binding_copy_cancel_keeps_all_original_and_partial_backings
 fn surface_ownership_binding_copy_unwind_keeps_owners_outside_callback() {
     for frontier in 1..=8 {
         let mut node = leaf("root");
-        for index in 0..32 { node = with_binding(node, "fixture", &format!("action-{index}")); }
+        for index in 0..32 {
+            node = with_binding(node, "fixture", &format!("action-{index}"));
+        }
         let mut current = SurfaceReconciler::new("allocation-fixture");
         let mut cursor = SurfaceReconcileCursor::new(tree(leaf("unused")), &current);
         cursor.stage = SurfaceReconcileStage::DiffRecords;
         cursor.record_diff = Some(RecordDiffCursor { id: ui_contract::UiNodeId(1), record: build_record_owned(ui_contract::UiNodeId(1), node, Default::default(), None).into(), field: 5, fresh: Some(FreshRecordClone::default()), owned_copy: None });
-        for _ in 0..frontier { cursor.step(&current); }
+        for _ in 0..frontier {
+            cursor.step(&current);
+        }
         let before = cursor.record_diff.as_ref().unwrap().owned_copy.as_ref().and_then(RecordOwnedCopy::bindings).unwrap() as *const ui_contract::UiBindingsCopy;
         cursor.fail_binding_step = true;
         let failed = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| cursor.step(&current))).is_err();
@@ -320,7 +375,9 @@ fn surface_ownership_transfer_preserves_backing_without_allocating_replacement()
     let fixture = fixture();
     let case = &fixture["transfer"];
     let mut source = SurfaceFixedVec::<u64, 4>::default();
-    for value in case["values"].as_array().unwrap() { source.try_push(value.as_u64().unwrap()).unwrap(); }
+    for value in case["values"].as_array().unwrap() {
+        source.try_push(value.as_u64().unwrap()).unwrap();
+    }
     let original = source.entries.as_ptr();
     let original_bytes = size_of_val(source.entries.as_ref());
     let mut moved = source.take_all();
@@ -354,7 +411,9 @@ fn surface_ownership_patch_refusal_and_cancel_keep_exact_unallocated_owner() {
         let mut cursor = SurfaceReconcileCursor::new(tree(leaf("root")), &current);
         cursor.stage = SurfaceReconcileStage::Finalize;
         cursor.ids.try_push(ui_contract::UiNodeId(1)).unwrap();
-        for _ in 0..turns { assert!(matches!(cursor.step(&current), SurfaceReconcileStep::Yield { .. })); }
+        for _ in 0..turns {
+            assert!(matches!(cursor.step(&current), SurfaceReconcileStep::Yield { .. }));
+        }
         let allocated = cursor.ops.allocated_bytes();
         if turns == 1 {
             cursor.limits.max_bytes = 0;
@@ -364,7 +423,10 @@ fn surface_ownership_patch_refusal_and_cancel_keep_exact_unallocated_owner() {
         }
         let mut closed = false;
         for _ in 0..10_000 {
-            if cursor.retire_one() { closed = true; break; }
+            if cursor.retire_one() {
+                closed = true;
+                break;
+            }
             assert!(cursor.ops.allocated_bytes() <= allocated, "cancellation cannot allocate a retirement page");
         }
         assert!(closed);
@@ -383,10 +445,15 @@ fn surface_ownership_finalize_transfers_exact_record_and_index_allocations() {
     let indexes = cursor.new_key_index.entries.entries.as_ptr();
     let mut complete = None;
     for _ in 0..10_000 {
-        if cursor.stage == SurfaceReconcileStage::Finalize { records = cursor.assembly.root_identity(); }
+        if cursor.stage == SurfaceReconcileStage::Finalize {
+            records = cursor.assembly.root_identity();
+        }
         match cursor.step(&current) {
             SurfaceReconcileStep::Yield { .. } => {}
-            SurfaceReconcileStep::Complete { reconciler, patch } => { complete = Some((reconciler, patch)); break; }
+            SurfaceReconcileStep::Complete { reconciler, patch } => {
+                complete = Some((reconciler, patch));
+                break;
+            }
             SurfaceReconcileStep::Fault(fault) => panic!("exact transfer fixture fault: {fault:?}"),
         }
     }
@@ -397,15 +464,33 @@ fn surface_ownership_finalize_transfers_exact_record_and_index_allocations() {
     assert!(cursor.assembly.terminal_is_empty());
     assert_eq!(size_of_val(cursor.new_key_index.entries.entries.as_ref()), 0);
     let mut complete = false;
-    for _ in 0..10_000 { if cursor.retire_one() { complete = true; break; } }
+    for _ in 0..10_000 {
+        if cursor.retire_one() {
+            complete = true;
+            break;
+        }
+    }
     assert!(complete);
     let mut complete = false;
-    for _ in 0..10_000 { if reconciler.retire_one() { complete = true; break; } }
+    for _ in 0..10_000 {
+        if reconciler.retire_one() {
+            complete = true;
+            break;
+        }
+    }
     assert!(complete);
     let mut complete = false;
-    for _ in 0..10_000 { if current.retire_one() { complete = true; break; } }
+    for _ in 0..10_000 {
+        if current.retire_one() {
+            complete = true;
+            break;
+        }
+    }
     assert!(complete);
-    if let Some(patch) = patch.as_mut() { while patch.ops.pop().is_some() {} patch.ops.release_empty_allocation().unwrap(); }
+    if let Some(patch) = patch.as_mut() {
+        while patch.ops.pop().is_some() {}
+        patch.ops.release_empty_allocation().unwrap();
+    }
     eprintln!("[DEBUG] surface-finalize-transfer exact-records=true exact-indexes=true replacement-bytes=0 closed=true");
 }
 
@@ -468,7 +553,9 @@ fn surface_ownership_native_backing_inventory_preserves_capacity() {
         ("retained-job-allocation", size_of::<SurfaceReconcileRetained>()),
         ("reconciler", size_of::<SurfaceReconciler>()),
     ];
-    for (owner, bytes) in sizes { eprintln!("[DEBUG] surface-physical-owner owner={owner} bytes={bytes}"); }
+    for (owner, bytes) in sizes {
+        eprintln!("[DEBUG] surface-physical-owner owner={owner} bytes={bytes}");
+    }
 }
 #[test]
 fn surface_ownership_resident_reservation_uses_one_shared_aggregate_ledger() {
@@ -496,11 +583,18 @@ fn surface_ownership_resident_return_maintenance_preserves_contended_credit() {
     assert!(observed.owns(&credit));
     release_surface_reconcile(credit);
     assert!(ui_contract::UiResidentPermit::has_pending_returns());
-    for _ in 0..128 { assert!(!close_surface_reconcile_handback_one().unwrap()); }
+    for _ in 0..128 {
+        assert!(!close_surface_reconcile_handback_one().unwrap());
+    }
     assert_eq!(observed.snapshot().bytes, before.bytes + 65536);
     drop(observed);
     let mut complete = false;
-    for _ in 0..256 { if close_surface_reconcile_handback_one().unwrap() { complete = true; break; } }
+    for _ in 0..256 {
+        if close_surface_reconcile_handback_one().unwrap() {
+            complete = true;
+            break;
+        }
+    }
     assert!(complete);
     assert_eq!(ui_contract::UiResidentPermit::snapshot().unwrap(), before);
     eprintln!("[DEBUG] runtime-resident-return mutex-busy-keeps-credit=true maintenance-resumes=true exact-return=65536");

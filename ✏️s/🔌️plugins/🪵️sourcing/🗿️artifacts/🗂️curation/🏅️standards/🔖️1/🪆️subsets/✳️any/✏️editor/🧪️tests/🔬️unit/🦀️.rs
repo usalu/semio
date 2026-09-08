@@ -9,7 +9,7 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
     for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
         let mut app = new_app().await;
         app.bind_instance_id(7).await;
-        app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7 }).await.unwrap();
+        app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }).await.unwrap();
         let mut document = None;
         let mut terminal = false;
         for _ in 0..100_000 {

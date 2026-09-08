@@ -883,7 +883,7 @@ async fn database_catalog_bootstrap_public_result_drop_hands_back_exact_owner_wi
 
 #[semio_framework_async_macros::async_test]
 async fn database_capability_open_paused_transfer_blocks_public_close() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📬️capability-completion/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📬️capability-completion/🔣️.json")).unwrap();
     for row in fixture["driveOwnership"].as_array().unwrap() {
         let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
@@ -961,7 +961,7 @@ async fn database_capability_open_paused_transfer_blocks_public_close() {
 #[semio_framework_async_macros::async_test]
 async fn database_capability_open_lease_successors_and_active_publication_retire_once() {
     use std::sync::atomic::Ordering;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📬️capability-completion/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📬️capability-completion/🔣️.json")).unwrap();
     for row in fixture["leaseCompletion"].as_array().unwrap() {
         let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
@@ -1065,7 +1065,7 @@ async fn database_capability_open_lease_successors_and_active_publication_retire
 
 #[semio_framework_async_macros::async_test]
 async fn database_capability_open_completion_interleavings_preserve_result_and_wake() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📬️capability-completion/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📬️capability-completion/🔣️.json")).unwrap();
     for row in fixture["publication"].as_array().unwrap() {
         let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
@@ -1139,7 +1139,7 @@ async fn database_capability_open_completion_interleavings_preserve_result_and_w
 
 #[semio_framework_async_macros::async_test]
 async fn database_capability_open_consumed_completion_retires_before_publisher_wake() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📬️capability-completion/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📬️capability-completion/🔣️.json")).unwrap();
     for row in fixture["retirement"].as_array().unwrap() {
         let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
@@ -1549,7 +1549,7 @@ fn control_catalog_read_submissions(state: &Arc<DatabaseCatalogReadState>) -> Ar
 #[semio_framework_async_macros::async_test]
 async fn database_catalog_read_paused_transfers_exclude_successors_and_public_cleanup() {
     use std::sync::atomic::Ordering;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📖️catalog-read-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📖️catalog-read-ownership/🔣️.json")).unwrap();
     for row in fixture["transfers"].as_array().unwrap() {
         let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
@@ -1672,7 +1672,7 @@ fn assert_catalog_read_fixture_result(fixture: &serde_json::Value, result: Datab
 #[semio_framework_async_macros::async_test]
 async fn database_catalog_read_retry_and_terminal_resume_preserve_exact_root() {
     use std::sync::atomic::Ordering;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📖️catalog-read-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📖️catalog-read-ownership/🔣️.json")).unwrap();
     for row in fixture["recovery"].as_array().unwrap() {
         let (probe, pointer, operation) = catalog_read_fixture_probe(&fixture, row["outcome"].as_str().unwrap()).await;
         let state = probe.state.clone();
@@ -1824,7 +1824,7 @@ async fn database_catalog_read_retry_and_terminal_resume_preserve_exact_root() {
 #[semio_framework_async_macros::async_test]
 async fn database_catalog_read_consumed_publication_preserves_exact_root_and_retires() {
     use std::sync::atomic::Ordering;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📖️catalog-read-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📖️catalog-read-ownership/🔣️.json")).unwrap();
     for row in fixture["completion"].as_array().unwrap() {
         let (mut probe, pointer, operation) = catalog_read_fixture_probe(&fixture, row["outcome"].as_str().unwrap()).await;
         let state = probe.state.clone();
@@ -4135,7 +4135,7 @@ impl std::task::Wake for ControlledHistoryPublicWake {
 #[semio_framework_async_macros::async_test]
 async fn artifact_history_completion_interleavings_preserve_result_and_wake() {
     use std::sync::atomic::Ordering;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/📜️history-completion/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📜️history-completion/🔣️.json")).unwrap();
     let artifact_root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("history native law requires its ticket artifact directory"));
     let root = artifact_root.join(format!("history-publication-{}", std::process::id()));
     std::fs::create_dir_all(&root).unwrap();

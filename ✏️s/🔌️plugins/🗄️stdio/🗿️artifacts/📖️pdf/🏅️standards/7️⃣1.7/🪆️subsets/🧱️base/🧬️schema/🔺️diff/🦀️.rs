@@ -17,12 +17,11 @@
 //! the diff mirrors
 //! `PdfObject`'s real shape field-for-field instead of inventing a parallel vocabulary.
 
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPage, PdfPredictor, PdfSnapshot, PdfStreamFilter};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDecimal, PdfDictEntry, PdfInfo, PdfObject, PdfPredictor, PdfSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use framework_schema::ArtifactSchema;
 use std::collections::{HashMap, HashSet};
-
 //#region 🔖️PageDiff
 /// 📄️ Sparse per-field patch for one `PdfPage` (a WEAK entity per the recipe -- a value struct,
 /// never sub-diffed beyond its own flat fields). `crop_box` is tri-state: `None` = unchanged,
@@ -2609,3 +2608,10 @@ mod handcrafted_diff_codec_tests;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::standards::v1_7::subsets::base::schema::snapshot::ObjRef;
+pub use crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter;
+pub use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;
+//#endregion 🔁️Re-exports

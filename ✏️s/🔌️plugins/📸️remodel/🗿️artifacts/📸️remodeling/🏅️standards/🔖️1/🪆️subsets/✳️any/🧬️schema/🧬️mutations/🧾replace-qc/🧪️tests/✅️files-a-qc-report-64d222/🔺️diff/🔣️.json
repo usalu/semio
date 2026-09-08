@@ -159,7 +159,7 @@
             0.9375,
             -0.3515625,
             -0.00048828125,
-            0.0
+            0
           ],
           "translation": [
             -0.001953125,
@@ -202,7 +202,7 @@
         "id": "orbit-track-a",
         "length": 9,
         "class": "static",
-        "meanSpeedMS": 0.0
+        "meanSpeedMS": 0
       },
       {
         "id": "orbit-track-b",
@@ -244,7 +244,7 @@
         "isWatertight": true
       },
       "meanTrackLength": 7.25,
-      "registeredFrameRatio": 1.0,
+      "registeredFrameRatio": 1,
       "denseCoverageRatio": 0.8125,
       "warnings": []
     }
@@ -254,6 +254,5 @@
   "reportTable": null,
   "frameCursor": null,
   "camera": null,
-  "layers": null,
-  "locale": null
+  "layers": null
 }

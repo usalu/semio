@@ -124,7 +124,7 @@ fn fixture_assert<const CAPACITY: usize>(id: &str, registry: &mut FixedOperation
     assert!(registry.is_empty(), "language-neutral fixed operation case {id} retained an owner");
 }
 
-include!("../../🧪️fixtures/🧪️fixed-operation-registry-cases.rs");
+include!("../🧪️fixed-operation-registry-cases/🦀️.rs");
 
 #[test]
 fn maximum_plus_one_and_saturation_return_the_exact_owner() {

@@ -27,7 +27,6 @@ type LayoutDiff {
   previewCameraY: Float @state(class: CONFIG)
   previewCameraZoom: Float @state(class: CONFIG)
   dropPreview: LayoutDropPreviewState @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
   hoveredId: String @state(class: ARTIFACT)
 }
 

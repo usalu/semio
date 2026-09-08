@@ -77,8 +77,8 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from the config-carried locale; unknown locales fall back to native English.
-pub fn layout_labels(cfg: &LayoutConfig) -> &'static LayoutLabels {
-    semio_framework_plugin::resolve_labels_for_locale::<LayoutLabels>(&cfg.locale)
+pub fn layout_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static LayoutLabels {
+    semio_framework_plugin::resolve_labels::<LayoutLabels>(view_state)
 }
 
 /// 🗣️ Resolves a catalogue frame kind's display label from its stable id; unknown kinds fall back to the kind id itself.

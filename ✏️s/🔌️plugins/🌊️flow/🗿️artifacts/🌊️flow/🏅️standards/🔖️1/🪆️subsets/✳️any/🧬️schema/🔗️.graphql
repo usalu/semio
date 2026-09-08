@@ -19,7 +19,6 @@ type FlowArtifact {
   automationEnabledJson: String! @state(class: CONFIG)
   contributionsJson: String! @state(class: CONFIG)
   generationJson: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 
 type CameraJson {

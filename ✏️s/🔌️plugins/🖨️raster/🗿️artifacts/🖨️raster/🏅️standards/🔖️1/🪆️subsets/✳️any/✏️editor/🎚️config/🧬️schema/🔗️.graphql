@@ -15,5 +15,4 @@ type RasterConfig {
   compositeViewport: RasterConfigViewportSize @state(class: CONFIG)
   camera: RasterCamera! @state(class: CONFIG)
   activeUtilityId: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }

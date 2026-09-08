@@ -144,7 +144,7 @@ mod mutations;
 pub use mutations::*;
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🌿️vcs/🦀️.rs"]
 mod flow_direct_tests;
 
 #[path = "🧬️schema/🔺️diff/🦀️.rs"]

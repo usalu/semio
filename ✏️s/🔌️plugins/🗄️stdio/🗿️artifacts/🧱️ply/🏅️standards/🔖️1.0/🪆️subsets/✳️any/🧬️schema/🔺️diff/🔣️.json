@@ -4,122 +4,6 @@
   "title": "PlyDiff",
   "type": "object",
   "$defs": {
-    "PlyScalarType": {
-      "type": "string",
-      "enum": [
-        "char",
-        "uChar",
-        "short",
-        "uShort",
-        "int",
-        "uInt",
-        "float",
-        "double"
-      ]
-    },
-    "PlyProperty": {
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "form",
-            "name",
-            "kind"
-          ],
-          "properties": {
-            "form": {
-              "const": "scalar"
-            },
-            "name": {
-              "type": "string"
-            },
-            "kind": {
-              "$ref": "#/$defs/PlyScalarType"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "form",
-            "name",
-            "countKind",
-            "valueKind"
-          ],
-          "properties": {
-            "form": {
-              "const": "list"
-            },
-            "name": {
-              "type": "string"
-            },
-            "countKind": {
-              "$ref": "#/$defs/PlyScalarType"
-            },
-            "valueKind": {
-              "$ref": "#/$defs/PlyScalarType"
-            }
-          }
-        }
-      ]
-    },
-    "PlyValue": {
-      "type": "object",
-      "required": [
-        "kind",
-        "value"
-      ],
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "value": {}
-      }
-    },
-    "PlyRow": {
-      "type": "object",
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PlyValue"
-          }
-        }
-      }
-    },
-    "PlyElement": {
-      "type": "object",
-      "required": [
-        "name",
-        "count",
-        "properties",
-        "rows"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "count": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "properties": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PlyProperty"
-          }
-        },
-        "rows": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PlyRow"
-          }
-        }
-      }
-    },
     "PlyRowFieldChange": {
       "type": "object",
       "required": [
@@ -131,7 +15,7 @@
           "type": "string"
         },
         "value": {
-          "$ref": "#/$defs/PlyValue"
+          "$ref": "https://semio.tech/schema/s/stdio/ply/1.0/any/snapshot.json#/$defs/PlyValue"
         }
       }
     },
@@ -174,7 +58,7 @@
           "minimum": 0
         },
         "row": {
-          "$ref": "#/$defs/PlyRow"
+          "$ref": "https://semio.tech/schema/s/stdio/ply/1.0/any/snapshot.json#/$defs/PlyRow"
         }
       }
     },
@@ -208,7 +92,7 @@
         "properties": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/PlyProperty"
+            "$ref": "https://semio.tech/schema/s/stdio/ply/1.0/any/snapshot.json#/$defs/PlyProperty"
           }
         },
         "rows": {
@@ -243,7 +127,7 @@
           "minimum": 0
         },
         "element": {
-          "$ref": "#/$defs/PlyElement"
+          "$ref": "https://semio.tech/schema/s/stdio/ply/1.0/any/snapshot.json#/$defs/PlyElement"
         }
       }
     },

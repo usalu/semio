@@ -1,4 +1,4 @@
-import { INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE, INTERACTIVITY_AUDIT_WINIT_HOST_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, policyReadFileSafe, interactivityMountedEngineSurfaceLifetimeFailures } from "../../../../../../../../📜️script.ts";
+import { INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE, INTERACTIVITY_AUDIT_WINIT_HOST_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, policyReadRustPolicySource, interactivityMountedEngineSurfaceLifetimeFailures } from "../../../../../../../../📜️script.ts";
 
 /** 🧪️ Executes interactivity mounted engine surface lifetime policy assertions. */
 export function interactivityMountedEngineSurfaceLifetimeSelfTests(repoRoot: string): void {
@@ -14,7 +14,7 @@ export function interactivityMountedEngineSurfaceLifetimeSelfTests(repoRoot: str
     "🧰️framework/🔨️modules/✍️editor/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs",
   ] as const;
-  const clean = files.map((file) => policyReadFileSafe(repoRoot, file));
+  const clean = files.map((file) => policyReadRustPolicySource(repoRoot, file));
   const mutations: readonly [string, number, string, string][] = [
     ["wrapping-cpu-generation", 0, "slot.generation.checked_add(1)", "Some(slot.generation.wrapping_add(1))"],
     ["blocking-cpu-close-registry", 0, "self.state().try_lock().ok()", "self.state().lock().ok()"],

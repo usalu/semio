@@ -1,0 +1,23 @@
+{
+  "appearance": "dark",
+  "layout": "desktop",
+  "driverId": "studio",
+  "customDrivers": {
+    "studio": {
+      "driverId": "studio",
+      "label": "Studio",
+      "config": { "scale": 1.25 }
+    }
+  },
+  "locale": "de",
+  "terminology": "reuse",
+  "themeId": "contrast",
+  "customThemes": {
+    "contrast": {
+      "themeId": "contrast",
+      "label": "Contrast",
+      "config": { "colors": { "surface": "#000000", "text": "#ffffff" }, "radius": 4 }
+    }
+  },
+  "keybindingOverrides": { "edit.undo": "Meta+Z" }
+}

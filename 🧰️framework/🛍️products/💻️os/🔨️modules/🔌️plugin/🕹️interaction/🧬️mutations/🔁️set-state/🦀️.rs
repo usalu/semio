@@ -42,5 +42,5 @@ impl SetInteractionState {
 //#endregion ⚙️ColdSemantics
 
 #[cfg(test)]
-#[path = "🧪️.rs"]
+#[path = "🧪️tests/🔁️set-state/🦀️.rs"]
 mod tests;

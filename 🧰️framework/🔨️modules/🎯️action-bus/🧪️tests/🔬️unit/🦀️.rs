@@ -1,6 +1,5 @@
-
 use super::*;
-use semio_framework_job::{CommitCandidate, Generation, RevisionId, allocate_operation_id};
+use semio_framework_job::{allocate_operation_id, CommitCandidate, Generation, RevisionId};
 
 struct ImmediateJob {
     output: Option<Vec<u8>>,

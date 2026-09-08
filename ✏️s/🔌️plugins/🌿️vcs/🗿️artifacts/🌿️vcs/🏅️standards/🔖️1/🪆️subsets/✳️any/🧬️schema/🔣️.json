@@ -11,8 +11,7 @@
     "notes",
     "status",
     "tags",
-    "selectedCheckpointIds",
-    "locale"
+    "selectedCheckpointIds"
   ],
   "properties": {
     "schema": {
@@ -49,10 +48,6 @@
         "type": "string"
       },
       "x-semio-state": "presence"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {

@@ -1,3 +1,9 @@
 syntax = "proto3";
 package semio.s_stdio_semio_kit_mutations.binary;
 message SemioKitMutationFrame { uint32 format = 1; uint32 tag = 2; bytes payload = 3; }
+
+message SemioKitMutationBinary {
+  optional int64 format = 1;
+  optional int64 tag = 2;
+  optional string payload = 3;
+}

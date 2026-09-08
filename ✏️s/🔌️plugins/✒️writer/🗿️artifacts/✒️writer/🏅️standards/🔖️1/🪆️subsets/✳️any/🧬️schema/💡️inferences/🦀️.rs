@@ -10,9 +10,6 @@ use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use semio_s_artifact_trinity_jack::core::{example_graph, lint};
-
-use super::outline::WriterOutline;
-
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a writer snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir) — writer is a
@@ -135,3 +132,8 @@ pub fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u32) ->
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::WriterOutline;
+//#endregion 🔁️Re-exports

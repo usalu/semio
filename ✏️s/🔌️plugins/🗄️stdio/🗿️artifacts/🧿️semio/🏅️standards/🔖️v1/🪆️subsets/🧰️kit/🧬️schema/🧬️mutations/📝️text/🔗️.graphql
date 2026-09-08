@@ -1,1 +1,5 @@
 type SemioKitMutationDsl { line: String! }
+
+type SemioKitMutationText {
+  line: String
+}

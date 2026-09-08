@@ -1,6 +1,6 @@
 use super::*;
 
-const CHECKPOINT_FIXTURE_JSON: &str = include_str!("../../🧪️fixtures/📸️artifact-command-checkpoint.json");
+const CHECKPOINT_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/📸️artifact-command-checkpoint.json");
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

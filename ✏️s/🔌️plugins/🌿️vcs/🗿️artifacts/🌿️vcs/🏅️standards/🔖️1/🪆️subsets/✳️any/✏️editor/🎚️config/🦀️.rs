@@ -21,7 +21,6 @@ use protocol::Mutation;
 #[dsl(layout = "lines")]
 pub struct VcsDemoConfig {
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -70,7 +69,7 @@ impl store::ArtifactPack for VcsDemoConfig {
 
 impl Default for VcsDemoConfig {
     fn default() -> Self {
-        Self { locale: "en-US".into() }
+        Self { }
     }
 }
 
@@ -90,8 +89,6 @@ pub enum VcsDemoConfigMutation {
         #[dsl(block)]
         config: VcsDemoConfig,
     },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
@@ -169,28 +166,11 @@ impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
             composition: protocol::MutationComposition::Atomic,
             required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
         },
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
-            owner: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🗣️set-locale",
-            semantic_kind: "set-locale",
-            display_name: "Set Locale",
-            emoji: "🗣️",
-            aggregate_variant: "SetLocale",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::Warning],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
             Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            Self::SetLocale { .. } => &Self::DESCRIPTORS[1],
         }
     }
 
@@ -202,12 +182,6 @@ impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
                     return protocol::MutationOutcome::empty().warn("mutation.no-op", "Config snapshot is already identical to the requested replacement.");
                 }
                 return protocol::MutationOutcome::new(config.clone());
-            }
-            VcsDemoConfigMutation::SetLocale { value } => {
-                if &base.locale == value {
-                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Locale is already \"{}\".", value));
-                }
-                next.locale = value.clone();
             }
         }
         protocol::MutationOutcome::new(next)

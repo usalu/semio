@@ -6,7 +6,7 @@
         "id": "pos-lighthouse",
         "data": {
           "kind": "lighthouse",
-          "lat": 54.0,
+          "lat": 54,
           "lon": 8.5
         }
       }
@@ -22,6 +22,5 @@
   "cameraJson": null,
   "renderMode": null,
   "vectorStyle": null,
-  "lodMode": null,
-  "locale": null
+  "lodMode": null
 }

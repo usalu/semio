@@ -126,9 +126,6 @@ impl Generation2dDiff {
             if let Some(value) = &self.generation_preview_text {
                 next.generation_preview_text = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -169,7 +166,6 @@ impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
         take!(show_mode);
         take!(selected_generation_id);
         take!(generation_preview_text);
-        take!(locale);
     }
 }
 //#endregion 🔖️Apply
@@ -193,3 +189,8 @@ pub fn diff_generation_from_ops(base: &Generation2dSnapshot, ops: Vec<Generation
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Generation2dDiffText = String;
+//#endregion 🚚️Carrier

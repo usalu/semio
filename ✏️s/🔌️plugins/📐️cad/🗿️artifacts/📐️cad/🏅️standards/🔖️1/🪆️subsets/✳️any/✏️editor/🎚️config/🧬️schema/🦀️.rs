@@ -82,12 +82,6 @@ pub struct CadConfig {
     #[state(config)]
     pub dislocate_structure_classic: CadDislocateOptions,
     #[state(config)]
-    pub active_utility_id: String,
-    #[state(config)]
-    pub locale: String,
-    #[state(config)]
-    pub terminology: String,
-    #[state(config)]
     pub contributions_json: String,
 }
 

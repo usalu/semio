@@ -33,10 +33,19 @@ message GisMapArtifact {
   // @state config
   string selection_mode = 14;
   // @state config
-  string locale = 15;
 }
 
 message GisMapFeature {
   string id = 1;
   string data_json = 2;
+}
+
+message GisMapBoolEntry {
+  string key = 1;
+  bool value = 2;
+}
+
+message GisMapNumberEntry {
+  string key = 1;
+  double value = 2;
 }

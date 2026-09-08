@@ -1,7 +1,9 @@
 use super::*;
 
 //#region 🧪️PagedStorageLaws
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixture/🔣️.json")).unwrap()
+}
 
 #[test]
 fn retained_fixed_list_pages_preserve_order_without_all_n_allocation() {
@@ -51,7 +53,9 @@ fn retained_fixed_list_pages_preserve_order_without_all_n_allocation() {
 fn retained_fixed_list_pages_refuse_oversized_payload_without_losing_owner() {
     let mut values = UiFixedList::<[u8; 32769], 2>::default();
     for _ in 0..10 {
-        if values.next_allocation_bytes().unwrap() > 32768 { break; }
+        if values.next_allocation_bytes().unwrap() > 32768 {
+            break;
+        }
         values.try_reserve_one(32768).unwrap();
     }
     let before = values.allocated_bytes();
@@ -62,7 +66,9 @@ fn retained_fixed_list_pages_refuse_oversized_payload_without_losing_owner() {
     assert!(!values.try_place_reserved(&mut source, 32768).unwrap().progressed);
     assert_eq!(source.as_ref().unwrap()[32768], 7);
     assert!(values.is_empty());
-    while !values.terminal_is_empty() { values.release_empty_page().unwrap(); }
+    while !values.terminal_is_empty() {
+        values.release_empty_page().unwrap();
+    }
     eprintln!("[DEBUG] fixed-list-oversized source-retained=true allocated-after-refusal={before} placed=false");
 }
 
@@ -92,7 +98,9 @@ fn retained_fixed_list_pages_admit_binding_sized_payloads_and_safe_mutable_itera
     let allocated = values.allocated_bytes();
     assert!(allocated > 32 * 2072, "metadata backing is not erased from the resident count");
     while values.pop().is_some() {}
-    while !values.terminal_is_empty() { values.release_empty_page().unwrap(); }
+    while !values.terminal_is_empty() {
+        values.release_empty_page().unwrap();
+    }
     eprintln!("[DEBUG] fixed-list-binding-pages items=32 bytes-per-placement=2072 total-with-metadata={allocated} safe-mutable-iteration=true");
 }
 #[test]
@@ -108,7 +116,9 @@ fn retained_fixed_list_pages_zero_zst_and_empty_tail_reuse_preserve_exact_storag
     assert_eq!(byte, Some(9));
     assert!(zero.terminal_is_empty());
     let mut zst = UiFixedList::<(), 7>::default();
-    while !zst.has_reserved_slot() { assert!(zst.try_reserve_one(4096).unwrap().progressed); }
+    while !zst.has_reserved_slot() {
+        assert!(zst.try_reserve_one(4096).unwrap().progressed);
+    }
     for _ in 0..data["zeroSizedCount"].as_u64().unwrap() {
         let mut owner = Some(());
         let step = zst.try_place_reserved(&mut owner, 0).unwrap();
@@ -117,14 +127,20 @@ fn retained_fixed_list_pages_zero_zst_and_empty_tail_reuse_preserve_exact_storag
     }
     assert!(zst.release_empty_page().is_err());
     while zst.pop().is_some() {}
-    while !zst.terminal_is_empty() { assert!(zst.release_empty_page().unwrap().progressed); }
+    while !zst.terminal_is_empty() {
+        assert!(zst.release_empty_page().unwrap().progressed);
+    }
     let mut values = UiFixedList::<u64, 600>::default();
     for index in 0..data["tailCount"].as_u64().unwrap() {
-        while !values.has_reserved_slot() { values.try_reserve_one(4096).unwrap(); }
+        while !values.has_reserved_slot() {
+            values.try_reserve_one(4096).unwrap();
+        }
         values.try_place_reserved(&mut Some(index), 4096).unwrap();
     }
     let retained = data["retainedPrefix"].as_u64().unwrap() as usize;
-    while values.len() > retained { values.pop(); }
+    while values.len() > retained {
+        values.pop();
+    }
     let first_pointer = values.get(0).unwrap() as *const u64;
     let before = values.allocated_bytes();
     let payload_release = values.release_empty_page().unwrap();
@@ -134,13 +150,17 @@ fn retained_fixed_list_pages_zero_zst_and_empty_tail_reuse_preserve_exact_storag
     assert!(metadata_release.progressed && metadata_release.released_allocation_bytes != 0);
     assert!(values.release_empty_page().is_err());
     assert_eq!(values.get(0).unwrap() as *const u64, first_pointer);
-    while !values.has_reserved_slot() { values.try_reserve_one(4096).unwrap(); }
+    while !values.has_reserved_slot() {
+        values.try_reserve_one(4096).unwrap();
+    }
     let mut source = Some(data["reuseValue"].as_u64().unwrap());
     values.try_place_reserved(&mut source, 4096).unwrap();
     assert_eq!(values.get(retained), Some(&900));
     assert_eq!(values.get(0).unwrap() as *const u64, first_pointer);
     while values.pop().is_some() {}
-    while !values.terminal_is_empty() { values.release_empty_page().unwrap(); }
+    while !values.terminal_is_empty() {
+        values.release_empty_page().unwrap();
+    }
     eprintln!("[DEBUG] fixed-list-edges zero=true zst=7 retained-prefix=512 empty-tail-released=true reuse=true");
 }
 //#endregion 🧪️PagedStorageLaws

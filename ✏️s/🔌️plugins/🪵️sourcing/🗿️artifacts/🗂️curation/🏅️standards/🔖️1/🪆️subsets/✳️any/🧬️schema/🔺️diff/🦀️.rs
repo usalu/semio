@@ -26,8 +26,6 @@ pub struct CurationDiff {
     #[state(config)]
     pub filters: Option<Filters>,
     #[state(config)]
-    pub locale: Option<String>,
-    #[state(config)]
     pub contributions_json: Option<String>,
 }
 //#endregion 🔖️Diff

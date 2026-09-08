@@ -17,94 +17,16 @@
     "steps": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/SequenceStep"
+        "$ref": "https://semio.tech/schema/s/sequence/sequence/artifact.json#/$defs/SequenceStep"
       },
       "x-semio-state": "artifact"
     },
     "edges": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/SequenceEdge"
+        "$ref": "https://semio.tech/schema/s/sequence/sequence/artifact.json#/$defs/SequenceEdge"
       },
       "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "SequenceStep": {
-      "title": "SequenceStep",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "kind",
-        "params",
-        "x",
-        "y",
-        "collapsed"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string"
-        },
-        "params": {
-          "type": "object"
-        },
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "slot": {
-          "$ref": "#/$defs/SlotRef"
-        },
-        "collapsed": {
-          "type": "boolean"
-        }
-      }
-    },
-    "SequenceEdge": {
-      "title": "SequenceEdge",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "from",
-        "to"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "from": {
-          "type": "string"
-        },
-        "to": {
-          "type": "string"
-        }
-      }
-    },
-    "SlotRef": {
-      "title": "SlotRef",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "owner",
-        "name"
-      ],
-      "properties": {
-        "owner": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
     }
   }
 }

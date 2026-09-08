@@ -9,3 +9,8 @@ type En1990Artifact {
   seismicAEdKn: Float! @state(class: ARTIFACT)
   selectedCheckIndex: Int @state(class: PRESENCE)
 }
+
+type En1990QkEntry {
+  category: String!
+  value: Float!
+}

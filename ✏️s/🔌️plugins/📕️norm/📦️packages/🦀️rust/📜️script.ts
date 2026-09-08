@@ -129,6 +129,7 @@ class ConfigMutationSourceScript extends BundleScript {
     const fixture = JSON.parse(readFileSync(join(configRoot, "🧪️tests", "🔣️.json"), "utf8"));
     const aggregate = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "🔣️.json"), "utf8"));
     const ajv = new Ajv({ allErrors: true, strict: true });
+    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     const module = JSON.parse(readFileSync(join(this.root, "..", "..", "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
     ajv.addSchema(module);
     const validateFixture = ajv.compile({ $ref: `${module.$id}#/$defs/NormConfigMutationCases` });
@@ -165,7 +166,7 @@ class ConfigMutationSourceScript extends BundleScript {
 class ConfigMutationTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestBudgeted(["semio-s-plugin-norm"], this.repoRoot, ["--test", "config_mutation", ...rest]);
+    await runCargoTestBudgeted(["semio-s-artifact-norm-contract"], this.repoRoot, ["--test", "config_mutation", ...rest]);
   }
 }
 
@@ -180,6 +181,7 @@ class SurfaceRenderSourceScript extends BundleScript {
     const pluginRoot = readFileSync(join(this.root, "..", "..", "🦀️.rs"), "utf8");
     if (!pluginRoot.includes('.package_id("semio:norm")')) throw new Error("norm plugin does not declare its exact component package identity");
     const ajv = new Ajv({ allErrors: true, strict: true });
+    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     ajv.addSchema(module);
     const validate = ajv.compile({ $ref: `${module.$id}#/$defs/NormSurfaceRenderCases` });
     const manifest = Bun.TOML.parse(readFileSync(join(this.root, "Cargo.toml"), "utf8")) as { package: { metadata: { semio: { playground: { variant: string }[] } } } };
@@ -247,6 +249,7 @@ class MutationLeafTaxonomyCheckScript extends BundleScript {
     const module = JSON.parse(readFileSync(join(this.root, "../../🧬️schema/🔣️.json"), "utf8"));
     const fixture = JSON.parse(readFileSync(join(this.root, "📇️mutation-leaf-taxonomy-v1.json"), "utf8")) as MutationLeafTaxonomy;
     const ajv = new Ajv({ allErrors: true, strict: true });
+    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     ajv.addSchema(module);
     const validate = ajv.compile({ $ref: `${module.$id}#/$defs/NormMutationLeafTaxonomy` });
     if (!validate(fixture)) throw new Error(`norm mutation-leaf taxonomy schema failed: ${JSON.stringify(validate.errors)}`);

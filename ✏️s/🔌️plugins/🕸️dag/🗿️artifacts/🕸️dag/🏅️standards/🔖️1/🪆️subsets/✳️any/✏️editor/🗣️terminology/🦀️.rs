@@ -2,7 +2,6 @@
 //! for. Deliberately ONE block for the whole app (never split per window/panel): the macro's value is
 //! that every locale combination is compile-checked in one place.
 
-use crate::editor::dag::config::DagConfig;
 use semio_framework_plugin::AppLabels;
 
 //#region 🔖️Labels
@@ -38,23 +37,19 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ `cfg.locale`-driven counterpart to the deleted `ViewModel`-driven locale read.
-pub fn is_de_locale(cfg: &DagConfig) -> bool {
-    cfg.locale.starts_with("de")
+pub fn is_de_locale(view_state: &semio_framework_plugin::ViewModel) -> bool {
+    view_state.locale == semio_framework_plugin::Locale::De
 }
 
 /// 🗣️ Derives the compile-time-checked `Locale` from the BCP-47 `cfg.locale` tag.
-pub fn dag_locale(cfg: &DagConfig) -> semio_framework_plugin::Locale {
-    if is_de_locale(cfg) {
-        semio_framework_plugin::Locale::De
-    } else {
-        semio_framework_plugin::Locale::En
-    }
+pub fn dag_locale(view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::Locale {
+    view_state.locale
 }
 
 /// 🗣️ Resolves the active label set from `cfg.locale`; this app has no terminology variant, so
 /// `Terminology` is always `Native`.
-pub fn dag_play_labels(cfg: &DagConfig) -> &'static DagPlayLabels {
-    DagPlayLabels::labels(dag_locale(cfg), semio_framework_plugin::Terminology::Native)
+pub fn dag_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static DagPlayLabels {
+    semio_framework_plugin::resolve_labels::<DagPlayLabels>(view_state)
 }
 //#endregion 🔖️Resolvers
 

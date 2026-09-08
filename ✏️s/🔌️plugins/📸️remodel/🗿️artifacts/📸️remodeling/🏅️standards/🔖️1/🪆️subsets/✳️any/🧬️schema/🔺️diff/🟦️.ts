@@ -76,7 +76,6 @@ export interface RemodelingDiff {
   frameCursor: RemodelingUiFrameCursor | null;
   camera: RemodelingUiCamera | null;
   layers: RemodelingUiLayers | null;
-  locale: string | null;
 }
 //#endregion 🔖️Diff
 
@@ -181,3 +180,70 @@ export const remodelingDiffLanes = (diff: RemodelingDiff): string[] =>
     return (diff as unknown as Record<string, unknown>)[key] !== null;
   });
 //#endregion 🔖️Codec
+
+//#region 🚪️Parsers
+/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
+export class remodelRemodelingDiffGuardRefusal extends Error {
+  constructor(readonly at: string, readonly why: string) {
+    super(`${at}: ${why}`);
+  }
+}
+
+const remodelRemodelingDiffGuardReject = (at: string, why: string): never => {
+  throw new remodelRemodelingDiffGuardRefusal(at, why);
+};
+
+type remodelRemodelingDiffGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
+type remodelRemodelingDiffGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
+type remodelRemodelingDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
+
+export const remodelRemodelingDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : remodelRemodelingDiffGuardReject(at, "value is not an object");
+export const remodelRemodelingDiffGuardArray = (value: unknown, at: string, bounds: remodelRemodelingDiffGuardSizeBounds = {}): readonly unknown[] => {
+  if (!Array.isArray(value)) return remodelRemodelingDiffGuardReject(at, "value is not an array");
+  if (bounds.minItems !== undefined && value.length < bounds.minItems) remodelRemodelingDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
+  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) remodelRemodelingDiffGuardReject(at, `array has more than ${bounds.maxItems} items`);
+  return value;
+};
+export const remodelRemodelingDiffGuardString = (value: unknown, at: string, bounds: remodelRemodelingDiffGuardTextBounds = {}): string => {
+  if (typeof value !== "string") return remodelRemodelingDiffGuardReject(at, "value is not a string");
+  const length = [...value].length;
+  if (bounds.minLength !== undefined && length < bounds.minLength) remodelRemodelingDiffGuardReject(at, `string is shorter than ${bounds.minLength}`);
+  if (bounds.maxLength !== undefined && length > bounds.maxLength) remodelRemodelingDiffGuardReject(at, `string is longer than ${bounds.maxLength}`);
+  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) remodelRemodelingDiffGuardReject(at, `string does not match ${bounds.pattern}`);
+  return value;
+};
+export const remodelRemodelingDiffGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : remodelRemodelingDiffGuardReject(at, "value is not a boolean"));
+export const remodelRemodelingDiffGuardNumber = (value: unknown, at: string, bounds: remodelRemodelingDiffGuardRangeBounds = {}): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return remodelRemodelingDiffGuardReject(at, "value is not a finite number");
+  if (bounds.minimum !== undefined && value < bounds.minimum) remodelRemodelingDiffGuardReject(at, `number is below ${bounds.minimum}`);
+  if (bounds.maximum !== undefined && value > bounds.maximum) remodelRemodelingDiffGuardReject(at, `number is above ${bounds.maximum}`);
+  return value;
+};
+export const remodelRemodelingDiffGuardInteger = (value: unknown, at: string, bounds: remodelRemodelingDiffGuardRangeBounds = {}): number =>
+  Number.isSafeInteger(value) ? remodelRemodelingDiffGuardNumber(value, at, bounds) : remodelRemodelingDiffGuardReject(at, "value is not an integer");
+export const remodelRemodelingDiffGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
+  members.includes(value as T) ? (value as T) : remodelRemodelingDiffGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const remodelRemodelingDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
+  value === expected ? expected : remodelRemodelingDiffGuardReject(at, `value is not ${String(expected)}`);
+//#endregion 🚪️Parsers
+
+export interface RemodelingArtifact {
+  readonly schema: string;
+  readonly id: string;
+  readonly streams: readonly MediaStream[];
+  readonly assets: Readonly<Record<string, unknown>>;
+  readonly durableArtifacts: Readonly<Record<string, unknown>>;
+  readonly calibration: CalibrationState;
+  readonly params: ReconstructionParams;
+  readonly gcps: readonly GroundControlPoint[];
+  readonly job: ReconstructionJob;
+  readonly results: ReconstructionResults;
+  readonly selection: RemodelingUiSelection;
+  readonly activeUtilityId: string;
+  readonly reportTable: string;
+  readonly frameCursor: RemodelingUiFrameCursor;
+  readonly camera: RemodelingUiCamera;
+  readonly layers: RemodelingUiLayers;
+  readonly
+}

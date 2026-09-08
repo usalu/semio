@@ -47,3 +47,7 @@ Legacy `index` test suite folders should receive content-based suite names (for 
 ## Ticket Closure Capacity Check
 
 The repo MCP server defaults to a 1 MiB JSON request limit. A migration touching thousands of Rust source and case paths may exceed this when closing with the required complete file list. Measure the actual final UTF-8 request size before closing; do not silently truncate the list or attribute unrelated Git changes. The existing close implementation accepts arrays only and normalizes each entry; no file-manifest expansion is currently implemented. This is a potential integration issue, not yet a blocker.
+
+## Retained Verification Inputs
+
+The coordinator’s ticket script now only replays runtime verification from the permanent framework manifest. The completed AST migration and mutation code was removed. It no longer depends on generated migration journals, and its Python interpreter path selects the native Windows virtual environment layout when needed. The private Nx graph and repository scan input remain available for reproducing verification.

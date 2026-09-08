@@ -361,6 +361,6 @@ impl<R: Send + Sync> Drop for ScalarRecordWireWitness<R> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🔎️scalar-witness/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

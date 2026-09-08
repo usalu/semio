@@ -6,7 +6,6 @@
   "additionalProperties": false,
   "required": [
     "activePanelTab",
-    "locale",
     "directoryJson",
     "directorySessionBindingSha256",
     "directoryAuthorizationGeneration",
@@ -16,10 +15,6 @@
   ],
   "properties": {
     "activePanelTab": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "locale": {
       "type": "string",
       "x-semio-state": "config"
     },

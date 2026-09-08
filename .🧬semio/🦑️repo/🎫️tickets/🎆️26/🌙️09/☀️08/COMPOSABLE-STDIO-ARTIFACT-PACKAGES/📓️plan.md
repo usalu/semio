@@ -64,3 +64,7 @@ All Cargo/compilation results in reports refer to actual executed commands. Conc
 The complete audited scope is 99 production artifacts plus 2 shared contracts, totaling 101 Rust declarations; 39 existing TypeScript entry points are declared separately. The initial 93-root count above was superseded by schema ownership exploration. Root now owns both GIS leaves and the GIS/Block parent composition boundaries alongside all framework artifacts except Space/Collection (registry executor). The artifact executor owns the remaining 15 multi-artifact leaves.
 
 PDF TypeScript cache acceptance passed: baseline task hash `2961489084152580833`, deleted-output restoration at 1/1 local cache hit, relevant PDF source mutation at a cache miss with hash `6201406382484965991`, and unrelated JPG mutation retaining the baseline hit and identical JS/declaration outputs. Temporary source markers were removed. Broader compiler/runtime, Nx aggregate/launch/prerequisite, and final independent audit gates remain open.
+
+## Final Browser Artifact Scope
+
+The final TypeScript artifact inventory is 40: the prior 39 plus the Sequence browser artifact. Its handwritten browser and host JavaScript implementations and TypeScript API declarations now live in the editor taxonomy; the artifact TypeScript package contains only declarations and the canonical script router. The old parent TypeScript package is a private integration test harness. Runtime harness and third-party protocol oracle evidence are recorded in `📓️sequence-browser-package.md`.

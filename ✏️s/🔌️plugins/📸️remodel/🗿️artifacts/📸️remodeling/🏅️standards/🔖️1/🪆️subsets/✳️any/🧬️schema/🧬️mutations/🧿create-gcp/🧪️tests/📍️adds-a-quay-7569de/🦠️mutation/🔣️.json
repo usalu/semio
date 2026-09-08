@@ -6,7 +6,7 @@
     "worldPosition": [
       -0.75,
       0.875,
-      -1.0
+      -1
     ],
     "observations": [
       {
@@ -22,7 +22,7 @@
         "frameIndex": 8,
         "pixel": [
           214.75,
-          169.0
+          169
         ]
       }
     ]

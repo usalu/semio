@@ -74,8 +74,6 @@ pub struct Process3dArtifact {
     #[state(config)]
     pub sun_color: String,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub contributions_json: String,
     #[state(artifact)]
     pub hovered_id: Option<String>,
@@ -114,7 +112,6 @@ impl Default for Process3dArtifact {
             sun_elevation: 35.0,
             sun_intensity: 0.85,
             sun_color: "#ffffff".into(),
-            locale: "en-US".into(),
             contributions_json: "[]".into(),
             hovered_id: None,
         }

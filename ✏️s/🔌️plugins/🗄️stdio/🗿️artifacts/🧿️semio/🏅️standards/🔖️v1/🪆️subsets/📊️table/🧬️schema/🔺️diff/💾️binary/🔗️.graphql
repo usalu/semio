@@ -4,3 +4,9 @@ type SemioTableDiffFrame {
   presence: Int! # bit0=columns, bit1=rows
   payload: String! # opaque base64: present sections only
 }
+
+type SemioTableDiffBinaryFrame {
+  format: Int
+  presence: Int
+  payload: String
+}

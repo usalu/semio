@@ -32,24 +32,44 @@ impl UiBindingsCopy {
         Self { owned: ManuallyDrop::new(OwnedBindings { source, ..Default::default() }), retirement: Default::default(), closing: false, returned: 0 }
     }
 
-    pub fn candidate(&self) -> Option<&crate::UiNodeBindings> { (!self.closing && self.returned & 2 == 0).then_some(&self.owned.candidate) }
-    pub fn source(&self) -> Option<&crate::UiNodeBindings> { (!self.closing && self.returned & 1 == 0).then_some(&self.owned.source) }
-    pub fn candidate_allocated_bytes(&self) -> usize { self.owned.candidate.allocated_bytes() }
-    pub fn source_allocated_bytes(&self) -> usize { self.owned.source.allocated_bytes() }
+    pub fn candidate(&self) -> Option<&crate::UiNodeBindings> {
+        (!self.closing && self.returned & 2 == 0).then_some(&self.owned.candidate)
+    }
+    pub fn source(&self) -> Option<&crate::UiNodeBindings> {
+        (!self.closing && self.returned & 1 == 0).then_some(&self.owned.source)
+    }
+    pub fn candidate_allocated_bytes(&self) -> usize {
+        self.owned.candidate.allocated_bytes()
+    }
+    pub fn source_allocated_bytes(&self) -> usize {
+        self.owned.source.allocated_bytes()
+    }
 
     pub fn next_allocation_bytes(&self) -> Result<usize, &'static str> {
-        if self.closing { return Err("binding copy is closing"); }
-        if self.owned.pending.is_some() || self.is_complete() { return Ok(0); }
+        if self.closing {
+            return Err("binding copy is closing");
+        }
+        if self.owned.pending.is_some() || self.is_complete() {
+            return Ok(0);
+        }
         self.owned.candidate.next_allocation_bytes()
     }
 
-    pub fn is_complete(&self) -> bool { !self.closing && (self.returned != 0 || self.owned.pending.is_none() && self.owned.source.len() == self.owned.candidate.len()) }
+    pub fn is_complete(&self) -> bool {
+        !self.closing && (self.returned != 0 || self.owned.pending.is_none() && self.owned.source.len() == self.owned.candidate.len())
+    }
 
     pub fn advance(&mut self, items: usize, allocation_bytes: usize, copy_bytes: usize) -> Result<UiBindingsCopyProgress, UiFixedListAllocationError> {
         let rejected = |reason| UiFixedListAllocationError { allocated_bytes: 0, reason };
-        if self.closing { return Err(rejected("binding copy is closing")); }
-        if self.is_complete() { return Ok(UiBindingsCopyProgress { complete: true, ..Default::default() }); }
-        if items == 0 { return Ok(UiBindingsCopyProgress::default()); }
+        if self.closing {
+            return Err(rejected("binding copy is closing"));
+        }
+        if self.is_complete() {
+            return Ok(UiBindingsCopyProgress { complete: true, ..Default::default() });
+        }
+        if items == 0 {
+            return Ok(UiBindingsCopyProgress::default());
+        }
         let owned = &mut *self.owned;
         if owned.pending.is_some() {
             let step = owned.candidate.try_place_reserved(&mut owned.pending, copy_bytes).map_err(rejected)?;
@@ -59,36 +79,50 @@ impl UiBindingsCopy {
             let step = owned.candidate.try_reserve_one(allocation_bytes)?;
             return Ok(UiBindingsCopyProgress { progressed: step.progressed, allocated_bytes: step.allocated_bytes, ..Default::default() });
         }
-        if copy_bytes < size_of::<ActionBinding>() { return Ok(UiBindingsCopyProgress::default()); }
+        if copy_bytes < size_of::<ActionBinding>() {
+            return Ok(UiBindingsCopyProgress::default());
+        }
         let binding = owned.source.get(owned.candidate.len()).ok_or_else(|| rejected("binding source ordinal is missing"))?;
-        let Some(binding) = clone_binding_one(binding).map_err(rejected)? else { return Ok(UiBindingsCopyProgress::default()); };
+        let Some(binding) = clone_binding_one(binding).map_err(rejected)? else {
+            return Ok(UiBindingsCopyProgress::default());
+        };
         owned.pending = Some(binding);
         Ok(UiBindingsCopyProgress { progressed: true, copied_bytes: size_of::<ActionBinding>(), ..Default::default() })
     }
 
     pub fn take_completed(&mut self) -> Option<(crate::UiNodeBindings, crate::UiNodeBindings)> {
-        if self.closing || self.returned != 0 || !self.is_complete() { return None; }
+        if self.closing || self.returned != 0 || !self.is_complete() {
+            return None;
+        }
         self.returned = 3;
         Some((std::mem::take(&mut self.owned.source), std::mem::take(&mut self.owned.candidate)))
     }
 
     /// 📤️ Transfers one completed exact root without borrowing a previous child's work grant.
     pub fn take_completed_source_with_grant(&mut self, bytes: usize) -> Option<crate::UiNodeBindings> {
-        if !self.is_complete() || self.returned & 1 != 0 || bytes < size_of::<crate::UiNodeBindings>() { return None; }
+        if !self.is_complete() || self.returned & 1 != 0 || bytes < size_of::<crate::UiNodeBindings>() {
+            return None;
+        }
         self.returned |= 1;
         Some(std::mem::take(&mut self.owned.source))
     }
 
     /// 📤️ Keeps the other root in this owner until its own granted transfer or typed retirement.
     pub fn take_completed_candidate_with_grant(&mut self, bytes: usize) -> Option<crate::UiNodeBindings> {
-        if !self.is_complete() || self.returned & 2 != 0 || bytes < size_of::<crate::UiNodeBindings>() { return None; }
+        if !self.is_complete() || self.returned & 2 != 0 || bytes < size_of::<crate::UiNodeBindings>() {
+            return None;
+        }
         self.returned |= 2;
         Some(std::mem::take(&mut self.owned.candidate))
     }
 
     pub fn close_step(&mut self, items: usize, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
-        if self.terminal_is_empty() { return Ok(UiValueRetirementStep { complete: true, ..Default::default() }); }
-        if items == 0 || bytes == 0 { return Ok(UiValueRetirementStep::default()); }
+        if self.terminal_is_empty() {
+            return Ok(UiValueRetirementStep { complete: true, ..Default::default() });
+        }
+        if items == 0 || bytes == 0 {
+            return Ok(UiValueRetirementStep::default());
+        }
         self.closing = true;
         self.retirement.advance(&mut *self.owned, items, bytes)
     }
@@ -100,7 +134,9 @@ impl UiBindingsCopy {
 
 impl Drop for UiBindingsCopy {
     fn drop(&mut self) {
-        if !self.terminal_is_empty() && !std::thread::panicking() { panic!("binding copy requires exact source, candidate and pending retirement"); }
+        if !self.terminal_is_empty() && !std::thread::panicking() {
+            panic!("binding copy requires exact source, candidate and pending retirement");
+        }
     }
 }
 
@@ -114,7 +150,10 @@ impl UiTypedRetire for OwnedBindings {
             2 => self.source.retire_typed(path, value, bytes)?,
             _ => return Ok(UiValueRetirementStep { complete: true, progressed: true, ..Default::default() }),
         };
-        if step.complete { *field += 1; path.fill(0); }
+        if step.complete {
+            *field += 1;
+            path.fill(0);
+        }
         step.complete = *field == 3;
         Ok(step)
     }

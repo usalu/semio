@@ -5,9 +5,6 @@
   "oneOf": [
     {
       "$ref": "https://semio.tech/schema/app/gis/gis3d/config/mutation/set-camera/schema.json"
-    },
-    {
-      "$ref": "https://semio.tech/schema/app/gis/gis3d/config/mutation/set-locale/schema.json"
     }
   ]
 }

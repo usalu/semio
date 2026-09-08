@@ -35,7 +35,6 @@ pub struct DrawingConfig {
     /// ⏳ Pending bounded trace work units for observable progress.
     pub trace_pointer_pending_work: u64,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -91,7 +90,6 @@ impl Default for DrawingConfig {
             trace_pointer_generation: 0,
             trace_pointer_completed_work: 0,
             trace_pointer_pending_work: 0,
-            locale: "en-US".into(),
         }
     }
 }
@@ -124,8 +122,6 @@ pub enum DrawingConfigMutation {
     SetActiveUtility { utility_id: String },
     #[dsl(key = "trace-pointer-progress")]
     SetTracePointerProgress { generation: u64, completed_work: u64, pending_work: u64 },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
@@ -195,7 +191,6 @@ impl Mutation<DrawingConfig> for DrawingConfigMutation {
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎥️camera", semantic_kind: "camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🛠️active-utility", semantic_kind: "active-utility", display_name: "Set Active Utility", emoji: "🛠️", aggregate_variant: "SetActiveUtility", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📶️trace-pointer-progress", semantic_kind: "trace-pointer-progress", display_name: "Set Trace Pointer Progress", emoji: "📶️", aggregate_variant: "SetTracePointerProgress", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🌐️locale", semantic_kind: "locale", display_name: "Set Locale", emoji: "🌐️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -205,7 +200,6 @@ impl Mutation<DrawingConfig> for DrawingConfigMutation {
             DrawingConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[2],
             DrawingConfigMutation::SetActiveUtility { .. } => &Self::DESCRIPTORS[3],
             DrawingConfigMutation::SetTracePointerProgress { .. } => &Self::DESCRIPTORS[4],
-            DrawingConfigMutation::SetLocale { .. } => &Self::DESCRIPTORS[5],
         }
     }
 
@@ -226,7 +220,6 @@ impl Mutation<DrawingConfig> for DrawingConfigMutation {
                 next.trace_pointer_completed_work = *completed_work;
                 next.trace_pointer_pending_work = *pending_work;
             }
-            DrawingConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         protocol::MutationOutcome::new(next)
     }

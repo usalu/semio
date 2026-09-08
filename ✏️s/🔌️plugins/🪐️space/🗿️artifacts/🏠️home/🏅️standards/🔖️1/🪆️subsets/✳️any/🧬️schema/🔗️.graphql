@@ -4,5 +4,4 @@ type SHomeArtifact {
   schema: String! @state(class: ARTIFACT)
   catalogGeneration: Long! @state(class: ARTIFACT)
   activePanelTab: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }

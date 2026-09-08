@@ -20,30 +20,30 @@
       "x-semio-state": "artifact"
     },
     "objects": {
-      "$ref": "#/$defs/CadObjectsDelta",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadObjectsDelta",
       "x-semio-state": "artifact"
     },
     "buildingObjects": {
-      "$ref": "#/$defs/CadObjectsDelta",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadObjectsDelta",
       "x-semio-state": "artifact"
     },
     "energyObjects": {
-      "$ref": "#/$defs/CadObjectsDelta",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadObjectsDelta",
       "x-semio-state": "artifact"
     },
     "structureClassicObjects": {
-      "$ref": "#/$defs/CadObjectsDelta",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadObjectsDelta",
       "x-semio-state": "artifact"
     },
     "referencesByModelDefinitionId": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "#/$defs/CadReferenceList"
+        "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadReferenceList"
       },
       "x-semio-state": "artifact"
     },
     "nodes": {
-      "$ref": "#/$defs/CadNodesDelta",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadNodesDelta",
       "x-semio-state": "artifact"
     },
     "shapeGeometry": {
@@ -52,7 +52,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/CadGeometry"
+          "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadGeometry"
         }
       ],
       "x-semio-state": "artifact"
@@ -63,7 +63,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/CadGeometry"
+          "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadGeometry"
         }
       ],
       "x-semio-state": "artifact"
@@ -74,7 +74,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/CadGeometry"
+          "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadGeometry"
         }
       ],
       "x-semio-state": "artifact"
@@ -85,7 +85,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/CadGeometry"
+          "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadGeometry"
         }
       ],
       "x-semio-state": "artifact"
@@ -95,11 +95,11 @@
       "x-semio-state": "artifact"
     },
     "selectedObjectIds": {
-      "$ref": "#/$defs/CadStringList",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadStringList",
       "x-semio-state": "presence"
     },
     "selectedNodeIds": {
-      "$ref": "#/$defs/CadStringList",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadStringList",
       "x-semio-state": "presence"
     },
     "activeObjectId": {
@@ -114,7 +114,7 @@
       "x-semio-state": "presence"
     },
     "componentSelection": {
-      "$ref": "#/$defs/CadComponentSelection",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadComponentSelection",
       "x-semio-state": "presence"
     },
     "selectedReferenceModelDefinitionId": {
@@ -245,43 +245,35 @@
       "x-semio-state": "config"
     },
     "camera": {
-      "$ref": "#/$defs/CadCamera",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadCamera",
       "x-semio-state": "config"
     },
     "cameraBuilding": {
-      "$ref": "#/$defs/CadCamera",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadCamera",
       "x-semio-state": "config"
     },
     "cameraEnergy": {
-      "$ref": "#/$defs/CadCamera",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadCamera",
       "x-semio-state": "config"
     },
     "cameraStructureClassic": {
-      "$ref": "#/$defs/CadCamera",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadCamera",
       "x-semio-state": "config"
     },
     "dislocateShape": {
-      "$ref": "#/$defs/CadDislocateOptions",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadDislocateOptions",
       "x-semio-state": "config"
     },
     "dislocateBuilding": {
-      "$ref": "#/$defs/CadDislocateOptions",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadDislocateOptions",
       "x-semio-state": "config"
     },
     "dislocateEnergy": {
-      "$ref": "#/$defs/CadDislocateOptions",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadDislocateOptions",
       "x-semio-state": "config"
     },
     "dislocateStructureClassic": {
-      "$ref": "#/$defs/CadDislocateOptions",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "terminology": {
-      "type": "string",
+      "$ref": "https://semio.tech/schema/s/cad/cad/artifact.json#/$defs/CadDislocateOptions",
       "x-semio-state": "config"
     },
     "contributionsJson": {
@@ -334,173 +326,6 @@
         }
       ],
       "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "CadObject": {
-      "title": "CadObject",
-      "type": "object",
-      "additionalProperties": true,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "CadNode": {
-      "title": "CadNode",
-      "type": "object",
-      "additionalProperties": true,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        }
-      }
-    },
-    "CadReferenceList": {
-      "title": "CadReferenceList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        }
-      }
-    },
-    "CadGeometry": {
-      "title": "CadGeometry",
-      "type": "object",
-      "additionalProperties": true,
-      "properties": {}
-    },
-    "CadCamera": {
-      "title": "CadCamera",
-      "type": "object",
-      "additionalProperties": true,
-      "properties": {}
-    },
-    "CadComponentSelection": {
-      "title": "CadComponentSelection",
-      "type": "object",
-      "additionalProperties": true,
-      "properties": {}
-    },
-    "CadDislocateOptions": {
-      "title": "CadDislocateOptions",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "moveEnabled",
-        "rotateEnabled"
-      ],
-      "properties": {
-        "moveEnabled": {
-          "type": "boolean"
-        },
-        "rotateEnabled": {
-          "type": "boolean"
-        }
-      }
-    },
-    "CadStringList": {
-      "title": "CadStringList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "CadObjectsDelta": {
-      "title": "CadObjectsDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/CadObject"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "CadNodesDelta": {
-      "title": "CadNodesDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "added",
-        "removed",
-        "patched"
-      ],
-      "properties": {
-        "added": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/CadNode"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "patched": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
     }
   }
 }

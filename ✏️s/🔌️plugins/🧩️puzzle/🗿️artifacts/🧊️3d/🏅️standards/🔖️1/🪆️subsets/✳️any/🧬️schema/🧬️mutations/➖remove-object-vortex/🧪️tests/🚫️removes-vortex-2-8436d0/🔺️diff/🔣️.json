@@ -15,9 +15,9 @@
             "objectKind": "object-kind-b",
             "anchor": "fixed",
             "origin": [
-              4.0,
-              0.0,
-              0.0
+              4,
+              0,
+              0
             ],
             "vortices": [],
             "hidden": false,
@@ -64,7 +64,6 @@
   "lodDepthVariable": null,
   "lodManual": null,
   "proximityRadius": null,
-  "locale": null,
   "runtimeExtrasJson": null,
   "hoveredObjectId": null,
   "hoveredVortexFullId": null,

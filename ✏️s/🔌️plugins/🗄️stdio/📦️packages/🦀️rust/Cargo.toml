@@ -16,7 +16,7 @@ role = "plugin"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "🦀️.rs"
+path = "../../🦀️.rs"
 
 [features]
 default = ["plugin-root"]
@@ -75,4 +75,4 @@ serde_json = { workspace = true }
 
 [[test]]
 name = "native_openable_provider"
-path = "🧪️tests/📇️native-openable-provider/🦀️.rs"
+path = "../../🧪️tests/📇️native-openable-provider/🦀️.rs"

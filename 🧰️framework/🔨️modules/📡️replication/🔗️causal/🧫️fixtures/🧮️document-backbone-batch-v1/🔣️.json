@@ -1,6 +1,7 @@
 {
   "schema": "semio.replication.document-backbone-batch.v1",
   "wire": "causal-envelope-batch-v1",
+  "retention": { "maximumBytes": 1048576, "maximumMessages": 64 },
   "cases": [
     {
       "id": "empty-canonical",

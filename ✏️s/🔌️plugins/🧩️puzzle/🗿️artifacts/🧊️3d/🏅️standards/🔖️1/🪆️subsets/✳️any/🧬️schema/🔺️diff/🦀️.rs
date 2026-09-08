@@ -79,8 +79,6 @@ pub struct Puzzle3dDiff {
     #[state(config)]
     pub proximity_radius: Option<f64>,
     #[state(config)]
-    pub locale: Option<String>,
-    #[state(config)]
     pub runtime_extras_json: Option<String>,
     #[state(artifact)]
     pub hovered_object_id: Option<Option<String>>,

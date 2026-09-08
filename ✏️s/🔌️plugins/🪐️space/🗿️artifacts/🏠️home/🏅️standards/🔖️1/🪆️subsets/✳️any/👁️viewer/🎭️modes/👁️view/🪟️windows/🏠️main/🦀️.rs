@@ -68,8 +68,8 @@ fn render_rows(rows: &[crate::HomeSpaceRow], labels: &HomeTableLabels) -> semio_
 /// 👁️ No `SHomeSnapshot` argument: exactly like the editor's own main-window render, Home's table rows
 /// are derived entirely from `HomeConfig.directory` + the live studio catalog, never from the artifact
 /// document itself — see `HomeApp::handle`'s doc comment in the editor for the same observation.
-pub fn render(directory: &store::os_directory::DirectoryReadModel, locale: &str, client_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let labels = semio_framework_plugin::resolve_labels_for_locale::<HomeTableLabels>(locale);
+pub fn render(directory: &store::os_directory::DirectoryReadModel, view_state: &semio_framework_plugin::ViewModel, client_id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let labels = semio_framework_plugin::resolve_labels::<HomeTableLabels>(view_state);
     // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
     // stay sync (called synchronously by `HomeViewer::render`) — bridged via `resolve_ready`.
     let rows = semio_framework_plugin::resolve_ready(crate::home_space_rows(directory, client_id));

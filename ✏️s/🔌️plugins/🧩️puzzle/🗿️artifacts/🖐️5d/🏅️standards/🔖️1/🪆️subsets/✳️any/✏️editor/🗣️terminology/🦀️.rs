@@ -77,18 +77,16 @@ fn puzzle5d_locale(value: &str) -> Option<Locale> {
 }
 
 /// 🗣️ Resolves the German branch only for an explicitly recognized locale.
-pub fn puzzle5d_is_de_locale(config: &Puzzle5dConfig) -> Option<bool> {
-    puzzle5d_locale(config.locale.as_str()).map(|locale| locale == Locale::De)
+pub fn puzzle5d_is_de_locale(view_state: &semio_framework_plugin::ViewModel) -> Option<bool> {
+    Some(view_state.locale == Locale::De)
 }
 
 /// 🗣️ Resolves the active label set from this document's persisted locale/terminology config
 /// (see `Puzzle5dConfig::locale`/`.terminology` — this app VCS's its own axes rather than reading
 /// `ViewModel`, so `resolve_labels::<Puzzle5dLabels>(view_state)` doesn't apply here). Unsupported
 /// BCP-47 or terminology values fail closed.
-pub fn puzzle5d_labels(config: &Puzzle5dConfig) -> Option<&'static Puzzle5dLabels> {
-    let locale = puzzle5d_locale(config.locale.as_str())?;
-    let terminology = Terminology::parse(config.terminology.as_str())?;
-    Some(Puzzle5dLabels::labels(locale, terminology))
+pub fn puzzle5d_labels(view_state: &semio_framework_plugin::ViewModel) -> Option<&'static Puzzle5dLabels> {
+    Some(semio_framework_plugin::resolve_labels::<Puzzle5dLabels>(view_state))
 }
 
 /// 🗺️ Lifts a `Puzzle5dLabels` field accessor into a full manifest-level `LocalizedLabel` matrix —

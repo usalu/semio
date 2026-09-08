@@ -1,10 +1,10 @@
-import { OwnedResidentLedger, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "../../../../🌱️value/💾️resident/🟦️.ts";
+import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "../../../../🌱️value/💾️resident/🟦️.ts";
 
 //#region 🧬️OutputReservation
 export type OwnedActorTurnOutputState = { readonly capacity: number; readonly sequence: string; readonly phase: "reserved" | "pending" | "returned" | "cancelled"; readonly retained: boolean };
 export type OwnedActorTurnOutputOutcome = { readonly kind: "returned" | "refused"; readonly value: unknown };
 export type OwnedActorTurnOutputAdmission = { readonly step: ResidentStep; readonly output: OwnedActorTurnOutput | null };
-type Slot = { readonly owner: object; readonly capacity: number; readonly sequence: bigint; queue: OwnedActorTurnOutputs | null; handle: OwnedActorTurnOutput | null; phase: OwnedActorTurnOutputState["phase"]; response: object | null; outcome: OwnedActorTurnOutputOutcome | null; fault: unknown; previous: Slot | null; next: Slot | null; readonly cell: OwnedResidentAdmission; readonly record: OwnedResidentRecord };
+type Slot = { owner: object | null; readonly capacity: number; readonly sequence: bigint; queue: OwnedActorTurnOutputs | null; handle: OwnedActorTurnOutput | null; phase: OwnedActorTurnOutputState["phase"]; response: object | null; outcome: OwnedActorTurnOutputOutcome | null; fault: unknown; previous: Slot | null; next: Slot | null; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null };
 type AdmissionPhase = "idle" | "preparing" | "cell-held" | "claiming" | "claimed" | "record-admitting" | "record-held" | "installing" | "installed" | "slot-held" | "facade-held" | "published";
 const MINT = Object.freeze({});
 const NO_OUTPUT_FAULT = Symbol("actor-output.no-fault");
@@ -57,14 +57,14 @@ export class OwnedActorTurnOutput {
 
 /** 🗃️ A bounded strong response roster; closing admission never discards returned roots. */
 export class OwnedActorTurnOutputs {
-  readonly #owner: object;
+  #owner: object | null;
   readonly #capacity: number;
   #sequence: bigint;
   #head: Slot | null = null;
   #tail: Slot | null = null;
   #pending = 0;
   #closed = false;
-  readonly #ledger: OwnedResidentLedger;
+  #ledger: OwnedResidentLedger | null;
   #admissionCell: OwnedResidentAdmission | null = null;
   #admissionRecord: OwnedResidentRecord | null = null;
   #admissionPhase: AdmissionPhase = "idle";
@@ -74,7 +74,7 @@ export class OwnedActorTurnOutputs {
     this.#owner = owner; this.#capacity = capacity; this.#sequence = sequence; this.#ledger = ledger;
   }
   static {
-    canRun = slot => slot.queue !== null && !slot.queue.#closed && slot.queue.#admissionFault === NO_OUTPUT_FAULT && (slot.queue.#admissionCell !== slot.cell || slot.queue.#admissionPhase === "published") && slot.record.matchesLiveShell(slot.queue);
+    canRun = slot => slot.queue !== null && !slot.queue.#closed && slot.queue.#admissionFault === NO_OUTPUT_FAULT && (slot.queue.#admissionCell !== slot.cell || slot.queue.#admissionPhase === "published") && slot.record?.matchesLiveShell(slot.queue) === true;
     cancelEmpty = slot => {
       const queue = slot.queue;
       if (!queue || slot.phase !== "reserved" || slot.outcome !== null || slot.fault !== NO_OUTPUT_FAULT) return false;
@@ -86,6 +86,7 @@ export class OwnedActorTurnOutputs {
   peek(): OwnedActorTurnOutput | null { return this.#head?.handle ?? null; }
   reserve(grant: ResidentGrant): OwnedActorTurnOutputAdmission {
     if (!granted(grant, 64)) return admission("blocked", "actor-output.grant");
+    if (this.#closed || !this.#owner || !this.#ledger) return admission("rejected", "actor-output.closed");
     try {
       const ledger = this.#ledger;
       if (this.#admissionPhase === "preparing") {
@@ -154,6 +155,53 @@ export class OwnedActorTurnOutputs {
     }
   }
   beginClose(): void { this.#closed = true; }
+  /** 🚪️ Retires only unused reservations; returned, in-flight and faulted data require their original domain discharge. */
+  closeStep(grant: ResidentGrant): ResidentStep {
+    if (!granted(grant, 64)) return admission("blocked", "actor-output.close-grant").step;
+    if (!this.#closed) return admission("rejected", "actor-output.not-closing").step;
+    if (this.terminalIsEmpty()) return admission("complete", "actor-output.closed").step;
+    if (this.#admissionFault !== NO_OUTPUT_FAULT) return admission("blocked", "actor-output.fault-held").step;
+    const slot = this.#head;
+    if (slot) {
+      if (slot.phase === "pending" || slot.response !== null || slot.outcome !== null || slot.fault !== NO_OUTPUT_FAULT) return admission("blocked", "actor-output.domain-discharge-required").step;
+      if (slot.phase === "reserved") { slot.phase = "cancelled"; return admission("pending", "actor-output.cancel-unused", 64).step; }
+      if (slot.owner !== null || slot.queue !== null || slot.handle !== null) {
+        if (!granted(grant, 128)) return admission("blocked", "actor-output.slot-detachment").step;
+        slot.owner = null; slot.queue = null; slot.handle = null;
+        return admission("pending", "actor-output.slot-detachment", 128).step;
+      }
+    }
+    let cell = slot?.cell ?? this.#admissionCell;
+    if (!cell && this.#admissionPhase === "preparing") {
+      cell = this.#ledger?.preparedAdmission(this) ?? null;
+      if (!cell) return admission("blocked", "actor-output.cell-handoff").step;
+      this.#admissionCell = cell;
+      return admission("pending", "actor-output.cell-observation", 64).step;
+    }
+    if (cell) {
+      if (cell.hasFailure) return admission("blocked", "actor-output.admission-fault").step;
+      const record = slot?.record ?? this.#admissionRecord ?? cell.result?.record ?? null;
+      if (!slot && record !== null && this.#admissionRecord !== record) { this.#admissionRecord = record; return admission("pending", "actor-output.record-observation", 64).step; }
+      if (record?.matchesShell(this)) { record.beginClose(); return record.detach(this, grant); }
+      if (!cell.terminalIsEmpty()) {
+        cell.beginClose();
+        const current = cell.closeStep(grant);
+        return { ...current, kind: current.kind === "complete" ? "pending" : current.kind };
+      }
+      if (!OwnedResidentRetirement.matches(cell.retirement, cell) || record && (!record.terminalIsEmpty() || !OwnedResidentRetirement.matches(record.retirement, record) || record.detachment !== null && !OwnedResidentRecordDetachment.matches(record.detachment, record, this))) return admission("blocked", "actor-output.retirement-proof").step;
+      if (!granted(grant, 256)) return admission("blocked", "actor-output.unlink").step;
+      if (this.#admissionCell === cell) { this.#admissionCell = null; this.#admissionRecord = null; this.#admissionPhase = "idle"; }
+      if (slot) {
+        this.#head = slot.next; if (this.#head) this.#head.previous = null; else this.#tail = null;
+        slot.previous = null; slot.next = null; slot.cell = null; slot.record = null; this.#pending--;
+      }
+      return admission("pending", "actor-output.unlink", 256).step;
+    }
+    if (slot || this.#pending !== 0 || this.#tail !== null || this.#admissionRecord !== null || this.#admissionPhase !== "idle") return admission("blocked", "actor-output.retained-admission").step;
+    this.#owner = null; this.#ledger = null;
+    return admission("complete", "actor-output.closed", 64).step;
+  }
+  terminalIsEmpty(): boolean { return this.#closed && this.#owner === null && this.#ledger === null && this.#head === null && this.#tail === null && this.#pending === 0 && this.#admissionCell === null && this.#admissionRecord === null && this.#admissionPhase === "idle" && this.#admissionFault === NO_OUTPUT_FAULT; }
 }
 //#endregion 🧬️OutputReservation
 

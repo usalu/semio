@@ -18,7 +18,7 @@ impl std::task::Wake for Counter {
 
 #[test]
 fn wal_writer_release_signal_preserves_exact_waits_across_writer_and_backend_reuse() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
     let expected = &fixture["releaseSignal"];
     let counter = Arc::new(Counter(AtomicUsize::new(0)));
     let waker = Waker::from(counter.clone());

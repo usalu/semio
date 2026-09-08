@@ -6,16 +6,16 @@
   "type": "object",
   "properties": {
     "styles": {
-      "$ref": "#/$defs/namedTriple"
+      "$ref": "#/definitions/namedTriple"
     },
     "images": {
-      "$ref": "#/$defs/namedTriple"
+      "$ref": "#/definitions/namedTriple"
     },
     "blocks": {
-      "$ref": "#/$defs/indexedTriple"
+      "$ref": "#/definitions/indexedTriple"
     }
   },
-  "$defs": {
+  "definitions": {
     "indexedTriple": {
       "type": "object",
       "properties": {

@@ -29,6 +29,9 @@ mod pending;
 #[path = "📮️requests/🦀️.rs"]
 pub mod requests;
 
+#[path = "🪟️surfaces/🦀️.rs"]
+pub(crate) mod surface_context;
+
 // 🧬️ Only `wit_bridge` below (component-guest/-extension-guest wasm32-wasip2) consumes these —
 // a plain native build never reaches the WIT-boundary translation code, so unlike `RefCell` these
 // two must be gated identically to `wit_bridge` itself or they warn as unused on native.
@@ -1018,7 +1021,7 @@ pub async fn restore_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runt
         Ok::<(), semio_framework::Fault>(())
     })?;
     for restart in pack.task_restarts().await {
-        let meta = crate::app::ActionMeta { actor: crate::plugin_runtime::instance_actor(runtime, restart.instance).await, instance_id: restart.instance };
+        let meta = crate::app::ActionMeta { actor: crate::plugin_runtime::instance_actor(runtime, restart.instance).await, instance_id: restart.instance, view_state: None };
         let pending = PendingResume { instance: restart.instance, meta, outcome: TaskResumeOutcome::Command(restart.command.clone()) };
         TASK_RESUMES
             .with(|resumes| resumes.borrow_mut().push(pending))
@@ -1368,7 +1371,7 @@ mod wit_bridge {
             // 🎬️ `wit-flip` (26/08/20): UI intents no longer masquerade as `app-command` — see kernel
             // `Event::UiIntent`'s own doc.
             W::UiIntent(payload) => Event::UiIntent { instance: semio_framework::kernel::PluginInstanceId(payload.instance.to_string()), intent: payload.intent },
-            W::SurfaceVisible(payload) => Event::SurfaceVisible { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface) },
+            W::SurfaceVisible(payload) => Event::SurfaceVisible { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), body_key: payload.body_key, view_state: payload.view_state },
             W::SurfaceHidden(payload) => Event::SurfaceHidden { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface) },
             W::SurfaceResized(payload) => Event::SurfaceResized { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), width: payload.width, height: payload.height },
             W::PatchAck(payload) => Event::PatchAck { receipt: wit_patch_receipt_to_kernel(payload.receipt), surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), revision: payload.revision },

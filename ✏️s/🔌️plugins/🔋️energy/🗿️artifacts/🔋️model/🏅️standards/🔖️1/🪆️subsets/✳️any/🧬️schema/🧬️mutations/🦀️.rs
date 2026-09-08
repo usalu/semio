@@ -1050,7 +1050,7 @@ pub const DIRECTORIES: &[(&str, &str)] = &[
     ("rename-plant-loop", "📛️rename-plant-loop"),
     ("change-plant-loop-type", "♻️change-plant-loop-type"),
     ("change-plant-loop-supply-temperature", "☕️change-plant-loop-supply-temperature"),
-    ("change-plant-loop-return-temperature", "🧫️change-plant-loop-return-temperature"),
+    ("change-plant-loop-return-temperature", "🫖️change-plant-loop-return-temperature"),
     ("change-plant-loop-design-flow", "🚤️change-plant-loop-design-flow"),
     ("add-plant-loop-equipment", "🔩️add-plant-loop-equipment"),
     ("remove-plant-loop-equipment", "⚙️remove-plant-loop-equipment"),

@@ -38,7 +38,7 @@ pub use document_index::{DirectoryIndexedDocumentViewV1, DocumentIndexEntryV1};
 #[path = "🌐️browser-actor/🦀️.rs"]
 pub mod browser_actor;
 pub use browser_actor::{
-    DOCUMENT_BROWSER_ACTOR_INTERFACES, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, DocumentBrowserActorByteLengthV1, DocumentBrowserActorErrorV1, DocumentBrowserActorSourceV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1,
+    DocumentBrowserActorByteLengthV1, DocumentBrowserActorErrorV1, DocumentBrowserActorSourceV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1, DOCUMENT_BROWSER_ACTOR_INTERFACES, DOCUMENT_BROWSER_ACTOR_MAX_BYTES,
 };
 
 /// 🔐️ Domain prefix for the one canonical descriptor digest encoding.
@@ -2260,7 +2260,11 @@ impl GisMapInferencePortPhaseV1 {
 
     /// 🔊 Work in flight announces politely; every terminal asserts.
     pub const fn aria_role(self) -> &'static str {
-        if self.terminal() { "alert" } else { "status" }
+        if self.terminal() {
+            "alert"
+        } else {
+            "status"
+        }
     }
 
     /// 🗣 Explicit English and German text; there is no default language.
@@ -2577,15 +2581,26 @@ pub struct ArtifactFrontier {
 impl ArtifactFrontier {
     /// 🌱️ Empty history is exact, scope-bound, and never represented by an invented edit.
     pub fn is_genesis_for(&self, scope: &DocumentScope) -> bool {
-        valid_document_open_text(&scope.space_id, DOCUMENT_OPEN_ID_MAX_BYTES) && valid_document_open_text(&scope.document_id, DOCUMENT_OPEN_ID_MAX_BYTES)
-            && self.document_id == scope.document_id && self.head_edit_ordinal == 0 && self.head_edit_id.is_empty() && self.last_commit_seq == 0 && self.chain_hash.0 == [0; 32]
+        valid_document_open_text(&scope.space_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+            && valid_document_open_text(&scope.document_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+            && self.document_id == scope.document_id
+            && self.head_edit_ordinal == 0
+            && self.head_edit_id.is_empty()
+            && self.last_commit_seq == 0
+            && self.chain_hash.0 == [0; 32]
     }
 
     /// 🌿️ An edited frontier has positive counters and a real authenticated history head.
     pub fn is_edited_for(&self, scope: &DocumentScope) -> bool {
-        valid_document_open_text(&scope.space_id, DOCUMENT_OPEN_ID_MAX_BYTES) && self.document_id == scope.document_id && valid_document_open_text(&self.document_id, DOCUMENT_OPEN_ID_MAX_BYTES)
-            && valid_document_open_text(&self.head_edit_id, DOCUMENT_OPEN_ID_MAX_BYTES) && self.head_edit_ordinal > 0 && self.head_edit_ordinal <= DOCUMENT_OPEN_MAX_SAFE_INTEGER
-            && self.last_commit_seq > 0 && self.last_commit_seq <= DOCUMENT_OPEN_MAX_SAFE_INTEGER && self.chain_hash.0 != [0; 32]
+        valid_document_open_text(&scope.space_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+            && self.document_id == scope.document_id
+            && valid_document_open_text(&self.document_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+            && valid_document_open_text(&self.head_edit_id, DOCUMENT_OPEN_ID_MAX_BYTES)
+            && self.head_edit_ordinal > 0
+            && self.head_edit_ordinal <= DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            && self.last_commit_seq > 0
+            && self.last_commit_seq <= DOCUMENT_OPEN_MAX_SAFE_INTEGER
+            && self.chain_hash.0 != [0; 32]
     }
 }
 

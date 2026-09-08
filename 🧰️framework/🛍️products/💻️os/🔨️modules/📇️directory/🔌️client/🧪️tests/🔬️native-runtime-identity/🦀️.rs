@@ -1,3 +1,3 @@
-mod runtime_identity_tests {
-    include!("../../🪪️runtime/🧪️tests/🦀️.rs");
-}
+#[cfg(test)]
+#[path = "../../🪪️runtime/🧪️tests/🪪️runtime/🦀️.rs"]
+mod runtime_identity_tests;

@@ -39,12 +39,6 @@ impl RewritingDiff {
             if let Some(value) = &self.before_pane_camera {
                 next.before_pane_camera = value.clone();
             }
-            if let Some(value) = self.reorganize_epoch {
-                next.reorganize_epoch = value;
-            }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -117,8 +111,11 @@ impl MutationDiff<RewritingSnapshot> for RewritingDiff {
         merge_map_delta(&mut self.rule_layout, other.rule_layout);
         merge_map_delta(&mut self.lod_mode_by_window, other.lod_mode_by_window);
         take!(before_pane_camera);
-        take!(reorganize_epoch);
-        take!(locale);
     }
 }
 //#endregion 🔖️Apply
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type RewritingDiffText = String;
+//#endregion 🚚️Carrier

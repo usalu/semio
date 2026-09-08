@@ -129,7 +129,6 @@ semio_framework_plugin::app_commands! {
     /// 🎯️ `SourcingCurationApp::Command` — the SOLE dispatch surface for curation's own behavior, assembled
     /// from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
     /// (`command_id()`) and the `dsl` wire keyword (the kebab-case `#[dsl(key = ..)]` the codec uses) —
-    /// they are genuinely different vocabularies, and `setLocale`/`locale` is the row that proves it.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
     pub enum SourcingCurationCommand for CurationSnapshot, SourcingMutation, SourcingCurationConfig, SourcingCurationConfigMutation {
         "setDocument" as "document-json" => set_artifact_json::SetArtifactJson,
@@ -145,7 +144,6 @@ semio_framework_plugin::app_commands! {
         "setFilterTypology" as "filter-typology" => set_filter_typology::SetFilterTypology,
         "setFilterMinAvailability" as "filter-min-availability" => set_filter_min_availability::SetFilterMinAvailability,
         "sortTable" as "sort-table" => sort_table::SortTable,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "setContributions" as "contributions" => set_contributions::SetContributions,
     }
 }
@@ -153,7 +151,6 @@ semio_framework_plugin::app_commands! {
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use crate::editor::sourcing::commands::set_contributions;
-use crate::editor::sourcing::commands::set_locale;
 use crate::editor::sourcing::commands::{curation_add, curation_remove, curation_set_count, drop_on_curated, drop_on_pool};
 use crate::editor::sourcing::commands::{set_active_example, set_artifact_json, stock_from_catalogue};
 use crate::editor::sourcing::commands::{set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table};
@@ -207,7 +204,6 @@ fn sourcing_curation_command_from_action(action: &str, args: Option<&protocol::D
         "setFilterTypology" => SourcingCurationCommand::SetFilterTypology(set_filter_typology::SetFilterTypology { path: str_field("path").or_else(|| text_of("value")).unwrap_or_default() }),
         "setFilterMinAvailability" => SourcingCurationCommand::SetFilterMinAvailability(set_filter_min_availability::SetFilterMinAvailability { delta: f64_field("delta"), value: f64_field("value") }),
         "sortTable" => SourcingCurationCommand::SortTable(sort_table::SortTable { column_id: str_field("columnId").unwrap_or_default(), direction: str_field("direction").unwrap_or_default() }),
-        "setLocale" => SourcingCurationCommand::SetLocale(set_locale::SetLocale { value: text_of("value").unwrap_or_default() }),
         "setContributions" => SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: json_field("json") }),
         other => return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{other}' is not a sourcing curation command"))),
     })
@@ -262,6 +258,7 @@ fn sourcing_curation_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<SourcingCurationApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation, NoDraftMutation>, Fault> {
     if !SOURCING_CURATION_BOUNDED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("sourcing-curation-retained-route-mismatch")); }
@@ -374,7 +371,7 @@ fn sourcing_curation_config_bytes(config: &SourcingCurationConfig) -> Result<usi
         .saturating_add(config.filters.module_ids.iter().map(String::len).sum::<usize>())
         .saturating_add(config.filters.typology_path.iter().map(String::len).sum::<usize>())
         .saturating_add(config.filters.sort.as_ref().map_or(0, |sort| sort.column_id.len()))
-        .saturating_add(config.locale.len())
+
         .saturating_add(config.contributions_json.len());
     if bytes > SOURCING_CURATION_CONFIG_TEXT_BYTES { return Err("Sourcing Config base exceeds its encoded text envelope".into()); }
     let bytes = bytes.saturating_add(size_of::<SourcingCurationConfig>())
@@ -385,7 +382,7 @@ fn sourcing_curation_config_bytes(config: &SourcingCurationConfig) -> Result<usi
 
 fn sourcing_curation_config_mutation_footprint(mutation: &SourcingCurationConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let (work_items, retained_bytes) = match mutation {
-        SourcingCurationConfigMutation::Snapshot { .. } | SourcingCurationConfigMutation::SetLocale { .. } => return Err("Sourcing Config preparation rejects a non-retained mutation".into()),
+        SourcingCurationConfigMutation::Snapshot { .. } => return Err("Sourcing Config preparation rejects a non-retained mutation".into()),
         SourcingCurationConfigMutation::SetFilterQuery { value } | SourcingCurationConfigMutation::SetContributions { json: value } => (1, value.len()),
         SourcingCurationConfigMutation::SetFilterModules { module_ids } => {
             if module_ids.len() > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS { return Err("Sourcing Config module filter exceeds its retained item envelope".into()); }
@@ -947,7 +944,6 @@ impl ArtifactEditor for SourcingCurationApp {
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
-    /// `app_commands!`'s generated `command_id()`. `setLocale` has no manifest declaration (host-pushed,
     /// not a user-facing action).
     fn command_id(command: &SourcingCurationCommand) -> &'static str {
         command.command_id()
@@ -970,17 +966,17 @@ impl ArtifactEditor for SourcingCurationApp {
         command: &SourcingCurationCommand,
         doc: &ArtifactView<'_, CurationSnapshot>,
         cfg: &ConfigView<'_, SourcingCurationConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let snapshot = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = sourcing_curation_labels(config);
+        let labels = sourcing_curation_labels(view_state);
         match body_key {
             pool::SOURCING_CURATION_BODY_POOL => pool::render(snapshot, config, labels).map(semio_framework_plugin::built_to_component_tree),
             curated::SOURCING_CURATION_BODY_CURATED => curated::render(snapshot, labels).map(semio_framework_plugin::built_to_component_tree),
@@ -1134,7 +1130,6 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
                 .default_value(&DEMO_STOCK_EXAMPLE_ID)],
             )
             // 🎯️ Typed channel surface — this app's typed commands are dispatched via
-            // `SourcingCurationCommand`'s `OpBinary` codec directly (`setLocale` deliberately left
             // undeclared above, mirroring `flow_ui`: `VcsArtifactApp`'s kind-discipline check only runs
             // when the registry actually declares a command's id).
             .io(sourcing_curation_io())
@@ -1151,7 +1146,6 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .action_interactive_job("setFilterTypology", InteractiveJobClassification::Migrated)
             .action_interactive_job("setFilterMinAvailability", InteractiveJobClassification::Migrated)
             .action_interactive_job("sortTable", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::ForbiddenFromUi)
             .build_definition()
 }
 //#endregion 🔖️Manifest

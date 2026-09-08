@@ -21,7 +21,7 @@
       "maximum": 65535
     },
     "drawing": {
-      "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/artifact.json#/$defs/drawing"
+      "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/artifact.json#/$defs/DwgLogicalDrawing"
     },
     "header": {
       "$ref": "https://semio.tech/schema/s/stdio/dwg/ac1024/any/artifact.json#/$defs/headerVariables"

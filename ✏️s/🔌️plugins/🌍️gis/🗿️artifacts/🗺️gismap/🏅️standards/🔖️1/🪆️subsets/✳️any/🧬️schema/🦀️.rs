@@ -47,8 +47,6 @@ pub struct GisMapArtifact {
     pub vector_style: String,
     #[state(config)]
     pub lod_mode: String,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔹Artifact
 
@@ -66,7 +64,6 @@ impl Default for GisMapArtifact {
             render_mode: "combined".into(),
             vector_style: "colored".into(),
             lod_mode: "automatic".into(),
-            locale: "en-US".into(),
         }
     }
 }

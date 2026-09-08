@@ -7,20 +7,19 @@
  * Usage: bun <this> [--json <out>]
  */
 import { writeFileSync } from "node:fs";
-import { inventorySchemaScopes, loadCatalogTaxonomy } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { inventorySchemaScopes, loadCatalogTaxonomy } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import {
   schemaExportCompletenessDiagnostics,
   schemaFixtureIsolationDiagnostics,
   schemaOwnerEligibilityDiagnostics,
   schemaPlacementDiagnostics,
   schemaTreeFiles,
-  inertSchemaDataPaths,
   normativeSchemaFormat,
   scopeNormativeDocuments,
   type SchemaDiagnostic,
-} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 
-const repoRoot = new URL("../../../../../../", import.meta.url).pathname.replace(/\/$/u, "");
+const repoRoot = new URL("../../../../../../../", import.meta.url).pathname.replace(/\/$/u, "");
 const MUTATIONS = "/🧬️mutations/";
 
 const mine = (path: string | undefined | null): boolean => typeof path === "string" && path.startsWith("✏️s/") && !path.includes(MUTATIONS);
@@ -36,8 +35,7 @@ for (const [id, scope] of Object.entries(catalog.scopes)) {
   void scopeNormativeDocuments(scope, normative);
 }
 const files = schemaTreeFiles(repoRoot, "✏️s");
-const inert = inertSchemaDataPaths(repoRoot, files);
-for (const entry of [...schemaPlacementDiagnostics(repoRoot, files, inert), ...schemaOwnerEligibilityDiagnostics(repoRoot, files), ...schemaFixtureIsolationDiagnostics(repoRoot, files, inert)]) {
+for (const entry of [...schemaPlacementDiagnostics(repoRoot, files), ...schemaOwnerEligibilityDiagnostics(repoRoot, files), ...schemaFixtureIsolationDiagnostics(repoRoot, files)]) {
   if (mine(entry.path)) found.push(entry);
 }
 

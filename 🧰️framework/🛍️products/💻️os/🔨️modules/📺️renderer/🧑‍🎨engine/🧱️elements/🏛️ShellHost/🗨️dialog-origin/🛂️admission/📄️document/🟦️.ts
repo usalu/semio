@@ -35,14 +35,11 @@ export async function runDocumentOpeningAttemptV1(port: DocumentOpeningAttemptV1
   let attaching = false;
   try {
     if (!Number.isFinite(port.deadlineMs) || port.deadlineMs <= 0) throw new Error("invalid document opening deadline");
-    await Promise.race([
-      port.socket(),
-      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("socket actor deadline exceeded")), port.deadlineMs); }),
-    ]);
-    if (timer !== undefined) { clearTimeout(timer); timer = undefined; }
+    const deadline = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("document opening deadline exceeded")), port.deadlineMs); });
+    await Promise.race([port.socket(), deadline]);
     if (!port.current()) return false;
     attaching = true;
-    await port.attach();
+    await Promise.race([port.attach(), deadline]);
     if (!port.current()) return false;
     port.commit();
     committed = true;
@@ -62,7 +59,7 @@ export async function runDocumentOpeningAttemptV1(port: DocumentOpeningAttemptV1
 /** 🧵️ Orders physical attachment and retirement for one exact plugin app instance. */
 export class DocumentAttachmentLaneV1 {
   #tail: Promise<unknown> = Promise.resolve();
-  #desired: string | null = null;
+  #desired: Readonly<{ owner: string }> | null = null;
   #attached: string | null = null;
   #pending = 0;
   readonly #detach: () => Promise<void>;
@@ -74,13 +71,14 @@ export class DocumentAttachmentLaneV1 {
   drain(): Promise<void> { return this.#tail.then(() => {}); }
 
   attach(owner: string, current: () => boolean, apply: () => Promise<void>): Promise<void> {
-    this.#desired = owner;
+    const intent = { owner };
+    this.#desired = intent;
     return this.#append(async () => {
-      if (this.#desired !== owner || !current()) return;
+      if (this.#desired !== intent || !current()) return;
       if (this.#attached !== null && this.#attached !== owner) {
         await this.#detach();
         this.#attached = null;
-        if (this.#desired !== owner || !current()) return;
+        if (this.#desired !== intent || !current()) return;
       }
       this.#attached = owner;
       await apply();
@@ -88,7 +86,7 @@ export class DocumentAttachmentLaneV1 {
   }
 
   close(owner: string): Promise<void> {
-    if (this.#desired === owner) this.#desired = null;
+    if (this.#desired?.owner === owner) this.#desired = null;
     return this.#append(async () => {
       if (this.#attached !== owner) return;
       await this.#detach();
@@ -97,16 +95,23 @@ export class DocumentAttachmentLaneV1 {
   }
 
   replace(owner: string, current: () => boolean, apply: () => Promise<void>): Promise<void> {
-    this.#desired = owner;
+    const intent = { owner };
+    this.#desired = intent;
     return this.#append(async () => {
-      if (this.#desired !== owner || !current()) return;
+      if (this.#desired !== intent || !current()) return;
       if (this.#attached !== null) {
         await this.#detach();
         this.#attached = null;
-        if (this.#desired !== owner || !current()) return;
+        if (this.#desired !== intent || !current()) return;
       }
       this.#attached = owner;
-      await apply();
+      try { await apply(); }
+      catch (error) {
+        await this.#detach();
+        this.#attached = null;
+        if (this.#desired === intent) this.#desired = null;
+        throw error;
+      }
     });
   }
 
@@ -115,6 +120,52 @@ export class DocumentAttachmentLaneV1 {
     const result = this.#tail.then(operation, operation).finally(() => { this.#pending--; });
     this.#tail = result.catch(() => {});
     return result;
+  }
+}
+
+/** 🧊️ Retains one active and one latest cold pair; superseded work cannot publish a binding. */
+export class LatestDocumentReplacementV1<Value> {
+  #desired: object | null = null;
+  #active: object | null = null;
+  #running: Promise<void> | null = null;
+  #next: { identity: object; value: Value; apply(value: Value, current: () => boolean): Promise<void>; resolve(value: boolean): void; reject(error: unknown): void } | null = null;
+
+  get pending(): boolean { return this.#active !== null || this.#next !== null; }
+
+  replace(value: Value, apply: (value: Value, current: () => boolean) => Promise<void>): Promise<boolean> {
+    const identity = {};
+    this.#desired = identity;
+    this.#next?.resolve(false);
+    const result = new Promise<boolean>((resolve, reject) => { this.#next = { identity, value, apply, resolve, reject }; });
+    this.#start();
+    return result;
+  }
+
+  invalidate(): void {
+    this.#desired = null;
+    this.#next?.resolve(false);
+    this.#next = null;
+  }
+
+  #start(): void {
+    if (this.#running !== null || this.#next === null) return;
+    this.#running = Promise.resolve().then(async () => {
+      while (this.#next !== null) {
+        const operation = this.#next;
+        this.#next = null;
+        this.#active = operation.identity;
+        const current = () => this.#desired === operation.identity;
+        try {
+          await operation.apply(operation.value, current);
+          this.#active = null;
+          operation.resolve(current());
+        } catch (error) {
+          this.#active = null;
+          if (current()) operation.reject(error);
+          else operation.resolve(false);
+        }
+      }
+    }).finally(() => { this.#running = null; this.#start(); });
   }
 }
 

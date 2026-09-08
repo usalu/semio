@@ -23,5 +23,4 @@ type RemodelingConfig {
   frameCursor: RemodelingFrameCursor! @state(class: CONFIG)
   reportTable: String! @state(class: CONFIG)
   activeUtilityId: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }

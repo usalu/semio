@@ -53,11 +53,10 @@ pub mod world_pointer_down {
         payload: &WorldPointerDown,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
-        let config = cfg.snapshot;
-        let utility = config.active_utility();
+        let utility = ctx.active_utility()?;
         if utility == "select" {
             return Ok(Emit::default());
         }
@@ -93,14 +92,14 @@ pub mod world_face_drag_end {
         payload: &WorldFaceDragEnd,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
+        ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
-        if config.active_utility() != "select" {
+        if ctx.active_utility()? != "select" {
             return Ok(Emit::default());
         }
-        match process3d_step_from_face_drag(payload.normal, payload.start_point, payload.distance, payload.face_extent, process3d_labels(config)) {
+        match process3d_step_from_face_drag(payload.normal, payload.start_point, payload.distance, payload.face_extent, process3d_labels(ctx.view_state()?)) {
             Some(step) => Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), ..Default::default() }),
             None => Ok(Emit::default()),
         }

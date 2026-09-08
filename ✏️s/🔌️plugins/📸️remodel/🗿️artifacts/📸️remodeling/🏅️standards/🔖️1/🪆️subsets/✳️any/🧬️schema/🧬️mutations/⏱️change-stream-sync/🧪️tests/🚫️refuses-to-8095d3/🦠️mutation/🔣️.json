@@ -1,5 +1,5 @@
 {
   "mutation": "changeStreamSync",
   "id": "orbit-absent",
-  "newSyncOffsetMs": 12.0
+  "newSyncOffsetMs": 12
 }

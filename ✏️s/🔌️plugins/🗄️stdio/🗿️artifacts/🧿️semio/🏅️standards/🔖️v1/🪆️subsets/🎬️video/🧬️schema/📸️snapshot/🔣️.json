@@ -13,83 +13,88 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "title": "SemioVideoStream",
-        "type": "object",
-        "properties": {
-          "kind": {
-            "enum": [
-              "video",
-              "audio",
-              "subtitle"
-            ]
-          },
-          "codec": {
-            "type": "string"
-          },
-          "width": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "height": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "rate": {
-            "title": "SemioRational",
-            "type": "object",
-            "properties": {
-              "num": {
-                "type": "integer"
-              },
-              "den": {
-                "type": "integer"
-              }
-            },
-            "required": [
-              "num",
-              "den"
-            ]
-          },
-          "samples": {
-            "type": "array",
-            "items": {
-              "title": "SemioVideoSample",
-              "type": "object",
-              "properties": {
-                "pts": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "key": {
-                  "type": "boolean"
-                },
-                "data": {
-                  "type": "string",
-                  "contentEncoding": "hex",
-                  "description": "opaque compressed payload"
-                }
-              },
-              "required": [
-                "pts",
-                "key",
-                "data"
-              ]
-            }
-          }
-        },
-        "required": [
-          "kind",
-          "codec",
-          "width",
-          "height",
-          "rate",
-          "samples"
-        ]
+        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/video/snapshot.json#/$defs/SemioVideoStream"
       }
     }
   },
   "required": [
     "schema",
     "streams"
-  ]
+  ],
+  "$defs": {
+    "SemioVideoStream": {
+      "title": "SemioVideoStream",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "video",
+            "audio",
+            "subtitle"
+          ]
+        },
+        "codec": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rate": {
+          "title": "SemioRational",
+          "type": "object",
+          "properties": {
+            "num": {
+              "type": "integer"
+            },
+            "den": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "num",
+            "den"
+          ]
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "title": "SemioVideoSample",
+            "type": "object",
+            "properties": {
+              "pts": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "string",
+                "contentEncoding": "hex",
+                "description": "opaque compressed payload"
+              }
+            },
+            "required": [
+              "pts",
+              "key",
+              "data"
+            ]
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "codec",
+        "width",
+        "height",
+        "rate",
+        "samples"
+      ]
+    }
+  }
 }

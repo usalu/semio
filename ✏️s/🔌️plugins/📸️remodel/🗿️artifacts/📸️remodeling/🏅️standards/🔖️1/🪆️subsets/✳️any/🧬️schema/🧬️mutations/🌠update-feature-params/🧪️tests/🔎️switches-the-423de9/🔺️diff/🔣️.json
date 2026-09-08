@@ -29,7 +29,7 @@
     },
     "sfm": {
       "ransacIterations": 1000,
-      "ransacThresholdPx": 2.0,
+      "ransacThresholdPx": 2,
       "minTrackLength": 3,
       "baMaxIterations": 50,
       "robustLoss": "huber",
@@ -43,8 +43,8 @@
       "maxPoints": 500000
     },
     "mesh": {
-      "tsdfVoxelSizeMm": 5.0,
-      "tsdfTruncationMm": 20.0,
+      "tsdfVoxelSizeMm": 5,
+      "tsdfTruncationMm": 20,
       "decimateTargetTriangles": 200000,
       "smoothingIterations": 2,
       "textureEnabled": true,
@@ -67,7 +67,7 @@
       "originAlt": null,
       "gsdM": 0.0625,
       "dsmCellM": 0.125,
-      "dtmFilterRadiusM": 2.0,
+      "dtmFilterRadiusM": 2,
       "orthoMaxPx": 4096
     }
   },
@@ -79,6 +79,5 @@
   "reportTable": null,
   "frameCursor": null,
   "camera": null,
-  "layers": null,
-  "locale": null
+  "layers": null
 }

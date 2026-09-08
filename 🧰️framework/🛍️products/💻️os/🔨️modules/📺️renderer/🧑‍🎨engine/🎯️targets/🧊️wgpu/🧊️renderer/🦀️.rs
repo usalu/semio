@@ -4,13 +4,7 @@ extern crate semio_framework_async as wasm_bindgen_futures;
 use ui_wgpu::wgpu::Mesh3dItem;
 
 #[cfg(test)]
-fn collect_fixture_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
-    let mut actions = Vec::new();
-    while let Some(action) = input.take_action_step().expect("fixture action authority remains live") {
-        actions.push(action.into_descriptor().expect("bounded fixture action materializes"));
-    }
-    actions
-}
+include!("../../../🧪️tests/🧊️wgpu-renderer-standalone/🦀️.rs");
 
 // 🧊️ Raw wgpu WASM renderer for declarative framework UiNode trees.
 //
@@ -3573,6 +3567,8 @@ pub(crate) mod kernel_runtime {
 
     struct QueuedKernelEvent {
         surface_visible: Option<String>,
+        surface_body_key: Option<String>,
+        surface_view_state: Option<Vec<u8>>,
     }
 
     impl QueuedKernelEvent {
@@ -3582,7 +3578,7 @@ pub(crate) mod kernel_runtime {
                 return Err(RejectedKernelEvents { events });
             }
             match events.pop_front().expect("one queued event is present") {
-                Event::SurfaceVisible { surface } => Ok(Self { surface_visible: Some(surface) }),
+                Event::SurfaceVisible { surface, body_key, view_state } => Ok(Self { surface_visible: Some(surface), surface_body_key: Some(body_key), surface_view_state: Some(view_state) }),
                 rejected => {
                     events.push_front(rejected);
                     Err(RejectedKernelEvents { events })
@@ -3591,22 +3587,38 @@ pub(crate) mod kernel_runtime {
         }
 
         fn into_event(mut self) -> Event {
-            Event::SurfaceVisible { surface: self.surface_visible.take().expect("queued surface-visible event is present") }
+            Event::SurfaceVisible {
+                surface: self.surface_visible.take().expect("queued surface-visible surface is present"),
+                body_key: self.surface_body_key.take().expect("queued surface-visible body key is present"),
+                view_state: self.surface_view_state.take().expect("queued surface-visible view state is present"),
+            }
         }
 
         fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-            let Some(length) = self.surface_visible.as_ref().map(String::len) else {
-                return (true, 0, 0);
-            };
+            if let Some(length) = self.surface_visible.as_ref().map(String::len) {
+                if length > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                drop(self.surface_visible.take().expect("queued surface-visible surface is present"));
+                return (self.remaining_bytes() == 0, 1, length);
+            }
+            if let Some(length) = self.surface_body_key.as_ref().map(String::len) {
+                if length > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                drop(self.surface_body_key.take().expect("queued surface-visible body key is present"));
+                return (self.remaining_bytes() == 0, 1, length);
+            }
+            let Some(length) = self.surface_view_state.as_ref().map(Vec::len) else { return (true, 0, 0) };
             if length > maximum_bytes {
                 return (false, 0, 0);
             }
-            drop(self.surface_visible.take().expect("queued surface-visible event is present"));
+            drop(self.surface_view_state.take().expect("queued surface-visible view state is present"));
             (true, 1, length)
         }
 
         fn remaining_bytes(&self) -> usize {
-            self.surface_visible.as_ref().map_or(0, String::len)
+            self.surface_visible.as_ref().map_or(0, String::len) + self.surface_body_key.as_ref().map_or(0, String::len) + self.surface_view_state.as_ref().map_or(0, Vec::len)
         }
     }
 
@@ -9713,7 +9725,7 @@ type RuntimeCompletion = runtime_mailbox_core::Completion<RuntimeApply>;
 type RuntimeCompletionQueue = runtime_mailbox_core::BoundedCompletionQueue<RuntimeApply, RUNTIME_COMPLETION_CAPACITY>;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/📥️enqueue/🧪️tests/🦀️.rs"]
+#[path = "../../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/📥️enqueue/🧪️tests/📥️enqueue/🦀️.rs"]
 mod runtime_publication_tests;
 
 fn enqueue_runtime_completion(completions: &Mutex<RuntimeCompletionQueue>, presentation: &RuntimePresentationAuthority, waker: &Mutex<Option<RuntimeHostWaker>>, completion: RuntimeCompletion) -> bool {
@@ -12739,16 +12751,7 @@ impl AppPresenter {
     }
 }
 
-#[cfg(test)]
-#[test]
-fn realize_fault_remains_scheduled_until_the_aborted_cursor_is_terminal() {
-    let glue = include_str!("🦀️.rs");
-    let native = include_str!("../🪟️winit-app/🦀️.rs");
-    assert!(glue.contains("cursor.phase = AppPresentPhase::Aborted;\n                            if self.retained_fault.is_none()"));
-    assert!(glue.contains("return Ok(AppPresentStep::Pending);"));
-    assert!(native.contains("if self.presenter.has_pending_presentation()"));
-    assert!(native.contains("self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);"));
-}
+
 
 /// 🧪️ P3c: `self_weak` was the only field that made `AppRuntime` definitionally `Rc<RefCell<_>>`-owned
 /// (see `AppHandle`'s own doc comment above). With it gone, this assertion lets the compiler — not a
@@ -13922,34 +13925,7 @@ impl store::FromValue for NativeSocketProbeMutation {
 /// reaching an assertion at all proves the cycle is gone, and the fixture pins the exact wire shape
 /// so the cure cannot silently change the encoding. `serde_json` is the independent third-party
 /// oracle — the first-party `ToValue` tree must equal what it serializes for the same values.
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[test]
-fn native_socket_probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third_party_serializer() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️native-socket-probe-codec.json")).expect("language-neutral codec fixture parses");
-    let probe = &fixture["nativeSocketProbeCodec"];
-    let value = probe["value"].as_str().expect("fixture value is a string").to_string();
-    let snapshot = NativeSocketProbeSnapshot(value.clone());
-    let diff = NativeSocketProbeDiff(value.clone());
-    let mutation = NativeSocketProbeMutation::Set(value);
 
-    assert_eq!(serde_json::Value::from(store::ToValue::to_value(&snapshot)), probe["snapshotEncoding"]);
-    assert_eq!(serde_json::Value::from(store::ToValue::to_value(&diff)), probe["diffEncoding"]);
-    assert_eq!(serde_json::Value::from(store::ToValue::to_value(&mutation)), probe["mutationEncoding"]);
-    assert_eq!(serde_json::to_value(&snapshot).expect("serde oracle"), probe["snapshotEncoding"]);
-    assert_eq!(serde_json::to_value(&diff).expect("serde oracle"), probe["diffEncoding"]);
-    assert_eq!(serde_json::to_value(&mutation).expect("serde oracle"), probe["mutationEncoding"]);
-
-    assert_eq!(<NativeSocketProbeSnapshot as store::FromValue>::from_value(store::ToValue::to_value(&snapshot)).expect("snapshot round trip"), snapshot);
-    assert_eq!(<NativeSocketProbeDiff as store::FromValue>::from_value(store::ToValue::to_value(&diff)).expect("diff round trip"), diff);
-    assert_eq!(<NativeSocketProbeMutation as store::FromValue>::from_value(store::ToValue::to_value(&mutation)).expect("mutation round trip"), mutation);
-
-    for rejected in probe["rejectedSnapshotEncodings"].as_array().expect("fixture snapshot rejections") {
-        assert!(<NativeSocketProbeSnapshot as store::FromValue>::from_value(store::DslValue::from(rejected)).is_err(), "snapshot must reject {rejected}");
-    }
-    for rejected in probe["rejectedMutationEncodings"].as_array().expect("fixture mutation rejections") {
-        assert!(<NativeSocketProbeMutation as store::FromValue>::from_value(store::DslValue::from(rejected)).is_err(), "mutation must reject {rejected}");
-    }
-}
 
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_spr::command::OpText for NativeSocketProbeMutation {

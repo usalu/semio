@@ -16,7 +16,7 @@ use crate::op::FormMutation;
 use crate::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
 use crate::editor::forms::commands::{
     add_question, add_question_option, add_step, add_vector_field, drop_question_kind, export_fixture, move_question, move_step, next_step, patch_question_options, patch_questions, patch_step, patch_vector_field, previous_step, remove_question,
-    remove_question_option, remove_step, remove_vector_field, reset_try, set_active_example, set_contributions, set_locale, set_spec_json, set_try_value, set_try_value_step, set_try_values, submit, update_form,
+    remove_question_option, remove_step, remove_vector_field, reset_try, set_active_example, set_contributions, set_spec_json, set_try_value, set_try_value_step, set_try_values, submit, update_form,
 };
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::modes::blueprint;
@@ -313,7 +313,6 @@ semio_framework_plugin::app_commands! {
     /// `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`, the
     /// camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case
     /// `#[dsl(key = ..)]` the codec uses) — they are genuinely different vocabularies, and
-    /// `setLocale`/`locale` is the row that proves it. **Row order is the binary variant ordinal:
     /// appending is safe, reordering is a wire-format break.**
     pub enum FormsCommand for FormsSnapshot, FormMutation, FormsConfig, FormsConfigMutation {
         "setTryValue" as "try-value" => set_try_value::SetTryValue,
@@ -322,7 +321,6 @@ semio_framework_plugin::app_commands! {
         "previousStep" as "previous-step" => previous_step::PreviousStep,
         "nextStep" as "next-step" => next_step::NextStep,
         "submit" as "submit" => submit::Submit,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "setContributions" as "contributions" => set_contributions::SetContributions,
         "addStep" as "add-step" => add_step::AddStep,
         "patchStep" as "patch-step" => patch_step::PatchStep,
@@ -395,8 +393,7 @@ const FORMS_RETAINED_TOOL_IDS: &[&str] = &[
     "previousStep",
     "nextStep",
     "submit",
-    "setLocale",
-    "setContributions",
+        "setContributions",
     "addStep",
     "patchStep",
     "removeStep",
@@ -437,6 +434,7 @@ fn forms_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<FormsPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<FormMutation, FormsConfigMutation, NoDraftMutation>, Fault> {
     if !FORMS_RETAINED_TOOL_IDS.contains(&command.command_id()) {
@@ -506,7 +504,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommand
         ArtifactToolPublicationContract { tool_id: "previousStep", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "nextStep", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "submit", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "patchStep", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
@@ -796,7 +793,6 @@ impl ArtifactEditor for FormsPlayApp {
             "previousStep" => forms_bounded_contract(),
             "nextStep" => forms_bounded_contract(),
             "submit" => forms_bounded_contract(),
-            "setLocale" => forms_bounded_contract(),
             "setContributions" => forms_bounded_contract(),
             "addStep" => forms_bounded_contract(),
             "patchStep" => forms_bounded_contract(),
@@ -834,7 +830,6 @@ impl ArtifactEditor for FormsPlayApp {
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
-    /// `app_commands!`'s generated `command_id()`. `setLocale`/`setContributions` have no manifest
     /// declaration (host-pushed, not user-facing actions).
     fn command_id(command: &FormsCommand) -> &'static str {
         command.command_id()
@@ -844,7 +839,7 @@ impl ArtifactEditor for FormsPlayApp {
         command: &FormsCommand,
         doc: &ArtifactView<'_, FormsSnapshot>,
         cfg: &ConfigView<'_, FormsConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<FormMutation, FormsConfigMutation, Self::DraftMutation>, Fault> {
@@ -885,10 +880,10 @@ impl ArtifactEditor for FormsPlayApp {
     }
     //#endregion 🔖️Media
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &ConfigView<'_, FormsConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let spec = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = forms_play_labels(config);
+        let labels = forms_play_labels(view_state);
         let node = match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, labels),
             FORMS_PLAY_BODY_TRY => try_window::render(spec, config, labels),
@@ -915,7 +910,7 @@ impl ArtifactEditor for FormsPlayApp {
 pub fn create_forms_app() -> AppDefinition {
     Editor::builder(crate::FORMS_DIALECT)
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
-            .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setLocale", LocalizedLabel::native("Set Locale", "Gebietsschema festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("value", LocalizedLabel::native("Locale", "Gebietsschema"))]) })
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog(LocalizedLabel::native("Set Locale", "Gebietsschema festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("value", LocalizedLabel::native("Locale", "Gebietsschema"))]) })
             .document(["semio", "forms"])
             .artifact_kind(ArtifactKindSpec {
                 id: "form.dictionary".into(),
@@ -975,7 +970,6 @@ pub fn create_forms_app() -> AppDefinition {
             .action_interactive_job("previousStep", InteractiveJobClassification::Migrated)
             .action_interactive_job("nextStep", InteractiveJobClassification::Migrated)
             .action_interactive_job("submit", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
             .action_interactive_job("addStep", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchStep", InteractiveJobClassification::Migrated)

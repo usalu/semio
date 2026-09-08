@@ -28,7 +28,6 @@ pub struct Block3dConfig {
     /// "all tags".
     pub wanted_tags: Vec<String>,
     /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewModel.locale`.
-    pub locale: String,
     #[value(default)]
     #[cfg_attr(test, serde(default))]
     #[dsl(table)]
@@ -100,7 +99,7 @@ fn default_brush_radius() -> f64 {
 
 impl Default for Block3dConfig {
     fn default() -> Self {
-        Self { active_representation_id: None, wanted_tags: Vec::new(), locale: "en-US".into(), windows: Vec::new(), brush_vortex_kind_id: None, brush_radius: default_brush_radius(), brush_flip: false, brush_preview: None, camera: None }
+        Self { active_representation_id: None, wanted_tags: Vec::new(), windows: Vec::new(), brush_vortex_kind_id: None, brush_radius: default_brush_radius(), brush_flip: false, brush_preview: None, camera: None }
     }
 }
 
@@ -147,8 +146,6 @@ pub enum Block3dConfigMutation {
     SetActiveRepresentation { representation_id: Option<String> },
     #[dsl(key = "wanted-tags")]
     SetWantedTags { tags: Vec<String> },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
     #[dsl(key = "window-representations")]
     SetWindowRepresentations { window_id: String, representation_ids: Vec<String> },
     #[dsl(key = "toggle-window-representation")]
@@ -238,7 +235,6 @@ impl Mutation<Block3dConfig> for Block3dConfigMutation {
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🟤️set-snapshot", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧱set-active-representation", semantic_kind: "set-active-representation", display_name: "Set Active Representation", emoji: "🧱", aggregate_variant: "SetActiveRepresentation", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔖set-wanted-tags", semantic_kind: "set-wanted-tags", display_name: "Set Wanted Tags", emoji: "🔖", aggregate_variant: "SetWantedTags", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🗣️set-locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "🗣️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🪟set-window-representations", semantic_kind: "set-window-representations", display_name: "Set Window Representations", emoji: "🪟", aggregate_variant: "SetWindowRepresentations", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔁toggle-window-representation", semantic_kind: "toggle-window-representation", display_name: "Toggle Window Representation", emoji: "🔁", aggregate_variant: "ToggleWindowRepresentation", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/↔️set-window-arrangement", semantic_kind: "set-window-arrangement", display_name: "Set Window Arrangement", emoji: "↔️", aggregate_variant: "SetWindowArrangement", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
@@ -256,17 +252,16 @@ impl Mutation<Block3dConfig> for Block3dConfigMutation {
             Block3dConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
             Block3dConfigMutation::SetActiveRepresentation { .. } => &Self::DESCRIPTORS[1],
             Block3dConfigMutation::SetWantedTags { .. } => &Self::DESCRIPTORS[2],
-            Block3dConfigMutation::SetLocale { .. } => &Self::DESCRIPTORS[3],
-            Block3dConfigMutation::SetWindowRepresentations { .. } => &Self::DESCRIPTORS[4],
-            Block3dConfigMutation::ToggleWindowRepresentation { .. } => &Self::DESCRIPTORS[5],
-            Block3dConfigMutation::SetWindowArrangement { .. } => &Self::DESCRIPTORS[6],
-            Block3dConfigMutation::SetWindowSpacing { .. } => &Self::DESCRIPTORS[7],
-            Block3dConfigMutation::SetActiveUtility { .. } => &Self::DESCRIPTORS[8],
-            Block3dConfigMutation::SetBrushVortexKind { .. } => &Self::DESCRIPTORS[9],
-            Block3dConfigMutation::SetBrushRadius { .. } => &Self::DESCRIPTORS[10],
-            Block3dConfigMutation::SetBrushFlip { .. } => &Self::DESCRIPTORS[11],
-            Block3dConfigMutation::SetBrushPreview { .. } => &Self::DESCRIPTORS[12],
-            Block3dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[13],
+            Block3dConfigMutation::SetWindowRepresentations { .. } => &Self::DESCRIPTORS[3],
+            Block3dConfigMutation::ToggleWindowRepresentation { .. } => &Self::DESCRIPTORS[4],
+            Block3dConfigMutation::SetWindowArrangement { .. } => &Self::DESCRIPTORS[5],
+            Block3dConfigMutation::SetWindowSpacing { .. } => &Self::DESCRIPTORS[6],
+            Block3dConfigMutation::SetActiveUtility { .. } => &Self::DESCRIPTORS[7],
+            Block3dConfigMutation::SetBrushVortexKind { .. } => &Self::DESCRIPTORS[8],
+            Block3dConfigMutation::SetBrushRadius { .. } => &Self::DESCRIPTORS[9],
+            Block3dConfigMutation::SetBrushFlip { .. } => &Self::DESCRIPTORS[10],
+            Block3dConfigMutation::SetBrushPreview { .. } => &Self::DESCRIPTORS[11],
+            Block3dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[12],
         }
     }
 
@@ -276,7 +271,6 @@ impl Mutation<Block3dConfig> for Block3dConfigMutation {
             Block3dConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
             Block3dConfigMutation::SetActiveRepresentation { representation_id } => next.active_representation_id = representation_id.clone(),
             Block3dConfigMutation::SetWantedTags { tags } => next.wanted_tags = tags.clone(),
-            Block3dConfigMutation::SetLocale { value } => next.locale = value.clone(),
             Block3dConfigMutation::SetWindowRepresentations { window_id, representation_ids } => {
                 let index = upsert_window_view_index(&mut next.windows, window_id);
                 next.windows[index].representation_ids = representation_ids.clone();

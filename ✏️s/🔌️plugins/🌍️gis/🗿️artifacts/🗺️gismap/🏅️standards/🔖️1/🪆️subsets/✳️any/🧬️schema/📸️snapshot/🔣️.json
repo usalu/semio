@@ -13,43 +13,23 @@
     "positions": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/GisMapFeature"
+        "$ref": "https://semio.tech/schema/s/gis/gismap/artifact.json#/$defs/GisMapFeature"
       },
       "x-semio-state": "artifact"
     },
     "routes": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/GisMapFeature"
+        "$ref": "https://semio.tech/schema/s/gis/gismap/artifact.json#/$defs/GisMapFeature"
       },
       "x-semio-state": "artifact"
     },
     "regions": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/GisMapFeature"
+        "$ref": "https://semio.tech/schema/s/gis/gismap/artifact.json#/$defs/GisMapFeature"
       },
       "x-semio-state": "artifact"
-    }
-  },
-  "$defs": {
-    "GisMapFeature": {
-      "title": "GisMapFeature",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "data"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "data": {
-          "type": "object",
-          "additionalProperties": true
-        }
-      }
     }
   }
 }

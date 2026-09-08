@@ -19,8 +19,7 @@
 pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-
-use crate::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType, PlyValue};
+use crate::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType};
 use crate::PlySnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
@@ -1593,3 +1592,8 @@ pub(crate) fn demo_diff_cases() -> Vec<PlyDiff> {
 #[path = "🧪️tests/🔬️codec/🦀️.rs"]
 mod codec_tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::schema::snapshot::PlyValue;
+//#endregion 🔁️Re-exports

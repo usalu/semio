@@ -173,7 +173,6 @@ semio_framework_plugin::app_commands! {
         "canvasDragOver" as "canvas-drag-over" => canvas_drag_over::CanvasDragOver,
         "canvasDragLeave" as "canvas-drag-leave" => canvas_drag_leave::CanvasDragLeave,
         "setCamera" as "camera" => set_camera::SetCamera,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "addFrame" as "add-frame" => add_frame::AddFrame,
         "addPage" as "add-page" => add_page::AddPage,
         "patchPage" as "patch-page" => patch_page::PatchPage,
@@ -191,12 +190,11 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use crate::editor::layout::commands::{
     add_frame, add_page, canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, engagement_input, engagement_submit, export_package, export_pdf, export_png, export_svg, focus_preflight_issue,
-    patch_frame, patch_page, set_active_page, set_camera, set_locale,
-};
+    patch_frame, patch_page, set_active_page, set_camera, };
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const LAYOUT_RETAINED_TOOL_IDS: &[&str] = &["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "setLocale", "engagementSubmit"];
+const LAYOUT_RETAINED_TOOL_IDS: &[&str] = &["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "engagementSubmit"];
 const LAYOUT_RETAINED_PAYLOAD_SCHEMA: &str = "layout.layout.tool-command.v1";
 const LAYOUT_RETAINED_RAW_BYTES: usize = 8_192;
 const LAYOUT_RETAINED_WORK_ITEMS: usize = 1;
@@ -214,6 +212,7 @@ fn layout_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<LayoutPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<LayoutMutation, LayoutConfigMutation, NoDraftMutation>, Fault> {
     if !LAYOUT_RETAINED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("layout-command-retained-route-rejected")); }
@@ -280,7 +279,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutRetainedComma
         ArtifactToolPublicationContract { tool_id: "canvasDragOver", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "canvasDragLeave", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ];
 }
@@ -295,7 +293,7 @@ impl LayoutRetainedProofs {
         factory: "LayoutRetainedCommandJobFactory",
         factory_type: LayoutRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-        tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "setLocale", "engagementSubmit"]
+        tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "engagementSubmit"]
     }
 }
 
@@ -325,14 +323,14 @@ const LAYOUT_CONFIG_PUBLICATION_MAXIMUM_BYTES: usize = 4_096;
 
 //#region 🎟️Admission
 fn layout_config_text_bytes(config: &LayoutConfig) -> usize {
-    [config.active_page_id.len(), config.drop_preview.kind.len(), config.engagement_input.len(), config.locale.len()].into_iter().fold(0usize, usize::saturating_add)
+    [config.active_page_id.len(), config.drop_preview.kind.len(), config.engagement_input.len()].into_iter().fold(0usize, usize::saturating_add)
 }
 
 fn layout_config_publication_bytes(mutation: &LayoutConfigMutation) -> Result<usize, String> {
     let bytes = match mutation {
         LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id }) => page_id.len(),
         LayoutConfigMutation::SetDropPreview(crate::editor::layout::config::SetDropPreview { preview }) => preview.kind.len(),
-        LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value }) | LayoutConfigMutation::SetLocale(crate::editor::layout::config::SetLocale { value }) => value.len(),
+        LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value }) => value.len(),
         LayoutConfigMutation::SetCamera(crate::editor::layout::config::SetCamera { .. }) | LayoutConfigMutation::SetPreviewCamera(crate::editor::layout::config::SetPreviewCamera { .. }) => 0,
     };
     if bytes > LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES { return Err("layout-config-text-envelope".into()); }
@@ -387,7 +385,6 @@ impl store::ArtifactStoreOneItemPreparation<LayoutConfig, LayoutConfigMutation> 
             LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value }) => { next.engagement_input = value.clone(); LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value: base.get().engagement_input.clone() }) }
             LayoutConfigMutation::SetCamera(crate::editor::layout::config::SetCamera { camera }) => { next.camera = camera.clone(); LayoutConfigMutation::SetCamera(crate::editor::layout::config::SetCamera { camera: base.get().camera.clone() }) }
             LayoutConfigMutation::SetPreviewCamera(crate::editor::layout::config::SetPreviewCamera { camera }) => { next.preview_camera = camera.clone(); LayoutConfigMutation::SetPreviewCamera(crate::editor::layout::config::SetPreviewCamera { camera: base.get().preview_camera.clone() }) }
-            LayoutConfigMutation::SetLocale(crate::editor::layout::config::SetLocale { value }) => { next.locale = value.clone(); LayoutConfigMutation::SetLocale(crate::editor::layout::config::SetLocale { value: base.get().locale.clone() }) }
         };
         if layout_config_text_bytes(&next) > LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES { return Err("layout-config-post-text-envelope".into()); }
         let authority = self.authority.as_ref().ok_or_else(|| "layout-config-authority-missing".to_string())?;
@@ -583,7 +580,7 @@ impl ArtifactEditor for LayoutPlayApp {
         command: &LayoutCommand,
         doc: &ArtifactView<'_, LayoutSnapshot>,
         cfg: &ConfigView<'_, LayoutConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>, Fault> {
@@ -626,10 +623,10 @@ impl ArtifactEditor for LayoutPlayApp {
     }
     //#endregion 🔖️Media
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = layout_labels(config);
+        let labels = layout_labels(view_state);
         let mut engine = LayoutEngine::new();
         match body_key {
             LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(&mut engine, document, config),
@@ -637,14 +634,14 @@ impl ArtifactEditor for LayoutPlayApp {
             LAYOUT_PLAY_BODY_DOCUMENT => document_panel::render(document, config, labels),
             LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
-            LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, config),
+            LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout error text admission failed")),
         }.map(semio_framework_plugin::built_to_component_tree)
     }
 
-    fn window_engagements(_doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(_doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let config = cfg.snapshot;
-        let labels = layout_labels(config);
+        let labels = layout_labels(view_state);
         HashMap::from([(LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(config, "blueprint", labels)), (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(config, "preview", labels))])
     }
 }
@@ -723,7 +720,6 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("canvasDragOver", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasDragLeave", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportPng", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportSvg", InteractiveJobClassification::Migrated)

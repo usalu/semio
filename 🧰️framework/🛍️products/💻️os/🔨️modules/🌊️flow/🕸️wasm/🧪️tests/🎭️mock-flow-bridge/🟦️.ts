@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import flowProtocol from "../../🧪️fixtures/📡️abi.json";
+import flowProtocol from "../../🧫️fixtures/📡️abi.json";
 
 export interface MockFlowBridgeOptions {
   readonly hold?: number;

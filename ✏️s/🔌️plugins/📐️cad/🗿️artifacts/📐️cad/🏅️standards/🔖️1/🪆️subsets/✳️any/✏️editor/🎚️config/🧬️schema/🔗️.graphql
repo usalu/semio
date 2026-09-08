@@ -67,8 +67,5 @@ type CadConfig {
   dislocateBuilding: CadDislocateOptions! @state(class: CONFIG)
   dislocateEnergy: CadDislocateOptions! @state(class: CONFIG)
   dislocateStructureClassic: CadDislocateOptions! @state(class: CONFIG)
-  activeUtilityId: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
-  terminology: String! @state(class: CONFIG)
   contributionsJson: String! @state(class: CONFIG)
 }

@@ -338,9 +338,10 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     it("validates the neutral corpus against its own schema", async () => {
-      const { default: Ajv2020 } = await import("ajv/dist/2020.js");
-      const [{ default: corpus }, { default: schema }] = await Promise.all([import("../../🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json"), import("../../🧫️fixtures/🎒️pack-dynamic-integer-v1/🧬️.schema.json")]);
-      expect(new Ajv2020({ strict: true, allErrors: true }).compile(schema)(corpus)).toBe(true);
+      const { default: Ajv } = await import("ajv");
+      const [{ default: corpus }, { default: schema }] = await Promise.all([import("../../🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json"), import("../../🔨️modules/🎒️pack/🌱️value/🧬️schema/🔣️.json")]);
+      const packValueExport = new Ajv({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${(schema as { $id: string }).$id}#/$defs/PackDynamicIntegerV1`)!;
+      expect(packValueExport(corpus)).toBe(true);
       expect(corpus.accept).toHaveLength(6);
       expect(corpus.reject.map((row: { id: string }) => row.id)).toEqual(["truncated-u64", "u64-overflow", "nonminimal-u64", "nonminimal-zigzag-i64"]);
     });
@@ -796,8 +797,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const encodeUnsigned: unknown = Reflect.get(oracle, "encodeUIntBuffer");
       if (typeof encodeUnsigned !== "function") throw new Error("missing LEB128 oracle encoder");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", source.url), "utf8"));
-      const schema = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧬️schema.json", source.url), "utf8"));
-      const validate = new Ajv({ strict: true }).compile(schema);
+      const module = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
+      const validate = new Ajv({ strict: true }).addSchema(module).getSchema(`${module.$id}#/$defs/LocalInteractionV1`)!;
       expect(validate(fixture)).toBe(true);
       expect(validate({ ...fixture, lateTokenAccepted: true })).toBe(false);
       expect(validate({ ...fixture, terminalBeforeClosed: true })).toBe(false);
@@ -1568,8 +1569,9 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("retains one exact causal OpBinary through actor send and receive frames", () => {
       const batch = fromHex("01016d0164016100017301aa016902bbcc03ffffffffffffffffff0105");
       const message = encodeBackboneMessage({ kind: "mutations", envelopes: batch });
-      const request = { kind: "send", documentId: "d", clientInstanceId: "client-1", message: { kind: "documentBackbone", message } } as const;
-      const response = { kind: "event", documentId: "d", clientInstanceId: "client-1", event: { kind: "documentBackbone", message } } as const;
+      const clientInstanceId = "12345678-1234-4123-8123-123456789abc";
+      const request = { kind: "send", documentId: "d", clientInstanceId, message: { kind: "documentBackbone", message } } as const;
+      const response = { kind: "event", documentId: "d", clientInstanceId, event: { kind: "documentBackbone", message } } as const;
       const requestRound = decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request));
       const responseRound = decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(response));
       expect(requestRound).toEqual(request);
@@ -1586,7 +1588,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(() => parseDocumentBackboneMessage(trailing)).toThrow("trailing-bytes");
       expect(() => parseDocumentBackboneMessage(new Uint8Array(262_145))).toThrow("hot byte limit");
 
-      const malformedFields = encodePackValue({ kind: "send", documentId: "d", clientInstanceId: "client-1", message: { kind: "documentBackbone", message: Array.from(encodeBackboneMessage({ kind: "mutations", envelopes: Uint8Array.of(0) })), legacy: [] } });
+      const malformedFields = encodePackValue({ kind: "send", documentId: "d", clientInstanceId: "12345678-1234-4123-8123-123456789abc", message: { kind: "documentBackbone", message: Array.from(encodeBackboneMessage({ kind: "mutations", envelopes: Uint8Array.of(0) })), legacy: [] } });
       expect(() => decodeBackboneWorkerRequest(new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...malformedFields]))).toThrow("invalid document backbone message");
     });
   });

@@ -44,3 +44,27 @@ message StepDiff {
   semio.s_stdio_step.snapshot.StepFileSchema file_schema = 3;
   StepEntitiesDiff entities = 4;
 }
+
+message StepValue {
+  StepValue value = 1;
+}
+
+message StepComplexType {
+  StepComplexType value = 1;
+}
+
+message StepEntity {
+  StepEntity value = 1;
+}
+
+message StepFileDescription {
+  StepFileDescription value = 1;
+}
+
+message StepFileName {
+  StepFileName value = 1;
+}
+
+message StepFileSchema {
+  StepFileSchema value = 1;
+}

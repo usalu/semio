@@ -12,7 +12,7 @@ pub fn definition() -> ModeDefinition {
 }
 
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[semio_framework_os_flow::GENERATION_3D_PLAY_WINDOW_MAIN.into(), preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into()], "row", Some(&[68.0, 32.0]), Some(&["Flow".into(), "Preview".into()]))
+    create_default_layout(&[flow::GENERATION_3D_PLAY_WINDOW_MAIN.into(), preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into()], "row", Some(&[68.0, 32.0]), Some(&["Flow".into(), "Preview".into()]))
 }
 //#endregion 🔖️Definition
 

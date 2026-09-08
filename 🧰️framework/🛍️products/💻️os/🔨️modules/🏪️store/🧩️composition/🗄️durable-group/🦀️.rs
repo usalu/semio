@@ -301,14 +301,7 @@ impl DurableOwnedGroupJournalRecordV1 {
         if decision.parent.post_revision == [0; 32] {
             return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
         }
-        Ok(Self {
-            canonical_pack,
-            decision_sha256: decision.decision_sha256,
-            anchor_sha256: decision.anchor_sha256,
-            document: decision.anchor.parent,
-            parent_edit_id,
-            parent_post_revision: decision.parent.post_revision,
-        })
+        Ok(Self { canonical_pack, decision_sha256: decision.decision_sha256, anchor_sha256: decision.anchor_sha256, document: decision.anchor.parent, parent_edit_id, parent_post_revision: decision.parent.post_revision })
     }
 
     pub fn admit(canonical_pack: Vec<u8>, claimed_decision_sha256: &str) -> Result<Self, DurableOwnedGroupDecisionError> {
@@ -3267,7 +3260,7 @@ impl ArtifactPack for DurableOwnedThreeMemberDecisionV1 {
 /// package law suites; production callers must obtain records through Store-owned assembly.
 #[cfg(feature = "testkit")]
 pub fn durable_owned_group_journal_test_record() -> DurableOwnedGroupJournalRecordV1 {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).expect("durable group fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("durable group fixture");
     let hex = |value: &str| value.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("fixture hex"), 16).expect("fixture byte")).collect::<Vec<_>>();
     let revision = |value: &str| -> [u8; 32] { hex(value).try_into().expect("fixed fixture revision") };
     let reference = |value: &serde_json::Value| crate::os_pack::json::from_json_str(&serde_json::to_string(value).expect("fixture reference json")).expect("fixture reference");

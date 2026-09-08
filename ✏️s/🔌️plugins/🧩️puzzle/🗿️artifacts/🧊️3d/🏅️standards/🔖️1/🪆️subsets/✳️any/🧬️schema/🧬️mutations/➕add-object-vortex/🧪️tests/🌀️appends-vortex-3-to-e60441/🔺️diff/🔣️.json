@@ -15,18 +15,18 @@
             "objectKind": "object-kind-b",
             "anchor": "fixed",
             "origin": [
-              4.0,
-              0.0,
-              0.0
+              4,
+              0,
+              0
             ],
             "vortices": [
               {
                 "id": "vortex-2",
                 "vortexKind": "vortex-kind-b",
                 "position": [
-                  -1.0,
-                  0.0,
-                  0.0
+                  -1,
+                  0,
+                  0
                 ],
                 "hidden": false,
                 "locked": false
@@ -35,9 +35,9 @@
                 "id": "vortex-3",
                 "vortexKind": "vortex-kind-b",
                 "position": [
-                  0.0,
-                  0.0,
-                  1.0
+                  0,
+                  0,
+                  1
                 ],
                 "hidden": false,
                 "locked": false
@@ -80,7 +80,6 @@
   "lodDepthVariable": null,
   "lodManual": null,
   "proximityRadius": null,
-  "locale": null,
   "runtimeExtrasJson": null,
   "hoveredObjectId": null,
   "hoveredVortexFullId": null,

@@ -70,7 +70,7 @@ struct QDoc {
 
 //#region 🔖️NodePath
 /// 🧭 Child-index chain from the root element — mirrors the production `NodePath` addressing
-/// scheme (`crate::artifacts::svg::schema::snapshot::NodePath`), reimplemented here against
+/// scheme (`semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::NodePath`), reimplemented here against
 /// `QDoc` rather than imported. `path == []` addresses the root itself.
 fn q_node_at_mut<'a>(doc: &'a mut QDoc, path: &[usize]) -> &'a mut QNode {
     let mut node = doc.root.as_mut().expect("recipe document has no root element");

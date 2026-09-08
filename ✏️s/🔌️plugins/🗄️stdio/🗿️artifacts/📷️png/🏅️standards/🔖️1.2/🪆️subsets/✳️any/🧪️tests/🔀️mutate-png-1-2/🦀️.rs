@@ -110,7 +110,7 @@ mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::artifacts::png::standards::v1_2::subsets::any::project_png_mutation;
-    use semio_s_plugin_stdio::ArtifactDsl;
+    use semio_framework_os_kernel::ArtifactDsl;
     use crate::standards::v1_2::subsets::any::io::{decode_png, encode_png};
     use crate::standards::v1_2::subsets::any::schema::mutations::{apply_png_mutation, inverse_png_mutation, PngMutation};
     use crate::standards::v1_2::subsets::any::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSnapshot, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp};

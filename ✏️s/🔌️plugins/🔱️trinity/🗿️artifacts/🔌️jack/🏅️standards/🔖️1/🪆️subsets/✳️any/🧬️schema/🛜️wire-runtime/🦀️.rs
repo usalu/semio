@@ -1734,7 +1734,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
         }
     }
 
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework::Fault> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, semio_framework_plugin::Fault> {
         self.begin_close();
         if maximum_items == 0 || maximum_bytes < JACK_OWNED_FIELD_BYTES {
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
@@ -1747,7 +1747,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                 self.terminal_handoff = true;
                 Ok(semio_framework_plugin::PluginCloseStep::Complete)
             }
-            Err(error) => Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("artifact-store.initializer-close"), format!("Jack initializer close failed: {error}"))),
+            Err(error) => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::Plugin, semio_framework_plugin::FaultCode::new("artifact-store.initializer-close"), format!("Jack initializer close failed: {error}"))),
         }
     }
 

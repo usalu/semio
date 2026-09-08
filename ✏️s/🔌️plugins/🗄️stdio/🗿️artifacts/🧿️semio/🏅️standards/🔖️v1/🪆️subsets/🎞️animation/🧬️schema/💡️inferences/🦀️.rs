@@ -9,8 +9,7 @@ use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSn
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::duration::{compute_semio_animation_duration, SemioAnimationDuration};
-
+use super::duration::{compute_semio_animation_duration};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio animation snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `duration`, backed by the `⏱️duration/` slug dir).
@@ -83,3 +82,8 @@ pub fn semio_animation_artifact_inference_descriptor() -> framework_schema::Arti
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::duration::SemioAnimationDuration;
+//#endregion 🔁️Re-exports

@@ -97,7 +97,8 @@ pub mod os_dsl {
         pub mod sheet;
     }
 
-    #[path = "../../🔨️modules/🗣️dsl/🧹️fixture-sweep/🦀️.rs"]
+    #[cfg(test)]
+    #[path = "../../🔨️modules/🗣️dsl/🧹️fixture-sweep/🧪️tests/🧹️fixture-sweep/🦀️.rs"]
     pub mod fixture_sweep;
 
     #[path = "../../🔨️modules/🗣️dsl/📖️grammar/🦀️.rs"]
@@ -353,21 +354,6 @@ pub use semio_framework_value_derive::{FromValue, ToValue};
 /// 🚨️ Every `#[path]` in this file must point at a file that exists. A mount whose target moved
 /// turns into "os-kernel does not compile" for every session in the tree, with an error that names
 /// a path rather than a cause; this turns it into one named failing test in the owning crate.
-#[test]
-fn every_path_mount_in_this_glue_resolves_to_an_existing_file() {
-    let here = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-    let source = include_str!("🦀️.rs");
-    let mut missing = Vec::new();
-    for line in source.lines() {
-        let Some(rest) = line.trim().strip_prefix("#[path = \"") else { continue };
-        let Some(target) = rest.split('"').next() else { continue };
-        if target == "." {
-            continue;
-        }
-        if !here.join(target).exists() {
-            missing.push(target.to_string());
-        }
-    }
-    assert!(missing.is_empty(), "glue.rs mounts files that do not exist: {missing:?}");
-}
+#[cfg(test)]
+include!("../../🧪️tests/🔬️standalone/🦀️.rs");
 //#endregion 🧪️Tests

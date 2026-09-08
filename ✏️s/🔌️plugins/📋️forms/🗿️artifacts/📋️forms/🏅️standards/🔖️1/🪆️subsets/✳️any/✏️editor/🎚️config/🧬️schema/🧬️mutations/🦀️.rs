@@ -31,9 +31,6 @@ pub use commit_try_values_batch::CommitTryValuesBatch;
 #[path = "🧽️clear-try-values/🦀️.rs"]
 mod clear_try_values;
 pub use clear_try_values::ClearTryValues;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 #[path = "🧩️set-contributions/🦀️.rs"]
 mod set_contributions;
 pub use set_contributions::SetContributions;
@@ -61,8 +58,6 @@ pub enum FormsConfigMutation {
     CommitTryValuesBatch(CommitTryValuesBatch),
     #[dsl(key = "clear-try-values")]
     ClearTryValues(ClearTryValues),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
     #[dsl(key = "set-contributions")]
     SetContributions(SetContributions),
 }
@@ -126,4 +121,3 @@ impl protocol::OpBinary for FormsConfigMutation {
 }
 
 //#endregion 🔖️OpCodec
-

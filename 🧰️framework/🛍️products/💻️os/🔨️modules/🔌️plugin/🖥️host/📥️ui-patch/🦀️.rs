@@ -2,9 +2,7 @@
 
 use super::wit_ui;
 use semio_framework::kernel::{ActorUiPatchReceipt, UiTurnPatches, UI_TURN_PATCHES_MAXIMUM};
-use semio_framework_ui_contract::{
-    self as ui, UiNodeBindings, UiNodeChildren, UiNodeId, UiPatch, UiPatchOp, UiPatchOps,
-};
+use semio_framework_ui_contract::{self as ui, UiNodeBindings, UiNodeChildren, UiNodeId, UiPatch, UiPatchOp, UiPatchOps};
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -91,13 +89,7 @@ fn patch(value: wit_ui::UiPatch, expected_instance: u32) -> Result<UiPatch, Stri
 }
 
 /// 🧷️ Moves exactly one emitted-first WIT patch into the retained kernel turn owner.
-pub(super) fn wit_ui_patches_to_kernel(
-    expected_instance: u32,
-    max_patch_bytes: u32,
-    emitted: Vec<wit_ui::UiPatch>,
-    returned: Vec<wit_ui::UiPatch>,
-    receipt: Option<ActorUiPatchReceipt>,
-) -> Result<UiTurnPatches, String> {
+pub(super) fn wit_ui_patches_to_kernel(expected_instance: u32, max_patch_bytes: u32, emitted: Vec<wit_ui::UiPatch>, returned: Vec<wit_ui::UiPatch>, receipt: Option<ActorUiPatchReceipt>) -> Result<UiTurnPatches, String> {
     let count = emitted.len().checked_add(returned.len()).ok_or_else(|| "ui patch count overflow".to_string())?;
     ActorUiPatchReceipt::validate_pairing(receipt, count).map_err(|error| error.to_string())?;
     if receipt.is_some_and(|receipt| receipt.lifetime.instance_id != expected_instance) {

@@ -6,24 +6,13 @@
   "additionalProperties": false,
   "required": [
     "camera",
-    "activeFixtureId",
     "jackQuery",
     "jackResultJson",
-    "editorEngagementInput",
-    "graphEngagementInput",
-    "resultsEngagementInput",
-    "reorganizeEpoch",
-    "lodModeByWindow",
-    "revision",
-    "locale"
+    "lodModeByWindow"
   ],
   "properties": {
     "camera": {
-      "$ref": "#/$defs/Camera",
-      "x-semio-state": "config"
-    },
-    "activeFixtureId": {
-      "type": "string",
+      "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Camera",
       "x-semio-state": "config"
     },
     "jackQuery": {
@@ -35,25 +24,8 @@
       "contentMediaType": "application/json",
       "x-semio-state": "config"
     },
-    "editorEngagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "graphEngagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "resultsEngagementInput": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "reorganizeEpoch": {
-      "type": "integer",
-      "format": "int64",
-      "x-semio-state": "config"
-    },
     "editorSelection": {
-      "$ref": "#/$defs/JackEditorSelection",
+      "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/JackEditorSelection",
       "x-semio-state": "config"
     },
     "lodModeByWindow": {
@@ -62,60 +34,6 @@
         "type": "string"
       },
       "x-semio-state": "config"
-    },
-    "revision": {
-      "type": "integer",
-      "format": "int64",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    }
-  },
-  "$defs": {
-    "Camera": {
-      "title": "Camera",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "x",
-        "y",
-        "zoom"
-      ],
-      "properties": {
-        "x": {
-          "type": "number",
-          "format": "double"
-        },
-        "y": {
-          "type": "number",
-          "format": "double"
-        },
-        "zoom": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "JackEditorSelection": {
-      "title": "JackEditorSelection",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "start",
-        "end"
-      ],
-      "properties": {
-        "start": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "end": {
-          "type": "integer",
-          "format": "int64"
-        }
-      }
     }
   }
 }

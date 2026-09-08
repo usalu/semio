@@ -15,7 +15,6 @@ type Fem2dDiff {
   resultMode: String @state(class: PRESENCE)
   resultModeIndex: Int @state(class: PRESENCE)
   camera: FemCamera @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
   solverResultsJson: String @state(class: ARTIFACT)
   meshPreviewJson: String @state(class: ARTIFACT)
 }

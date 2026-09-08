@@ -317,7 +317,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("listModelObjectsForModelDefinition lists BIM class objects for aec.building", async () => {
       const { readFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
-      const fixturePath = resolve(source.directoryname, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json");
+      const fixturePath = resolve(source.directory, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json");
       const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
       const space = ModelSpace.fromJSON(fixtureJson);
       const building = space.models["aec.building"]!;

@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/cad/cad/diff/text.json",
   "title": "CadDiffText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of CadDiff: the instance is the serialized document this facet's grammar and codec speak."
 }

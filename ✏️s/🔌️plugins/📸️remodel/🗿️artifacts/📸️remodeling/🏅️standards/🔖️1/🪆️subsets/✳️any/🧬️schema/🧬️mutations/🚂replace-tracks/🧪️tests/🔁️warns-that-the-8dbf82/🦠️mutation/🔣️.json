@@ -5,7 +5,7 @@
       "id": "orbit-track-a",
       "length": 9,
       "class": "static",
-      "meanSpeedMS": 0.0
+      "meanSpeedMS": 0
     },
     {
       "id": "orbit-track-b",

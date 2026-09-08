@@ -10,8 +10,24 @@ const testLevel = process.env.SEMIO_TEST_LEVEL ?? "fundamental";
 const includeBackboneWorker = process.env.SEMIO_INCLUDE_BACKBONE_WORKER === "1";
 const includeAgentBridge = process.env.SEMIO_INCLUDE_AGENT_BRIDGE === "1";
 const backboneWorkerSuite = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts");
-const engineTestSuites = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/*/🟦️.{ts,tsx}");
-const playwrightEngineTestSuites = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-*/🟦️.ts");
+const engineSuite = (name: string, extension = "ts") => resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/${name}/🟦️.${extension}`);
+const engineTestSuites = [
+  engineSuite("⚡️quick"),
+  engineSuite("🎮️browser-interactive-job-port"),
+  engineSuite("🏛️space-administration", "tsx"),
+  engineSuite("👥️scoped-presence", "tsx"),
+  engineSuite("📇️directory-home-bootstrap", "tsx"),
+  engineSuite("📡️actor-backbone"),
+  engineSuite("📨️browser-frame-transport"),
+  engineSuite("🔬️artifact-creation-ready-opening"),
+  engineSuite("🔬️document-opening"),
+  engineSuite("🔬️engine-contract"),
+  engineSuite("🚪️opening"),
+  engineSuite("🧩️package-integration"),
+  engineSuite("🧯️router-plugin-faults"),
+  engineSuite("🩺️window-fault"),
+] as const;
+const playwrightEngineTestSuites = [engineSuite("📚️storybook-hosts-no-wasm"), engineSuite("📚️storybook-hosts-wasm")] as const;
 const rootPolicySelfTestSuites = ["interactivity-live-reconcile", "interactivity-mounted-engine-surface-lifetime", "interactivity-mounted-frame-transaction"].map((id) => resolve(repoRoot, `./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️${id}/🟦️.ts`));
 const quickTestSuite = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚡️quick/🟦️.ts");
 const agentBridgeTestSuite = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🧩️component/🟦️.ts");
@@ -19,6 +35,7 @@ const longInSourceSuites = [
   resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"),
   resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx"),
   resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx"),
+  resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎚️UiPreferences/🟦️.ts"),
 ] as const;
 const exhaustiveInSourceSuites = [
   ...longInSourceSuites,
@@ -47,8 +64,8 @@ export default defineConfig({
     name: "@semio-tech/framework-renderer-react",
     environment: "jsdom",
     coverage: { include: ["index.tsx"] },
-    exclude: [...configDefaults.exclude, playwrightEngineTestSuites, ...rootPolicySelfTestSuites],
-    include: includeAgentBridge ? [agentBridgeTestSuite] : testLevel === "fundamental" || testLevel === "quick" ? [quickTestSuite] : [engineTestSuites],
+    exclude: [...configDefaults.exclude, ...playwrightEngineTestSuites, ...rootPolicySelfTestSuites],
+    include: includeAgentBridge ? [agentBridgeTestSuite] : testLevel === "fundamental" || testLevel === "quick" ? [quickTestSuite] : [...engineTestSuites],
     testNamePattern: testLevel === "fundamental" ? /validates the language-neutral renderer resident capacity with the Node oracle/ : undefined,
     // 🧪️ In-source (`import.meta.vitest`) suites in the `🧑‍🎨engine/🧱️elements/` co-location dirs —
     // NOT under this package's own `root`, so the default `include` glob never finds them. Fundamental

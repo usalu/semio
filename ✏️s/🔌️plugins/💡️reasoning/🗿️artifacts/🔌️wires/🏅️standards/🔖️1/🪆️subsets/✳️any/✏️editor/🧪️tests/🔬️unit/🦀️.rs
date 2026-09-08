@@ -3,7 +3,7 @@ use super::*;
 use crate::editor::wires::testkit::{metabolism_app, new_app, render};
 use semio_framework_plugin::EditorApp;
 
-const RETAINED_ROUTES: &str = include_str!("../../🧪️fixtures/🛣️retained-command-routes.json");
+const RETAINED_ROUTES: &str = include_str!("../../🧫️fixtures/🛣️retained-command-routes.json");
 
 #[test]
 fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {

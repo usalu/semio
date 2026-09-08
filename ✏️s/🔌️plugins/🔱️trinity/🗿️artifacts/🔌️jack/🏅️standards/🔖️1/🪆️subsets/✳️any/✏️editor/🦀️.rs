@@ -10,7 +10,6 @@
 use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
 use crate::{JackSnapshot, Node, PortDirection, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use crate::editor::jack::config::{JackConfig, JackConfigMutation};
-use crate::editor::jack::presence::{JackPresence, JackPresenceMutation};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
@@ -59,7 +58,7 @@ pub(crate) fn default_fixture() -> JackSnapshot {
 /// populated on load.
 fn seeded_jack_config(fixture: &JackSnapshot) -> JackConfig {
     let (result_json, _) = crate::editor::jack::commands::query::run_jack_query(fixture, TRINITY_JACK_DEFAULT_QUERY);
-    JackConfig { camera: fixture.camera.clone(), active_fixture_id: "nakagin".into(), jack_query: TRINITY_JACK_DEFAULT_QUERY.into(), jack_result_json: result_json, ..JackConfig::default() }
+    JackConfig { camera: fixture.camera.clone(), jack_query: TRINITY_JACK_DEFAULT_QUERY.into(), jack_result_json: result_json, ..JackConfig::default() }
 }
 
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetFixture` — see
@@ -231,19 +230,10 @@ pub enum TrinityJackCommand {
     #[dsl(key = "text-select")]
     TextSelect { start: u64, end: u64 },
     #[dsl(key = "request-completions")]
-    RequestCompletions,
     #[dsl(key = "format-document")]
     FormatDocument,
     #[dsl(key = "set-lod-mode")]
     SetLodMode { window_id: String, value: String },
-    #[dsl(key = "editor-engagement-input")]
-    EditorEngagementInput { value: String },
-    #[dsl(key = "graph-engagement-input")]
-    GraphEngagementInput { value: String },
-    #[dsl(key = "results-engagement-input")]
-    ResultsEngagementInput { value: String },
-    #[dsl(key = "set-locale")]
-    SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
@@ -309,7 +299,7 @@ impl protocol::OpBinary for TrinityJackCommand {
 pub struct TrinityJackPlayApp;
 
 //#region 🧵️RetainedConfigCommands
-const JACK_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["setViewport", "textEdit", "textSelect", "requestCompletions", "setLodMode", "editorEngagementInput", "graphEngagementInput", "resultsEngagementInput"];
+const JACK_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["setViewport", "textEdit", "textSelect", "setLodMode"];
 const JACK_RETAINED_PAYLOAD_SCHEMA: &str = "trinity.graph.config-command.v1";
 const JACK_RETAINED_RAW_BYTES: usize = 8_192;
 const JACK_RETAINED_WORK_ITEMS: usize = 64;
@@ -317,11 +307,7 @@ const JACK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = 
     ArtifactToolPublicationContract { tool_id: "setViewport", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "textSelect", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "requestCompletions", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "editorEngagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "graphEngagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "resultsEngagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
 ];
 
 fn jack_retained_config_contract() -> ToolExecutionContract {
@@ -332,9 +318,8 @@ fn jack_retained_config_extent(command: &TrinityJackCommand, _snapshot: &JackSna
     let bytes = match command {
         TrinityJackCommand::SetViewport { viewport_json } => viewport_json.len(),
         TrinityJackCommand::TextEdit { text } => text.len(),
-        TrinityJackCommand::TextSelect { .. } | TrinityJackCommand::RequestCompletions => 0,
+        TrinityJackCommand::TextSelect { .. } => 0,
         TrinityJackCommand::SetLodMode { window_id, value } => window_id.len().checked_add(value.len())?,
-        TrinityJackCommand::EditorEngagementInput { value } | TrinityJackCommand::GraphEngagementInput { value } | TrinityJackCommand::ResultsEngagementInput { value } => value.len(),
         _ => return None,
     };
     (bytes <= JACK_RETAINED_RAW_BYTES).then_some(1)
@@ -343,21 +328,18 @@ fn jack_retained_config_extent(command: &TrinityJackCommand, _snapshot: &JackSna
 fn jack_retained_config_reduce(
     command: &TrinityJackCommand,
     _snapshot: &JackSnapshot,
-    config: &JackConfig,
+    _config: &JackConfig,
     _history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<TrinityJackPlayApp>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, NoDraftMutation>, Fault> {
     match command {
         TrinityJackCommand::SetViewport { viewport_json } => Ok(crate::editor::jack::commands::set_viewport(viewport_json)),
         TrinityJackCommand::TextEdit { text } => Ok(crate::editor::jack::commands::text_edit(text)),
         TrinityJackCommand::TextSelect { start, end } => Ok(crate::editor::jack::commands::text_select(*start, *end)),
-        TrinityJackCommand::RequestCompletions => Ok(crate::editor::jack::commands::request_completions(config.revision)),
         TrinityJackCommand::SetLodMode { window_id, value } => Ok(crate::editor::jack::commands::set_lod_mode(window_id, value)),
-        TrinityJackCommand::EditorEngagementInput { value } => Ok(crate::editor::jack::commands::editor_engagement_input(value)),
-        TrinityJackCommand::GraphEngagementInput { value } => Ok(crate::editor::jack::commands::graph_engagement_input(value)),
-        TrinityJackCommand::ResultsEngagementInput { value } => Ok(crate::editor::jack::commands::results_engagement_input(value)),
         _ => Err(Fault::from("jack-retained-config-route-mismatch")),
     }
 }
@@ -492,8 +474,8 @@ impl ArtifactEditor for TrinityJackPlayApp {
     type ConfigMutation = JackConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = JackPresence;
-    type PresenceMutation = JackPresenceMutation;
+    type Presence = semio_framework_plugin::NoPresence;
+    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
@@ -514,7 +496,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         factory: "JackRetainedConfigJobFactory",
         factory_type: JackRetainedConfigJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
-        tools: ["setViewport", "textEdit", "textSelect", "requestCompletions", "setLodMode", "editorEngagementInput", "graphEngagementInput", "resultsEngagementInput"]
+        tools: ["setViewport", "textEdit", "textSelect", "setLodMode"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -607,13 +589,8 @@ impl ArtifactEditor for TrinityJackPlayApp {
             TrinityJackCommand::SetViewport { .. } => "setViewport",
             TrinityJackCommand::TextEdit { .. } => "textEdit",
             TrinityJackCommand::TextSelect { .. } => "textSelect",
-            TrinityJackCommand::RequestCompletions => "requestCompletions",
             TrinityJackCommand::FormatDocument => "formatDocument",
             TrinityJackCommand::SetLodMode { .. } => "setLodMode",
-            TrinityJackCommand::EditorEngagementInput { .. } => "editorEngagementInput",
-            TrinityJackCommand::GraphEngagementInput { .. } => "graphEngagementInput",
-            TrinityJackCommand::ResultsEngagementInput { .. } => "resultsEngagementInput",
-            TrinityJackCommand::SetLocale { .. } => "setLocale",
         }
     }
 
@@ -621,7 +598,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         command: &TrinityJackCommand,
         doc: &ArtifactView<'_, JackSnapshot>,
         cfg: &ConfigView<'_, JackConfig>,
-        interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<TrinityGraphMutation, JackConfigMutation, Self::DraftMutation>, Fault> {
@@ -631,47 +608,42 @@ impl ArtifactEditor for TrinityJackPlayApp {
             TrinityJackCommand::SetFixtureJson { json } => crate::editor::jack::commands::set_fixture_json(json),
             TrinityJackCommand::DeleteSelection => crate::editor::jack::commands::delete_selection(fixture, &interaction.selection("ast").ids),
             TrinityJackCommand::PatchNodes { node_ids, field, value } => crate::editor::jack::commands::patch_nodes(fixture, node_ids, field, value),
-            TrinityJackCommand::Reorganize => crate::editor::jack::commands::reorganize(fixture, config.reorganize_epoch),
+            TrinityJackCommand::Reorganize => crate::editor::jack::commands::reorganize(fixture),
             TrinityJackCommand::RunQuery { query } => crate::editor::jack::commands::run_query(fixture, query, &config.jack_query),
             TrinityJackCommand::LoadExampleQuery { query } => crate::editor::jack::commands::load_example_query(fixture, query),
             TrinityJackCommand::SetActiveExample { example_id } => crate::editor::jack::commands::set_active_example(example_id),
             TrinityJackCommand::SetViewport { viewport_json } => crate::editor::jack::commands::set_viewport(viewport_json),
             TrinityJackCommand::TextEdit { text } => crate::editor::jack::commands::text_edit(text),
             TrinityJackCommand::TextSelect { start, end } => crate::editor::jack::commands::text_select(*start, *end),
-            TrinityJackCommand::RequestCompletions => crate::editor::jack::commands::request_completions(config.revision),
             TrinityJackCommand::FormatDocument => crate::editor::jack::commands::format_document(&config.jack_query),
             TrinityJackCommand::SetLodMode { window_id, value } => crate::editor::jack::commands::set_lod_mode(window_id, value),
-            TrinityJackCommand::EditorEngagementInput { value } => crate::editor::jack::commands::editor_engagement_input(value),
-            TrinityJackCommand::GraphEngagementInput { value } => crate::editor::jack::commands::graph_engagement_input(value),
-            TrinityJackCommand::ResultsEngagementInput { value } => crate::editor::jack::commands::results_engagement_input(value),
-            TrinityJackCommand::SetLocale { value } => crate::editor::jack::commands::set_locale(value),
         })
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let fixture = doc.snapshot;
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::jack::terminology::TrinityJackLabels>(&cfg.snapshot.locale);
+        let labels = semio_framework_plugin::resolve_labels::<crate::editor::jack::terminology::TrinityJackLabels>(view_state);
         let root = match body_key {
             TRINITY_JACK_PLAY_BODY_GRAPH => edit::windows::graph::render(TRINITY_JACK_PLAY_SURFACE_GRAPH, TRINITY_JACK_PLAY_CONTROLLER_ID, TRINITY_JACK_PLAY_WINDOW_GRAPH, fixture, cfg.snapshot),
             TRINITY_JACK_PLAY_BODY_EDITOR => edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, fixture, cfg.snapshot),
             TRINITY_JACK_PLAY_BODY_RESULTS => edit::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, cfg.snapshot),
             TRINITY_JACK_PLAY_BODY_DOCUMENT => crate::editor::jack::panels::document::render(fixture, cfg.snapshot, labels),
-            TRINITY_JACK_PLAY_BODY_CATALOGUE => crate::editor::jack::panels::catalogue::render(cfg.snapshot, labels),
+            TRINITY_JACK_PLAY_BODY_CATALOGUE => crate::editor::jack::panels::catalogue::render(labels),
             TRINITY_JACK_PLAY_BODY_INSPECTION => crate::editor::jack::panels::inspection::render(),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.body.label", "the fixed Trinity body label exceeds its UI bound")),
         }?;
         Ok(semio_framework_plugin::built_to_component_tree(root))
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let mode = cfg.snapshot.lod_mode_by_window.get(TRINITY_JACK_PLAY_WINDOW_GRAPH).map_or(edit::windows::graph::TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
         HashMap::from([(TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(), vec![edit::windows::graph::trinity_lod_measure(TRINITY_JACK_PLAY_WINDOW_GRAPH, mode, jack_window_action)])])
     }
 
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, JackSnapshot>, cfg: &ConfigView<'_, JackConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, JackSnapshot>, _cfg: &ConfigView<'_, JackConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        let is_de = cfg.snapshot.locale.starts_with("de");
+        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
         // 🕹️ Selection is framework-owned now (domain "ast") — `context_menu` has no `InteractionView`,
         // so the request's own surface-carried selection groups are the only source; no config fallback.
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
@@ -765,20 +737,12 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
             .view_action("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"))
             .view_action("textSelect", LocalizedLabel::native("Select Jack Query Text", "Jack-Abfragetext auswählen"))
-            .view_action("requestCompletions", LocalizedLabel::native("Request Completions", "Vervollständigungen anfordern"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("formatDocument", LocalizedLabel::native("Format Jack Query", "Jack-Abfrage formatieren"), ActionKind::View).with_category("utilities"))
             .view_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"))
-            .view_action("editorEngagementInput", LocalizedLabel::native("Editor Engagement Input", "Editor-Eingabe"))
-            .view_action("graphEngagementInput", LocalizedLabel::native("Graph Engagement Input", "Graph-Eingabe"))
-            .view_action("resultsEngagementInput", LocalizedLabel::native("Results Engagement Input", "Ergebnis-Eingabe"))
             .action_interactive_job("setViewport", InteractiveJobClassification::Migrated)
             .action_interactive_job("textEdit", InteractiveJobClassification::Migrated)
             .action_interactive_job("textSelect", InteractiveJobClassification::Migrated)
-            .action_interactive_job("requestCompletions", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)
-            .action_interactive_job("editorEngagementInput", InteractiveJobClassification::Migrated)
-            .action_interactive_job("graphEngagementInput", InteractiveJobClassification::Migrated)
-            .action_interactive_job("resultsEngagementInput", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchNodes", InteractiveJobClassification::BatchOnlyPendingRewrite)
             // 🕹️ Domain "ast": jack's document nodes, transitive over each node's first incoming
             // connection (see `interaction_topology`). Selection/hover, marquee, modes and merges are

@@ -362,6 +362,7 @@ fn space_bounded_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<SpaceApp>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<WorkflowMutation, SpaceConfigMutation, NoDraftMutation>, Fault> {
     if !SPACE_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
@@ -486,7 +487,7 @@ fn space_config_bytes(config: &SpaceConfig) -> Result<usize, String> {
     for value in [&config.active_node_id, &config.focused_node_id, &config.pending_import_node_id, &config.pending_import_format, &config.space_id, &config.client_id, &config.client_name] {
         bytes = bytes.saturating_add(value.as_ref().map_or(0, String::len));
     }
-    for value in [&config.workflow_engagement_input, &config.compiled_dag_engagement_input, &config.active_panel_tab, &config.locale] {
+    for value in [&config.workflow_engagement_input, &config.compiled_dag_engagement_input, &config.active_panel_tab] {
         bytes = bytes.saturating_add(value.len());
     }
     if bytes > SPACE_CONFIG_TEXT_BYTES {
@@ -871,12 +872,12 @@ impl ArtifactApp for SpaceApp {
                 target_port_id: str_field("targetPortId").or_else(|| str_field("target_port_id")).unwrap_or_default(),
             })),
             "disconnectMediaEdge" => Ok(SpaceCommand::DisconnectMediaEdge(disconnect_media_edge::DisconnectMediaEdge { edge_id: str_field("edgeId").or_else(|| str_field("edge_id")).unwrap_or_default() })),
-            "removeAppInstance" => Ok(SpaceCommand::RemoveAppInstance(remove_app_instance::RemoveAppInstance { node_id: node_id() })),
+            "removeAppInstance" => Ok(SpaceCommand::RemoveAppInstance(remove_app_instance::RemoveAppInstance { node_id: node_id(), surface_contexts: Default::default() })),
             "deleteSelection" => Ok(SpaceCommand::DeleteSelection(delete_selection::DeleteSelection {})),
             "copyAppInstance" => Ok(SpaceCommand::CopyAppInstance(copy_app_instance::CopyAppInstance {})),
             "duplicateAppInstance" => Ok(SpaceCommand::DuplicateAppInstance(duplicate_app_instance::DuplicateAppInstance {})),
             "pasteAppInstance" => Ok(SpaceCommand::PasteAppInstance(paste_app_instance::PasteAppInstance {})),
-            "renameAppInstance" => Ok(SpaceCommand::RenameAppInstance(rename_app_instance::RenameAppInstance { label: str_field("label").or_else(|| str_field("name")) })),
+            "renameAppInstance" => Ok(SpaceCommand::RenameAppInstance(rename_app_instance::RenameAppInstance { label: str_field("label").or_else(|| str_field("name")), surface_contexts: Default::default() })),
             "patchMediaNodes" => {
                 let ids = string_vec("nodeIds");
                 Ok(SpaceCommand::PatchMediaNodes(patch_media_nodes::PatchMediaNodes {
@@ -973,20 +974,17 @@ impl ArtifactApp for SpaceApp {
         InteractionTopology { domains }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let projection = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale);
-        // 🪟 `VcsArtifactApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
-        // strip it so Space body keys still match.
-        let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
-        match base_body_key {
+        let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(view_state);
+        match body_key {
             crate::engine::space::modes::main::windows::workflow::S_PLAY_BODY_WORKFLOW => {
                 crate::engine::space::modes::main::windows::workflow::render(&SpaceApp, projection, config).await.map(semio_framework_plugin::built_to_component_tree)
             }
-            crate::engine::space::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::engine::space::modes::main::windows::media_vfs::render(projection, &config.locale).await.map(semio_framework_plugin::built_to_component_tree),
+            crate::engine::space::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::engine::space::modes::main::windows::media_vfs::render(projection, view_state).await.map(semio_framework_plugin::built_to_component_tree),
             crate::engine::space::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::engine::space::modes::main::windows::compiled_dag::render(projection).await.map(semio_framework_plugin::built_to_component_tree),
-            S_PLAY_CATALOGUE_BODY_KEY => crate::engine::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_plugin::locale_from_str(&config.locale)).await.map(semio_framework_plugin::built_to_component_tree),
+            S_PLAY_CATALOGUE_BODY_KEY => crate::engine::space::panels::catalogue::build_catalogue_tree(labels, view_state.locale).await.map(semio_framework_plugin::built_to_component_tree),
             // 🧬️ `parameters`/`inspection` are now ported to the contract `BuiltNode` DSL (SEMANTIC-
             // UI-CONTRACT-AND-RENDERER-FAMILY, 26/08/20) — both `render` fns are U1-sync (the contract
             // builder's own sync-only ruling), so no `.await` here, only the `map` bridge into `ComponentTree`.
@@ -1000,8 +998,8 @@ impl ArtifactApp for SpaceApp {
         }
     }
 
-    async fn window_measures(doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
-        HashMap::from([(crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), crate::engine::space::modes::main::windows::workflow::window_measures(cfg.snapshot, &doc.snapshot.graph.nodes).await)])
+    async fn window_measures(doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
+        HashMap::from([(crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), crate::engine::space::modes::main::windows::workflow::window_measures(cfg.snapshot, &doc.snapshot.graph.nodes, view_state).await)])
     }
 
     /// 🕹️ `context_menu` carries no `InteractionView` (same gap as `render` — see ticket 26/08/14's
@@ -1010,11 +1008,12 @@ impl ArtifactApp for SpaceApp {
     async fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, WorkflowSnapshot>,
-        cfg: &ConfigView<'_, SpaceConfig>,
+        _cfg: &ConfigView<'_, SpaceConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&cfg.snapshot.locale);
-        let is_de = cfg.snapshot.locale.starts_with("de");
+        let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(view_state);
+        let is_de = matches!(view_state.locale, semio_framework_plugin::Locale::De);
         space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &[]).await
     }
 }

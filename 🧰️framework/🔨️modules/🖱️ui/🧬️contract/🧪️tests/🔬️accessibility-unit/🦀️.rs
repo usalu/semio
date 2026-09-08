@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn ui_text(value: &str) -> crate::UiText {

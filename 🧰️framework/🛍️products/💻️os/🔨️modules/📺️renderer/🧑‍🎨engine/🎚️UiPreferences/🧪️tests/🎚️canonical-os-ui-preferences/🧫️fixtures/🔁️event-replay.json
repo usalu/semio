@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "events": [
+    { "mutation": "setAppearance", "appearance": "dark" },
+    { "mutation": "setLayout", "layout": "tablet" },
+    { "mutation": "setLocale", "locale": "de" },
+    { "mutation": "setTerminology", "terminology": "reuse" },
+    { "mutation": "setLocale", "locale": "en" },
+    { "mutation": "setLocale", "locale": "de" }
+  ],
+  "expected": {
+    "appearance": "dark",
+    "layout": "tablet",
+    "driverId": null,
+    "customDrivers": {},
+    "locale": "de",
+    "terminology": "reuse",
+    "themeId": null,
+    "customThemes": {},
+    "keybindingOverrides": {}
+  }
+}

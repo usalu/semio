@@ -22,7 +22,7 @@ use crate::schema::build_tile_morph_prompt;
 use crate::{default_presentation_snapshot, FigureTileDraft, PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use crate::editor::animate::commands::{
     add_tile, canvas_pointer_down, clear_tiles, copy_prompt, delete_selection, delete_tile, engagement_input, engagement_submit, export_video_from_deck, no_operation, patch_tile_crops, rename_tiles, reset_grid, seed_grid, set_active_example,
-    set_frame, set_locale, set_source,
+    set_frame, set_source,
 };
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
 use crate::editor::animate::modes::main;
@@ -253,7 +253,6 @@ semio_framework_plugin::app_commands! {
         "resetGrid" as "reset-grid" => reset_grid::ResetGrid,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
-        "setLocale" as "set-locale" => set_locale::SetLocale,
         "noMutation" as "no-op" => no_operation::NoOperation,
         "copyPrompt" as "copy-prompt" => copy_prompt::CopyPrompt,
         "exportVideoFromDeck" as "export-video-from-deck" => export_video_from_deck::ExportVideoFromDeck,
@@ -262,7 +261,7 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const ANIMATE_PRESENTATION_RETAINED_TOOL_IDS: &[&str] = &["setActiveExample", "engagementInput", "setLocale", "noMutation"];
+const ANIMATE_PRESENTATION_RETAINED_TOOL_IDS: &[&str] = &["setActiveExample", "engagementInput", "noMutation"];
 const ANIMATE_PRESENTATION_RETAINED_PAYLOAD_SCHEMA: &str = "animate.presentation.tool-command.v1";
 const ANIMATE_PRESENTATION_RETAINED_RAW_BYTES: usize = 8_192;
 const ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS: usize = 1;
@@ -272,7 +271,6 @@ const ANIMATE_PRESENTATION_CONFIG_STEP_BYTES: usize = 4_096;
 const ANIMATE_PRESENTATION_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "noMutation", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
@@ -284,7 +282,6 @@ fn animate_presentation_retained_extent(command: &PresentationCommand, _snapshot
     match command {
         PresentationCommand::SetActiveExample(payload) if payload.example_id.len() <= ANIMATE_PRESENTATION_RETAINED_RAW_BYTES => Some(1),
         PresentationCommand::EngagementInput(payload) if payload.value.len() <= ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES => Some(1),
-        PresentationCommand::SetLocale(payload) if payload.value.len() <= ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES => Some(1),
         PresentationCommand::NoOperation(_) => Some(1),
         _ => None,
     }
@@ -297,6 +294,7 @@ fn animate_presentation_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<AnimatePresentationPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<PresentationMutation, PresentationConfigMutation, NoDraftMutation>, Fault> {
     let document = ArtifactView::with_operation(snapshot, history, operation.clone());
@@ -305,7 +303,6 @@ fn animate_presentation_retained_reduce(
     match command {
         PresentationCommand::SetActiveExample(payload) if payload.example_id.len() <= ANIMATE_PRESENTATION_RETAINED_RAW_BYTES => set_active_example::handle(payload, &document, &config, &mut context),
         PresentationCommand::EngagementInput(payload) if payload.value.len() <= ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES => engagement_input::handle(payload, &document, &config, &mut context),
-        PresentationCommand::SetLocale(payload) if payload.value.len() <= ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES => set_locale::handle(payload, &document, &config, &mut context),
         PresentationCommand::NoOperation(payload) => no_operation::handle(payload, &document, &config, &mut context),
         _ => Err(Fault::from("animate-presentation-retained-route-mismatch")),
     }
@@ -409,7 +406,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<PresentationConfig, Presentat
     fn preflight(&self, mutation: &PresentationConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         let mutation_bytes = match mutation {
             PresentationConfigMutation::SetEngagementInput(payload) => payload.value.len(),
-            PresentationConfigMutation::SetLocale(payload) => payload.value.len(),
         };
         if lane != store::HistoryLane::Document || mutation_bytes > ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Animate Presentation config preparation rejected its lane or byte envelope".into());
@@ -420,7 +416,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<PresentationConfig, Presentat
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation>> {
         let mutation_bytes = match &request.mutation {
             PresentationConfigMutation::SetEngagementInput(payload) => payload.value.len(),
-            PresentationConfigMutation::SetLocale(payload) => payload.value.len(),
         };
         if request.lane != store::HistoryLane::Document || mutation_bytes > ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
             return Err(request);
@@ -438,7 +433,7 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
         if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
         if self.candidate.is_none() && self.sealed_candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "Animate Presentation config preparation lost its exact base root".to_string())?.get();
-            let base_bytes = base.engagement_input.len().saturating_add(base.locale.len());
+            let base_bytes = base.engagement_input.len();
             if base_bytes > ANIMATE_PRESENTATION_CONFIG_BASE_BYTES { return Err("Animate Presentation config base exceeds retained byte capacity".into()); }
             let mutation = self.mutation.take().ok_or_else(|| "Animate Presentation config preparation lost its mutation owner".to_string())?;
             let mut post = base.clone();
@@ -446,10 +441,6 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
                 PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value }) => {
                     post.engagement_input = value.clone();
                     PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value: base.engagement_input.clone() })
-                }
-                PresentationConfigMutation::SetLocale(crate::editor::animate::config::SetLocale { value }) => {
-                    post.locale = value.clone();
-                    PresentationConfigMutation::SetLocale(crate::editor::animate::config::SetLocale { value: base.locale.clone() })
                 }
             };
             self.candidate = Some((post, inverse, mutation));
@@ -464,7 +455,7 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
         if self.serialized_bytes.is_none() {
             let (post, edit) = self.sealed_candidate.as_ref().ok_or_else(|| "Animate Presentation config preparation lost its semantic edit".to_string())?;
             let bytes = animate_presentation_config_edit_bytes(edit)?;
-            if bytes.saturating_add(post.engagement_input.len().saturating_add(post.locale.len())).saturating_add(512) > ANIMATE_PRESENTATION_CONFIG_STEP_BYTES {
+            if bytes.saturating_add(post.engagement_input.len()).saturating_add(512) > ANIMATE_PRESENTATION_CONFIG_STEP_BYTES {
                 return Err("Animate Presentation config publication exceeds the 4096-byte complete envelope".into());
             }
             self.serialized_bytes = Some(bytes);
@@ -540,7 +531,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         factory: "AnimatePresentationRetainedCommandJobFactory",
         factory_type: AnimatePresentationRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 65_536, 7_500),
-        tools: ["setActiveExample", "engagementInput", "setLocale", "noMutation"]
+        tools: ["setActiveExample", "engagementInput", "noMutation"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -624,7 +615,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         command: &PresentationCommand,
         doc: &ArtifactView<'_, PresentationSnapshot>,
         cfg: &ConfigView<'_, PresentationConfig>,
-        interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<PresentationMutation, PresentationConfigMutation, Self::DraftMutation>, Fault> {
@@ -638,10 +629,10 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// `config.selected_ids` are gone from `inspection::render`; the client renders the tile-selected
     /// canvas highlight itself from the framework's own interaction state now (matches `🖍️draw`'s
     /// canvas render, same reason).
-    fn render(body_key: &str, doc: &ArtifactView<'_, PresentationSnapshot>, cfg: &ConfigView<'_, PresentationConfig>) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PresentationSnapshot>, cfg: &ConfigView<'_, PresentationConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
         let deck = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = animate_presentation_labels(config);
+        let labels = animate_presentation_labels(view_state);
         (match body_key {
             PRESENTATION_PLAY_BODY_MAIN => tile_editor::render(deck),
             PRESENTATION_PLAY_BODY_DOCUMENT => artifact::render(deck, labels),
@@ -691,7 +682,6 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .view_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"))
             .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"))
             .view_action("noMutation", LocalizedLabel::native("No Operation", "Keine Aktion"))
-            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 🎛️ Declared arg schemas for palette-parametric actions (materialized before dispatch).
             .action_args("seedGrid", vec![
                 ActionArgDef::number("rows", LocalizedLabel::native("Rows", "Zeilen")).required().default_value(&2),
@@ -720,7 +710,6 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .action_interactive_job("resetGrid", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerDown", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             .action_interactive_job("noMutation", InteractiveJobClassification::Migrated)
             .action_interactive_job("copyPrompt", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("exportVideoFromDeck", InteractiveJobClassification::BatchOnlyPendingRewrite)

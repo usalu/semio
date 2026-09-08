@@ -16,7 +16,7 @@
       "x-semio-state": "artifact"
     },
     "objectKind": {
-      "$ref": "#/$defs/BlockKindIdentity",
+      "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockKindIdentity",
       "x-semio-state": "artifact"
     },
     "representations": {
@@ -44,11 +44,11 @@
       "x-semio-state": "artifact"
     },
     "camera3d": {
-      "$ref": "#/$defs/BlockCamera3d",
+      "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockCamera3d",
       "x-semio-state": "artifact"
     },
     "meta": {
-      "$ref": "#/$defs/BlockMeta",
+      "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockMeta",
       "x-semio-state": "artifact"
     },
     "selectedIds": {
@@ -69,10 +69,6 @@
     "wantedTags": {
       "$ref": "#/$defs/Block3dStringList",
       "x-semio-state": "presence"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     },
     "windows": {
       "$ref": "#/$defs/Block3dWindowsList",
@@ -104,7 +100,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/Block3dBrushPreview"
+          "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/Block3dBrushPreview"
         }
       ],
       "x-semio-state": "artifact"
@@ -115,7 +111,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/BlockCamera3d"
+          "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockCamera3d"
         }
       ],
       "x-semio-state": "config"
@@ -133,61 +129,6 @@
     }
   },
   "$defs": {
-    "BlockKindIdentity": {
-      "title": "BlockKindIdentity",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockRepresentation": {
-      "title": "BlockRepresentation",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block3dVortexKind": {
-      "title": "Block3dVortexKind",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block3dVortexTemplate": {
-      "title": "Block3dVortexTemplate",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockCompatibilityRule": {
-      "title": "BlockCompatibilityRule",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockAttribute": {
-      "title": "BlockAttribute",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockAuthor": {
-      "title": "BlockAuthor",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockCamera3d": {
-      "title": "BlockCamera3d",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "BlockMeta": {
-      "title": "BlockMeta",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block3dWindowView": {
-      "title": "Block3dWindowView",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "Block3dBrushPreview": {
-      "title": "Block3dBrushPreview",
-      "type": "object",
-      "additionalProperties": true
-    },
     "Block3dStringList": {
       "title": "Block3dStringList",
       "type": "object",
@@ -215,7 +156,7 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/BlockAuthor"
+            "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockAuthor"
           }
         }
       }
@@ -233,7 +174,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/BlockRepresentation"
+            "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockRepresentation"
           }
         },
         "removed": {
@@ -280,7 +221,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "#/$defs/BlockRepresentation"
+          "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockRepresentation"
         }
       }
     },
@@ -297,7 +238,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Block3dVortexKind"
+            "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/Block3dVortexKind"
           }
         },
         "removed": {
@@ -344,7 +285,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "#/$defs/Block3dVortexKind"
+          "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/Block3dVortexKind"
         }
       }
     },
@@ -361,7 +302,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Block3dVortexTemplate"
+            "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/Block3dVortexTemplate"
           }
         },
         "removed": {
@@ -408,7 +349,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "#/$defs/Block3dVortexTemplate"
+          "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/Block3dVortexTemplate"
         }
       }
     },
@@ -425,7 +366,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/BlockCompatibilityRule"
+            "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockCompatibilityRule"
           }
         },
         "removed": {
@@ -472,7 +413,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "#/$defs/BlockCompatibilityRule"
+          "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockCompatibilityRule"
         }
       }
     },
@@ -489,7 +430,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/BlockAttribute"
+            "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockAttribute"
           }
         },
         "removed": {
@@ -536,7 +477,7 @@
       "required": [],
       "properties": {
         "replacement": {
-          "$ref": "#/$defs/BlockAttribute"
+          "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/BlockAttribute"
         }
       }
     },
@@ -551,7 +492,7 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Block3dWindowView"
+            "$ref": "https://semio.tech/schema/s/block/block3d/artifact.json#/$defs/Block3dWindowView"
           }
         }
       }

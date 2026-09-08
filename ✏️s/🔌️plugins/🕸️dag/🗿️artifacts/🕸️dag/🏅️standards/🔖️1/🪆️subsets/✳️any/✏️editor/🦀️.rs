@@ -16,7 +16,6 @@
 
 use crate::op::DagMutation;
 use crate::DagSnapshot;
-use crate::editor::dag::commands::set_locale;
 use crate::editor::dag::commands::{add_node, patch_dag_nodes, remove_node, rename_dag_node};
 use crate::editor::dag::commands::{connect_media_ports, delete_selection, disconnect, move_media_node, node_graph_edit, reorganize};
 use crate::editor::dag::commands::{graph_pointer_down, node_graph_viewport};
@@ -115,7 +114,6 @@ semio_framework_plugin::app_commands! {
     /// `🎮️commands/*` payload modules. Each row states BOTH the manifest action id (`command_id()`, the
     /// camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the kebab-case
     /// `#[dsl(keyword = ..)]` the codec uses) — genuinely different vocabularies for every row except
-    /// where they happen to coincide (e.g. `"reorganize" as "reorganize"`). `"setLocale" as "locale"` is
     /// the row that proves it. **Row order is the binary variant ordinal: appending is safe, reordering
     /// is a wire-format break.**
     pub enum DagCommand for DagSnapshot, DagMutation, DagConfig, DagConfigMutation {
@@ -131,7 +129,6 @@ semio_framework_plugin::app_commands! {
         "patchDagNodes" as "patch-dag-nodes" => patch_dag_nodes::PatchDagNodes,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
         "graphPointerDown" as "graph-pointer-down" => graph_pointer_down::GraphPointerDown,
-        "setLocale" as "locale" => set_locale::SetLocale,
     }
 }
 //#endregion 🔖️Commands
@@ -170,7 +167,7 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::
 pub struct DagPlayApp;
 
 //#region 🧵️RetainedConfigCommands
-const DAG_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport", "setLocale"];
+const DAG_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport", ];
 const DAG_RETAINED_COMMAND_SCHEMA: &str = "dag.dag/v1.tool-command.v1";
 const DAG_RETAINED_RAW_BYTES: usize = 8_192;
 
@@ -181,6 +178,7 @@ fn dag_retained_config_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<DagPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<DagMutation, DagConfigMutation, NoDraftMutation>, Fault> {
     if !DAG_RETAINED_CONFIG_TOOL_IDS.contains(&command.command_id()) {
@@ -231,7 +229,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DagConfigCommandJob
     const DOCUMENT_SCHEMA: &'static str = "dag.dag";
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
     ];
 }
 //#endregion 🧵️RetainedConfigCommands
@@ -258,7 +255,6 @@ struct DagConfigPreparation {
 fn dag_config_footprint(mutation: &DagConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = match mutation {
         DagConfigMutation::ReplaceConfig(crate::editor::dag::config::ReplaceConfig { .. }) => return Err("DAG Config preparation rejects whole-snapshot input".into()),
-        DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value }) => value.len(),
         DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { .. }) => 0,
     };
     if retained_bytes > DAG_CONFIG_TEXT_BYTES { return Err("DAG Config mutation exceeds its fixed preparation envelope".into()); }
@@ -267,7 +263,6 @@ fn dag_config_footprint(mutation: &DagConfigMutation) -> Result<store::ArtifactS
 
 fn prepare_dag_config(base: &DagConfig, mutation: DagConfigMutation) -> Result<(DagConfig, Vec<DagConfigMutation>, DagConfigMutation), String> {
     dag_config_footprint(&mutation)?;
-    if base.locale.len() > DAG_CONFIG_TEXT_BYTES { return Err("DAG Config base exceeds its fixed preparation envelope".into()); }
     let mut post = base.clone();
     let inverse = match &mutation {
         DagConfigMutation::ReplaceConfig(crate::editor::dag::config::ReplaceConfig { .. }) => return Err("DAG Config preparation rejects whole-snapshot input".into()),
@@ -275,7 +270,6 @@ fn prepare_dag_config(base: &DagConfig, mutation: DagConfigMutation) -> Result<(
             post.camera_x = *x; post.camera_y = *y; post.camera_zoom = *zoom;
             DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom })
         }
-        DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value }) => { post.locale = value.clone(); DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value: base.locale.clone() }) }
     };
     Ok((post, vec![inverse], mutation))
 }
@@ -314,7 +308,6 @@ impl store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation> for Da
         if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
         if self.candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "DAG Config preparation lost its exact base root".to_string())?.get();
-            if base.locale.len() > DAG_CONFIG_TEXT_BYTES { return Err("DAG Config base exceeds its fixed preparation envelope".into()); }
             let bytes = DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024;
             if grant.maximum_bytes < bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
             let mutation = self.mutation.take().ok_or_else(|| "DAG Config preparation lost its mutation owner".to_string())?;
@@ -395,7 +388,6 @@ impl ArtifactEditor for DagPlayApp {
         factory_type: DagConfigCommandJobFactory,
         tools: {
             "nodeGraphViewport" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
-            "setLocale" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
         }
     }
 
@@ -457,7 +449,7 @@ impl ArtifactEditor for DagPlayApp {
         command: &DagCommand,
         doc: &ArtifactView<'_, DagSnapshot>,
         cfg: &ConfigView<'_, DagConfig>,
-        interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<DagMutation, DagConfigMutation, Self::DraftMutation>, Fault> {
@@ -474,11 +466,11 @@ impl ArtifactEditor for DagPlayApp {
     /// threads interaction into render; the document tree instead binds `interaction_domain("graph")`
     /// so the framework's own post-render stamp paints its selection/hover, no app code needed.
     /// Flagged as a discovered framework gap, not worked around here (matches `space`'s identical gap).
-    fn render(body_key: &str, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let camera = dag_config_camera(config);
-        let labels = dag_play_labels(config);
+        let labels = dag_play_labels(view_state);
         let node = match body_key {
             DAG_PLAY_BODY_MAIN => main::render(document, &camera, labels),
             DAG_PLAY_BODY_COMPILED => compiled::render(document, &camera),
@@ -493,8 +485,8 @@ impl ArtifactEditor for DagPlayApp {
     /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render`), so the
     /// selection-dependent rows below always take the "nothing selected" branch — `request.surface`'s
     /// own click-carried selection (independent of `graph`'s live state) still drives the menu.
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        let labels = dag_play_labels(cfg.snapshot);
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        let labels = dag_play_labels(view_state);
         let is_de = is_de_locale(cfg.snapshot);
         dag_context_menu_items(registry, labels, is_de, &[], request)
     }
@@ -566,7 +558,6 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             // actions yourself).
             .view_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
             .view_action("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"))
-            .view_action("setLocale", LocalizedLabel::native("Set Language", "Sprache einstellen"))
             .keybinding("delete,backspace", "deleteSelection")
             // 📝️ Staged argument form for the panel-visible create action.
             .action_args("addNode", vec![
@@ -623,7 +614,6 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("patchDagNodes", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_interactive_job("nodeGraphViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("graphPointerDown", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .config(DagPlayApp::config_spec())
             .build_definition()
 }

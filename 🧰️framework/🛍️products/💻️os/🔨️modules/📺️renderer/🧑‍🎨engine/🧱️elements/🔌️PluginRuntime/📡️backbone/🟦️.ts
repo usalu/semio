@@ -1,8 +1,15 @@
-import { encodePackValue, packUInt } from "@semio-tech/framework-os";
+import { decodeBackboneMessage, encodePackValue, packUInt } from "@semio-tech/framework-os";
 
 export const DOCUMENT_BACKBONE_BINDING_SCHEMA_V1 = "semio.plugin.document-backbone-binding.v1";
 export const DOCUMENT_BACKBONE_RECEIPT_SCHEMA_V1 = "semio.plugin.document-backbone-binding-receipt.v1";
 export const DOCUMENT_BACKBONE_CONTROL_MAXIMUM_BYTES = 4096;
+
+/** 📬️ Guest Ack terminates at Shell as an ingest receipt, never as Hub command completion. */
+export function documentBackboneEffectV1(bytes: Uint8Array): "mutations" | "remote-ingest-receipt" {
+  const message = decodeBackboneMessage(bytes);
+  if (message.kind === "snapshot") throw new Error("actor-document-port.snapshot-requires-cold-pair");
+  return message.kind === "ack" ? "remote-ingest-receipt" : "mutations";
+}
 
 export type DocumentBackboneControlV1 = Readonly<{
   schema: string;

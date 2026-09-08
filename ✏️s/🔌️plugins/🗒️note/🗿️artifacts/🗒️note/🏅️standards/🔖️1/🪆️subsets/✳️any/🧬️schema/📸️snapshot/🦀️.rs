@@ -1,7 +1,7 @@
 //! 🧬️ Note snapshot schema — artifact-lane fields only.
 
 use crate::{NoteBlockNode, NoteImageAsset, NOTE_DOCUMENT_SCHEMA};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 

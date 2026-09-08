@@ -3216,7 +3216,7 @@ impl InteractiveJob for TortureJob {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "⏱️budget/🧪️tests/🦀️.rs"]
+#[path = "⏱️budget/🧪️tests/⏱️budget/🦀️.rs"]
 mod microsecond_budget_tests;
 
 #[cfg(test)]

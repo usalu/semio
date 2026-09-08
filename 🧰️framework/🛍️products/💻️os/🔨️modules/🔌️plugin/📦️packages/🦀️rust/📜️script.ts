@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { createPluginRunnerTests } from "../../🧪️tests/🏃️runner-self-tests/🟦️.ts";
 /** 🦀️ Awaited plugin SDK checks and exact-filter native regression tests. */
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import assert from "node:assert/strict";
@@ -15,34 +16,6 @@ export function pluginTestInvocation(segments: string[]): { mode: "inventory" | 
   const boundary = rest.indexOf("--");
   const inventory = rest.slice(0, boundary < 0 ? rest.length : boundary).includes("--no-run");
   return inventory ? { mode: "inventory", args: ["test", "--manifest-path", "Cargo.toml", "--lib", ...rest] } : { mode: "budgeted", args: ["--lib", ...rest] };
-}
-
-/** 🧪️ Pins exact forwarding against the neutral fixture and Node's independent separator parser. */
-export function pluginTestRunnerSelfTests(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧪️tests/🏃️runner/🧪️fixture/🔣️.json", import.meta.url), "utf8"));
-  const schema = JSON.parse(readFileSync(new URL("../../🧪️tests/🏃️runner/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  const runnerAjv = new Ajv({ strict: true, allErrors: true });
-  runnerAjv.addSchema(schema);
-  const validate = runnerAjv.getSchema(`${schema.$id}#/$defs/TestRunnerForwardingV1`)!;
-  assert(validate(fixture), JSON.stringify(validate.errors));
-  const level = process.env.SEMIO_TEST_LEVEL,
-    coverage = process.env.SEMIO_COVERAGE;
-  try {
-    for (const row of fixture.cases) {
-      const selected = pluginTestInvocation(row.args);
-      assert.equal(selected.mode, row.mode);
-      assert.deepEqual(selected.args, row.forwarded);
-      const parsed = parseArgs({ args: row.args, strict: false, allowPositionals: true, options: { "no-run": { type: "boolean" } } });
-      assert.equal(parsed.values["no-run"] === true ? "inventory" : "budgeted", row.mode);
-      assert.equal(validate({ ...fixture, cases: fixture.cases.map((other: object) => (other === row ? { ...row, mode: row.mode === "inventory" ? "budgeted" : "inventory" } : other)) }), false);
-    }
-  } finally {
-    if (level === undefined) delete process.env.SEMIO_TEST_LEVEL;
-    else process.env.SEMIO_TEST_LEVEL = level;
-    if (coverage === undefined) delete process.env.SEMIO_COVERAGE;
-    else process.env.SEMIO_COVERAGE = coverage;
-  }
-  return fixture.cases.length;
 }
 //#endregion 🧪️RunnerSelection
 
@@ -173,7 +146,7 @@ class TestScript extends BundleScript {
 class CodecSendSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-codec-send-source accepts no arguments");
-    const { testPluginCodecCallerSource } = await import("../../🔣️codec/🧵️send/📜️script.ts");
+    const { testPluginCodecCallerSource } = await import("../../🧪️tests/🔣️codec-caller-source/🟦️.ts");
     testPluginCodecCallerSource(this.repoRoot);
   }
 }
@@ -394,29 +367,53 @@ function documentBackboneBindingOracle(repoRoot: string): number {
   }
   for (const row of fixture.hostile) assert.equal(validate({ ...fixture, cases: [{ ...fixture.cases[0], command: row.value }] }), false, row.id);
   const binding = readFileSync(new URL("../../📡️backbone/🔗️binding/🦀️.rs", import.meta.url), "utf8");
+  const batchFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"), "utf8"));
+  const batchSchema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧬️schema/🧮️document-backbone-batch-v1/🔣️.json"), "utf8"));
+  const validateBatch = new Ajv({ strict: true, allErrors: true }).compile(batchSchema);
+  assert(validateBatch(batchFixture), JSON.stringify(validateBatch.errors));
   const store = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
+  const causal = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs"), "utf8");
+  const sync = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");
   const component = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
   const reactor = readFileSync(new URL("../../⚛️reactor/🔄️turn/🦀️.rs", import.meta.url), "utf8");
   for (const marker of ["DocumentBackboneBindingStateV1", "binding-noncanonical", "binding-live", "stale-generation"]) assert(binding.includes(marker), marker);
   for (const marker of ["ActorBackboneChannelOwner", "attach_hot_backbone", "decode_hot_backbone_message_exact", "hot backbone transport refuses snapshots"]) assert(store.includes(marker), marker);
+  for (const marker of ["decode_document_backbone_envelopes_exact_with_limits", "nonminimal-varint", "DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES"]) assert(causal.includes(marker), marker);
+  for (const marker of ["ArtifactActorMsg::DocumentBackbone", "ArtifactEvent::DocumentBackbone", "DocumentBackboneRetentionV1", "decode_document_backbone_message_exact"]) assert(sync.includes(marker), marker);
   for (const marker of ["plugin_handle_document_backbone_binding", "plugin_receive_document_backbone", "plugin_drain_document_backbones"]) assert(reactor.includes(marker), marker);
   const retireBranch = component.slice(component.indexOf("DocumentBackboneBindingDecisionV1::Retire(receipt)"), component.indexOf("pub async fn plugin_receive_document_backbone"));
   assert(retireBranch.indexOf("owner.begin_retire()") < retireBranch.indexOf("plugin_detach_backbone(runtime, command.instance_id).await"), "retire must synchronously close ingress before detach awaits");
-  assert.deepEqual(fixture.dataLimits, { hotMessageBytes: 262144, snapshotMessageBytes: 4194304, pendingBytes: 4194304, pendingMessages: 64, snapshotTransport: "cold-pair" });
-  return fixture.cases.length + fixture.codec.golden.length + fixture.codec.hostile.length + fixture.hostile.length;
+  assert(!retireBranch.includes("document_backbone_effects"), "retire must discard stale data before emitting its sole receipt");
+  assert.deepEqual(fixture.dataLimits, { hotMessageBytes: 262144, snapshotMessageBytes: 4194304, pendingBytes: 1048576, pendingMessages: 64, snapshotTransport: "cold-pair" });
+  assert.deepEqual(batchFixture.retention, { maximumBytes: 1048576, maximumMessages: 64 });
+  return fixture.cases.length + fixture.codec.golden.length + fixture.codec.hostile.length + fixture.hostile.length + batchFixture.cases.length;
 }
 
 class DocumentBackboneBindingCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     assert(segments.every((segment) => segment === "--native"), "document-backbone-binding-check accepts only --native");
     const rows = documentBackboneBindingOracle(this.repoRoot);
-    console.log(`document-backbone-binding-oracle: ajv=1 rows=${rows} hot=256KiB snapshot=4MiB queue=64/4MiB`);
+    console.log(`document-backbone-binding-oracle: ajv=1 rows=${rows} hot=256KiB snapshot=4MiB pending=64/1MiB`);
     if (!segments.includes("--native")) return;
     const receipts = await runExactCargoLaws({
       cwd: this.root,
       env: { ...process.env, RUST_MIN_STACK: "33554432", CARGO_BUILD_JOBS: "1" },
       nativeEnv: { RUST_MIN_STACK: "268435456", CARGO_BUILD_RUSTFLAGS: "-Z threads=1" },
       groups: [
+        {
+          package: "semio-framework-replication",
+          target: { kind: "lib", name: "protocol" },
+          laws: ["causal::tests::document_backbone_batch_fixture_is_exact_bounded_and_u64_safe"],
+        },
+        {
+          package: "semio-framework-os-kernel",
+          target: { kind: "lib", name: "semio_framework_os_kernel" },
+          cargoArgs: ["--features", "sync"],
+          laws: [
+            "os_store::sync::tests::document_backbone_mailbox_and_retention_are_exact_bounded_and_terminal",
+            "os_store::sync::tests::actor_tests::raw_document_backbone_reaches_hub_once_and_returns_one_canonical_event",
+          ],
+        },
         {
           package: "semio-framework-plugin",
           target: { kind: "lib" },
@@ -442,5 +439,9 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
   .register("test-codec-send-source", CodecSendSourceScript)
   .register("artifact-admission-check", ArtifactAdmissionCheckScript);
+const createPluginRunnerTestsInstance = createPluginRunnerTests({ Ajv, assert, parseArgs, pluginTestInvocation, readFileSync }, { directory: import.meta.dir, url: import.meta.url });
+export const pluginTestRunnerSelfTests = createPluginRunnerTestsInstance.pluginTestRunnerSelfTests;
+
+
 if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });
 //#endregion 🎯️Tasks

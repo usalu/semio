@@ -43,3 +43,8 @@ message Din4108Artifact {
   // @state presence
   optional uint32 selected_check_index = 19;
 }
+
+message Din4108LayerDocument {
+  double thickness_m = 1;
+  double lambda_w_mk = 2;
+}

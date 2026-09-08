@@ -8,7 +8,6 @@ use crate::En1995Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::En1995Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1995 snapshot. One field per named inference under
@@ -80,7 +79,6 @@ use crate::standards::v1::subsets::any::schema::{check_glulam_beam, k_crit, k_mo
 /// `⚙️engine`. `evaluate` is the `En1995Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{AnnexChoice, CheckReport, LoadDuration};
-
 /// 📋️ Full EN 1995 check across bending, compression, shear, connections, fire, and bridge parts.
 #[allow(clippy::too_many_arguments)]
 pub fn check_full_timber(
@@ -173,3 +171,8 @@ pub fn evaluate(document: &En1995Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::En1995Outline;
+//#endregion 🔁️Re-exports

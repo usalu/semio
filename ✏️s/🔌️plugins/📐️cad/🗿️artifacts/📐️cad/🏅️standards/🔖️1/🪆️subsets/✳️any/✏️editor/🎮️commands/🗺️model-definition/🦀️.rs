@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::inferences::{default_document, f
 use crate::CadSnapshot;
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{preview_transition_snapshot_of, reset_document_effect, runtime_of, CadPlayRuntime};
+use crate::editor::cad::{preview_transition_snapshot_of, reset_document_effect, CadPlayRuntime};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -37,10 +37,8 @@ pub mod set_active_example {
     }
 
     pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let current = runtime_of(cfg);
-        let preserved_shell = (current.active_utility_id, current.locale, current.terminology);
         let (scene, runtime) = if payload.example_id.is_empty() {
-            (default_document(), CadPlayRuntime { active_utility_id: preserved_shell.0.clone(), locale: preserved_shell.1.clone(), terminology: preserved_shell.2, ..CadPlayRuntime::default() })
+            (default_document(), CadPlayRuntime::default())
         } else if payload.example_id == CAD_EXAMPLE_FOREST_LEFT || payload.example_id == "forest-left" {
             let forest_camera = forest_play_camera();
             (
@@ -51,9 +49,6 @@ pub mod set_active_example {
                     camera_building: forest_camera.clone(),
                     camera_energy: forest_camera.clone(),
                     camera_structure_classic: forest_camera,
-                    active_utility_id: preserved_shell.0,
-                    locale: preserved_shell.1,
-                    terminology: preserved_shell.2,
                     ..CadPlayRuntime::default()
                 },
             )

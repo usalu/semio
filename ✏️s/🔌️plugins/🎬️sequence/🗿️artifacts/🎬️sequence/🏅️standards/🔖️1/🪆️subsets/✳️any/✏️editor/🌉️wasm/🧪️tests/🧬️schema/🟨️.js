@@ -5,7 +5,7 @@ import {
   SEQUENCE_MAX_REQUEST_BYTES,
   SEQUENCE_MAX_TRANSFER_BYTES,
   SequenceOperation,
-} from "../../📦️packages/🟨️javascript/🖥️sequence-host.js";
+} from "../../🖥️host/🟨️.js";
 
 //#region 🧬️SchemaLaws
 

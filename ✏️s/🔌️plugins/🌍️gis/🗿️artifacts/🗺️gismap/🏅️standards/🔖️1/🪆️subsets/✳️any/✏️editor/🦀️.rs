@@ -218,7 +218,6 @@ semio_framework_plugin::app_commands! {
         "setLodMode" as "lod-mode" => set_lod_mode::SetLodMode,
         "focusFeature" as "focus-feature" => focus_feature::FocusFeature,
         "setLayerStrokeScale" as "layer-stroke-scale" => set_layer_stroke_scale::SetLayerStrokeScale,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "openSource" as "open-source" => open_source::OpenSource,
         "proposeBoundsRegion" as "propose-bounds-region" => propose_bounds_region::ProposeBoundsRegion,
     }
@@ -228,7 +227,6 @@ semio_framework_plugin::app_commands! {
 use example::set_active_example;
 use features::{patch_positions, patch_route, patch_routes};
 use inference::propose_bounds_region;
-use locale::set_locale;
 use shell::open_source;
 use view::{fit_world, focus_feature, set_camera, set_layer_stroke_scale, set_lod_mode, set_render_mode, set_vector_style, toggle_layer_visibility};
 //#endregion 🔖️Commands
@@ -257,8 +255,7 @@ const GIS2D_RETAINED_TOOL_IDS: &[&str] = &[
     "focusFeature",
     "setLayerStrokeScale",
     "openSource",
-    "setLocale",
-    "proposeBoundsRegion",
+        "proposeBoundsRegion",
 ];
 const GIS2D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.map.tool-command.v1";
 const GIS2D_RETAINED_RAW_BYTES: usize = 8_192;
@@ -278,7 +275,6 @@ const GIS2D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
     ArtifactToolPublicationContract { tool_id: "focusFeature", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setLayerStrokeScale", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "openSource", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "proposeBoundsRegion", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
@@ -297,6 +293,7 @@ fn gis2d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Gis2dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
@@ -668,8 +665,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         factory_type: Gis2dRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
         tools: [
-            "setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource", "setLocale",
-            "proposeBoundsRegion",
+            "setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource",             "proposeBoundsRegion",
         ]
     }
 
@@ -841,7 +837,6 @@ impl ArtifactEditor for Gis2dPlayApp {
                 Ok(Gis2dCommand::FocusFeature(focus_feature::FocusFeature { feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(), feature_kind: str_arg(&["featureKind", "feature_kind"]).unwrap_or_else(|| "position".into()) }))
             }
             "setLayerStrokeScale" => Ok(Gis2dCommand::SetLayerStrokeScale(set_layer_stroke_scale::SetLayerStrokeScale { layer_id: str_arg(&["layerId", "layer_id"]).unwrap_or_default(), value: f64_arg(&["value"]).unwrap_or(1.0) })),
-            "setLocale" => Ok(Gis2dCommand::SetLocale(set_locale::SetLocale { value: str_arg(&["value", "locale"]).unwrap_or_default() })),
             "openSource" => Ok(Gis2dCommand::OpenSource(open_source::OpenSource { feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default() })),
             "proposeBoundsRegion" => Ok(Gis2dCommand::ProposeBoundsRegion(propose_bounds_region::ProposeBoundsRegion {})),
             other => Err(Fault::from(format!(
@@ -855,7 +850,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         command: &Gis2dCommand,
         doc: &ArtifactView<'_, GisMapSnapshot>,
         cfg: &ConfigView<'_, Gis2dConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>, Fault> {
@@ -868,9 +863,9 @@ impl ArtifactEditor for Gis2dPlayApp {
         semio_framework_plugin::ConfigSpec::default()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let config = cfg.snapshot;
-        let labels = gis2d_labels(config);
+        let labels = gis2d_labels(view_state);
         match body_key {
             map::GIS2D_PLAY_BODY_COMPOSITE => map::render(doc.snapshot, config).map(semio_framework_plugin::built_to_component_tree),
             document_panel::GIS2D_PLAY_BODY_DOCUMENT => document_panel::render(config, labels).map(semio_framework_plugin::built_to_component_tree),
@@ -880,9 +875,9 @@ impl ArtifactEditor for Gis2dPlayApp {
         }
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, Gis2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
-        HashMap::from([(map::GIS2D_PLAY_WINDOW_MAIN.into(), map::window_measures(config, gis2d_labels(config)))])
+        HashMap::from([(map::GIS2D_PLAY_WINDOW_MAIN.into(), map::window_measures(config, gis2d_labels(view_state)))])
     }
 
     fn context_menu(
@@ -958,7 +953,6 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setLayerStrokeScale", LocalizedLabel::native("Set Layer Stroke Scale", "Ebenenstrichstärke festlegen"))
             // 🌐️ Shell action — opens the picked feature's source URL through the host.
             .action_with(ActionDefinition { category: Some("open".into()), ..ActionDefinition::bounded_catalog("openSource", LocalizedLabel::native("Open Source", "Quelle öffnen"), ActionKind::Shell) })
-            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 💡️ Shell action — asks the host to open its own ephemeral inference port and offer a
             // reviewable bounds region. It never writes the document; only the hub's server-stamped
             // approval command can.
@@ -976,7 +970,6 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("focusFeature", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLayerStrokeScale", InteractiveJobClassification::Migrated)
             .action_interactive_job("openSource", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             .action_interactive_job("proposeBoundsRegion", InteractiveJobClassification::Migrated)
             // 📝️ Argument schemas for the discrete-choice actions so the command palette can stage them
             // and the registry validates the vocabulary. The arg id matches the key each handler reads.

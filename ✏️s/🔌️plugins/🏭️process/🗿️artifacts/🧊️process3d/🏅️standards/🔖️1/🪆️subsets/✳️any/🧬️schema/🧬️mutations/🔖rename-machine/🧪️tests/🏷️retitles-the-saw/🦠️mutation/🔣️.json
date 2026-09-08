@@ -1,1 +1,5 @@
-{"mutation":"renameMachine","id":"saw","newLabel":"Panel Saw"}
+{
+  "mutation": "renameMachine",
+  "id": "saw",
+  "newLabel": "Panel Saw"
+}

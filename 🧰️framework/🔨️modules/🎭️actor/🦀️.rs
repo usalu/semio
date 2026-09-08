@@ -38,15 +38,15 @@ pub mod return_page;
 pub mod cold_pair;
 
 #[cfg(test)]
-#[path = "📃️page/🧪️tests/🦀️.rs"]
+#[path = "📃️page/🧪️tests/📃️page/🦀️.rs"]
 mod byte_page_tests;
 
 #[cfg(test)]
-#[path = "📤️return/🧪️tests/🦀️.rs"]
+#[path = "📤️return/🧪️tests/📤️return/🦀️.rs"]
 mod return_page_tests;
 
 #[cfg(test)]
-#[path = "📥️cold-pair/🧪️tests/🦀️.rs"]
+#[path = "📥️cold-pair/🧪️tests/📥️cold-pair/🦀️.rs"]
 mod cold_pair_tests;
 
 //#region 🧬️SchemaMetadata

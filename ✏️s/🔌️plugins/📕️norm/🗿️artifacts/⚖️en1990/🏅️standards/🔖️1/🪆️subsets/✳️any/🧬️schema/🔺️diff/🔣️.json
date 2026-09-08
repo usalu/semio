@@ -65,26 +65,8 @@
         "values": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/En1990QkEntry"
+            "$ref": "https://semio.tech/schema/s/norm/en1990/artifact.json#/$defs/En1990QkEntry"
           }
-        }
-      }
-    },
-    "En1990QkEntry": {
-      "title": "En1990QkEntry",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "category",
-        "value"
-      ],
-      "properties": {
-        "category": {
-          "type": "string"
-        },
-        "value": {
-          "type": "number",
-          "format": "double"
         }
       }
     }

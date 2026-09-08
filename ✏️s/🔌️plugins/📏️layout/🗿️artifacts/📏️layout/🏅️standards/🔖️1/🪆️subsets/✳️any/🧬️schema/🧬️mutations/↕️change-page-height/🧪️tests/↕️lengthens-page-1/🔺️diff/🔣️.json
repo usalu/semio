@@ -18,7 +18,7 @@
         "patch": {
           "name": null,
           "width": null,
-          "height": 360.0,
+          "height": 360,
           "margin_top": null,
           "margin_right": null,
           "margin_bottom": null,
@@ -47,6 +47,5 @@
   "previewCameraY": null,
   "previewCameraZoom": null,
   "dropPreview": null,
-  "locale": null,
   "hoveredId": null
 }

@@ -8,7 +8,7 @@ import {
   createSequenceFeatures,
   createSequenceHost,
   decodeMessage,
-} from "../../📦️packages/🟨️javascript/🖥️sequence-host.js";
+} from "../../🖥️host/🟨️.js";
 
 const equal = (actual, expected, law) => {
   if (actual !== expected) throw new Error(`${law}: ${String(actual)} !== ${String(expected)}`);

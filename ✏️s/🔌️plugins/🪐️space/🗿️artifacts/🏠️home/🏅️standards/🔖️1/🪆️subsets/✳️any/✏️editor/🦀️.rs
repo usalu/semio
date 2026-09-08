@@ -124,6 +124,7 @@ fn home_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
     if home_retained_extent(command, snapshot, _interaction).is_none() {
@@ -196,7 +197,6 @@ fn home_config_retained_bytes(config: &HomeConfig) -> usize {
     config
         .active_panel_tab
         .len()
-        .saturating_add(config.locale.len())
         .saturating_add(config.directory_json.len())
         .saturating_add(config.directory_session_binding_sha256.len())
         .saturating_add(config.directory_receipt_sha256.len())
@@ -525,19 +525,16 @@ impl ArtifactEditor for HomeApp {
         command: &HomeCommand,
         doc: &ArtifactView<'_, SHomeSnapshot>,
         cfg: &ConfigView<'_, HomeConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation, HomeConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> UiAssemblyResult<ComponentTree> {
-        // 🪟 `VcsArtifactApp::render` appends `:{windowInstanceId}` when `view_state.window_id` is set —
-        // strip it so Home's single body key still matches.
-        let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
-        let root = match base_body_key {
-            crate::editor::home::modes::explore::windows::main::S_HOME_BODY => crate::editor::home::modes::explore::windows::main::render(cfg.snapshot)?,
+    fn render(body_key: &str, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+        let root = match body_key {
+            crate::editor::home::modes::explore::windows::main::S_HOME_BODY => crate::editor::home::modes::explore::windows::main::render(cfg.snapshot, view_state)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
                 .map_err(|_| PluginAssemblyError::new("s.home.render.unknown-body", "unknown body key text admission failed"))?,
         };

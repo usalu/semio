@@ -18,7 +18,6 @@ use protocol::Mutation;
 #[dsl(layout = "lines")]
 pub struct Block2dConfig {
     /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewModel.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -67,7 +66,7 @@ impl store::ArtifactPack for Block2dConfig {
 
 impl Default for Block2dConfig {
     fn default() -> Self {
-        Self { locale: "en-US".into() }
+        Self { }
     }
 }
 
@@ -86,8 +85,6 @@ pub enum Block2dConfigMutation {
         #[dsl(block)]
         config: Block2dConfig,
     },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
@@ -152,13 +149,11 @@ impl Mutation<Block2dConfig> for Block2dConfigMutation {
     /// state, not document leaves, so the `owner` paths are metadata for the registry only.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🗣️locale", semantic_kind: "set-locale", display_name: "Set Locale", emoji: "🗣️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
             Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            Self::SetLocale { .. } => &Self::DESCRIPTORS[1],
         }
     }
 
@@ -166,7 +161,6 @@ impl Mutation<Block2dConfig> for Block2dConfigMutation {
         let mut next = base.clone();
         match self {
             Block2dConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            Block2dConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         protocol::MutationOutcome::new(next)
     }

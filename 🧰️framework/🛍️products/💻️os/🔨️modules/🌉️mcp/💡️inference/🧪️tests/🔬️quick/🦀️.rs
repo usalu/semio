@@ -88,7 +88,7 @@ fn bare_tier_every_inference_tool_is_a_retryable_plugin_unavailable() {
 //#region 🧪️Discovery
 #[test]
 fn gis_inference_discovery_reads_committed_descriptor_through_registered_mcp_tool_without_execution_authority() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🗺️gis-discovery/🔣️.json")).expect("neutral GIS discovery fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗺️gis-discovery/🔣️.json")).expect("neutral GIS discovery fixture");
     let workspace = open_workspace(plugin_only_catalog(fixture["pluginId"].as_str().unwrap()));
     let mut registry = InMemoryToolRegistry::new();
     register_inference_tools(&mut registry, Some(workspace));

@@ -10,8 +10,6 @@ use schema::ArtifactSchema;
 pub struct PresentationConfig {
     #[state(config)]
     pub engagement_input: String,
-    #[state(config)]
-    pub locale: String,
 }
 //#endregion 🔖️Config
 

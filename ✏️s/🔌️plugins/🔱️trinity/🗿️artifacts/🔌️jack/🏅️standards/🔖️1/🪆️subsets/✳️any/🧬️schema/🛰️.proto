@@ -20,30 +20,23 @@ message JackArtifact {
   repeated Edge edges = 7;
   // @state artifact
   optional string root_node_id = 8;
-  // @state presence
-  string active_fixture_id = 10;
-  // @state presence
+  // @state config
+  // @state config
   string jack_query = 11;
-  // @state presence
+  // @state config
   map<string, string> lod_mode_by_window = 12;
   // @state config
   Camera viewport_camera = 13;
   // @state config
   string jack_result_json = 14;
   // @state config
-  string editor_engagement_input = 15;
   // @state config
-  string graph_engagement_input = 16;
   // @state config
-  string results_engagement_input = 17;
   // @state config
-  int64 reorganize_epoch = 18;
   // @state config
   optional JackEditorSelection editor_selection = 19;
   // @state config
-  int64 revision = 20;
   // @state config
-  string locale = 21;
 }
 
 message JackEditorSelection {

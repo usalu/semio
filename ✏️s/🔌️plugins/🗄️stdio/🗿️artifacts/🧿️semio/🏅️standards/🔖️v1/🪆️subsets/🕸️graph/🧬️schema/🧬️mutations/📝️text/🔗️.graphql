@@ -4,3 +4,8 @@ type SemioGraphOpDsl {
   keyword: String!
   args: String!
 }
+
+type SemioGraphMutationText {
+  keyword: String
+  args: String
+}

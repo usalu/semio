@@ -12,7 +12,7 @@ use crate::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
 use crate::editor::drawing::commands::canvas_pointer_down::{DrawingGesturePreview, DrawingSession};
 use crate::editor::drawing::commands::{
     add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input,
-    engagement_submit, move_layer, patch_layer, patch_layers, set_active_example, set_active_utility, set_camera, set_camera_zoom, set_fixture_json, set_locale, set_selected_opacity, set_snapshot, toggle_layer_visible,
+    engagement_submit, move_layer, patch_layer, patch_layers, set_active_example, set_active_utility, set_camera, set_camera_zoom, set_fixture_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
 };
 use crate::editor::drawing::config::{DrawingConfig, DrawingConfigMutation};
 use crate::editor::drawing::modes::edit;
@@ -148,7 +148,6 @@ semio_framework_plugin::app_commands! {
         "setCamera" as "camera" => set_camera::SetCamera,
         "setCameraZoom" as "camera-zoom" => set_camera_zoom::SetCameraZoom,
         "engagementInput" as "engagement-input" => engagement_input::EngagementInput,
-        "setLocale" as "locale" => set_locale::SetLocale,
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "canvasPointerMove" as "canvas-pointer-move" => canvas_pointer_move::CanvasPointerMove,
         "canvasPointerUp" as "canvas-pointer-up" => canvas_pointer_up::CanvasPointerUp,
@@ -797,8 +796,7 @@ const DRAWING_BOUNDED_TOOL_IDS: &[&str] = &[
     "setCamera",
     "setCameraZoom",
     "engagementInput",
-    "setLocale",
-];
+    ];
 const DRAWING_BOUNDED_PAYLOAD_SCHEMA: &str = "drawing.tool-command.v1";
 const DRAWING_BOUNDED_RAW_BYTES: usize = 65_536;
 const DRAWING_BOUNDED_WORK_ITEMS: usize = 4_096;
@@ -827,7 +825,6 @@ const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactT
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
 ];
 
 fn drawing_bounded_contract() -> semio_framework::ToolExecutionContract {
@@ -855,6 +852,7 @@ fn drawing_bounded_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &::protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<DrawingPlayApp>>>,
     operation: &semio_framework_plugin::AppOperationContext,
 ) -> Result<Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation>, Fault> {
     if !DRAWING_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
@@ -1244,8 +1242,7 @@ impl DrawingBoundedProofs {
         tools: [
             "setSnapshot", "commitDocument", "setFixtureJson", "setActiveExample", "setSelectedOpacity", "engagementSubmit",
             "addLayer", "dropLayerKind", "moveLayer", "deleteLayer", "duplicateLayer", "toggleLayerVisible", "combineBoolean",
-            "patchLayer", "patchLayers", "setActiveUtility", "setCamera", "setCameraZoom", "engagementInput", "setLocale"
-        ]
+            "patchLayer", "patchLayers", "setActiveUtility", "setCamera", "setCameraZoom", "engagementInput",         ]
     }
 }
 //#endregion 🧾️ProofCatalogs
@@ -1275,7 +1272,7 @@ fn render_drawing_body(
     config: &DrawingConfig,
     preview: &DrawingGesturePreview,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-    let labels = semio_framework_plugin::resolve_labels_for_locale::<DrawingPlayLabels>(&config.locale);
+    let labels = semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state);
     let active_utility = config.active_utility_id.as_str();
     let root = match body_key {
         DRAWING_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, preview, active_utility),
@@ -1429,7 +1426,7 @@ impl ArtifactEditor for DrawingPlayApp {
         command: &DrawingCommand,
         doc: &ArtifactView<'_, DrawingSnapshot>,
         cfg: &ConfigView<'_, DrawingConfig>,
-        interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<DrawingMutation, DrawingConfigMutation, Self::DraftMutation>, Fault> {
@@ -1441,7 +1438,7 @@ impl ArtifactEditor for DrawingPlayApp {
         command.dispatch(doc, cfg, &mut session)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, DrawingConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, DrawingConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         render_drawing_body(body_key, doc.snapshot, cfg.snapshot, &DrawingSession::default().preview())
     }
 
@@ -1450,6 +1447,7 @@ impl ArtifactEditor for DrawingPlayApp {
         body_key: &str,
         doc: &ArtifactView<'_, DrawingSnapshot>,
         cfg: &ConfigView<'_, DrawingConfig>,
+        _view_state: &semio_framework_plugin::ViewModel,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let preview = match doc.render_operation() {
             Some(operation) => owner
@@ -1596,8 +1594,7 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
             .action_with(drawing_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
-            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(drawing_internal_action(LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
             // 📷️ Camera — session-only runtime pose, never a document operation.
             .action_with(drawing_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
             .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)

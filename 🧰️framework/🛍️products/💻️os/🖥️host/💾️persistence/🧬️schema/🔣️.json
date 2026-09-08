@@ -1,66 +1,16 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "semio.shell.persistence/v1",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/host/persistence/component.json",
   "oneOf": [
     {
-      "$ref": "#/$defs/request"
+      "$ref": "#/$defs/Request"
     },
     {
-      "$ref": "#/$defs/event"
+      "$ref": "#/$defs/Event"
     }
   ],
   "$defs": {
-    "id": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 128,
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
-    },
-    "scope": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "windowId": {
-          "$ref": "#/$defs/id"
-        },
-        "spaceId": {
-          "$ref": "#/$defs/id"
-        },
-        "sessionId": {
-          "$ref": "#/$defs/id"
-        },
-        "generation": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740990
-        }
-      },
-      "required": [
-        "windowId",
-        "spaceId",
-        "sessionId",
-        "generation"
-      ]
-    },
-    "correlation": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "scope": {
-          "$ref": "#/$defs/scope"
-        },
-        "requestId": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        }
-      },
-      "required": [
-        "scope",
-        "requestId"
-      ]
-    },
-    "operation": {
+    "Operation": {
       "oneOf": [
         {
           "type": "object",
@@ -89,7 +39,7 @@
               ]
             },
             "selectionId": {
-              "$ref": "#/$defs/id"
+              "$ref": "#/definitions/id"
             }
           },
           "required": [
@@ -108,7 +58,7 @@
               "const": "bindSpace"
             },
             "selectionId": {
-              "$ref": "#/$defs/id"
+              "$ref": "#/definitions/id"
             }
           },
           "required": [
@@ -124,7 +74,7 @@
               "const": "importSpace"
             },
             "selectionId": {
-              "$ref": "#/$defs/id"
+              "$ref": "#/definitions/id"
             }
           },
           "required": [
@@ -140,7 +90,7 @@
               "const": "deleteEntry"
             },
             "entryId": {
-              "$ref": "#/$defs/id"
+              "$ref": "#/definitions/id"
             }
           },
           "required": [
@@ -150,7 +100,7 @@
         }
       ]
     },
-    "request": {
+    "Request": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -158,10 +108,10 @@
           "const": "semio.shell.persistence-request/v1"
         },
         "correlation": {
-          "$ref": "#/$defs/correlation"
+          "$ref": "#/definitions/correlation"
         },
         "operation": {
-          "$ref": "#/$defs/operation"
+          "$ref": "#/$defs/Operation"
         },
         "deadlineMs": {
           "type": "integer",
@@ -176,7 +126,7 @@
         "deadlineMs"
       ]
     },
-    "outcome": {
+    "Outcome": {
       "oneOf": [
         {
           "type": "object",
@@ -186,7 +136,7 @@
               "const": "committed"
             },
             "spaceId": {
-              "$ref": "#/$defs/id"
+              "$ref": "#/definitions/id"
             },
             "catalogGeneration": {
               "type": "integer",
@@ -196,7 +146,9 @@
             "contentDigest": {
               "type": "string",
               "pattern": "^[0-9a-f]{64}$",
-              "not": { "const": "0000000000000000000000000000000000000000000000000000000000000000" }
+              "not": {
+                "const": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
             },
             "byteLength": {
               "type": "integer",
@@ -220,7 +172,7 @@
               "const": "deleted"
             },
             "entryId": {
-              "$ref": "#/$defs/id"
+              "$ref": "#/definitions/id"
             },
             "catalogGeneration": {
               "type": "integer",
@@ -273,7 +225,7 @@
         }
       ]
     },
-    "event": {
+    "Event": {
       "oneOf": [
         {
           "type": "object",
@@ -286,7 +238,7 @@
               "const": "progress"
             },
             "correlation": {
-              "$ref": "#/$defs/correlation"
+              "$ref": "#/definitions/correlation"
             },
             "phase": {
               "enum": [
@@ -328,10 +280,10 @@
               "const": "terminal"
             },
             "correlation": {
-              "$ref": "#/$defs/correlation"
+              "$ref": "#/definitions/correlation"
             },
             "outcome": {
-              "$ref": "#/$defs/outcome"
+              "$ref": "#/$defs/Outcome"
             }
           },
           "required": [
@@ -341,6 +293,58 @@
             "outcome"
           ]
         }
+      ]
+    }
+  },
+  "definitions": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "windowId": {
+          "$ref": "#/definitions/id"
+        },
+        "spaceId": {
+          "$ref": "#/definitions/id"
+        },
+        "sessionId": {
+          "$ref": "#/definitions/id"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740990
+        }
+      },
+      "required": [
+        "windowId",
+        "spaceId",
+        "sessionId",
+        "generation"
+      ]
+    },
+    "correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "$ref": "#/definitions/scope"
+        },
+        "requestId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "scope",
+        "requestId"
       ]
     }
   }

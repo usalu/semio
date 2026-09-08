@@ -86,7 +86,7 @@
           "const": { "controlBytes": 4096, "uriBytes": 1280, "codeBytes": 256 }
         },
         "dataLimits": {
-          "const": { "hotMessageBytes": 262144, "snapshotMessageBytes": 4194304, "pendingBytes": 4194304, "pendingMessages": 64, "snapshotTransport": "cold-pair" }
+          "const": { "hotMessageBytes": 262144, "snapshotMessageBytes": 4194304, "pendingBytes": 1048576, "pendingMessages": 64, "snapshotTransport": "cold-pair" }
         },
         "cases": {
           "type": "array",

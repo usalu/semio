@@ -71,18 +71,18 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-exaggeration" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeration-from-1-to-2-5/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeration-from-1-to-2-5/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeration-from-1-to-2-5/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeration-from-1-to-2-5/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeration-from-1-to-2-5/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeratio-8ebcb8/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeratio-8ebcb8/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeratio-8ebcb8/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeratio-8ebcb8/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises-exaggeratio-8ebcb8/🎯️outcome/🔣️.json"),
         },
         "change-imported-features" => Vector {
-            before: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-position-descriptor/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-position-descriptor/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-position-descriptor/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-position-descriptor/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-position-descriptor/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports-harbor-94979a/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-gisterrain-1: no committed specification vector is registered for kind {other:?}"),
     }

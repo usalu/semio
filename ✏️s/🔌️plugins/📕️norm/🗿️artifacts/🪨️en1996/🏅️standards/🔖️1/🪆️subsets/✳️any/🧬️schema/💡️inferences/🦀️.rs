@@ -8,7 +8,6 @@ use crate::En1996Snapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::En1996Outline;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1996 snapshot. One field per named inference under
@@ -80,7 +79,6 @@ use crate::standards::v1::subsets::any::schema::{part_1_1, part_1_2, part_2, par
 /// `⚙️engine`. `evaluate` is the `En1996Snapshot -> CheckReport` projection; everything it composes
 /// is a pure helper living in the parent `🧬️schema`.
 use crate::document::{CheckReport, DesignSituation};
-
 fn parse_masonry_unit(value: &str) -> MasonryUnit {
     match value.to_ascii_lowercase().as_str() {
         "calcium_silicate" | "calcium silicate" => MasonryUnit::CalciumSilicate,
@@ -134,3 +132,8 @@ pub fn evaluate(document: &En1996Snapshot) -> CheckReport {
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 //#endregion 🧪️ComplianceReportTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::En1996Outline;
+//#endregion 🔁️Re-exports

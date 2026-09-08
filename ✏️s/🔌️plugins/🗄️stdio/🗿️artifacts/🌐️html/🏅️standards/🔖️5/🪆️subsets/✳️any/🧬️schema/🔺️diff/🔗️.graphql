@@ -62,3 +62,9 @@ type HtmlChildrenDiff {
   modified: [HtmlChildModified!]!
   added: [HtmlChildAdded!]!
 }
+
+type HtmlElementDiff {
+  name: String
+  attributes: HtmlAttributesDiff
+  children: HtmlChildrenDiff
+}

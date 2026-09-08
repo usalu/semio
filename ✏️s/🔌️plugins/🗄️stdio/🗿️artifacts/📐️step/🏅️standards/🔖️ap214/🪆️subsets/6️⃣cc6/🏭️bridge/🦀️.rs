@@ -77,7 +77,7 @@ fn main() {
         .collect();
 
     println!(
-        "{{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"{}\",\"standard\":\"{}\",\"subset\":\"{}\",\"bridgeVersion\":1,\"producedBy\":\"semio-s-plugin-stdio StepCc6Mutation dispatch enum\",\"mutations\":[{}]}}",
+        "{{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"{}\",\"standard\":\"{}\",\"subset\":\"{}\",\"bridgeVersion\":1,\"producedBy\":\"semio-s-artifact-stdio-step StepCc6Mutation dispatch enum\",\"mutations\":[{}]}}",
         escape(&artifact),
         escape(&standard),
         escape(&subset),

@@ -20,9 +20,5 @@ message Process3dConfig {
   // @state config
   string sun_color = 9;
   // @state config
-  string active_utility_id = 10;
-  // @state config
-  string locale = 11;
-  // @state config
   string contributions_json = 12;
 }

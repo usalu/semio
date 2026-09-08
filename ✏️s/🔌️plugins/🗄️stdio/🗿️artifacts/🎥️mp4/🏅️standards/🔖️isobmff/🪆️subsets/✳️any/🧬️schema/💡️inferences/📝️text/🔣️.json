@@ -2,5 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/stdio/mp4/isobmff/any/inference/text.json",
   "title": "Mp4InferenceText",
-  "type": "object"
+  "type": "string",
+  "description": "🚚️ The text representation of Mp4Inference: the instance is the serialized document this facet's grammar and codec speak."
 }

@@ -19,7 +19,6 @@ message Generation2dArtifact {
   // @state artifact
   optional string generation_preview_text = 7;
   // @state config
-  string locale = 8;
 }
 
 message CameraJson {
@@ -57,4 +56,8 @@ message GenerationPlayState {
   repeated FormGeneration generations = 1;
   optional string selected_generation_id = 2;
   optional string preview_text = 3;
+}
+
+message Generation2dStringList {
+  repeated string values = 1;
 }

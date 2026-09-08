@@ -23,7 +23,7 @@ const contractFor = (row: any) => ({ path: "🧪️tests/📝️history.md", gra
 
 /** 📦️ Reuses the executed Draw collector without importing or running its test suite. */
 function producerInputs(schema: discovery.Taxonomy) {
-  const path = join(libraryRoot, "📦️packages/🟦️typescript/🔬️index.test.ts"), content = readFileSync(path, "utf8"), tree = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true);
+  const path = join(libraryRoot, "🧪️tests/🔬️workspace-contract/🟦️.ts"), content = readFileSync(path, "utf8"), tree = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true);
   const names = new Set(["artifactProjectionProducerInput", "artifactProjectionProducerInputs", "projectionByteSort"]);
   const declarations = tree.statements.filter((node) => ts.isFunctionDeclaration(node) && names.has(node.name?.text ?? ""));
   expect(declarations).toHaveLength(3);

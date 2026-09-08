@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[test]
@@ -14,7 +13,7 @@ fn authored_installation_directory_survives_the_wire_codec() {
 }
 
 async fn sample_manifest() -> ExtensionPackageManifest {
-    use crate::os_pack::json::{Value, object};
+    use crate::os_pack::json::{object, Value};
     ExtensionPackageManifest {
         extension_id: "flow.math".into(),
         directory_name: "🧮️flow-math".into(),
@@ -49,7 +48,7 @@ async fn extends_matches_primary_dependency_rejects_mismatch_and_missing_depende
 
 #[semio_framework_async_macros::async_test]
 async fn dependencies_default_absent_on_the_wire() {
-    use crate::os_pack::json::{Value, object};
+    use crate::os_pack::json::{object, Value};
     let bare = object([
         ("extensionId".to_string(), Value::from("flow.math")),
         ("directoryName".to_string(), Value::from("🧮️flow-math")),
@@ -67,7 +66,7 @@ async fn dependencies_default_absent_on_the_wire() {
 
 #[semio_framework_async_macros::async_test]
 async fn package_plugin_dependency_round_trips_as_a_plain_string_pair() {
-    use crate::os_pack::json::{Value, object};
+    use crate::os_pack::json::{object, Value};
     let dependency = PackagePluginDependency { plugin_id: "cad".into(), version: "^1.0.0".into() };
     let json = dependency.to_json();
     assert_eq!(json, object([("pluginId".to_string(), Value::from("cad")), ("version".to_string(), Value::from("^1.0.0"))]));

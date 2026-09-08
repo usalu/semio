@@ -119,7 +119,6 @@ message CurationDiff {
   // @state config
   optional Filters filters = 5;
   // @state config
-  optional string locale = 7;
   // @state config
   optional string contributions_json = 8;
 }

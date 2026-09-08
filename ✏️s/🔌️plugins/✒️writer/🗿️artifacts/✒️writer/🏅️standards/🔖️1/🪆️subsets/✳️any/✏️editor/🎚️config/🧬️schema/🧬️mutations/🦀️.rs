@@ -25,9 +25,6 @@ pub use set_engagement_input::SetEngagementInput;
 #[path = "📷️set-camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
-#[path = "🗣️set-locale/🦀️.rs"]
-mod set_locale;
-pub use set_locale::SetLocale;
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::ToValue, dsl::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = WriterConfig, diff = WriterConfig, schema = "writer.config")]
@@ -48,8 +45,6 @@ pub enum WriterConfigMutation {
     SetEngagementInput(SetEngagementInput),
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),
-    #[dsl(key = "set-locale")]
-    SetLocale(SetLocale),
 }
 
 impl protocol::OpText for WriterConfigMutation {

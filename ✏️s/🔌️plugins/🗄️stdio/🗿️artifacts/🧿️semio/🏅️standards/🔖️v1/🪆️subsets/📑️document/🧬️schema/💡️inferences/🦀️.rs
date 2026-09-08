@@ -10,8 +10,7 @@ use crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnap
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::outline::{compute_semio_document_outline, SemioDocumentOutline};
-
+use super::outline::{compute_semio_document_outline};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio document snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir).
@@ -84,3 +83,8 @@ pub fn semio_document_artifact_inference_descriptor() -> framework_schema::Artif
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::outline::SemioDocumentOutline;
+//#endregion 🔁️Re-exports

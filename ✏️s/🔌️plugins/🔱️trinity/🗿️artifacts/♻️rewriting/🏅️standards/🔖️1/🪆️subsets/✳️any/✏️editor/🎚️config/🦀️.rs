@@ -5,8 +5,8 @@ use std::collections::BTreeMap;
 
 /// 🧮️ Rewriting's `ArtifactApp::Config` — node selection, the Before pane's live viewport camera
 /// (seeded once from the initial before-fixture's seed-only `camera` field, then only ever written by
-/// `nodeGraphViewport`), the reorganize epoch, the hover/select var focus + their epochs, the
-/// per-window LOD mode, and the BCP-47 locale tag.
+/// `nodeGraphViewport`), the reorganize epoch, the hover/select var focus + their epochs, and the
+/// per-window LOD mode.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "trinity.rewritingcfg")]
@@ -14,9 +14,7 @@ use std::collections::BTreeMap;
 pub struct RewritingConfig {
     #[dsl(block)]
     pub before_pane_camera: Camera,
-    pub reorganize_epoch: u64,
     pub lod_mode_by_window: BTreeMap<String, String>,
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -65,7 +63,7 @@ impl store::ArtifactPack for RewritingConfig {
 
 impl Default for RewritingConfig {
     fn default() -> Self {
-        Self { before_pane_camera: Camera::default(), reorganize_epoch: 0, lod_mode_by_window: BTreeMap::new(), locale: "en-US".into() }
+        Self { before_pane_camera: Camera::default(), lod_mode_by_window: BTreeMap::new() }
     }
 }
 

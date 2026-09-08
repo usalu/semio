@@ -789,7 +789,7 @@ class FontsScript extends BundleScript {
 
 /** 🧪️ Runs the in-source `import.meta.vitest` coverage in `🟦️.ts` (the generic
  * `tileProxyVitePlugin`/`staticDirVitePlugin`/`meshCollectionVitePlugin`/`playgroundAssetVitePlugins`
- * factories among others) — `framework/ui/styling/🧪️test/🟦️s.ts`'s `bun:test` cases run separately via `bun test`. */
+ * factories among others) — `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts`'s `bun:test` cases run separately via `bun test`. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);

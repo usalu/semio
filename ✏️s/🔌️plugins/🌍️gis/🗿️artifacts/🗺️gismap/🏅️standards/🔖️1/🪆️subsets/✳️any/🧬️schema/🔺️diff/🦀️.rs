@@ -31,8 +31,6 @@ pub struct GisMapDiff {
     pub vector_style: Option<String>,
     #[state(config)]
     pub lod_mode: Option<String>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔹Diff
 

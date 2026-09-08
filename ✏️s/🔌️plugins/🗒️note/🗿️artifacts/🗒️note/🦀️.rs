@@ -4,7 +4,7 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as schema;
+extern crate semio_framework_schema as framework_schema;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<NoteMutation, NoteConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing it
@@ -1204,10 +1204,7 @@ pub fn note_canvas_document_json(document: &NoteSnapshot, camera: &NoteCamera) -
             }
         }
 
-        // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
+        pub use crate::standards::v1::subsets::any::schema;
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
@@ -1215,7 +1212,7 @@ pub fn note_canvas_document_json(document: &NoteSnapshot, camera: &NoteCamera) -
             pub use crate::standards::v1::subsets::any::io::mutations::text::*;
             pub use crate::standards::v1::subsets::any::schema::mutations::NoteMutation;
         }
-        pub mod dsl {
+        pub mod document_dsl {
             pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
         }
         pub mod spr {
@@ -1347,8 +1344,6 @@ pub mod editor {
             pub mod set_grid_subdivisions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-grid-visible/🦀️.rs"]
             pub mod set_grid_visible;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️.rs"]
-            pub mod set_locale;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️set-pencil-width/🦀️.rs"]
             pub mod set_pencil_width;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️set-snap-enabled/🦀️.rs"]

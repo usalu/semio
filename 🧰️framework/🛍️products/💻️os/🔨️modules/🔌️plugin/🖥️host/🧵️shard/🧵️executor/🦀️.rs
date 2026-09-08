@@ -22,14 +22,14 @@
 //! forwarder thread necessary in the first place (`💻️os/🖥️host/🎠️activation/🦀️.rs`'s deleted
 //! `semio-os-host-kernel-shard-forward-*` threads) no longer exists.
 
-use super::{AdmissionLimit, DeferredAuthority, FixedOwnerRing, SHARD_DEFERRED_BYTES, SHARD_DEFERRED_ITEMS, SHARD_FRAME_MAX_BYTES, ShardDrive, ShardLoop, ShardOutcome, ShardTransports};
+use super::{AdmissionLimit, DeferredAuthority, FixedOwnerRing, ShardDrive, ShardLoop, ShardOutcome, ShardTransports, SHARD_DEFERRED_BYTES, SHARD_DEFERRED_ITEMS, SHARD_FRAME_MAX_BYTES};
 use crate::{GuestInstance, GuestRuntime, GuestRuntimes};
 use semio_framework_actor::{ActorId, Lane as ActorLane, ShardTransport, ThreadTransport};
 use semio_framework_async::{Job as PoolJob, Lane as PoolLane, WorkerPool, WorkerSubmitErrorKind};
 use std::collections::VecDeque;
 use std::future::Future;
-use std::pin::{Pin, pin};
-use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering};
+use std::pin::{pin, Pin};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, Condvar, Mutex, PoisonError, Weak};
 use std::task::{Context, Poll, Wake, Waker};
 use std::time::{Duration, Instant};

@@ -146,6 +146,7 @@ impl ArtifactEditor for SurfaceEditorFixture {
         doc: &ArtifactView<'_, SurfaceSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
         _interaction: &crate::app::InteractionView<'_>,
+        _view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, NoDraft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<SurfaceMutation>, Fault> {
@@ -154,7 +155,7 @@ impl ArtifactEditor for SurfaceEditorFixture {
         }
     }
 
-    fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
+    fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
         built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
     }
 }
@@ -179,11 +180,11 @@ impl ArtifactViewer for SurfaceViewerFixture {
         SurfaceSnapshot::default()
     }
 
-    fn handle(_command: &SurfaceViewerCommand, _doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &crate::app::InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+    fn handle(_command: &SurfaceViewerCommand, _doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &crate::app::InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
+    fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
         built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
     }
 }

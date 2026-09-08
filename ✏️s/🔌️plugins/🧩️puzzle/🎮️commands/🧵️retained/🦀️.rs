@@ -39,14 +39,7 @@ pub trait PuzzleCommandWork<A: ArtifactApp>: Send {
     fn tool_id(&self) -> &'static str;
     fn bind_operation(&mut self, _operation: Operation) {}
     fn extent(&self, command: &A::Command, snapshot: &A::Snapshot, interaction: &protocol::InteractionState) -> Option<usize>;
-    fn step(
-        &mut self,
-        command: &A::Command,
-        snapshot: &A::Snapshot,
-        config: &A::Config,
-        interaction: &protocol::InteractionState,
-        hover: &InteractionHoverState,
-    ) -> Result<PuzzleCommandWorkStep<A>, Fault>;
+    fn step(&mut self, command: &A::Command, snapshot: &A::Snapshot, config: &A::Config, interaction: &protocol::InteractionState, hover: &InteractionHoverState) -> Result<PuzzleCommandWorkStep<A>, Fault>;
     fn begin_close(&mut self) {}
     fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
         InteractiveJobCloseStep::Complete
@@ -78,14 +71,7 @@ impl<A: ArtifactApp> PuzzleCommandWork<A> for BoundedFirstStepCommandWork<A> {
         (self.extent)(command, snapshot, interaction)
     }
 
-    fn step(
-        &mut self,
-        command: &A::Command,
-        snapshot: &A::Snapshot,
-        config: &A::Config,
-        interaction: &protocol::InteractionState,
-        hover: &InteractionHoverState,
-    ) -> Result<PuzzleCommandWorkStep<A>, Fault> {
+    fn step(&mut self, command: &A::Command, snapshot: &A::Snapshot, config: &A::Config, interaction: &protocol::InteractionState, hover: &InteractionHoverState) -> Result<PuzzleCommandWorkStep<A>, Fault> {
         if self.consumed {
             return Err(Fault::from("puzzle-command-bounded-work-repeated"));
         }
@@ -116,14 +102,7 @@ impl<A: ArtifactApp> PuzzleCommandWork<A> for NoopPuzzleCommandWork<A> {
         Some(1)
     }
 
-    fn step(
-        &mut self,
-        _command: &A::Command,
-        _snapshot: &A::Snapshot,
-        _config: &A::Config,
-        _interaction: &protocol::InteractionState,
-        _hover: &InteractionHoverState,
-    ) -> Result<PuzzleCommandWorkStep<A>, Fault> {
+    fn step(&mut self, _command: &A::Command, _snapshot: &A::Snapshot, _config: &A::Config, _interaction: &protocol::InteractionState, _hover: &InteractionHoverState) -> Result<PuzzleCommandWorkStep<A>, Fault> {
         if self.consumed {
             return Err(Fault::from("puzzle-command-noop-repeated"));
         }
@@ -225,13 +204,7 @@ impl PuzzleCommandCheckpointState {
         let usize_at = |index| usize::try_from(read(index)?).ok();
         Some(Self {
             phase,
-            operation: Operation {
-                operation: semio_framework_job::OperationId(read(0)?),
-                base_revision: semio_framework_job::RevisionId(read(1)?),
-                generation: semio_framework_job::Generation(read(2)?),
-                preview_sequence: read(3)?,
-                seed: read(4)?,
-            },
+            operation: Operation { operation: semio_framework_job::OperationId(read(0)?), base_revision: semio_framework_job::RevisionId(read(1)?), generation: semio_framework_job::Generation(read(2)?), preview_sequence: read(3)?, seed: read(4)? },
             tool_hash: read(5)?,
             input_hash: read(6)?,
             raw_len: usize_at(7)?,
@@ -321,12 +294,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
         Self::from_payload(operation, payload, Some(input))
     }
 
-    pub fn validate_wire_checkpoint(
-        operation: Operation,
-        payload: &RetainedPuzzleCommandPayload<A>,
-        input: &RetainedToolWireInput,
-        checkpoint: &RetainedToolWireInput,
-    ) -> Result<(), ToolJobFactoryError> {
+    pub fn validate_wire_checkpoint(operation: Operation, payload: &RetainedPuzzleCommandPayload<A>, input: &RetainedToolWireInput, checkpoint: &RetainedToolWireInput) -> Result<(), ToolJobFactoryError> {
         let bytes = retained_checkpoint_bytes(checkpoint).ok_or_else(|| ToolJobFactoryError::new("Puzzle retained checkpoint has an invalid fixed-page extent"))?;
         let state = PuzzleCommandCheckpointState::decode(&bytes).ok_or_else(|| ToolJobFactoryError::new("Puzzle retained checkpoint is corrupt"))?;
         let input_hash = retained_input_hash(input).ok_or_else(|| ToolJobFactoryError::new("Puzzle retained command input is not exactly sealed"))?;
@@ -345,22 +313,14 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                 PuzzleCommandPhase::WorkProgress => state.raw_scan_cursor == state.raw_len && state.work_extent != 0 && state.preflight_cursor == state.work_extent && state.work_cursor != 0,
                 _ => false,
             };
-        let operation_matches = state.operation.operation == operation.operation
-            && state.operation.base_revision == operation.base_revision
-            && state.operation.generation == operation.generation
-            && state.operation.seed == operation.seed;
+        let operation_matches = state.operation.operation == operation.operation && state.operation.base_revision == operation.base_revision && state.operation.generation == operation.generation && state.operation.seed == operation.seed;
         if !operation_matches || state.tool_hash != tool_hash || state.input_hash != input_hash || !phase_is_resumable || !cursors_are_bounded {
             return Err(ToolJobFactoryError::new("Puzzle retained checkpoint authority or cursor state is stale"));
         }
         Ok(())
     }
 
-    pub fn from_validated_wire_checkpoint(
-        operation: Operation,
-        payload: RetainedPuzzleCommandPayload<A>,
-        input: RetainedToolWireInput,
-        checkpoint: RetainedToolWireInput,
-    ) -> Self {
+    pub fn from_validated_wire_checkpoint(operation: Operation, payload: RetainedPuzzleCommandPayload<A>, input: RetainedToolWireInput, checkpoint: RetainedToolWireInput) -> Self {
         let bytes = retained_checkpoint_bytes(&checkpoint).expect("validated Puzzle checkpoint bytes");
         let state = PuzzleCommandCheckpointState::decode(&bytes).expect("validated Puzzle checkpoint state");
         let mut job = Self::from_payload(operation, payload, Some(input));
@@ -436,10 +396,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
             }
         };
         self.checkpoint_pending = false;
-        StepOutcome::CheckpointReady(Checkpoint {
-            state: payload,
-            applied_progress: self.raw_page_cursor.saturating_add(self.raw_scan_cursor).saturating_add(self.preflight_cursor).saturating_add(self.work_cursor) as u64,
-        })
+        StepOutcome::CheckpointReady(Checkpoint { state: payload, applied_progress: self.raw_page_cursor.saturating_add(self.raw_scan_cursor).saturating_add(self.preflight_cursor).saturating_add(self.work_cursor) as u64 })
     }
 
     fn checkpoint(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
@@ -481,9 +438,7 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
                 !matches!(self.phase, PuzzleCommandPhase::WirePages | PuzzleCommandPhase::WireBytes | PuzzleCommandPhase::Decode | PuzzleCommandPhase::Preflight)
                     || (self.phase == PuzzleCommandPhase::Preflight && self.preflight_cursor > target.preflight_cursor)
             }
-            PuzzleCommandPhase::WorkProgress => {
-                matches!(self.phase, PuzzleCommandPhase::Publish | PuzzleCommandPhase::Complete | PuzzleCommandPhase::Fault) || self.work_cursor > target.work_cursor
-            }
+            PuzzleCommandPhase::WorkProgress => matches!(self.phase, PuzzleCommandPhase::Publish | PuzzleCommandPhase::Complete | PuzzleCommandPhase::Fault) || self.work_cursor > target.work_cursor,
             _ => true,
         }
     }
@@ -554,7 +509,9 @@ impl<A: ArtifactApp> RetainedPuzzleCommandJob<A> {
             }
             PuzzleCommandPhase::Work => {
                 cx.set_stage("puzzle-command-work");
-                let (Some(command), Some(snapshot), Some(config), Some(interaction), Some(hover), Some(work)) = (self.command.as_ref(), self.snapshot.as_ref(), self.config.as_ref(), self.interaction_state.as_ref(), self.interaction_hover.as_ref(), self.work.as_mut()) else {
+                let (Some(command), Some(snapshot), Some(config), Some(interaction), Some(hover), Some(work)) =
+                    (self.command.as_ref(), self.snapshot.as_ref(), self.config.as_ref(), self.interaction_state.as_ref(), self.interaction_hover.as_ref(), self.work.as_mut())
+                else {
                     return self.fault(cx, b"puzzle command work owner is absent");
                 };
                 match work.step(command, snapshot, config, interaction, hover) {

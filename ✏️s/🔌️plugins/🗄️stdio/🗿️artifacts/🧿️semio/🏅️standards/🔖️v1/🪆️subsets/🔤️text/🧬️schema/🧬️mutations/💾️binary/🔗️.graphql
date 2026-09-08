@@ -5,3 +5,9 @@ type SemioTextMutationOpFrameHeader {
   tag: Int!
   payload: String!
 }
+
+type SemioTextMutationBinary {
+  format: Int
+  tag: Int
+  payload: String
+}

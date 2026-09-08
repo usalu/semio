@@ -10,14 +10,12 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[path = "🎨️set-vector-style/🦀️.rs"] mod set_vector_style;
 #[path = "🔽️set-lod-mode/🦀️.rs"] mod set_lod_mode;
 #[path = "📏️set-layer-stroke-scale/🦀️.rs"] mod set_layer_stroke_scale;
-#[path = "🗣️set-locale/🦀️.rs"] mod set_locale;
 pub use set_layer_visibility::SetLayerVisibility;
 pub use set_camera::SetCamera;
 pub use set_render_mode::SetRenderMode;
 pub use set_vector_style::SetVectorStyle;
 pub use set_lod_mode::SetLodMode;
 pub use set_layer_stroke_scale::SetLayerStrokeScale;
-pub use set_locale::SetLocale;
 //#endregion 🧬️Leaves
 
 //#region 🧬️Aggregate
@@ -31,6 +29,5 @@ pub enum Gis2dConfigMutation {
     SetVectorStyle(SetVectorStyle),
     SetLodMode(SetLodMode),
     SetLayerStrokeScale(SetLayerStrokeScale),
-    SetLocale(SetLocale),
 }
 //#endregion 🧬️Aggregate

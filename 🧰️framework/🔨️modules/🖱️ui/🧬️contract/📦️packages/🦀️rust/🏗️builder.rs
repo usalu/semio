@@ -1392,7 +1392,6 @@ impl TreeItemBuilder {
             Err(row_action) => Err((self, row_action)),
         }
     }
-
 }
 
 impl HasBase for TreeItemBuilder {

@@ -14,7 +14,6 @@ export interface EquationDiff {
   /** @state config */
   cameraZoom?: number;
   /** @state config */
-  locale?: string;
 }
 
 export interface EquationArtifact {
@@ -23,7 +22,6 @@ export interface EquationArtifact {
   cameraX: number;
   cameraY: number;
   cameraZoom: number;
-  locale: string;
 }
 
 export interface EquationGraph {

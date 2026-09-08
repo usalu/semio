@@ -39,7 +39,8 @@ silently applied.
   (scope id `<root>.mutation.<semanticKind>`, facet `schema`, exports `Payload`/`Wire` or the `title`).
   The catalog generator recognizes a `🧬️mutations/<leaf>/🧬️schema/` module as a scope of its own.
 - Export presence per format: JSON `$defs.<Export>`; proto `message <Export>`; GraphQL any of
-  `type|input|enum|interface|union|scalar <Export>`; Rust `pub struct|enum <Export>`; TypeScript both an
+  `type|input|enum|interface|union|scalar <Export>`; Rust `pub struct|enum|type <Export>` or a per-name
+  `pub use <path>::<Export>;` (grouped or glob re-exports declare nothing); TypeScript both an
   exported type and `parse<Export>()`. `x-semio-formats` lists every format the export exists in,
   including the normative one. Diagnostic codes: the harness `schema-*` vocabulary is the single code
   table shared by the harness and the root `schema check`.

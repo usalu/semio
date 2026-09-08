@@ -3295,7 +3295,7 @@ fn event_from_node(row: &neo4rs::Row) -> DirectoryResult<DirectoryEvent> {
 }
 
 #[cfg(test)]
-#[path = "🌱️creation-v1/🦀️.rs"]
+#[path = "🌱️creation-v1/🧪️tests/🔬️standalone/🦀️.rs"]
 mod creation_tests;
 
 //#region 🧪️Tests

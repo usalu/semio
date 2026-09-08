@@ -6,7 +6,6 @@ type LayoutConfig {
   engagementInput: String! @state(class: CONFIG)
   camera: LayoutCamera! @state(class: CONFIG)
   previewCamera: LayoutCamera! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 type LayoutDropPreviewState {
   kind: String!

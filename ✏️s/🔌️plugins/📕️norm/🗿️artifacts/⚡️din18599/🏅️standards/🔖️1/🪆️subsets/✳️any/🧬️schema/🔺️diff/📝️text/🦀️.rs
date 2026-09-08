@@ -134,3 +134,8 @@ impl MutationDiff<Din18599Snapshot> for Din18599Diff {
     }
 }
 //#endregion 🔖️Apply
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Din18599DiffText = String;
+//#endregion 🚚️Carrier

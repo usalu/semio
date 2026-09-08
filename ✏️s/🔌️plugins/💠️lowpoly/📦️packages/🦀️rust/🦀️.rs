@@ -36,12 +36,5 @@ mod viewer { pub use semio_s_artifact_lowpoly_lowpoly::viewer::*; }
 mod plugin;
 semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::LowpolyApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_lowpoly_demo_session;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

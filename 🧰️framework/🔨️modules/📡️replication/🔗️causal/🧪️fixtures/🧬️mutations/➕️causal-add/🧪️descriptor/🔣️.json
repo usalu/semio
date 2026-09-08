@@ -5,12 +5,17 @@
   "displayName": "Causal Add",
   "emoji": "➕️",
   "aggregateVariant": "CausalAddOp",
-  "payloadSchema": "🛂️schema/🔣️.json",
+  "payloadSchema": "🦀️.rs#CausalAddOp",
   "textOpcode": null,
   "binaryTag": null,
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",
-  "outcomeClasses": ["applied"],
+  "outcomeClasses": [
+    "applied"
+  ],
   "composition": "atomic",
-  "requiredLanguageSurfaces": ["rust", "binary", "json-schema"]
+  "requiredLanguageSurfaces": [
+    "rust",
+    "binary"
+  ]
 }

@@ -2,5 +2,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/s/puzzle/puzzle3d/mutations/text.json",
   "title": "Puzzle3dMutationsText",
-  "type": "object"
+  "type": "object",
+  "x-semio-formats": [
+    "🔣️jsonschema",
+    "🟦️typescript"
+  ]
 }

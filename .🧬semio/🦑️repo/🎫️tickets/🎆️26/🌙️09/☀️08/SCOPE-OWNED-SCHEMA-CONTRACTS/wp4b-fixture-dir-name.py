@@ -30,7 +30,10 @@ def directories():
 
 def referencing_files():
     inside, outside = [], []
-    for directory, names, files in os.walk(REPO):
+    outside = [line for line in subprocess.run(
+        ["git", "grep", "-l", "✏️s[^\"' ]*" + OLD, "--", "🧰️framework", "🌎️hub", ".vscode", "📜️script.ts"],
+        cwd=REPO, capture_output=True, text=True).stdout.splitlines() if line]
+    for directory, names, files in os.walk(os.path.join(REPO, ROOT)):
         names[:] = [name for name in names
                     if name not in ("target", "node_modules", ".venv", "dist", ".git") and not name.startswith(".git")]
         relative_dir = os.path.relpath(directory, REPO)
@@ -46,7 +49,7 @@ def referencing_files():
             if OLD not in text:
                 continue
             relative = os.path.relpath(path, REPO)
-            (inside if relative.split(os.sep)[0] == ROOT else outside).append(relative)
+            inside.append(relative)
     return inside, outside
 
 

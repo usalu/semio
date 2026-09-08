@@ -3,7 +3,7 @@
   "handle": {
     "id": "handle-out",
     "handleKind": "hk-power",
-    "angle": 3.0,
+    "angle": 3,
     "radius": 0.5
   }
 }

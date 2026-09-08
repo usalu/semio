@@ -1,4 +1,3 @@
-
 use super::*;
 
 struct Factory(Arc<std::sync::atomic::AtomicUsize>);

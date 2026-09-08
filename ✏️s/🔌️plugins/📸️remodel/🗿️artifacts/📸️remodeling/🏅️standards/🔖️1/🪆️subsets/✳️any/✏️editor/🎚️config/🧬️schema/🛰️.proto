@@ -42,5 +42,4 @@ message RemodelingConfig {
   // @state config
   string active_utility_id = 6;
   // @state config
-  string locale = 7;
 }

@@ -7,7 +7,7 @@ import { createRequire } from "node:module";
 /** 🧾️ Joins the native ARC1 contract to strict schema validation and independent platform byte encoders. */
 export function toolJobCheckpointSelfTests(): number {
   const base = join(getWorkspaceRoot(), "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
-  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/📸️artifact-command-checkpoint.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/📸️artifact-command-checkpoint.json"), "utf8")) as {
     format: string; version: number; maximumBytes: number; headerBytes: number;
     cases: { name: string; workPhase: boolean; rawPageCursor: number; rawBytes: number; workProgress: number; contextDigest: number; workspaceIdentity: number; workState: { bytes?: number[]; fill?: number; length?: number }; outcome: string }[];
   };

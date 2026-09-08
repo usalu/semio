@@ -41,6 +41,8 @@ infinite_canvas = { path = "../../../../../../♾️infinite/📦️packages/�
 semio-framework-3d = { path = "../../../../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 puzzle = { path = "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust", package = "semio-s-plugin-puzzle" }
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-config = { workspace = true }
+semio-framework-os-shell = { workspace = true }
 ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
 # 🖥️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): `winit_app.rs`/`os_host.rs` already
 # named `ui_host::{WindowDelegate, WindowMetrics, RedrawOutcome, should_request_redraw, PointerRegistry,
@@ -77,6 +79,9 @@ path = "💾️binary/🦀️.rs"
 required-features = ["native-bin"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# 🖥️ Native-only: it embeds wasmtime, and its `wasmtime-wasi` pulls tokio/mio, which hard-fails on
+# wasm32. Its only users here (`🎠️runtime`, `kernel_runtime`) are already `cfg(not(target_arch = "wasm32"))`;
+# the previous `not(target_os = "wasi")` gate admitted wasm32-unknown-unknown, whose target_os is "unknown".
 semio-framework-plugin-host = { path = "../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 # 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H3-wgpu-native): the `Kernel`/`ActorId`/`ThreadTransport`
 # vocabulary the native kernel thread (`../../🧊️renderer/🦀️.rs`'s `kernel_runtime` module) drives directly — see

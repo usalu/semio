@@ -69,31 +69,9 @@
     "selectionMode": {
       "type": "string",
       "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
     }
   },
   "$defs": {
-    "GisMapFeature": {
-      "title": "GisMapFeature",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "data"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "data": {
-          "type": "object",
-          "additionalProperties": true
-        }
-      }
-    },
     "GisMapStringList": {
       "title": "GisMapStringList",
       "type": "object",
@@ -166,7 +144,7 @@
         "added": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/GisMapFeature"
+            "$ref": "https://semio.tech/schema/s/gis/gismap/artifact.json#/$defs/GisMapFeature"
           }
         },
         "removed": {

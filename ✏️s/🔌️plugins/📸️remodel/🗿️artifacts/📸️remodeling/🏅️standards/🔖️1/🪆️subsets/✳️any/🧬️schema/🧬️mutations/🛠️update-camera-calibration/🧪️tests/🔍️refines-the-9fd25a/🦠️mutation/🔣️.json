@@ -6,15 +6,15 @@
     "model": "brownConrady",
     "fx": 271.5,
     "fy": 271.5,
-    "cx": 160.0,
-    "cy": 120.0,
-    "skew": 0.0,
+    "cx": 160,
+    "cy": 120,
+    "skew": 0,
     "distortion": [
       -0.01953125,
       0.0048828125,
-      0.0,
-      0.0,
-      0.0
+      0,
+      0,
+      0
     ],
     "rmsReprojectionPx": 0.3125,
     "locked": false

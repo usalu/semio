@@ -190,7 +190,6 @@ semio_framework_plugin::app_commands! {
     /// from the `🎮️commands/*` payload modules. Each row states BOTH the manifest action id
     /// (`command_id()`, the camelCase id declared in `🔖️Manifest` below) and the `dsl` wire keyword (the
     /// kebab-case `#[dsl(key = ..)]` the codec uses) — genuinely different vocabularies:
-    /// `"setSelection" as "selection"` and `"setLocale" as "locale"` are the rows that prove it.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
     pub enum RemodelingCommand for RemodelingSnapshot, RemodelingMutation, RemodelingConfig, RemodelingConfigMutation {
         // 🚀️ Generation-tagged reconstruction; the hidden row is appended to preserve ordinals.
@@ -235,7 +234,6 @@ semio_framework_plugin::app_commands! {
         "setReportTable" as "report-table" => set_report_table::SetReportTable,
         // 🧰️ `setActiveUtility` is the framework-injected id (`SET_ACTIVE_UTILITY_ACTION_ID`).
         "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
-        "setLocale" as "locale" => set_locale::SetLocale,
         // 🐚️ Shell effects — no operations either way.
         "importFrames" as "import-frames" => import_frames::ImportFrames,
         "importVideo" as "import-video" => import_video::ImportVideo,
@@ -254,7 +252,7 @@ use crate::editor::remodeling::commands::{add_stream, import_frame_payload, impo
 use crate::editor::remodeling::commands::{advance_reconstruction, cancel_reconstruction, retry_stage, run_reconstruction, run_stage};
 use crate::editor::remodeling::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks, reset_placeholder_mesh};
 use crate::editor::remodeling::commands::{export_qc_report, import_frames, import_video};
-use crate::editor::remodeling::commands::{set_active_example, set_active_utility, set_camera, set_frame_cursor, set_layer_visibility, set_locale, set_report_table};
+use crate::editor::remodeling::commands::{set_active_example, set_active_utility, set_camera, set_frame_cursor, set_layer_visibility, set_report_table};
 use crate::editor::remodeling::commands::{set_dense_params, set_feature_params, set_geo_params, set_ingest_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
 //#endregion 🔖️Commands
 
@@ -453,7 +451,6 @@ mod args_bridge {
             "setFrameCursor" => RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: text(args, "streamId"), frame_index: u32_or("frameIndex", 0) }),
             "setReportTable" => RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: text_or("table", "frames") }),
             "setActiveUtility" => RemodelingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: text_or("utilityId", "select") }),
-            "setLocale" => RemodelingCommand::SetLocale(set_locale::SetLocale { value: text_or("value", "en-US") }),
             "importFrames" => RemodelingCommand::ImportFrames(import_frames::ImportFrames {}),
             "importVideo" => RemodelingCommand::ImportVideo(import_video::ImportVideo {}),
             "exportQcReport" => RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {}),
@@ -515,8 +512,7 @@ const REMODELING_RETAINED_TOOL_IDS: &[&str] = &[
     "setFrameCursor",
     "setReportTable",
     "setActiveUtility",
-    "setLocale",
-    "importFrames",
+        "importFrames",
     "importVideo",
     "exportQcReport",
     "advanceReconstruction",
@@ -571,7 +567,7 @@ const REMODELING_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPu
     config_route("setFrameCursor"),
     config_route("setReportTable"),
     config_route("setActiveUtility"),
-    config_route("setLocale"),
+    config_route(),
     host_route("importFrames"),
     host_route("importVideo"),
     host_route("exportQcReport"),
@@ -620,6 +616,7 @@ fn remodeling_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<RemodelingPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation, NoDraftMutation>, Fault> {
     if !REMODELING_RETAINED_TOOL_IDS.contains(&command.command_id()) {
@@ -808,7 +805,6 @@ impl store::ArtifactStoreOneItemPreparation<RemodelingSnapshot, RemodelingMutati
 }
 
 /// 📬️ The config lane's twin — remodeling's six session verbs (`setCamera`/`setLayerVisibility`/
-/// `setFrameCursor`/`setReportTable`/`setActiveUtility`/`setLocale`) publish into the config store, and
 /// the runtime rejects a `Config` publication contract outright when this factory is absent.
 struct RemodelingConfigStorePreparationFactory;
 
@@ -993,8 +989,7 @@ impl ArtifactEditor for RemodelingPlayApp {
             "editCalibration", "calibrateCameras", "addGcp", "removeGcp", "placeGcpObservation",
             "setIngestParams", "setFeatureParams", "setMatchParams", "setSfmParams", "setDenseParams", "setMeshParams", "setMotionParams", "setGeoParams",
             "resetPlaceholderMesh", "clearSparse", "clearDense", "clearMeshResult", "clearTracks", "clearGeoProducts", "clearResult",
-            "setCamera", "setLayerVisibility", "setFrameCursor", "setReportTable", "setActiveUtility", "setLocale",
-            "importFrames", "importVideo", "exportQcReport",
+            "setCamera", "setLayerVisibility", "setFrameCursor", "setReportTable", "setActiveUtility",             "importFrames", "importVideo", "exportQcReport",
             "advanceReconstruction", "cancelReconstruction", "setActiveExample"
         ]
     }
@@ -1033,7 +1028,7 @@ impl ArtifactEditor for RemodelingPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::remodeling::config::schema::app_schema_descriptor())
     }
 
@@ -1136,17 +1131,17 @@ impl ArtifactEditor for RemodelingPlayApp {
         command: &RemodelingCommand,
         doc: &ArtifactView<'_, RemodelingSnapshot>,
         cfg: &ConfigView<'_, RemodelingConfig>,
-        _interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation, Self::DraftMutation>, Fault> {
         command.dispatch(doc, cfg)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let scene = doc.snapshot;
         let config = cfg.snapshot;
-        let labels = remodeling_labels(config);
+        let labels = remodeling_labels(view_state);
         let built = match body_key {
             model::windows::model::REMODELING_PLAY_BODY_MAIN => model::windows::model::render(scene, config),
             capture::windows::frames::REMODELING_PLAY_BODY_FRAMES => capture::windows::frames::render(scene, config),
@@ -1165,8 +1160,8 @@ impl ArtifactEditor for RemodelingPlayApp {
 
     /// 👁️ Dynamic per-render window measures — the Model window's layer toggles must reflect the LIVE
     /// config, so they are supplied here rather than frozen into the manifest.
-    fn window_measures(_doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        HashMap::from([(model::windows::model::REMODELING_PLAY_WINDOW_MAIN.to_string(), model::windows::model::window_measures(cfg.snapshot, remodeling_labels(cfg.snapshot)))])
+    fn window_measures(_doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, RemodelingConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        HashMap::from([(model::windows::model::REMODELING_PLAY_WINDOW_MAIN.to_string(), model::windows::model::window_measures(cfg.snapshot, remodeling_labels(view_state)))])
     }
 }
 //#endregion 🔖️RemodelingPlayApp
@@ -1413,7 +1408,7 @@ pub fn create_remodeling_app() -> AppDefinition {
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("gcpPlace", LocalizedLabel::native("Place GCP", "Passpunkt setzen"), "crosshair") })
             // 👁️ Internal (non-palette) view actions the panels/windows dispatch — declared so they are
             // real `ActionDefinition`s the classification gate and the tool-proof catalog can both see.
-            .action_with(remodeling_internal_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
+            .action_with(remodeling_internal_action(LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
             // 🎬️ Example picker — one option per `crate::editor::remodeling::examples::REMODELING_EXAMPLES`
             // entry, so appending an example there is the only edit a new example needs.
             .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::bounded_catalog("setActiveExample", LocalizedLabel::native("Load Example", "Beispiel laden"), ActionKind::Mutation) })
@@ -1473,7 +1468,6 @@ pub fn create_remodeling_app() -> AppDefinition {
             .action_interactive_job("setLayerVisibility", InteractiveJobClassification::Migrated)
             .action_interactive_job("setFrameCursor", InteractiveJobClassification::Migrated)
             .action_interactive_job("setReportTable", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportQcReport", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             // 🎯️ Typed channel surface — `io()` is this same information's single source of truth,

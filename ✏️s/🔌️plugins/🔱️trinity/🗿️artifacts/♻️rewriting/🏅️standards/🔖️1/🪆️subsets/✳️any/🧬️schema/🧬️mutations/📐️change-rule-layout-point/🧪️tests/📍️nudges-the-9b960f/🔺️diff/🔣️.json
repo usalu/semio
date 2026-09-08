@@ -5,12 +5,10 @@
   "parameterBindings": null,
   "ruleLayout": {
     "c": {
-      "x": 24.0,
+      "x": 24,
       "y": 16.5
     }
   },
   "lodModeByWindow": null,
-  "beforePaneCamera": null,
-  "reorganizeEpoch": null,
-  "locale": null
+  "beforePaneCamera": null
 }

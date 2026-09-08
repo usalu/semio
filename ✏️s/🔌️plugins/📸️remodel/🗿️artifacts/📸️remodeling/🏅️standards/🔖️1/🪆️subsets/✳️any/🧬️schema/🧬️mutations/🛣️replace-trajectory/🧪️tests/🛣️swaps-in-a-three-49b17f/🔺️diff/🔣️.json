@@ -104,7 +104,7 @@
         "id": "orbit-track-a",
         "length": 9,
         "class": "static",
-        "meanSpeedMS": 0.0
+        "meanSpeedMS": 0
       },
       {
         "id": "orbit-track-b",
@@ -129,7 +129,7 @@
       "gcpCheckpointRmse": 0.1875,
       "watertight": null,
       "meanTrackLength": 6.5,
-      "registeredFrameRatio": 1.0,
+      "registeredFrameRatio": 1,
       "denseCoverageRatio": 0.625,
       "warnings": [
         "only two streams observe gcp-south-pier"
@@ -141,6 +141,5 @@
   "reportTable": null,
   "frameCursor": null,
   "camera": null,
-  "layers": null,
-  "locale": null
+  "layers": null
 }

@@ -44,8 +44,7 @@
                   "setDirected",
                   "nodeGraphEdit",
                   "nodeGraphViewport",
-                  "setPoints",
-                  "setLocale"
+                  "setPoints"
                 ]
               },
               "lane": {

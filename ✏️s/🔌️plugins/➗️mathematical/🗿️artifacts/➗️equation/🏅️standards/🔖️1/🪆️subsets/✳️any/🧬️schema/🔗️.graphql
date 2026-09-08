@@ -6,7 +6,6 @@ type EquationArtifact {
   cameraX: Float! @state(class: CONFIG)
   cameraY: Float! @state(class: CONFIG)
   cameraZoom: Float! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }
 
 type EquationGraph {

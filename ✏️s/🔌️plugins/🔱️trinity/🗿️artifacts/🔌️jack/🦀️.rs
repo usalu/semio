@@ -753,8 +753,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// `crate::editor::jack::config::schema::register_app_schema()` is the one exception, kept alive via
 /// the plugin root's own narrowed `.setup()`: it registers the `TrinityJackPlayApp` CONFIG/PRESENCE
 /// schema, an app-scope concern neither the old nor the new declaration type has a field for.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    #[cfg(feature = "component-app-assembly")]
+#[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
     + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::jack::TrinityJackPlayApp>>>
@@ -770,6 +769,7 @@ impl<PA> ArtifactApps for PA where
 {
 }
 
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
 use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
@@ -1243,6 +1243,9 @@ mod tests;
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
                 mod component;
                 pub use component::*;
+                #[cfg(test)]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
+                mod tests;
             }
         }
 
@@ -1251,6 +1254,8 @@ mod tests;
 pub mod editor {
     #[path = "."]
     pub mod jack {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🔍️lod/🦀️.rs"]
+        pub mod lod;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
@@ -1263,7 +1268,7 @@ pub mod editor {
                 mod component;
                 pub use component::*;
                 #[cfg(test)]
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🦀️.rs"]
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
                 mod tests;
             }
         }
@@ -1275,16 +1280,6 @@ pub mod editor {
             pub use component::*;
 
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
             pub mod schema;
         }
 
@@ -1371,14 +1366,6 @@ pub mod editor {
             pub(crate) use format_document_leaf::format_document;
 
             #[path = "."]
-            mod request_completions_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💡️request-completions/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use request_completions_leaf::request_completions;
-
-            #[path = "."]
             mod set_viewport_leaf {
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖥️set-viewport/🦀️.rs"]
                 mod component;
@@ -1410,37 +1397,6 @@ pub mod editor {
             }
             pub(crate) use set_lod_mode_leaf::set_lod_mode;
 
-            #[path = "."]
-            mod editor_engagement_input_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📝️editor-engagement-input/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use editor_engagement_input_leaf::editor_engagement_input;
-
-            #[path = "."]
-            mod graph_engagement_input_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌐️graph-engagement-input/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use graph_engagement_input_leaf::graph_engagement_input;
-
-            #[path = "."]
-            mod results_engagement_input_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📊️results-engagement-input/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use results_engagement_input_leaf::results_engagement_input;
-
-            #[path = "."]
-            mod set_locale_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use set_locale_leaf::set_locale;
         }
 
         #[path = "."]

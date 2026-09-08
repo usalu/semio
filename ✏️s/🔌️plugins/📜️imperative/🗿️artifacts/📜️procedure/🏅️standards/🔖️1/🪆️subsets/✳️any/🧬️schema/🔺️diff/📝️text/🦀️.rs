@@ -32,9 +32,6 @@ impl ProcedureDiff {
             if let Some(list) = &self.selected_step_ids {
                 next.selected_step_ids = list.values.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             if let Some(value) = &self.contributions_json {
                 next.contributions_json = value.clone();
             }
@@ -78,7 +75,6 @@ impl MutationDiff<ProcedureSnapshot> for ProcedureDiff {
         take!(flow);
         take!(text);
         take!(selected_step_ids);
-        take!(locale);
         take!(contributions_json);
     }
 }
@@ -96,3 +92,8 @@ pub fn diff_set_snapshot(snapshot: ProcedureSnapshot) -> ProcedureDiff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type ProcedureDiffText = String;
+//#endregion 🚚️Carrier

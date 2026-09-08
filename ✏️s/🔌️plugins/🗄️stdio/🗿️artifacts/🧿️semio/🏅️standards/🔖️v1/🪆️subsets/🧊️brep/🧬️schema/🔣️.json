@@ -13,49 +13,49 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "📸️snapshot/🔣️.json#/$defs/brepVertex"
+        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepVertex"
       }
     },
     "edges": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "📸️snapshot/🔣️.json#/$defs/brepEdge"
+        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepEdge"
       }
     },
     "loops": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "📸️snapshot/🔣️.json#/$defs/brepLoop"
+        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepLoop"
       }
     },
     "faces": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "📸️snapshot/🔣️.json#/$defs/brepFace"
+        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepFace"
       }
     },
     "shells": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "📸️snapshot/🔣️.json#/$defs/brepShell"
+        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepShell"
       }
     },
     "solids": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "📸️snapshot/🔣️.json#/$defs/brepSolid"
+        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepSolid"
       }
     },
     "coedges": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "📸️snapshot/🔣️.json#/$defs/brepCoedge"
+        "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/snapshot.json#/$defs/brepCoedge"
       }
     },
     "nextLabel": {

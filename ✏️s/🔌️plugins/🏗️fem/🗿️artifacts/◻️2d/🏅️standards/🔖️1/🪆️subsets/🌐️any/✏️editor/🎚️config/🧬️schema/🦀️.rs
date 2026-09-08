@@ -15,8 +15,6 @@ pub struct Fem2dConfig {
     pub result_mode_index: u32,
     #[state(config)]
     pub camera: FemCamera,
-    #[state(config)]
-    pub locale: String,
 }
 
 //region 📎 App-schema descriptor

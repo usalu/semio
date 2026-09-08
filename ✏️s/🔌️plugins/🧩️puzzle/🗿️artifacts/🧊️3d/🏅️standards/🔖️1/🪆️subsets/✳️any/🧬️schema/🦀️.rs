@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle3d artifact schema — every field of the artifact with its state class.
 
-use crate::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dSnapshot, Puzzle3dTargetVolume};
+use crate::{Puzzle3dSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
 //#region 🔖️Artifact
 /// 🧬️ Full puzzle3d artifact state across the artifact, presence and config lanes.
@@ -75,8 +75,6 @@ pub struct Puzzle3dArtifact {
     #[state(config)]
     pub proximity_radius: f64,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub runtime_extras_json: String,
     #[state(artifact)]
     pub hovered_object_id: Option<String>,
@@ -146,7 +144,6 @@ impl Puzzle3dArtifact {
             lod_depth_variable: false,
             lod_manual: 1.0,
             proximity_radius: 0.75,
-            locale: "en-US".into(),
             runtime_extras_json: "{}".into(),
             hovered_object_id: None,
             hovered_vortex_full_id: None,
@@ -905,3 +902,12 @@ pub(crate) mod testkit;
 #[path = "🧪️tests/🔬️precompute-model/🦀️.rs"]
 mod precompute_model_tests;
 //#endregion 🧪️PrecomputeModelTests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::Puzzle3dMeta;
+pub use crate::Puzzle3dObject;
+pub use crate::Puzzle3dAttraction;
+pub use crate::Puzzle3dTargetVolume;
+pub use crate::Puzzle3dReference;
+//#endregion 🔁️Re-exports

@@ -15,7 +15,6 @@ use crate::op::sequence_snapshot_mutations;
 use crate::{default_snapshot, SequenceCamera, SequenceEdge, SequenceFixture, SequenceSnapshot, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use crate::editor::sequence::commands::connection::{connect_steps, disconnect_steps};
 use crate::editor::sequence::commands::layout::{reorganize, set_orientation};
-use crate::editor::sequence::commands::locale::set_locale;
 use crate::editor::sequence::commands::node_graph::{node_graph_edit, set_viewport};
 use crate::editor::sequence::commands::playback::{run_command, stop_command};
 use crate::editor::sequence::commands::step::{add_step, add_step_dropped, add_step_to_slot, delete_selection, move_step, remove_step, set_step_collapsed, set_step_params};
@@ -847,7 +846,6 @@ semio_framework_plugin::app_commands! {
         "run" as "run" => run_command::Run,
         "stop" as "stop" => stop_command::Stop,
         "setViewport" as "set-viewport" => set_viewport::SetViewport,
-        "setLocale" as "set-locale" => set_locale::SetLocale,
     }
 }
 //#endregion 🔖️Commands
@@ -988,7 +986,6 @@ sequence_json_record!(SequenceCamera, "x" => x, "y" => y, "zoom" => zoom);
 sequence_json_record!(crate::editor::sequence::config::SetLastRun, "json" => json);
 sequence_json_record!(crate::editor::sequence::config::SetOrientation, "value" => value);
 sequence_json_record!(crate::editor::sequence::config::SetCamera, "camera" => camera);
-sequence_json_record!(crate::editor::sequence::config::SetLocale, "value" => value);
 
 impl SequenceRetainedJson for SequenceConfigMutation {
     fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
@@ -996,7 +993,6 @@ impl SequenceRetainedJson for SequenceConfigMutation {
             Self::SetLastRun(payload) => counter.object(&[("SetLastRun", payload)]),
             Self::SetOrientation(payload) => counter.object(&[("SetOrientation", payload)]),
             Self::SetCamera(payload) => counter.object(&[("SetCamera", payload)]),
-            Self::SetLocale(payload) => counter.object(&[("SetLocale", payload)]),
         }
     }
 }
@@ -1215,14 +1211,13 @@ struct SequenceConfigStorePreparation {
 }
 
 fn sequence_config_retained_bytes(config: &SequenceConfig) -> usize {
-    config.last_run_json.len() + config.orientation.len() + config.locale.len()
+    config.last_run_json.len() + config.orientation.len()
 }
 
 fn sequence_config_mutation_retained_bytes(mutation: &SequenceConfigMutation) -> usize {
     match mutation {
         SequenceConfigMutation::SetLastRun(payload) => payload.json.len(),
         SequenceConfigMutation::SetOrientation(payload) => payload.value.len(),
-        SequenceConfigMutation::SetLocale(payload) => payload.value.len(),
         SequenceConfigMutation::SetCamera(_) => 0,
     }
 }
@@ -2055,19 +2050,17 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SequencePersistentJ
 const SEQUENCE_RETAINED_PAYLOAD_SCHEMA: &str = "sequence.play/retained-config-command.v1";
 const SEQUENCE_RETAINED_RAW_BYTES: usize = 4_096;
 const SEQUENCE_RETAINED_MAXIMUM_UNITS: usize = 2;
-const SEQUENCE_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["setViewport", "setOrientation", "stop", "setLocale"];
+const SEQUENCE_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["setViewport", "setOrientation", "stop", ];
 const SEQUENCE_RETAINED_CONFIG_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setViewport", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setOrientation", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "stop", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setLocale", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
 ];
 
 fn sequence_retained_config_command_admitted(command: &SequenceCommand) -> bool {
     match command {
         SequenceCommand::SetViewport(_) | SequenceCommand::Stop(_) => true,
         SequenceCommand::SetOrientation(payload) => payload.value.len() <= 32,
-        SequenceCommand::SetLocale(payload) => payload.value.len() <= 64,
         _ => false,
     }
 }
@@ -2306,7 +2299,6 @@ impl SequenceConfigProofs {
             "setViewport" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 4_096, 2_000, 1, 1),
             "setOrientation" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 4_096, 2_000, 1, 1),
             "stop" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 4_096, 2_000, 1, 1),
-            "setLocale" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 4_096, 2_000, 1, 1),
         }
     }
 }
@@ -2433,7 +2425,7 @@ impl ArtifactEditor for SequencePlayApp {
         command: &SequenceCommand,
         doc: &ArtifactView<'_, SequenceSnapshot>,
         cfg: &ConfigView<'_, SequenceConfig>,
-        interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>, Fault> {
@@ -2467,11 +2459,11 @@ impl ArtifactEditor for SequencePlayApp {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let fixture = doc.snapshot;
         let live = fixture.to_fixture();
         let config = cfg.snapshot;
-        let labels = sequence_play_labels(config);
+        let labels = sequence_play_labels(view_state);
         match body_key {
             SEQUENCE_PLAY_BODY_MAIN => main::render(fixture, config),
             SEQUENCE_PLAY_BODY_SCRIPT => script::render(fixture, config),
@@ -2490,8 +2482,8 @@ impl ArtifactEditor for SequencePlayApp {
     /// 26/08/14's w3b-summary.md), so the selection-dependent rows built by
     /// `sequence_context_menu_items` below always take the "nothing selected" branch here rather than
     /// reading a stale/wrong selection.
-    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        let is_de = cfg.snapshot.locale.starts_with("de");
+    fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, SequenceSnapshot>, cfg: &ConfigView<'_, SequenceConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
         sequence_context_menu_items(registry, is_de, request.surface.as_ref(), &[])
     }
 }
@@ -2569,7 +2561,6 @@ pub fn create_sequence_app() -> AppDefinition {
             .view_action("setOrientation", LocalizedLabel::native("Set Orientation", "Ausrichtung festlegen"))
             .action_with(ActionDefinition::bounded_catalog("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View).with_category("actions"))
             .action_with(ActionDefinition::bounded_catalog("stop", LocalizedLabel::native("Stop", "Stopp"), ActionKind::View).with_category("actions"))
-            .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 📝️ Staged argument forms for the panel-visible create + layout actions.
             .action_args("addStep", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
@@ -2602,7 +2593,6 @@ pub fn create_sequence_app() -> AppDefinition {
             .action_interactive_job("run", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("stop", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLocale", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):

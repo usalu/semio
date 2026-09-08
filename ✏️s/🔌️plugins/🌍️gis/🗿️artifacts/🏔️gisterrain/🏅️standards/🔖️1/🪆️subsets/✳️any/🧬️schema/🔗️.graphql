@@ -5,5 +5,4 @@ type GisTerrainArtifact {
   importedFeaturesJson: String! @state(class: ARTIFACT)
   selectedIds: [String!]! @state(class: PRESENCE)
   cameraJson: String! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
 }

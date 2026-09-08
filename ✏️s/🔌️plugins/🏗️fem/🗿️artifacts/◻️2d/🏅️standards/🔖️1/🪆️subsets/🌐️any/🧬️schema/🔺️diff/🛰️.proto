@@ -32,7 +32,6 @@ message Fem2dDiff {
   // @state config
   optional FemCamera camera = 14;
   // @state config
-  optional string locale = 15;
   // @state artifact
   optional string solver_results_json = 16;
   // @state artifact

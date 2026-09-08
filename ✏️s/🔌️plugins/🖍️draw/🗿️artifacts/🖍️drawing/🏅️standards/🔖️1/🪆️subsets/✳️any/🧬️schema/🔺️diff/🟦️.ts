@@ -37,7 +37,6 @@ export interface DrawingDiff {
   /** @state config */
   cameraZoom?: number;
   /** @state config */
-  locale?: string;
   /** @state artifact */
   hoveredId?: string | null;
 }
@@ -91,4 +90,59 @@ export interface DrawingLayerPatch {
   booleanOperation?: string;
   traceParamsJson?: string;
   layerJson?: string;
+}
+
+//#region 🚪️Parsers
+/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
+export class drawingDrawingDiffGuardRefusal extends Error {
+  constructor(readonly at: string, readonly why: string) {
+    super(`${at}: ${why}`);
+  }
+}
+
+const drawingDrawingDiffGuardReject = (at: string, why: string): never => {
+  throw new drawingDrawingDiffGuardRefusal(at, why);
+};
+
+type drawingDrawingDiffGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
+type drawingDrawingDiffGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
+type drawingDrawingDiffGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
+
+export const drawingDrawingDiffGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : drawingDrawingDiffGuardReject(at, "value is not an object");
+export const drawingDrawingDiffGuardArray = (value: unknown, at: string, bounds: drawingDrawingDiffGuardSizeBounds = {}): readonly unknown[] => {
+  if (!Array.isArray(value)) return drawingDrawingDiffGuardReject(at, "value is not an array");
+  if (bounds.minItems !== undefined && value.length < bounds.minItems) drawingDrawingDiffGuardReject(at, `array has fewer than ${bounds.minItems} items`);
+  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) drawingDrawingDiffGuardReject(at, `array has more than ${bounds.maxItems} items`);
+  return value;
+};
+export const drawingDrawingDiffGuardString = (value: unknown, at: string, bounds: drawingDrawingDiffGuardTextBounds = {}): string => {
+  if (typeof value !== "string") return drawingDrawingDiffGuardReject(at, "value is not a string");
+  const length = [...value].length;
+  if (bounds.minLength !== undefined && length < bounds.minLength) drawingDrawingDiffGuardReject(at, `string is shorter than ${bounds.minLength}`);
+  if (bounds.maxLength !== undefined && length > bounds.maxLength) drawingDrawingDiffGuardReject(at, `string is longer than ${bounds.maxLength}`);
+  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) drawingDrawingDiffGuardReject(at, `string does not match ${bounds.pattern}`);
+  return value;
+};
+export const drawingDrawingDiffGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : drawingDrawingDiffGuardReject(at, "value is not a boolean"));
+export const drawingDrawingDiffGuardNumber = (value: unknown, at: string, bounds: drawingDrawingDiffGuardRangeBounds = {}): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return drawingDrawingDiffGuardReject(at, "value is not a finite number");
+  if (bounds.minimum !== undefined && value < bounds.minimum) drawingDrawingDiffGuardReject(at, `number is below ${bounds.minimum}`);
+  if (bounds.maximum !== undefined && value > bounds.maximum) drawingDrawingDiffGuardReject(at, `number is above ${bounds.maximum}`);
+  return value;
+};
+export const drawingDrawingDiffGuardInteger = (value: unknown, at: string, bounds: drawingDrawingDiffGuardRangeBounds = {}): number =>
+  Number.isSafeInteger(value) ? drawingDrawingDiffGuardNumber(value, at, bounds) : drawingDrawingDiffGuardReject(at, "value is not an integer");
+export const drawingDrawingDiffGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
+  members.includes(value as T) ? (value as T) : drawingDrawingDiffGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const drawingDrawingDiffGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
+  value === expected ? expected : drawingDrawingDiffGuardReject(at, `value is not ${String(expected)}`);
+//#endregion 🚪️Parsers
+
+export function parseDrawingDiff(value: unknown, at = "$"): DrawingDiff {
+  const row = drawingDrawingDiffGuardObject(value, at);
+  return {
+    schema: row["schema"] === undefined ? undefined : drawingDrawingDiffGuardString(row["schema"], `${at}.schema`),
+    value: row["value"] === undefined ? undefined : drawingDrawingDiffGuardString(row["value"], `${at}.value`),
+  };
 }

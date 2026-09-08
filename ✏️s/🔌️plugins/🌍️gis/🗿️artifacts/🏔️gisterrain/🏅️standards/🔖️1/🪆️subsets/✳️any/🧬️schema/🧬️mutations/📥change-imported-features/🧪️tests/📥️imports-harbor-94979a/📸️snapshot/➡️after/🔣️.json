@@ -1,5 +1,5 @@
 {
-  "exaggeration": 1.0,
+  "exaggeration": 1,
   "importedFeaturesJson": "{\"positions\":[{\"id\":\"pos-harbor\",\"lat\":53.5,\"lon\":10.0}],\"routes\":[],\"regions\":[]}",
   "mesh": {
     "childId": "gisterrain-mesh-derived",

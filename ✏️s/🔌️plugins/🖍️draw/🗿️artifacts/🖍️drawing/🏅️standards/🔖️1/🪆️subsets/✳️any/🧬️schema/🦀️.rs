@@ -1,14 +1,10 @@
 //! 🧬️ Drawing artifact schema — every field of the artifact with its state class.
 
-use crate::{
-    default_drawing_trace_params, default_drawing_transform, ArtifactDsl, DrawingArtboard, DrawingAttributes, DrawingBooleanBody, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingImageBody, DrawingLayerBase, DrawingLayerNode, DrawingLine, DrawingMutation, DrawingPathBody,
-    DrawingPolygon, DrawingRect, DrawingShapeBody, DrawingSnapshot, DrawingTextBody, DrawingTraceBody, DrawingTransform, FillStyle, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA,
-};
+use crate::{default_drawing_trace_params, default_drawing_transform, ArtifactDsl, DrawingAttributes, DrawingBooleanBody, DrawingEllipse, DrawingGroupBody, DrawingImageBody, DrawingLayerBase, DrawingLine, DrawingMutation, DrawingPathBody, DrawingPolygon, DrawingRect, DrawingShapeBody, DrawingSnapshot, DrawingTextBody, DrawingTraceBody, DrawingTransform, FillStyle, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
-
 //#region 🔖️Artifact
 /// 🧬️ Full drawing artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
@@ -41,8 +37,6 @@ pub struct DrawingArtifact {
     pub camera_y: f64,
     #[state(config)]
     pub camera_zoom: f64,
-    #[state(config)]
-    pub locale: String,
     #[state(artifact)]
     pub hovered_id: Option<String>,
 }
@@ -64,7 +58,6 @@ impl Default for DrawingArtifact {
             camera_x: 512.0,
             camera_y: 512.0,
             camera_zoom: 0.75,
-            locale: "en-US".into(),
             hovered_id: None,
         }
     }
@@ -1244,3 +1237,10 @@ pub fn artifact_schema_registered() -> bool {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::DrawingLayerNode;
+pub use crate::DrawingImageAsset;
+pub use crate::DrawingArtboard;
+//#endregion 🔁️Re-exports

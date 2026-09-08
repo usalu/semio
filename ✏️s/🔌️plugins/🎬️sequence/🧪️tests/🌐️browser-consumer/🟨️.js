@@ -1,4 +1,4 @@
-import { createSequenceBrowserFeatures } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { createSequenceBrowserFeatures } from "@semio-tech/sequence-sequence";
 
 //#region 🌐️ProductionConsumerLaw
 
@@ -24,7 +24,7 @@ if (!features.document || !features.editing || !features.execution || !features.
 await features.lifetime.close();
 if (!bridge.closed || !bridge.terminalEmpty) throw new Error("Sequence production entry did not close cleanly");
 
-console.log(JSON.stringify({ publicEntry: "@semio-tech/sequence-js", instantiate: "exact", session: "owned", terminal: "empty" }));
+console.log(JSON.stringify({ publicEntry: "@semio-tech/sequence-sequence", instantiate: "exact", session: "owned", terminal: "empty" }));
 
 //#endregion 🌐️ProductionConsumerLaw
 

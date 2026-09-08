@@ -4,7 +4,7 @@
       "id": "pos-lighthouse",
       "data": {
         "kind": "lighthouse",
-        "lat": 54.0,
+        "lat": 54,
         "lon": 8.5
       }
     },
@@ -21,7 +21,7 @@
       "data": {
         "kind": "harbor",
         "lat": 53.5,
-        "lon": 10.0
+        "lon": 10
       }
     }
   ],

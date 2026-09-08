@@ -11,6 +11,76 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     throw new Error("Response admission exceeded declared transitions");
   }
   describe("OwnedActorTurnOutput", () => {
+    it("ActorOutputEmptyRetirement drains exact unused admission prefixes and conserves every resident charge", async () => {
+      const { default: fixture } = await import("../../🚪️retirement/🧪️fixture/🔣️.json");
+      const { default: schema } = await import("../../🚪️retirement/🧬️schema/🔣️.json");
+      const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+      expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
+      for (const prefix of fixture.admissionPrefixes) {
+        const ledger = fixtureLedger(); const queue = new OwnedActorTurnOutputs({}, 2, ledger);
+        for (let index = 0; index < prefix; index++) queue.reserve(fixture.grant);
+        const before = ledger.usage.data; queue.beginClose();
+        expect(queue.closeStep({ maxItems: 0, maxBytes: fixture.grant.maxBytes }).kind).toBe("blocked");
+        expect(ledger.usage.data).toEqual(before);
+        let complete = false;
+        for (let index = 0; index < fixture.maximumSteps; index++) {
+          const step = queue.closeStep(fixture.grant);
+          expect(step.items).toBeLessThanOrEqual(fixture.grant.maxItems);
+          expect(step.bytes).toBeLessThanOrEqual(fixture.grant.maxBytes);
+          expect(step.kind, step.phase).not.toBe("rejected");
+          expect(step.kind, step.phase).not.toBe("blocked");
+          if (step.kind === "complete") { complete = true; break; }
+        }
+        expect(complete, String(prefix)).toBe(true);
+        const actual = { pending: queue.pending, empty: queue.terminalIsEmpty(), data: ledger.usage.data };
+        expect(actual).toEqual(fixture.terminal);
+        expect(actual.data).toEqual(produce(before, value => { value.bytes = 0; value.slots = 0; value.owners = 0; }));
+        expect(queue.closeStep(fixture.grant).kind).toBe("complete");
+        expect(queue.reserve(fixture.grant).step.kind).toBe("rejected");
+      }
+      console.log("[DEBUG] ActorOutputEmptyRetirement: 12 original admission prefixes physically detached; no returned-data release claim");
+    });
+
+    it("ActorOutputEmptyRetirement unlinks multiple original empty outputs and closes stale facades", async () => {
+      const { default: fixture } = await import("../../🚪️retirement/🧪️fixture/🔣️.json");
+      const owner = {}; const ledger = fixtureLedger(); const queue = new OwnedActorTurnOutputs(owner, fixture.reservedOutputs, ledger);
+      const outputs: OwnedActorTurnOutput[] = [];
+      for (let index = 0; index < fixture.reservedOutputs; index++) outputs.push((await fixtureOutput(queue))!);
+      outputs[0]!.cancelEmpty(); queue.beginClose();
+      let complete = false;
+      for (let index = 0; index < fixture.maximumSteps; index++) {
+        const step = queue.closeStep(fixture.grant);
+        expect(step.kind, step.phase).not.toBe("blocked"); expect(step.kind, step.phase).not.toBe("rejected");
+        if (step.kind === "complete") { complete = true; break; }
+      }
+      expect(complete).toBe(true);
+      expect({ pending: queue.pending, empty: queue.terminalIsEmpty(), data: ledger.usage.data }).toEqual(fixture.terminal);
+      for (const output of outputs) {
+        expect(OwnedActorTurnOutput.matches(output, owner)).toBe(false);
+        expect(output.cancelEmpty()).toBe(false);
+        expect(output.state).toMatchObject({ phase: "cancelled", retained: false });
+        await expect(output.run(async () => { throw new Error("Stale output dispatched"); })).rejects.toThrow("actor-output.already-submitted");
+      }
+    });
+
+    it("ActorOutputEmptyRetirement refuses in-flight, returned and faulted roots without reading their payloads", async () => {
+      const { default: fixture } = await import("../../🚪️retirement/🧪️fixture/🔣️.json");
+      for (const phase of fixture.blocked) {
+        const ledger = fixtureLedger(); const queue = new OwnedActorTurnOutputs({}, 1, ledger); const output = (await fixtureOutput(queue))!;
+        let release!: (value: unknown) => void, reads = 0;
+        const raw = { get payload() { reads++; throw new Error("Unowned output getter"); } };
+        const work = output.run(() => phase === "pending" ? new Promise(resolve => { release = resolve; }) : phase === "faulted" ? Promise.reject(raw) : Promise.resolve(raw));
+        const observed = work.catch(() => {});
+        if (phase !== "pending") await observed;
+        const before = ledger.usage.data; queue.beginClose();
+        try {
+          for (let index = 0; index < 3; index++) expect(queue.closeStep(fixture.grant).kind).toBe("blocked");
+          expect(ledger.usage.data).toEqual(before); expect(queue.pending).toBe(1); expect(queue.peek()).toBe(output);
+          expect(queue.terminalIsEmpty()).toBe(false); expect(reads).toBe(0);
+        } finally { release?.(raw); await observed; }
+      }
+    });
+
     it("ActorResponseAdmission declares conserved metadata and separate grants without receiver or refund authority", async () => {
       const { default: contract } = await import("../../🏘️admission/🤝️contract.json"); const { default: schema } = await import("../../🏘️admission/🧬️schema/🔣️.json"); const { default: fixture } = await import("../../🏘️admission/🧪️fixture/🔣️.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
       const ajv = new Ajv({ strict: true }); expect(ajv.addSchema(schema).getSchema(`${schema.$id}#/$defs/Admission`)!(contract)).toBe(true); expect(ajv.getSchema(`${schema.$id}#/$defs/AdmissionFixture`)!(fixture)).toBe(true);
@@ -72,9 +142,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: fixture } = await import("../../🧪️fixture/🔣️.json");
       const { default: schema } = await import("../../🧬️schema/🔣️.json");
       const { default: lifetimeSchema } = await import("../../../../../🚪️lifetime/🧬️schema/🔣️.json");
+      const { default: valueSchema } = await import("../../../../../../🌱️value/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv");
       const { produce } = await import("immer");
-      const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).compile(schema);
+      const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).compile(schema);
       const owner = Object.freeze({});
       const queue = new OwnedActorTurnOutputs(owner, fixture.capacity, fixtureLedger());
       const output = (await fixtureOutput(queue))!;
@@ -122,9 +193,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: fixture } = await import("../../🧪️fixture/🔣️.json");
       const { default: schema } = await import("../../🧬️schema/🔣️.json");
       const { default: lifetimeSchema } = await import("../../../../../🚪️lifetime/🧬️schema/🔣️.json");
+      const { default: valueSchema } = await import("../../../../../../🌱️value/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv");
       const { produce } = await import("immer");
-      const validate = new Ajv({ strict: true }).addSchema(lifetimeSchema).compile(schema);
+      const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).compile(schema);
       for (const kind of fixture.responseSettlement.outcomes) {
         const owner = Object.freeze({}); const queue = new OwnedActorTurnOutputs(owner, fixture.capacity, fixtureLedger()); const output = (await fixtureOutput(queue))!;
         const raw = { kind: "result", ok: kind === "success", value: { uiPatches: [] }, framesBytes: new Uint8Array(fixture.responseSettlement.unknownPayloadBytes), unknown: { retained: true } };

@@ -493,3 +493,8 @@ pub fn diff_set_snapshot(snapshot: Fem3dSnapshot) -> Fem3dDiff {
     Fem3dDiff { artifact: Some(Box::new(Fem3dArtifact::from_snapshot(snapshot))), ..Default::default() }
 }
 //#endregion 🔖️Constructors
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type Fem3dDiffText = String;
+//#endregion 🚚️Carrier

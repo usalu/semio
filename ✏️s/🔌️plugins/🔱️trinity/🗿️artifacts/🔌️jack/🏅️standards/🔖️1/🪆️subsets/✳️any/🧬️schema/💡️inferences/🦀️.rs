@@ -15,9 +15,8 @@ use crate::JackSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::flat_position::{compute_flat_position, JackFlatPosition};
-use super::topology::{compute_topology, JackTopology};
-
+use super::flat_position::{compute_flat_position};
+use super::topology::{compute_topology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a jack snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by `🧭topology/`; `flat_position`, backed by
@@ -83,3 +82,9 @@ pub fn jack_artifact_inference_descriptor() -> ::semio_framework_schema::Artifac
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::topology::JackTopology;
+pub use super::flat_position::JackFlatPosition;
+//#endregion 🔁️Re-exports

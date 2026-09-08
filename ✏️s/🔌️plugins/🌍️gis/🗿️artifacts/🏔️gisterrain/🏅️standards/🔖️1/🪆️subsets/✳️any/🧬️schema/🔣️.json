@@ -8,8 +8,7 @@
     "exaggeration",
     "importedFeaturesJson",
     "selectedIds",
-    "cameraJson",
-    "locale"
+    "cameraJson"
   ],
   "properties": {
     "exaggeration": {
@@ -32,10 +31,6 @@
     "cameraJson": {
       "type": "string",
       "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "locale": {
-      "type": "string",
       "x-semio-state": "config"
     }
   }

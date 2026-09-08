@@ -23,7 +23,7 @@ pub const STDIO_LAS_DOCUMENT_SCHEMA: &str = "stdio.las";
 pub const LAS_ARTIFACT_SCHEMA_ID: &str = "s.stdio.las";
 
 /// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("🧬️schema/📜️artifact-definition.json");
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     let factories = native_codecs();

@@ -7,7 +7,6 @@ type PlaybookArtifact {
   title: String @state(class: ARTIFACT)
   steps: [PlaybookStep!]! @state(class: ARTIFACT)
   selectedIds: [String!]! @state(class: PRESENCE)
-  locale: String! @state(class: CONFIG)
   contributionsJson: String! @state(class: CONFIG)
 }
 

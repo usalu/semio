@@ -31,7 +31,6 @@ type LowpolyDiff {
   selectionMethod: String @state(class: CONFIG)
   selectionModeDefault: String @state(class: CONFIG)
   engagementInput: String @state(class: CONFIG)
-  locale: String @state(class: CONFIG)
   hoveredObjectId: String @state(class: ARTIFACT)
   hoveredTargetObjectId: String @state(class: ARTIFACT)
   hoveredTargetMode: String @state(class: ARTIFACT)
@@ -100,4 +99,31 @@ type LowpolyTransform {
 type LowpolyObject {
   id: String!
   name: String!
+}
+
+type LowpolyPaintLayersDelta {
+  added: [LowpolyIndexedPaintLayer!]!
+  removed: [Int!]!
+  patched: [LowpolyIndexedPaintLayerPatch!]!
+  strokes: [LowpolyPaintStrokeAt!]!
+}
+
+type LowpolyIndexedPaintLayer {
+  index: Int!
+  layer: LowpolyPaintLayer!
+}
+
+type LowpolyIndexedPaintLayerPatch {
+  index: Int!
+  patch: LowpolyPaintLayerPatch!
+}
+
+type LowpolyPaintStrokeAt {
+  layerIndex: Int!
+  runs: [PixelRun!]!
+}
+
+type PixelRun {
+  offset: Int!
+  bytes: String!
 }

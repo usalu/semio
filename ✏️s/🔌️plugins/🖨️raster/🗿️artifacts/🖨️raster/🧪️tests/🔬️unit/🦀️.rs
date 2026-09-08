@@ -9,7 +9,7 @@ struct CommittedRasterChildOwnerOracle;
 
 impl RasterChildOwnerOracle for CommittedRasterChildOwnerOracle {
     fn expected() -> dsl::json::Value {
-        dsl::json::parse(include_str!("../../🧪️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Raster child-owner fixture")
+        dsl::json::parse(include_str!("../../🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("language-neutral Raster child-owner fixture")
     }
 }
 

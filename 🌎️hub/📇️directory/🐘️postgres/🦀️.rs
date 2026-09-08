@@ -3341,7 +3341,7 @@ fn event_from_row(row: (i64, String, i64, i64, String, String, Option<String>, O
 }
 
 #[cfg(test)]
-#[path = "🌱️creation-v1/🦀️.rs"]
+#[path = "🌱️creation-v1/🧪️tests/🔬️standalone/🦀️.rs"]
 mod creation_tests;
 
 //#region 🧪️Tests

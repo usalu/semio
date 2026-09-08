@@ -13,21 +13,21 @@
             "id": "node-b",
             "nodeKind": "node-kind-b",
             "shape": "rectangle",
-            "x": 40.0,
-            "y": 20.0,
-            "width": 30.0,
-            "height": 12.0,
+            "x": 40,
+            "y": 20,
+            "width": 30,
+            "height": 12,
             "anchor": "fixed",
             "handles": [
               {
                 "id": "handle-2",
                 "handleKind": "handle-kind-b",
-                "angle": 3.0
+                "angle": 3
               },
               {
                 "id": "handle-3",
                 "handleKind": "handle-kind-b",
-                "angle": 2.0
+                "angle": 2
               }
             ]
           }
@@ -50,8 +50,6 @@
   "fillCount": null,
   "brushCandidateIndex": null,
   "brushCandidateSourceHandleId": null,
-  "locale": null,
-  "terminology": null,
   "lodModeByPaneJson": null,
   "engagementInputByPaneJson": null,
   "brushCandidatesJson": null,

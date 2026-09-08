@@ -8,5 +8,4 @@ message WiresConfig {
   // @state config
   double drag_last_y = 3;
   // @state config
-  string locale = 4;
 }

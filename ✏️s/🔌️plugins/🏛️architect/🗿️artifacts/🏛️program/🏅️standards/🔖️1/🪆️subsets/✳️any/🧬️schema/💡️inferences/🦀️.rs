@@ -16,8 +16,7 @@ use protocol::Inference;
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 
-use super::topology::{compute_topology, ProgramTopology};
-
+use super::topology::{compute_topology};
 //#region 🔖️DerivedComputeImports
 /// 🧭️ Dissolved out of the former `⚙️engine` topic files (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — every `fn(&ProgramSnapshot, ...) ->
@@ -2189,3 +2188,8 @@ mod tests_trace;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::topology::ProgramTopology;
+//#endregion 🔁️Re-exports

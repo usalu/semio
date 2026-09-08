@@ -112,3 +112,18 @@ Relocation review and contract-correction review are separate steps within WP3�
   W3e entity catalog, W6d plugins w3 (largest). Contract gained: no restated `$defs` across scopes, surface
   lanes as own scopes, runtime-enum vocabularies, `parse<Export>()` requirement, shared diagnostic-code table,
   entity-kind catalog owned by `framework.schema`. Queued: W4e, W2w, W5c, W7d, stdio build wave (load-gated).
+- 2026-09-08 21:40 · Landed: W2t/W2v (library + root tooling, exempt area, shared code table half), W3d/W3e
+  (registry crate, `framework.schema` facet, entity-kind catalog owned by framework with generated first-wins
+  projections), W7c (mutations: absolute refs, injective ids, kind lists dropped), W9d/W9e/W9f (repo product
+  clean incl. vscode revert, CLI consumes generated Go catalog), W4c/W4d (hub clean, 68 completeness rows
+  cleared, 3 scopes registered), W10d/W10e (derive fixes, ui vocabularies from runtime enums), W1c/W1d
+  (rules: internal refs, `x-semio-formats`, TS parser, GraphQL keywords, code table), W6c (plugins wave 2),
+  W8d (stdio JSON-only complete). Running: W5b os (five lanes), W10f framework w3, W2u library, W6d plugins w3,
+  W2x root, W1e harness, W7d mutations w3, W4e hub final, W10g ui single-owner. Queued: W2w, W5c, W1f, W2y,
+  W6e; stdio build wave load-gated (load 128, 49 compilers at 21:25).
+- 2026-09-08 22:35 · Session rate limit (reset 22:30) killed nine in-flight workers (W1f, W2y, W4e, W10g, W7d,
+  W2u, W6d, W5b, W8e); W1e and W2y had already delivered (W2y: rows 133/138 need no root change — walker is
+  library-owned, depth already correct). Relaunched as assess-first successors: W1f' harness, W2w library
+  (incl. rows 133/147/115/124/129 + taxonomy), W7d' mutations, W10h ui + value scalars, W6e plugins wave 3
+  (+ 24 missing root modules, stdio registry inventory deletion), W5c os (completion + all os rows + wave 3),
+  W8f stdio roots + twins, W4f hub registration laws. Load 77 at relaunch.

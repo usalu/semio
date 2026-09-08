@@ -696,6 +696,8 @@ interface events {
 
   record surface-visible-event {
     surface: surface-ref,
+    body-key: string,
+    view-state: list<u8>,
   }
   record surface-hidden-event {
     surface: surface-ref,

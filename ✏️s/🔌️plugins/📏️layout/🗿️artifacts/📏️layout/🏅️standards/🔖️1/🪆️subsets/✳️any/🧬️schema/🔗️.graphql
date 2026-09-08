@@ -23,7 +23,6 @@ type LayoutArtifact {
   previewCameraY: Float! @state(class: CONFIG)
   previewCameraZoom: Float! @state(class: CONFIG)
   dropPreview: LayoutDropPreviewState! @state(class: CONFIG)
-  locale: String! @state(class: CONFIG)
   hoveredId: String @state(class: ARTIFACT)
 }
 
@@ -46,3 +45,7 @@ type ImageLink { id: String! }
 type ParentPage { id: String! }
 type Spread { id: String! }
 type Page { id: String! }
+
+type LayoutStringList {
+  values: [String!]!
+}

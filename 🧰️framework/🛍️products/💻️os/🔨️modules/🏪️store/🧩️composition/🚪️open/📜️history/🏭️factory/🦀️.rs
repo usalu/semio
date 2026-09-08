@@ -322,5 +322,5 @@ impl<M: MemberFactory> Drop for SelectedVerifiedMemberHistory<M> {
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
+#[path = "🧪️tests/🏭️factory/🦀️.rs"]
 mod tests;

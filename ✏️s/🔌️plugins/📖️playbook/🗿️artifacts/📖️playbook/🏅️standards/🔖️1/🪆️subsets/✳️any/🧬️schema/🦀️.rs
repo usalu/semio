@@ -25,8 +25,6 @@ pub struct PlaybookArtifact {
     #[state(presence)]
     pub selected_ids: Vec<String>,
     #[state(config)]
-    pub locale: String,
-    #[state(config)]
     pub contributions_json: String,
 }
 //#endregion 🔖️Artifact
@@ -35,7 +33,7 @@ pub struct PlaybookArtifact {
 impl Default for PlaybookArtifact {
     fn default() -> Self {
         let snapshot = crate::PlaybookSnapshot::default();
-        Self { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "playbook".into(), version: "1".into(), title: None, document: snapshot.document, flow: snapshot.flow, selected_ids: Vec::new(), locale: "en-US".into(), contributions_json: "[]".into() }
+        Self { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "playbook".into(), version: "1".into(), title: None, document: snapshot.document, flow: snapshot.flow, selected_ids: Vec::new(), contributions_json: "[]".into() }
     }
 }
 
@@ -78,7 +76,6 @@ impl ::semio_framework_os_kernel::ToValue for PlaybookArtifact {
             ("document".to_string(), ::semio_framework_os_kernel::to_dsl_value(&self.document).expect("ArtifactChild serializes")),
             ("flow".to_string(), ::semio_framework_os_kernel::to_dsl_value(&self.flow).expect("ArtifactChild serializes")),
             ("selectedIds".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.selected_ids)),
-            ("locale".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.locale)),
             ("contributionsJson".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.contributions_json)),
         ])
     }
@@ -96,7 +93,6 @@ impl ::semio_framework_os_kernel::FromValue for PlaybookArtifact {
             document: ::semio_framework_os_kernel::from_dsl_value(field("document")?).map_err(::semio_framework_os_kernel::ValueError::new)?,
             flow: ::semio_framework_os_kernel::from_dsl_value(field("flow")?).map_err(::semio_framework_os_kernel::ValueError::new)?,
             selected_ids: ::semio_framework_os_kernel::FromValue::from_value(field("selectedIds")?)?,
-            locale: ::semio_framework_os_kernel::FromValue::from_value(field("locale")?)?,
             contributions_json: ::semio_framework_os_kernel::FromValue::from_value(field("contributionsJson")?)?,
         })
     }

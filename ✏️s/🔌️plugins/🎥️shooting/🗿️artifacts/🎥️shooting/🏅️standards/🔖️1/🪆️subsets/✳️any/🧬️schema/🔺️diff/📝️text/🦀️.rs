@@ -190,9 +190,6 @@ impl ShootingDiff {
             if let Some(value) = &self.camera {
                 next.camera = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -261,7 +258,6 @@ impl MutationDiff<ShootingSnapshot> for ShootingDiff {
         take!(fit_revision);
         take!(camera_draft_label);
         take!(camera);
-        take!(locale);
     }
 }
 //#endregion 🔖️Apply
@@ -280,3 +276,8 @@ impl MutationDiff<ShootingSnapshot> for ShootingDiff {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type ShootingDiffText = String;
+//#endregion 🚚️Carrier

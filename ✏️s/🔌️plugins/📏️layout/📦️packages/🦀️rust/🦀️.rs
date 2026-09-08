@@ -42,12 +42,5 @@ mod plugin;
 pub use plugin::LayoutApps;
 semio_framework_plugin::plugin_exports!(plugin::plugin, LayoutApps);
 
-//#region 📚️Examples
-#[path = "."]
-pub mod examples {
-    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
-    pub mod app_layout_demo_session;
-}
-//#endregion 📚️Examples
 
 //#endregion 🔖️Plugin

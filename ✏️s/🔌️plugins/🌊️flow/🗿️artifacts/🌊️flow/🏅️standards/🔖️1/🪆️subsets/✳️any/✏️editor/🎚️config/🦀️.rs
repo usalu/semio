@@ -60,7 +60,6 @@ pub struct FlowConfig {
     /// 📋️ JSON checkpoint for observable duplicate-widget progress; empty when idle.
     pub duplicate_widget_progress_json: String,
     /// 🗣️ BCP-47 locale tag.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -122,7 +121,6 @@ impl Default for FlowConfig {
             contributions_json: "[]".into(),
             generation_json: String::new(),
             duplicate_widget_progress_json: String::new(),
-            locale: "en-US".into(),
         }
     }
 }
@@ -192,8 +190,6 @@ pub enum FlowConfigMutation {
     SetDuplicateWidgetProgress { json: String },
     #[dsl(key = "cancel-duplicate-widget")]
     CancelDuplicateWidget { generation: u64 },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
 }
 
 //#region 🔖️OpCodec
@@ -269,7 +265,6 @@ impl Mutation<FlowConfig> for FlowConfigMutation {
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️set-generation", semantic_kind: "generation", display_name: "Set Generation", emoji: "🧬️", aggregate_variant: "SetGeneration", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📋️set-duplicate-widget-progress", semantic_kind: "duplicate-widget-progress", display_name: "Set Duplicate Widget Progress", emoji: "📋️", aggregate_variant: "SetDuplicateWidgetProgress", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🛑️cancel-duplicate-widget", semantic_kind: "cancel-duplicate-widget", display_name: "Cancel Duplicate Widget", emoji: "🛑️", aggregate_variant: "CancelDuplicateWidget", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🗣️set-locale", semantic_kind: "locale", display_name: "Set Locale", emoji: "🗣️", aggregate_variant: "SetLocale", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -288,7 +283,6 @@ impl Mutation<FlowConfig> for FlowConfigMutation {
             FlowConfigMutation::SetGeneration { .. } => &Self::DESCRIPTORS[11],
             FlowConfigMutation::SetDuplicateWidgetProgress { .. } => &Self::DESCRIPTORS[12],
             FlowConfigMutation::CancelDuplicateWidget { .. } => &Self::DESCRIPTORS[13],
-            FlowConfigMutation::SetLocale { .. } => &Self::DESCRIPTORS[14],
         }
     }
 
@@ -319,7 +313,6 @@ impl Mutation<FlowConfig> for FlowConfigMutation {
                 }
                 next.contributions_json = json.clone();
             }
-            FlowConfigMutation::SetLocale { value } => next.locale = value.clone(),
         }
         protocol::MutationOutcome::new(next)
     }

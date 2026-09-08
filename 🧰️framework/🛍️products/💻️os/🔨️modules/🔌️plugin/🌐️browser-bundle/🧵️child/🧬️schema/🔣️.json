@@ -1,155 +1,160 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/os/plugin/browser-bundle/child/component.json",
-  "title": "Browser Actor Child Containment V1",
-  "description": "One dedicated child, fixed first-party entrypoint, bounded child-local WASI diagnostics and clock, no document or network host authority. These are intentional buffer limits, not a browser heap quota or a security sandbox.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema",
-    "limits",
-    "modules",
-    "laws",
-    "wireRows",
-    "ownerFaults"
-  ],
-  "properties": {
-    "schema": {
-      "const": "semio.os.browser-actor-child-containment/v1"
-    },
-    "limits": {
+  "$ref": "#/$defs/BrowserActorChildContainmentV1",
+  "$defs": {
+    "BrowserActorChildContainmentV1": {
+      "title": "Browser Actor Child Containment V1",
+      "description": "One dedicated child, fixed first-party entrypoint, bounded child-local WASI diagnostics and clock, no document or network host authority. These are intentional buffer limits, not a browser heap quota or a security sandbox.",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "actors",
-        "actorBytes",
-        "messageBytes",
-        "outputBytes",
-        "bootMs",
-        "loadMs",
-        "invokeMs",
-        "wasiOutputBytes",
-        "wasiOutputWrites"
+        "schema",
+        "limits",
+        "modules",
+        "laws",
+        "wireRows",
+        "ownerFaults"
       ],
       "properties": {
-        "actors": {
-          "const": 2
+        "schema": {
+          "const": "semio.os.browser-actor-child-containment/v1"
         },
-        "actorBytes": {
-          "const": 67108864
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "actors",
+            "actorBytes",
+            "messageBytes",
+            "outputBytes",
+            "bootMs",
+            "loadMs",
+            "invokeMs",
+            "wasiOutputBytes",
+            "wasiOutputWrites"
+          ],
+          "properties": {
+            "actors": {
+              "const": 2
+            },
+            "actorBytes": {
+              "const": 67108864
+            },
+            "messageBytes": {
+              "const": 262144
+            },
+            "outputBytes": {
+              "const": 1048576
+            },
+            "bootMs": {
+              "const": 10000
+            },
+            "loadMs": {
+              "const": 5000
+            },
+            "invokeMs": {
+              "const": 2000
+            },
+            "wasiOutputBytes": {
+              "const": 65536
+            },
+            "wasiOutputWrites": {
+              "const": 128
+            }
+          }
         },
-        "messageBytes": {
-          "const": 262144
+        "modules": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "normal",
+            "loadLoop",
+            "activationFailure",
+            "wasi"
+          ],
+          "properties": {
+            "normal": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "loadLoop": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "activationFailure": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "wasi": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          }
         },
-        "outputBytes": {
-          "const": 1048576
+        "laws": {
+          "type": "array",
+          "minItems": 18,
+          "maxItems": 18,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "static-child",
+              "verified-transfer",
+              "round-trip",
+              "pre-transfer-bound",
+              "aggregate-capacity",
+              "tight-loop-invoke",
+              "tight-loop-load",
+              "activation-failure",
+              "digest-denial",
+              "single-flight",
+              "output-bound",
+              "effect-denial",
+              "abort-retirement",
+              "fresh-generation",
+              "wasi-clock",
+              "wasi-output",
+              "wasi-output-bound",
+              "wasi-exit"
+            ]
+          }
         },
-        "bootMs": {
-          "const": 10000
+        "wireRows": {
+          "type": "array",
+          "minItems": 13,
+          "maxItems": 13,
+          "items": {
+            "$ref": "#/definitions/wireRow"
+          }
         },
-        "loadMs": {
-          "const": 5000
-        },
-        "invokeMs": {
-          "const": 2000
-        },
-        "wasiOutputBytes": {
-          "const": 65536
-        },
-        "wasiOutputWrites": {
-          "const": 128
+        "ownerFaults": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "constructor-failure",
+              "boot-init-denial",
+              "load-transfer-failure",
+              "invoke-transfer-failure",
+              "abort-during-hash",
+              "synchronous-source-consumption",
+              "child-load-shape",
+              "child-invoke-shape",
+              "child-rehash-after-transfer"
+            ]
+          }
         }
-      }
-    },
-    "modules": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "normal",
-        "loadLoop",
-        "activationFailure",
-        "wasi"
-      ],
-      "properties": {
-        "normal": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 4096
-        },
-        "loadLoop": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 4096
-        },
-        "activationFailure": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 4096
-        },
-        "wasi": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 4096
-        }
-      }
-    },
-    "laws": {
-      "type": "array",
-      "minItems": 18,
-      "maxItems": 18,
-      "uniqueItems": true,
-      "items": {
-        "enum": [
-          "static-child",
-          "verified-transfer",
-          "round-trip",
-          "pre-transfer-bound",
-          "aggregate-capacity",
-          "tight-loop-invoke",
-          "tight-loop-load",
-          "activation-failure",
-          "digest-denial",
-          "single-flight",
-          "output-bound",
-          "effect-denial",
-          "abort-retirement",
-          "fresh-generation",
-          "wasi-clock",
-          "wasi-output",
-          "wasi-output-bound",
-          "wasi-exit"
-        ]
-      }
-    },
-    "wireRows": {
-      "type": "array",
-      "minItems": 13,
-      "maxItems": 13,
-      "items": {
-        "$ref": "#/$defs/wireRow"
-      }
-    },
-    "ownerFaults": {
-      "type": "array",
-      "minItems": 9,
-      "maxItems": 9,
-      "uniqueItems": true,
-      "items": {
-        "enum": [
-          "constructor-failure",
-          "boot-init-denial",
-          "load-transfer-failure",
-          "invoke-transfer-failure",
-          "abort-during-hash",
-          "synchronous-source-consumption",
-          "child-load-shape",
-          "child-invoke-shape",
-          "child-rehash-after-transfer"
-        ]
       }
     }
   },
-  "$defs": {
+  "definitions": {
     "binding": {
       "type": "object",
       "additionalProperties": false,

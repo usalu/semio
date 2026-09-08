@@ -6,20 +6,20 @@ use semio_framework_plugin::testkit::{assert_editor_and_viewer_share_dialect, as
 
 #[semio_framework_async_macros::async_test]
 async fn home_viewer_never_mutates() {
-    assert_viewer_never_mutates::<crate::viewer::home::HomeViewer>().await;
+    assert_viewer_never_mutates::<semio_s_artifact_space_home::viewer::home::HomeViewer>().await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn home_editor_and_viewer_share_dialect() {
-    assert_editor_and_viewer_share_dialect::<crate::editor::home::HomeApp, crate::viewer::home::HomeViewer>().await;
+    assert_editor_and_viewer_share_dialect::<semio_s_artifact_space_home::editor::home::HomeApp, semio_s_artifact_space_home::viewer::home::HomeViewer>().await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn space_index_viewer_never_mutates() {
-    assert_viewer_never_mutates::<crate::viewer::space_index::SpaceIndexViewer>().await;
+    assert_viewer_never_mutates::<semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>().await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn space_index_editor_and_viewer_share_dialect() {
-    assert_editor_and_viewer_share_dialect::<crate::editor::space_index::SpaceIndexEditor, crate::viewer::space_index::SpaceIndexViewer>().await;
+    assert_editor_and_viewer_share_dialect::<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor, semio_s_artifact_space_space::viewer::space_index::SpaceIndexViewer>().await;
 }

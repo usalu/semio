@@ -17,7 +17,7 @@
       "detector": "orb",
       "targetCount": 4000,
       "octaves": 4,
-      "edgeThreshold": 10.0
+      "edgeThreshold": 10
     },
     "matching": {
       "matcher": "brute-force",
@@ -29,7 +29,7 @@
     },
     "sfm": {
       "ransacIterations": 1000,
-      "ransacThresholdPx": 2.0,
+      "ransacThresholdPx": 2,
       "minTrackLength": 3,
       "baMaxIterations": 50,
       "robustLoss": "huber",
@@ -43,8 +43,8 @@
       "maxPoints": 500000
     },
     "mesh": {
-      "tsdfVoxelSizeMm": 5.0,
-      "tsdfTruncationMm": 20.0,
+      "tsdfVoxelSizeMm": 5,
+      "tsdfTruncationMm": 20,
       "decimateTargetTriangles": 200000,
       "smoothingIterations": 2,
       "textureEnabled": true,
@@ -64,7 +64,7 @@
       "enabled": true,
       "originLon": 8.5,
       "originLat": 52.375,
-      "originAlt": 60.0,
+      "originAlt": 60,
       "gsdM": 0.03125,
       "dsmCellM": 0.0625,
       "dtmFilterRadiusM": 1.5,
@@ -79,6 +79,5 @@
   "reportTable": null,
   "frameCursor": null,
   "camera": null,
-  "layers": null,
-  "locale": null
+  "layers": null
 }

@@ -1,8 +1,8 @@
 //! 🧬️ Remodeling diff schema — sparse field delta over the artifact.
 
-use crate::schema::{RemodelingArtifact, RemodelingUiCamera, RemodelingUiFrameCursor, RemodelingUiLayers, RemodelingUiSelection};
+use crate::schema::{RemodelingUiCamera, RemodelingUiFrameCursor, RemodelingUiLayers, RemodelingUiSelection};
 use crate::{CalibrationState, GroundControlPoint, MediaStream, ReconstructionJob, ReconstructionParams, ReconstructionResults, RemodelingAssetChild, RemodelingDurableArtifactStore};
-use schema::ArtifactSchema;
+use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -47,8 +47,6 @@ pub struct RemodelingDiff {
     pub camera: Option<RemodelingUiCamera>,
     #[state(config)]
     pub layers: Option<RemodelingUiLayers>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
 
@@ -69,3 +67,8 @@ pub struct RemodelingGcpList {
     pub values: Vec<GroundControlPoint>,
 }
 //#endregion 🔖️DeltaHelpers
+
+//#region 🔁️Re-exports
+/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use crate::schema::RemodelingArtifact;
+//#endregion 🔁️Re-exports

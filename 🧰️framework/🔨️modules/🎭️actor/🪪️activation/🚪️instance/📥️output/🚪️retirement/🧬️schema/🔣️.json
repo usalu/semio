@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/actor/activation/instance/output/retirement/schema.json",
+  "title": "Empty Actor Response Retirement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "grant", "admissionPrefixes", "maximumSteps", "reservedOutputs", "blocked", "terminal"],
+  "properties": {
+    "version": { "const": 1 },
+    "grant": { "const": { "maxItems": 1, "maxBytes": 4096 } },
+    "admissionPrefixes": { "const": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
+    "maximumSteps": { "const": 64 },
+    "reservedOutputs": { "const": 3 },
+    "blocked": { "const": ["pending", "returned", "faulted"] },
+    "terminal": { "const": { "pending": 0, "empty": true, "data": { "bytes": 0, "slots": 0, "owners": 0 } } }
+  }
+}

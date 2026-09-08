@@ -48,13 +48,26 @@
       }
     },
     "quality": {
-      "$ref": "#/$defs/quality"
+      "$ref": "#/definitions/quality"
     },
     "provenance": {
-      "$ref": "#/$defs/provenance"
+      "$ref": "#/definitions/provenance"
     }
   },
-  "$defs": {
+  "x-semio": {
+    "id": "s.stdio.gltf.inference.euler-characteristic.v1",
+    "kind": "inference",
+    "inference": {
+      "algorithmVersion": 1,
+      "cacheKey": "s.stdio.gltf.inference.euler-characteristic.v1:geometry-v2",
+      "inputs": [
+        "schema/snapshot",
+        "buffers"
+      ],
+      "target": "geometry.overall.topology.eulerCharacteristic"
+    }
+  },
+  "definitions": {
     "quality": {
       "type": "object",
       "additionalProperties": false,
@@ -146,19 +159,6 @@
           "type": "string"
         }
       }
-    }
-  },
-  "x-semio": {
-    "id": "s.stdio.gltf.inference.euler-characteristic.v1",
-    "kind": "inference",
-    "inference": {
-      "algorithmVersion": 1,
-      "cacheKey": "s.stdio.gltf.inference.euler-characteristic.v1:geometry-v2",
-      "inputs": [
-        "schema/snapshot",
-        "buffers"
-      ],
-      "target": "geometry.overall.topology.eulerCharacteristic"
     }
   }
 }

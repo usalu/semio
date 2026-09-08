@@ -5,41 +5,59 @@
   "description": "id-keyed b-rep topology graph — see the sibling 🦀️.rs for the real source of truth.",
   "type": "object",
   "$defs": {
-    "semioPoint3": {
+    "BrepCoedge": {
       "type": "object",
+      "description": "First-class p-curve/ring-position coedge — see native Coedge; a separate, purely-additive collection (never widens brepLoopEdge, see 🦀️.rs doc comment).",
       "properties": {
-        "x": {
-          "type": "number"
+        "id": {
+          "type": "string"
         },
-        "y": {
-          "type": "number"
+        "edge": {
+          "type": "string"
         },
-        "z": {
-          "type": "number"
+        "forward": {
+          "type": "boolean"
+        },
+        "pcurve": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BrepCurve2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prange": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "loopId": {
+          "type": "string"
+        },
+        "next": {
+          "type": "string"
+        },
+        "prev": {
+          "type": "string"
         }
       },
       "required": [
-        "x",
-        "y",
-        "z"
+        "id",
+        "edge",
+        "forward",
+        "pcurve",
+        "prange",
+        "loopId",
+        "next",
+        "prev"
       ]
     },
-    "semioPoint2": {
-      "type": "object",
-      "properties": {
-        "x": {
-          "type": "number"
-        },
-        "y": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "x",
-        "y"
-      ]
-    },
-    "brepCurve2": {
+    "BrepCurve": {
       "oneOf": [
         {
           "type": "object",
@@ -48,10 +66,10 @@
               "const": "line"
             },
             "origin": {
-              "$ref": "#/$defs/semioPoint2"
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "direction": {
-              "$ref": "#/$defs/semioPoint2"
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             }
           },
           "required": [
@@ -67,7 +85,116 @@
               "const": "circle"
             },
             "center": {
-              "$ref": "#/$defs/semioPoint2"
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+            },
+            "axis": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+            },
+            "radius": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "center",
+            "axis",
+            "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "ellipse"
+            },
+            "center": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+            },
+            "axis": {
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+            },
+            "radiusMajor": {
+              "type": "number"
+            },
+            "radiusMinor": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "center",
+            "axis",
+            "radiusMajor",
+            "radiusMinor"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "nurbs"
+            },
+            "controlPoints": {
+              "type": "array",
+              "items": {
+                "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
+              }
+            },
+            "weights": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "degree": {
+              "type": "integer"
+            },
+            "knots": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "controlPoints",
+            "weights",
+            "degree",
+            "knots"
+          ]
+        }
+      ]
+    },
+    "BrepCurve2": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "line"
+            },
+            "origin": {
+              "$ref": "#/$defs/SemioPoint2"
+            },
+            "direction": {
+              "$ref": "#/$defs/SemioPoint2"
+            }
+          },
+          "required": [
+            "kind",
+            "origin",
+            "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "center": {
+              "$ref": "#/$defs/SemioPoint2"
             },
             "radius": {
               "type": "number"
@@ -86,10 +213,10 @@
               "const": "ellipse"
             },
             "center": {
-              "$ref": "#/$defs/semioPoint2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "xAxis": {
-              "$ref": "#/$defs/semioPoint2"
+              "$ref": "#/$defs/SemioPoint2"
             },
             "radiusMajor": {
               "type": "number"
@@ -115,7 +242,7 @@
             "controlPoints": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/semioPoint2"
+                "$ref": "#/$defs/SemioPoint2"
               }
             },
             "weights": {
@@ -144,116 +271,167 @@
         }
       ]
     },
-    "brepCurve": {
-      "oneOf": [
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "line"
-            },
-            "origin": {
-              "$ref": "#/$defs/semioPoint3"
-            },
-            "direction": {
-              "$ref": "#/$defs/semioPoint3"
-            }
-          },
-          "required": [
-            "kind",
-            "origin",
-            "direction"
-          ]
+    "BrepEdge": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
         },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "circle"
-            },
-            "center": {
-              "$ref": "#/$defs/semioPoint3"
-            },
-            "axis": {
-              "$ref": "#/$defs/semioPoint3"
-            },
-            "radius": {
-              "type": "number"
-            }
-          },
-          "required": [
-            "kind",
-            "center",
-            "axis",
-            "radius"
-          ]
+        "startVertex": {
+          "type": "string"
         },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "ellipse"
-            },
-            "center": {
-              "$ref": "#/$defs/semioPoint3"
-            },
-            "axis": {
-              "$ref": "#/$defs/semioPoint3"
-            },
-            "radiusMajor": {
-              "type": "number"
-            },
-            "radiusMinor": {
-              "type": "number"
-            }
-          },
-          "required": [
-            "kind",
-            "center",
-            "axis",
-            "radiusMajor",
-            "radiusMinor"
-          ]
+        "endVertex": {
+          "type": "string"
         },
-        {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "const": "nurbs"
-            },
-            "controlPoints": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/semioPoint3"
-              }
-            },
-            "weights": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              }
-            },
-            "degree": {
-              "type": "integer"
-            },
-            "knots": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              }
-            }
-          },
-          "required": [
-            "kind",
-            "controlPoints",
-            "weights",
-            "degree",
-            "knots"
-          ]
+        "curve": {
+          "$ref": "#/$defs/BrepCurve"
+        },
+        "tol": {
+          "type": "number"
         }
+      },
+      "required": [
+        "id",
+        "startVertex",
+        "endVertex",
+        "curve",
+        "tol"
       ]
     },
-    "brepSurface": {
+    "BrepFace": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "outerLoop": {
+          "type": "string"
+        },
+        "innerLoops": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "surface": {
+          "$ref": "#/$defs/BrepSurface"
+        },
+        "orientation": {
+          "type": "boolean"
+        },
+        "tol": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "outerLoop",
+        "innerLoops",
+        "surface",
+        "orientation",
+        "tol"
+      ]
+    },
+    "BrepLoop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepLoopEdge"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "edges"
+      ]
+    },
+    "BrepLoopEdge": {
+      "type": "object",
+      "properties": {
+        "edge": {
+          "type": "string"
+        },
+        "orientation": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "edge",
+        "orientation"
+      ]
+    },
+    "BrepShell": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "faces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepShellFace"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "faces"
+      ]
+    },
+    "BrepShellFace": {
+      "type": "object",
+      "properties": {
+        "face": {
+          "type": "string"
+        },
+        "orientation": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "face",
+        "orientation"
+      ]
+    },
+    "BrepSolid": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "shells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BrepSolidShell"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "shells"
+      ]
+    },
+    "BrepSolidShell": {
+      "type": "object",
+      "properties": {
+        "shell": {
+          "type": "string"
+        },
+        "isVoid": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "shell",
+        "isVoid"
+      ]
+    },
+    "BrepSurface": {
       "oneOf": [
         {
           "type": "object",
@@ -262,10 +440,10 @@
               "const": "plane"
             },
             "origin": {
-              "$ref": "#/$defs/semioPoint3"
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "normal": {
-              "$ref": "#/$defs/semioPoint3"
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             }
           },
           "required": [
@@ -281,10 +459,10 @@
               "const": "cylinder"
             },
             "origin": {
-              "$ref": "#/$defs/semioPoint3"
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "axis": {
-              "$ref": "#/$defs/semioPoint3"
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "radius": {
               "type": "number"
@@ -304,10 +482,10 @@
               "const": "cone"
             },
             "origin": {
-              "$ref": "#/$defs/semioPoint3"
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "axis": {
-              "$ref": "#/$defs/semioPoint3"
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "radius": {
               "type": "number"
@@ -331,7 +509,7 @@
               "const": "sphere"
             },
             "center": {
-              "$ref": "#/$defs/semioPoint3"
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "radius": {
               "type": "number"
@@ -350,10 +528,10 @@
               "const": "torus"
             },
             "center": {
-              "$ref": "#/$defs/semioPoint3"
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "axis": {
-              "$ref": "#/$defs/semioPoint3"
+              "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
             },
             "majorRadius": {
               "type": "number"
@@ -379,7 +557,7 @@
             "controlPoints": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/semioPoint3"
+                "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
               }
             },
             "weights": {
@@ -427,14 +605,14 @@
         }
       ]
     },
-    "brepVertex": {
+    "BrepVertex": {
       "type": "object",
       "properties": {
         "id": {
           "type": "string"
         },
         "point": {
-          "$ref": "#/$defs/semioPoint3"
+          "$ref": "https://semio.tech/schema/s/stdio/semio/v1/brep/inference.json#/$defs/semioPoint3"
         },
         "tol": {
           "type": "number",
@@ -447,216 +625,19 @@
         "tol"
       ]
     },
-    "brepEdge": {
+    "SemioPoint2": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
+        "x": {
+          "type": "number"
         },
-        "startVertex": {
-          "type": "string"
-        },
-        "endVertex": {
-          "type": "string"
-        },
-        "curve": {
-          "$ref": "#/$defs/brepCurve"
-        },
-        "tol": {
+        "y": {
           "type": "number"
         }
       },
       "required": [
-        "id",
-        "startVertex",
-        "endVertex",
-        "curve",
-        "tol"
-      ]
-    },
-    "brepLoopEdge": {
-      "type": "object",
-      "properties": {
-        "edge": {
-          "type": "string"
-        },
-        "orientation": {
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "edge",
-        "orientation"
-      ]
-    },
-    "brepLoop": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "edges": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/brepLoopEdge"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "edges"
-      ]
-    },
-    "brepFace": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "outerLoop": {
-          "type": "string"
-        },
-        "innerLoops": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "surface": {
-          "$ref": "#/$defs/brepSurface"
-        },
-        "orientation": {
-          "type": "boolean"
-        },
-        "tol": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "id",
-        "outerLoop",
-        "innerLoops",
-        "surface",
-        "orientation",
-        "tol"
-      ]
-    },
-    "brepShellFace": {
-      "type": "object",
-      "properties": {
-        "face": {
-          "type": "string"
-        },
-        "orientation": {
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "face",
-        "orientation"
-      ]
-    },
-    "brepShell": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "faces": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/brepShellFace"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "faces"
-      ]
-    },
-    "brepSolidShell": {
-      "type": "object",
-      "properties": {
-        "shell": {
-          "type": "string"
-        },
-        "isVoid": {
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "shell",
-        "isVoid"
-      ]
-    },
-    "brepSolid": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "shells": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/brepSolidShell"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "shells"
-      ]
-    },
-    "brepCoedge": {
-      "type": "object",
-      "description": "First-class p-curve/ring-position coedge — see native Coedge; a separate, purely-additive collection (never widens brepLoopEdge, see 🦀️.rs doc comment).",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "edge": {
-          "type": "string"
-        },
-        "forward": {
-          "type": "boolean"
-        },
-        "pcurve": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/brepCurve2"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "prange": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 2,
-          "maxItems": 2
-        },
-        "loopId": {
-          "type": "string"
-        },
-        "next": {
-          "type": "string"
-        },
-        "prev": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "id",
-        "edge",
-        "forward",
-        "pcurve",
-        "prange",
-        "loopId",
-        "next",
-        "prev"
+        "x",
+        "y"
       ]
     }
   },
@@ -669,49 +650,49 @@
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/brepVertex"
+        "$ref": "#/$defs/BrepVertex"
       }
     },
     "edges": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/brepEdge"
+        "$ref": "#/$defs/BrepEdge"
       }
     },
     "loops": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/brepLoop"
+        "$ref": "#/$defs/BrepLoop"
       }
     },
     "faces": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/brepFace"
+        "$ref": "#/$defs/BrepFace"
       }
     },
     "shells": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/brepShell"
+        "$ref": "#/$defs/BrepShell"
       }
     },
     "solids": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/brepSolid"
+        "$ref": "#/$defs/BrepSolid"
       }
     },
     "coedges": {
       "type": "array",
       "x-semio-state": "artifact",
       "items": {
-        "$ref": "#/$defs/brepCoedge"
+        "$ref": "#/$defs/BrepCoedge"
       },
       "description": "empty for snapshots produced before this field existed"
     },

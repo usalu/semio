@@ -5,14 +5,9 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "locale",
     "contributionsJson"
   ],
   "properties": {
-    "locale": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "contributionsJson": {
       "type": "string",
       "x-semio-state": "config"

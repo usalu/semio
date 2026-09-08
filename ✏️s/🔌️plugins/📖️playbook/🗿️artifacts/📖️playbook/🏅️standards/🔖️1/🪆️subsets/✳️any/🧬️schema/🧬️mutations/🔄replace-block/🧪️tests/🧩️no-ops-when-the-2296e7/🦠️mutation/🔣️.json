@@ -6,8 +6,8 @@
     "label": "Team size",
     "kind": "number",
     "required": true,
-    "min": 1.0,
-    "max": 80.0,
+    "min": 1,
+    "max": 80,
     "unit": "people"
   }
 }

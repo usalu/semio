@@ -65,13 +65,13 @@
         "sourceUrl": "https://example.test/plan.png",
         "mediaKind": "image",
         "origin": [
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ],
         "orientation": null,
         "scale": 1.5,
-        "widthWorld": 8.0,
+        "widthWorld": 8,
         "hidden": true,
         "locked": true,
         "opacity": 0.5

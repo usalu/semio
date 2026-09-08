@@ -45,7 +45,6 @@ pub struct WriterConfig {
     #[dsl(block)]
     pub camera: WriterCamera,
     /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
-    pub locale: String,
 }
 
 //#region 🔖️ArtifactCodec
@@ -94,7 +93,7 @@ impl store::ArtifactPack for WriterConfig {
 
 impl Default for WriterConfig {
     fn default() -> Self {
-        Self { editor_selection: None, format_signal: 0, lint_signal: 0, revision: 0, editor_settings: WriterEditorSettings::default(), engagement_input: String::new(), camera: WriterCamera::default(), locale: "en-US".into() }
+        Self { editor_selection: None, format_signal: 0, lint_signal: 0, revision: 0, editor_settings: WriterEditorSettings::default(), engagement_input: String::new(), camera: WriterCamera::default(), }
     }
 }
 

@@ -36,8 +36,6 @@ pub struct Block2dDiff {
     pub meta: Option<BlockMeta>,
     #[state(presence)]
     pub selected_ids: Option<Block2dStringList>,
-    #[state(config)]
-    pub locale: Option<String>,
 }
 //#endregion 🔖️Diff
 

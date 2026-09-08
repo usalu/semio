@@ -16,15 +16,15 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework", "dep:semio-framework-dispatch-macros", "dep:semio-framework-geometry", "dep:semio-framework-os-infinite", "dep:semio-framework-ui-contract"]
 
 [dependencies]
-semio-framework = { workspace = true }
+semio-framework = { workspace = true, optional = true }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-framework-geometry = { workspace = true }
+semio-framework-geometry = { workspace = true, optional = true }
 semio-framework-graph = { workspace = true }
 semio-framework-job = { workspace = true }
-semio-framework-os-infinite = { workspace = true }
+semio-framework-os-infinite = { workspace = true, optional = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }

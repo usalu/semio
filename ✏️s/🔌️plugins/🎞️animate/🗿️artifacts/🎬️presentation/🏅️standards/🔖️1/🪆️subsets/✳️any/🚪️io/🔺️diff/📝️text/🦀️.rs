@@ -33,9 +33,6 @@ impl PresentationDiff {
             if let Some(value) = &self.engagement_input {
                 next.engagement_input = value.clone();
             }
-            if let Some(value) = &self.locale {
-                next.locale = value.clone();
-            }
             next
         })
     }
@@ -73,7 +70,6 @@ impl MutationDiff<PresentationSnapshot> for PresentationDiff {
         take!(presentation);
         take!(selected_ids);
         take!(engagement_input);
-        take!(locale);
     }
 }
 //#endregion 🔖️Apply

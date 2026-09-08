@@ -4,9 +4,9 @@
  * Two halves, deliberately separable so the gate can run the cheap one alone:
  *
  * 1. the **source oracle** — `proveMcpInferenceBridgeFixture` (`💡️inference-bridge.ts`), a real
- *    third-party AJV 2020-12 pass over the shared neutral fixture
+ *    third-party AJV draft-07 pass over the shared neutral fixture
  *    `🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1`, the four closed wire shapes with their
- *    hostile mutations, and a cross-check of the client's four path builders against the routes the
+ *    hostile mutations, and a cross-check of the client's five path builders against the routes the
  *    hub binary actually registers;
  * 2. the **process laws** — the REAL `semio-os-mcp` binary driven over raw stdio JSON-RPC.
  *
@@ -36,13 +36,13 @@ type ToolListResult = { tools: Array<{ name: string; description?: string; input
 describe("gis map inference bridge — neutral fixture and closed wire shapes", () => {
   it("the independent AJV oracle passes every fixture, wire-shape, hostile and route law", () => {
     const report = proveMcpInferenceBridgeFixture(repoRoot);
-    expect(report.ajv).toBe(8);
+    expect(report.ajv).toBe(14);
     expect(report.errors).toBe(11);
     expect(report.visibility).toBe(7);
     expect(report.lifecycle).toBe(9);
-    expect(report.routes).toBe(4);
+    expect(report.routes).toBe(5);
     expect(report.limits).toBe(4);
-    expect(report.hostile).toBeGreaterThanOrEqual(26);
+    expect(report.hostile).toBeGreaterThanOrEqual(29);
   });
 
   it("the os.mcp approval mirror is structurally identical to hub's own authority", () => {

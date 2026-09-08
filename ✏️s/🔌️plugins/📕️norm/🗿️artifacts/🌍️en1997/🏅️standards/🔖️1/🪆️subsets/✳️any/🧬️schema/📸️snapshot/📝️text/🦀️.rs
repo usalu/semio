@@ -28,3 +28,8 @@ pub fn print_dsl(document: &En1997Snapshot) -> String {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🚚️Carrier
+/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
+pub type En1997SnapshotText = String;
+//#endregion 🚚️Carrier

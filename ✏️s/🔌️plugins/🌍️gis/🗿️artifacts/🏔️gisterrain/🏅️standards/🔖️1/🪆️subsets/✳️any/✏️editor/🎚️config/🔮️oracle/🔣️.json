@@ -21,8 +21,7 @@
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️any",
       "kinds": [
-        "set-camera",
-        "set-locale"
+        "set-camera"
       ],
       "vectors": []
     }
@@ -46,26 +45,6 @@
             "operation": "set-camera",
             "bridgeVersion": 1,
             "variant": "SetCamera"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "gis-gisterrain-1-config-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "set-locale",
-          "capability": "gis-gisterrain-1-config-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🗣️set-locale/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "set-locale",
-            "bridgeVersion": 1,
-            "variant": "SetLocale"
           },
           "oracleRequirements": [
             {
@@ -128,57 +107,6 @@
       "reproducible": true,
       "family": "structural",
       "notes": "The set-camera mutation applied to Gis3dConfig's own real, minimal seed record — a whole-field replace that leaves its sibling field untouched, checked directly in this facet's claiming feature's own subject handler (mutate-gis-gisterrain-1-config)."
-    },
-    {
-      "schema": "semio.repository-test.fixture/v2",
-      "id": "set-locale-applied",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.gis.gisterrain",
-        "standard": "1",
-        "subset": "any"
-      },
-      "mutation": "set-locale",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "radian"
-      },
-      "files": [
-        {
-          "role": "expected-before-json",
-          "path": "../🧫️fixtures/🌐️set-locale-applied/⬅️before.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:aecd97c9ac7fdda737af3b295b2e623c70841f26631418e6682498e06dc5aa9f",
-          "bytes": 66
-        },
-        {
-          "role": "expected-after-json",
-          "path": "../🧫️fixtures/🌐️set-locale-applied/➡️after.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:5c88cfe3b6a1890c5fc32a7e3c003205b0902e358c187f1f73f5ac47dc637afd",
-          "bytes": 66
-        }
-      ],
-      "generator": {
-        "oracle": "none",
-        "packageVersion": "1",
-        "engineFamily": "handcrafted",
-        "engineVersion": "1",
-        "command": "handcrafted by shard G4 — Gis3dConfig's own two string fields, no tool needed",
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "handcrafted",
-        "license": "public-domain (synthetic, no third-party content embedded)",
-        "attribution": "A minimal, deterministic set-locale specification vector over Gis3dConfig's own two-field record ({cameraJson, locale}), matching this feature's own Examples table row verbatim and this facet's own no-oracle decision (gis-gisterrain-config-mutation-semantics) — no tool or third-party library produced it, it is asserted correct by construction against the same real Mutation<Gis3dConfig>/MutationDiff<Gis3dConfig> trait chain gis3d_config_mutation_report_json (../🦀️.rs) exercises, exactly as os.config.opening's own committed specification vectors are.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "The set-locale mutation applied to Gis3dConfig's own real, minimal seed record — a whole-field replace that leaves its sibling field untouched, checked directly in this facet's claiming feature's own subject handler (mutate-gis-gisterrain-1-config)."
     }
   ]
 }

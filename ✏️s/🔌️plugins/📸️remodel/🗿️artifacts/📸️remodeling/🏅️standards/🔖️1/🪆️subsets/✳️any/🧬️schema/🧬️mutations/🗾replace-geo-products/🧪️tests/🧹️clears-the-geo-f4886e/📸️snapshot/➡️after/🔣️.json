@@ -7,57 +7,57 @@
       "name": "Orbit Primary",
       "kind": "video",
       "cameraId": "orbit-cam-primary",
-      "syncOffsetMs": 0.0,
-      "fpsHint": 2.0,
+      "syncOffsetMs": 0,
+      "fpsHint": 2,
       "frames": [
         {
           "index": 0,
-          "timestampMs": 0.0,
+          "timestampMs": 0,
           "assetId": "orbit-frame-00"
         },
         {
           "index": 1,
-          "timestampMs": 500.0,
+          "timestampMs": 500,
           "assetId": "orbit-frame-01"
         },
         {
           "index": 2,
-          "timestampMs": 1000.0,
+          "timestampMs": 1000,
           "assetId": "orbit-frame-02"
         },
         {
           "index": 3,
-          "timestampMs": 1500.0,
+          "timestampMs": 1500,
           "assetId": "orbit-frame-03"
         },
         {
           "index": 4,
-          "timestampMs": 2000.0,
+          "timestampMs": 2000,
           "assetId": "orbit-frame-04"
         },
         {
           "index": 5,
-          "timestampMs": 2500.0,
+          "timestampMs": 2500,
           "assetId": "orbit-frame-05"
         },
         {
           "index": 6,
-          "timestampMs": 3000.0,
+          "timestampMs": 3000,
           "assetId": "orbit-frame-06"
         },
         {
           "index": 7,
-          "timestampMs": 3500.0,
+          "timestampMs": 3500,
           "assetId": "orbit-frame-07"
         },
         {
           "index": 8,
-          "timestampMs": 4000.0,
+          "timestampMs": 4000,
           "assetId": "orbit-frame-08"
         },
         {
           "index": 9,
-          "timestampMs": 4500.0,
+          "timestampMs": 4500,
           "assetId": "orbit-frame-09"
         }
       ],
@@ -65,7 +65,7 @@
         "name": "orbit-primary.mp4",
         "container": "mp4",
         "codec": "avc",
-        "durationMs": 5000.0,
+        "durationMs": 5000,
         "frameCount": 10,
         "width": 320,
         "height": 240
@@ -76,57 +76,57 @@
       "name": "Orbit Secondary",
       "kind": "image-sequence",
       "cameraId": "orbit-cam-secondary",
-      "syncOffsetMs": 40.0,
-      "fpsHint": 2.0,
+      "syncOffsetMs": 40,
+      "fpsHint": 2,
       "frames": [
         {
           "index": 0,
-          "timestampMs": 40.0,
+          "timestampMs": 40,
           "assetId": "orbit-frame-00"
         },
         {
           "index": 1,
-          "timestampMs": 540.0,
+          "timestampMs": 540,
           "assetId": "orbit-frame-01"
         },
         {
           "index": 2,
-          "timestampMs": 1040.0,
+          "timestampMs": 1040,
           "assetId": "orbit-frame-02"
         },
         {
           "index": 3,
-          "timestampMs": 1540.0,
+          "timestampMs": 1540,
           "assetId": "orbit-frame-03"
         },
         {
           "index": 4,
-          "timestampMs": 2040.0,
+          "timestampMs": 2040,
           "assetId": "orbit-frame-04"
         },
         {
           "index": 5,
-          "timestampMs": 2540.0,
+          "timestampMs": 2540,
           "assetId": "orbit-frame-05"
         },
         {
           "index": 6,
-          "timestampMs": 3040.0,
+          "timestampMs": 3040,
           "assetId": "orbit-frame-06"
         },
         {
           "index": 7,
-          "timestampMs": 3540.0,
+          "timestampMs": 3540,
           "assetId": "orbit-frame-07"
         },
         {
           "index": 8,
-          "timestampMs": 4040.0,
+          "timestampMs": 4040,
           "assetId": "orbit-frame-08"
         },
         {
           "index": 9,
-          "timestampMs": 4540.0,
+          "timestampMs": 4540,
           "assetId": "orbit-frame-09"
         }
       ],
@@ -137,17 +137,17 @@
       "name": "Orbit Spare Pass",
       "kind": "image-sequence",
       "cameraId": null,
-      "syncOffsetMs": 0.0,
-      "fpsHint": 1.0,
+      "syncOffsetMs": 0,
+      "fpsHint": 1,
       "frames": [
         {
           "index": 0,
-          "timestampMs": 0.0,
+          "timestampMs": 0,
           "assetId": "orbit-frame-00"
         },
         {
           "index": 1,
-          "timestampMs": 500.0,
+          "timestampMs": 500,
           "assetId": "orbit-frame-01"
         }
       ],
@@ -404,17 +404,17 @@
         "id": "orbit-cam-primary",
         "label": "Orbit Primary",
         "model": "brownConrady",
-        "fx": 272.0,
-        "fy": 272.0,
-        "cx": 160.0,
-        "cy": 120.0,
-        "skew": 0.0,
+        "fx": 272,
+        "fy": 272,
+        "cx": 160,
+        "cy": 120,
+        "skew": 0,
         "distortion": [
           -0.01953125,
           0.0048828125,
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ],
         "rmsReprojectionPx": 0.421875,
         "locked": false
@@ -423,17 +423,17 @@
         "id": "orbit-cam-secondary",
         "label": "Orbit Secondary",
         "model": "pinhole",
-        "fx": 272.0,
-        "fy": 272.0,
-        "cx": 160.0,
-        "cy": 120.0,
-        "skew": 0.0,
+        "fx": 272,
+        "fy": 272,
+        "cx": 160,
+        "cy": 120,
+        "skew": 0,
         "distortion": [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0,
+          0,
+          0
         ],
         "rmsReprojectionPx": 0.578125,
         "locked": false
@@ -442,17 +442,17 @@
         "id": "orbit-cam-tertiary",
         "label": "Orbit Tertiary",
         "model": "pinhole",
-        "fx": 272.0,
-        "fy": 272.0,
-        "cx": 160.0,
-        "cy": 120.0,
-        "skew": 0.0,
+        "fx": 272,
+        "fy": 272,
+        "cx": 160,
+        "cy": 120,
+        "skew": 0,
         "distortion": [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0,
+          0,
+          0
         ],
         "rmsReprojectionPx": null,
         "locked": true
@@ -462,29 +462,29 @@
       {
         "cameraId": "orbit-cam-primary",
         "rotationWxyz": [
-          1.0,
-          0.0,
-          0.0,
-          0.0
+          1,
+          0,
+          0,
+          0
         ],
         "translationM": [
-          0.0,
-          0.0,
-          0.0
+          0,
+          0,
+          0
         ]
       },
       {
         "cameraId": "orbit-cam-secondary",
         "rotationWxyz": [
-          1.0,
-          0.0,
+          1,
+          0,
           0.05078125,
-          0.0
+          0
         ],
         "translationM": [
           0.125,
-          0.0,
-          0.0
+          0,
+          0
         ]
       }
     ]
@@ -500,7 +500,7 @@
       "detector": "akaze",
       "targetCount": 600,
       "octaves": 4,
-      "edgeThreshold": 10.0
+      "edgeThreshold": 10
     },
     "matching": {
       "matcher": "brute-force",
@@ -512,7 +512,7 @@
     },
     "sfm": {
       "ransacIterations": 1000,
-      "ransacThresholdPx": 2.0,
+      "ransacThresholdPx": 2,
       "minTrackLength": 2,
       "baMaxIterations": 25,
       "robustLoss": "huber",
@@ -526,8 +526,8 @@
       "maxPoints": 50000
     },
     "mesh": {
-      "tsdfVoxelSizeMm": 100.0,
-      "tsdfTruncationMm": 330.0,
+      "tsdfVoxelSizeMm": 100,
+      "tsdfTruncationMm": 330,
       "decimateTargetTriangles": 20000,
       "smoothingIterations": 1,
       "textureEnabled": false,
@@ -547,10 +547,10 @@
       "enabled": true,
       "originLon": 8.5,
       "originLat": 47.375,
-      "originAlt": 408.0,
+      "originAlt": 408,
       "gsdM": 0.05078125,
       "dsmCellM": 0.099609375,
-      "dtmFilterRadiusM": 2.0,
+      "dtmFilterRadiusM": 2,
       "orthoMaxPx": 4096
     }
   },
@@ -559,7 +559,7 @@
       "id": "gcp-north-pier",
       "name": "North Pier",
       "worldPosition": [
-        1.0,
+        1,
         0.5,
         -0.25
       ],
@@ -584,7 +584,7 @@
           "streamId": "orbit-secondary",
           "frameIndex": 4,
           "pixel": [
-            151.0,
+            151,
             104.75
           ]
         }
@@ -596,7 +596,7 @@
       "worldPosition": [
         0.25,
         -0.75,
-        1.0
+        1
       ],
       "observations": [
         {
@@ -604,7 +604,7 @@
           "frameIndex": 6,
           "pixel": [
             171.5,
-            58.0
+            58
           ]
         },
         {
@@ -621,7 +621,7 @@
       "id": "gcp-south-pier",
       "name": "South Pier",
       "worldPosition": [
-        -1.0,
+        -1,
         -0.5,
         -0.25
       ],
@@ -630,7 +630,7 @@
           "streamId": "orbit-primary",
           "frameIndex": 2,
           "pixel": [
-            122.0,
+            122,
             150.5
           ]
         },
@@ -639,7 +639,7 @@
           "frameIndex": 7,
           "pixel": [
             198.25,
-            143.0
+            143
           ]
         }
       ]
@@ -648,9 +648,9 @@
       "id": "gcp-unsurveyed",
       "name": "Unsurveyed Mark",
       "worldPosition": [
-        0.0,
+        0,
         1.25,
-        0.0
+        0
       ],
       "observations": []
     }
@@ -661,7 +661,7 @@
     "progress01": 0.625,
     "cancelRequested": false,
     "stageCursor": 8,
-    "startedAtMs": 1738368000000.0,
+    "startedAtMs": 1738368000000,
     "error": null,
     "cameraPosesPreview": [
       {
@@ -845,7 +845,7 @@
             0.9375,
             -0.3515625,
             -0.00048828125,
-            0.0
+            0
           ],
           "translation": [
             -0.001953125,
@@ -888,7 +888,7 @@
         "id": "orbit-track-a",
         "length": 9,
         "class": "static",
-        "meanSpeedMS": 0.0
+        "meanSpeedMS": 0
       },
       {
         "id": "orbit-track-b",
@@ -909,7 +909,7 @@
       "gcpCheckpointRmse": 0.1875,
       "watertight": null,
       "meanTrackLength": 6.5,
-      "registeredFrameRatio": 1.0,
+      "registeredFrameRatio": 1,
       "denseCoverageRatio": 0.625,
       "warnings": [
         "only two streams observe gcp-south-pier"

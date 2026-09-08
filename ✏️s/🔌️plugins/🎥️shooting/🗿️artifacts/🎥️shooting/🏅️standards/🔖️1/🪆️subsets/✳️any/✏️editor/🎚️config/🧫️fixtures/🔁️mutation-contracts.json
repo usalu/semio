@@ -1,0 +1,340 @@
+{
+  "base": {
+    "defaultShotFormat": "png",
+    "defaultShotShape": "rectangle",
+    "defaultAssetFormat": "glb",
+    "selectedShotIds": [],
+    "centerModel": true,
+    "fitRevision": 0,
+    "cameraDraftLabel": "",
+    "camera": {
+      "position": [
+        420,
+        -420,
+        320
+      ],
+      "target": [
+        0,
+        0,
+        40
+      ],
+      "zoom": 1,
+      "fov": 50
+    },
+    "activeUtilityId": "move"
+  },
+  "cases": [
+    {
+      "kind": "replace-config",
+      "mutation": {
+        "ReplaceConfig": {
+          "config": {
+            "defaultShotFormat": "png",
+            "defaultShotShape": "rectangle",
+            "defaultAssetFormat": "glb",
+            "selectedShotIds": [],
+            "centerModel": true,
+            "fitRevision": 0,
+            "cameraDraftLabel": "Übersicht",
+            "camera": {
+              "position": [
+                420,
+                -420,
+                320
+              ],
+              "target": [
+                0,
+                0,
+                40
+              ],
+              "zoom": 1,
+              "fov": 50
+            },
+            "activeUtilityId": "move"
+          }
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "Übersicht",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move"
+      }
+    },
+    {
+      "kind": "set-shot-selection",
+      "mutation": {
+        "SetShotSelection": {
+          "shotIds": [
+            "shot-a",
+            "shot-b"
+          ]
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [
+          "shot-a",
+          "shot-b"
+        ],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move"
+      }
+    },
+    {
+      "kind": "set-center-model",
+      "mutation": {
+        "SetCenterModel": {
+          "value": false
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": false,
+        "fitRevision": 0,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move"
+      }
+    },
+    {
+      "kind": "set-fit-revision",
+      "mutation": {
+        "SetFitRevision": {
+          "value": 4294967295
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 4294967295,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move"
+      }
+    },
+    {
+      "kind": "set-camera-draft-label",
+      "mutation": {
+        "SetCameraDraftLabel": {
+          "value": "Übersicht"
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "Übersicht",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move"
+      }
+    },
+    {
+      "kind": "set-camera",
+      "mutation": {
+        "SetCamera": {
+          "camera": {
+            "position": [
+              1,
+              2,
+              3
+            ],
+            "target": [
+              0,
+              0,
+              0
+            ],
+            "zoom": 2,
+            "fov": 35,
+            "up": [
+              0,
+              0,
+              1
+            ],
+            "projection": "orthographic"
+          }
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            1,
+            2,
+            3
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "zoom": 2,
+          "fov": 35,
+          "up": [
+            0,
+            0,
+            1
+          ],
+          "projection": "orthographic"
+        },
+        "activeUtilityId": "move"
+      }
+    },
+    {
+      "kind": "set-active-utility",
+      "mutation": {
+        "SetActiveUtility": {
+          "utilityId": "rotate"
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "rotate"
+      }
+    },
+    {
+      "kind": "set-defaults",
+      "mutation": {
+        "SetDefaults": {
+          "shotFormat": "svg",
+          "shotShape": "ellipse",
+          "assetFormat": "obj"
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "svg",
+        "defaultShotShape": "ellipse",
+        "defaultAssetFormat": "obj",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move"
+      }
+    }
+  ]
+}
